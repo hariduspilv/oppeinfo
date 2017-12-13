@@ -1,12 +1,12 @@
 package ee.hitsa.ois.web.dto;
 
+import java.math.BigDecimal;
+import java.util.Set;
+
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
-
-import java.math.BigDecimal;
-import java.util.Set;
 
 public class SubjectSearchDto {
     private Long id;
@@ -18,6 +18,7 @@ public class SubjectSearchDto {
     private Set<String> languages;
     private String status;
     private AutocompleteResult schoolDepartment;
+    private Boolean canEdit;
 
     public Long getId() {
         return id;
@@ -95,5 +96,13 @@ public class SubjectSearchDto {
 
     public void setSchoolDepartment(AutocompleteResult schoolDepartment) {
         this.schoolDepartment = schoolDepartment;
+    }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
     }
 }

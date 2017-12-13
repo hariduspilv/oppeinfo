@@ -49,8 +49,9 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
     function afterAuthentication() {
       $scope.loadGeneralMessages();
       $scope.loadUnreadMessages();
-      chechIfHasUnacceptedAbsences();
-      checkUnconfirmedJournas();
+      checkIfHasUnacceptedAbsences();
+      checkUnconfirmedJournals();
+      expiringOccupationStandards();
     }
 
     if (AuthService.isAuthenticated()) {
@@ -59,20 +60,42 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
     $scope.$on(AUTH_EVENTS.loginSuccess, afterAuthentication);
     $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
 
-    function chechIfHasUnacceptedAbsences() {
-      QueryUtils.endpoint('/absences/hasUnaccepted').search().$promise.then(function(response){
-        $scope.hasUnaccepdedAbsences = response.hasUnaccepted;
-      });
+    function checkIfHasUnacceptedAbsences() {
+      if(['ROLL_A', 'ROLL_O'].indexOf(Session.roleCode) !== -1) {
+        QueryUtils.endpoint('/absences/hasUnaccepted').search().$promise.then(function(response) {
+          $scope.hasUnacceptedAbsences = response.hasUnaccepted;
+        });
+      } else {
+        $scope.hasUnacceptedAbsences = undefined;
+      }
     }
 
-    function checkUnconfirmedJournas() {
-      QueryUtils.endpoint('/journals/unconfirmedJournalsInfo').search().$promise.then(function(response){
-        $scope.unconfirmedJournals = {
-          count: response.unconfirmedJournalCount,
-          anyFinished: response.hasEndedUnconfirmedJournals
-        };
-      });
+    function checkUnconfirmedJournals() {
+      if(['ROLL_A', 'ROLL_O'].indexOf(Session.roleCode) !== -1) {
+        QueryUtils.endpoint('/journals/unconfirmedJournalsInfo').search().$promise.then(function(response) {
+          $scope.unconfirmedJournals = {
+            count: response.unconfirmedJournalCount,
+            anyFinished: response.hasEndedUnconfirmedJournals
+          };
+        });
+      } else {
+        $scope.unconfirmedJournals = undefined;
+      }
     }
+
+    var initialNumberOfOccupationStandards = 3;
+    $scope.numberOfOccupationStandards = initialNumberOfOccupationStandards;
+    function expiringOccupationStandards() {
+      if(['ROLL_A'].indexOf(Session.roleCode) !== -1) {
+        $scope.expiringOccupationStandards = QueryUtils.endpoint('/curriculumOccupation/expiringOccupationStandards').query();
+      } else {
+        $scope.expiringOccupationStandards = undefined;
+      }
+    }
+
+    $scope.toggleNumberOfOccupationStandards = function() {
+      $scope.numberOfOccupationStandards = $scope.numberOfOccupationStandards ? undefined : initialNumberOfOccupationStandards;
+    };
   }
 ]).controller('StudentHomeController', ['$scope', 'QueryUtils', 'Session', 'AUTH_EVENTS',
   function($scope, QueryUtils, Session, AUTH_EVENTS) {

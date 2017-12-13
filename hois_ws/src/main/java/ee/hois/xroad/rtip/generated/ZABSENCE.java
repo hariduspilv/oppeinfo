@@ -1,12 +1,13 @@
 
 package ee.hois.xroad.rtip.generated;
 
+import java.time.LocalDate;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 
 /**
@@ -89,7 +90,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "ZABSENCE", namespace = "http://rtk-v6.x-road.eu", propOrder = {
+@XmlType(name = "ZABSENCE", propOrder = {
     "pernr",
     "plans",
     "atext",
@@ -99,7 +100,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "nachn",
     "country",
     "city",
-    "apernr"
+    "apernr",
+    "awref"
 })
 public class ZABSENCE {
 
@@ -109,12 +111,14 @@ public class ZABSENCE {
     protected String plans;
     @XmlElement(name = "ATEXT")
     protected String atext;
-    @XmlElement(name = "BEGDA")
+    @XmlElement(name = "BEGDA", type = String.class)
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "date")
-    protected XMLGregorianCalendar begda;
-    @XmlElement(name = "ENDDA")
+    protected LocalDate begda;
+    @XmlElement(name = "ENDDA", type = String.class)
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "date")
-    protected XMLGregorianCalendar endda;
+    protected LocalDate endda;
     @XmlElement(name = "VORNA")
     protected String vorna;
     @XmlElement(name = "NACHN")
@@ -125,6 +129,8 @@ public class ZABSENCE {
     protected String city;
     @XmlElement(name = "APERNR")
     protected String apernr;
+    @XmlElement(name = "AWREF")
+    protected String awref;
 
     /**
      * Gets the value of the pernr property.
@@ -203,10 +209,10 @@ public class ZABSENCE {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getBEGDA() {
+    public LocalDate getBEGDA() {
         return begda;
     }
 
@@ -215,10 +221,10 @@ public class ZABSENCE {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setBEGDA(XMLGregorianCalendar value) {
+    public void setBEGDA(LocalDate value) {
         this.begda = value;
     }
 
@@ -227,10 +233,10 @@ public class ZABSENCE {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getENDDA() {
+    public LocalDate getENDDA() {
         return endda;
     }
 
@@ -239,10 +245,10 @@ public class ZABSENCE {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setENDDA(XMLGregorianCalendar value) {
+    public void setENDDA(LocalDate value) {
         this.endda = value;
     }
 
@@ -364,6 +370,30 @@ public class ZABSENCE {
      */
     public void setAPERNR(String value) {
         this.apernr = value;
+    }
+    
+    /**
+     * Gets the value of the awref property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getAWREF() {
+        return awref;
+    }
+
+    /**
+     * Sets the value of the awref property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setAWREF(String value) {
+        this.awref = value;
     }
 
 }

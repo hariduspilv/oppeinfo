@@ -27,6 +27,7 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
 import ee.hitsa.ois.util.CurriculumUtil;
+import ee.hitsa.ois.util.EnterpriseUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.SubjectUtil;
@@ -51,6 +52,22 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
 
     public AutocompleteResult(Long id, Translatable data) {
         this(id, data.getNameEt(), data.getNameEn());
+    }
+    
+    @Override 
+    public boolean equals(Object obj) {
+        if(this == obj) {
+            return true;
+        }
+        if (obj == null || id == null || !getClass().equals(obj.getClass())) {
+            return false;
+        }
+        return id.equals(((AutocompleteResult) obj).id);
+    }
+    
+    @Override
+    public int hashCode() {
+        return this.id == null ? 31 : this.id.hashCode();
     }
 
     @Override
@@ -91,7 +108,7 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
         return new CurriculumVersionResult(curriculumVersion.getId(),
                 CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEt()),
                 CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEn()),
-                null, null, null, Boolean.valueOf(CurriculumUtil.isVocational(curriculum)));
+                CurriculumUtil.id(curriculum), null, null, Boolean.valueOf(CurriculumUtil.isVocational(curriculum)));
     }
 
     public static AutocompleteResult of(CurriculumVersionHigherModule module) {
@@ -115,7 +132,7 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     }
 
     public static AutocompleteResult of(Enterprise enterprise) {
-        String name = enterprise.getName() + "(" + enterprise.getRegCode() + ")";
+        String name = EnterpriseUtil.getName(enterprise);
         return new AutocompleteResult(enterprise.getId(), name, name);
     }
 

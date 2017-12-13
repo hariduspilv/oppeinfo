@@ -12,10 +12,10 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
@@ -85,7 +85,7 @@ public class StateCurriculumCopyService {
         (copied, newCurriculum, "id", "school", "inserted", "insertedBy", "changed", "changedBy", "version", 
                 "validFrom", "validThru",  
                 "studyLanguages", "specialities", 
-                "studyForms", "modules", "occupations", "versions");
+                "studyForms", "modules", "occupations", "versions", "nameRu");
         
         newCurriculum.setCode("ADD CODE");
         newCurriculum.setSchool(em.getReference(School.class, user.getSchoolId()));
@@ -112,11 +112,12 @@ public class StateCurriculumCopyService {
         return MainClassCode.KUTSE.name().equals(c.getMainClassCode());
     }
 
-    private static Integer calculateStudyPeriod(Long credits) {
-        if(credits.equals(Integer.valueOf(0))) {
+    public static Integer calculateStudyPeriod(Long credits) {
+        if(credits.equals(Long.valueOf(0))) {
             return Integer.valueOf(0);
         }
-        return credits.intValue() / CREDITS_PER_TERM * MONTHS_PER_TERM;
+        return BigDecimal.valueOf(credits).multiply(BigDecimal.valueOf(MONTHS_PER_TERM))
+                .divide(BigDecimal.valueOf(CREDITS_PER_TERM), 0, BigDecimal.ROUND_HALF_UP).intValue();
     }
     
     /**
@@ -135,22 +136,24 @@ public class StateCurriculumCopyService {
         qb.requiredCriteria(FILTER_BY_SCHOOL_STUDY_LEVEL, "school", schoolId);
         qb.sort("classifier_code limit 1"); //TODO: is it proper use of limit?
         List<?> data = qb.select(" classifier_code", em).getResultList();
-        if(CollectionUtils.isEmpty(data)) {
+        if(data.isEmpty()) {
             throw new ValidationFailedException("curriculum.error.noSuchStudyLevel");
         }
         String code = resultAsString(data.get(0), 0);
         return classifierRepository.getOne(code);
     }
-    
+
     private void copyOccupations(Curriculum newCurriculum, List<StateCurriculumOccupationCopyCommand> occupations) {
-        newCurriculum.setOccupations(new HashSet<>());
+        Set<CurriculumOccupation> newOccupations = new HashSet<>();
         for(StateCurriculumOccupationCopyCommand occupation : occupations) {
-            newCurriculum.getOccupations().add(copyOccupation(occupation));
+            newOccupations.add(copyOccupation(newCurriculum, occupation));
         }
+        newCurriculum.setOccupations(newOccupations);
     }
-    
-    private CurriculumOccupation copyOccupation(StateCurriculumOccupationCopyCommand occupation) {
+
+    private CurriculumOccupation copyOccupation(Curriculum newCurriculum, StateCurriculumOccupationCopyCommand occupation) {
         CurriculumOccupation newOccupation  = new CurriculumOccupation();
+        newOccupation.setCurriculum(newCurriculum);
         newOccupation.setOccupation(classifierRepository.getOne(occupation.getOccupation()));
         newOccupation.setOccupationGrant(Boolean.FALSE);
         copySpecialities(newOccupation, occupation.getSpecialities());

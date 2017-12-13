@@ -1,14 +1,15 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
+import javax.validation.constraints.NotNull;
+
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
-
-import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
 
 @DateRange
 public class UserForm extends VersionedCommand {

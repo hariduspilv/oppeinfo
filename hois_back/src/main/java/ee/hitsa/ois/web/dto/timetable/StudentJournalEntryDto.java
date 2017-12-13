@@ -1,15 +1,8 @@
 package ee.hitsa.ois.web.dto.timetable;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
-
-import ee.hitsa.ois.util.DateUtils;
-import ee.hitsa.ois.util.StreamUtil;
 
 public class StudentJournalEntryDto {
     private final Long id;
@@ -22,7 +15,7 @@ public class StudentJournalEntryDto {
     private final String homework;
     private final LocalDate homeworkDueDate;
     private List<StudentJournalEntryPreviousResultDto> previousResults;
-    
+
     public StudentJournalEntryDto(Long id, String entryType, LocalDate entryDate, String content, String gradeValue,
             LocalDateTime gradeInserted, String addInfo, String homework, LocalDate homeworkDueDate) {
         this.id = id;
@@ -59,7 +52,7 @@ public class StudentJournalEntryDto {
     public LocalDateTime getGradeInserted() {
         return gradeInserted;
     }
-    
+
     public String getAddInfo() {
         return addInfo;
     }
@@ -71,7 +64,7 @@ public class StudentJournalEntryDto {
     public LocalDate getHomeworkDueDate() {
         return homeworkDueDate;
     }
-    
+
     public List<StudentJournalEntryPreviousResultDto> getPreviousResults() {
         return previousResults;
     }
@@ -79,5 +72,5 @@ public class StudentJournalEntryDto {
     public void setPreviousResults(List<StudentJournalEntryPreviousResultDto> previousResults) {
         this.previousResults = previousResults;
     }
-    
+
 }

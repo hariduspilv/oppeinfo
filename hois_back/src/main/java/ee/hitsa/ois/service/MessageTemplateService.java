@@ -6,6 +6,7 @@ import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -28,9 +29,11 @@ import org.springframework.expression.spel.support.ReflectivePropertyAccessor;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.MessageTemplate;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.MessageTemplateRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -99,7 +102,16 @@ public class MessageTemplateService {
         }, pageable).map(MessageTemplateDto::of);
     }
 
-    public MessageTemplate findValidTemplate(MessageType type, Long schoolId) {
+    /**
+     * Find valid template for given automatic message type.
+     *
+     * @param type
+     * @param schoolId
+     * @param required
+     * @return
+     * @throws BadConfigurationException if required is true and message template is missing
+     */
+    public MessageTemplate findValidTemplate(MessageType type, Long schoolId, boolean required) {
         TypedQuery<MessageTemplate> q = em.createQuery(
                 "select t from MessageTemplate t where t.school.id = ?1 and t.type.code = ?2 and (t.validFrom is null or t.validFrom <= ?3) and (t.validThru is null or t.validThru >= ?3)", MessageTemplate.class);
         q.setParameter(1, schoolId);
@@ -113,7 +125,15 @@ public class MessageTemplateService {
             log.error("Multiple {} templates found for school {}", type.name(), schoolId);
         }
 
-        return templates.isEmpty() ? null : templates.get(0);
+        if(templates.isEmpty()) {
+            if(required) {
+                Classifier templateName = em.getReference(Classifier.class, type.name());
+                throw new BadConfigurationException("main.messages.error.configuration.missingAutomaticMessageTemplate",
+                        Collections.singletonMap("template", templateName.getNameEt()));
+            }
+            return null;
+        }
+        return templates.get(0);
     }
 
     public Set<String> getUsedTypeCodes(Long schoolId, String code) {

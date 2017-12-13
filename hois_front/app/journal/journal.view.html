@@ -61,16 +61,14 @@
             <tr md-row flex>
               <th md-column style="padding-right:11em;"><span>{{'student.label' | translate}}, {{'journal.studentGroup' | translate}}</span></th>
               <th md-column style="padding-left:1em;" ng-repeat="journalEntry in journal.journalEntriesByDate">
-                {{journalEntry.entryDate ? (journalEntry.entryDate | hoisDayMonth) : '-' }}
+                <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}}</span>
+                <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L'">{{journalEntry.entryDate  ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
                 <md-tooltip>
                   {{journalEntry.startLessonNr}}
                   <span ng-if="journalEntry.startLessonNr">,&nbsp;</span> {{journalEntry.nameEt}}
                   <span>,&nbsp;</span> {{currentLanguageNameField(journalEntry.entryType)}}
                   <span>,&nbsp;</span> {{journalEntry.teacher}}
                 </md-tooltip>
-              </th>
-              <th md-column>
-                <span>{{'journal.finalResult' | translate}}</span>
               </th>
             </tr>
           </thead>
@@ -97,7 +95,6 @@
                   </span>
                 </div>
               </td>
-              <td md-cell md-colors="{background: getEntryColor('SISSEKANNE_L')}"></td>
             </tr>
           </tbody>
         </table>

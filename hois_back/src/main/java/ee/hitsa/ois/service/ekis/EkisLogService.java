@@ -26,6 +26,7 @@ import ee.hitsa.ois.domain.WsEkisLog;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -58,7 +59,7 @@ public class EkisLogService {
         logRecord.setRequest(log.getOutgoingXml() != null ? log.getOutgoingXml() : "Päringu koostamisel tekkis viga");
         logRecord.setResponse(log.getIncomingXml());
         logRecord.setHasErrors(Boolean.valueOf(log.getError() != null));
-        logRecord.setLogTxt(log.getError() != null ? log.getError().toString() : null);
+        logRecord.setLogTxt(log.getError() != null ? ExceptionUtil.getRootCause(log.getError()).toString() : null);
         em.persist(logRecord);
     }
 

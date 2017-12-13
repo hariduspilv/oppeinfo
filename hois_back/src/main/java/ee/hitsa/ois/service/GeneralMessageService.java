@@ -94,10 +94,11 @@ public class GeneralMessageService {
     public GeneralMessage create(HoisUserDetails user, GeneralMessageForm form) {
         GeneralMessage generalMessage = new GeneralMessage();
         generalMessage.setSchool(em.getReference(School.class, user.getSchoolId()));
-        return save(generalMessage, form);
+        return save(user, generalMessage, form);
     }
 
-    public GeneralMessage save(GeneralMessage generalMessage, GeneralMessageForm form) {
+    public GeneralMessage save(HoisUserDetails user, GeneralMessage generalMessage, GeneralMessageForm form) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(form, generalMessage, "targets");
         List<GeneralMessageTarget> storedTargets = generalMessage.getTargets();
         if(storedTargets == null) {

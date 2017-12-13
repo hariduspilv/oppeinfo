@@ -21,8 +21,12 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
      */
     private ClassifierSelection type;
     private Boolean addedToImplementationPlan = Boolean.FALSE;
+    
+    /* variables related to curriculum */
     private Set<CurriculumOccupationDto> curriculumOccupations;
+    private Boolean occupation;
     private Boolean basicDataCanBeEdited;
+    public Boolean canHaveOccupations;
 
     public static CurriculumModuleDto of(CurriculumModule module) {
         CurriculumModuleDto dto = EntityUtil.bindToDto
@@ -36,6 +40,8 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
         dto.setCurriculum(EntityUtil.getId(curriculum));
         dto.setCurriculumOccupations(StreamUtil.toMappedSet(CurriculumOccupationDto::of, curriculum.getOccupations()));
         dto.setBasicDataCanBeEdited(Boolean.valueOf(CurriculumUtil.basicDataCanBeEdited(curriculum)));
+        dto.setOccupation(curriculum.getOccupation());
+        dto.setCanHaveOccupations(Boolean.valueOf(CurriculumUtil.canHaveOccupations(curriculum)));
         return dto;
     }
     
@@ -95,5 +101,21 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
 
     public void setType(ClassifierSelection type) {
         this.type = type;
+    }
+
+    public Boolean getOccupation() {
+        return occupation;
+    }
+
+    public void setOccupation(Boolean occupation) {
+        this.occupation = occupation;
+    }
+
+    public Boolean getCanHaveOccupations() {
+        return canHaveOccupations;
+    }
+
+    public void setCanHaveOccupations(Boolean canHaveOccupations) {
+        this.canHaveOccupations = canHaveOccupations;
     }
 }

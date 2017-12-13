@@ -33,7 +33,7 @@ public class MidtermTaskController {
     
     @GetMapping("/{id:\\d+}")
     public MidtermTaskUpdateForm getMidtermTasks(HoisUserDetails user, 
-            @WithEntity("id") SubjectStudyPeriod subjectStudyPeriod) {
+            @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
         MidtermTaskUpdateForm form = MidtermTaskUpdateForm.of(subjectStudyPeriod);
         form.setCanBeEdited(Boolean.valueOf(MidtermTaskUtil.midtermTaskCanBeEdited(user, subjectStudyPeriod)));
@@ -42,7 +42,7 @@ public class MidtermTaskController {
 
     @PutMapping("/{id:\\d+}")
     public MidtermTaskUpdateForm updateMidtermTasks(HoisUserDetails user, 
-            @WithEntity("id") SubjectStudyPeriod subjectStudyPeriod, 
+            @WithEntity SubjectStudyPeriod subjectStudyPeriod,
             @NotNull @Valid @RequestBody MidtermTaskUpdateForm form) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
         MidtermTaskUtil.checkIfMidtermTasksCanBeEdited(user, subjectStudyPeriod);
@@ -63,7 +63,7 @@ public class MidtermTaskController {
     
     @PutMapping("/{id:\\d+}/subjectStudyPeriodCopy/{copiedId:\\d+}")
     public MidtermTaskUpdateForm copyMidtermTasks(HoisUserDetails user, 
-            @WithEntity("id") SubjectStudyPeriod subjectStudyPeriod, 
+            @WithEntity SubjectStudyPeriod subjectStudyPeriod,
             @WithEntity("copiedId") SubjectStudyPeriod copiedSubjectStudyPeriod) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
         MidtermTaskUtil.checkIfMidtermTasksCanBeEdited(user, subjectStudyPeriod);
@@ -73,14 +73,14 @@ public class MidtermTaskController {
 
     @GetMapping("/studentResults/{id:\\d+}")
     public SubjectStudyPeriodMidtermTaskDto getStudentsResults(
-            HoisUserDetails user, @WithEntity("id") SubjectStudyPeriod subjectStudyPeriod) {
+            HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
         return SubjectStudyPeriodMidtermTaskDto.ofForMidtermTasksStudentResultsForm(subjectStudyPeriod);
     }
 
     @PutMapping("/studentResults/{id:\\d+}")
     public SubjectStudyPeriodMidtermTaskDto updateStudentsResults(HoisUserDetails user, 
-            @WithEntity("id") SubjectStudyPeriod subjectStudyPeriod, 
+            @WithEntity SubjectStudyPeriod subjectStudyPeriod,
             @NotNull @Valid @RequestBody SubjectStudyPeriodMidtermTaskForm form) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
         MidtermTaskUtil.assertNotPractice(subjectStudyPeriod);

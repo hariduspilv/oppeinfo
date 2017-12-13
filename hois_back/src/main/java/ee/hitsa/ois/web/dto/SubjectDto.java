@@ -1,5 +1,11 @@
 package ee.hitsa.ois.web.dto;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.SubjectConnect;
@@ -10,16 +16,16 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
-
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 
 public class SubjectDto extends SubjectForm {
 
     private Long id;
+    
+    private Boolean canEdit;
+    private Boolean canDelete;
+    private Boolean canSetActive;
+    private Boolean canSetPassive;
 
     public Long getId() {
         return id;
@@ -39,7 +45,7 @@ public class SubjectDto extends SubjectForm {
 
     private String changedBy;
 
-    private Set<AutocompleteResult> curriculumVersions;
+    private Set<CurriculumVersionResult> curriculumVersions;
 
     public static SubjectDto of(Subject subject, List<CurriculumVersion> curriculumVersions) {
         SubjectDto dto = EntityUtil.bindToDto(subject, new SubjectDto(), "languages", "curriculumVersions");
@@ -116,11 +122,44 @@ public class SubjectDto extends SubjectForm {
         this.changedBy = changedBy;
     }
 
-    public Set<AutocompleteResult> getCurriculumVersions() {
+    public Set<CurriculumVersionResult> getCurriculumVersions() {
         return curriculumVersions;
     }
 
-    public void setCurriculumVersions(Set<AutocompleteResult> curriculumVersions) {
+    public void setCurriculumVersions(Set<CurriculumVersionResult> curriculumVersions) {
         this.curriculumVersions = curriculumVersions;
     }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
+
+    public Boolean getCanDelete() {
+        return canDelete;
+    }
+
+    public void setCanDelete(Boolean canDelete) {
+        this.canDelete = canDelete;
+    }
+
+    public Boolean getCanSetActive() {
+        return canSetActive;
+    }
+
+    public void setCanSetActive(Boolean canSetActive) {
+        this.canSetActive = canSetActive;
+    }
+
+    public Boolean getCanSetPassive() {
+        return canSetPassive;
+    }
+
+    public void setCanSetPassive(Boolean canSetPassive) {
+        this.canSetPassive = canSetPassive;
+    }
+
 }

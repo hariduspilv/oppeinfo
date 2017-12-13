@@ -94,12 +94,12 @@
                       <md-input-container>
                         <div ng-if="hasAcceptedAbsence(row)">
                           <md-radio-group ng-model="journalEntryStudents[row.id].absence" layout="row" aria-label="absence"
-                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)">
-                          <md-radio-button value="PUUDUMINE_V" aria-label="PUUDUMINE_H">{{absenceOptions["PUUDUMINE_V"].value}}</md-radio-button>
+                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" ng-disabled="!row.canEdit">
+                          <md-radio-button value="PUUDUMINE_V" aria-label="PUUDUMINE_V">{{absenceOptions["PUUDUMINE_V"].value}}</md-radio-button>
                         </md-radio-group>
                         </div>
                         <md-radio-group ng-if="!hasAcceptedAbsence(row)" ng-model="journalEntryStudents[row.id].absence" layout="row" aria-label="absence"
-                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)">
+                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" ng-disabled="!row.canEdit">
                           <md-radio-button value="PUUDUMINE_H" aria-label="PUUDUMINE_H">{{absenceOptions["PUUDUMINE_H"].value}}</md-radio-button>
                           <md-radio-button value="PUUDUMINE_P" aria-label="PUUDUMINE_P">{{absenceOptions["PUUDUMINE_P"].value}}</md-radio-button>
                         </md-radio-group>
@@ -113,13 +113,13 @@
                       &nbsp;
                       <md-input-container>
                         <hois-select ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" value-property="code"
-                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" aria-label="grade"></hois-select>
+                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" aria-label="grade" ng-disabled="!row.canEdit"></hois-select>
                       </md-input-container>
                     </td>
                     <td md-cell>
                       <md-input-container>
                         <input type="text" ng-model="journalEntryStudents[row.id].addInfo"
-                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" aria-label="additional info">
+                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" aria-label="additional info" ng-disabled="!row.canEdit">
                       </md-input-container>
                     </td>
                   </tr>

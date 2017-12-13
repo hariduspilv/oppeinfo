@@ -1,14 +1,14 @@
 package ee.hitsa.ois.web.commandobject;
 
-import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.NotEmpty;
+import java.time.LocalDate;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import java.time.LocalDate;
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.DateRange;
+import ee.hitsa.ois.validation.NotEmpty;
 
 @DateRange(from = "startDate", thru = "endDate")
 public class StudyPeriodForm extends VersionedCommand {

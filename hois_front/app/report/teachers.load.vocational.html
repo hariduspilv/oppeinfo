@@ -7,7 +7,7 @@
           <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required autofocus></hois-select>
         </md-input-container>
 
-        <md-input-container flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
+        <md-input-container flex="50" flex-offset="5" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'report.teachersload.studyPeriod' | translate}}</label>
           <hois-select ng-model="criteria.studyPeriod" values="criteria.studyYear ? formState.studyPeriods[criteria.studyYear] : formState.allStudyPeriods"></hois-select>
         </md-input-container>
@@ -15,6 +15,10 @@
 
       <div layout="row">
         <div flex="45">
+          <hois-autocomplete ng-model="criteria.module" method="vocationalmodules" label="{{'report.teachersload.module' | translate}}"></hois-autocomplete>
+        </div>
+
+        <div flex="50" flex-offset="5" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
           <hois-autocomplete ng-model="criteria.teacher" method="teachers" label="{{'report.teachersload.teacher' | translate}}"></hois-autocomplete>
         </div>
       </div>

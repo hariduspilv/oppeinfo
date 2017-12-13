@@ -27,7 +27,6 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumFileUpdateDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumJointPartnerDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleDto;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumOccupationDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
 
 @DateRange
@@ -126,7 +125,6 @@ public class CurriculumForm extends VersionedCommand {
     private LocalDate validFrom;
     private LocalDate validThru;
 
-    private Long stateCurriculum;
     @ClassifierRestriction(MainClassCode.OPPEKAVAGRUPP)
     private String group;
     @ClassifierRestriction(MainClassCode.OPPEKAVA_EHIS_STAATUS)
@@ -163,8 +161,6 @@ public class CurriculumForm extends VersionedCommand {
     @NotEmpty(groups = {ConfirmedVocational.class})
     @Valid
     private Set<CurriculumModuleDto> modules;
-    @Valid
-    private Set<CurriculumOccupationDto> occupations;
 
     private String contractEt;
     private String contractEn;
@@ -200,14 +196,6 @@ public class CurriculumForm extends VersionedCommand {
 
     public void setModules(Set<CurriculumModuleDto> modules) {
         this.modules = modules;
-    }
-
-    public Set<CurriculumOccupationDto> getOccupations() {
-        return occupations;
-    }
-
-    public void setOccupations(Set<CurriculumOccupationDto> occupations) {
-        this.occupations = occupations;
     }
 
     public Set<CurriculumGradeDto> getGrades() {
@@ -592,14 +580,6 @@ public class CurriculumForm extends VersionedCommand {
 
     public void setJointMentor(String jointMentor) {
         this.jointMentor = jointMentor;
-    }
-
-    public Long getStateCurriculum() {
-        return stateCurriculum;
-    }
-
-    public void setStateCurriculum(Long stateCurriculum) {
-        this.stateCurriculum = stateCurriculum;
     }
 
     public String getConsecution() {

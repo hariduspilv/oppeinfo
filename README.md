@@ -1,4 +1,4 @@
-VERSIOON: 0.4.3/20171023
+VERSIOON: 0.5.0/20171213
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -102,6 +102,14 @@ DOK6 - HOIS_analyys_vastuvott.docx
 DOK7 - HOIS_analyys_kasutajaoigused.docx
 		2.1	Kasutaja otsing
 		2.2	Kasutaja andmete sisestamine ja kasutajarolli haldamine
+		3.1 Avalik kasutaja
+		3.2 Õppur
+	    3.3 Lapsevanem
+	    3.4 Väline ekspert
+	    3.5 Peaadministraator
+	    3.6 Õpetaja
+	    3.7 Administratiivne töötaja
+
 		
 DOK8 - HOIS_analyys_teated.docx
 		2.1	Üldteate otsing
@@ -120,6 +128,7 @@ DOK9 - HOIS_analyys_andmevahetus.docx
 		
 		Andmevahetus EHISega
 		-------------------------------------------
+		3.1 Õppekava
 		3.2	Pedagoogide andmed
 		3.3	Õppejõudude andmed
 		3.4.1.1	Õppekoormuse muutmine
@@ -142,6 +151,12 @@ DOK9 - HOIS_analyys_andmevahetus.docx
 		4.2	Konkursid
 		4.3	Vastuvõtu avaldused
 		
+		Andmevahetus RTIP-iga
+        -------------------------------------------
+        6.1 Teenus Z_EMPLOEES
+        6.2 Teenus tootajaPohiandmed
+
+		
 DOK10 - HOIS_analyys_opitulemused_paevikud.docx
 		Päevikud ja protokollid kutseõppes
 		-----------------------------------
@@ -149,6 +164,7 @@ DOK10 - HOIS_analyys_opitulemused_paevikud.docx
 		2.2	Päevikusse õppurite lisamine
 		2.3	Päeviku kinnitamine
 		2.4	Päeviku täitmine
+		2.5 Päeviku kuvamine õppuri ja lapsevanema vaates
 		2.6	Mooduli protokollid ja mooduli tulemuse sisestamine
 		2.7.1	Praktika lepingute otsing
 		2.7.2	Praktika lepingu sõlmimine
@@ -172,6 +188,10 @@ DOK10 - HOIS_analyys_opitulemused_paevikud.docx
 		5.4	Õppetulemuste vaatamine õppeperioodide kaupa kõrgharidusõppes
 		5.5	Õppetulemuste vaatamine sooritamise järjekorras kutseõppes
 		5.6	Õppetulemuste vaatamine sooritamise järjekorras kõrgharidusõppes
+		6.1	Kaitsmiskomisjon kutseõppes ja kõrgharidusõppes
+        7.1 VÕTA arvestamine kõrgharidusõppes
+        7.2 VÕTA arvestamine kutseõppes
+
 
 DOK11 - HOIS_analyys_tunniplaan.docx	
 		2.1	Tundide aegade sisestamine
@@ -187,7 +207,8 @@ DOK11 - HOIS_analyys_tunniplaan.docx
 		4.8	Aine-õpetaja paari  otsing
 		5.3	Tunniplaani koostamine
 		5.4	Sündmuste otsing
-		5.7.1	Üldise tunniplaani vaatamine
+        5.5 Üksiksündmuse sisestamine
+        5.7 Tunniplaani kuvamine
 
 DOK12 - HOIS_analyys_paringud.docx
 		2.1	Õppurid
@@ -197,6 +218,11 @@ DOK12 - HOIS_analyys_paringud.docx
 		2.7	Õpetaja koormus (kõrg)
 
 MUU:	ID-kaardiga sisselogimine
+		Mobiil-IDga sisselogimine
+        Active Directory’ga isselogimine
+        TAAT
+        KRATT
+
 	   
 Testisikute kasutajanimed, kellena saab ÕISi sisse logida ja süsteemi testida (kasutajanimi - isiku nimi, rollid):
 37101010003 - Test1 Kasutaja1, peaadministraator, administratiivne töötaja Tallinna Polütehnikumis, Tallinna Tervishoiu Kõrgkoolis ja EBS-s
@@ -218,7 +244,7 @@ Tallinna Tervishoiu Kõrgkoolis on olemas üks kõrgharidusõppe õppekava
 NB! Automaatteadete saatmiseks ÕISi on tekitatud kasutaja Hõis Automaatteade, palume seda mitte kustutada
 	   
 
-EELDUS: ver. 0.4.2/20171018
+EELDUS: ver. 0.4.3/20171023
 ------------------------------------------------------
 1. Serveris on installeeritud (opsüsteem Linux, nt CentOS Linux 7.2.x):
 	   1. PostgreSQL v 9.5.x

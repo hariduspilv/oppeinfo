@@ -1,0 +1,31 @@
+<div layout="column" layout-padding>
+  <div>
+    <form name="apelSchoolForm">
+      <md-input-container class="md-block">
+        <label>{{'apel.apelSchool.country' | translate}}</label>
+        <hois-classifier-select ng-model="apelSchool.country" aria-label="country" model-value-attr="code" 
+            main-classifier-code="RIIK" required></hois-classifier-select>
+      </md-input-container>
+
+      <md-input-container class="md-block" ng-if="apelSchool.country === 'RIIK_EST'">
+        <label class="textInput">{{'apel.apelSchool.schoolEHIS' | translate}}</label>
+        <hois-classifier-select ng-model="apelSchool.ehisSchool" aria-label="ehisSchool" model-value-attr="code" 
+            main-classifier-code="EHIS_KOOL" ng-change="ehisSchoolChanged(apelSchool.ehisSchool)" required></hois-classifier-select>
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'apel.apelSchool.schoolNameEt' | translate}}</label>
+        <input ng-model="apelSchool.nameEt" name="nameEt" type="text" md-maxlength="100" required>
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'apel.apelSchool.schoolNameEn' | translate}}</label>
+        <input ng-model="apelSchool.nameEn" name="nameEn" type="text" md-maxlength="100" required>
+      </md-input-container>
+    </form>
+
+    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+    <md-button ng-click="delete()" ng-if="apelSchool.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-href="#/apelSchools" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

@@ -1,6 +1,8 @@
 package ee.hitsa.ois.web.dto.student;
 
-import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.*;
+import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_K;
+import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_T;
+
 import java.time.LocalDateTime;
 
 import ee.hitsa.ois.domain.student.Student;

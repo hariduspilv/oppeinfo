@@ -1,45 +1,54 @@
 package ee.hitsa.ois.util;
 
-import java.util.Optional;
-
 import ee.hitsa.ois.domain.timetable.Journal;
-import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
 public abstract class JournalValidationUtil extends JournalUtil {
     
-    public static void asssertCanBeConfirmed(HoisUserDetails user, Journal journal) {
-        if(!canBeConfirmed(user, journal)) {
-            throw new ValidationFailedException("cannot be confirmed");
+    public static void assertCanView(HoisUserDetails user) {
+        if(!hasPermissionToView(user)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
     
-    public static void asssertCanBeUnconfirmed(HoisUserDetails user, Journal journal) {
-        if(!canBeUnconfirmed(user, journal)) {
-            throw new ValidationFailedException("cannot be unconfirmed");
+    public static void assertCanView(HoisUserDetails user, Journal journal) {
+        if(!hasPermissionToView(user, journal.getSchool())) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
     
-    public static void assertIsConfirmer(HoisUserDetails user, Journal journal) {
-        if (user.isTeacher()) {
-            Optional<JournalTeacher> teacher =
-                    journal.getJournalTeachers().stream().filter(it -> EntityUtil.getId(it.getTeacher()).equals(user.getTeacherId())).findFirst();
-            if (!teacher.isPresent() || !Boolean.TRUE.equals(teacher.get().getIsConfirmer())) {
-                throw new ValidationFailedException("journal.messages.teacherNotAllowedToChangeEndDate");
+    public static void asssertCanChange(HoisUserDetails user, Journal journal) {
+        if(!hasPermissionToChange(user, journal)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void asssertCanConfirm(HoisUserDetails user, Journal journal) {
+        if(!canConfirm(user, journal)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void asssertCanUnconfirm(HoisUserDetails user, Journal journal) {
+        if(!canUnconfirm(user, journal)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanRemoveStudent(HoisUserDetails user, Journal journal) {
+        if (!canRemoveStudent(user, journal)) {
+            String message = "journal.messages.removingStudentIsNotAllowed";
+            if(user.isTeacher() && !teacherCanRemoveStudent(journal)) {
+                message = "journal.messages.removingStudentIsNotAllowedForTeacher";
             }
+            throw new ValidationFailedException(message);
         }
     }
 
-    public static void assertAddStudentsToJournal(HoisUserDetails user, Journal journal) {
-        if (user.isTeacher() && !journal.getJournalEntries().isEmpty()) {
+    public static void assertCanAddStudent(HoisUserDetails user, Journal journal) {
+        if (!hasPermissionToChange(user, journal)) {
             throw new ValidationFailedException("journal.messages.addingStudentIsNotAllowed");
-        }
-    }
-
-    public static void assertRemoveStudentsFromJournal(HoisUserDetails user, Journal journal) {
-        if (user.isTeacher() && !journal.getJournalEntries().isEmpty()) {
-            throw new ValidationFailedException("journal.messages.removingStudentIsNotAllowed");
         }
     }
 

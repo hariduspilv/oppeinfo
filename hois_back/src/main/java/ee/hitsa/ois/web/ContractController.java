@@ -50,7 +50,7 @@ public class ContractController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public ContractDto get(HoisUserDetails user, @WithEntity("id") Contract contract) {
+    public ContractDto get(HoisUserDetails user, @WithEntity Contract contract) {
         UserUtil.assertSameSchool(user, contract.getStudent().getSchool());
         return contractService.get(contract);
     }
@@ -65,7 +65,7 @@ public class ContractController {
 
     @PutMapping("/{id:\\d+}")
     public ContractDto save(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) Contract contract,
+            @WithVersionedEntity(versionRequestBody = true) Contract contract,
             @Valid @RequestBody ContractForm contractForm) {
         UserUtil.assertIsSchoolAdmin(user);
         if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())) {
@@ -76,7 +76,7 @@ public class ContractController {
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestParam = "version") Contract contract,
+            @WithVersionedEntity(versionRequestParam = "version") Contract contract,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user);
         if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_Y, contract.getStatus())
@@ -101,7 +101,7 @@ public class ContractController {
     }
 
     @PostMapping("/sendToEkis/{id:\\d+}")
-    public ContractDto sendToEkis(HoisUserDetails user, @WithEntity("id") Contract contract) {
+    public ContractDto sendToEkis(HoisUserDetails user, @WithEntity Contract contract) {
         UserUtil.assertIsSchoolAdmin(user);
         return get(user, contractService.sendToEkis(user, contract));
     }

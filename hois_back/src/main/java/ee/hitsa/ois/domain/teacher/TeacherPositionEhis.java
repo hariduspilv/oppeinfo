@@ -1,5 +1,8 @@
 package ee.hitsa.ois.domain.teacher;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -8,9 +11,6 @@ import javax.persistence.ManyToOne;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Entity
 public class TeacherPositionEhis extends BaseEntityWithId {

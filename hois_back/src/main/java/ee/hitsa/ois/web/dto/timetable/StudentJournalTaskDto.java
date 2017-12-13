@@ -1,12 +1,12 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+
 import java.time.LocalDate;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 
 public class StudentJournalTaskDto {
     private final Long entryId;

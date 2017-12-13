@@ -27,7 +27,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "XRoadLocalGroupIdentifierType")
+@XmlType(name = "XRoadLocalGroupIdentifierType", namespace = "http://x-road.eu/xsd/identifiers")
 public class XRoadLocalGroupIdentifierType
     extends XRoadIdentifierType
 {

@@ -1,13 +1,13 @@
 package ee.hitsa.ois.message;
 
-import ee.hitsa.ois.domain.student.StudentRepresentativeApplication;
+import ee.hitsa.ois.domain.student.Student;
 
 public class StudentRepresentativeApplicationCreated extends StudentMessage {
 
     public StudentRepresentativeApplicationCreated() {
     }
 
-    public StudentRepresentativeApplicationCreated(StudentRepresentativeApplication application) {
-        super(application.getStudent());
+    public StudentRepresentativeApplicationCreated(Student student) {
+        super(student);
     }
 }

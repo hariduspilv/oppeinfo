@@ -69,7 +69,7 @@ public class PracticeJournalController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public PracticeJournalDto get(HoisUserDetails user, @WithEntity("id") PracticeJournal practiceJournal) {
+    public PracticeJournalDto get(HoisUserDetails user, @WithEntity PracticeJournal practiceJournal) {
         UserUtil.assertSameSchool(user, practiceJournal.getStudent().getSchool());
         return practiceJournalService.get(practiceJournal);
     }
@@ -83,7 +83,7 @@ public class PracticeJournalController {
 
     @PutMapping("/{id:\\d+}")
     public PracticeJournalDto save(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) PracticeJournal practiceJournal,
+            @WithVersionedEntity(versionRequestBody = true) PracticeJournal practiceJournal,
             @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return get(user, practiceJournalService.save(practiceJournal, practiceJournalForm));
@@ -91,7 +91,7 @@ public class PracticeJournalController {
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestParam = "version") PracticeJournal practiceJournal,
+            @WithVersionedEntity(versionRequestParam = "version") PracticeJournal practiceJournal,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         practiceJournalService.delete(user, practiceJournal);
@@ -113,7 +113,7 @@ public class PracticeJournalController {
 
     @PutMapping("/{id:\\d+}/saveEntries/student")
     public PracticeJournalDto saveEntriesStudent(HoisUserDetails user,
-            @WithEntity("id") PracticeJournal practiceJournal,
+            @WithEntity PracticeJournal practiceJournal,
             @RequestBody PracticeJournalEntriesStudentForm practiceJournalEntriesStudentForm) {
         UserUtil.assertIsStudent(user);
         return get(user, practiceJournalService.saveEntriesStudent(practiceJournal, practiceJournalEntriesStudentForm));
@@ -121,10 +121,10 @@ public class PracticeJournalController {
 
     @PutMapping("/{id:\\d+}/saveEntries/teacher")
     public PracticeJournalDto saveEntriesTeacher(HoisUserDetails user,
-            @WithEntity("id") PracticeJournal practiceJournal,
+            @WithEntity PracticeJournal practiceJournal,
             @RequestBody PracticeJournalEntriesTeacherForm practiceJournalEntriesTeacherForm) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return get(user, practiceJournalService.saveEntriesTeacher(practiceJournal, practiceJournalEntriesTeacherForm));
+        return get(user, practiceJournalService.saveEntriesTeacher(user, practiceJournal, practiceJournalEntriesTeacherForm));
     }
 
     @GetMapping("/supervisor/{uuid}")

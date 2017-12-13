@@ -1,9 +1,9 @@
 package ee.hitsa.ois.web.dto;
 
+import java.time.LocalDate;
+
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.util.EntityUtil;
-
-import java.time.LocalDate;
 
 public class PersonDto {
 

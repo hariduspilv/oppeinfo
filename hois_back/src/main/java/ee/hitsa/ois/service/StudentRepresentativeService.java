@@ -3,10 +3,12 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_E;
 import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_K;
 import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_T;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -25,6 +27,7 @@ import ee.hitsa.ois.domain.student.StudentRepresentativeApplication;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationAccepted;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationCreated;
@@ -34,6 +37,7 @@ import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -159,16 +163,44 @@ public class StudentRepresentativeService {
 
     public void createApplication(HoisUserDetails user, StudentRepresentativeApplicationForm form) {
         // find person submitting application
-        // FIXME should create new person with data from user (idcode, lastname, firstname?)
-        Person person = EntityUtil.withEntity(user.getUserId(), id -> personRepository.findByUserId(id), p -> p);
+        Person person = EntityUtil.withEntity(user.getPersonId(), id -> em.find(Person.class, id), p -> p);
 
-        // find all students with given studentIdcode
-        // FIXME status of student?
-        List<Student> students = em.createQuery("select s from Student s where s.person.idcode = ?1", Student.class)
-                .setParameter(1, form.getStudentIdcode()).getResultList();
+        // find all active students with given studentIdcode
+        List<Student> students = em.createQuery("select s from Student s where s.person.idcode = ?1 and s.status.code in ?2", Student.class)
+                .setParameter(1, form.getStudentIdcode()).setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE).getResultList();
+        if(students.isEmpty()) {
+            throw new ValidationFailedException("student.representative.studentnotfound");
+        }
 
-        AssertionFailedException.throwIf(students.isEmpty(), "Student representative application: student not found");
-        assertRepresentativeApplicationAllowed(students.get(0));
+        // check for already representative
+        List<?> reprs = em.createNativeQuery("select sr.student_id from student_representative sr where sr.student_id in ?1 and sr.person_id = ?2")
+                .setParameter(1, StreamUtil.toMappedList(Student::getId, students))
+                .setParameter(2, person.getId())
+                .getResultList();
+        Set<Long> existingReprs = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), reprs);
+        students = students.stream().filter(r -> !existingReprs.contains(r.getId())).collect(Collectors.toList());
+        if(students.isEmpty()) {
+            throw new ValidationFailedException("student.representative.alreadyrepresentative");
+        }
+
+        // is it allowed to be representative?
+        Student student = students.get(0);
+        assertRepresentativeApplicationAllowed(student);
+
+        // check for duplicate applications
+        List<?> apps = em.createNativeQuery("select sra.student_id from student_representative_application sra"
+                + " inner join student_representative sr on sra.person_id = sr.person_id and sra.student_id = sr.student_id"
+                + " where sra.student_id in ?1 and sra.person_id = ?2 and sra.status_code in ?3")
+                .setParameter(1, StreamUtil.toMappedList(Student::getId, students))
+                .setParameter(2, person.getId())
+                .setParameter(3, EnumUtil.toNameList(StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_E, StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_K))
+                .getResultList();
+
+        Set<Long> existingApps = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), apps);
+        students = students.stream().filter(r -> !existingApps.contains(r.getId())).collect(Collectors.toList());
+        if(students.isEmpty()) {
+            throw new ValidationFailedException("student.representative.alreadyapplication");
+        }
 
         // update person data
         person.setPhone(form.getPhone());
@@ -180,7 +212,7 @@ public class StudentRepresentativeService {
 
         // send message to school administrative workers about new application
         Set<School> schools = StreamUtil.toMappedSet(Student::getSchool, students);
-        StudentRepresentativeApplicationCreated data = new StudentRepresentativeApplicationCreated();
+        StudentRepresentativeApplicationCreated data = new StudentRepresentativeApplicationCreated(student);
         for(School school : schools) {
             automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_OPPURI_ANDMED, school, data);
         }

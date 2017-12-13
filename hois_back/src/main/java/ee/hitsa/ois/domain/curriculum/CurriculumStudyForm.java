@@ -4,6 +4,8 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 
+import org.hibernate.Hibernate;
+
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 
@@ -45,18 +47,13 @@ public class CurriculumStudyForm extends BaseEntityWithId {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        } else if (obj == null) {
+        }
+        if (obj == null || !Hibernate.getClass(this).equals(Hibernate.getClass(obj))) {
             return false;
         }
 
-        // TODO other can be any object
         CurriculumStudyForm other = (CurriculumStudyForm) obj;
-        if (studyForm == null) {
-            if (other.studyForm != null)
-                return false;
-        } else if (!studyForm.equals(other.studyForm))
-            return false;
-        return true;
+        return studyForm == null ? other.studyForm == null : studyForm.equals(other.studyForm);
     }
 
 }

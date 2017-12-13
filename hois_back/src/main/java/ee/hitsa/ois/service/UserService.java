@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +15,10 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
@@ -25,10 +30,13 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.web.dto.UserProjection;
 import ee.hitsa.ois.web.dto.UserRolesDto;
 
@@ -38,6 +46,8 @@ public class UserService {
 
     @Autowired
     private EntityManager em;
+    @Autowired
+    private PersonRepository personRepository;
 
     /**
      * Create user for logged in user without any roles in ois
@@ -170,6 +180,38 @@ public class UserService {
                 Collectors.groupingBy(r -> resultAsString(r, 0),
                         Collectors.groupingBy(r -> resultAsString(r, 1), Collectors.mapping(r -> resultAsString(r, 2), Collectors.toList()))));
         return new UserRolesDto(rights);
+    }
+
+    public void createPersonUserIfNecessary(String idcode, String lastname, String firstname) {
+        Person person = personRepository.findByIdcode(idcode);
+        if (person == null || findAllActiveUsers(person.getId()).isEmpty()) {
+            // either person or user not found
+
+            // hack: we are going to change authentication to allow audit info filled
+            Authentication oldAuthentication = SecurityContextHolder.getContext().getAuthentication();
+            try {
+                if (person == null) {
+                    person = new Person();
+                    person.setLastname(lastname);
+                    person.setFirstname(firstname);
+                    person.setIdcode(idcode);
+                    person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(idcode));
+                    person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(idcode)));
+                }
+                SecurityContextHolder.getContext().setAuthentication(createInitialAuthentication(person));
+                if (person.getId() == null) {
+                    person = personRepository.save(person);
+                }
+                createUser(person);
+            } finally {
+                SecurityContextHolder.getContext().setAuthentication(oldAuthentication);
+            }
+        }
+    }
+
+    private static Authentication createInitialAuthentication(Person person) {
+        return new UsernamePasswordAuthenticationToken(PersonUtil.fullnameAndIdcode(person), null,
+                Collections.singletonList((GrantedAuthority)(() -> Role.ROLL_X.name())));
     }
 
     private static void disableUser(Person person, Long id, Role role, LocalDate disabledDate) {

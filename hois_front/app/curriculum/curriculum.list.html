@@ -106,7 +106,11 @@
       </div>
       <div layout="row" layout-sm="column" layout-xs="column" >
 		<div layout="column" flex="45">
-          <label class="common-label"> {{'curriculum.creditsEapEkap' | translate}}</label>
+      <label class="common-label">
+        <span ng-if="school.vocational && !school.higher">{{'curriculum.creditsRangeEkap' | translate}}</span>
+        <span ng-if="!school.vocational && school.higher">{{'curriculum.creditsRangeEap' | translate}}</span>
+        <span ng-if="school.vocational && school.higher || !school.vocational && !school.higher">{{'curriculum.creditsEapEkap' | translate}}</span>
+      </label>
 		  <div layout="row" layout-sm="column" layout-xs="column" >
 			  <md-input-container flex="45" flex-sm="100" flex-xs="100" class="">
 				  <label>{{'main.from' | translate}}</label>
@@ -174,7 +178,11 @@
         <th md-column md-order-by="school.{{currentLanguageNameField()}}" ng-if="!auth.school">{{'school.label' | translate}}</th>
         <th md-column md-order-by="{{currentLanguageNameField()}}">{{'curriculum.name' | translate}}</th>
         <th md-column md-order-by="origStudyLevel.{{currentLanguageNameField()}}">{{'curriculum.studyLevel' | translate}}</th>
-        <th md-column md-order-by="credits">{{'curriculum.creditsEapEkap' | translate}}</th>
+        <th md-column md-order-by="credits">
+          <span ng-if="school.vocational && school.higher || !school.vocational && !school.higher">{{'curriculum.search.creditsEapEkap' | translate}}</span>
+          <span ng-if="!school.vocational && school.higher">{{'curriculum.search.creditsEap' | translate}}</span>
+          <span ng-if="school.vocational && !school.higher">{{'curriculum.search.creditsEkap' | translate}}</span>
+        </th>
         <th md-column md-order-by="validFrom">{{'stateCurriculum.validFrom' | translate}}</th>
         <th md-column md-order-by="validThru">{{'stateCurriculum.validThru' | translate}}</th>
         <th md-column md-order-by="status.{{currentLanguageNameField()}}" ng-if="canView">{{'stateCurriculum.status' | translate}}</th>

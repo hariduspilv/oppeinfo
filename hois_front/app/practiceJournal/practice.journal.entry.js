@@ -45,6 +45,13 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
 
   var baseEndpointUrl = '/practiceJournals/' + $scope.practiceJournal.id + '/saveEntries/';
   $scope.save = function () {
+
+    $scope.practiceJournalEntryForm.$setSubmitted();
+    if(!$scope.practiceJournalEntryForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      return;
+    }
+
     var practiceJournalEntries;
     if ($scope.auth.isStudent()) {
       var EndpointStudent = QueryUtils.endpoint(baseEndpointUrl + 'student');
@@ -79,6 +86,12 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
         message.info('main.messages.delete.success');
         $location.path('/practiceJournals');
       });
+    });
+  };
+
+  $scope.deleteFile = function(file){
+    dialogService.confirmDialog({ prompt: 'practiceJournal.prompt.fileDeleteConfirm' }, function () {
+      ArrayUtils.remove($scope.practiceJournal.practiceJournalFiles, file);
     });
   };
 

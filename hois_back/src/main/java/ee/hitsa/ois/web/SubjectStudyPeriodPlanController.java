@@ -49,7 +49,7 @@ public class SubjectStudyPeriodPlanController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public SubjectStudyPeriodPlanDto get(@WithEntity("id") SubjectStudyPeriodPlan plan) {
+    public SubjectStudyPeriodPlanDto get(@WithEntity SubjectStudyPeriodPlan plan) {
         return SubjectStudyPeriodPlanDto.of(plan);
     }
 
@@ -62,7 +62,7 @@ public class SubjectStudyPeriodPlanController {
 
     @PutMapping("/{id:\\d+}")
     public SubjectStudyPeriodPlanDto save(HoisUserDetails user, 
-            @WithVersionedEntity(value = "id", versionRequestBody = true) SubjectStudyPeriodPlan subjectStudyPeriod, 
+            @WithVersionedEntity(versionRequestBody = true) SubjectStudyPeriodPlan subjectStudyPeriod, 
             @Valid @RequestBody SubjectStudyPeriodPlanDto form) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(),
                 "Only school administrator can update subjectStudyPeriodPlan");  
@@ -70,7 +70,7 @@ public class SubjectStudyPeriodPlanController {
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") SubjectStudyPeriodPlan plan, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") SubjectStudyPeriodPlan plan, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(),
                 "Only school administrator can delete subjectStudyPeriodPlan");  
         subjectStudyPeriodPlanService.delete(user, plan);
@@ -87,12 +87,12 @@ public class SubjectStudyPeriodPlanController {
     }
 
     @GetMapping("/studyPeriod/{id:\\d+}")
-    public StudyPeriodDto studyPeriod(@WithEntity("id") StudyPeriod studyPeriod) {
+    public StudyPeriodDto studyPeriod(@WithEntity StudyPeriod studyPeriod) {
         return EntityUtil.bindToDto(studyPeriod, new StudyPeriodDto());
     }
 
     @GetMapping("/subject/{id:\\d+}")
-    public AutocompleteResult subject(@WithEntity("id") Subject subject) {
+    public AutocompleteResult subject(@WithEntity Subject subject) {
         return AutocompleteResult.of(subject);
     }
 

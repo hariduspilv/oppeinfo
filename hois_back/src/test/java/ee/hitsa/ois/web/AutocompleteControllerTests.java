@@ -1,10 +1,6 @@
 package ee.hitsa.ois.web;
 
-import java.time.LocalDate;
-
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,41 +13,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfiguration;
-import ee.hitsa.ois.domain.school.SchoolDepartment;
-import ee.hitsa.ois.service.SchoolDepartmentService;
-import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.service.security.HoisUserDetailsService;
-import ee.hitsa.ois.web.commandobject.SchoolDepartmentForm;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class AutocompleteControllerTests {
 
     @Autowired
-    private HoisUserDetailsService hoisUserDetailsService;
-    @Autowired
     private TestRestTemplate restTemplate;
-    @Autowired
-    private SchoolDepartmentService schoolDepartmentService;
-
-    private HoisUserDetails user;
-    private SchoolDepartment schoolDepartment;
-
-    @Before
-    public void setUp() {
-        if(user == null) {
-            user = hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID);
-        }
-        SchoolDepartmentForm schoolDepartmentForm = new SchoolDepartmentForm();
-        schoolDepartmentForm.setNameEt("Struktuuriüksus");
-        schoolDepartmentForm.setValidFrom(LocalDate.now());
-        schoolDepartment = schoolDepartmentService.create(user, schoolDepartmentForm);
-    }
-
-    @After
-    public void cleanUp() {
-        schoolDepartmentService.delete(user, schoolDepartment);
-    }
 
     @Test
     public void buildings() {
@@ -181,6 +149,16 @@ public class AutocompleteControllerTests {
         uriBuilder = UriComponentsBuilder.fromUriString(uri);
         uriBuilder.queryParam("idcode", "48908209998");
         responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertTrue(HttpStatus.NOT_FOUND.equals(responseEntity.getStatusCode()) || HttpStatus.OK.equals(responseEntity.getStatusCode()));
+    }
+
+    @Test
+    public void personAsActiveStudent() {
+        String uri = "/autocomplete/persons";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(uri);
+        uriBuilder.queryParam("idcode", TestConfiguration.USER_ID);
+        uriBuilder.queryParam("role", "activestudent");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertTrue(HttpStatus.NOT_FOUND.equals(responseEntity.getStatusCode()) || HttpStatus.OK.equals(responseEntity.getStatusCode()));
     }
 

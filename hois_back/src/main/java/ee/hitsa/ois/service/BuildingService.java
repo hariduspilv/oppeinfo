@@ -75,7 +75,6 @@ public class BuildingService {
      *
      * @param user
      * @param building
-     * @throws EntityRemoveException if there are references to building
      */
     public void delete(HoisUserDetails user, Building building) {
         EntityUtil.setUsername(user.getUsername(), em);
@@ -139,6 +138,7 @@ public class BuildingService {
         // check for duplicate rows
         AssertionFailedException.throwIf(StreamUtil.toMappedSet(RoomForm.RoomEquipmentCommand::getEquipment, newRoomEquipment).size() != newRoomEquipment.size(), "Duplicate values in equipment list");
 
+        EntityUtil.setUsername(user.getUsername(), em);
         List<RoomEquipment> storedRoomEquipment = room.getRoomEquipment();
         if(storedRoomEquipment == null) {
             room.setRoomEquipment(storedRoomEquipment = new ArrayList<>());
@@ -168,7 +168,6 @@ public class BuildingService {
      *
      * @param user
      * @param room
-     * @throws EntityRemoveException if there are references to room
      */
     public void delete(HoisUserDetails user, Room room) {
         EntityUtil.setUsername(user.getUsername(), em);

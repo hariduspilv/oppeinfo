@@ -10,13 +10,11 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +28,7 @@ import javax.transaction.Transactional;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import javax.validation.groups.Default;
+import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
@@ -71,6 +70,7 @@ import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -89,6 +89,7 @@ import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 import ee.hois.soap.LogContext;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
 import ee.hois.xroad.sais2.generated.AllAppsExportRequest;
+import ee.hois.xroad.sais2.generated.AppExportResponse;
 import ee.hois.xroad.sais2.generated.Application;
 import ee.hois.xroad.sais2.generated.ApplicationFormData;
 import ee.hois.xroad.sais2.generated.ArrayOfCandidateAddress;
@@ -204,6 +205,8 @@ public class SaisApplicationService {
         EstonianIdCodeValidator idCodeValidator = new EstonianIdCodeValidator();
         List<SaisApplicationImportedRowDto> failed = dto.getFailed();
         ClassifierCache classifiers = new ClassifierCache(classifierService);
+
+        EntityUtil.setUsername(user.getUsername(), em);
 
         String fileContent = getContent(fileData);
 
@@ -513,17 +516,21 @@ public class SaisApplicationService {
             saisLogService.insertLog(logContext, schoolId, "Kooli reg. nr. lugemisel tekkis viga", true);
         }
 
+        EntityUtil.setUsername(user.getUsername(), em);
         return importPages(xRoadHeader, schoolId, request, classifiers);
     }
 
     private SaisApplicationImportResultDto importPages(XRoadHeaderV4 xRoadHeader, Long schoolId, AllAppsExportRequest request, ClassifierCache classifiers) {
         SaisApplicationImportResultDto dto = new SaisApplicationImportResultDto();
+        EstonianIdCodeValidator idCodeValidator = new EstonianIdCodeValidator();
+        Map<String, SaisAdmission> admissionMap = new HashMap<>();
+        long fetchedCount = 0;
 
         while(request != null && request.getPage() != null) {
             SaisApplicationResponse response = saisClient.applicationsExport(xRoadHeader, request);
+            fetchedCount += applyPaging(request, response.getResult(), fetchedCount);
+
             saisLogService.withResponse(response, schoolId, (result, logContext) -> {
-                EstonianIdCodeValidator idCodeValidator = new EstonianIdCodeValidator();
-                Map<String, SaisAdmission> admissionMap = new HashMap<>();
 
                 //look for all the application numbers to find previously imported applications with one query
                 List<Application> applications = result.getApplications() != null ? result.getApplications().getApplication() : null;
@@ -536,13 +543,6 @@ public class SaisApplicationService {
 
                 List<SaisApplicationImportedRowDto> failed = new ArrayList<>();
                 List<SaisApplicationImportedRowDto> successful = new ArrayList<>();
-
-                if(applications != null && !applications.isEmpty()) {
-                    // got applications, try next page
-                    request.setPage(objectFactory.createAllAppsExportRequestPage(Integer.valueOf(request.getPage().getValue().intValue() + 1)));
-                } else {
-                    request.setPage(null);
-                }
 
                 for(Application application : StreamUtil.nullSafeList(applications)) {
                     SaisApplication prevApp = previousApplications.get(application.getApplicationNumber());
@@ -574,6 +574,28 @@ public class SaisApplicationService {
         return dto;
     }
 
+    /**
+     * Update request for fetching next page. If there are no more pages left, set page element to null
+     *
+     * @param request
+     * @param response
+     * @param fetchedCount
+     * @return number of application fetched including this result
+     */
+    private long applyPaging(AllAppsExportRequest request, AppExportResponse response, long fetchedCount) {
+        List<Application> applications = response.getApplications() != null ? response.getApplications().getApplication() : null;
+        JAXBElement<Integer> page = null;
+        if(applications != null && !applications.isEmpty()) {
+            fetchedCount += applications.size();
+            if(response.getTotalCount() != null && fetchedCount < response.getTotalCount().longValue()) {
+                // read less than totalCount number of applications, try next page
+                page = objectFactory.createAllAppsExportRequestPage(Integer.valueOf(request.getPage().getValue().intValue() + 1));
+            }
+        }
+        request.setPage(page);
+        return fetchedCount;
+    }
+
     private SaisApplicationImportedRowDto processApplication(Application application, SaisApplication prevApp, ClassifierCache classifiers,
             Map<String, SaisAdmission> admissionMap,
             EstonianIdCodeValidator idCodeValidator) {
@@ -598,9 +620,8 @@ public class SaisApplicationService {
         saisApplication.setFirstname(application.getFirstName());
         saisApplication.setLastname(application.getLastName());
         if(application.getDateModified() != null) {
-            Date modifiedDate = application.getDateModified().toGregorianCalendar().getTime();
-            saisApplication.setChanged(LocalDateTime.ofInstant(modifiedDate.toInstant(), ZoneId.systemDefault()));
-            saisApplication.setSubmitted(LocalDateTime.ofInstant(modifiedDate.toInstant(), ZoneId.systemDefault()).toLocalDate());
+            saisApplication.setChanged(DateUtils.toLocalDateTime(application.getDateModified()));
+            saisApplication.setSubmitted(DateUtils.toLocalDate(application.getDateModified()));
         }
         saisApplication.setIdcode(application.getIdCode());
 
@@ -613,8 +634,7 @@ public class SaisApplicationService {
 
         saisApplication.setSaisId(application.getId());
         if(application.getBirthday() != null) {
-            Date startDate = application.getBirthday().toGregorianCalendar().getTime();
-            saisApplication.setBirthdate(LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault()).toLocalDate());
+            saisApplication.setBirthdate(DateUtils.toLocalDate(application.getBirthday()));
         }
 
         if(application.getOtherIdNumber() != null) {
@@ -670,9 +690,9 @@ public class SaisApplicationService {
             saisApplication.setAddressAds(address.getAdsAddressCode());
         }
 
-        String sexCode = EstonianIdCodeValidator.sexFromIdcode(application.getSexClassification().getValue());
+        String sexCode = application.getSexClassification().getValue();
         if (StringUtils.hasText(sexCode)) {
-            saisApplication.setSex(classifiers.getByCode(sexCode, MainClassCode.SUGU));
+            saisApplication.setSex(classifiers.getByValue(sexCode, MainClassCode.SUGU));
         }
 
         saisApplication.setPhone(application.getPhone());
@@ -698,6 +718,10 @@ public class SaisApplicationService {
         }
         for(ApplicationFormData data : application.getApplicationFormData().getApplicationFormData()) {
             processData(data, saisApplication);
+        }
+
+        if(application.getDateModified() != null) {
+            saisApplication.setSaisChanged(DateUtils.toLocalDate(application.getDateModified()));
         }
 
         saisAdmission.getApplications().add(saisApplication);
@@ -749,12 +773,10 @@ public class SaisApplicationService {
         SaisApplicationGraduatedSchool graduated = new SaisApplicationGraduatedSchool();
         graduated.setName(education.getInstitutionName());
         if(education.getStudyBeginDate() != null) {
-            Date startDate = education.getStudyBeginDate().toGregorianCalendar().getTime();
-            graduated.setStartDate(LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault()));
+            graduated.setStartDate(DateUtils.toLocalDateTime(education.getStudyBeginDate()));
         }
         if(education.getStudyEndDate() != null) {
-            Date endDate = education.getStudyEndDate().toGregorianCalendar().getTime();
-            graduated.setEndDate(LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault()));
+            graduated.setEndDate(DateUtils.toLocalDateTime(education.getStudyEndDate()));
         }
         graduated.setRegCode(education.getInstitutionRegNr() != null ? education.getInstitutionRegNr().toString() : "");
         graduated.setIsAbroad(education.getInstitutionCountry() == null || "EST".equals(education.getInstitutionCountry().getValue()) ? Boolean.FALSE : Boolean.TRUE);

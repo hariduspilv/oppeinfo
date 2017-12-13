@@ -1,5 +1,21 @@
 package ee.hitsa.ois.service.ehis;
 
+import java.lang.invoke.MethodHandles;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.util.List;
+
+import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
@@ -8,6 +24,7 @@ import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hois.soap.LogContext;
 import ee.hois.xroad.ehis.generated.KhlIsikuandmedLisa;
@@ -19,27 +36,14 @@ import ee.hois.xroad.ehis.generated.KhlOppur;
 import ee.hois.xroad.ehis.service.EhisClient;
 import ee.hois.xroad.ehis.service.EhisLaeKorgharidusedResponse;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-
-import javax.annotation.PostConstruct;
-import javax.persistence.EntityManager;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
-
-import java.lang.invoke.MethodHandles;
-import java.math.BigInteger;
-import java.time.LocalDate;
 
 public abstract class EhisService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    private static final String ERROR_MARKER = "Viga!";
     static final String LAE_KORGHARIDUS_SERVICE_CODE = "laeKorgharidus";
-    public static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERVICE_CODE + ".v1";
+    public static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERVICE_CODE;
     private static final String BIRTH_DATE_ENTERED = "SS";
 
     private DatatypeFactory datatypeFactory;
@@ -92,9 +96,10 @@ public abstract class EhisService {
         wsEhisStudentLog.setHasXteeErrors(Boolean.valueOf(queryLog.getError() != null));
 
         if(!response.hasError()) {
+            wsEhisStudentLog.setHasXteeErrors(Boolean.valueOf(resultHasError(response.getResult())));
             wsEhisStudentLog.setLogTxt(String.join(";", StreamUtil.nullSafeList(response.getResult())));
         } else {
-            wsEhisStudentLog.setLogTxt(queryLog.getError().toString());
+            wsEhisStudentLog.setLogTxt(ExceptionUtil.getRootCause(queryLog.getError()).toString());
         }
         return ehisLogService.insert(queryLog, wsEhisStudentLog);
     }
@@ -258,4 +263,13 @@ public abstract class EhisService {
     }
 
     protected abstract String getServiceCode();
+
+    /**
+     * errors are reported as success. If any of item has magic string Viga! then consider result as error
+     * @param result
+     * @return
+     */
+    protected boolean resultHasError(List<String> result) {
+        return StreamUtil.nullSafeList(result).stream().anyMatch(r -> r != null && r.contains(ERROR_MARKER));
+    }
 }

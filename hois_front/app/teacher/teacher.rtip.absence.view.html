@@ -1,0 +1,25 @@
+<div layout-padding>
+  <md-table-container>
+    <table md-table md-progress="tabledata.$promise">
+      <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+        <tr md-row>
+          <th md-column md-order-by="startDate">{{'teacher.rtipAbsence.absenceFrom' | translate}}</th>
+          <th md-column md-order-by="endDate">{{'teacher.rtipAbsence.absenceThru' | translate}}</th>
+          <th md-column md-order-by="reason">{{'teacher.rtipAbsence.absenceReason' | translate}}</th>
+          <th md-column md-order-by="changed">{{'teacher.rtipAbsence.changed' | translate}}</th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>{{row.startDate | hoisDate}}</td>
+          <td md-cell>{{row.endDate | hoisDate}}</td>
+          <td md-cell>{{row.reason}}</td>
+          <td md-cell>{{row.changed | hoisDate}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
+  <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+  md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+  md-page-select></md-table-pagination>
+</div>

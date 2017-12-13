@@ -44,7 +44,7 @@ public class GeneralMessageController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public GeneralMessageDto get(HoisUserDetails user, @WithEntity("id") GeneralMessage generalMessage) {
+    public GeneralMessageDto get(HoisUserDetails user, @WithEntity GeneralMessage generalMessage) {
         UserUtil.assertIsSchoolAdmin(user, generalMessage.getSchool());
         return GeneralMessageDto.of(generalMessage);
     }
@@ -56,13 +56,13 @@ public class GeneralMessageController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public GeneralMessageDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) GeneralMessage generalMessage, @Valid @RequestBody GeneralMessageForm form) {
+    public GeneralMessageDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) GeneralMessage generalMessage, @Valid @RequestBody GeneralMessageForm form) {
         UserUtil.assertIsSchoolAdmin(user, generalMessage.getSchool());
-        return get(user, generalMessageService.save(generalMessage, form));
+        return get(user, generalMessageService.save(user, generalMessage, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") GeneralMessage generalMessage, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") GeneralMessage generalMessage, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, generalMessage.getSchool());
         generalMessageService.delete(user, generalMessage);
     }

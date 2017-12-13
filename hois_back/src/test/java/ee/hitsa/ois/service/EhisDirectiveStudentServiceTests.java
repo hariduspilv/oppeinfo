@@ -14,9 +14,12 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.service.ehis.EhisDirectiveStudentService;
 import ee.hitsa.ois.util.EnumUtil;
 
@@ -36,7 +39,10 @@ public class EhisDirectiveStudentServiceTests {
     @Test
     public void updateStudents() {
         for(Directive directive : findDirectives()) {
-            ehisDirectiveStudentService.updateStudents(directive.getId());
+            Job job = new Job();
+            job.setDirective(directive);
+            job.setType(em.getReference(Classifier.class, JobType.JOB_EHIS.name()));
+            ehisDirectiveStudentService.updateStudents(job);
         }
     }
 

@@ -44,23 +44,23 @@ public class CurriculumVersionController {
     private SchoolService schoolService;
     
     @GetMapping("/{id:\\d+}")
-    public CurriculumVersionDto get(HoisUserDetails user, @WithEntity("id") CurriculumVersion curriculumVersion) {
+    public CurriculumVersionDto get(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion) {
         CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion);
         return curriculumVersionService.get(user, curriculumVersion);
     }
     
     @GetMapping("/curriculum/{id:\\d+}")
-    public CurriculumDto getCurriculum(@WithEntity("id") Curriculum curriculum) {
+    public CurriculumDto getCurriculum(@WithEntity Curriculum curriculum) {
         return CurriculumDto.forVersionForm(curriculum);
     }
     
     @GetMapping("/schoolDepartments/curriculum/{id:\\d+}")
-    public List<AutocompleteResult> getSchoolDepartments(@WithEntity("id") Curriculum curriculum) {
+    public List<AutocompleteResult> getSchoolDepartments(@WithEntity Curriculum curriculum) {
         return curriculumVersionService.getSchoolDepartments(curriculum);
     }
     
     @PutMapping("/copy/{id:\\d+}")
-    public CurriculumVersionDto copy(HoisUserDetails user, @WithEntity("id") CurriculumVersion curriculumVersion) {
+    public CurriculumVersionDto copy(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion) {
         Curriculum curriculum = curriculumVersion.getCurriculum();
         
         CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
@@ -85,26 +85,26 @@ public class CurriculumVersionController {
 
     @PutMapping("/{id:\\d+}")
     public CurriculumVersionDto save(HoisUserDetails user,
-            @WithEntity(value = "id") CurriculumVersion curriculumVersion,
+            @WithEntity CurriculumVersion curriculumVersion,
             @Valid @RequestBody CurriculumVersionDto curriculumVersionDto) {
         CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
 
         curriculumValidationService.assertCurriculumVersionCanBeEdited(curriculumVersion);
         curriculumValidationService.validateCurriculumVersionFormWithStatus(curriculumVersion, curriculumVersionDto);
         curriculumValidationService.assertVersionCodeIsUnique(user.getSchoolId(), curriculumVersionDto.getCode(), curriculumVersion);
-        return get(user, curriculumVersionService.save(curriculumVersion, curriculumVersionDto));
+        return get(user, curriculumVersionService.save(user, curriculumVersion, curriculumVersionDto));
     }
 
     @PutMapping("/close/{id:\\d+}")
     public CurriculumVersionDto close(HoisUserDetails user,
-            @WithEntity(value = "id") CurriculumVersion curriculumVersion) {
+            @WithEntity CurriculumVersion curriculumVersion) {
         CurriculumUtil.assertCanClose(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
         return get(user, curriculumVersionService.close(curriculumVersion));
     }
 
     @PutMapping("/confirm/{id:\\d+}")
     public CurriculumVersionDto confirm(HoisUserDetails user,
-            @WithEntity(value = "id") CurriculumVersion curriculumVersion) {
+            @WithEntity CurriculumVersion curriculumVersion) {
         CurriculumUtil.assertCanConfirm(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
 
         curriculumValidationService.validateCurriculumVersion(curriculumVersion);
@@ -113,7 +113,7 @@ public class CurriculumVersionController {
 
     @PutMapping("/saveAndConfirm/{id:\\d+}")
     public CurriculumVersionDto saveAndConfirm(HoisUserDetails user,
-            @WithEntity(value = "id") CurriculumVersion curriculumVersion,
+            @WithEntity CurriculumVersion curriculumVersion,
             @Valid @RequestBody CurriculumVersionDto curriculumVersionDto) {
         
         String myEhisSchool = schoolService.getEhisSchool(user.getSchoolId());
@@ -123,15 +123,14 @@ public class CurriculumVersionController {
         curriculumValidationService.validateCurriculumVersionForm(curriculumVersion, curriculumVersionDto);
         curriculumValidationService.assertCurriculumVersionCanBeEdited(curriculumVersion);
         curriculumValidationService.assertVersionCodeIsUnique(user.getSchoolId(), curriculumVersionDto.getCode(), curriculumVersion);
-        return get(user, curriculumVersionService.saveAndConfirm(curriculumVersion, curriculumVersionDto));
+        return get(user, curriculumVersionService.saveAndConfirm(user, curriculumVersion, curriculumVersionDto));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithEntity(value = "id") CurriculumVersion curriculumVersion) {
+    public void delete(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion) {
         CurriculumUtil.assertCanDelete(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
         curriculumValidationService.assertCurriculumVersionCanDeleted(curriculumVersion);
-        
-        curriculumVersionService.delete(curriculumVersion);
+
+        curriculumVersionService.delete(user, curriculumVersion);
     }
-    
 }

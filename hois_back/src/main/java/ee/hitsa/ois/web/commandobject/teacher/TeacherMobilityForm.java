@@ -1,14 +1,15 @@
 package ee.hitsa.ois.web.commandobject.teacher;
 
+import java.time.LocalDate;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
-
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.time.LocalDate;
 
 @DateRange(from = "start", thru = "end")
 public class TeacherMobilityForm extends VersionedCommand {

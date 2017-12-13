@@ -1,5 +1,14 @@
 package ee.hitsa.ois.web.commandobject.teacher;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Set;
+
+import javax.validation.Valid;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
@@ -7,14 +16,6 @@ import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-
-import javax.validation.Valid;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Set;
 
 public class TeacherForm extends VersionedCommand {
 
@@ -36,6 +37,8 @@ public class TeacherForm extends VersionedCommand {
     private String phone;
     @NotNull
     private Short scheduleLoad;
+    @Size(max = 20)
+    private String rtipNr;
 
     public Boolean getIsStudyPeriodScheduleLoad() {
         return isStudyPeriodScheduleLoad;
@@ -51,6 +54,78 @@ public class TeacherForm extends VersionedCommand {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public TeacherPersonForm getPerson() {
+        return person;
+    }
+
+    public void setPerson(TeacherPersonForm person) {
+        this.person = person;
+    }
+
+    public Boolean getIsVocational() {
+        return isVocational;
+    }
+
+    public void setIsVocational(Boolean vocational) {
+        isVocational = vocational;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean higher) {
+        isHigher = higher;
+    }
+
+    public AutocompleteResult getTeacherOccupation() {
+        return teacherOccupation;
+    }
+
+    public void setTeacherOccupation(AutocompleteResult teacherOccupation) {
+        this.teacherOccupation = teacherOccupation;
+    }
+
+    public Set<TeacherPositionEhisForm> getTeacherPositionEhis() {
+        return teacherPositionEhis;
+    }
+
+    public void setTeacherPositionEhis(Set<TeacherPositionEhisForm> teacherPositionEhis) {
+        this.teacherPositionEhis = teacherPositionEhis;
+    }
+
+    public Short getScheduleLoad() {
+        return scheduleLoad;
+    }
+
+    public void setScheduleLoad(Short scheduleLoad) {
+        this.scheduleLoad = scheduleLoad;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getRtipNr() {
+        return rtipNr;
+    }
+
+    public void setRtipNr(String rtipNr) {
+        this.rtipNr = rtipNr;
     }
 
     public static class TeacherPersonForm {
@@ -183,7 +258,7 @@ public class TeacherForm extends VersionedCommand {
         private Boolean isChildCare = Boolean.FALSE;
         private Boolean isClassTeacher = Boolean.FALSE;
         @NotNull
-        @DecimalMin("0.1")
+        @DecimalMin("0.0")
         private BigDecimal load;
 
         // TODO: VALIDATION(this or opetaja keel req)
@@ -350,69 +425,5 @@ public class TeacherForm extends VersionedCommand {
         public void setSchoolDepartment(Long schoolDepartment) {
             this.schoolDepartment = schoolDepartment;
         }
-    }
-
-    public TeacherPersonForm getPerson() {
-        return person;
-    }
-
-    public void setPerson(TeacherPersonForm person) {
-        this.person = person;
-    }
-
-    public Boolean getIsVocational() {
-        return isVocational;
-    }
-
-    public void setIsVocational(Boolean vocational) {
-        isVocational = vocational;
-    }
-
-    public Boolean getIsHigher() {
-        return isHigher;
-    }
-
-    public void setIsHigher(Boolean higher) {
-        isHigher = higher;
-    }
-
-    public AutocompleteResult getTeacherOccupation() {
-        return teacherOccupation;
-    }
-
-    public void setTeacherOccupation(AutocompleteResult teacherOccupation) {
-        this.teacherOccupation = teacherOccupation;
-    }
-
-    public Set<TeacherPositionEhisForm> getTeacherPositionEhis() {
-        return teacherPositionEhis;
-    }
-
-    public void setTeacherPositionEhis(Set<TeacherPositionEhisForm> teacherPositionEhis) {
-        this.teacherPositionEhis = teacherPositionEhis;
-    }
-
-    public Short getScheduleLoad() {
-        return scheduleLoad;
-    }
-
-    public void setScheduleLoad(Short scheduleLoad) {
-        this.scheduleLoad = scheduleLoad;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
     }
 }

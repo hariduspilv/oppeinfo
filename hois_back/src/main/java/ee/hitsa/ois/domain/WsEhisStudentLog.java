@@ -1,13 +1,13 @@
 package ee.hitsa.ois.domain;
 
-import ee.hitsa.ois.domain.directive.Directive;
-import ee.hitsa.ois.domain.school.School;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+
+import ee.hitsa.ois.domain.directive.Directive;
+import ee.hitsa.ois.domain.school.School;
 
 @Entity
 public class WsEhisStudentLog extends BaseLog {

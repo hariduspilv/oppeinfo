@@ -143,6 +143,9 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
             return currentCapacities.indexOf(t.id) !== -1;
           });
         }
+        $scope.plan.selectedStudentGroupObject = $scope.plan.studentGroups.find(function(sg) {
+          return sg.id === $scope.plan.selectedGroup;
+        });
       }
     }
 
@@ -249,7 +252,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     };
 
 
-    $scope.getTeacherLesson = function (index, lesson, group) {
+    $scope.getTeacherLesson = function (index, lesson, group, fullName) {
       var selectedDay, daysSoFar = 0;
       for (var k = 0; $scope.dayOrder.length > k; k++) {
         daysSoFar += $scope.lessonsInDay[$scope.dayOrder[k]].length;
@@ -265,12 +268,16 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
             return $scope.weekday[new Date(t.start).getDay()] === selectedDay && lesson.lessonNr === t.lessonNr;
           });
           if (teacherLesson) {
-            teacherPlan.push(teacher.nameEt);
+            if(fullName) {
+              teacherPlan.push(teacher.nameEt);
+            } else {
+              teacherPlan.push(teacher.nameEt.replace(/\b(\S{1,2})\S*/g, '$1').replace(/ /g, ''));
+            }
           }
         }
       });
       return teacherPlan ? teacherPlan : null;
-    }
+    };
 
     $scope.removeFromArray = ArrayUtils.remove;
 

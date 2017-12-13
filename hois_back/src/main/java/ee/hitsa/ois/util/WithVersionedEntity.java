@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface WithVersionedEntity {
-    String value();
+    String value() default "id";
     /**
      * Take version value from {@link org.springframework.web.bind.annotation.PathVariable} with given name
      */

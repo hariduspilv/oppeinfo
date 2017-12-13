@@ -3,7 +3,6 @@ package ee.hitsa.ois.service;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -51,18 +50,6 @@ import ee.hitsa.ois.web.dto.timetable.LessonTimeSearchDto;
 public class LessonTimeService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-    private static final EnumMap<Day, String> DAY_MAPPING = new EnumMap<>(Day.class);
-
-    static {
-        DAY_MAPPING.put(Day.NADALAPAEV_E, "dayMon");
-        DAY_MAPPING.put(Day.NADALAPAEV_T, "dayTue");
-        DAY_MAPPING.put(Day.NADALAPAEV_K, "dayWed");
-        DAY_MAPPING.put(Day.NADALAPAEV_N, "dayThu");
-        DAY_MAPPING.put(Day.NADALAPAEV_R, "dayFri");
-        DAY_MAPPING.put(Day.NADALAPAEV_L, "daySat");
-        DAY_MAPPING.put(Day.NADALAPAEV_P, "daySun");
-    }
 
     @Autowired
     private LessonTimeRepository lessonTimeRepository;
@@ -302,7 +289,6 @@ public class LessonTimeService {
     }
 
     private static String getDayProperty(String dayString) {
-        Day day = Day.valueOf(dayString);
-        return DAY_MAPPING.get(day);
+        return Day.valueOf(dayString).getProperty();
     }
 }

@@ -40,6 +40,7 @@ public class PracticeJournalForm extends VersionedCommand {
     @NotNull
     private Long teacher;
     @NotNull
+    @Size(max = 20000)
     private String practicePlan;
     @NotNull(groups = PracticeJournalValidation.Higher.class)
     private Long subject;

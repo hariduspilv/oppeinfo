@@ -42,7 +42,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     entityToForm(entity);
   }
 
-    function loadJournalEntries() {
+  function loadJournalEntries() {
     $scope.journalEntriesCriteria = { size: 20, page: 1 };
     if (!angular.isDefined($scope.journalEntries)) {
       $scope.journalEntries = {};
@@ -259,25 +259,38 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   var ConfirmEndpoint = QueryUtils.endpoint('/journals/confirm/');
   var UnconfirmEndpoint = QueryUtils.endpoint('/journals/unconfirm/');
 
-    $scope.confirm = function() {
-      dialogService.confirmDialog({ prompt: 'journal.prompt.confirm' }, function () {
-        new ConfirmEndpoint($scope.journal).$update().then(function (response) {
-          message.info('journal.messages.confirmed');
-          $scope.journal.canBeConfirmed = response.canBeConfirmed;
-          $scope.journal.canBeUnconfirmed = response.canBeUnconfirmed;
-          $scope.$parent.journal.status = response.status;
-        });
-      });
-    };
+  function confirm() {
+    new ConfirmEndpoint($scope.journal).$update().then(function (response) {
+      message.info('journal.messages.confirmed');
+      $scope.journal.canBeConfirmed = response.canBeConfirmed;
+      $scope.journal.canBeUnconfirmed = response.canBeUnconfirmed;
+      $scope.$parent.journal.status = response.status;
+    });
+  }
 
-    $scope.unconfirm = function() {
-      dialogService.confirmDialog({ prompt: 'journal.prompt.unconfirm' }, function () {
-        new UnconfirmEndpoint($scope.journal).$update().then(function (response) {
-          message.info('journal.messages.unconfirmed');
-          $scope.journal.canBeConfirmed = response.canBeConfirmed;
-          $scope.journal.canBeUnconfirmed = response.canBeUnconfirmed;
-          $scope.$parent.journal.status = response.status;
-        });
+  $scope.confirm = function() {
+    dialogService.confirmDialog({ prompt: 'journal.prompt.confirm' }, function () {
+      QueryUtils.endpoint('/journals/' + $scope.journal.id + '/withoutFinalResult/').query().$promise.then(function(response){
+        if(!ArrayUtils.isEmpty(response)) {
+          var withoutFinalResult = response.map(function(student){
+            return student.fullname;
+          }).join(', ');
+          dialogService.confirmDialog({ prompt: 'journal.prompt.someStudentsDoNotHaveFinalResult', students: withoutFinalResult  }, confirm);
+        } else {
+          confirm();
+        }
       });
-    };
+    });
+  };
+
+  $scope.unconfirm = function() {
+    dialogService.confirmDialog({ prompt: 'journal.prompt.unconfirm' }, function () {
+      new UnconfirmEndpoint($scope.journal).$update().then(function (response) {
+        message.info('journal.messages.unconfirmed');
+        $scope.journal.canBeConfirmed = response.canBeConfirmed;
+        $scope.journal.canBeUnconfirmed = response.canBeUnconfirmed;
+        $scope.$parent.journal.status = response.status;
+      });
+    });
+  };
 });

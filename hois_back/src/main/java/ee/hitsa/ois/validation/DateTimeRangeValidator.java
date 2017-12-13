@@ -1,12 +1,12 @@
 package ee.hitsa.ois.validation;
 
-import org.springframework.beans.PropertyAccessor;
-import org.springframework.beans.PropertyAccessorFactory;
+import java.time.LocalDateTime;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import java.time.LocalDateTime;
+import org.springframework.beans.PropertyAccessor;
+import org.springframework.beans.PropertyAccessorFactory;
 
 public class DateTimeRangeValidator implements ConstraintValidator<DateTimeRange, Object> {
 

@@ -135,9 +135,16 @@
             </div>
           </div>
 
-          <md-checkbox ng-model="teacher.isActive">
-            {{'teacher.isActive' | translate}}
-          </md-checkbox>
+          <div layout="row" layout-sm="column" layout-xs="column">
+	        <md-checkbox ng-model="teacher.isActive" flex="25" flex-sm="100" flex-xs="100">
+	          {{'teacher.isActive' | translate}}
+	        </md-checkbox>
+            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'teacher.rtipNr' | translate}}</label>
+              <input ng-model="teacher.rtipNr" type="text">
+            </md-input-container>
+          </div>
+
         </div>
       </hois-collapsable>
 
@@ -175,10 +182,15 @@
             </div>
 
             <div layout="row" layout-sm="column" layout-xs="column">
-              <md-input-container flex="25" flex-sm="100" flex-xs="100">
+              <md-input-container flex="25" flex-sm="100" flex-xs="100" ng-if="teacherPositionEhis.isVocational">
                 <label>{{'teacher.teacherPositionEhis.contractType' | translate}}</label>
                 <hois-classifier-select ng-model="teacherPositionEhis.contractType" main-classifier-code="EHIS_LEPING" model-value-attr="code"
-                  required></hois-classifier-select>
+                  required criteria="{vocational: true}"></hois-classifier-select>
+              </md-input-container>
+              <md-input-container flex="25" flex-sm="100" flex-xs="100" ng-if="!teacherPositionEhis.isVocational">
+                <label>{{'teacher.teacherPositionEhis.contractType' | translate}}</label>
+                <hois-classifier-select ng-model="teacherPositionEhis.contractType" main-classifier-code="EHIS_LEPING" model-value-attr="code"
+                  required criteria="{higher: true}"></hois-classifier-select>
               </md-input-container>
               <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'teacher.teacherPositionEhis.contractStart' | translate}}</label>

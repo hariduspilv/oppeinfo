@@ -20,7 +20,7 @@ import ee.hitsa.ois.util.Translatable;
 public class CurriculumModule extends BaseEntityWithId implements Translatable {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    @JoinColumn(nullable = false, updatable = false)
     private Curriculum curriculum;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

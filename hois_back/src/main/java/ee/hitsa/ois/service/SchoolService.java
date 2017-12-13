@@ -102,7 +102,8 @@ public class SchoolService {
         EntityUtil.deleteEntity(school, em);
     }
 
-    public School updateStudyLevels(School school, SchoolUpdateStudyLevelsCommand cmd) {
+    public School updateStudyLevels(HoisUserDetails user, School school, SchoolUpdateStudyLevelsCommand cmd) {
+        EntityUtil.setUsername(user.getUsername(), em);
         List<SchoolStudyLevel> storedStudyLevels = school.getStudyLevels();
         if(storedStudyLevels == null) {
             school.setStudyLevels(storedStudyLevels = new ArrayList<>());
@@ -118,7 +119,8 @@ public class SchoolService {
         return EntityUtil.save(school, em);
     }
 
-    public School updateLegends(School school, SchoolUpdateStudyYearScheduleLegendsCommand cmd) {
+    public School updateLegends(HoisUserDetails user, School school, SchoolUpdateStudyYearScheduleLegendsCommand cmd) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindEntityCollection(school.getStudyYearScheduleLegends(), StudyYearScheduleLegend::getId, cmd.getLegends(), StudyYearScheduleLegendDto::getId, form -> {
             StudyYearScheduleLegend legend = new StudyYearScheduleLegend();
             legend.setSchool(school);

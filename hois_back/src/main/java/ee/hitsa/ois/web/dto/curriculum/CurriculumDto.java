@@ -5,9 +5,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumForm;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class CurriculumDto extends CurriculumForm {
     private Long id;
@@ -23,7 +25,30 @@ public class CurriculumDto extends CurriculumForm {
     private Boolean canConfirm;
     private Boolean canClose;
     private Boolean canDelete;
+    private AutocompleteResult stateCurriculum;
+    private Boolean canHaveOccupations;
+    
+    /*
+     * Two sets below actually bring the same info
+     */
+    private Set<CurriculumOccupationDto> occupations;
+    private Set<CurriculumOccupationViewDto> curriculumOccupations;
 
+
+    public static CurriculumDto afterDeletingOccupation(Curriculum curriculum) {
+        CurriculumDto dto = new CurriculumDto();   
+        dto.setModules(StreamUtil.toMappedSet(CurriculumModuleDto::of, curriculum.getModules()));
+        return dto;
+    }
+
+    public static CurriculumDto forModuleForm(Curriculum curriculum) {
+        CurriculumDto dto = new CurriculumDto(); 
+        dto.setId(EntityUtil.getId(curriculum));
+        dto.setOccupation(curriculum.getOccupation());
+        dto.setOccupations(StreamUtil.toMappedSet(CurriculumOccupationDto::of, curriculum.getOccupations()));
+        dto.setCanHaveOccupations(Boolean.valueOf(CurriculumUtil.canHaveOccupations(curriculum)));
+        return dto;
+    }
 
     public static CurriculumDto forVersionForm(Curriculum curriculum) {
         CurriculumDto dto = new CurriculumDto();
@@ -42,6 +67,8 @@ public class CurriculumDto extends CurriculumForm {
         //TODO: use partial dto 
         dto.setOccupations(StreamUtil.toMappedSet(CurriculumOccupationDto::of, curriculum.getOccupations()));
 
+        dto.setCanHaveOccupations(Boolean.valueOf(CurriculumUtil.canHaveOccupations(curriculum)));
+
         return dto;
     }
 
@@ -52,7 +79,7 @@ public class CurriculumDto extends CurriculumForm {
         CurriculumDto dto = EntityUtil.bindToDto
                 (curriculum, new CurriculumDto(), 
                  "versions", "studyLanguages", "studyForms", "schoolDepartments", "files", 
-                 "jointPartners", "specialities", "modules", "occupations", "grades");
+                 "jointPartners", "specialities", "modules", "occupations", "grades", "stateCurriculum");
                 
         dto.setStudyLanguages(StreamUtil.toMappedSet(lang -> EntityUtil.getNullableCode(lang.getStudyLang()), curriculum.getStudyLanguages()));
         dto.setStudyForms(StreamUtil.toMappedSet(f -> EntityUtil.getNullableCode(f.getStudyForm()), curriculum.getStudyForms()));
@@ -61,11 +88,14 @@ public class CurriculumDto extends CurriculumForm {
         dto.setSpecialities(StreamUtil.toMappedSet(CurriculumSpecialityDto::of, curriculum.getSpecialities()));
         //TODO: use partial dto
         dto.setModules(StreamUtil.toMappedSet(CurriculumModuleDto::of, curriculum.getModules()));
-        dto.setOccupations(StreamUtil.toMappedSet(CurriculumOccupationDto::of, curriculum.getOccupations()));
         dto.setGrades(StreamUtil.toMappedSet(CurriculumGradeDto::of, curriculum.getGrades()));
         dto.setFiles(StreamUtil.toMappedSet(CurriculumFileUpdateDto::of, curriculum.getFiles()));
         dto.setStateCurrClass(getStateCurrClass(curriculum));        
         dto.setEhisSchool(EntityUtil.getCode(curriculum.getSchool().getEhisSchool()));
+        
+        dto.setOccupations(StreamUtil.toMappedSet(CurriculumOccupationDto::of, curriculum.getOccupations()));
+        dto.setCurriculumOccupations(StreamUtil.toMappedSet(CurriculumOccupationViewDto::of, curriculum.getOccupations()));
+
         return dto;
     }
     
@@ -188,5 +218,37 @@ public class CurriculumDto extends CurriculumForm {
 
     public void setEhisSchool(String ehisSchool) {
         this.ehisSchool = ehisSchool;
+    }
+
+    public Set<CurriculumOccupationDto> getOccupations() {
+        return occupations != null ? occupations : (occupations = new HashSet<>());
+    }
+
+    public void setOccupations(Set<CurriculumOccupationDto> occupations) {
+        this.occupations = occupations;
+    }
+
+    public Set<CurriculumOccupationViewDto> getCurriculumOccupations() {
+        return curriculumOccupations;
+    }
+
+    public void setCurriculumOccupations(Set<CurriculumOccupationViewDto> curriculumOccupations) {
+        this.curriculumOccupations = curriculumOccupations;
+    }
+
+    public AutocompleteResult getStateCurriculum() {
+        return stateCurriculum;
+    }
+
+    public void setStateCurriculum(AutocompleteResult stateCurriculum) {
+        this.stateCurriculum = stateCurriculum;
+    }
+
+    public Boolean getCanHaveOccupations() {
+        return canHaveOccupations;
+    }
+
+    public void setCanHaveOccupations(Boolean canHaveOccupations) {
+        this.canHaveOccupations = canHaveOccupations;
     }
 }

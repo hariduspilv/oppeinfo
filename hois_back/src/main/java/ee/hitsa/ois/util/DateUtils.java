@@ -62,4 +62,8 @@ public class DateUtils {
     public static LocalDate toLocalDate(XMLGregorianCalendar cal) {
         return cal.toGregorianCalendar().toZonedDateTime().toLocalDate();
     }
+
+    public static LocalDateTime toLocalDateTime(XMLGregorianCalendar cal) {
+        return cal.toGregorianCalendar().toZonedDateTime().toLocalDateTime();
+    }
 }

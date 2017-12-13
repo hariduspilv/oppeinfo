@@ -7,8 +7,8 @@
  * # ClassifierConnect
  * Factory in the hitsaOis.
  */
-angular.module('hitsaOis')
-  .factory('ClassifierConnect', function ($resource, config, QueryUtils) {
+angular.module('hitsaOis').factory('ClassifierConnect', ['QueryUtils',
+  function (QueryUtils) {
 
     function ClassifierConnect(args) {
       this.classifierCode = args.classifierCode;
@@ -16,21 +16,19 @@ angular.module('hitsaOis')
     }
 
     ClassifierConnect.query = function(params, successCallback) {
-      var resource = $resource(config.apiUrl+'/classifierConnect');
       var queryParams = QueryUtils.getQueryParams(params);
-      return resource.get(queryParams, successCallback);
+      return QueryUtils.endpoint('/classifierConnect').search(queryParams, successCallback);
     };
 
     ClassifierConnect.queryAll = function(params, successCallback) {
-      var resource = $resource(config.apiUrl+'/classifierConnect/all');
       var queryParams = QueryUtils.getQueryParams(params);
-      return resource.query(queryParams, successCallback);
+      return QueryUtils.endpoint('/classifierConnect/all').query(queryParams, successCallback);
     };
 
     ClassifierConnect.sendListOfParents = function(classifier, parents) {
-        return $resource(config.apiUrl+'/classifierConnect/changeParents/' + classifier.code).save(parents);
+        return QueryUtils.endpoint('/classifierConnect/changeParents/' + classifier.code).save(parents);
     };
 
     return ClassifierConnect;
-
-  });
+  }
+]);

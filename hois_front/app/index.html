@@ -54,7 +54,7 @@
 
         <div layout-align="end" flex>
           <div layout="row" layout-align="end center" flex>
-            <div ng-show="state.currentUser">
+            <div ng-show="state.currentUser && state.currentUser.roleCode !== 'ROLL_X'">
                 <md-button class="md-icon-button" ng-href="#/messages/received?_menu">
                   <md-icon md-colors="{color: 'primary-800'}">email</md-icon>
                 </md-button>
@@ -241,6 +241,9 @@
   <script src="lessonplan/lessonplan.route.js"></script>
   <script src="lessonplan/event.search.js"></script>
 
+  <script src="logs/logs.route.js"></script>
+  <script src="logs/logs.js"></script>
+
   <script src="message/message.js"></script>
   <script src="message/message.route.js"></script>
 
@@ -250,6 +253,9 @@
   <script src="midtermTask/midtermTask.js"></script>
   <script src="midtermTask/midtermTask.util.js"></script>
   <script src="midtermTask/midtermTask.route.js"></script>
+
+  <script src="occupationcertificate/occupationcertificate.js"></script>
+  <script src="occupationcertificate/occupationcertificate.route.js"></script>
 
   <script src="protocol/module.protocol.js"></script>
   <script src="protocol/module.protocol.list.js"></script>
@@ -272,11 +278,16 @@
   <script src="reception/reception.saisApplication.list.js"></script>
   <script src="reception/reception.route.js"></script>
 
+  <script src="apelApplication/apel.application.js"></script>
+  <script src="apelApplication/apel.application.list.js"></script>
+  <script src="apelApplication/apel.school.js"></script>
+  <script src="apelApplication/apel.application.route.js"></script>
+
   <script src="report/report.js"></script>
   <script src="report/report.route.js"></script>
 
-  <script src="sais/sais.route.js"></script>
-  <script src="sais/logs.js"></script>
+  <script src="rtip/rtip.js"></script>
+  <script src="rtip/rtip.route.js"></script>
 
   <script src="services/array.utils.js"></script>
   <script src="services/auth.js"></script>
@@ -308,8 +319,8 @@
   <script src="student/vocational.grade.js"></script>
   <script src="student/student.journal.js"></script>
 
-  <script src="studentAbsence/absences.route.js"></script>
-  <script src="studentAbsence/absences.js"></script>
+  <script src="studentAbsence/absence.route.js"></script>
+  <script src="studentAbsence/absence.search.js"></script>
 
   <script src="studentGroup/student.group.js"></script>
   <script src="studentGroup/student.group.route.js"></script>
@@ -369,13 +380,17 @@
 
   <script src="vocationalCurriculum/module/vocational.curriculum.module.js"></script>
 
-  <script src="ekis/logs.js"></script>
-  <script src="ekis/ekis.route.js"></script>
-
   <script src="ehis/student.js"></script>
   <script src="ehis/logs.js"></script>
   <script src="ehis/teacher.export.js"></script>
   <script src="ehis/ehis.route.js"></script>
+
+  <script src="scholarship/scholarship.route.js"></script>
+  <script src="scholarship/scholarship.edit.js"></script>
+  <script src="scholarship/scholarship.search.js"></script>
+  <script src="scholarship/scholarship.student.js"></script>
+  <script src="scholarship/scholarship.application.edit.js"></script>
+  <script src="scholarship/scholarship.application.list.js"></script>
   <!-- endbuild -->
 
   <!-- build:remove:dist -->

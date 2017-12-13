@@ -42,7 +42,7 @@ public class ApplicationController {
     private ApplicationService applicationService;
 
     @GetMapping("/{id:\\d+}")
-    public ApplicationDto get(HoisUserDetails user, @WithEntity("id") Application application) {
+    public ApplicationDto get(HoisUserDetails user, @WithEntity Application application) {
         if (!UserUtil.canViewStudent(user, application.getStudent())) {
             throw new ValidationFailedException(String.format("user %s is not allowed to view application %d", user.getUsername(), application.getId()));
         }
@@ -61,16 +61,16 @@ public class ApplicationController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public ApplicationDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Application application, @Valid @RequestBody ApplicationForm applicationForm) {
+    public ApplicationDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Application application, @Valid @RequestBody ApplicationForm applicationForm) {
         if (!UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) && !UserUtil.isSame(user, application.getStudent())) {
             throw new ValidationFailedException(String.format("user %s is not allowed to update application %d", user.getUsername(), application.getId()));
         }
         checkUpdateBusinessRules(user, application, applicationForm);
-        return get(user, applicationService.save(application, applicationForm));
+        return get(user, applicationService.save(user, application, applicationForm));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Application application, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Application application, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         Student student = application.getStudent();
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
         if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) || !ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status) ||
@@ -81,7 +81,7 @@ public class ApplicationController {
     }
 
     @GetMapping("/student/{id:\\d+}/validAcademicLeave")
-    public ApplicationDto academicLeave(HoisUserDetails user, @WithEntity(value = "id") Student student) {
+    public ApplicationDto academicLeave(HoisUserDetails user, @WithEntity Student student) {
         if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
             throw new ValidationFailedException(String.format("user %s is not allowed to view validAcademicLeave", user.getUsername()));
         }
@@ -89,7 +89,7 @@ public class ApplicationController {
     }
 
     @GetMapping("student/{id:\\d+}/applicable")
-    public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(HoisUserDetails user, @WithEntity(value = "id") Student student) {
+    public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(HoisUserDetails user, @WithEntity Student student) {
         if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
             throw new ValidationFailedException(String.format("user %s is not allowed to view applicable", user.getUsername()));
         }
@@ -98,7 +98,7 @@ public class ApplicationController {
     }
 
     @PutMapping("/{id:\\d+}/submit")
-    public ApplicationDto submit(HoisUserDetails user, @WithEntity(value = "id") Application application) {
+    public ApplicationDto submit(HoisUserDetails user, @WithEntity Application application) {
         if(!UserUtil.canSubmitApplication(user, application)) {
             String status = EntityUtil.getCode(application.getStatus());
             throw new ValidationFailedException(String.format("User %s is not allowed to submit application %d with status %s", user.getUsername(), application.getId(), status));
@@ -114,7 +114,7 @@ public class ApplicationController {
     }
 
     @PutMapping("/{id:\\d+}/reject")
-    public ApplicationDto reject(HoisUserDetails user, @WithEntity(value = "id") Application application,
+    public ApplicationDto reject(HoisUserDetails user, @WithEntity Application application,
             @Valid @RequestBody ApplicationRejectForm applicationRejectForm) {
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
 

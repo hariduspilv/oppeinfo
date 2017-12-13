@@ -32,6 +32,7 @@ import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.DeclarationDto;
 import ee.hitsa.ois.web.dto.DeclarationSubjectDto;
+import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 @RestController
 @RequestMapping("declarations")
@@ -41,7 +42,7 @@ public class DeclarationController {
     private DeclarationService declarationService;
 
     @GetMapping("/{id:\\d+}")
-    public DeclarationDto get(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
+    public DeclarationDto get(HoisUserDetails user, @WithEntity Declaration declaration) {
         UserUtil.assertCanViewStudent(user, declaration.getStudent());
         return declarationService.get(user, declaration);
     }
@@ -77,19 +78,19 @@ public class DeclarationController {
     }
 
     @GetMapping("/modules/{id:\\d+}")
-    public List<AutocompleteResult> getModules(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
+    public List<AutocompleteResult> getModules(HoisUserDetails user, @WithEntity Declaration declaration) {
         UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
         return declarationService.getModules(declaration);
     }
 
     @GetMapping("/subjects/{id:\\d+}")
-    public List<DeclarationSubjectDto> getCurriculumSubjectOptions(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
+    public List<DeclarationSubjectDto> getCurriculumSubjectOptions(HoisUserDetails user, @WithEntity Declaration declaration) {
         UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
         return declarationService.getCurriculumSubjectOptions(declaration);
     }
 
     @GetMapping("/subjects/extracurriculum/{id:\\d+}")
-    public List<DeclarationSubjectDto> getExtraCurriculumSubjectOptions(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
+    public List<DeclarationSubjectDto> getExtraCurriculumSubjectOptions(HoisUserDetails user, @WithEntity Declaration declaration) {
         UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
         return declarationService.getExtraCurriculumSubjectsOptions(declaration);
     }
@@ -110,13 +111,13 @@ public class DeclarationController {
     }
 
     @PostMapping("/create/{id:\\d+}")
-    public DeclarationDto createForSchoolAdmin(HoisUserDetails user, @WithEntity("id") Student student) {
+    public DeclarationDto createForSchoolAdmin(HoisUserDetails user, @WithEntity Student student) {
         UserUtil.assertIsSchoolAdmin(user, student.getSchool());
         return get(user, declarationService.create(user, student.getId()));
     }
 
     @PutMapping("/confirm/{id:\\d+}")
-    public DeclarationDto confirm(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
+    public DeclarationDto confirm(HoisUserDetails user, @WithEntity Declaration declaration) {
         DeclarationUtil.assertCanConfirm(user, declaration);
         return get(user, declarationService.confirm(user.getUsername(), declaration));
     }
@@ -131,7 +132,7 @@ public class DeclarationController {
     }
 
     @PutMapping("/removeConfirm/{id:\\d+}")
-    public DeclarationDto removeConfirmation(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
+    public DeclarationDto removeConfirmation(HoisUserDetails user, @WithEntity Declaration declaration) {
         DeclarationUtil.assertCanUnconfirmDeclaration(user, declaration);
         return get(user, declarationService.removeConfirmation(declaration));
     }
@@ -142,7 +143,7 @@ public class DeclarationController {
     }
 
     @DeleteMapping("/subject/{id:\\d+}")
-    private void deleteSubject(HoisUserDetails user, @WithEntity("id") DeclarationSubject subject) {
+    private void deleteSubject(HoisUserDetails user, @WithEntity DeclarationSubject subject) {
         DeclarationUtil.assertCanChangeDeclaration(user, subject.getDeclaration());
         declarationService.deleteSubject(user, subject);
     }
@@ -152,6 +153,15 @@ public class DeclarationController {
             Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return declarationService.getStudentsWithoutDeclaration(command, pageable, user.getSchoolId());
+    }
+    
+    /**
+     * @return list of active students who have no declaration in current study period
+     */
+    @GetMapping("/withoutDeclaration")
+    public Page<StudentSearchDto> searchStudentsWithoutDeclaration(HoisUserDetails user, Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return declarationService.searchStudentsWithoutDeclaration(new UsersSearchCommand(), user.getSchoolId(), pageable);
     }
 
     @GetMapping("/currentStudyPeriod")

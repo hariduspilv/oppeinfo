@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -123,8 +124,8 @@ public class ControllerErrorHandler {
     public static class ErrorInfo {
         private final List<Error> errors;
 
-        public ErrorInfo(List<Error> errors) {
-            this.errors = errors;
+        public ErrorInfo(List<? extends Error> errors) {
+            this.errors = new ArrayList<>(errors != null ? errors : Collections.emptyList());
         }
 
         @JsonProperty("_errors")
@@ -151,10 +152,11 @@ public class ControllerErrorHandler {
             return new ErrorInfo(Collections.singletonList(new Error(code, params)));
         }
 
-        public static ErrorInfo of(List<Map.Entry<String, String>> errors) {
-            return new ErrorInfo(StreamUtil.toMappedList(me -> new ErrorForField(me.getValue(), me.getKey()), errors));
+        public static ErrorInfo of(List<? extends Error> errors) {
+            return new ErrorInfo(errors);
         }
 
+        // TODO rename to avoid name clash with java.lang.Error
         @JsonInclude(value = Include.NON_NULL)
         public static class Error {
             private final String code;
@@ -191,7 +193,6 @@ public class ControllerErrorHandler {
                 return field;
             }
         }
-
     }
 
     private static Map<String, String> UNIQUE_VIOLATION_MESSAGES = new HashMap<>();

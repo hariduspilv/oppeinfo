@@ -53,7 +53,7 @@ angular.module('hitsaOis')
     $scope.studyForms = curriculumEntity.studyForms;
     $scope.curriculumStudyForms = curriculumEntity.studyForms;
 
-    var admissionYears = [];
+    var admissionYears = [null];
     var currentYear = new Date().getFullYear();
     for(var year = currentYear - 10; year <= currentYear + 2; year++) {
       admissionYears.push(year);
@@ -419,6 +419,14 @@ angular.module('hitsaOis')
       } else {
         $scope.codeNameUnique = true;
       }
+    });
+
+    /**
+     * Back buttons not always work properly on this form, that is why this is left here for testing in devhois.
+     * TODO: delete before the release on 13 December 2017
+     */
+    $scope.$watch('vocationalCurriculumModuleImplementationPlanForm.$dirty', function(){
+      console.log("implementation plan form dirty: ", $scope.vocationalCurriculumModuleImplementationPlanForm.$dirty);
     });
 
   });

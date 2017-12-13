@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -7,6 +8,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +22,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JobStatus;
 import ee.hitsa.ois.enums.JobType;
+import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
@@ -32,10 +36,15 @@ import ee.hitsa.ois.util.StreamUtil;
 @Service
 public class JobService {
 
-    private static final List<String> AKAD_JOB_TYPES = EnumUtil.toNameList(JobType.JOB_AKAD_MINEK, JobType.JOB_AKAD_TULEK);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    private static final int ACADEMIC_LEAVE_MESSAGE_BEFORE_DAYS = 14;
+    private static final List<String> AKAD_JOB_TYPES = EnumUtil.toNameList(JobType.JOB_AKAD_MINEK, JobType.JOB_AKAD_TULEK, JobType.JOB_AKAD_LOPP_TEADE);
     private static final List<String> AKADK_JOB_TYPES = EnumUtil.toNameList(JobType.JOB_AKAD_KATK);
     private static final List<String> VALIS_JOB_TYPES = EnumUtil.toNameList(JobType.JOB_VALIS_MINEK, JobType.JOB_VALIS_TULEK);
 
+    @Autowired
+    private DirectiveConfirmService directiveConfirmService;
     @Autowired
     private EntityManager em;
 
@@ -67,7 +76,12 @@ public class JobService {
      */
     public void directiveConfirmed(Long directiveId) {
         Directive directive = em.getReference(Directive.class, directiveId);
-        submitEhisSend(directive);
+        // cancelling directive is not sent to ehis (it's changed manually in ehis)
+        // akad and akadk are sent when student status changes
+        // valis and lopetamine are sent manually
+        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_AKADK, DirectiveType.KASKKIRI_LOPET, DirectiveType.KASKKIRI_VALIS)) {
+            submitEhisSend(directive, null);
+        }
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
         switch(directiveType) {
@@ -89,7 +103,7 @@ public class JobService {
             }
             break;
         case KASKKIRI_AKADK:
-            cancelJobs(EnumUtil.toNameList(JobType.JOB_AKAD_TULEK), directive);
+            cancelJobs(EnumUtil.toNameList(JobType.JOB_AKAD_TULEK, JobType.JOB_AKAD_LOPP_TEADE), directive);
             for(DirectiveStudent ds : directive.getStudents()) {
                 submitAkadkJob(ds);
             }
@@ -141,6 +155,19 @@ public class JobService {
         return em.merge(job);
     }
 
+    public void submitEhisSend(Directive directive, Student student) {
+        if(!em.contains(directive)) {
+            directive = em.merge(directive);
+        }
+        Job job = new Job();
+        job.setSchool(directive.getSchool());
+        job.setDirective(directive);
+        job.setStudent(student);
+        // ASAP
+        job.setJobTime(LocalDateTime.now());
+        submitJob(JobType.JOB_EHIS, job);
+    }
+
     private void submitAkadJob(DirectiveStudent ds) {
         Directive directive = ds.getDirective();
 
@@ -151,6 +178,14 @@ public class JobService {
         job.setStudent(ds.getStudent());
         job.setJobTime(DateUtils.periodStart(ds).atStartOfDay());
         submitJob(JobType.JOB_AKAD_MINEK, job);
+
+        // automatic message before academic leave ends
+        job = new Job();
+        job.setSchool(directive.getSchool());
+        job.setDirective(directive);
+        job.setStudent(ds.getStudent());
+        job.setJobTime(DateUtils.periodEnd(ds).atStartOfDay().minusDays(ACADEMIC_LEAVE_MESSAGE_BEFORE_DAYS));
+        submitJob(JobType.JOB_AKAD_LOPP_TEADE, job);
 
         // student comes back from academic leave, change status A -> O
         job = new Job();
@@ -164,8 +199,16 @@ public class JobService {
     private void submitAkadkJob(DirectiveStudent ds) {
         Directive directive = ds.getDirective();
 
-        // student cancels academic leave, change status A -> O
+        // automatic message before cancel academic leave
         Job job = new Job();
+        job.setSchool(directive.getSchool());
+        job.setDirective(directive);
+        job.setStudent(ds.getStudent());
+        job.setJobTime(ds.getStartDate().atStartOfDay().minusDays(ACADEMIC_LEAVE_MESSAGE_BEFORE_DAYS));
+        submitJob(JobType.JOB_AKAD_LOPP_TEADE, job);
+
+        // student cancels academic leave, change status A -> O
+        job = new Job();
         job.setSchool(directive.getSchool());
         job.setDirective(directive);
         job.setStudent(ds.getStudent());
@@ -193,23 +236,37 @@ public class JobService {
         submitJob(JobType.JOB_VALIS_TULEK, job);
     }
 
-    private void submitEhisSend(Directive directive) {
-        // cancelling directive is not sent to ehis (it's changed manually in ehis)
-        // akad and akadk are sent when student status changes
-        // valis and lopetamine are sent manually
-        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_AKADK, DirectiveType.KASKKIRI_LOPET, DirectiveType.KASKKIRI_VALIS)) {
-            Job ehis = new Job();
-            ehis.setSchool(directive.getSchool());
-            ehis.setDirective(directive);
-            // ASAP
-            ehis.setJobTime(LocalDateTime.now());
-            submitJob(JobType.JOB_EHIS, ehis);
-        }
-    }
-
     private void submitJob(JobType type, Job job) {
         job.setType(em.getReference(Classifier.class, type.name()));
         setJobStatus(job, JobStatus.JOB_STATUS_VALMIS);
+
+        LocalDateTime now = LocalDateTime.now();
+        if(!job.getJobTime().isAfter(now)) {
+            // job start time already arrived
+            switch(type) {
+            case JOB_AKAD_MINEK:
+            case JOB_AKAD_KATK:
+            case JOB_VALIS_MINEK:
+                directiveConfirmService.updateStudentStatus(job);
+                if(JobType.JOB_AKAD_MINEK.equals(type) || JobType.JOB_AKAD_KATK.equals(type)) {
+                    // send student status change to ehis
+                    submitEhisSend(job.getDirective(), job.getStudent());
+                }
+                setJobStatus(job, JobStatus.JOB_STATUS_TAIDETUD);
+                break;
+            case JOB_AKAD_LOPP_TEADE:
+                try {
+                    directiveConfirmService.sendAcademicLeaveEndingMessage(job);
+                    setJobStatus(job, JobStatus.JOB_STATUS_TAIDETUD);
+                } catch(BadConfigurationException e) {
+                    setJobStatus(job, JobStatus.JOB_STATUS_VIGA);
+                    LOG.error("Error while sending automatic message: ", e);
+                }
+                break;
+            default:
+                break;
+            }
+        }
         em.persist(job);
     }
 

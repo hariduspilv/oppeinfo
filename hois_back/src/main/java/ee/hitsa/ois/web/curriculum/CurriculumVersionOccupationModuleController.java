@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
@@ -26,6 +27,7 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto;
 
@@ -45,7 +47,7 @@ public class CurriculumVersionOccupationModuleController {
     private SchoolService schoolService;
     
     @GetMapping("/{id:\\d+}")
-    public CurriculumVersionOccupationModuleDto get(HoisUserDetails user, @WithEntity("id") CurriculumVersionOccupationModule module) {
+    public CurriculumVersionOccupationModuleDto get(HoisUserDetails user, @WithEntity CurriculumVersionOccupationModule module) {
         CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), module.getCurriculumVersion());
         return curriculumVersionOccupationModuleService.get(module);
         
@@ -61,17 +63,15 @@ public class CurriculumVersionOccupationModuleController {
     @PutMapping("/{id:\\d+}")
     public CurriculumVersionOccupationModuleDto update(HoisUserDetails user,
             @NotNull @Valid @RequestBody CurriculumVersionOccupationModuleDto dto,
-            @WithEntity("id") CurriculumVersionOccupationModule occupationModule) {
+            @WithEntity CurriculumVersionOccupationModule occupationModule) {
         validate(user, EntityUtil.getId(occupationModule.getCurriculumVersion()));
         return get(user, curriculumVersionOccupationModuleService.update(dto, occupationModule));
     }
     
     @GetMapping("/curriculumModule/{id:\\d+}")
-    public CurriculumModuleDto getCurriculumModule(@WithEntity("id") CurriculumModule module) {
+    public CurriculumModuleDto getCurriculumModule(@WithEntity CurriculumModule module) {
         return CurriculumModuleDto.forOccupationModule(module);
     }
-    
-    
     
     @PostMapping("/theme")
     public CurriculumVersionOccupationModuleThemeDto createTheme(HoisUserDetails user,
@@ -79,22 +79,32 @@ public class CurriculumVersionOccupationModuleController {
         validate(user, EntityUtil.getId(em.getReference(CurriculumVersionOccupationModule.class, dto.getModule()).getCurriculumVersion()));
         return curriculumVersionOccupationModuleService.getTheme(curriculumVersionOccupationModuleService.createTheme(dto));
     }
+    
+    @GetMapping("/theme/{id:\\d+}")
+    public CurriculumVersionOccupationModuleThemeDto getTheme(@WithEntity CurriculumVersionOccupationModuleTheme theme) {
+        return CurriculumVersionOccupationModuleThemeDto.of(theme);
+    }
 
     @PutMapping("/theme/{id:\\d+}")
     public CurriculumVersionOccupationModuleThemeDto updateTheme(HoisUserDetails user,
             @NotNull @Valid @RequestBody CurriculumVersionOccupationModuleThemeDto dto,
-            @WithEntity("id") CurriculumVersionOccupationModuleTheme theme) {
+            @WithEntity CurriculumVersionOccupationModuleTheme theme) {
         validate(user, EntityUtil.getId(theme.getModule().getCurriculumVersion()));
         return curriculumVersionOccupationModuleService.getTheme(curriculumVersionOccupationModuleService.updateTheme(theme, dto));
     }
-    
+
     @DeleteMapping("/theme/{id:\\d+}")
     public void deleteTHeme(HoisUserDetails user,
-            @WithEntity("id") CurriculumVersionOccupationModuleTheme theme) {
+            @WithEntity CurriculumVersionOccupationModuleTheme theme) {
         validate(user, EntityUtil.getId(theme.getModule().getCurriculumVersion()));
-        curriculumVersionOccupationModuleService.deleteTheme(theme);
+        curriculumVersionOccupationModuleService.deleteTheme(user, theme);
     }
     
+    @GetMapping("/outcome/{id:\\d+}")
+    public CurriculumModuleOutcomeDto getTheme(@WithEntity CurriculumModuleOutcome outcome) {
+        return CurriculumModuleOutcomeDto.of(outcome);
+    }
+
     private void validate(HoisUserDetails user, Long curriculumVersionId) {
         CurriculumVersion curriculumVersion = curriculumVersionRepository.getOne(curriculumVersionId);
         CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());

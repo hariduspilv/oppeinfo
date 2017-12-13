@@ -27,6 +27,10 @@ public class CurriculumOccupation extends BaseEntityWithId {
     @JoinColumn(name = "curriculum_occupation_id", nullable = false, updatable = false)
     private Set<CurriculumOccupationSpeciality> specialities;
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
+    private Curriculum curriculum;
+
     public Classifier getOccupation() {
         return occupation;
     }
@@ -50,5 +54,13 @@ public class CurriculumOccupation extends BaseEntityWithId {
     public void setSpecialities(Set<CurriculumOccupationSpeciality> specialities) {
         getSpecialities().clear();
         getSpecialities().addAll(specialities);
+    }
+
+    public Curriculum getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(Curriculum curriculum) {
+        this.curriculum = curriculum;
     }
 }

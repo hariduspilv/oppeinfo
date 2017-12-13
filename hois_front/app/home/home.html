@@ -3,19 +3,39 @@
     <span>{{ 'home.greeting' | translate }}</span>
     <br>
     <br>
+    <a target="_blank" href="https://kratt.edu.ee">Kratt</a>
+    <br>
+    <br>
     <a ng-href="/#/studentrepresentatives/applications/new?_menu">{{'home.represantiveApplication' | translate}}</a>
     <br>
     <br>
-    <div ng-if="hasUnaccepdedAbsences">
+    <div ng-if="hasUnacceptedAbsences">
       <span>{{'absence.youHaveUnacceptedAbsences' | translate}}</span>
       <a ng-href="/#/absences?_menu">{{'main.button.view' | translate}}</a>
     </div>
     <br>
-    <div ng-class="{unconfirmedFinishedJournals: unconfirmedJournals.anyFinished}"
-    ng-if="unconfirmedJournals.count && unconfirmedJournals.count > 0">
+    <div ng-class="{unconfirmedFinishedJournals: unconfirmedJournals.anyFinished}" ng-if="unconfirmedJournals && unconfirmedJournals.count > 0">
         <span>{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
     </div>
     <br>
+
+    <h3 ng-if="expiringOccupationStandards && expiringOccupationStandards.length > 0">{{'home.expiringOccupationStandards.title' | translate}}
+      <span ng-if="expiringOccupationStandards && expiringOccupationStandards.length > 3">
+        <md-button class="md-primary" ng-click="toggleNumberOfOccupationStandards()">{{(numberOfOccupationStandards? 'main.button.view' : 'main.button.hide')|translate}}</md-button>
+      </span>
+    </h3>
+    <md-table-container>
+      <table md-table>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in expiringOccupationStandards | limitTo:numberOfOccupationStandards" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell width="40%">{{::currentLanguageNameField(row)}}</td>
+            <td md-cell width="10%">{{::row.validThru | hoisDate}}</td>
+            <td md-cell>{{'home.expiringOccupationStandards.curriculum' | translate}}&nbsp;{{::row.curriculums.join(', ')}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+
     <br>
     <h3>{{'home.generalmessages' | translate}}</h3>
     <md-table-container>
@@ -31,7 +51,7 @@
               <a class="md-primary" ng-click="openCloseDetails(row)" aria-label="{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}">
                 <span>{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}</span>
               </a>
-			      </td>
+            </td>
           </tr>
         </tbody>
       </table>

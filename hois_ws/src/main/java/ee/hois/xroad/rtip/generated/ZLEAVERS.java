@@ -34,7 +34,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "ZLEAVERS", namespace = "http://rtk-v6.x-road.eu", propOrder = {
+@XmlType(name = "ZLEAVERS", propOrder = {
     "pernr"
 })
 public class ZLEAVERS {

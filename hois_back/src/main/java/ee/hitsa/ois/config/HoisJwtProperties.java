@@ -19,6 +19,12 @@ public class HoisJwtProperties {
     private String tokenPrefix = "Bearer";
     @NotEmpty
     private String claimLoginMethod = "loginMethod";
+    @NotEmpty
+    private String claimSesscode = "sesscode";
+    @NotEmpty
+    private String claimGivenname = "givenname";
+    @NotEmpty
+    private String claimSurname = "surname";
 
     public String getSecret() {
         return secret;
@@ -52,5 +58,28 @@ public class HoisJwtProperties {
         this.claimLoginMethod = claimLoginMethod;
     }
 
+    public String getClaimSesscode() {
+        return claimSesscode;
+    }
+
+    public void setClaimSesscode(String claimSesscode) {
+        this.claimSesscode = claimSesscode;
+    }
+
+    public String getClaimGivenname() {
+        return claimGivenname;
+    }
+
+    public void setClaimGivenname(String claimGivenname) {
+        this.claimGivenname = claimGivenname;
+    }
+
+    public String getClaimSurname() {
+        return claimSurname;
+    }
+
+    public void setClaimSurname(String claimSurname) {
+        this.claimSurname = claimSurname;
+    }
 
 }

@@ -1,6 +1,8 @@
 package ee.hitsa.ois.web.commandobject;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
@@ -25,12 +27,25 @@ public class SchoolForm extends VersionedCommand {
     @Size(max = 255)
     private String emailDomain;
     private Boolean generateUserEmail;
+    @Size(max = 10)
+    private String rtipSchoolCode;
     @Valid
     private OisFileCommand logo;
     private Boolean deleteCurrentLogo;
     @NotEmpty
     @ClassifierRestriction(MainClassCode.EHIS_KOOL)
     private String ehisSchool;
+    @Size(max = 255)
+    private String adUrl;
+    @Min(0)
+    @Max(65535)
+    private Long adPort;
+    @Size(max = 255)
+    private String adDomain;
+    @Size(max = 255)
+    private String adBase;
+    @Size(max = 50)
+    private String adIdcodeField;
 
     public String getNameEt() {
         return nameEt;
@@ -96,6 +111,14 @@ public class SchoolForm extends VersionedCommand {
         this.generateUserEmail = generateUserEmail;
     }
 
+    public String getRtipSchoolCode() {
+        return rtipSchoolCode;
+    }
+
+    public void setRtipSchoolCode(String rtipSchoolCode) {
+        this.rtipSchoolCode = rtipSchoolCode;
+    }
+
     public OisFileCommand getLogo() {
         return logo;
     }
@@ -119,4 +142,45 @@ public class SchoolForm extends VersionedCommand {
     public void setEhisSchool(String ehisSchool) {
         this.ehisSchool = ehisSchool;
     }
+
+    public String getAdUrl() {
+        return adUrl;
+    }
+
+    public void setAdUrl(String adUrl) {
+        this.adUrl = adUrl;
+    }
+
+    public Long getAdPort() {
+        return adPort;
+    }
+
+    public void setAdPort(Long adPort) {
+        this.adPort = adPort;
+    }
+
+    public String getAdDomain() {
+        return adDomain;
+    }
+
+    public void setAdDomain(String adDomain) {
+        this.adDomain = adDomain;
+    }
+
+    public String getAdBase() {
+        return adBase;
+    }
+
+    public void setAdBase(String adBase) {
+        this.adBase = adBase;
+    }
+
+    public String getAdIdcodeField() {
+        return adIdcodeField;
+    }
+
+    public void setAdIdcodeField(String adIdcodeField) {
+        this.adIdcodeField = adIdcodeField;
+    }
+    
 }

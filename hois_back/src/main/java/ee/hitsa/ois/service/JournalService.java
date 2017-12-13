@@ -187,12 +187,12 @@ public class JournalService {
                                 .get("id"), command.getStudentGroup())));
         filters.add(cb.exists(studentGroupsQuery));
     }
-    
+
     public Journal confirm(Journal journal) {
         journal.setStatus(classifierRepository.getOne(JournalStatus.PAEVIK_STAATUS_K.name()));
         return EntityUtil.save(journal, em);
     }
-    
+
     public Journal unconfirm(Journal journal) {
         journal.setStatus(classifierRepository.getOne(JournalStatus.PAEVIK_STAATUS_T.name()));
         return EntityUtil.save(journal, em);
@@ -208,6 +208,7 @@ public class JournalService {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
             filters.add(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()));
+            filters.add(cb.equal(root.get("curriculumVersion").get("curriculum").get("higher"), Boolean.FALSE));
 
             if (StringUtils.hasText(command.getStudentName())) {
                 List<Predicate> name = new ArrayList<>();
@@ -221,6 +222,10 @@ public class JournalService {
                     filters.add(cb.or(name.toArray(new Predicate[name.size()])));
                 }
             }
+            
+            if(!CollectionUtils.isEmpty(command.getStudentId())) {
+                filters.add(cb.not(root.get("id").in(command.getStudentId())));
+            }
 
             Subquery<Long> studentsQuery = query.subquery(Long.class);
             Root<Journal> journalRoot = studentsQuery.from(Journal.class);
@@ -230,15 +235,20 @@ public class JournalService {
                             cb.equal(journalStudentsJoin.get("student").get("id"), root.get("id"))));
             filters.add(cb.not(cb.exists(studentsQuery)));
 
-            // kellel puudub vastavas moodulis positiivne tulemus.
+            
+            // who has no positive result in given module
+            
+            Journal journal = journalRepository.findOne(journalId);
+            Set<Long> omodules = StreamUtil.toMappedSet(t -> EntityUtil.getId(
+                    t.getCurriculumVersionOccupationModuleTheme().getModule()), journal.getJournalOccupationModuleThemes());
+            
             Subquery<Long> protocolStudentsQuery = query.subquery(Long.class);
             Root<Protocol> protocolRoot = protocolStudentsQuery.from(Protocol.class);
             Join<Object, Object> protocolStudentsJoin = protocolRoot.join("protocolStudents", JoinType.LEFT);
             protocolStudentsQuery.select(protocolStudentsJoin.get("student").get("id")).where(
                     cb.and(cb.equal(protocolStudentsJoin.get("student").get("id"), root.get("id"))),
                     protocolStudentsJoin.get("grade").get("code").in(OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE),
-                    cb.equal(protocolRoot.get("protocolVdata").get("curriculumVersion").get("id"),
-                            root.get("curriculumVersion").get("id")));
+                    protocolRoot.get("protocolVdata").get("curriculumVersionOccupationModule").get("id").in(omodules));
             filters.add(cb.not(cb.exists(protocolStudentsQuery)));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
@@ -303,26 +313,29 @@ public class JournalService {
         return EntityUtil.save(journal, em);
     }
 
-    public Journal removeStudentsFromJournal(Journal journal, JournalStudentsCommand command) {
+    public Journal removeStudentsFromJournal(HoisUserDetails user, Journal journal, JournalStudentsCommand command) {
+        EntityUtil.setUsername(user.getUsername(), em);
         journal.getJournalStudents().removeIf(js -> command.getStudents().contains(EntityUtil.getId(js.getStudent())));
         return EntityUtil.save(journal, em);
     }
 
     public Journal saveJournalEntry(HoisUserDetails user, Journal journal, JournalEntryForm journalEntryForm) {
         validateJournalEntry(journalEntryForm);
+        EntityUtil.setUsername(user.getUsername(), em);
         JournalEntry journalEntry = EntityUtil.bindToEntity(journalEntryForm, new JournalEntry(), classifierRepository,
                 "journalEntryStudents", "journalEntryCapacityTypes");
         journal.getJournalEntries().add(journalEntry);
-        saveJournalEntryStudents(user, journalEntryForm, journalEntry);
+        saveJournalEntryStudents(journalEntryForm, journalEntry);
         return EntityUtil.save(journal, em);
     }
 
     public void updateJournalEntry(HoisUserDetails user, JournalEntryForm journalEntryForm, Long journalEntrylId) {
         validateJournalEntry(journalEntryForm);
+        EntityUtil.setUsername(user.getUsername(), em);
         JournalEntry journalEntry = em.getReference(JournalEntry.class, journalEntrylId);
         EntityUtil.bindToEntity(journalEntryForm, journalEntry, classifierRepository, "journalEntryStudents",
                 "journalEntryCapacityTypes");
-        saveJournalEntryStudents(user, journalEntryForm, journalEntry);
+        saveJournalEntryStudents(journalEntryForm, journalEntry);
         EntityUtil.save(journalEntry, em);
     }
 
@@ -336,13 +349,13 @@ public class JournalService {
         }
     }
 
-    private void saveJournalEntryStudents(HoisUserDetails user, JournalEntryForm journalEntryForm,
+    private void saveJournalEntryStudents(JournalEntryForm journalEntryForm,
             JournalEntry journalEntry) {
         for (JournalEntryStudentForm journalEntryStudentForm : journalEntryForm.getJournalEntryStudents()) {
             if (journalEntryStudentForm.getId() != null) {
-                updateJournalStudentEntry(user, journalEntryStudentForm);
+                updateJournalStudentEntry(journalEntryStudentForm);
             } else {
-                saveJournalStudentEntry(user, journalEntry, journalEntryStudentForm);
+                saveJournalStudentEntry(journalEntry, journalEntryStudentForm);
             }
         }
         EntityUtil.bindEntityCollection(journalEntry.getJournalEntryCapacityTypes(),
@@ -354,9 +367,9 @@ public class JournalService {
                 });
     }
 
-    private void updateJournalStudentEntry(HoisUserDetails user, JournalEntryStudentForm journalEntryStudentForm) {
+    private void updateJournalStudentEntry(JournalEntryStudentForm journalEntryStudentForm) {
         JournalEntryStudent journalEntryStudent = em.getReference(JournalEntryStudent.class, journalEntryStudentForm.getId());
-        assertJournalEntryStudentRules(user, journalEntryStudent.getJournalStudent(), journalEntryStudent,
+        assertJournalEntryStudentRules(journalEntryStudent.getJournalStudent(), journalEntryStudent,
                 journalEntryStudentForm);
 
         if (journalEntryStudent.getGrade() != null
@@ -374,29 +387,15 @@ public class JournalService {
                 "journalEntryStudentHistories", "gradeInserted");
     }
 
-    private static void assertJournalEntryStudentRules(HoisUserDetails user, JournalStudent journaStudent,
+    private static void assertJournalEntryStudentRules(JournalStudent journaStudent,
             JournalEntryStudent journalEntryStudent, JournalEntryStudentForm journalEntryStudentForm) {
 
-        // Mitteõppivate, kuid päevikuga seotud õppurite õppetulemusi muuta ei
-        // saa
+        // cannot change results of not studying students
         if (!StudentUtil.isStudying(journaStudent.getStudent())) {
             throw new ValidationFailedException("journal.messages.changeIsNotAllowedStudentIsNotStudying");
         }
 
-        // Õpetaja ja administratiivne töötaja saavad märkida ainult põhjuseta
-        // puudumist
-        // new requirement: they can select PUUDUMINE_V if student has accepted absence
-        // TODO: validation here can be enhanced actually
-//        if ((user.isTeacher() || user.isSchoolAdmin()) && journalEntryStudentForm.getAbsence() != null
-//                && Absence.PUUDUMINE_V.name().equals(journalEntryStudentForm.getAbsence())
-//                && (journalEntryStudent == null
-//                        || !ClassifierUtil.equals(Absence.PUUDUMINE_V, journalEntryStudent.getAbsence()))) {
-//            throw new ValidationFailedException("journal.messages.absenceValueIsNotAllowed");
-//        }
-
-        // Kui puudumine on rühmajuhataja poolt muudetud põhjendatuks, siis
-        // hiljem hilinemise ega puudumise andmeid vastava sissekande juures
-        // muuta ei saa
+        // If the absence/lateness has a respectful reason, then absence/lateness data cannot be changed
         if (journalEntryStudent != null && journalEntryStudent.getAbsence() != null
                 && ClassifierUtil.equals(Absence.PUUDUMINE_V, journalEntryStudent.getAbsence())
                 && !Absence.PUUDUMINE_V.name().equals(journalEntryStudentForm.getAbsence())) {
@@ -404,10 +403,10 @@ public class JournalService {
         }
     }
 
-    private void saveJournalStudentEntry(HoisUserDetails user, JournalEntry journalEntry,
+    private void saveJournalStudentEntry(JournalEntry journalEntry,
             JournalEntryStudentForm journalEntryStudentForm) {
         JournalStudent journalStudent = em.getReference(JournalStudent.class, journalEntryStudentForm.getJournalStudent());
-        assertJournalEntryStudentRules(user, journalStudent, null, journalEntryStudentForm);
+        assertJournalEntryStudentRules(journalStudent, null, journalEntryStudentForm);
 
         JournalEntryStudent journalEntryStudent = EntityUtil.bindToEntity(journalEntryStudentForm,
                 new JournalEntryStudent(), classifierRepository, "journalEntryStudentHistories", "gradeInserted");
@@ -466,6 +465,10 @@ public class JournalService {
         }
         return null;
     }
+    
+    private static boolean isFinalResult(JournalEntryByDateDto dto) {
+        return JournalEntryType.SISSEKANNE_L.name().equals(dto.getEntryType());
+    }
 
     public List<JournalEntryByDateDto> journalEntriesByDate(Journal journal, Boolean allStudents) {
         List<JournalEntryByDateDto> result = new ArrayList<>();
@@ -491,6 +494,16 @@ public class JournalService {
         }
 
         Collections.sort(result, Comparator.comparing(JournalEntryByDateDto::getEntryDate, Comparator.nullsLast(Comparator.naturalOrder())));
+        
+        // put final results to the end of the list
+        Collections.sort(result, (JournalEntryByDateDto o1, JournalEntryByDateDto o2) -> {
+            if(isFinalResult(o1) && !isFinalResult(o2)) {
+                return 1;
+            } else if(!isFinalResult(o1) && isFinalResult(o2)) {
+                return -1;
+            }
+            return 0;
+        });
         return result;
     }
 
@@ -697,8 +710,6 @@ public class JournalService {
         return StreamUtil.toMappedList(r -> new StudentJournalAbsenceDto(resultAsLong(r, 0), resultAsLocalDate(r, 1), resultAsString(r, 2),
                 resultAsString(r, 3), resultAsShort(r, 4), resultAsString(r, 5)), data);
     }
-    
-    //StudentJournalResultDto
     
     /**
      * Get student's last 10 results for view.

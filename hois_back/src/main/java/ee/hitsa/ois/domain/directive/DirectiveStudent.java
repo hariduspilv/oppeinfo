@@ -1,6 +1,5 @@
 package ee.hitsa.ois.domain.directive;
 
-import static ee.hitsa.ois.validation.DirectiveValidation.*;
 import java.time.LocalDate;
 
 import javax.persistence.Entity;
@@ -21,6 +20,17 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.util.Period;
+import ee.hitsa.ois.validation.DirectiveValidation.Akad;
+import ee.hitsa.ois.validation.DirectiveValidation.Akadk;
+import ee.hitsa.ois.validation.DirectiveValidation.Eksmat;
+import ee.hitsa.ois.validation.DirectiveValidation.Ennist;
+import ee.hitsa.ois.validation.DirectiveValidation.Finm;
+import ee.hitsa.ois.validation.DirectiveValidation.Immat;
+import ee.hitsa.ois.validation.DirectiveValidation.Lopet;
+import ee.hitsa.ois.validation.DirectiveValidation.Okava;
+import ee.hitsa.ois.validation.DirectiveValidation.Okoorm;
+import ee.hitsa.ois.validation.DirectiveValidation.Ovorm;
+import ee.hitsa.ois.validation.DirectiveValidation.Valis;
 import ee.hitsa.ois.validation.PeriodRange;
 
 @PeriodRange(groups = {Akad.class, Valis.class})

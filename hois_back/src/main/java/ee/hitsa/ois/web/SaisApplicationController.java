@@ -41,7 +41,7 @@ public class SaisApplicationController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public SaisApplicationDto get(@WithEntity("id") SaisApplication saisApplication, HoisUserDetails user) {
+    public SaisApplicationDto get(@WithEntity SaisApplication saisApplication, HoisUserDetails user) {
         UserUtil.assertSameSchool(user, saisApplication.getSaisAdmission().getCurriculumVersion().getCurriculum().getSchool());
         return SaisApplicationDto.of(saisApplication);
     }

@@ -61,7 +61,7 @@ public class MessageController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public MessageDto get(HoisUserDetails user, @WithEntity("id") Message message) {
+    public MessageDto get(HoisUserDetails user, @WithEntity Message message) {
         MessageDto dto = MessageDto.of(message);
         dto.setIsRead(message.isReadBy(user.getPersonId()));
         return dto;
@@ -74,7 +74,7 @@ public class MessageController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public void setRead(HoisUserDetails user, @WithEntity("id") Message message) {
+    public void setRead(HoisUserDetails user, @WithEntity Message message) {
         messageService.setRead(user.getPersonId(), message);
     }
 

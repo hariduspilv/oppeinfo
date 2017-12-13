@@ -22,17 +22,12 @@ import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumJointPartner;
-import ee.hitsa.ois.domain.curriculum.CurriculumModule;
-import ee.hitsa.ois.domain.curriculum.CurriculumModuleOccupation;
-import ee.hitsa.ois.domain.curriculum.CurriculumOccupation;
-import ee.hitsa.ois.domain.curriculum.CurriculumOccupationSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyForm;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersionSpeciality;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
@@ -44,13 +39,13 @@ import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
-import ee.hitsa.ois.repository.CurriculumVersionSpecialityRepository;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.ehis.EhisCurriculumService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.StateCurriculumUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudyLevelUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -59,14 +54,11 @@ import ee.hitsa.ois.web.commandobject.curriculum.CurriculumFileForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSchoolDepartmentCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumStudyLevelCommand;
-import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionHigherModuleForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumJointPartnerDto;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleDto;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumOccupationDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 
@@ -84,17 +76,16 @@ public class CurriculumService {
     @Autowired
     private EhisCurriculumService ehisCurriculumService;
     @Autowired
-    private CurriculumVersionSpecialityRepository curriculumVersionSpecialityRepository;
-    @Autowired
     private SchoolService schoolService;
 
-    public void delete(Curriculum curriculum) {
+    public void delete(HoisUserDetails user, Curriculum curriculum) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(curriculum, em);
     }
 
-	public List<Classifier> getAreasOfStudyByGroupOfStudy(String code) {
-	    return classifierRepository.findAreasOfStudyByGroupOfStudy(code);
-	}
+    public List<Classifier> getAreasOfStudyByGroupOfStudy(String code) {
+        return classifierRepository.findAreasOfStudyByGroupOfStudy(code);
+    }
 
     public Curriculum create(HoisUserDetails user, CurriculumForm curriculumForm) {
         Curriculum curriculum = new Curriculum();
@@ -107,88 +98,34 @@ public class CurriculumService {
             updateCurriculumSpecialities(curriculum, curriculumForm.getSpecialities());
         } else {
             curriculum.setDraft(classifierRepository.getOne(curriculumForm.getDraft()));
-            curriculum.setStateCurriculum(EntityUtil.getOptionalOne(StateCurriculum.class, 
-                    curriculumForm.getStateCurriculum(), em));
         }
         setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_S);
         curriculum.setHigher(curriculumForm.getHigher());
-        return save(curriculum, curriculumForm);
+        return save(user, curriculum, curriculumForm);
     }
 
-    public Curriculum save(Curriculum curriculum, CurriculumForm curriculumForm) {
-      EntityUtil.bindToEntity(curriculumForm, curriculum, classifierRepository, "draft", "higher", 
+    public Curriculum save(HoisUserDetails user, Curriculum curriculum, CurriculumForm curriculumForm) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.bindToEntity(curriculumForm, curriculum, classifierRepository, "draft", "higher",
               "versions", "studyLanguages", "studyForms", "schoolDepartments", "files",
               "jointPartners", "specialities", "modules", "occupations", "grades");
-      if(Boolean.FALSE.equals(curriculum.getHigher())) {
-          updateOccupations(curriculum, curriculumForm.getOccupations());
-          updateStudyForms(curriculum, curriculumForm.getStudyForms());
-      }
-      if(curriculum.getId() != null) {
-          updateCurriculumFiles(curriculum, StreamUtil.toMappedSet(CurriculumFileDto::of, curriculumForm.getFiles()));
-      }
-      updateDepartments(curriculum, curriculumForm.getSchoolDepartments());
-      updateLanguages(curriculum, curriculumForm.getStudyLanguages());
-      updateJointPartners(curriculum, curriculumForm.getJointPartners());
-      updateModules(curriculum, curriculumForm.getModules());
-      return curriculumRepository.save(curriculum);
-    }
 
-    private void updateCurriculumVersionSpecialities(CurriculumVersion version, Set<Long> specRefNums) {
-      EntityUtil.bindEntityCollection(version.getSpecialities(), cs -> EntityUtil.getId(cs.getCurriculumSpeciality()), specRefNums, s -> {
-          CurriculumVersionSpeciality cvs = new CurriculumVersionSpeciality();
-          cvs.setCurriculumVersion(version);
-          cvs.setCurriculumSpeciality(em.getReference(CurriculumSpeciality.class, s));
-          return cvs;
-      });
-    }
-
-    private void updateModules(Curriculum curriculum, Set<CurriculumModuleDto> modules) {
-        EntityUtil.bindEntityCollection(curriculum.getModules(), CurriculumModule::getId, modules, 
-           CurriculumModuleDto::getId, dto -> createCurriculumModule(curriculum, dto), this::updateCurriculumModule);
-    }
-
-    /**
-     * TODO: remove as no module created here
-     */
-    private CurriculumModule createCurriculumModule(Curriculum curriculum, CurriculumModuleDto dto) {
-        CurriculumModule module = new CurriculumModule();
-        module.setCurriculum(curriculum);
-        curriculum.getModules().add(module);
-        return updateCurriculumModule(dto, module);
-    }
-
-    /**
-     * only needed for updating list of module occupations, if some occupation was removed
-     */
-    private CurriculumModule updateCurriculumModule(CurriculumModuleDto dto, CurriculumModule module) {
-        EntityUtil.bindEntityCollection(module.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), dto.getOccupations(), occupationCode -> {
-            Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupationCode),
-                    MainClassCode.OSAKUTSE, MainClassCode.KUTSE, MainClassCode.SPETSKUTSE);
-            return new CurriculumModuleOccupation(c);
-          });
-        return module;
-    }
-
-    private void updateOccupations(Curriculum curriculum, Set<CurriculumOccupationDto> occupations) {
-        Set<CurriculumOccupation> newOccupations = new HashSet<>();
-        if(occupations != null) {
-            for(CurriculumOccupationDto dto : occupations) {
-                CurriculumOccupation occupation = dto.getId() == null ? new CurriculumOccupation() :
-                    EntityUtil.find(dto.getId(), curriculum.getOccupations()).get();
-
-                EntityUtil.bindToEntity(dto, occupation, classifierRepository, "specialities");
-                EntityUtil.bindEntityCollection(occupation.getSpecialities(), s -> EntityUtil.getCode(s.getSpeciality()), dto.getSpecialities(), specialityCode -> {
-                    Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(specialityCode), MainClassCode.SPETSKUTSE);
-                    return new CurriculumOccupationSpeciality(c);
-                });
-
-                newOccupations.add(occupation);
-            }
+        if(CurriculumUtil.isVocational(curriculum)) {
+            updateStudyForms(curriculum, curriculumForm.getStudyForms());
         }
-        curriculum.setOccupations(newOccupations);
+        if(curriculum.getId() != null) {
+            updateCurriculumFiles(curriculum, StreamUtil.toMappedSet(CurriculumFileDto::of, curriculumForm.getFiles()));
+        }
+        updateDepartments(curriculum, curriculumForm.getSchoolDepartments());
+        updateLanguages(curriculum, curriculumForm.getStudyLanguages());
+        updateJointPartners(curriculum, curriculumForm.getJointPartners());
+        if(CurriculumUtil.isVocational(curriculum) && Boolean.TRUE.equals(curriculum.getJoint())) {
+            updateVersionsSchoolDepartments(curriculum);
+        }
+        return EntityUtil.save(curriculum, em);
     }
-    
-    public void updateJointPartners(Curriculum curriculum, Set<CurriculumJointPartnerDto> jointPartners) {
+
+    private void updateJointPartners(Curriculum curriculum, Set<CurriculumJointPartnerDto> jointPartners) {
         EntityUtil.bindEntityCollection(curriculum.getJointPartners(), CurriculumJointPartner::getId, 
                 jointPartners, CurriculumJointPartnerDto::getId, dto -> {
             CurriculumJointPartner jointPartner = new CurriculumJointPartner();
@@ -197,44 +134,67 @@ public class CurriculumService {
             return jointPartner;
         }, this::updateJointPartner);
     }
-    
-    public void updateJointPartner(CurriculumJointPartnerDto dto, CurriculumJointPartner partner) {
+
+    private void updateJointPartner(CurriculumJointPartnerDto dto, CurriculumJointPartner partner) {
         EntityUtil.bindToEntity(dto, partner, classifierRepository);
     }
     
+    /**
+     * Is joint partner is deleted from curriculum, 
+     * then its school departments should be deleted from implementation plans
+     */
+    private void updateVersionsSchoolDepartments(Curriculum curriculum) {
+        Set<String> ehisSchools = new HashSet<>();
+        ehisSchools.add(EntityUtil.getCode(curriculum.getSchool().getEhisSchool()));        
+        ehisSchools.addAll(StreamUtil.toMappedSet(p -> EntityUtil.getCode(p.getEhisSchool()), curriculum.getJointPartners().stream().filter(p -> p.getEhisSchool() != null)));
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from school_department sd join school s on s.id = sd.school_id ");
+
+        qb.requiredCriteria("s.ehis_school_code in :ehisSchools", "ehisSchools", ehisSchools);
+
+        List<?> data = qb.select("sd.id", em).getResultList();
+        List<Long> schoolDepartments = StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
+        
+        for(CurriculumVersion version: curriculum.getVersions()) {
+            if(!schoolDepartments.contains(EntityUtil.getNullableId(version.getSchoolDepartment()))) {
+                version.setSchoolDepartment(null);
+            }
+        }
+    }
+
     private void updateCurriculumSpecialities(Curriculum curriculum, Set<CurriculumSpecialityDto> specialities) {
         EntityUtil.bindEntityCollection(curriculum.getSpecialities(), CurriculumSpeciality::getId, 
                 specialities, CurriculumSpecialityDto::getId, dto -> createSpeciality(curriculum, dto), this::updateSpeciality);
     }
-    
-    public CurriculumSpeciality createSpeciality(Curriculum curriculum, CurriculumSpecialityDto dto) {
+
+    private CurriculumSpeciality createSpeciality(Curriculum curriculum, CurriculumSpecialityDto dto) {
         CurriculumSpeciality speciality = new CurriculumSpeciality();
         speciality.setCurriculum(curriculum);
         updateSpeciality(dto, speciality);
         return speciality;  
     }
-    
+
     private CurriculumSpeciality updateSpeciality(CurriculumSpecialityDto dto, CurriculumSpeciality speciality) {
         return EntityUtil.bindToEntity(dto, speciality, classifierRepository, "curriculum");
     }
-    
+
     private void updateGrades(Curriculum curriculum, Set<CurriculumGradeDto> gradeDtos) {
         EntityUtil.bindEntityCollection(curriculum.getGrades(), CurriculumGrade::getId, gradeDtos, 
                 CurriculumGradeDto::getId, dto -> createGrade(curriculum, dto), this::updateGrade);
     }
-    
-    public CurriculumGrade createGrade(Curriculum curriculum, CurriculumGradeDto dto) {
+
+    private CurriculumGrade createGrade(Curriculum curriculum, CurriculumGradeDto dto) {
         CurriculumGrade grade = new CurriculumGrade();
         grade.setCurriculum(curriculum);
         updateGrade(dto, grade);
         return grade;
     }
 
-    public CurriculumGrade updateGrade(CurriculumGradeDto dto, CurriculumGrade grade) {
+    private CurriculumGrade updateGrade(CurriculumGradeDto dto, CurriculumGrade grade) {
         return EntityUtil.bindToEntity(dto, grade, classifierRepository);
     }
 
-    public void updateDepartments(Curriculum curriculum, Set<Long> newDepartments) {
+    void updateDepartments(Curriculum curriculum, Set<Long> newDepartments) {
         EntityUtil.bindEntityCollection(curriculum.getDepartments(), c -> EntityUtil.getId(c.getSchoolDepartment()), newDepartments, d -> {
             CurriculumDepartment cd = new CurriculumDepartment();
             cd.setCurriculum(curriculum);
@@ -246,7 +206,7 @@ public class CurriculumService {
     /**
      * TODO: no files created here
      */
-    public void updateCurriculumFiles(Curriculum curriculum, Set<CurriculumFileDto> newFileDtos) {
+    private void updateCurriculumFiles(Curriculum curriculum, Set<CurriculumFileDto> newFileDtos) {
         EntityUtil.bindEntityCollection(curriculum.getFiles(), CurriculumFile::getId, 
                 newFileDtos, CurriculumFileDto::getId, dto -> {
             CurriculumFile file = new CurriculumFile();
@@ -257,11 +217,11 @@ public class CurriculumService {
         }, this::updateCurriculumFile);
     }
     
-    public void updateCurriculumFile(CurriculumFileDto dto, CurriculumFile file) {
+    private void updateCurriculumFile(CurriculumFileDto dto, CurriculumFile file) {
         EntityUtil.bindToEntity(dto, file, classifierRepository, "oisFile");
     }
 
-    public void updateStudyForms(Curriculum curriculum, Set<String> studyForms) {
+    void updateStudyForms(Curriculum curriculum, Set<String> studyForms) {
         EntityUtil.bindEntityCollection(curriculum.getStudyForms(), sf -> EntityUtil.getCode(sf.getStudyForm()), studyForms, studyForm -> {
             // add new link
             Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(studyForm), MainClassCode.OPPEVORM);
@@ -276,17 +236,6 @@ public class CurriculumService {
             csl.setStudyLang(classifierRepository.getOne(code));
             return csl;
         });
-    }
-
-    public Curriculum updateCurriculumSpecialities(Curriculum curriculum,
-            CurriculumDto form) {
-        updateCurriculumSpecialities(curriculum, form.getSpecialities());
-        return EntityUtil.save(curriculum, em);
-    }
-
-    public Curriculum updateCurriculumGrades(Curriculum curriculum, CurriculumDto form) {
-        updateGrades(curriculum, form.getGrades());
-        return EntityUtil.save(curriculum, em);
     }
 
     public Curriculum closeCurriculum(Curriculum curriculum) {
@@ -320,7 +269,8 @@ public class CurriculumService {
         return EntityUtil.save(curriculumFile, em);
     }
 
-    public void deleteCurriculumFile(CurriculumFile curriculumFile) {
+    public void deleteCurriculumFile(HoisUserDetails user, CurriculumFile curriculumFile) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(curriculumFile, em);
     }
 
@@ -348,47 +298,39 @@ public class CurriculumService {
     
     public CurriculumGrade createCurriculumGrade(Curriculum curriculum, CurriculumGradeDto dto){
         CurriculumGrade grade = EntityUtil.save(createGrade(curriculum, dto), em);
-        curriculum.getGrades().add(grade);
         return grade;
     }
-    
+
     public CurriculumGrade updateCurriculumGrade(CurriculumGradeDto dto, CurriculumGrade grade){
         return EntityUtil.save(updateGrade(dto, grade), em);
     }
 
-    public void deleteCurriculumGrade(CurriculumGrade grade) {
+    public void deleteCurriculumGrade(HoisUserDetails user, CurriculumGrade grade) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(grade, em);
-        grade.getCurriculum().getGrades().remove(grade);
     }
-    
+
     public CurriculumSpeciality createCurriculumSpeciality(Curriculum curriculum, CurriculumSpecialityDto dto) {
         CurriculumSpeciality speciality = EntityUtil.save(createSpeciality(curriculum, dto), em);
-        curriculum.getSpecialities().add(speciality);
         return speciality;
     }
-    
+
     public CurriculumSpeciality updateCurriculumSpeciality(CurriculumSpeciality speciality,
             CurriculumSpecialityDto dto) {
         return EntityUtil.save(updateSpeciality(dto, speciality), em);
     }
 
-    public void deleteCurriculumSpeciality(CurriculumSpeciality speciality) {
+    public void deleteCurriculumSpeciality(HoisUserDetails user, CurriculumSpeciality speciality) {
         if(speciality.isAddedToVersion()) {
             throw new ValidationFailedException("curriculum.error.specAddedToVersion");
         }
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(speciality, em);
-        speciality.getCurriculum().getSpecialities().remove(speciality);
     }
 
-    public void saveCurriculumVersionSpecialities(CurriculumVersion curriculumVersion,
-            CurriculumVersionHigherModuleForm form) {
-        updateCurriculumVersionSpecialities(curriculumVersion, form.getCurriculumVersionSpecialities());
-        curriculumVersionSpecialityRepository.save(curriculumVersion.getSpecialities());
-    }
-
-    public Curriculum saveAndProceedCurriculum(Curriculum curriculum, CurriculumForm curriculumForm) {
+    public Curriculum saveAndProceedCurriculum(HoisUserDetails user, Curriculum curriculum, CurriculumForm curriculumForm) {
         setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_M);
-        return save(curriculum, curriculumForm);
+        return save(user, curriculum, curriculumForm);
     }
 
     private void setCurriculumStatus(Curriculum curriculum, CurriculumStatus status) {
@@ -409,11 +351,13 @@ public class CurriculumService {
         if(Boolean.TRUE.equals(curriculum.getHigher())) {
             setJointPartnersDeletePermissions(curriculum, dto.getJointPartners());
         }
+        StateCurriculum sc = curriculum.getStateCurriculum();
+        if(sc != null && StateCurriculumUtil.canView(user, sc)) {
+            dto.setStateCurriculum(AutocompleteResult.of(sc));
+        }
         return dto;
     }
     
-    
-
     private static void setJointPartnersDeletePermissions(Curriculum curriculum,
             Set<CurriculumJointPartnerDto> jointPartners) {        
         
@@ -433,6 +377,14 @@ public class CurriculumService {
                 partner.setHasSubjects(Boolean.FALSE);
             }
         }
+    }
+    
+    public List<AutocompleteResult> getSchoolDepartments(Curriculum curriculum) {
+        CurriculumSchoolDepartmentCommand command = new CurriculumSchoolDepartmentCommand();
+        command.setCurriculum(EntityUtil.getId(curriculum));
+        command.setEhisShools(StreamUtil.toMappedSet(p -> EntityUtil.getCode(p.getEhisSchool()), 
+                curriculum.getJointPartners().stream().filter(p -> p.getEhisSchool() != null)));
+        return getSchoolDepartments(null, command);
     }
 
     public List<AutocompleteResult> getSchoolDepartments(Long userSchoolId, CurriculumSchoolDepartmentCommand command) {
@@ -462,5 +414,4 @@ public class CurriculumService {
         } 
         return studyLevels.stream().filter(StudyLevelUtil::isVocational).collect(Collectors.toList());
     }
-
 }

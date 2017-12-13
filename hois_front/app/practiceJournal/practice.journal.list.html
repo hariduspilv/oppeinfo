@@ -113,7 +113,7 @@
             <td md-cell>{{row.studentLastEntryDate | hoisDate}}</td>
             <td md-cell>
               <div layout="column">
-                <md-button ng-if="row.canEdit" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/entries/edit">{{'practiceJournal.button.fill' | translate}}</md-button>
+                <md-button ng-if="row.canAddEntries" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/entries/edit">{{'practiceJournal.button.fill' | translate}}</md-button>
                 <md-button ng-if="row.canEdit && (auth.isTeacher() || auth.isAdmin())" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
               </div>
             </td>

@@ -58,13 +58,13 @@ public class DirectiveController {
     }
 
     @GetMapping("/{id:\\d+}/view")
-    public DirectiveViewDto getForView(HoisUserDetails user, @WithEntity("id") Directive directive) {
+    public DirectiveViewDto getForView(HoisUserDetails user, @WithEntity Directive directive) {
         UserUtil.assertSameSchool(user, directive.getSchool());
         return directiveService.getForView(user, directive);
     }
 
     @GetMapping("/{id:\\d+}")
-    public DirectiveDto get(HoisUserDetails user, @WithEntity("id") Directive directive) {
+    public DirectiveDto get(HoisUserDetails user, @WithEntity Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
         return directiveService.get(directive);
     }
@@ -76,26 +76,26 @@ public class DirectiveController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public DirectiveDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Directive directive, @Valid @RequestBody DirectiveForm form) {
+    public DirectiveDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Directive directive, @Valid @RequestBody DirectiveForm form) {
         assertCanEditDirective(user, directive);
         return get(user, directiveService.save(directive, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Directive directive, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Directive directive, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         assertCanEditDirective(user, directive);
         directiveService.delete(user, directive);
     }
 
     @PutMapping("/sendtoconfirm/{id:\\d+}")
-    public void sendToConfirm(HoisUserDetails user, @WithEntity("id") Directive directive) {
+    public void sendToConfirm(HoisUserDetails user, @WithEntity Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
         directiveConfirmService.sendToConfirm(directive);
     }
 
     // TODO for testing only, remove later
     @PutMapping("/confirm/{id:\\d+}")
-    public DirectiveDto confirm(HoisUserDetails user, @WithEntity("id") Directive directive) {
+    public DirectiveDto confirm(HoisUserDetails user, @WithEntity Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
         // start requests after save has been successful
         jobService.directiveConfirmed(EntityUtil.getId(directiveConfirmService.confirm(user.getUsername(), directive, LocalDate.now())));
@@ -121,7 +121,7 @@ public class DirectiveController {
     }
 
     @GetMapping("/coordinators/{id:\\d+}")
-    public DirectiveCoordinatorDto getCoordinator(HoisUserDetails user, @WithEntity("id") DirectiveCoordinator coordinator) {
+    public DirectiveCoordinatorDto getCoordinator(HoisUserDetails user, @WithEntity DirectiveCoordinator coordinator) {
         UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool());
         return DirectiveCoordinatorDto.of(coordinator);
     }
@@ -133,13 +133,13 @@ public class DirectiveController {
     }
 
     @PutMapping("/coordinators/{id:\\d+}")
-    public DirectiveCoordinatorDto saveCoordinator(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) DirectiveCoordinator coordinator, @Valid @RequestBody DirectiveCoordinatorForm form) {
+    public DirectiveCoordinatorDto saveCoordinator(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) DirectiveCoordinator coordinator, @Valid @RequestBody DirectiveCoordinatorForm form) {
         UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool());
         return getCoordinator(user, directiveService.save(coordinator, form));
     }
 
     @DeleteMapping("/coordinators/{id:\\d+}")
-    public void deleteCoordinator(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") DirectiveCoordinator coordinator, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void deleteCoordinator(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") DirectiveCoordinator coordinator, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool());
         directiveService.delete(user, coordinator);
     }

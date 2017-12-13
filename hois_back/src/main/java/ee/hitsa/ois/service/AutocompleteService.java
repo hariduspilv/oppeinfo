@@ -30,7 +30,9 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.PersonRepository;
@@ -38,6 +40,8 @@ import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
+import ee.hitsa.ois.util.EnterpriseUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -56,6 +60,8 @@ import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionModuleAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.EnterpriseResult;
@@ -64,6 +70,10 @@ import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
+import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOModulesAndThemesResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
@@ -73,6 +83,12 @@ import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 public class AutocompleteService {
 
     private static final int MAX_ITEM_COUNT = 20;
+    private static final List<String> positiveHigherGrades = EnumUtil.toNameList(
+            HigherAssessment.KORGHINDAMINE_A, HigherAssessment.KORGHINDAMINE_1, HigherAssessment.KORGHINDAMINE_2,
+            HigherAssessment.KORGHINDAMINE_3, HigherAssessment.KORGHINDAMINE_4, HigherAssessment.KORGHINDAMINE_5);
+    private static final List<String> positiveVocationalGrades = EnumUtil.toNameList(
+            OccupationalGrade.KUTSEHINDAMINE_A, OccupationalGrade.KUTSEHINDAMINE_3, OccupationalGrade.KUTSEHINDAMINE_4,
+            OccupationalGrade.KUTSEHINDAMINE_5);
 
     @Autowired
     private EntityManager em;
@@ -211,35 +227,82 @@ public class AutocompleteService {
         }
         return result;
     }
-
-    public List<AutocompleteResult> curriculumVersionOccupationModules(Long curriculumVersionId) {
-        String from = "from curriculum_version_omodule cvo inner join curriculum_module cm on cvo.curriculum_module_id = cm.id";
+    
+    public List<AutocompleteResult> curriculumVersionHigherModules(CurriculumVersionModuleAutocompleteCommand lookup) {
+        String from = "from curriculum_version_hmodule cvh"
+                + " inner join curriculum_version cv on cvh.curriculum_version_id = cv.id";
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
-        qb.requiredCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
-                curriculumVersionId);
+        qb.requiredCriteria("cvh.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
+                lookup.getCurriculumVersionId());
+        qb.optionalContains("cv.status_code",  "statusCode", lookup.getCurriculumVersionStatusCode());
 
-        List<?> data = qb.select("cvo.id, cm.name_et, cm.name_en", em).getResultList();
+        List<?> data = qb.select("cvh.id, cvh.name_et, cvh.name_en", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             return new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2));
         }, data);
     }
+  
+    public List<CurriculumVersionOccupationModuleResult> curriculumVersionOccupationModules(CurriculumVersionModuleAutocompleteCommand lookup) {
+        String from = "from curriculum_version_omodule cvo"
+                + " inner join curriculum_module cm on cvo.curriculum_module_id = cm.id"
+                + " inner join curriculum_version cv on cvo.curriculum_version_id = cv.id"
+                + " inner join curriculum c on cv.curriculum_id = c.id";
 
-    public List<AutocompleteResult> curriculumVersionOccupationModuleThemes(Long curriculumVersionOmoduleId) {
-        String from = "from curriculum_version_omodule_theme cvot";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+
+        qb.optionalCriteria("cvo.id = :id", "id", lookup.getId());
+        if (lookup.getCurriculumModules() == null || Boolean.TRUE.equals(lookup.getCurriculumModules())) {
+            qb.requiredCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
+                    lookup.getCurriculumVersionId());            
+        } else {
+            qb.requiredCriteria("cvo.curriculum_version_id != :curriculumVersionId", "curriculumVersionId",
+                    lookup.getCurriculumVersionId());
+            qb.optionalCriteria("c.school_id = :schoolId",  "schoolId", lookup.getSchoolId());
+        }
+        qb.optionalContains("cv.status_code",  "statusCode", lookup.getCurriculumVersionStatusCode());
+        qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "cm.name_en" : "cm.name_et", "name", lookup.getName());
+
+        List<?> data = qb.select("cvo.id, cm.name_et, cm.name_en, cvo.assessment_code", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            return new CurriculumVersionOccupationModuleResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3));
+        }, data);
+    }
+
+    public List<CurriculumVersionOccupationModuleThemeResult> curriculumVersionOccupationModuleThemes(
+            CurriculumVersionOccupationModuleThemeAutocompleteCommand lookup) {
+        String from = "from curriculum_version_omodule_theme cvot"
+                + " inner join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id"
+                + " inner join curriculum_version cv on cvo.curriculum_version_id = cv.id";
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("cvot.curriculum_version_omodule_id = :curriculum_version_omodule_id",
-                "curriculum_version_omodule_id", curriculumVersionOmoduleId);
+                "curriculum_version_omodule_id", lookup.getCurriculumVersionOmoduleId());
+        qb.optionalContains("cv.status_code",  "statusCode", lookup.getCurriculumVersionStatusCode());
 
-        List<?> data = qb.select("cvot.id, cvot.name_et", em).getResultList();
+        List<?> data = qb.select("cvot.id, cvot.name_et, cvot.credits", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             String name = resultAsString(r, 1);
-            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+            return new CurriculumVersionOccupationModuleThemeResult(resultAsLong(r, 0), name, name, resultAsDecimal(r, 2));
         }, data);
     }
+    
+    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(CurriculumVersionModuleAutocompleteCommand lookup) {
+        List<CurriculumVersionOModulesAndThemesResult> modulesAndThemes = new ArrayList<>();
+        List<CurriculumVersionOccupationModuleResult> modules = curriculumVersionOccupationModules(lookup);
+        
+        for (CurriculumVersionOccupationModuleResult module : modules) {
+            CurriculumVersionOccupationModuleThemeAutocompleteCommand themeLookup = new CurriculumVersionOccupationModuleThemeAutocompleteCommand();
+            themeLookup.setCurriculumVersionOmoduleId(module.getId());
+            themeLookup.setCurriculumVersionStatusCode(lookup.getCurriculumVersionStatusCode());
+            List<CurriculumVersionOccupationModuleThemeResult> themes = curriculumVersionOccupationModuleThemes(themeLookup);
+            modulesAndThemes.add(new CurriculumVersionOModulesAndThemesResult(module.getId(), module.getNameEt(), module.getNameEn(), module.getAssessment(), themes));
+        }
+        return modulesAndThemes;
+    }
+    
 
     public List<AutocompleteResult> directiveCoordinators(Long schoolId, DirectiveCoordinatorAutocompleteCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_coordinator dc");
@@ -261,12 +324,19 @@ public class AutocompleteService {
 
     public PersonDto person(HoisUserDetails user, PersonLookupCommand lookup) {
         Person person;
+        String idcode = lookup.getIdcode().trim();
         if("student".equals(lookup.getRole())) {
             // FIXME multiple students with same idcode?
             // FIXME should filter by school?
-            person = personRepository.findByIdcodeStudent(lookup.getIdcode().trim());
+            List<?> data = em.createQuery("select s.person from Student s where s.person.idcode = ?1", Person.class)
+                    .setParameter(1, idcode).setMaxResults(1).getResultList();
+            person = data.isEmpty() ? null : (Person)data.get(0);
+        } else if("activestudent".equals(lookup.getRole())) {
+            List<?> data = em.createQuery("select s.person from Student s where s.person.idcode = ?1 and s.status.code in ?2", Person.class)
+                    .setParameter(1, idcode).setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE).setMaxResults(1).getResultList();
+            person = data.isEmpty() ? null : (Person)data.get(0);
         } else {
-           person = personRepository.findByIdcode(lookup.getIdcode().trim());
+           person = personRepository.findByIdcode(idcode);
         }
         PersonDto dto = null;
         if(person != null) {
@@ -283,10 +353,44 @@ public class AutocompleteService {
         return dto;
     }
 
-    public List<SchoolWithoutLogo> schools() {
-        List<?> data = em.createQuery("select id, code, nameEt, nameEn, email from School").getResultList();
+    public List<SchoolWithoutLogo> schools(AutocompleteCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from school s");
+
+        qb.optionalCriteria("s.id = :schoolId", "schoolId", lookup.getId());
+
+        List<?> data = qb.select("s.id, s.code, s.name_et, s.name_en, s.email", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             return new SchoolWithoutLogo(
+                    resultAsLong(r, 0),
+                    resultAsString(r, 1),
+                    resultAsString(r, 2),
+                    resultAsString(r, 3),
+                    resultAsString(r, 4));
+        }, data);
+    }
+
+    public List<SchoolWithoutLogo> ldapSchools() {
+        List<?> data = em.createNativeQuery("select s.id, s.code, s.name_et, s.name_en, s.email" +
+                " from school s where s.ad_domain is not null and s.ad_base is not null" + 
+                " and s.ad_port is not null and s.ad_url is not null and s.ad_idcode_field is not null")
+                .getResultList();
+        return StreamUtil.toMappedList(r -> {
+            return new SchoolWithoutLogo(
+                    resultAsLong(r, 0),
+                    resultAsString(r, 1),
+                    resultAsString(r, 2),
+                    resultAsString(r, 3),
+                    resultAsString(r, 4));
+        }, data);
+    }
+    
+    public List<ApelSchoolResult> apelSchools(Long schoolId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from apel_school s");
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        
+        List<?> data = qb.select("s.id, s.name_et, s.name_en, s.country_code, s.ehis_school_code", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            return new ApelSchoolResult(
                     resultAsLong(r, 0),
                     resultAsString(r, 1),
                     resultAsString(r, 2),
@@ -366,6 +470,13 @@ public class AutocompleteService {
                     + "where cv.id = s.curriculum_version_id "
                     + "and c.is_higher = true )");
         }
+        if (Boolean.FALSE.equals(lookup.getHigher())) {
+            qb.filter("exists (select c.id from curriculum c "
+                    + "join curriculum_version cv on cv.curriculum_id = c.id "
+                    + "where cv.id = s.curriculum_version_id "
+                    + "and c.is_higher = false )");
+        }
+        
         List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
         return StreamUtil.toMappedList(r -> {
             String name = PersonUtil.fullnameAndIdcode(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3));
@@ -377,14 +488,47 @@ public class AutocompleteService {
      * SubjectService.search() is not used as it does not enable to search by both code and name using autocomplete
      */
     public List<AutocompleteResult> subjects(Long schoolId, SubjectAutocompleteCommand lookup) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject s");
+        String from ="from subject s";
+        
+        if (Boolean.TRUE.equals(lookup.getCurriculumSubjects()) || Boolean.FALSE.equals(lookup.getCurriculumSubjects())) {
+            from += " inner join curriculum_version_hmodule_subject cvhs on cvhs.subject_id = s.id"
+                    + " inner join curriculum_version_hmodule cvh on cvh.id = cvhs.curriculum_version_hmodule_id"
+                    + " inner join curriculum_version cv on cv.id = cvh.curriculum_version_id";
+        }
+        
+        if (lookup.getStudent() != null) {
+            from += " left join subject_study_period ssp on s.id = ssp.subject_id" 
+                    + " left join protocol_hdata ph on ssp.id = ph.subject_study_period_id" 
+                    + " left join protocol pro on ph.protocol_id = pro.id"
+                    + " left join protocol_student ps on pro.id = ps.protocol_id";
+        }
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.requiredCriteria("s.status_code = :statusCode", "statusCode", SubjectStatus.AINESTAATUS_K);
         qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "name", lookup.getName());
         qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "code", lookup.getCode());
         qb.optionalCriteria("is_practice = :isPractice", "isPractice", lookup.getPractice());
+        qb.optionalCriteria(Boolean.TRUE.equals(lookup.getCurriculumSubjects()) ? "cv.id = :curriculumVersionId"
+                : "cv.id != :curriculumVersionId", "curriculumVersionId", lookup.getCurriculumVersion());
+        
+        if (lookup.getStudent() != null) {
+            qb.optionalCriteria("ps.grade_code is null or ps.student_id = :studentId", "studentId", lookup.getStudent());
+            qb.optionalCriteria("ps.grade_code is null or ps.grade_code not in (:postiveGrades)", "postiveGrades", positiveHigherGrades);
+            qb.optionalCriteria("s.id not in (select shr.subject_id from student_higher_result shr where shr.student_id = :studentId)", "studentId", lookup.getStudent());
+        }
 
         List<?> data = qb.select("s.id, s.name_et, s.name_en, s.code, s.credits", em).getResultList();
+        
+        if (!lookup.getWithCredits().booleanValue()) {
+            return StreamUtil.toMappedList(r -> {
+                String code = resultAsString(r, 3);
+                String nameEt = SubjectUtil.subjectName(code, resultAsString(r, 1));
+                String nameEn = SubjectUtil.subjectName(code, resultAsString(r, 2));
+                return new AutocompleteResult(resultAsLong(r, 0), nameEt, nameEn);
+            }, data);
+        }
         return StreamUtil.toMappedList(r -> {
             String code = resultAsString(r, 3);
             BigDecimal credits = resultAsDecimal(r, 4);
@@ -481,11 +625,13 @@ public class AutocompleteService {
     public List<EnterpriseResult> enterprises() {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from enterprise e");
 
-        List<?> data = qb.select("e.id, e.name, e.contact_person_name, e.contact_person_email, e.contact_person_phone", em)
+        List<?> data = qb.select("e.id, e.name, e.contact_person_name, e.contact_person_email, e.contact_person_phone, e.reg_code", em)
                 .getResultList();
         return StreamUtil.toMappedList(r -> {
             String name = resultAsString(r, 1);
-            EnterpriseResult enterpriseResult = new EnterpriseResult(resultAsLong(r, 0), name, name);
+            String regCode = resultAsString(r, 5);
+            String enterpriseName = EnterpriseUtil.getName(name, regCode);
+            EnterpriseResult enterpriseResult = new EnterpriseResult(resultAsLong(r, 0), enterpriseName, enterpriseName);
             enterpriseResult.setContactPersonName(resultAsString(r, 2));
             enterpriseResult.setContactPersonEmail(resultAsString(r, 3));
             enterpriseResult.setContactPersonPhone(resultAsString(r, 4));
@@ -501,12 +647,11 @@ public class AutocompleteService {
             journalLookup.setName(lookup.getName());
         }
         List<AutocompleteResult> journalsList = journals(user, journalLookup);
-        
         // Change journal ids to negative to differentiate between journal and subject ids
         for (AutocompleteResult journal : journalsList) {
-            journal.setId(-journal.getId());
+            journal.setId(Long.valueOf(-journal.getId().longValue()));
         }
-        
+
         SubjectAutocompleteCommand subjectLookup = new SubjectAutocompleteCommand();
         if (lookup.getName() != null) {
             journalLookup.setLang(lookup.getLang());

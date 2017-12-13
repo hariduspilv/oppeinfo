@@ -28,7 +28,7 @@ public class EnterpriseController {
     private EnterpriseService enterpriseService;
 
     @GetMapping("/{id:\\d+}")
-    public EnterpriseDto get(HoisUserDetails user, @WithEntity("id") Enterprise enterprise) {
+    public EnterpriseDto get(HoisUserDetails user, @WithEntity Enterprise enterprise) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return enterpriseService.get(enterprise);
     }
@@ -40,7 +40,7 @@ public class EnterpriseController {
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Enterprise enterprise,
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Enterprise enterprise,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user);
         enterpriseService.delete(user, enterprise);

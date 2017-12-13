@@ -3,7 +3,7 @@
   "browser": true,
   "curly": true,
   "eqeqeq": true,
-  "esnext": true,
+  "esnext": false,
   "latedef": true,
   "noarg": true,
   "node": true,

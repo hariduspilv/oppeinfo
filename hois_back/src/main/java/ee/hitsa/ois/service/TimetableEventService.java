@@ -5,7 +5,11 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,10 +25,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import ee.hitsa.ois.util.JpaQueryUtil;
-import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.teacher.TeacherAbsence;
 import ee.hitsa.ois.domain.timetable.TimetableEvent;
 import ee.hitsa.ois.domain.timetable.TimetableEventRoom;
 import ee.hitsa.ois.domain.timetable.TimetableEventTeacher;
@@ -36,6 +39,8 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
@@ -80,7 +85,7 @@ public class TimetableEventService {
         data.put("singleEvent", Boolean.TRUE);
         return data;
     }
-    
+
     public TimetableEvent createEvent(TimetableSingleEventForm form) {
         TimetableEvent te = new TimetableEvent();
         te.setStart(form.getDate().atTime(form.getStartTime()));
@@ -91,6 +96,20 @@ public class TimetableEventService {
                 : classifierRepository.getOne(TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI.name()));
         addTimetableEventTimes(te, form);
         return EntityUtil.save(te, em);
+    }
+
+    public void createEvents(TeacherAbsence absence) {
+        TimetableSingleEventForm form = new TimetableSingleEventForm();
+        form.setStartTime(LocalTime.of(7, 00));
+        form.setEndTime(LocalTime.of(23, 00));
+        form.setRepeat(Boolean.FALSE);
+        form.setName(absence.getReason());
+        form.setTeachers(new ArrayList<>(Arrays.asList(new AutocompleteResult(EntityUtil.getId(absence.getTeacher()), null, null))));
+        
+        for(LocalDate date = absence.getStartDate(); date.isBefore(absence.getEndDate()); date = date.plusDays(1)) {
+            form.setDate(date);
+            createEvent(form);
+        }
     }
 
     private void addRoomsToTimetableEvent(TimetableEventTime timetableEventTime, TimetableSingleEventForm form) {
@@ -472,7 +491,7 @@ public class TimetableEventService {
 
         qb.requiredCriteria("tem.id in (:tetIds)", "tetIds", tetIds);
 
-        List<?> queryResult = qb.select("tem.id, t.id as teacherId, p.firstname, p.lastname", em).getResultList();
+        List<?> queryResult = qb.select("distinct tem.id, t.id as teacherId, p.firstname, p.lastname", em).getResultList();
         List<ResultObject> resultObjects = StreamUtil.toMappedList(
                 r -> new ResultObject(resultAsLong(r, 0), resultAsLong(r, 1), PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3))),
                 queryResult);
@@ -518,9 +537,9 @@ public class TimetableEventService {
      * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
-    public TimetableCalendarDto getGroupCalendar(TimetableEventSearchCommand command, Language lang) {
+    public TimetableCalendarDto getGroupCalendar(TimetableEventSearchCommand command, String language) {
         TimetableByGroupDto groupTimetable = groupTimetable(command);
-        return timetableGenerationService.getICal(groupTimetable, lang);
+        return timetableGenerationService.getICal(groupTimetable, getLanguage(language));
     }
     
     /**
@@ -529,9 +548,9 @@ public class TimetableEventService {
      * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
-    public TimetableCalendarDto getTeacherCalendar(TimetableEventSearchCommand command, Language lang) {
+    public TimetableCalendarDto getTeacherCalendar(TimetableEventSearchCommand command, String language) {
         TimetableByTeacherDto teacherTimetable = teacherTimetable(command);
-        return timetableGenerationService.getICal(teacherTimetable, lang);
+        return timetableGenerationService.getICal(teacherTimetable, getLanguage(language));
     }
     
     /**
@@ -540,9 +559,9 @@ public class TimetableEventService {
      * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
-    public TimetableCalendarDto getRoomCalendar(TimetableEventSearchCommand command, Language lang) {
+    public TimetableCalendarDto getRoomCalendar(TimetableEventSearchCommand command, String language) {
         TimetableByRoomDto roomTimetable = roomTimetable(command);
-        return timetableGenerationService.getICal(roomTimetable, lang);
+        return timetableGenerationService.getICal(roomTimetable, getLanguage(language));
     }
     
     /**
@@ -551,9 +570,9 @@ public class TimetableEventService {
      * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
-    public TimetableCalendarDto getStudentCalendar(TimetableEventSearchCommand command, Language lang) {
+    public TimetableCalendarDto getStudentCalendar(TimetableEventSearchCommand command, String language) {
         TimetableByStudentDto studentTimetable = studentTimetable(command);
-        return timetableGenerationService.getICal(studentTimetable, lang);
+        return timetableGenerationService.getICal(studentTimetable, getLanguage(language));
     }
     
     /**
@@ -562,9 +581,13 @@ public class TimetableEventService {
      * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
-    public TimetableCalendarDto getSearchCalendar(TimetableEventSearchCommand command, Language lang) {
+    public TimetableCalendarDto getSearchCalendar(TimetableEventSearchCommand command, String language) {
         List<TimetableEventSearchDto> searchResult = searchTimetable(command);
-        return timetableGenerationService.getICal(searchResult, lang);
+        return timetableGenerationService.getICal(searchResult, getLanguage(language));
+    }
+    
+    private static Language getLanguage(String language) {
+        return "et".equals(language) ? Language.ET : Language.EN;
     }
 
     private static class ResultObject {

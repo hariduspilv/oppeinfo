@@ -6,6 +6,11 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
     selectedStudents: [],
     teachers: QueryUtils.endpoint('/moduleProtocols/teachers').query()
   };
+
+  if($scope.auth.isTeacher()) {
+    $scope.formState.teacher = $scope.auth.teacher;
+  }
+
   var clMapper = Classifier.valuemapper({ journalResults: 'KUTSEHINDAMINE', status: 'OPPURSTAATUS' });
 
   $scope.curriculumVersionChange = function () {

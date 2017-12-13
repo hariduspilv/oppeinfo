@@ -1,13 +1,13 @@
 package ee.hitsa.ois.web.dto;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.util.DateUtils;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
 
 public class EhisStudentReport {
 

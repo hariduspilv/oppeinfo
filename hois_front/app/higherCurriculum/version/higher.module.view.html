@@ -1,6 +1,6 @@
 <div class="ois-form-layout-padding">
   <div>
-    <h2>{{"module.addToughtModule" | translate}}</h2>
+    <h2>{{"module.viewToughtModule" | translate}}</h2>
     <span flex></span>
   </div>
   <span flex></span>
@@ -70,8 +70,8 @@
         <fieldset ng-show="formState.moduleMustHaveSubjects">
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.optionals' | translate}}</legend>
           <div ng-repeat="electiveModule in data.electiveModules | orderBy: 'nameEt'" class="secondary-table-row" flex layout="row">
-            <div flex="95">
-                <p>{{currentLanguageNameField(electiveModule)}}</p>
+            <div flex>
+              <p class="elective-module">{{currentLanguageNameField(electiveModule)}}</p>
             </div>
           </div>
         </fieldset>

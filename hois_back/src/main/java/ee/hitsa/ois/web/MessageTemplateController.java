@@ -40,7 +40,7 @@ public class MessageTemplateController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public MessageTemplateDto get(HoisUserDetails user, @WithEntity("id") MessageTemplate messageTemplate) {
+    public MessageTemplateDto get(HoisUserDetails user, @WithEntity MessageTemplate messageTemplate) {
         UserUtil.assertIsSchoolAdmin(user, messageTemplate.getSchool());
         return MessageTemplateDto.of(messageTemplate);
     }
@@ -53,14 +53,14 @@ public class MessageTemplateController {
 
     @PutMapping("/{id:\\d+}")
     public MessageTemplateDto save(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) MessageTemplate messageTemplate, 
+            @WithVersionedEntity(versionRequestBody = true) MessageTemplate messageTemplate, 
             @Valid @RequestBody MessageTemplateForm form) {
         UserUtil.assertIsSchoolAdmin(user, messageTemplate.getSchool());
         return get(user, messageTemplateService.save(messageTemplate, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") MessageTemplate messageTemplate, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") MessageTemplate messageTemplate, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, messageTemplate.getSchool());
         messageTemplateService.delete(user, messageTemplate);
     }

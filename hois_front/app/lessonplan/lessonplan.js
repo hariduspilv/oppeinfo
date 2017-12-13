@@ -240,7 +240,6 @@
           sp.arrayIndex = spIndex;
           spLocationPointer += sp.weekNrs.length;
         });
-        //console.log($scope.formState.studyPeriods);
         $scope.formState.weekNrs = result.weekNrs;
         $scope.formState.weekBeginningDates = result.weekBeginningDates;
         $scope.formState.legends = result.legends.reduce(function (acc, item) {
@@ -303,7 +302,6 @@
                   if (angular.isUndefined(journal.requiredLessons[key])) {
                     journal.requiredLessons[key] = 0;
                   }
-                  console.log(theme.hours[key]);
                   journal.requiredLessons[key] += theme.hours[key];
                 }
               });

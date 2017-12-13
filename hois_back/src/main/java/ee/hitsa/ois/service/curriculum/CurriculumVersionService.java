@@ -47,9 +47,9 @@ public class CurriculumVersionService {
         curriculumVersion.setCurriculum(curriculumRepository.findOne(dto.getCurriculum()));
         setCurriculumVersionStatus(curriculumVersion, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_S);
         CurriculumVersion updatedCurriculumVersion = updateVersion(curriculumVersion.getCurriculum(), curriculumVersion, dto);
-        return curriculumVersionRepository.save(updatedCurriculumVersion);
+        return EntityUtil.save(updatedCurriculumVersion, em);
     }
-    
+
     private CurriculumVersion updateVersion(Curriculum curriculum, CurriculumVersion version, CurriculumVersionDto dto) {
         EntityUtil.bindToEntity(dto, version, classifierRepository, "curriculumStudyForm", "modules",
                 "specialities", "schoolDepartment", "occupationModules", "status");
@@ -58,7 +58,7 @@ public class CurriculumVersionService {
         updateSchoolDepartment(version, dto);
         return version;
     }
-    
+
     private void updateCurriculumVersionSpecialities(CurriculumVersion version, Set<Long> specRefNums) {
         EntityUtil.bindEntityCollection(version.getSpecialities(), cs -> EntityUtil.getId(cs.getCurriculumSpeciality()), specRefNums, s -> {
             CurriculumVersionSpeciality cvs = new CurriculumVersionSpeciality();
@@ -66,8 +66,8 @@ public class CurriculumVersionService {
             cvs.setCurriculumSpeciality(em.getReference(CurriculumSpeciality.class, s));
             return cvs;
         });
-      }
-    
+    }
+
     private static void updateVersionStudyForm(Curriculum curriculum, CurriculumVersion version, CurriculumVersionDto dto) {
         if(curriculum.getId() == null) {
             return;
@@ -77,7 +77,7 @@ public class CurriculumVersionService {
                 .filter(s -> EntityUtil.getCode(s.getStudyForm()).equals(code)).findFirst();
         version.setCurriculumStudyForm(studyForm.orElse(null));
     }
-    
+
     private void updateSchoolDepartment(CurriculumVersion version, CurriculumVersionDto dto) {
         if (dto.getSchoolDepartment() != null) {
             version.setSchoolDepartment(em.getReference(SchoolDepartment.class, dto.getSchoolDepartment()));
@@ -88,10 +88,11 @@ public class CurriculumVersionService {
         curriculumVersion.setStatus(classifierRepository.getOne(status.name()));
     }
 
-    public CurriculumVersion save(CurriculumVersion curriculumVersion,
+    public CurriculumVersion save(HoisUserDetails user, CurriculumVersion curriculumVersion,
             CurriculumVersionDto curriculumVersionDto) {
+        EntityUtil.setUsername(user.getUsername(), em);
         CurriculumVersion updatedCurriculumVersion = updateVersion(curriculumVersion.getCurriculum(), curriculumVersion, curriculumVersionDto);
-        return curriculumVersionRepository.save(updatedCurriculumVersion);
+        return EntityUtil.save(updatedCurriculumVersion, em);
     }
 
     public CurriculumVersion close(CurriculumVersion curriculumVersion) {
@@ -104,16 +105,16 @@ public class CurriculumVersionService {
         return EntityUtil.save(curriculumVersion, em);
     }
 
-    public CurriculumVersion saveAndConfirm(CurriculumVersion curriculumVersion,
+    public CurriculumVersion saveAndConfirm(HoisUserDetails user, CurriculumVersion curriculumVersion,
             CurriculumVersionDto curriculumVersionDto) {
         setCurriculumVersionStatus(curriculumVersion, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K);
-        return save(curriculumVersion, curriculumVersionDto);
+        return save(user, curriculumVersion, curriculumVersionDto);
     }
 
-    public void delete(CurriculumVersion curriculumVersion) {
+    public void delete(HoisUserDetails user, CurriculumVersion curriculumVersion) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(curriculumVersion, em);
     }
-
 
     public boolean isCodeUnique(Long schoolId, UniqueCommand command) {
         boolean codeExists;

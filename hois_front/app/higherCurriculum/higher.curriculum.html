@@ -1,7 +1,7 @@
 <div class="ois-form-layout-padding">
     <form name="higherCurriculumForm" layout="column" class="nomargin" >
         <div layout="row" layout-sm="column" layout-xs="column">
-			<fieldset tabindex="1" layout="column" flex="30" flex-sm="100" flex-xs="100">
+			<fieldset tabindex="1" layout="column" flex="30" flex-sm="100" flex-xs="100" class="higher-curriculum-top-fieldset">
 				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.nameTitle' | translate}}</legend>
 				<md-input-container flex="100">
 					<label>{{'curriculum.nameEt' | translate}}</label>
@@ -24,7 +24,7 @@
 				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.mainData' | translate}}</legend>
 				<div layout="row" flex>
 					<div flex="45">
-						<md-checkbox ng-model="curriculum.joint" aria-label="Is vocational" class="md-primary" ng-disabled="formState.readOnly || formState.notEditableBasicData">
+						<md-checkbox ng-model="curriculum.joint" aria-label="{{'curriculum.isJoint' | translate}}" class="md-primary" ng-disabled="formState.readOnly || formState.notEditableBasicData || formState.jointDisabled">
 							{{'curriculum.isJoint' | translate}}
 						</md-checkbox>
 					</div>
@@ -341,88 +341,9 @@
 			</div>
 		</fieldset>
 
-
-			<!--Partner schools-->
-            <!--div layout="row" class="joint-data">
-                <md-input-container flex="20" flex-xs="100">
-                    <label class="md-required common-label">{{'curriculum.isJoint' | translate}}</label>
-                </md-input-container>
-                <md-radio-group ng-model="curriculum.joint" layout="row" required ng-change="setAbroad()" flex="80" class="align-center" ng-disabled="formState.readOnly || formState.notEditableBasicData">
-                    <md-radio-button ng-value="true" aria-label="yes">{{ 'main.yes' | translate }}</md-radio-button>
-                    <md-radio-button ng-value="false" aria-label="no">{{ 'main.no' | translate }}</md-radio-button>
-                </md-radio-group>
-            </div>
-
-            <div layout="row" layout-sm="column" layout-xs="column" ng-show="curriculum.joint" class="joint-data">
-                <md-input-container flex="20" flex-xs="100">
-                    <label class="md-required common-label">{{'curriculum.jointSchool' | translate}}</label>
-                </md-input-container>
-
-                <md-radio-group ng-model="curriculum.abroad" flex="35" layout="row" class="align-center" flex="50"  ng-required="curriculum.joint" ng-change="clearJointPartnersFields()" ng-disabled="formState.readOnly || formState.notEditableBasicData">
-                    <md-radio-button ng-value="false" aria-label="{{ 'curriculum.estonianEducationalInstitute' | translate }}">
-                        {{ 'curriculum.estonianEducationalInstitute' | translate }}
-                    </md-radio-button>
-                    <md-radio-button ng-value="true" aria-label="{{ 'curriculum.jointPartnerAbroadSchool' | translate }}">
-                        {{ 'curriculum.foreignEducationalInstitute' | translate }}
-                    </md-radio-button>
-                </md-radio-group>
-				<div layout="row" flex="35"  ng-show="curriculum.joint" >
-					<md-input-container flex="70" ng-hide="curriculum.abroad">
-						<label>{{'curriculum.estonianEducationalInstitute' | translate}}</label>
-						<hois-classifier-select ng-model="curriculum.jointPartnerEhisSchool" main-classifier-code="EHIS_KOOL"
-						filter-values="jointPartnersEhisSchools" model-value-attr="code" ng-disabled="formState.readOnly || formState.notEditableBasicData"></hois-classifier-select>
-					</md-input-container>
-					<md-input-container ng-hide="!curriculum.abroad">
-						<label>{{'school.name' | translate}}</label>
-						<input ng-model="curriculum.jointPartnerForeignNameEt" type="text" md-maxlength="100" ng-readonly="formState.readOnly">
-					</md-input-container>
-					<md-input-container ng-hide="!curriculum.abroad">
-						<label>{{'school.nameEn' | translate}}</label>
-						<input ng-model="curriculum.jointPartnerForeignNameEn" type="text" md-maxlength="100" ng-readonly="formState.readOnly">
-					</md-input-container>
-				</div>
-                <md-button class="md-raised" ng-click="addJointPartner()" ng-disabled="(!curriculum.jointPartnerForeignNameEt || !curriculum.jointPartnerForeignNameEn) && !curriculum.jointPartnerEhisSchool">{{'main.button.add' | translate}}</md-button>
-                <label class="invalid" ng-show="higherCurriculumForm.$submitted && !jointPartnersAdded()">{{ 'main.messages.error.atLeastOneShouldBeAdded' | translate }}</label>
-            </div>
-
-            <div layout="column" flex ng-show="curriculum.joint" class="joint-data-small">
-                <div layout="row" ng-repeat="item in curriculum.jointPartners" class="align-center">
-					<div flex="5">&nbsp;</div>
-                    <div ng-if="item.abroad">{{currentLanguageNameField(item)}}</div>
-                    <div ng-if="!item.abroad"> <hois-classifier-value ng-model="item.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value></div>
-					<md-button class="remove nomargin" ng-click="removejointPartner(item)" ng-if="!formState.readOnly && !formState.notEditableBasicData">&times;</md-button>
-                </div>
-            </div>
-			<div layout="row" ng-show="curriculum.joint" class="joint-data-small">&nbsp;</div>
-            <div layout="row" layout-sm="column" layout-xs="column" ng-show="curriculum.joint" class="joint-data">
-                <md-input-container  flex="50"  ng-if="curriculum.joint">
-                    <label>{{'curriculum.jointMentor' | translate}}</label>
-                     <hois-classifier-select ng-model="curriculum.jointMentor" main-classifier-code="EHIS_KOOL"
-                     model-value-attr="code" show-only-values="jointPartnersEhisSchools" required  ng-disabled="formState.readOnly || formState.notEditableBasicData"></hois-classifier-select>
-                </md-input-container>
-                <md-input-container   flex="45" flex-offset="5">
-                    <label>{{'curriculum.jointResponsible' | translate}}</label>
-                    <input ng-model="curriculum.supervisor" type="text" md-maxlength="100" ng-readonly="formState.readOnly || formState.notEditableBasicData">
-                </md-input-container>
-            </div>
-			<div layout="row" ng-show="curriculum.joint" class="joint-data-small">&nbsp;</div>
-            <div layout="row" layout-sm="column" layout-xs="column" ng-show="curriculum.joint" class="joint-data">
-                <md-input-container flex="50">
-                    <label>{{'curriculum.jointAgreementInfoEt' | translate}}</label>
-                    <textarea ng-model="curriculum.contractEt" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="curriculum.joint" ng-readonly="formState.readOnly || formState.notEditableBasicData"></textarea>
-                </md-input-container>
-                <md-input-container  flex="45" flex-offset="5">
-                    <label>{{'curriculum.jointAgreementInfoEn' | translate}}</label>
-                    <textarea ng-model="curriculum.contractEn" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="curriculum.joint" ng-readonly="formState.readOnly || formState.notEditableBasicData"></textarea>
-                </md-input-container>
-            </div-->
-
-
-            <!-- End of partner schools-->
-
 		<div>&nbsp;</div>
 		<fieldset tabindex="12">
-			<legend md-colors="{color: 'primary-800'}" ng-class="{invalid: strictValidation() && (!curriculum.specialities || curriculum.specialities.length === 0)}" class="md-title-small" >{{'curriculum.specialty.label' | translate}}</legend>
+			<legend md-colors="{color: 'primary-800'}" ng-class="{invalid: strictValidation() && (!curriculum.specialities || curriculum.specialities.length === 0)}" class="md-title-small" >{{'curriculum.specialty.label' | translate}} *</legend>
 			<md-button class="md-raised" ng-click="openAddSpecialtyDialog()" ng-show="!formState.readOnly">{{'curriculum.specialty.add' | translate}}</md-button>
 			<div ng-repeat = "item in curriculum.specialities | orderBy: currentLanguageNameField()" layout="column" >
 				<div layout = "row" class="occupation-row align-center" ng-class-odd="'odd'" ng-class-even="'even'">

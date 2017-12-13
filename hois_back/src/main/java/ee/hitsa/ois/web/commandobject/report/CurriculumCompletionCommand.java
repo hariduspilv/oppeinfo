@@ -1,9 +1,11 @@
 package ee.hitsa.ois.web.commandobject.report;
 
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+
 public class CurriculumCompletionCommand {
 
     private String name;
-    private Long curriculumVersion;
+    private EntityConnectionCommand curriculumVersion;
     private Long studentGroup;
     private String studyForm;
     private String studyLoad;
@@ -16,11 +18,11 @@ public class CurriculumCompletionCommand {
         this.name = name;
     }
 
-    public Long getCurriculumVersion() {
+    public EntityConnectionCommand getCurriculumVersion() {
         return curriculumVersion;
     }
 
-    public void setCurriculumVersion(Long curriculumVersion) {
+    public void setCurriculumVersion(EntityConnectionCommand curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
     }
 

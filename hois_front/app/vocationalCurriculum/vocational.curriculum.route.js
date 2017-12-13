@@ -1,14 +1,28 @@
 'use strict';
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
+
+  function checkRightsToEdit(message, $location, ArrayUtils, AuthResolver, USER_ROLES) {
+    AuthResolver.resolve().then(function(auth){
+      if(!auth.isAdmin() || !ArrayUtils.includes(auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA)) {
+        message.error('main.messages.error.nopermission');
+        $location.path('');
+      }
+    });
+  }
+
   $routeProvider
       .when('/vocationalCurriculum/new', {
         templateUrl: 'vocationalCurriculum/vocational.curriculum.html',
         controller: 'VocationalCurriculumController',
         controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          checkAccess: checkRightsToEdit
+        },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA]
         }
       })
       .when('/vocationalCurriculum/:id/edit', {
@@ -20,10 +34,11 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); },
           entity: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/curriculum').get({id: $route.current.params.id}).$promise;
-          }
+          },
+          checkAccess: checkRightsToEdit
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA]
         }
       })
       .when('/vocationalCurriculum/:id/view', {
@@ -38,7 +53,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEKAVA]
         }
       })
       .when('/vocationalCurriculum/:id/moduleImplementationPlan/new', {
@@ -50,10 +65,11 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); },
           curriculum: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/curriculumVersion/curriculum').get({id: $route.current.params.id}).$promise;
-          }
+          },
+          checkAccess: checkRightsToEdit
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA]
         }
       })
       .when('/vocationalCurriculum/:id/moduleImplementationPlan/:versionId/edit', {
@@ -68,14 +84,15 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           },
           curriculumVersion: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/curriculumVersion').get({id: $route.current.params.versionId}).$promise;
-          }
+          },
+          checkAccess: checkRightsToEdit
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA]
         }
       })
       .when('/vocationalCurriculum/:id/moduleImplementationPlan/:versionId/view', {
-        templateUrl: 'vocationalCurriculum/implementationPlan/implementation.plan.html',
+        templateUrl: 'vocationalCurriculum/implementationPlan/implementation.plan.view.html',
         controller: 'VocationalCurriculumModuleImplementationPlanController',
         controllerAs: 'controller',
         resolve: {
@@ -89,7 +106,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEKAVA]
         }
       }).when('/vocationalCurriculum/:curriculum/module/new', {
         templateUrl: 'vocationalCurriculum/module/vocational.curriculum.module.edit.html',
@@ -97,19 +114,20 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
+          checkAccess: checkRightsToEdit
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA]
         }
       }).when('/vocationalCurriculum/:curriculum/module/:id/view', {
         templateUrl: 'vocationalCurriculum/module/vocational.curriculum.module.view.html',
         controller: 'VocationalCurriculumModuleController',
         controllerAs: 'controller',
         resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); },
+          translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEKAVA]
         }
       }).when('/vocationalCurriculum/:curriculum/module/:id/edit', {
         templateUrl: 'vocationalCurriculum/module/vocational.curriculum.module.edit.html',
@@ -117,9 +135,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
+          checkAccess: checkRightsToEdit
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA]
         }
       }).when('/occupationModule/:curriculum/:version/:curriculumModule/new', {
        templateUrl: 'vocationalCurriculum/implementationPlan/occupation.module.edit.html',
@@ -127,9 +146,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
+          checkAccess: checkRightsToEdit
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA]
         }
       }).when('/occupationModule/:curriculum/:version/:curriculumModule/:occupationModule/edit', {
         templateUrl: 'vocationalCurriculum/implementationPlan/occupation.module.edit.html',
@@ -137,19 +157,20 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
+          checkAccess: checkRightsToEdit
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA]
         }
       }).when('/occupationModule/:curriculum/:version/:curriculumModule/:occupationModule/view', {
         templateUrl: 'vocationalCurriculum/implementationPlan/occupation.module.view.html',
         controller: 'VocationalCurriculumVersionOccupationModuleController',
         controllerAs: 'controller',
         resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); },
+          translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEKAVA]
         }
       });
 }]);

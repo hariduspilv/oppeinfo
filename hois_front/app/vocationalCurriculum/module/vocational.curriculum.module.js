@@ -3,7 +3,7 @@
 angular.module('hitsaOis')
   .controller('VocationalCurriculumModuleController', function ($scope, $route, QueryUtils, dialogService, message, ArrayUtils, $location, $rootScope, ClassifierConnect) {
 
-    $scope.curriculum = $route.current.params.curriculum;
+    $scope.curriculumId = $route.current.params.curriculum;
     var id = $route.current.params.id;
     var baseUrl = '/curriculumModule';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -13,7 +13,7 @@ angular.module('hitsaOis')
     });
 
     var initial = {
-      curriculum: $scope.curriculum,
+      curriculum: $scope.curriculumId,
       occupations: [],
       competences: [],
       outcomes: [],
@@ -22,6 +22,15 @@ angular.module('hitsaOis')
 
     $scope.occupationsSelected = {};
     $scope.specialitiesSelected = {};
+
+    $scope.competences = [];
+
+    QueryUtils.endpoint(baseUrl + '/competences/curriculum/' + $scope.curriculumId).query().$promise.then(function(response){
+      $scope.competences = response;
+      if($scope.vocationalCurriculumModuleForm) {
+        $scope.vocationalCurriculumModuleForm.$setPristine();
+      }
+    });
 
     function dtoToModel(response) {
       $scope.module = response;
@@ -43,21 +52,21 @@ angular.module('hitsaOis')
           }
         });
       }
-      loadCompetences();
     }
 
     if(id) {
       Endpoint.get({id: id}).$promise.then(dtoToModel);
     } else {
       $scope.module = new Endpoint(initial);
-      QueryUtils.endpoint(baseUrl + '/curriculumOccupations/' + $scope.curriculum).query().$promise.then(function(response){
-        $scope.module.curriculumOccupations = response;
-        loadCompetences();
+      QueryUtils.endpoint(baseUrl + '/curriculum/' + $scope.curriculumId).search().$promise.then(function(response){
+        $scope.module.curriculumOccupations = response.occupations;
+        $scope.module.occupation = response.occupation;
+        $scope.module.canHaveOccupations = response.canHaveOccupations;
       });
     }
 
     $scope.possibleTypes = [];
-    QueryUtils.endpoint(baseUrl + '/types').query({module: id, curriculum: $scope.curriculum}).$promise.then(function(response){
+    QueryUtils.endpoint(baseUrl + '/types').query({module: id, curriculum: $scope.curriculumId}).$promise.then(function(response){
       $scope.possibleTypes = response;
     });
 
@@ -184,28 +193,6 @@ angular.module('hitsaOis')
       });
     };
 
-    $scope.competences = [];
-
-    function loadCompetences() {
-      if(ArrayUtils.isEmpty($scope.competences)) {
-
-        var occupationsSelected =  $scope.module.curriculumOccupations.map(function(it){return it.occupation;});
-        if (angular.isArray(occupationsSelected) && occupationsSelected.length > 0) {
-          var loadedCompetences = {};
-          ClassifierConnect.queryAll({connectClassifierCode: occupationsSelected, classifierMainClassCode: 'KOMPETENTS'}, function(result) {
-            result.forEach(function(it) {
-              loadedCompetences[it.classifier.code] = it.classifier;
-            });
-            for(var p in loadedCompetences) {
-              if (loadedCompetences.hasOwnProperty(p)) {
-                $scope.competences.push(loadedCompetences[p]);
-              }
-            }
-          });
-        }
-      }
-    }
-
     function anySpecAdded(specialities) {
       if(!angular.isArray(specialities)) {
           return false;
@@ -269,5 +256,15 @@ angular.module('hitsaOis')
     $scope.validateOccupations = function() {
           $scope.occupationsValid = occupationsAreValid();
     };
+
+    /**
+     * Back buttons not always work properly on this form, that is why this is left here for testing in devhois.
+     * TODO: delete before the release on 13 December 2017
+     */
+    $scope.$watch('vocationalCurriculumModuleForm.$dirty', function(){
+        if($scope.vocationalCurriculumModuleForm) {
+            console.log("curriculum module form dirty: ", $scope.vocationalCurriculumModuleForm.$dirty);
+        }
+    });
 
   });

@@ -34,7 +34,7 @@ public class SaisAdmissionController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public SaisAdmissionDto get(@WithEntity("id") SaisAdmission saisAdmission, HoisUserDetails user) {
+    public SaisAdmissionDto get(@WithEntity SaisAdmission saisAdmission, HoisUserDetails user) {
         UserUtil.assertSameSchool(user, saisAdmission.getCurriculumVersion().getCurriculum().getSchool());
         return SaisAdmissionDto.of(saisAdmission);
     }

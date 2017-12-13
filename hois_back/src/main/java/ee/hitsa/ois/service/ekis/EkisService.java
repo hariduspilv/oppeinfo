@@ -1,14 +1,20 @@
 package ee.hitsa.ois.service.ekis;
 
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -51,6 +57,8 @@ import ee.hois.soap.ekis.client.generated.Content;
 @Transactional
 @Service
 public class EkisService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     // XXX we send 0 as missing wd_id value
     private static final int MISSING_WD_ID = 0;
@@ -185,8 +193,15 @@ public class EkisService {
         request.setStEkap(contract.getCredits() != null ? contract.getCredits().toString() : null);
         request.setStHours(contract.getHours() != null ? contract.getHours().toString() : null);
 
-        Translatable module = StudentUtil.isHigher(student) ? contract.getSubject() : contract.getModule().getCurriculumModule();
-        request.setStModule(module != null ? module.getNameEt() : null);
+        boolean higher = StudentUtil.isHigher(student);
+        Translatable module = higher ? contract.getSubject() : contract.getModule().getCurriculumModule();
+        String stModule = module != null ? module.getNameEt() : null;
+        if(!higher) {
+            // add theme
+            List<String> names = Arrays.asList(stModule, contract.getTheme() != null ? contract.getTheme().getNameEt() : null);
+            stModule = names.stream().filter(r -> r != null).collect(Collectors.joining(", "));
+        }
+        request.setStModule(stModule);
 
         Enterprise enterprise = contract.getEnterprise();
         request.setOrgName(enterprise.getName());
@@ -287,6 +302,7 @@ public class EkisService {
             }
         } catch (Exception e) {
             result.getLog().setError(e);
+            LOG.error("Error while handling EKIS response :", e);
         } finally {
             WsEkisLog logRecord = new WsEkisLog();
             logCustomizer.accept(logRecord);

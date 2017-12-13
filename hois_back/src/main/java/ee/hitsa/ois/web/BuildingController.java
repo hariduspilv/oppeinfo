@@ -36,7 +36,7 @@ public class BuildingController {
 
     // building: get/save/update/delete
     @GetMapping("/buildings/{id:\\d+}")
-    public BuildingDto getBuilding(HoisUserDetails user, @WithEntity("id") Building building) {
+    public BuildingDto getBuilding(HoisUserDetails user, @WithEntity Building building) {
         UserUtil.assertIsSchoolAdmin(user, building.getSchool());
         return BuildingDto.of(building);
     }
@@ -48,13 +48,13 @@ public class BuildingController {
     }
 
     @PutMapping("/buildings/{id:\\d+}")
-    public BuildingDto saveBuilding(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Building building, @Valid @RequestBody BuildingForm form) {
+    public BuildingDto saveBuilding(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Building building, @Valid @RequestBody BuildingForm form) {
         UserUtil.assertIsSchoolAdmin(user, building.getSchool());
         return getBuilding(user, buildingService.save(building, form));
     }
 
     @DeleteMapping("/buildings/{id:\\d+}")
-    public void deleteBuilding(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Building building, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void deleteBuilding(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Building building, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, building.getSchool());
         buildingService.delete(user, building);
     }
@@ -67,7 +67,7 @@ public class BuildingController {
     }
 
     @GetMapping("/rooms/{id:\\d+}")
-    public RoomDto getRoom(HoisUserDetails user, @WithEntity("id") Room room) {
+    public RoomDto getRoom(HoisUserDetails user, @WithEntity Room room) {
         UserUtil.assertIsSchoolAdmin(user, room.getBuilding().getSchool());
         return RoomDto.of(room);
     }
@@ -79,13 +79,13 @@ public class BuildingController {
     }
 
     @PutMapping("/rooms/{id:\\d+}")
-    public RoomDto saveRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Room room, @Valid @RequestBody RoomForm form) {
+    public RoomDto saveRoom(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Room room, @Valid @RequestBody RoomForm form) {
         UserUtil.assertIsSchoolAdmin(user, room.getBuilding().getSchool());
         return getRoom(user, buildingService.save(user, room, form));
     }
 
     @DeleteMapping("/rooms/{id:\\d+}")
-    public void deleteRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Room room, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void deleteRoom(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Room room, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, room.getBuilding().getSchool());
         buildingService.delete(user, room);
     }

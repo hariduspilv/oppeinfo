@@ -3,7 +3,7 @@
     <form name="studentRepresentativeApplicationCreateForm" novalidate>
         <md-input-container class="md-block">
           <label>{{'student.representative.studentIdcode' | translate}}</label>
-          <hois-idcode-lookup ng-model="record.studentIdcode" name="idcode" role="student" after-lookup="lookupPerson(response)" required></hois-idcode-lookup>
+          <hois-idcode-lookup ng-model="record.studentIdcode" name="idcode" role="activestudent" after-lookup="lookupPerson(response)" after-failed-lookup="lookupFailure(response)" required></hois-idcode-lookup>
         </md-input-container>
 
         <md-input-container class="md-block">
@@ -33,5 +33,6 @@
     </form>
 
     <md-button ng-click="apply()" class="md-raised md-primary">{{'student.representative.application.apply' | translate}}</md-button>
+    <md-button ng-click="back('#/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

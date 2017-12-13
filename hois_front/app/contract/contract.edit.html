@@ -1,9 +1,9 @@
 <div class="ois-form-layout-padding" ng-cloak>
   <div flex>
-    <form name="contractForm" ng-submit="contractForm.$valid && save()" novalidate layout="column">
+    <form name="contractForm" ng-submit="save()" layout="column">
       <div flex>
         <hois-autocomplete ng-model="contract.student" method="students" additional-query-params="{active: true, higher: formState.isHigher}" name="student"
-          label="student.label" required></hois-autocomplete>
+          label="student.label" required="true"></hois-autocomplete>
       </div>
 
       <div ng-if="contract.student && formState.student" class="form-readonly" layout="column">
@@ -18,8 +18,8 @@
             <hois-value value="formState.student.person.idcode"></hois-value>
           </md-input-container>
           <md-input-container flex>
-            <label>{{'student.email' | translate}}</label>
-            <hois-value value="formState.student.person.email"></hois-value>
+            <label>{{'student.schoolEmail' | translate}}</label>
+            <hois-value value="formState.student.schoolEmail"></hois-value>
           </md-input-container>
           <md-input-container flex>
             <label>{{'student.course' | translate}}</label>
@@ -68,12 +68,12 @@
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
           <label>{{'contract.credits' | translate}}</label>
-          <input type="number" ng-model="contract.credits" required>
+          <input type="number" ng-model="contract.credits" ng-min="0" ng-max="999.9" required>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
           <label>{{'contract.hours' | translate}}</label>
-          <input type="number" ng-model="contract.hours" required>
+          <input type="number" ng-model="contract.hours" ng-min="0" ng-max="32767" required>
         </md-input-container>
       </div>
 
@@ -92,7 +92,7 @@
       <div layout="row" flex>
         <md-input-container flex>
           <label class="textInput">{{'contract.practicePlace' | translate}}</label>
-          <input type="text" ng-model="contract.practicePlace" required>
+          <input type="text" ng-model="contract.practicePlace" md-maxlength="255" required>
         </md-input-container>
       </div>
 
@@ -109,30 +109,30 @@
       <div layout="row" flex>
         <md-input-container flex>
           <label class="textInput">{{'contract.contactPersonName' | translate}}</label>
-          <input type="text" ng-model="contract.contactPersonName" required>
+          <input type="text" ng-model="contract.contactPersonName" md-maxlength="100" required>
         </md-input-container>
         <md-input-container flex>
           <label class="textInput">{{'contract.contactPersonEmail' | translate}}</label>
-          <input type="email" ng-model="contract.contactPersonEmail" required>
+          <input type="email" ng-model="contract.contactPersonEmail" md-maxlength="100" required>
         </md-input-container>
         <md-input-container flex>
           <label class="textInput">{{'contract.contactPersonPhone' | translate}}</label>
-          <input type="text" ng-model="contract.contactPersonPhone">
+          <input type="text" ng-model="contract.contactPersonPhone" md-maxlength="100">
         </md-input-container>
       </div>
 
       <div layout="row" flex>
         <md-input-container flex>
           <label class="textInput">{{'contract.supervisorName' | translate}}</label>
-          <input type="text" ng-model="contract.supervisorName" required>
+          <input type="text" ng-model="contract.supervisorName" md-maxlength="100" required>
         </md-input-container>
         <md-input-container flex>
           <label class="textInput">{{'contract.supervisorEmail' | translate}}</label>
-          <input type="email" ng-model="contract.supervisorEmail" required>
+          <input type="email" ng-model="contract.supervisorEmail" md-maxlength="100" required>
         </md-input-container>
         <md-input-container flex>
           <label class="textInput">{{'contract.supervisorPhone' | translate}}</label>
-          <input type="text" ng-model="contract.supervisorPhone">
+          <input type="text" ng-model="contract.supervisorPhone" md-maxlength="100">
         </md-input-container>
       </div>
 
@@ -146,7 +146,7 @@
       <div layout="row" flex>
         <md-input-container flex>
           <label class="textInput">{{'contract.otherSupervisor' | translate}}</label>
-          <input type="text" ng-model="contract.otherSupervisor">
+          <input type="text" ng-model="contract.otherSupervisor" md-maxlength="255">
         </md-input-container>
       </div>
 
@@ -160,14 +160,14 @@
       <div layout="row" flex>
         <md-input-container flex>
           <label class="textInput">{{'contract.practicePlan' | translate}}</label>
-          <textarea ng-model="contract.practicePlan" required md-maxlength="10000" max-rows="2"></textarea>
+          <textarea ng-model="contract.practicePlan" required md-maxlength="20000" max-rows="4"></textarea>
         </md-input-container>
       </div>
 
       <div layout="row">
         <md-button ng-if="contract.status !== 'LEPING_STAATUS_Y'" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="contract.id && (contract.status === 'LEPING_STAATUS_Y' || contract.status === 'LEPING_STAATUS_S')" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="back('#/contracts/')">{{'main.button.back' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="back('#/contracts/', contractForm)">{{'main.button.back' | translate}}</md-button>
         <md-button ng-if="contract.id && contract.status === 'LEPING_STAATUS_S'" class="md-raised md-default" ng-click="sendToEkis()">{{'main.button.sendToEkis' | translate}}</md-button>
       </div>
     </form>

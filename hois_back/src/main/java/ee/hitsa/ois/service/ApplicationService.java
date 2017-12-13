@@ -157,18 +157,20 @@ public class ApplicationService {
             throw new ValidationFailedException(applicable.get(type).getReason());
         }
 
-        return save(new Application(), applicationForm);
+        return save(user, new Application(), applicationForm);
     }
 
     /**
      * Store student application
      *
+     * @param user
      * @param application
      * @param applicationForm
      * @return
      * @throws ValidationFailedException if application type specific validation fails
      */
-    public Application save(Application application, ApplicationForm applicationForm) {
+    public Application save(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(applicationForm, application, classifierRepository, "student", "files", "plannedSubjects",
                 "studyPeriodStart", "studyPeriodStart", "accademicApplication", "newCurriculumVersion", "oldCurriculumVersion", "submitted");
 

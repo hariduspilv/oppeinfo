@@ -60,6 +60,36 @@
       <input ng-model="school.emailDomain" name="emailDomain" type="text" md-maxlength="255">
     </md-input-container>
 
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.rtipSchoolCode' | translate}}</label>
+      <input ng-model="school.rtipSchoolCode" name="rtipSchoolCode" type="text" md-maxlength="10">
+    </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.adUrl' | translate}}</label>
+      <input ng-model="school.adUrl" name="adUrl" type="text" md-maxlength="255">
+    </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.adPort' | translate}}</label>
+      <input ng-model="school.adPort" name="adPort" type="number" min="0" max="65535">
+    </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.adDomain' | translate}}</label>
+      <input ng-model="school.adDomain" name="adDomain" type="text" md-maxlength="255">
+    </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.adBase' | translate}}</label>
+      <input ng-model="school.adBase" name="adBase" type="text" md-maxlength="255">
+    </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.adIdcodeField' | translate}}</label>
+      <input ng-model="school.adIdcodeField" name="adIdcodeField" type="text" md-maxlength="50">
+    </md-input-container>
+
     <lf-ng-md-file-input name="logoFiles"
       lf-files="logoFiles" lf-api="logoFileApi" lf-filesize="100KB"
       accept=".png, .jpg, .jpeg" lf-mimetype="image/*" preview

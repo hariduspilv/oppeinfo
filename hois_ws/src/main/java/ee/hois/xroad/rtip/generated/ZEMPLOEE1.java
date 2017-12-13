@@ -2,10 +2,13 @@
 package ee.hois.xroad.rtip.generated;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 
 /**
@@ -205,6 +208,15 @@ import javax.xml.bind.annotation.XmlType;
  *             &lt;/restriction&gt;
  *           &lt;/simpleType&gt;
  *         &lt;/element&gt;
+ *         &lt;element name="ALGUSKP" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
+ *         &lt;element name="LAUALYHI" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;
+ *               &lt;maxLength value="8"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="TOOLEKP" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -214,7 +226,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "ZEMPLOEE1", namespace = "http://rtk-v6.x-road.eu", propOrder = {
+@XmlType(name = "ZEMPLOEE1", propOrder = {
     "pernr",
     "vorna",
     "nachn",
@@ -240,7 +252,10 @@ import javax.xml.bind.annotation.XmlType;
     "koormus",
     "amnimi",
     "amkood",
-    "teeninduskoht"
+    "teeninduskoht",
+    "alguskp",
+    "laualyhi",
+    "toolekp"
 })
 public class ZEMPLOEE1 {
 
@@ -296,6 +311,16 @@ public class ZEMPLOEE1 {
     protected String amkood;
     @XmlElement(name = "TEENINDUSKOHT")
     protected String teeninduskoht;
+    @XmlElement(name = "ALGUSKP", type = String.class)
+    @XmlJavaTypeAdapter(Adapter1 .class)
+    @XmlSchemaType(name = "date")
+    protected LocalDate alguskp;
+    @XmlElement(name = "LAUALYHI")
+    protected String laualyhi;
+    @XmlElement(name = "TOOLEKP", type = String.class)
+    @XmlJavaTypeAdapter(Adapter1 .class)
+    @XmlSchemaType(name = "date")
+    protected LocalDate toolekp;
 
     /**
      * Gets the value of the pernr property.
@@ -919,6 +944,78 @@ public class ZEMPLOEE1 {
      */
     public void setTEENINDUSKOHT(String value) {
         this.teeninduskoht = value;
+    }
+
+    /**
+     * Gets the value of the alguskp property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public LocalDate getALGUSKP() {
+        return alguskp;
+    }
+
+    /**
+     * Sets the value of the alguskp property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setALGUSKP(LocalDate value) {
+        this.alguskp = value;
+    }
+
+    /**
+     * Gets the value of the laualyhi property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getLAUALYHI() {
+        return laualyhi;
+    }
+
+    /**
+     * Sets the value of the laualyhi property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setLAUALYHI(String value) {
+        this.laualyhi = value;
+    }
+
+    /**
+     * Gets the value of the toolekp property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public LocalDate getTOOLEKP() {
+        return toolekp;
+    }
+
+    /**
+     * Sets the value of the toolekp property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setTOOLEKP(LocalDate value) {
+        this.toolekp = value;
     }
 
 }

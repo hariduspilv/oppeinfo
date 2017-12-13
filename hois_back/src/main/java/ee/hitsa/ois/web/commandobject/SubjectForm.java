@@ -1,17 +1,18 @@
 package ee.hitsa.ois.web.commandobject;
 
-import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
-
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class SubjectForm extends VersionedCommand {
 

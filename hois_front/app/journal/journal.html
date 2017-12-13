@@ -21,7 +21,7 @@
           </md-input-container>
         </div>
 
-        <div ng-if="auth.isAdmin()" flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <div ng-if="journal.canBeConfirmed" flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <md-input-container style="margin-top:-1em;">
             <label>{{'journal.endDate' | translate}}</label>
             <md-datepicker ng-model="journal.endDate"></md-datepicker>

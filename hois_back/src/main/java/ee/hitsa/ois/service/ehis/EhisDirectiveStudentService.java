@@ -18,7 +18,6 @@ import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.enums.DirectiveType;
-import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hois.xroad.ehis.generated.KhlAkadPuhkusAlgus;
@@ -27,8 +26,8 @@ import ee.hois.xroad.ehis.generated.KhlKorgharidusLisa;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
 import ee.hois.xroad.ehis.generated.KhlLyhiajaliseltValismaal;
 import ee.hois.xroad.ehis.generated.KhlOppeasutus;
-import ee.hois.xroad.ehis.generated.KhlOppeasutuseLopetamine;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
+import ee.hois.xroad.ehis.generated.KhlOppeasutuseLopetamine;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusestValjaarvamine;
 import ee.hois.xroad.ehis.generated.KhlOppekavaMuutus;
 import ee.hois.xroad.ehis.generated.KhlOppevormiMuutus;
@@ -40,16 +39,29 @@ public class EhisDirectiveStudentService extends EhisService {
 
     private static final String SUBJECT_POINTS = "0";
 
-    public void updateStudents(Long directiveId) {
-        Directive directive = em.getReference(Directive.class, directiveId);
+    public void updateStudents(Job job) {
+        Directive directive = em.getReference(Directive.class, EntityUtil.getId(job.getDirective()));
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
+        Long studentId = EntityUtil.getNullableId(job.getStudent());
 
         for (DirectiveStudent directiveStudent : directive.getStudents()) {
-            if(Boolean.TRUE.equals(directiveStudent.getCanceled())) {
+            if(Boolean.TRUE.equals(directiveStudent.getCanceled()) || (studentId != null && !studentId.equals(EntityUtil.getId(directiveStudent.getStudent())))) {
                 continue;
             }
             try {
                 switch (directiveType) {
+                case KASKKIRI_AKAD:
+                    // verify ehis task is for single student only
+                    if(studentId != null) {
+                        startAcademicLeave(directiveStudent);
+                    }
+                    break;
+                case KASKKIRI_AKADK:
+                    // verify ehis task is for single student only
+                    if(studentId != null) {
+                        endAcademicLeave(directiveStudent, true);
+                    }
+                    break;
                 case KASKKIRI_EKSMAT:
                     exmatriculation(directiveStudent);
                     break;
@@ -74,31 +86,6 @@ public class EhisDirectiveStudentService extends EhisService {
                 case KASKKIRI_IMMAT:
                 case KASKKIRI_IMMATV:
                     admissionMatriculation(directiveStudent);
-                    break;
-                default:
-                    break;
-                }
-            } catch (Exception e) {
-                bindingException(directive, e);
-            }
-        }
-    }
-
-    public void updateStudentStatus(Job job) {
-        JobType jobType = JobType.valueOf(EntityUtil.getCode(job.getType()));
-        Directive directive = em.getReference(Directive.class, EntityUtil.getId(job.getDirective()));
-
-        for (DirectiveStudent directiveStudent : directive.getStudents()) {
-            if(Boolean.TRUE.equals(directiveStudent.getCanceled())) {
-                continue;
-            }
-            try {
-                switch(jobType) {
-                case JOB_AKAD_MINEK:
-                    startAcademicLeave(directiveStudent);
-                    break;
-                case JOB_AKAD_KATK:
-                    endAcademicLeave(directiveStudent, true);
                     break;
                 default:
                     break;

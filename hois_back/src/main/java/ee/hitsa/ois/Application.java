@@ -56,19 +56,14 @@ import ee.hitsa.ois.domain.BaseEntity;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+import ee.hitsa.ois.web.sso.idp.SAMLMessageHandler;
 
 @EntityScan(basePackageClasses = { BaseEntity.class, Jsr310JpaConverters.class })
 @EnableScheduling
 @EnableCaching
 @EnableJpaAuditing
 @SpringBootApplication
-@ImportResource({"classpath:cxf-config.xml"/*, 
-	"classpath*:/META-INF/net.shibboleth.idp/preconfig.xml",
-	"${idp.home}/system/conf/global-system.xml",
-	"classpath*:/META-INF/net.shibboleth.idp/config.xml",
-	"classpath*:/META-INF/net.shibboleth.idp/postconfig.xml",
-	"${idp.home}/system/conf/mvc-beans.xml", 
-	"${idp.home}/system/conf/webflow-config.xml"*/})
+@ImportResource("classpath:cxf-config.xml")
 public class Application {
 
     @Autowired
@@ -168,6 +163,13 @@ public class Application {
                 }
             });
 
+            jacksonObjectMapperBuilder.deserializerByType(String.class, new JsonDeserializer<String>() {
+                @Override
+                public String deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                    String value = p.getText();
+                    return value != null ? value.trim() : null;
+                }
+            });
         };
     }
 
@@ -175,6 +177,11 @@ public class Application {
     @Autowired
     public DomainClassConverter<FormattingConversionService> domainClassConverter(FormattingConversionService conversionService) {
         return new DomainClassConverter<>(conversionService);
+    }
+
+    @Bean
+    public SAMLMessageHandler samlMessageHandler() {
+        return new SAMLMessageHandler();
     }
 
     static class WebMvcConfig extends WebMvcConfigurerAdapter {
@@ -190,12 +197,6 @@ public class Application {
             argumentResolvers.add(new WithEntityMethodArgumentResolver(em));
             argumentResolvers.add(new HoisUserDetailsArgumentResolver());
             
-            ((ConverterRegistry)conversionService).addConverter(new net.shibboleth.ext.spring.config.DurationToLongConverter());
-            ((ConverterRegistry)conversionService).addConverter(new net.shibboleth.ext.spring.config.StringToIPRangeConverter());
-            ((ConverterRegistry)conversionService).addConverter(new net.shibboleth.ext.spring.config.BooleanToPredicateConverter());
-            ((ConverterRegistry)conversionService).addConverter(new net.shibboleth.ext.spring.config.StringBooleanToPredicateConverter());
-            ((ConverterRegistry)conversionService).addConverter(new net.shibboleth.ext.spring.config.StringToResourceConverter());
-
             // ISO string to LocalDate
             ((ConverterRegistry)conversionService).addConverter(String.class, LocalDate.class, s -> {
                 LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.parse(s), ZoneOffset.UTC);

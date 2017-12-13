@@ -13,7 +13,6 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -125,7 +124,7 @@ public class SubjectStudyPeriodStudentGroupSearchService {
         qb.filter(" t.start_date <= current_date ");
         qb.filter(" t.end_date >= current_date ");
         List<?> result = qb.select(TIMETABLE_SELECT, em).getResultList();
-        if(CollectionUtils.isEmpty(result)) {
+        if(result.isEmpty()) {
             return null;
         }
         return resultAsLong(result.get(0), 0);

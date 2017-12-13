@@ -67,7 +67,7 @@ public class ProtocolService {
         qb.parameter("studentId", EntityUtil.getId(student));
         qb.parameter("curriculumVersionId", EntityUtil.getId(student.getCurriculumVersion()));
         qb.parameter("positiveValueGrades", OccupationalGrade.OCCUPATIONAL_VALUE_GRADE_POSITIVE);
-
+//      sum(ekap) is zero in some cases
         return resultAsDecimal(qb.select("sum(grade_value * ekap) / sum(ekap)", em).getSingleResult(), 0);
     }
 

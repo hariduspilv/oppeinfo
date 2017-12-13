@@ -2,7 +2,7 @@
   <form name="dialogForm" ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2>{{"curriculum.grade.dialogLabel" | translate}}</h2>
+        <h2>{{"curriculum.grade.editLabel" | translate}}</h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
@@ -15,26 +15,26 @@
 	  <div layout="column">
         <md-input-container flex>
             <label>{{'curriculum.grade.nameEt' | translate}}</label>
-            <input ng-model="data.nameEt" type="text" required md-maxlength="255" ng-readonly="readOnly">
+            <input ng-model="data.nameEt" type="text" required md-maxlength="255">
         </md-input-container>
         <md-input-container flex>
             <label>{{'curriculum.grade.nameEn' | translate}}</label>
-            <input ng-model="data.nameEn" type="text" required md-maxlength="255" ng-readonly="readOnly">
+            <input ng-model="data.nameEn" type="text" required md-maxlength="255">
         </md-input-container>
         <md-input-container flex>
             <label>{{'curriculum.grade.nameEtGenitive' | translate}}</label>
-            <input ng-model="data.nameGenitiveEt" type="text" required md-maxlength="255" ng-readonly="readOnly">
+            <input ng-model="data.nameGenitiveEt" type="text" required md-maxlength="255">
         </md-input-container>
         <md-input-container flex>
             <label>{{'curriculum.grade.ehisGrade' | translate}}</label>
-            <hois-classifier-select ng-model="data.ehisGrade" main-classifier-code="AKAD_KRAAD" required model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
+            <hois-classifier-select ng-model="data.ehisGrade" main-classifier-code="AKAD_KRAAD" required model-value-attr="code"></hois-classifier-select>
         </md-input-container>
 </div>
       </div>
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!readOnly">{{"main.button.save" | translate}}</md-button>
-      <md-button ng-click="delete()" ng-if="editing && !readOnly" class="md-raised">{{"main.button.delete" | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button ng-click="delete()" ng-if="editing" class="md-raised">{{"main.button.delete" | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

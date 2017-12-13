@@ -89,14 +89,15 @@
               <div flex="40" layout="row">{{'module.contactStudy' | translate}}</div>
             </div>
             <div ng-repeat="item in occupationModuleTheme.capacities | orderBy: 'nameEt' track by item.capacityType" layout="row" class="secondary-table-row">
-              <div flex="30">{{currentLanguageNameField(item)}}</div>
+              <div flex="30" class="occupation-module-capacity">{{currentLanguageNameField(item)}}</div>
               <div flex="30">
                 <md-input-container flex>
                   <input ng-model="item.hours" type="number" min="0" max="999" pattern="^\d+$" aria-label="capacity hours" class="small-input" ng-required="item.contact">
                 </md-input-container>
               </div>
               <div flex="40" layout="row">
-                <md-checkbox ng-model="item.contact" aria-label="capacity contact"></md-checkbox>
+                <md-checkbox ng-model="item.contact" aria-label="capacity contact"
+                class="occupation-module-capacity-contact"></md-checkbox>
               </div>
             </div>
           </fieldset>
@@ -124,7 +125,7 @@
                 <span flex="30" class="common-label">{{'theme.assessmentType' | translate}}</span>
 
                   <md-radio-group ng-model="occupationModuleTheme.assessment" layout="row">
-                    <md-radio-button ng-repeat="option in assessments track by option.code" ng-value="option.code"
+                    <md-radio-button ng-repeat="option in assessments | orderBy: 'nameEt' track by option.code" ng-value="option.code"
                     aria-label="{{ currentLanguageNameField(option) }}">
                       {{ currentLanguageNameField(option) }}
                     </md-radio-button>

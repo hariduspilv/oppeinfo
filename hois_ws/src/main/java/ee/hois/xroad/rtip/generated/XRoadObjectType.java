@@ -26,7 +26,7 @@ import javax.xml.bind.annotation.XmlType;
  * </pre>
  * 
  */
-@XmlType(name = "XRoadObjectType")
+@XmlType(name = "XRoadObjectType", namespace = "http://x-road.eu/xsd/identifiers")
 @XmlEnum
 public enum XRoadObjectType {
 

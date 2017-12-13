@@ -54,6 +54,14 @@ angular.module('hitsaOis').controller('StudentRepresentativeApplicationSearchCon
       $scope.record.lastname = response.lastname;
     };
 
+    $scope.lookupFailure = function(response) {
+      if(!response || response.status !== 412) {
+        message.error('student.representative.studentnotfound');
+      }
+      $scope.record.firstname = undefined;
+      $scope.record.lastname = undefined;
+    };
+
     $scope.apply = function() {
       $scope.studentRepresentativeApplicationCreateForm.$setSubmitted();
       if(!$scope.studentRepresentativeApplicationCreateForm.$valid) {

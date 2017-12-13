@@ -1,0 +1,9 @@
+<jxb:bindings xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+              xmlns:jxb="http://java.sun.com/xml/ns/jaxb" 
+              jxb:version="2.1">
+  <jxb:globalBindings>
+    <jxb:javaType name="java.time.LocalDate" xmlType="xsd:date"
+        parseMethod="ee.hois.soap.SoapUtil.rtipParseDate"
+        printMethod="ee.hois.soap.SoapUtil.rtipPrintDate"/>
+  </jxb:globalBindings>
+</jxb:bindings>

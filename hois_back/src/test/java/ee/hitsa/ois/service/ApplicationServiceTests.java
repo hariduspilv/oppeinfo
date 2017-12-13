@@ -20,12 +20,19 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import ee.hitsa.ois.TestConfiguration;
+import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.AcademicLeaveReason;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.service.security.HoisUserDetailsService;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -37,13 +44,16 @@ public class ApplicationServiceTests {
 
     @Autowired
     private ApplicationService service;
-
+    @Autowired
+    private HoisUserDetailsService hoisUserDetailsService;
+    @Autowired
+    private TestConfigurationService testConfigurationService;
     @Autowired
     private Validator validator;
-
     @Autowired
     private StudentRepository studentRepository;
 
+    private HoisUserDetails testUser;
     private Student student;
     private Student occupationalStudent;
 
@@ -55,6 +65,9 @@ public class ApplicationServiceTests {
                 filters.add(cb.like(root.get("curriculumVersion").get("curriculum").get("origStudyLevel").get("value"), "5%"));
                 return cb.and(filters.toArray(new Predicate[filters.size()]));
             }).get(0);
+
+            User user = testConfigurationService.userWithRoleInSchool(TestConfiguration.USER_ID, Role.ROLL_A, EntityUtil.getId(student.getSchool()));
+            testUser = hoisUserDetailsService.getHoisUserDetails(user);
         }
 
         if(occupationalStudent == null) {
@@ -79,7 +92,7 @@ public class ApplicationServiceTests {
 
         ValidationFailedException result = null;
         try {
-            service.save(new Application(), applicationForm);
+            service.save(testUser, new Application(), applicationForm);
         } catch (ValidationFailedException e) {
             result = e;
         }
@@ -100,7 +113,7 @@ public class ApplicationServiceTests {
 
         ValidationFailedException result = null;
         try {
-            service.save(new Application(), applicationForm);
+            service.save(testUser, new Application(), applicationForm);
         } catch (ValidationFailedException e) {
             result = e;
         }

@@ -51,7 +51,7 @@ public class JournalUnconfirmedService {
       JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j");
       qb.requiredCriteria("j.school_id = :schoolId", "schoolId", user.getSchoolId());
       qb.optionalCriteria(FILTER_JOURNAL_BY_TEACHER, "teacherId", user.getTeacherId());
-      qb.requiredCriteria("j.end_date > :twoWeeksBeforeEnd", "twoWeeksBeforeEnd", LocalDate.now().minusWeeks(TWO_WEEKS));
+      qb.requiredCriteria("j.end_date <= :twoWeeksBeforeEnd", "twoWeeksBeforeEnd", LocalDate.now().plusWeeks(TWO_WEEKS));
       qb.requiredCriteria("j.status_code = :notConfirmed", "notConfirmed", JournalStatus.PAEVIK_STAATUS_T);
       return qb.count(em);
     }
@@ -63,8 +63,7 @@ public class JournalUnconfirmedService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j");
         qb.requiredCriteria("j.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria(FILTER_JOURNAL_BY_TEACHER, "teacherId", user.getTeacherId());
-        qb.filter("j.end_date > current_date");
-        qb.requiredCriteria("j.end_date > :today", "today", LocalDate.now());
+        qb.requiredCriteria("j.end_date < :today", "today", LocalDate.now());
         qb.requiredCriteria("j.status_code = :notConfirmed", "notConfirmed", JournalStatus.PAEVIK_STAATUS_T);
         return !qb.select("j.id", em).setMaxResults(1).getResultList().isEmpty();
     }

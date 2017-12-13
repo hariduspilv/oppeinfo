@@ -76,8 +76,16 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
     });
   }
 
+  function setModuleCredits() {
+    if($scope.contract.module && !$scope.contract.theme) {
+      $scope.contract.credits = $scope.formState.modulesById[$scope.contract.module].credits;
+      $scope.contract.hours = $scope.contract.credits * CREDITS_TO_HOURS_MULTIPLIER;
+    }
+  }
+
   $scope.moduleChanged = function (moduleId) {
     if ($scope.formState.modulesById[moduleId]) {
+      setModuleCredits();
       $scope.formState.themes = $scope.formState.modulesById[moduleId].themes.map(function (it) { return it.theme; });
 
       if (!angular.isDefined(entity) && angular.isString($scope.formState.modulesById[moduleId].assessmentMethodsEt)) {
@@ -94,6 +102,8 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
       if (!angular.isDefined(entity) && angular.isString($scope.formState.themesById[themeId].subthemes)) {
         $scope.contract.practicePlan = $scope.formState.themesById[themeId].subthemes;
       }
+    } else {
+      setModuleCredits();
     }
   };
 
@@ -135,6 +145,11 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
 
   var ContractEndpoint = QueryUtils.endpoint('/contracts');
   $scope.save = function (success) {
+    $scope.contractForm.$setSubmitted();
+    if(!$scope.contractForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      return;
+    }
     $scope.contract.isHigher = $scope.formState.isHigher;
     var contract = new ContractEndpoint($scope.contract);
     if (angular.isDefined($scope.contract.id)) {
@@ -144,6 +159,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
         if (angular.isFunction(success)) {
           success();
         }
+        $scope.contractForm.$setPristine();
       });
     } else {
       contract.$save().then(function () {

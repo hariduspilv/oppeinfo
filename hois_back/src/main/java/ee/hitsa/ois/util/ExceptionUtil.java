@@ -10,5 +10,19 @@ public class ExceptionUtil {
         e.printStackTrace(new PrintWriter(sw));
         return sw.toString();
     }
-    
+
+    /**
+     * Get root cause of exception.
+     *
+     * @param throwable
+     * @return
+     * @throws NullPointerException if throwable is null
+     */
+    public static Throwable getRootCause(Throwable throwable) {
+        Throwable cause = throwable.getCause();
+        if(cause == null) {
+            return throwable;
+        }
+        return getRootCause(cause);
+    }
 }

@@ -21,7 +21,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOMISJON]
         }
       })
       .when('/committees/:id/edit', {
@@ -32,7 +32,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOMISJON]
         }
       })
       .when('/committees/:id/view', {
@@ -43,7 +43,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOMISJON]
         }
       });
 }]);

@@ -45,21 +45,23 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
         Claims claims = getClaims(request);
         if(claims != null) {
+            request.setAttribute(Claims.class.getName(), claims);
             String username = claims.getSubject();
             String loginMethod = (String) claims.get(hoisJwtProperties.getClaimLoginMethod());
-
-            HoisUserDetails hoisUserDetails = hoisUserDetailsService.loadUserByUsername(username);
-            if (hoisUserDetails != null) {
-                PreAuthenticatedAuthenticationToken token = null;
-                if (LoginMethod.LOGIN_TYPE_I.name().equals(loginMethod)) {
-                    token = new EstonianIdCardAuthenticationToken(username);
-                    hoisUserDetails.setLoginMethod(LoginMethod.LOGIN_TYPE_I);
-                } else {
-                    token = new PreAuthenticatedAuthenticationToken(username, username);
+            if (loginMethod != null) {
+                HoisUserDetails hoisUserDetails = hoisUserDetailsService.loadUserByUsername(username);
+                if (hoisUserDetails != null) {
+                    PreAuthenticatedAuthenticationToken token = null;
+                    if (LoginMethod.LOGIN_TYPE_I.name().equals(loginMethod)) {
+                        token = new EstonianIdCardAuthenticationToken(username);
+                        hoisUserDetails.setLoginMethod(LoginMethod.LOGIN_TYPE_I);
+                    } else {
+                        token = new PreAuthenticatedAuthenticationToken(username, username);
+                    }
+                    token.setDetails(hoisUserDetails);
+                    token.setAuthenticated(true);
+                    SecurityContextHolder.getContext().setAuthentication(token);
                 }
-                token.setDetails(hoisUserDetails);
-                token.setAuthenticated(true);
-                SecurityContextHolder.getContext().setAuthentication(token);
             }
         }
 

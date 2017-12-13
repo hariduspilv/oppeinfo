@@ -75,7 +75,7 @@ public class CommitteeService {
         qb.optionalCriteria("c.valid_from >= :from", "from", criteria.getValidFrom());
         qb.optionalCriteria("c.valid_thru <= :thru", "thru", criteria.getValidThru());
         if(Boolean.FALSE.equals(criteria.getShowInvalid())) {
-            qb.filter(" (c.valid_from < current_date and c.valid_thru > current_date) ");
+            qb.filter(" (c.valid_from <= current_date and c.valid_thru >= current_date) ");
         }
         qb.optionalCriteria("exists(select cm3.id from committee_member cm3 where cm3.committee_id = c.id and cm3.member_name = :memberName)", 
                 "memberName", criteria.getMemberName());

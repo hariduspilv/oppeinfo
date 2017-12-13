@@ -1,12 +1,12 @@
 package ee.hitsa.ois.web.dto;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+
 import java.time.LocalDateTime;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 
 public class AcademicCalendarEventDto {
     

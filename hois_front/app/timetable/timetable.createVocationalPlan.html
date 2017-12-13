@@ -42,7 +42,7 @@
     </div>
     <div>
       <fieldset tabindex="1">
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetablePlan.plannedLessons' | translate}}</legend>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetablePlan.plannedLessons' | translate}}<span ng-if="plan.selectedGroup"> {{'timetable.timetablePlan.group' | translate}} {{plan.selectedStudentGroupObject.code}}</span></legend>
         <table md-table class="secondary-table">
           <thead md-head>
             <tr md-row>
@@ -97,17 +97,18 @@
           <tr md-row ng-repeat="group in plan.currentStudentGroups" ng-class-odd="'odd'" ng-class-even="'even'">
             <td>{{group.code}}</td>
             <td ng-repeat="lessonTime in currentLessonTimes track by $index">
-              <div index-value="{{$parent.$index}}" drop-fn="saveEvent(data)" ng-attr-ois-drop="{{plan.selectedGroup === group.id}}"
-                ng-repeat="currentEvent in t = angular.equals(t.id, getEventsForLesson($index, lessonTime, group).id) ? t : getEventsForLesson($index, lessonTime, group)"
+              <div index-value="{{$parent.$index}}" drop-fn="saveEvent(data)" ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" ng-repeat="currentEvent in t = angular.equals(t.id, getEventsForLesson($index, lessonTime, group).id) ? t : getEventsForLesson($index, lessonTime, group)"
                 ng-click="changeEvent(currentEvent)" ng-attr-ois-drag="{{plan.selectedGroup === group.id}}" id="{{currentEvent.journalObject.id + '-' + $index + group.id}}"
                 journal-id="{{currentEvent.journal}}" class="timetable-drag" style="background-color:{{currentEvent.journalObject.color}}"
                 old-event-id="{{currentEvent.id}}" title="{{currentEvent.journalObject.name}}/{{currentLanguageNameField(getCapacityType(currentEvent.capacityType))}}&#10;{{currentEvent.currentTeachers.join(', ')}}">
                 <span>{{currentEvent.journalObject.name.substr(0, 4)}}/{{getCapacityTypeValue(currentEvent.capacityType)}}</span>
                 <br>
-                <span style=";{{currentEvent.rooms ? '' : 'color:red;font-weight: bold;'}}">{{currentEvent.rooms ? getRoomCodes(currentEvent.rooms) : "?"}}</span>
+                <span style=";{{currentEvent.rooms.length !== 0 ? '' : 'color:red;font-weight: bold;'}}">{{currentEvent.rooms.length !== 0 ? getRoomCodes(currentEvent.rooms) : "?"}}</span>
               </div>
               <div ng-if="!getEventsForLesson($index, lessonTime, group)" ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" index-value="{{$index}}"
-                drop-fn="saveEvent(data)" id="{{group.id + '-' + $index}}" class="timetable-drop">{{getTeacherLesson($index, lessonTime, group).join(", ")}}</div>
+                drop-fn="saveEvent(data)" id="{{group.id + '-' + $index}}" class="timetable-drop" title="{{getTeacherLesson($index, lessonTime, group, true).join(', ')}}">
+                {{getTeacherLesson($index, lessonTime, group, false).join(", ")}}
+              </div>
             </td>
           </tr>
         </tbody>

@@ -3,7 +3,7 @@
     <form name="practiceJournalForm" ng-submit="practiceJournalForm.$valid && save()" novalidate layout="column">
       <div flex>
         <hois-autocomplete ng-model="practiceJournal.student" method="students" additional-query-params="{active: true, higher: formState.isHigher}" name="student"
-          label="student.label" required></hois-autocomplete>
+          label="student.label" required="true"></hois-autocomplete>
       </div>
 
       <div ng-if="practiceJournal.student && formState.student" class="form-readonly" layout="column">
@@ -51,12 +51,12 @@
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
           <label class="textInput">{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
-          <input type="number" ng-model="practiceJournal.credits" ng-min="0" ng-max="999.9" required>
+          <input type="number" ng-model="practiceJournal.credits" min="0" max="999.9" required>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'practiceJournal.hours' | translate}}</label>
-          <input type="number" ng-model="practiceJournal.hours" ng-min="0" ng-max="32767" required>
+          <input type="number" ng-model="practiceJournal.hours" min="0" max="32767" required>
         </md-input-container>
       </div>
 
@@ -68,12 +68,12 @@
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
           <label class="textInput">{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
-          <input type="number" ng-model="practiceJournal.credits" required>
+          <input type="number" ng-model="practiceJournal.credits" min="0" max="999.9" required>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'practiceJournal.hours' | translate}}</label>
-          <input type="number" ng-model="practiceJournal.hours" required>
+          <input type="number" ng-model="practiceJournal.hours" min="0" max="32767" required>
         </md-input-container>
       </div>
 
@@ -93,21 +93,21 @@
       <div layout="row" flex>
         <md-input-container flex>
           <label class="textInput">{{'practiceJournal.practicePlace' | translate}}</label>
-          <input type="text" ng-model="practiceJournal.practicePlace" required>
+          <input type="text" ng-model="practiceJournal.practicePlace" md-maxlength="255" required>
         </md-input-container>
       </div>
 
       <div layout="row" flex>
         <md-input-container flex>
           <label class="textInput">{{'practiceJournal.schoolSupervisor' | translate}}</label>
-          <hois-select ng-model="practiceJournal.teacher" type="teacher" required></hois-select>
+          <hois-select ng-model="practiceJournal.teacher" type="teacher" criteria="{valid: true}" required></hois-select>
         </md-input-container>
       </div>
 
       <div layout="row" flex>
         <md-input-container flex>
           <label class="textInput">{{'practiceJournal.practicePlan' | translate}}</label>
-          <textarea ng-model="practiceJournal.practicePlan" required md-maxlength="10000" max-rows="2"></textarea>
+          <textarea ng-model="practiceJournal.practicePlan" required md-maxlength="20000" max-rows="2"></textarea>
         </md-input-container>
       </div>
 

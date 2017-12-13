@@ -1,12 +1,20 @@
 'use strict';
 
-angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$resource', '$location', '$mdDialog', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
-  function ($resource, $location, $mdDialog, $route, $scope, dialogService, message, Classifier, QueryUtils) {
+angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
+  function ($location, $route, $scope, dialogService, message, Classifier, QueryUtils) {
     var id = $route.current.params.id;
     var lessonPlanModule = $route.current.params.lessonPlanModule;
     var baseUrl = '/lessonplans/journals';
-    $scope.formState = {capacityTypes: Classifier.queryForDropdown({mainClassCode: 'MAHT', vocational: true})};
-    $scope.record = QueryUtils.endpoint(baseUrl).get({id: id || 'new', lessonPlanModule: lessonPlanModule});
+    $scope.formState = {
+      capacityTypes: Classifier.queryForDropdown({
+        mainClassCode: 'MAHT',
+        vocational: true
+      })
+    };
+    $scope.record = QueryUtils.endpoint(baseUrl).get({
+      id: id || 'new',
+      lessonPlanModule: lessonPlanModule
+    });
     $scope.record.$promise.then(function (result) {
       $scope.formState.capacityTypes.$promise.then(function () {
         Classifier.setSelectedCodes($scope.formState.capacityTypes, $scope.record.journalCapacityTypes);
@@ -27,10 +35,14 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
         return acc;
       }, {});
 
-      if(angular.isArray(result.groups)) {
+      if (angular.isArray(result.groups)) {
         for (var i = 0; result.groups.length > i; i++) {
-          result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({curriculumVersionId: result.groups[i].curriculumVersion});
-          result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule});
+          result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({
+            curriculumVersionId: result.groups[i].curriculumVersion
+          });
+          result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({
+            curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule
+          });
         }
       }
     });
@@ -56,8 +68,12 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
         $scope.record.$update().then(function (result) {
           message.updateSuccess();
           for (var i = 0; result.groups.length > i; i++) {
-            result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({curriculumVersionId: result.groups[i].curriculumVersion});
-            result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule});
+            result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({
+              curriculumVersionId: result.groups[i].curriculumVersion
+            });
+            result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({
+              curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule
+            });
           }
         });
       } else {
@@ -75,7 +91,9 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
     };
 
     $scope.delete = function () {
-      dialogService.confirmDialog({prompt: 'journal.deleteconfirm'}, function () {
+      dialogService.confirmDialog({
+        prompt: 'journal.deleteconfirm'
+      }, function () {
         $scope.record.$delete().then(function () {
           message.info('main.messages.delete.success');
           $location.url('/lessonplans/vocational/' + $scope.record.lessonPlan + '/edit');
@@ -93,16 +111,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
         return;
       }
       $scope.record.journalOccupationModuleThemes.push(themeId);
-      //check the capacities of the added theme
-      var capacities = $scope.formState.themes.find(function(theme) {
-        return theme.id === themeId;
-      }).capacities;
-      var formsateCaps = $scope.formState.capacityTypes.filter(function(currCap) {
-        return capacities.indexOf(currCap.code) !== -1;
-      });
-      formsateCaps.forEach(function(it) {
-        it._selected = true;
-      });
+      checkCapacitiesForThemes();
       $scope.formState.theme = null;
     };
 
@@ -111,7 +120,39 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
       if (index !== -1) {
         $scope.record.journalOccupationModuleThemes.splice(index, 1);
       }
+      checkCapacitiesForThemes();
     };
+
+    function checkCapacitiesForThemes() {
+      var capacities = {};
+      $scope.record.journalOccupationModuleThemes.forEach(function (themeId) {
+        var currentTheme = $scope.formState.themes.find(function (currTheme) {
+          return currTheme.id === themeId;
+        });
+        for (var cap in currentTheme.capacities) {
+          if (angular.isDefined(capacities[cap])) {
+            capacities[cap] += currentTheme.capacities[cap];
+          } else {
+            capacities[cap] = currentTheme.capacities[cap];
+          }
+        }
+      });
+      var formsateCaps = $scope.formState.capacityTypes;
+
+      formsateCaps.forEach(function (it) {
+        if (angular.isDefined(capacities[it.code])) {
+          it._selected = true;
+          if (angular.isDefined(it.hours)) {
+            it.hours = capacities[it.code];
+          } else {
+            it.hours = capacities[it.code];
+          }
+        } else {
+          it._selected = false;
+          it.hours = 0;
+        }
+      });
+    }
 
     $scope.deleteRoom = function (room) {
       var index = $scope.record.journalRooms.indexOf(room);
@@ -130,7 +171,9 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
         message.error('lessonplan.journal.duplicateteacher');
         return;
       }
-      $scope.record.journalTeachers.push({teacher: $scope.formState.teacher});
+      $scope.record.journalTeachers.push({
+        teacher: $scope.formState.teacher
+      });
       $scope.formState.teacher = undefined;
     };
 
@@ -157,9 +200,14 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
         message.error('lessonplan.journal.duplicategroup');
         return;
       }
-      QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({curriculumVersionId: group.curriculumVersion}).$promise.then(function (response) {
+      QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({
+        curriculumVersionId: group.curriculumVersion
+      }).$promise.then(function (response) {
         group.modules = response;
-        $scope.record.groups.push({group: group, studentGroup: group.id});
+        $scope.record.groups.push({
+          group: group,
+          studentGroup: group.id
+        });
       });
       $scope.formState.group = undefined;
     };
@@ -199,7 +247,9 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
     $scope.newSelectedModule = function (moduleTheme) {
       if (moduleTheme.curriculumVersionOccupationModule !== null && moduleTheme.curriculumVersionOccupationModule !== "") {
         moduleTheme.curriculumVersionOccupationModuleThemes = null;
-        QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({curriculumVersionOmoduleId: moduleTheme.curriculumVersionOccupationModule}).$promise.then(function (response) {
+        QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({
+          curriculumVersionOmoduleId: moduleTheme.curriculumVersionOccupationModule
+        }).$promise.then(function (response) {
           moduleTheme.group.themes = response;
         });
       } else {

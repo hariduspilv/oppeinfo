@@ -2,13 +2,19 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.List;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
+
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 
 public class PracticeJournalEntriesTeacherForm {
 
+    @Valid
     private List<PracticeJournalEntryTeacherForm> practiceJournalEntries;
+    @Size(max=10000)
     private String teacherComment;
+    @Size(max=10000)
     private String teacherOpinion;
 
     @ClassifierRestriction({MainClassCode.KUTSEHINDAMINE, MainClassCode.KORGHINDAMINE})

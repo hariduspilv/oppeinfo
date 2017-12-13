@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('HigherCurriculumVersionController', function ($scope, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, $translate, $rootScope, $routeParams, DataUtils, config, Session) {
+  .controller('HigherCurriculumVersionController', function ($scope, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, $translate, $rootScope, $routeParams, DataUtils, config) {
 
     var baseUrl = '/curriculum';
     $scope.curriculum = $route.current.locals.curriculum;
@@ -71,7 +71,7 @@ angular.module('hitsaOis')
     };
 
     function setAdmissionYearsSelelction() {
-      $scope.admissionYears = [];
+      $scope.admissionYears = [null];
       var currentYear = new Date().getFullYear();
       for (var year = currentYear - 10; year <= currentYear + 2; year++) {
         $scope.admissionYears.push(year);
@@ -295,10 +295,6 @@ angular.module('hitsaOis')
 
     // modules and specialities
 
-    function moduleHasSpeciality(m) {
-      return m.minorSpeciality || (m.curriculumSpecialities && m.curriculumSpecialities.length > 0);
-    }
-
     $scope.filterModulesBySpeciality = function (spec) {
       return function (module1) {
         return ArrayUtils.includes(module1.curriculumSpecialities, spec.referenceNumber);
@@ -321,7 +317,7 @@ angular.module('hitsaOis')
 
     $scope.deleteSubject = function (module1, subject) {
       dialogService.confirmDialog({ prompt: 'curriculum.itemDeleteConfirm' }, function () {
-        new SubjectEndpoint(subject).$delete().then(function(response){
+        new SubjectEndpoint(subject).$delete().then(function(){
           message.info('main.messages.delete.success');
           ArrayUtils.remove(module1.subjects, subject);
           updateModuleCredits(module1);

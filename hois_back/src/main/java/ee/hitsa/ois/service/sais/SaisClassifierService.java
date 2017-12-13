@@ -26,8 +26,8 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.sais.SaisClassifierSearchCommand;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
-import ee.hois.xroad.sais2.generated.ClassificationTypeItem;
 import ee.hois.xroad.sais2.generated.ClassificationItem;
+import ee.hois.xroad.sais2.generated.ClassificationTypeItem;
 import ee.hois.xroad.sais2.generated.Kvp;
 import ee.hois.xroad.sais2.service.SaisClient;
 

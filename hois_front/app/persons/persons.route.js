@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
-  var authorizedRoles = {authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]};
+
   $routeProvider
     .when('/persons', {
       templateUrl: 'persons/persons.search.html',
@@ -26,7 +26,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         translationLoaded: function ($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
-      data: authorizedRoles
+      authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA]
     })
     .when('/persons/:person/users/new', {
       templateUrl: 'persons/users.edit.html',
@@ -36,7 +36,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         translationLoaded: function ($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
-      data: authorizedRoles
+      authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA]
     })
     .when('/persons/:person/users/:user/edit', {
       templateUrl: 'persons/users.edit.html',
@@ -46,7 +46,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         translationLoaded: function ($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
-      data: authorizedRoles
+      authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA]
     })
     .when('/persons/:person/users/:user', {
       templateUrl: 'persons/users.view.html',
@@ -56,7 +56,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         translationLoaded: function ($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
-      data: authorizedRoles
+      authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KASUTAJA]
     })
     .when('/persons/:id/edit', {
       templateUrl: 'persons/persons.edit.html',
@@ -66,7 +66,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         translationLoaded: function ($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
-      data: authorizedRoles
+      authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA]
     })
     .when('/persons/:id', {
       templateUrl: 'persons/persons.view.html',
@@ -76,6 +76,6 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         translationLoaded: function ($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
-      data: authorizedRoles
+      authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KASUTAJA]
     });
 }]);

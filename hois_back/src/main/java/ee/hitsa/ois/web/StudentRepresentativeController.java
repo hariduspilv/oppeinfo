@@ -49,7 +49,7 @@ public class StudentRepresentativeController {
     }
 
     @GetMapping("/{studentId:\\d+}/{id:\\d+}")
-    public StudentRepresentativeDto get(HoisUserDetails user, @WithEntity("id") StudentRepresentative studentRepresentative) {
+    public StudentRepresentativeDto get(HoisUserDetails user, @WithEntity StudentRepresentative studentRepresentative) {
         assertCanView(user, studentRepresentative.getStudent());
         return StudentRepresentativeDto.of(studentRepresentative, user);
     }
@@ -67,7 +67,7 @@ public class StudentRepresentativeController {
     }
 
     @PutMapping("/{studentId:\\d+}/{id:\\d+}")
-    public StudentRepresentativeDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentRepresentative representative, @Valid @RequestBody StudentRepresentativeForm form) {
+    public StudentRepresentativeDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudentRepresentative representative, @Valid @RequestBody StudentRepresentativeForm form) {
         if(!UserUtil.canEditStudentRepresentative(user, representative)) {
             throw new AssertionFailedException("User cannot edit student representative");
         }
@@ -75,7 +75,7 @@ public class StudentRepresentativeController {
     }
 
     @DeleteMapping("/{studentId:\\d+}/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") StudentRepresentative representative, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") StudentRepresentative representative, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         if(!UserUtil.canEditStudentRepresentative(user, representative)) {
             throw new AssertionFailedException("User cannot delete student representative");
         }
@@ -93,13 +93,13 @@ public class StudentRepresentativeController {
     }
 
     @PutMapping("/applications/accept/{id:\\d+}")
-    public void acceptApplication(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentRepresentativeApplication application, @SuppressWarnings("unused") @RequestBody VersionedCommand form) {
+    public void acceptApplication(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudentRepresentativeApplication application, @SuppressWarnings("unused") @RequestBody VersionedCommand form) {
         assertCanEdit(user, application);
         studentRepresentativeService.acceptApplication(application);
     }
 
     @PutMapping("/applications/decline/{id:\\d+}")
-    public void declineApplication(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentRepresentativeApplication application, @Valid @RequestBody StudentRepresentativeApplicationDeclineForm form) {
+    public void declineApplication(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudentRepresentativeApplication application, @Valid @RequestBody StudentRepresentativeApplicationDeclineForm form) {
         assertCanEdit(user, application);
         studentRepresentativeService.declineApplication(application, form);
     }

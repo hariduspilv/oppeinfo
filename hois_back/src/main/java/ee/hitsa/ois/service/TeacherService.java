@@ -1,6 +1,10 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -38,6 +42,7 @@ import ee.hitsa.ois.service.ehis.EhisTeacherExportService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherContinuingEducationForm;
@@ -45,8 +50,10 @@ import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
+import ee.hitsa.ois.web.dto.TeacherAbsenceDto;
 import ee.hitsa.ois.web.dto.TeacherDto;
 import ee.hitsa.ois.web.dto.TeacherSearchDto;
+import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolSearchDto;
 
 @Transactional
 @Service
@@ -72,45 +79,13 @@ public class TeacherService {
     }
 
     public TeacherDto save(HoisUserDetails user, Teacher teacher, TeacherForm teacherForm) {
-        if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
-            throw new ValidationFailedException("teacher-vocational-higher");
-        }
-        EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification", "teacherContinuingEducation");
-        teacher.setSchool(em.getReference(School.class, user.getSchoolId()));
-        teacher.setTeacherOccupation(teacherOccupationRepository.getOneByIdAndSchool_Id(teacherForm.getTeacherOccupation().getId(), user.getSchoolId()));
-        // TODO: this logic is wrong?
-        Person person = null;
-        if (teacherForm.getPerson().getIdcode() != null) {
-            person = personRepository.findByIdcode(teacherForm.getPerson().getIdcode());
-        } else if (teacherForm.getPerson().getId() != null) {
-            person = personRepository.getOne(teacherForm.getPerson().getId());
-        }
-        if (person == null) {
-            teacher.setPerson(EntityUtil.bindToEntity(teacherForm.getPerson(), new Person(), classifierRepository));
-            EntityUtil.save(teacher.getPerson(), em);
-        } else {
-            bindOldPerson(teacherForm, person);
-            teacher.setPerson(EntityUtil.save(person, em));
-        }
-        bindTeacherPositionEhisForm(teacher, teacherForm);
-        if (!Boolean.TRUE.equals(teacher.getIsHigher())) {
-            // remove possible leftovers of higher teacher
-            bindTeacherMobilityForm(teacher, Collections.emptySet());
-        }
-
-        teacher = EntityUtil.save(teacher, em);
-        if(Boolean.TRUE.equals(teacher.getIsActive())) {
-            userService.enableUser(teacher, LocalDate.now());
-        } else {
-            userService.disableUser(teacher, LocalDate.now());
-        }
-        return TeacherDto.of(teacher);
+        return TeacherDto.of(saveInternal(user, teacher, teacherForm));
     }
 
     public TeacherDto sendToEhis(HoisUserDetails user, Teacher teacher, TeacherForm teacherForm) {
-        TeacherDto dto = save(user, teacher, teacherForm);
+        teacher = saveInternal(user, teacher, teacherForm);
         ehisTeacherExportService.exportToEhis(teacher);
-        return dto;
+        return TeacherDto.of(teacher);
     }
 
     public Page<TeacherSearchDto> search(TeacherSearchCommand criteria, Pageable pageable) {
@@ -198,6 +173,44 @@ public class TeacherService {
     public void delete(HoisUserDetails user, TeacherPositionEhis teacherPositionEhis) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(teacherPositionEhis, em);
+    }
+
+    private Teacher saveInternal(HoisUserDetails user, Teacher teacher, TeacherForm teacherForm) {
+        if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
+            throw new ValidationFailedException("teacher-vocational-higher");
+        }
+
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification", "teacherContinuingEducation");
+        teacher.setSchool(em.getReference(School.class, user.getSchoolId()));
+        teacher.setTeacherOccupation(teacherOccupationRepository.getOneByIdAndSchool_Id(teacherForm.getTeacherOccupation().getId(), user.getSchoolId()));
+        // TODO: this logic is wrong?
+        Person person = null;
+        if (teacherForm.getPerson().getIdcode() != null) {
+            person = personRepository.findByIdcode(teacherForm.getPerson().getIdcode());
+        } else if (teacherForm.getPerson().getId() != null) {
+            person = personRepository.getOne(teacherForm.getPerson().getId());
+        }
+        if (person == null) {
+            teacher.setPerson(EntityUtil.bindToEntity(teacherForm.getPerson(), new Person(), classifierRepository));
+            EntityUtil.save(teacher.getPerson(), em);
+        } else {
+            bindOldPerson(teacherForm, person);
+            teacher.setPerson(EntityUtil.save(person, em));
+        }
+        bindTeacherPositionEhisForm(teacher, teacherForm);
+        if (!Boolean.TRUE.equals(teacher.getIsHigher())) {
+            // remove possible leftovers of higher teacher
+            bindTeacherMobilityForm(teacher, Collections.emptySet());
+        }
+
+        teacher = EntityUtil.save(teacher, em);
+        if(Boolean.TRUE.equals(teacher.getIsActive())) {
+            userService.enableUser(teacher, LocalDate.now());
+        } else {
+            userService.disableUser(teacher, LocalDate.now());
+        }
+        return teacher;
     }
 
     private void bindOldPerson(TeacherForm teacherForm, Person person) {
@@ -309,5 +322,20 @@ public class TeacherService {
             positionEhis.setIsChildCare(Boolean.FALSE);
             positionEhis.setIsClassTeacher(Boolean.FALSE);
         }
+    }
+    
+    public Page<TeacherAbsenceDto> teacherAbsences(Teacher teacher, Pageable pageable) {
+        Long teacherId = EntityUtil.getId(teacher);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher_absence ta").sort(pageable);
+        qb.requiredCriteria("ta.teacher_id = :teacherId", "teacherId", teacherId);
+        
+        return JpaQueryUtil.pagingResult(qb, "ta.start_date, ta.end_date, ta.reason, ta.changed", em, pageable).map(r -> {
+            TeacherAbsenceDto dto = new TeacherAbsenceDto();
+            dto.setStartDate(resultAsLocalDate(r, 0));
+            dto.setEndDate(resultAsLocalDate(r, 1));
+            dto.setReason(resultAsString(r, 2));
+            dto.setChanged(resultAsLocalDateTime(r, 3));
+            return dto;
+        });
     }
 }

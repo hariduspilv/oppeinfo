@@ -43,7 +43,7 @@ public class CommitteeController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public CommitteeDto get(HoisUserDetails user, @WithEntity("id") Committee committee) {
+    public CommitteeDto get(HoisUserDetails user, @WithEntity Committee committee) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, committee.getSchool());
         return committeeService.get(committee);
     }
@@ -56,15 +56,14 @@ public class CommitteeController {
 
     @PutMapping("/{id:\\d+}")
     public CommitteeDto save(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) Committee committee,
+            @WithVersionedEntity(versionRequestBody = true) Committee committee,
             @NotNull @Valid @RequestBody CommitteeDto dto) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, committee.getSchool());
         return committeeService.save(committee, dto);
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, 
-            @WithVersionedEntity(value = "id", versionRequestParam = "version") Committee committee, 
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Committee committee,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, committee.getSchool());
         committeeService.delete(user, committee);

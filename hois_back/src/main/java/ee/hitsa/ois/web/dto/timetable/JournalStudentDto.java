@@ -4,6 +4,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StudentUtil;
 
 public class JournalStudentDto {
 
@@ -12,6 +13,7 @@ public class JournalStudentDto {
     private String fullname;
     private String studentGroup;
     private String curriculum;
+    private Boolean canEdit;
 
     public static JournalStudentDto of(Student student) {
         JournalStudentDto dto = new JournalStudentDto();
@@ -24,6 +26,7 @@ public class JournalStudentDto {
             dto.setCurriculum(CurriculumUtil.versionName(student.getCurriculumVersion().getCode(),
                     student.getCurriculumVersion().getCurriculum().getNameEt()));
         }
+        dto.setCanEdit(Boolean.valueOf(StudentUtil.isStudying(student)));
         return dto;
     }
 
@@ -73,5 +76,11 @@ public class JournalStudentDto {
         this.curriculum = curriculum;
     }
 
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
 
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
 }

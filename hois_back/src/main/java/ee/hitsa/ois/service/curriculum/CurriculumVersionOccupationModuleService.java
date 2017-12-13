@@ -25,6 +25,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapac
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.VocationalGradeType;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.OccupationModuleCapacitiesUtil;
@@ -137,8 +138,6 @@ public class CurriculumVersionOccupationModuleService {
         });
     }
 
-
-
     public CurriculumVersionOccupationModuleThemeDto getTheme(CurriculumVersionOccupationModuleTheme theme) {
         List<Classifier> capacityTypes = getCapacityTypes();
         
@@ -177,13 +176,13 @@ public class CurriculumVersionOccupationModuleService {
         
         CurriculumVersionOccupationModuleTheme saved = EntityUtil.save(theme, em);
         
-        OccupationModuleCapacitiesUtil.updateModuleCapacitiesHours(saved.getModule(), getCapacityTypes());
+        OccupationModuleCapacitiesUtil.updateModuleCapacities(saved.getModule(), getCapacityTypes());
         OccupationModuleCapacitiesUtil.updateModuleYearCapacitiesHours(saved.getModule());
         EntityUtil.save(saved.getModule(), em);
 
         return saved;
     }
-    
+
     private void updateThemeCapacities(CurriculumVersionOccupationModuleTheme theme, 
             Set<CurriculumVersionOccupationModuleThemeCapacityDto> capactities) {
         Set<CurriculumVersionOccupationModuleThemeCapacityDto> filtered = capactities.stream().filter(c -> c.getHours() != null).collect(Collectors.toSet());
@@ -191,24 +190,24 @@ public class CurriculumVersionOccupationModuleService {
                 filtered, CurriculumVersionOccupationModuleThemeCapacityDto::getId, 
                 this::createThemeCapacity, this::updateThemeCapacity);
     }
-    
+
     private CurriculumVersionOccupationModuleThemeCapacity createThemeCapacity(CurriculumVersionOccupationModuleThemeCapacityDto dto) {
         CurriculumVersionOccupationModuleThemeCapacity capacity = new CurriculumVersionOccupationModuleThemeCapacity();
         return updateThemeCapacity(dto, capacity);
     }
-    
+
     private CurriculumVersionOccupationModuleThemeCapacity updateThemeCapacity
     (CurriculumVersionOccupationModuleThemeCapacityDto dto, CurriculumVersionOccupationModuleThemeCapacity capacity) {
         EntityUtil.bindToEntity(dto, capacity, classifierRepository);
         return capacity;
     }
 
-    public void deleteTheme(CurriculumVersionOccupationModuleTheme theme) {
+    public void deleteTheme(HoisUserDetails user, CurriculumVersionOccupationModuleTheme theme) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(theme, em);
         
-        OccupationModuleCapacitiesUtil.updateModuleCapacitiesHours(theme.getModule(), getCapacityTypes());
+        OccupationModuleCapacitiesUtil.updateModuleCapacities(theme.getModule(), getCapacityTypes());
         OccupationModuleCapacitiesUtil.updateModuleYearCapacitiesHours(theme.getModule());
         EntityUtil.save(theme.getModule(), em);
     }
-    
 }

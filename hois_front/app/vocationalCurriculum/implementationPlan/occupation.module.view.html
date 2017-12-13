@@ -3,7 +3,7 @@
       <form name="occupationModuleForm" ng-cloak>
 
         <div>
-          <h2 translate="module.occupationalModuleDataInsertion" translate-values="{{curriculumModule}}"></h2>
+          <h2 translate="module.occupationalModuleDataView" translate-values="{{curriculumModule}}"></h2>
         </div>
 
         <div layout="column">
@@ -17,7 +17,7 @@
               </div>
 
               <div ng-repeat="item in occupationModule.capacities | orderBy: 'nameEt' track by item.capacityType" layout="row" class="secondary-table-row">
-                <div flex="30">{{currentLanguageNameField(item)}}</div>
+                <div flex="30" class="occupation-module-capacity">{{currentLanguageNameField(item)}}</div>
 
                 <div flex="30">
                   <md-input-container flex>
@@ -25,7 +25,7 @@
                   </md-input-container>
                 </div>
                 <div flex="40" layout="row">
-                  <md-checkbox ng-model="item.contact" aria-label="capacity contact" disabled></md-checkbox>
+                  <md-checkbox ng-model="item.contact" aria-label="capacity contact" disabled class="occupation-module-capacity-contact"></md-checkbox>
                 </div>
               </div>
             </fieldset>
@@ -33,31 +33,31 @@
           <div>&nbsp;</div>
           <md-input-container flex>
             <label>{{'module.requirements' | translate}}</label>
-            <textarea ng-model="occupationModule.requirementsEt" readonly></textarea>
+            <textarea ng-model="occupationModule.requirementsEt" max-rows="10" readonly></textarea>
           </md-input-container>
 
           <md-input-container flex>
             <label>{{'module.assessments' | translate}}</label>
-            <textarea ng-model="occupationModule.assessmentsEt" readonly></textarea>
+            <textarea ng-model="occupationModule.assessmentsEt" max-rows="10" readonly></textarea>
           </md-input-container>
 
           <md-input-container flex>
             <label>{{'module.learningMethods' | translate}}</label>
-            <textarea ng-model="occupationModule.learningMethodsEt" readonly></textarea>
+            <textarea ng-model="occupationModule.learningMethodsEt" max-rows="10" readonly></textarea>
           </md-input-container>
 
           <md-input-container flex>
             <label>{{'module.assessmentMethodsAndTasks' | translate}}</label>
-            <textarea ng-model="occupationModule.assessmentMethodsEt" readonly></textarea>
+            <textarea ng-model="occupationModule.assessmentMethodsEt" max-rows="10" readonly></textarea>
           </md-input-container>
 
           <md-input-container flex>
             <label>{{'module.independentStudyDescription' | translate}}</label>
-            <textarea ng-model="occupationModule.independentStudyEt" readonly></textarea>
+            <textarea ng-model="occupationModule.independentStudyEt" max-rows="2" readonly></textarea>
           </md-input-container>
           <md-input-container flex>
             <label>{{'module.studyMaterials' | translate}}</label>
-            <textarea ng-model="occupationModule.studyMaterials" readonly></textarea>
+            <textarea ng-model="occupationModule.studyMaterials" max-rows="2" readonly></textarea>
           </md-input-container>
           <div>&nbsp;</div>
           <div flex>
@@ -70,28 +70,28 @@
               <div>&nbsp;</div>
               <md-input-container flex>
                 <label>{{'module.totalGradeDescription' | translate}}</label>
-                <textarea ng-model="occupationModule.totalGradeDescription" readonly></textarea>
+                <textarea ng-model="occupationModule.totalGradeDescription" max-rows="2" readonly></textarea>
               </md-input-container>
               <div>&nbsp;</div>
               <div ng-show="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'" layout="column">
                 <md-input-container flex>
                   <label>{{'module.grade3Description' | translate}}</label>
-                  <textarea ng-model="occupationModule.grade3Description" readonly></textarea>
+                  <textarea ng-model="occupationModule.grade3Description" max-rows="2" readonly></textarea>
                 </md-input-container>
                 <md-input-container flex>
                   <label>{{'module.grade4Description' | translate}}</label>
-                  <textarea ng-model="occupationModule.grade4Description" readonly></textarea>
+                  <textarea ng-model="occupationModule.grade4Description" max-rows="2" readonly></textarea>
                 </md-input-container>
                 <md-input-container flex>
                   <label>{{'module.grade5Description' | translate}}</label>
-                  <textarea ng-model="occupationModule.grade5Description" readonly></textarea>
+                  <textarea ng-model="occupationModule.grade5Description"  max-rows="2" readonly></textarea>
                 </md-input-container>
               </div>
 
               <div ng-show="occupationModule.assessment === 'KUTSEHINDAMISVIIS_M'" layout="column" flex>
                 <md-input-container flex>
                   <label>{{'module.gradeADescription' | translate}}</label>
-                  <textarea ng-model="occupationModule.passDescription" readonly></textarea>
+                  <textarea ng-model="occupationModule.passDescription" max-rows="10" readonly></textarea>
                 </md-input-container>
               </div>
             </fieldset>
@@ -117,13 +117,13 @@
                     <tbody md-body>
                       <tr md-row ng-repeat="theme in occupationModule.themes | orderBy: currentLanguageNameField()">
                         <td md-cell>
-                          <a class="md-primary" ng-click="openAddThemeDialog(theme)">{{currentLanguageNameField(theme)}}</a>
+                          <a class="md-primary one-row" ng-click="openAddThemeDialog(theme)">{{currentLanguageNameField(theme)}}</a>
                         </td>
                         <td md-cell>
                           {{theme.credits}}/{{theme.hours}}
                         </td>
                         <td md-cell>
-                          {{theme.subthemes}}
+                          <p class="scrollable">{{theme.subthemes}}</p>
                         </td>
                         <td md-cell>
                           {{theme.studyYearNumber}}
@@ -163,7 +163,7 @@
 
           <md-input-container flex>
             <label>{{'module.supervisor' | translate}}</label>
-            <input ng-model="occupationModule.supervisor" type="text" md-maxlength="100" required readonly>
+            <input ng-model="occupationModule.supervisor" type="text" readonly>
           </md-input-container>
         </div>
 

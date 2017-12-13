@@ -41,6 +41,7 @@ import ee.hitsa.ois.service.StudyYearService;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -140,12 +141,11 @@ public class EhisTeacherExportService extends EhisService {
                 }
                 queryLog = response.getLog();
                 if(!response.hasError()) {
-                    // errors are reported as success. If any of item has magic string Viga! then consider result as error
-                    wsEhisTeacherLog.setHasXteeErrors(Boolean.valueOf(StreamUtil.nullSafeList(response.getResult()).stream().anyMatch(r -> r != null && r.contains("Viga!"))));
+                    wsEhisTeacherLog.setHasXteeErrors(Boolean.valueOf(resultHasError(response.getResult())));
                     wsEhisTeacherLog.setLogTxt(String.join(";", StreamUtil.nullSafeList(response.getResult())));
                 } else {
                     wsEhisTeacherLog.setHasXteeErrors(Boolean.TRUE);
-                    wsEhisTeacherLog.setLogTxt(queryLog.getError().toString());
+                    wsEhisTeacherLog.setLogTxt(ExceptionUtil.getRootCause(queryLog.getError()).toString());
                     error = true;
                 }
             } else {

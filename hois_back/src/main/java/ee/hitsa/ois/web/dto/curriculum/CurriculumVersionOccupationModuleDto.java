@@ -26,6 +26,9 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     private Long curriculumVersion;
 
     private Long id;
+    
+    private String nameEt;
+    private String nameEn;
 
     @NotBlank
     private String requirementsEt;
@@ -65,6 +68,18 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
         dto.setCurriculumModule(EntityUtil.getId(module.getCurriculumModule()));
         return dto;
     }
+    
+    public static CurriculumVersionOccupationModuleDto forApelApplicationForm(CurriculumVersionOccupationModule module) {
+        CurriculumVersionOccupationModuleDto dto = EntityUtil.bindToDto(module, new CurriculumVersionOccupationModuleDto(),
+                "curriculumModule", "capacities", "themes", "yearCapacities");
+
+        dto.setCurriculumModule(EntityUtil.getId(module.getCurriculumModule()));
+        dto.setNameEt(module.getCurriculumModule().getNameEt());
+        dto.setNameEn(module.getCurriculumModule().getNameEn());
+        dto.setThemes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleThemeDto::of, module.getThemes()));
+ 
+        return dto;
+    }
 
     public static CurriculumVersionOccupationModuleDto of(CurriculumVersionOccupationModule module) {
         CurriculumVersionOccupationModuleDto dto = EntityUtil.bindToDto(module, new CurriculumVersionOccupationModuleDto(),
@@ -84,6 +99,22 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
 
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    public String getNameEt() {
+        return nameEt;
+    }
+
+    public void setNameEt(String nameEt) {
+        this.nameEt = nameEt;
+    }
+
+    public String getNameEn() {
+        return nameEn;
+    }
+
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
     }
 
     public String getRequirementsEt() {

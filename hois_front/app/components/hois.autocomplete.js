@@ -75,6 +75,10 @@ angular.module('hitsaOis')
               lookup.query(query, function (data) {
                 deferred.resolve(data);
               });
+            } else if(url === '/autocomplete/curriculumversionomodulesandthemes') {
+              lookup.query(query, function (data) {
+                deferred.resolve(data);
+              });
             } else {
               lookup.search(query, function (data) {
                 deferred.resolve(data.content);

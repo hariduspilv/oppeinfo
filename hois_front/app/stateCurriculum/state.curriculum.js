@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('StateCurriculumController', function ($route, $scope, message, Classifier, $location,
-    classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils, Curriculum, config) {
+    classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils, Curriculum, config, $rootScope) {
 
 
     $scope.STATUS = Curriculum.STATUS;
@@ -37,6 +37,10 @@ angular.module('hitsaOis')
         Endpoint.get({ id: id }).$promise.then(function (response) {
           $scope.stateCurriculum = response;
           setVariablesForExistingStateCurriculum();
+
+          $rootScope.removeLastUrlFromHistory(function(lastUrl){
+            return lastUrl && lastUrl.indexOf('/stateCurriculum/' + id) !== -1;
+          });
         });
       } else {
         $scope.stateCurriculum = new Endpoint(initialStateCurriculum);
@@ -330,7 +334,7 @@ angular.module('hitsaOis')
         return $scope.stateCurriculum.modules.filter(function(m){
             return ArrayUtils.includes(m.moduleOccupations, occupation);
         }).reduce(function(total, val){
-                return val.isAdditional ? 0 : total + val.credits;
+                return val.isAdditional ? total : total + val.credits;
         }, 0);
     }
 
@@ -447,6 +451,33 @@ angular.module('hitsaOis')
       });
     }
 
+    $scope.openViewModuleDialog = function (editingModule) {
+      var DialogController = function (scope) {
+
+          scope.data = angular.copy(editingModule);
+
+          scope.occupations = $scope.stateCurriculum.occupations.map(function(stateCurriculumOccupation){
+
+            var subOccupations = $scope.subOccupations[stateCurriculumOccupation];
+            subOccupations.forEach(function(s){
+              s.selected = isSelected(s.code);
+            });
+            return {
+              code: stateCurriculumOccupation,
+              selected: isSelected(stateCurriculumOccupation),
+              subOccupations:  subOccupations
+            };
+          });
+
+          function isSelected(occupationCode) {
+            return ArrayUtils.includes(scope.data.moduleOccupations, occupationCode);
+          }
+      };
+      dialogService.showDialog('stateCurriculum/state.curriculum.module.view.dialog.html', DialogController,
+          function () {
+          });
+      };
+
     $scope.openAddModuleDialog = function (editingModule) {
         var DialogController = function (scope) {
             if (editingModule) {
@@ -481,7 +512,7 @@ angular.module('hitsaOis')
 
             scope.addOutcome = function() {
               if (angular.isString(scope.data.outcomesEt) && scope.data.outcomesEt !== '') {
-                  scope.data.outcomes.push({outcomesEt: scope.data.outcomesEt, outcomesEn: scope.data.$$routeoutcomesEn});
+                  scope.data.outcomes.push({outcomesEt: scope.data.outcomesEt, outcomesEn: scope.data.outcomesEn});
                   scope.data.outcomesEt = undefined;
                   scope.data.outcomesEn = undefined;
                 }
@@ -557,9 +588,6 @@ angular.module('hitsaOis')
               scope.validateOccupations();
             };
 
-
-            scope.readOnly = $scope.formState.readOnly;
-
             scope.occupations = $scope.stateCurriculum.occupations.map(function(stateCurriculumOccupation){
 
               var subOccupations = $scope.subOccupations[stateCurriculumOccupation];
@@ -608,4 +636,19 @@ angular.module('hitsaOis')
                 }
             });
         };
+
+      $scope.goToEditForm = function() {
+        if(!$scope.stateCurriculum) {
+            return;
+        }
+        if($scope.stateCurriculum.status === $scope.STATUS.VERIFIED) {
+            dialogService.confirmDialog({
+            prompt: 'stateCurriculum.prompt.viewForm.editConfirmed',
+          }, function(){
+            $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit');
+            });
+        } else {
+            $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit');
+        }
+      };
   });

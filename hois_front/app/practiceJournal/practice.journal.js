@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalEditController', function ($scope, $route, QueryUtils, Classifier, message, $location, dialogService, DataUtils) {
+angular.module('hitsaOis').controller('PracticeJournalEditController', function ($scope, $route, QueryUtils, Classifier, message, $location, dialogService, DataUtils, $rootScope) {
   var CREDITS_TO_HOURS_MULTIPLIER = 26;
 
   $scope.auth = $route.current.locals.auth;
@@ -16,6 +16,9 @@ angular.module('hitsaOis').controller('PracticeJournalEditController', function 
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
     entityToForm(entity);
+    $rootScope.removeLastUrlFromHistory(function(lastUrl){
+      return lastUrl && lastUrl.indexOf('/practiceJournals/new') !== -1;
+    });
   } else {
     $scope.formState.isHigher = $scope.auth.school.higher === true && (($scope.auth.school.vocational === true && $route.current.params.higher === true) || $scope.auth.school.vocational === false);
   }

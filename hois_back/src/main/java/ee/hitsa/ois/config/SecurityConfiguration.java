@@ -18,9 +18,6 @@ import ee.hitsa.ois.filter.EstonianIdCardAuthenticationFilter;
 import ee.hitsa.ois.filter.JwtAuthorizationFilter;
 import ee.hitsa.ois.service.BdocService;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
-import net.shibboleth.idp.log.SLF4JMDCServletFilter;
-import net.shibboleth.utilities.java.support.net.CookieBufferingFilter;
-import net.shibboleth.utilities.java.support.net.RequestResponseContextFilter;
 
 @Configuration
 @EnableGlobalMethodSecurity(securedEnabled = true)
@@ -42,16 +39,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http
             .authorizeRequests()
                 .antMatchers("/user").permitAll()
-                .antMatchers("/SAML2/**").permitAll()
+                .antMatchers("/ldap").permitAll()
+                .antMatchers("/mIdLogin").permitAll()
+                .antMatchers("/mIdStatus").permitAll()
+                .antMatchers("/SingleSignOnService").permitAll()
                 .antMatchers(HttpMethod.GET, "/autocomplete/classifiers").permitAll()
                 .antMatchers(HttpMethod.GET, "/autocomplete/schools").permitAll()
+                .antMatchers(HttpMethod.GET, "/autocomplete/ldapschools").permitAll()
                 .anyRequest().authenticated()
                 .and()
-            .httpBasic()
-                .and()
-            .addFilterBefore(new CookieBufferingFilter(), JwtAuthorizationFilter.class)
-            .addFilterBefore(new RequestResponseContextFilter(), JwtAuthorizationFilter.class)
-            .addFilterBefore(new SLF4JMDCServletFilter(), JwtAuthorizationFilter.class)
             .addFilter(new JwtAuthorizationFilter(authenticationManager(), userDetailsService, hoisJwtProperties))
             .csrf().csrfTokenRepository(getRootCookieCsrfTokenRepository());
 

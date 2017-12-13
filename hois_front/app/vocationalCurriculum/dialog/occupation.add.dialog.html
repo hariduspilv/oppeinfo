@@ -2,7 +2,7 @@
   <form name="dialogForm" ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2>{{"occupation.addAquiredOccupation" | translate}}</h2>
+        <h2>{{formState.readOnly ? "occupation.viewAquiredOccupation" : "occupation.addAquiredOccupation" | translate}}</h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
@@ -46,7 +46,7 @@
 
     <span flex></span>
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!formState.readOnly">{{"main.button.add" | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!formState.readOnly">{{"main.button.save" | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

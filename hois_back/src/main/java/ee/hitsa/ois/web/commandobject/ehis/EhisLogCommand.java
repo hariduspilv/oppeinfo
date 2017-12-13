@@ -1,9 +1,9 @@
 package ee.hitsa.ois.web.commandobject.ehis;
 
+import java.time.LocalDate;
+
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
-
-import java.time.LocalDate;
 
 @DateRange(from = "from", thru = "thru")
 public class EhisLogCommand {

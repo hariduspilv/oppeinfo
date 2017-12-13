@@ -1,0 +1,37 @@
+<md-dialog aria-label="grade add dialog" flex="75" flex-xs="100">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2 flex>{{messagePrefix + record.wsName | translate}}</h2>
+      <span flex>
+        <hois-value class="md-button md-raised" ng-if="logType === 'ekis' && record.directive.id" value="record.directive.nameEt" href-value="'#/directives/' + record.directive.id + '/view'"></hois-value>
+      </span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <div layout="row">
+        <md-input-container>
+          <label>{{'logs.request' | translate}}</label>&nbsp;
+          <pre><hois-value value="record.request | limitTo:requestLength"></hois-value></pre>
+          <a ng-click="showAll(true)" ng-if="requestLength">&hellip;</a>
+        </md-input-container>
+      </div>
+      <hr>
+      <div layout="row">
+        <md-input-container>
+          <label>{{'logs.response' | translate}}</label>&nbsp;
+          <pre><hois-value value="record.response | limitTo:responseLength"></hois-value></pre>
+          <a ng-click="showAll(false)" ng-if="responseLength">&hellip;</a>
+        </md-input-container>
+      </div>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button ng-click="cancel()" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

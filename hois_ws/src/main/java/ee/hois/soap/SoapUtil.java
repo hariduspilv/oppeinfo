@@ -3,7 +3,12 @@ package ee.hois.soap;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import javax.xml.soap.SOAPException;
@@ -16,6 +21,8 @@ import javax.xml.transform.stream.StreamResult;
 
 public abstract class SoapUtil {
 
+    private static final Set<String> RTIP_MISSING_DATES = new HashSet<>(Arrays.asList("0000-00-00", "    -  -  "));
+    private static final DateTimeFormatter RTIP_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     public static String asPrettyString(SOAPMessage msg) throws IOException, SOAPException {
@@ -44,5 +51,59 @@ public abstract class SoapUtil {
             ctx.setError(e);
             return null;
         }
+    }
+
+    /**
+     * RTIP date parsing - there is magic "missing" value
+     *
+     * @param value
+     * @return
+     */
+    public static LocalDate rtipParseDate(String value) {
+        if(RTIP_MISSING_DATES.contains(value)) {
+            return null;
+        }
+        return parseDate(value);
+    }
+
+    /**
+     * LocalDate to RTIP format
+     *
+     * @param date
+     * @return
+     */
+    public static String rtipPrintDate(LocalDate date) {
+        return date.format(RTIP_DATE_FORMAT);
+    }
+
+    /**
+     * xsd:date to LocalDate conversion
+     *
+     * @param value
+     * @return
+     */
+    public static LocalDate parseDate(String value) {
+        return LocalDate.parse(value);
+    }
+
+    /**
+     * LocalDate to xsd:date conversion
+     *
+     * @param date
+     * @return
+     */
+    public static String printDate(LocalDate date) {
+        return date.toString();
+    }
+
+    /**
+     * Kutseregister sends integer as empty text tag, but as we need it as string, do no conversion
+     */
+    public static String parseTaseType(String value) {
+        return "".equals(value) ? null : value;
+    }
+
+    public static String printTaseType(String value) {
+        return value;
     }
 }

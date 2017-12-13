@@ -1,14 +1,14 @@
 package ee.hitsa.ois.validation;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo;
+import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
+import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForField;
 
 public class ValidationFailedException extends RuntimeException {
 
@@ -25,14 +25,14 @@ public class ValidationFailedException extends RuntimeException {
     }
 
     public <T> ValidationFailedException(Set<ConstraintViolation<T>> errors) {
-        List<Map.Entry<String, String>> allErrors = new ArrayList<>();
+        List<ErrorForField> allErrors = new ArrayList<>();
         for(ConstraintViolation<T> e : errors) {
-            allErrors.add(new AbstractMap.SimpleImmutableEntry<>(e.getPropertyPath().toString(), e.getMessage()));
+            allErrors.add(new ErrorForField(e.getMessage(), e.getPropertyPath().toString()));
         }
         this.errorInfo = ErrorInfo.of(allErrors);
     }
 
-    public ValidationFailedException(List<Map.Entry<String, String>> errors) {
+    public ValidationFailedException(List<? extends Error> errors) {
         this.errorInfo = ErrorInfo.of(errors);
     }
 

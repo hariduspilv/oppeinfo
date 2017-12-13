@@ -75,7 +75,7 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
           } else if (attrs.type === 'studyyear') {
             scope.options = QueryUtils.endpoint('/autocomplete/studyYears').query({}, afterStudyYearsLoad);
           } else if (attrs.type === 'teacher') {
-            scope.options = QueryUtils.endpoint('/autocomplete/teachersList').query();
+            scope.options = QueryUtils.endpoint('/autocomplete/teachersList').query(scope.criteria);
           } else if (attrs.type === 'enterprise') {
             scope.options = QueryUtils.endpoint('/autocomplete/enterprises').query();
           } else if(attrs.type === 'saisadmissioncode') {
@@ -84,6 +84,8 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
             scope.options = QueryUtils.endpoint('/autocomplete/subjectsList').query();
           } else if(attrs.type === 'studyperiod') {
             scope.options = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+          } else if(attrs.type === 'apelschool') {
+            scope.options = QueryUtils.endpoint('/autocomplete/apelschools').query();
           }
 
           if (angular.isDefined(scope.options) && angular.isDefined(scope.options.$promise)) {

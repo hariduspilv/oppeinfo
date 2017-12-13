@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav,  $mdMedia,
-    $mdUtil, $rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService, config, $httpParamSerializer, Session, $mdDialog, ArrayUtils) {
+    $mdUtil, $rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService, config, $httpParamSerializer, Session, $mdDialog, ArrayUtils, AuthResolver, message) {
     $rootScope.state = {};
     var self = this;
 
@@ -383,6 +383,32 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
         }
       };
     }
+
+    /**
+     * Activate this method after 20 December 2017.
+     * Currently it does not allow access to EBS Admin to the Scholarships search form and probably to some other ones.
+     * Reason: USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A is used there, which is not present in those user.
+     */
+//     $rootScope.$on('$routeChangeStart', function (event, next, current) {
+//       var error = false;
+
+//       console.log("next:", next);
+//       console.log("current:", current);
+
+//       AuthResolver.resolve().then(function(auth){
+//         if(next.$$route.data && next.$$route.data.authorizedRoles && !ArrayUtils.intersect(next.$$route.data.authorizedRoles, auth.authorizedRoles)) {
+//           error = true;
+//         }
+// //         next.$$route.data.userRoles is an array of allowed roles, like ["ROLL_A"]
+//         // if (next.$$route.data.userRoles && !ArrayUtils.includes(next.$$route.data.userRoles, auth.userRole)) {
+//         //   error = true;
+//         // }
+//         if(error) {
+//           message.error('main.messages.error.nopermission');
+//           $location.path('');
+//         }
+//       });
+//     });
 
     $rootScope.restartTimeoutDialogCounter = function() {
       cancelOldTimeouts();

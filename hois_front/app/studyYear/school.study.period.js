@@ -1,7 +1,6 @@
 'use strict';
 
 angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
-  var authorizedRoles = {authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]};
 
   $routeProvider
     .when('/school/studyYears', {
@@ -18,14 +17,18 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controller: 'StudyYearsEditController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-      data: authorizedRoles
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEPERIOOD]
+      }
     })
     .when('/school/studyYears/:id/edit', {
       templateUrl: 'studyYear/study.year.edit.html',
       controller: 'StudyYearsEditController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-      data: authorizedRoles
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEPERIOOD]
+      }
     });
   })
   .controller('StudyYearsListController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
@@ -39,7 +42,6 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     var Endpoint = QueryUtils.endpoint('/school/studyYears');
 
     var periodTypes = Classifier.valuemapper({type: 'OPPEPERIOOD'});
-    var events = Classifier.valuemapper({eventType: 'SYNDMUS'});
 
     function afterLoad() {
       DataUtils.convertStringToDates($scope.studyYear, ['startDate', 'endDate']);
@@ -210,7 +212,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         $scope.cancel = $mdDialog.hide;
 
         $scope.submit = function () {
-          // calendar event must be unique in study period if it's type is ”Avalduse esitamine”, ”Deklareerimisperiood”, ”VÕTA taotluse vastuvõtmine” 
+          // calendar event must be unique in study period if it's type is ”Avalduse esitamine”, ”Deklareerimisperiood”, ”VÕTA taotluse vastuvõtmine”
           $scope.dialogForm.$setSubmitted();
 
           var errors = false;

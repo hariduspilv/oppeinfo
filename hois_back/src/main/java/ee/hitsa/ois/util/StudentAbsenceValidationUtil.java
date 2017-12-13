@@ -7,6 +7,10 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public abstract class StudentAbsenceValidationUtil extends StudentAbsenceUtil {
     
+    public static void assertCanSearch(HoisUserDetails user) {
+        AssertionFailedException.throwIf(!hasPermissionToSearch(user), "User cannot search student absences");
+    }
+    
     public static void assertCanCreate(HoisUserDetails user, Student student) {
         AssertionFailedException.throwIf(!canCreate(user, student), "User cannot add student absence");
     }

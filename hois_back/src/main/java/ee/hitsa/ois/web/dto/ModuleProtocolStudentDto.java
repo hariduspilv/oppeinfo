@@ -9,6 +9,7 @@ import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JournalUtil;
+import ee.hitsa.ois.util.ModuleProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 
@@ -23,6 +24,10 @@ public class ModuleProtocolStudentDto {
     @ClassifierRestriction(MainClassCode.OPPURSTAATUS)
     private String status;
     private List<ModuleProtocolJournalResultDto> journalResults = new ArrayList<>();
+    /**
+     * This variable does not consider user rights, it is checked by ModuleProtocolDto.canBeEdited
+     */
+    private Boolean canBeDeleted;
 
     public static ModuleProtocolStudentDto of(ProtocolStudent protocolStudent) {
         ModuleProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new ModuleProtocolStudentDto(),
@@ -37,6 +42,8 @@ public class ModuleProtocolStudentDto {
                 journalStudent.getJournalEntryStudents().stream()
                         .filter(jes -> JournalEntryType.SISSEKANNE_L.name()
                                 .equals(EntityUtil.getCode(jes.getJournalEntry().getEntryType())))
+                        .filter(jes -> EntityUtil.getId(jes.getJournalEntry().getJournal().getStudyYear())
+                                .equals(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getStudyYear())))
                         .filter(jes -> EntityUtil.getNullableCode(jes.getGrade()) != null)
                         .filter(jes -> JournalUtil.filterJournalEntryStudentsByOccupationalModule(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule(), jes))
                         .forEach(jes -> dto.getJournalResults()
@@ -50,6 +57,7 @@ public class ModuleProtocolStudentDto {
             }
 
         }
+        dto.setCanBeDeleted(Boolean.valueOf(ModuleProtocolUtil.studentCanBeDeleted(protocolStudent)));
         return dto;
     }
 
@@ -109,4 +117,11 @@ public class ModuleProtocolStudentDto {
         this.status = status;
     }
 
+    public Boolean getCanBeDeleted() {
+        return canBeDeleted;
+    }
+
+    public void setCanBeDeleted(Boolean canBeDeleted) {
+        this.canBeDeleted = canBeDeleted;
+    }
 }

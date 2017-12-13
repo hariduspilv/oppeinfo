@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        springBootVersion = '1.5.8.RELEASE'
+        springBootVersion = '1.5.9.RELEASE'
     }
     repositories {
         mavenCentral()
@@ -48,8 +48,8 @@ repositories {
 	}
 	mavenCentral()
 	maven {
-        url "https://build.shibboleth.net/nexus/content/repositories/releases/"
-    }
+		url "https://build.shibboleth.net/nexus/content/repositories/releases/"
+	}
 }
 
 
@@ -61,35 +61,16 @@ dependencies {
 	compile("org.springframework.boot:spring-boot-starter-actuator")
 	compile('org.springframework.boot:spring-boot-starter-security')
 	compile('org.springframework.boot:spring-boot-starter-web')
-	compile('org.apache.cxf:cxf-spring-boot-starter-jaxws:3.1.13')
+	compile('org.apache.cxf:cxf-spring-boot-starter-jaxws:3.1.14')
 	compile('org.springframework.boot:spring-boot-devtools')
 	compile('org.springframework.session:spring-session')
-	
-	compile('org.springframework.webflow:spring-webflow:2.4.6.RELEASE')
-	compile('net.shibboleth.idp:idp-admin-impl:3.3.2')
-	compile('net.shibboleth.idp:idp-attribute-filter-spring:3.3.2')
-	compile('net.shibboleth.idp:idp-attribute-resolver-spring:3.3.2')
-	compile('net.shibboleth.idp:idp-authn-impl:3.3.2')
-	compile('net.shibboleth.idp:idp-cas-impl:3.3.2')
-	compile('net.shibboleth.idp:idp-consent-impl:3.3.2')
-	compile('net.shibboleth.idp:idp-profile-spring:3.3.2')
-	compile('net.shibboleth.idp:idp-saml-impl:3.3.2')
-	compile('net.shibboleth.idp:idp-schema:3.3.2')
-	compile('net.shibboleth.idp:idp-session-impl:3.3.2')
-	compile('net.shibboleth.idp:idp-ui:3.3.2')
-	compile('org.opensaml:opensaml-messaging-impl:3.3.1')
-	compile('org.opensaml:opensaml-profile-impl:3.3.1')
 	compile('org.opensaml:opensaml-saml-impl:3.3.1')
-	compile('org.opensaml:opensaml-security-impl:3.3.1')
-	compile('org.opensaml:opensaml-soap-impl:3.3.1')
 	compile('org.opensaml:opensaml-storage-impl:3.3.1')
-	compile('org.opensaml:opensaml-xmlsec-impl:3.3.1')
-	
 	compile('org.liquibase:liquibase-core')
 	compile('org.postgresql:postgresql')
     compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.10')
     compile('com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.8.10')
-    compile('org.xhtmlrenderer:flying-saucer-pdf:9.1.7') {
+    compile('org.xhtmlrenderer:flying-saucer-pdf:9.1.9') {
         //because of digidoc4j libraries conflicts
         exclude group: 'org.bouncycastle', module: 'bctsp-jdk14'
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk14'

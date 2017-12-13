@@ -1,0 +1,53 @@
+<div layout-padding>
+  <div flex>
+    <form layout="column" name="rtipSyncForm">
+      <fieldset tabindex="1">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.menu.dataexchange.rtip' | translate}}</legend>
+
+        <div layout="row">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
+            <label>{{'ehis.student.sentDatesRange' | translate}}</label>
+            <input type="hidden">
+          </md-input-container>
+          <div flex="33">
+            <md-input-container flex>
+              <md-datepicker ng-model="rtipCriteria.from" md-max-date="criteria.thru"
+                             md-placeholder="{{'main.from' | translate}}" required></md-datepicker>
+            </md-input-container>
+            <md-input-container flex>
+              <md-datepicker ng-model="rtipCriteria.thru" md-min-date="criteria.from"
+                             md-placeholder="{{'main.thru' | translate}}" required></md-datepicker>
+            </md-input-container>
+          </div>
+        </div>
+
+        <div layout="row">
+          <md-button class="md-raised" ng-click="rtipSync()">{{'rtip.contract' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="rtipZemploees()">{{'rtip.sync' | translate}}</md-button>
+        </div>
+      </fieldset>
+    </form>
+
+    <br>
+
+    <form layout="column" name="kutseregisterSyncForm">
+      <fieldset tabindex="2">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.menu.dataexchange.kutseregister' | translate}}</legend>
+
+        <div layout="row">
+          <div flex="33">
+            <md-input-container flex>
+              <label>{{'main.from' | translate}}</label>
+              <md-datepicker ng-model="kutseregisterCriteria.from" md-max-date="criteria.thru"
+                             md-placeholder="{{'main.from' | translate}}" required></md-datepicker>
+            </md-input-container>
+          </div>
+        </div>
+
+        <div layout="row">
+          <md-button class="md-raised" ng-click="occupationStandards()">{{'kutseregister.occupationStandards' | translate}}</md-button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>

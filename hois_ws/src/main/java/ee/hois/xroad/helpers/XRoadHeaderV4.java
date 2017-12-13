@@ -58,11 +58,8 @@ public class XRoadHeaderV4 {
     }
 
     public LogContext logContext() {
+        // query name without version for logging
         String queryName = String.format("%s.%s", service.getSubsystemCode(), service.getServiceCode());
-        String serviceVersion = service.getServiceVersion();
-        if(serviceVersion != null) {
-            queryName = queryName + ("." + serviceVersion);
-        }
         return new LogContext(getId(), queryName);
     }
 

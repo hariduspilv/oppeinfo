@@ -12,12 +12,13 @@ public abstract class CurriculumVersionYearCapacitiesUtil {
     public static BigDecimal calculate(Set<CurriculumVersionOccupationModule> modules, Short year) {
         BigDecimal sum = BigDecimal.ZERO;
         for (CurriculumVersionOccupationModule module : modules) {
+            if(!Boolean.TRUE.equals(module.getCurriculumModule().getIsAdditional())) {
+                Optional<CurriculumVersionOccupationModuleYearCapacity> capacity = module.getYearCapacities().stream()
+                        .filter(c -> year.equals(c.getStudyYearNumber())).findFirst();
 
-            Optional<CurriculumVersionOccupationModuleYearCapacity> capacity = module.getYearCapacities().stream()
-                    .filter(c -> year.equals(c.getStudyYearNumber())).findFirst();
-
-            if (capacity.isPresent()) {
-                sum = sum.add(capacity.get().getCredits());
+                if (capacity.isPresent()) {
+                    sum = sum.add(capacity.get().getCredits());
+                }
             }
         }
         return sum;

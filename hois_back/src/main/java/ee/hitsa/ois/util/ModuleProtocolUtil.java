@@ -1,6 +1,8 @@
 package ee.hitsa.ois.util;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
+import ee.hitsa.ois.domain.protocol.ProtocolStudent;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public abstract class ModuleProtocolUtil {
@@ -14,6 +16,16 @@ public abstract class ModuleProtocolUtil {
             return !ProtocolUtil.confirmed(protocol) && isTeacherResponsible(user, protocol);
         }
         return false;
+    }
+    
+    /**
+     * Student cannot be deleted from the protocol, if he is exmatriculated and has some result
+     */
+    public static boolean studentCanBeDeleted(ProtocolStudent ps) {
+        if(ClassifierUtil.oneOf(ps.getStudent().getStatus(), StudentStatus.OPPURSTAATUS_K, StudentStatus.OPPURSTAATUS_L)) {
+            return ps.getGrade() == null;
+        }
+        return true;
     }
     
     public static boolean canDelete(HoisUserDetails user, Protocol protocol) {

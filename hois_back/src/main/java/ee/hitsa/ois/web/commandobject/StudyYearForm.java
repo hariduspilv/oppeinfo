@@ -1,11 +1,12 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.time.LocalDate;
+
+import javax.validation.constraints.NotNull;
+
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
-
-import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
 
 @DateRange(from = "startDate", thru = "endDate")
 public class StudyYearForm extends VersionedCommand {

@@ -1,6 +1,6 @@
 <div class="ois-form-layout-padding" ng-cloak>
   <div flex>
-    <form name="practiceJournalEntryForm" ng-submit="practiceJournalEntryForm.$valid && save()" novalidate layout="column">
+    <form name="practiceJournalEntryForm" ng-submit="save()" novalidate layout="column">
       <div class="form-readonly" layout="column">
         <br>
         <div ng-if="!auth.isStudent()" layout="row" flex>
@@ -112,7 +112,7 @@
                 </td>
                 <td md-cell>
                   <md-input-container ng-if="row.isStudentEntry && auth.isStudent()">
-                    <input ng-model="row.description" type="text" aria-label="{{'practiceJournal.practiceJournalEntry.description' | translate}}">
+                    <input ng-model="row.description" type="text" aria-label="{{'practiceJournal.practiceJournalEntry.description' | translate}}" md-maxlength="10000">
                   </md-input-container>
                   <div ng-if="!(row.isStudentEntry && auth.isStudent())">
                     <hois-value value="row.description"></hois-value>
@@ -120,7 +120,18 @@
                 </td>
                 <td md-cell>
                   <md-input-container ng-if="row.isStudentEntry && auth.isStudent()">
-                    <input ng-model="row.hours" type="number" aria-label="{{'practiceJournal.practiceJournalEntry.hours' | translate}}">
+                    <input ng-model="row.hours" type="number" aria-label="{{'practiceJournal.practiceJournalEntry.hours' | translate}}" min="0" max="24" name="hours" step="1" pattern="^\d+$">
+                    <div ng-messages="practiceJournalEntryForm.hours.$error" ng-show="practiceJournalEntryForm.hours.$dirty">
+                      <div ng-message="min">
+                        {{'practiceJournal.practiceJournalEntry.error.hoursNegative' | translate}}
+                      </div>
+                      <div ng-message="max">
+                        {{'practiceJournal.practiceJournalEntry.error.hourTooLarge' | translate}}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.integer' | translate}}
+                      </div>
+                    </div>
                   </md-input-container>
                   <div ng-if="!(row.isStudentEntry && auth.isStudent())">
                     <hois-value value="row.hours"></hois-value>
@@ -129,7 +140,7 @@
                 <td md-cell>{{row.supervisorComment}}</td>
                 <td md-cell>
                   <md-input-container ng-if="auth.isTeacher()">
-                    <input ng-model="row.teacherComment" type="text" aria-label="{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}">
+                    <input ng-model="row.teacherComment" type="text" aria-label="{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}" md-maxlength="10000">
                   </md-input-container>
                   <div ng-if="!auth.isTeacher()">
                     <hois-value value="row.teacherComment"></hois-value>
@@ -201,7 +212,7 @@
                   {{file.insertedBy}}
                 </td>
                 <td md-cell ng-if="!auth.isStudent()">
-                  <md-button class="remove nomargin" ng-click="removeFromArray(practiceJournal.practiceJournalFiles, file)">&times;</md-button>
+                  <md-button class="remove nomargin" ng-click="deleteFile(file)">&times;</md-button>
                 </td>
               </tr>
             </tbody>
@@ -221,7 +232,7 @@
       <div ng-if="!auth.isStudent()" layout="row">
         <md-input-container flex>
           <label>{{'practiceJournal.teacherOpinion' | translate}}</label>
-          <input ng-model="practiceJournal.teacherOpinion" type="text">
+          <input ng-model="practiceJournal.teacherOpinion" type="text" md-maxlength="10000">
         </md-input-container>
       </div>
 

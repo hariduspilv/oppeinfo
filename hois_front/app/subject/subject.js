@@ -63,7 +63,11 @@ angular.module('hitsaOis')
       $scope.update = function () {
         if (formIsValid()) {
           if ($scope.subject.id) {
-            $scope.subject.$update().then(message.updateSuccess);
+            $scope.subject.$update().then(function(response){
+              $scope.subject = new Endpoint(response);
+              message.updateSuccess();
+              $scope.subjectForm.$setPristine();
+            });
           } else {
             $scope.subject.$save().then(function (response) {
               $location.path('/subject/' + response.id + '/edit');
@@ -77,8 +81,9 @@ angular.module('hitsaOis')
         if (formIsValid()) {
           dialogService.confirmDialog({prompt: messages.prompt}, function () {
             new StatusChangeEndpoint($scope.subject).$update().then(function(response){
-              $scope.subject = response;
+              $scope.subject = new Endpoint(response);
               message.info(messages.success);
+              $scope.subjectForm.$setPristine();
             });
           });
         }
@@ -114,13 +119,11 @@ angular.module('hitsaOis')
       var id = $route.current.params.id;
       var backUrl = $route.current.params.backUrl;
 
-      $scope.auth = $route.current.locals.auth;
       $scope.formState = {backUrl: backUrl ? '#/' + backUrl : '#/subject'};
       $scope.subject = QueryUtils.endpoint('/subject').get({id: id});
   })
-  .controller('SubjectListController', ['$q', '$scope', 'Classifier', 'QueryUtils','$route',
-    function ($q, $scope, Classifier, QueryUtils, $route) {
-      $scope.auth = $route.current.locals.auth;
+  .controller('SubjectListController', ['$q', '$scope', 'Classifier', 'QueryUtils',
+    function ($q, $scope, Classifier, QueryUtils) {
       var clMapper = Classifier.valuemapper({status: 'AINESTAATUS', assessment: 'HINDAMISVIIS', languages: 'OPPEKEEL'});
       QueryUtils.createQueryForm($scope, '/subject', {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt'}, clMapper.objectmapper);
 
@@ -134,4 +137,12 @@ angular.module('hitsaOis')
       $scope.subjectLanguages = function (row) {
         return row.map($scope.currentLanguageNameField).join(', ');
       };
+
+      $scope.formState = {};
+
+      QueryUtils.endpoint('/subject/getPermissions').search(function (result) {
+        $scope.formState.canCreate = result.canCreate;
+        $scope.formState.canViewAll = result.canViewAll;
+      });
+
   }]);

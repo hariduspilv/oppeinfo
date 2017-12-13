@@ -1,2 +1,2 @@
-@javax.xml.bind.annotation.XmlSchema(namespace = "http://x-road.eu/xsd/identifiers")
+@javax.xml.bind.annotation.XmlSchema(namespace = "http://rtk-v6.x-road.eu")
 package ee.hois.xroad.rtip.generated;

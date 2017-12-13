@@ -127,7 +127,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
     return {getQueryParams: getQueryParams, clearQueryParams: clearQueryParams, createQueryForm: createQueryForm, endpoint: endpoint};
 }]).factory('busyHandler', ['$mdDialog',
   function ($mdDialog) {
-    var requests = 0;
+    var requests = 0, busyShowing = false;
     return {handle: function(params) {
       if(params.busy) {
         requests++;
@@ -140,12 +140,16 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
               '<div layout="row" layout-sm="column" layout-align="center center" aria-label="wait" style="height:120px;">'+
               '<md-progress-circular class="md-hue-2 loader" md-diameter="80px"></md-progress-circular>'+
               '</div>' +
-              '</md-dialog>'
+              '</md-dialog>',
+            onRemoving: function() {
+              busyShowing = false;
+            }
           });
+          busyShowing = true;
         }
       } else {
         requests--;
-        if(requests === 0) {
+        if(requests === 0 && busyShowing) {
           $mdDialog.hide();
         }
       }

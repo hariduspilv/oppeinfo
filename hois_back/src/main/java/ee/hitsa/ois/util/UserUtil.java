@@ -2,12 +2,14 @@ package ee.hitsa.ois.util;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.domain.apelapplication.ApelApplication;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
@@ -39,6 +41,90 @@ public abstract class UserUtil {
             return Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm()) && isStudentRepresentative(user, student);
         }
         if (ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name().equals(status)) {
+            return isSchoolAdmin(user, student.getSchool());
+        }
+        return false;
+    }
+    
+    public static boolean canUpdateInformalSubjectOrModuleTransferStatus(HoisUserDetails user, ApelApplication application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        Student student = application.getStudent();
+        if (!(ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status))) {
+            return Boolean.TRUE.equals(Boolean.valueOf(isSchoolAdmin(user, student.getSchool())
+                    && hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_VOTA)));
+        }
+        return false;
+    }
+
+    public static boolean canEditApelApplication(HoisUserDetails user, ApelApplication application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        Student student = application.getStudent();
+        if (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status) || ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
+            return isSchoolAdmin(user, student.getSchool()) || isSame(user, student);
+        }
+        return false;
+    }
+    
+    public static boolean canSubmitApelApplication(HoisUserDetails user, ApelApplication application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        Student student = application.getStudent();
+        if (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)) {
+            return isSchoolAdmin(user, student.getSchool()) || isSame(user, student);
+        }
+        return false;
+    }
+    
+    public static boolean canSendToConfirmApelApplication(HoisUserDetails user, ApelApplication application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        Student student = application.getStudent();
+        if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
+            return isSchoolAdmin(user, student.getSchool());
+        }
+        return false;
+    }
+    
+    public static boolean canSendBackToCreation(HoisUserDetails user, ApelApplication application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        Student student = application.getStudent();
+        if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
+            return isSchoolAdmin(user, student.getSchool());
+        }
+        return false;
+    }
+    
+    public static boolean canConfirmApelApplication(HoisUserDetails user, ApelApplication application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        Student student = application.getStudent();
+        if (ApelApplicationStatus.VOTA_STAATUS_Y.name().equals(status)) {
+            return Boolean.TRUE.equals(Boolean.valueOf(isSchoolAdmin(user, student.getSchool())
+                    && hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_VOTA)));
+        }
+        return false;
+    }
+    
+    public static boolean canRemoveConfirmationApelApplication(HoisUserDetails user, ApelApplication application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        Student student = application.getStudent();
+        if (ApelApplicationStatus.VOTA_STAATUS_C.name().equals(status)) {
+            return Boolean.TRUE.equals(Boolean.valueOf(isSchoolAdmin(user, student.getSchool())
+                    && hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_VOTA)));
+        }
+        return false;
+    }
+    
+    public static boolean canSendBackApelApplication(HoisUserDetails user, ApelApplication application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        Student student = application.getStudent();
+        if (ApelApplicationStatus.VOTA_STAATUS_Y.name().equals(status)) {
+            return isSchoolAdmin(user, student.getSchool());
+        }
+        return false;
+    }
+    
+    public static boolean canRejectApelApplication(HoisUserDetails user, ApelApplication application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        Student student = application.getStudent();
+        if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status) || ApelApplicationStatus.VOTA_STAATUS_Y.name().equals(status)) {
             return isSchoolAdmin(user, student.getSchool());
         }
         return false;

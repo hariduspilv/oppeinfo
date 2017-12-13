@@ -30,6 +30,7 @@ import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionHigherModuleSubjectRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HigherModuleCreditsUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -129,18 +130,20 @@ public class CurriculumVersionHigherModuleService {
         return EntityUtil.save(module, em);
     }
 
-    public void delete(CurriculumVersionHigherModule module) {
+    public void delete(HoisUserDetails user, CurriculumVersionHigherModule module) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(module, em);
-        module.getCurriculumVersion().getModules().remove(module);        
+        module.getCurriculumVersion().getModules().remove(module);
     }
-    
-    public void deleteSubject(CurriculumVersionHigherModuleSubject subject) {
+
+    public void deleteSubject(HoisUserDetails user, CurriculumVersionHigherModuleSubject subject) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(subject, em);
         CurriculumVersionHigherModule module = subject.getModule();
         module.getSubjects().remove(subject);
         module.getElectiveModules().forEach(e -> e.getSubjects().remove(subject));
         HigherModuleCreditsUtil.setCreduts(module);
-        EntityUtil.save(module, em);    
+        EntityUtil.save(module, em);
     }
 
     public List<CurriculumVersionHigherModuleSubjectDto> getSubjectsForHigherModule(HigherModuleSubjectCommand command) {

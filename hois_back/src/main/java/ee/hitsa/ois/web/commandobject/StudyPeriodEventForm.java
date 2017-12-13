@@ -1,15 +1,15 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.time.LocalDateTime;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateTimeRange;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-
-import java.time.LocalDateTime;
 
 @DateTimeRange(from = "start", thru = "end")
 public class StudyPeriodEventForm extends VersionedCommand {

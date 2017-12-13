@@ -78,7 +78,7 @@ public class ModuleProtocolController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public ModuleProtocolDto get(HoisUserDetails user, @WithEntity("id") Protocol protocol) {
+    public ModuleProtocolDto get(HoisUserDetails user, @WithEntity Protocol protocol) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         ModuleProtocolDto dto = ModuleProtocolDto.of(protocol);
         dto.setCanBeEdited(ModuleProtocolUtil.canEdit(user, protocol));
@@ -95,7 +95,7 @@ public class ModuleProtocolController {
 
     @PutMapping("/{id:\\d+}")
     public ModuleProtocolDto save(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
         ModuleProtocolValidationUtil.assertCanEdit(user, protocol);
         return get(user, moduleProtocolService.save(protocol, moduleProtocolSaveForm));
@@ -103,7 +103,7 @@ public class ModuleProtocolController {
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestParam = "version") Protocol protocol,
+            @WithVersionedEntity(versionRequestParam = "version") Protocol protocol,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         ModuleProtocolValidationUtil.assertCanDelete(user, protocol);
         moduleProtocolService.delete(user, protocol);
@@ -130,14 +130,14 @@ public class ModuleProtocolController {
 
     @GetMapping("/{id:\\d+}/otherStudents")
     public Collection<ModuleProtocolStudentSelectDto> otherStudents(HoisUserDetails user,
-            @WithEntity("id") Protocol protocol) {
+            @WithEntity Protocol protocol) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return moduleProtocolService.otherStudents(user, protocol);
     }
 
     @PostMapping("/{id:\\d+}/addStudents")
     public ModuleProtocolDto addStudents(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
         ModuleProtocolValidationUtil.assertCanEdit(user, protocol);
         return get(user, moduleProtocolService.addStudents(protocol, moduleProtocolSaveForm));
@@ -145,7 +145,7 @@ public class ModuleProtocolController {
 
     @PostMapping("/{id:\\d+}/signToConfirm")
     public EntitySignDto signToConfirm(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSignForm moduleProtocolSignForm, HttpSession httpSession) {
         //Administratiivne töötaja saab moodulite protokolle kinnitada ilma digiallkirjata, õpetaja peab mooduli protokollid kinnitama digiallkirjaga.
 
@@ -163,7 +163,7 @@ public class ModuleProtocolController {
     }
 
     @PostMapping("/{id:\\d+}/signToConfirmFinalize")
-    public ModuleProtocolDto signToConfirmFinalize(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
+    public ModuleProtocolDto signToConfirmFinalize(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody SignatureCommand signatureCommand, HttpSession httpSession) {
 
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
@@ -176,14 +176,14 @@ public class ModuleProtocolController {
 
     @PostMapping("/{id:\\d+}/confirm")
     public ModuleProtocolDto confirm(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
         ModuleProtocolValidationUtil.assertCanEdit(user, protocol);
         return get(user, moduleProtocolService.confirm(user, protocol, moduleProtocolSaveForm));
     }
 
     @GetMapping("/{id:\\d+}/print/protocol.pdf")
-    public void print(HoisUserDetails user, @WithEntity("id") Protocol protocol, HttpServletResponse response)
+    public void print(HoisUserDetails user, @WithEntity Protocol protocol, HttpServletResponse response)
             throws IOException {
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
@@ -192,7 +192,7 @@ public class ModuleProtocolController {
     
     @GetMapping("/{id:\\d+}/calculate")
     public List<ProtocolStudentResultDto> calculateGrades(HoisUserDetails user,
-            @NotNull @Valid ProtocolCalculateCommand command, @WithEntity(value = "id") Protocol protocol) {
+            @NotNull @Valid ProtocolCalculateCommand command, @WithEntity Protocol protocol) {
         ModuleProtocolValidationUtil.assertCanEdit(user, protocol);
         if(!Boolean.TRUE.equals(protocol.getIsVocational())) {
             throw new ValidationFailedException("not vocational protocol");

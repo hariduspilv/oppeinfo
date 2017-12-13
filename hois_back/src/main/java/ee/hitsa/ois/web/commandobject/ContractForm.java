@@ -62,7 +62,7 @@ public class ContractForm extends VersionedCommand {
     @NotNull
     private Long contractCoordinator;
     @NotNull
-    @Size(max = 255)
+    @Size(max = 20000)
     private String practicePlan;
     @NotNull(groups = ContractValidation.Higher.class)
     private Long subject;

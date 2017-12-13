@@ -66,13 +66,13 @@ public class StudentController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public StudentViewDto get(HoisUserDetails user, @WithEntity("id") Student student) {
+    public StudentViewDto get(HoisUserDetails user, @WithEntity Student student) {
         assertCanView(user, student);
         return studentService.getStudentView(user, student);
     }
 
     @PutMapping("/{id:\\d+}")
-    public StudentViewDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Student student, @Valid @RequestBody StudentForm form) {
+    public StudentViewDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Student student, @Valid @RequestBody StudentForm form) {
         if(!UserUtil.canEditStudent(user, student)) {
             throw new AssertionFailedException("User cannot edit student data");
         }
@@ -80,25 +80,25 @@ public class StudentController {
     }
 
     @GetMapping("/{id:\\d+}/absences")
-    public Page<StudentAbsenceDto> absences(HoisUserDetails user, @WithEntity("id") Student student, Pageable pageable) {
+    public Page<StudentAbsenceDto> absences(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
         assertCanView(user, student);
         return studentService.absences(user, student, pageable);
     }
 
     @PostMapping("/{studentId:\\d+}/absences")
-    public void createAbsence(HoisUserDetails user, @WithEntity(value = "studentId") Student student, @Valid @RequestBody StudentAbsenceForm form) {
+    public void createAbsence(HoisUserDetails user, @WithEntity("studentId") Student student, @Valid @RequestBody StudentAbsenceForm form) {
         StudentAbsenceValidationUtil.assertCanCreate(user, student);
         studentService.create(user, student, form);
     }
 
     @PutMapping("/{studentId:\\d+}/absences/{id:\\d+}")
-    public void saveAbsence(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentAbsence absence, @Valid @RequestBody StudentAbsenceForm form) {
+    public void saveAbsence(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudentAbsence absence, @Valid @RequestBody StudentAbsenceForm form) {
         StudentAbsenceValidationUtil.assertCanEdit(user, absence);
         studentService.save(absence, form);
     }
 
     @DeleteMapping("/{studentId:\\d+}/absences/{id:\\d+}")
-    public void deleteAbsence(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") StudentAbsence absence, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void deleteAbsence(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") StudentAbsence absence, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         StudentAbsenceValidationUtil.assertCanEdit(user, absence);
         studentService.delete(user, absence);
     }
@@ -111,7 +111,7 @@ public class StudentController {
      * @return
      */
     @GetMapping("/{id:\\d+}/documents")
-    public Map<String, Object> loadDocumentsPage(HoisUserDetails user, @WithEntity("id") Student student) {
+    public Map<String, Object> loadDocumentsPage(HoisUserDetails user, @WithEntity Student student) {
         Map<String, Object> result = new HashMap<>();
         int pagesize = 5;
         // TODO correct sorting
@@ -122,19 +122,19 @@ public class StudentController {
     }
 
     @GetMapping("/{id:\\d+}/applications")
-    public Page<StudentApplicationDto> applications(HoisUserDetails user, @WithEntity("id") Student student, Pageable pageable) {
+    public Page<StudentApplicationDto> applications(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
         assertCanView(user, student);
         return studentService.applications(EntityUtil.getId(student), pageable);
     }
 
     @GetMapping("/{id:\\d+}/directives")
-    public Page<StudentDirectiveDto> directives(HoisUserDetails user, @WithEntity("id") Student student, Pageable pageable) {
+    public Page<StudentDirectiveDto> directives(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
         assertCanView(user, student);
         return studentService.directives(user, student, pageable);
     }
 
     @GetMapping("/{id:\\d+}/subjects")
-    public List<AutocompleteResult> subjects(HoisUserDetails user, @WithEntity("id") Student student) {
+    public List<AutocompleteResult> subjects(HoisUserDetails user, @WithEntity Student student) {
         assertCanView(user, student);
         return studentService.subjects(student);
     }
@@ -146,13 +146,13 @@ public class StudentController {
     }
 
     @GetMapping("/{id:\\d+}/vocationalResults")
-    public StudentVocationalResultDto vocationalResults(HoisUserDetails user, @WithEntity("id") Student student) {
+    public StudentVocationalResultDto vocationalResults(HoisUserDetails user, @WithEntity Student student) {
         assertCanView(user, student);
         return studentService.vocationalResults(student);
     }
 
     @GetMapping("/{id:\\d+}/higherResults")
-    public StudentHigherResultDto higherResults(HoisUserDetails user, @WithEntity("id") Student student) {
+    public StudentHigherResultDto higherResults(HoisUserDetails user, @WithEntity Student student) {
         assertCanView(user, student);
         return studentResultHigherService.higherResults(student);
     }

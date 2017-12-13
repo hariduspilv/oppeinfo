@@ -2,8 +2,8 @@
   <form ng-cloak name="vocationalCurriculumModuleForm">
     <div layout="column" ng-cloak>
       <div flex>
-        <fieldset tabindex="1">
-          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
+        <fieldset tabindex="1" ng-if="module.canHaveOccupations">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{module.occupation ? 'module.occupationPartOccupationSpecialize' : 'module.partOccupation' | translate}}</legend>
           <div layout="column">
               <div ng-repeat="item in module.curriculumOccupations | orderBy: 'occupation'">
                   <md-checkbox ng-model="occupationsSelected[item.occupation]" ng-change="validateOccupations()"
@@ -99,12 +99,12 @@
             <div ng-repeat="item in module.outcomes track by $index" class="occupation-row align-center" layout="row" flex>
               <div flex="45">
                 <a ng-click="editOutcome(item)">
-                  <pre class="moduleOutcomes">{{item.outcomeEt}}</pre>
+                  <p class="scrollable">{{item.outcomeEt}}</p>
                 </a>
               </div>
               <div flex="40" flex-offset="5">
                 <a ng-click="editOutcome(item)">
-                  <p class="moduleOutcomes">{{item.outcomeEn}}</p>
+                  <p class="scrollable">{{item.outcomeEn}}</p>
                 </a>
               </div>
               <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
@@ -141,6 +141,20 @@
             {{currentLanguageNameField(option)}}</md-option>
         </md-select>
       </md-input-container>
+
+      <!-- <md-input-container flex>
+        <label>{{'module.competencesAquired' | translate}}</label>
+        <hois-select ng-model="module.competences" values="studyPeriods"
+        ng-disabled="module.module !== 'KUTSEMOODUL_P' || competences.length === 0"
+        valueProperty="code"></hois-select>
+      </md-input-container> -->
+
+        <!-- <md-input-container flex>
+          <label>{{'module.competencesAquired' | translate}}</label>
+          <hois-classifier-select  ng-model="module.competences" show-only-values="competences" main-classifier-code="KOMPETENTS"
+          ng-disabled="module.module !== 'KUTSEMOODUL_P' || competences.length === 0" model-value-attr="code"></hois-classifier-select>
+        </md-input-container> -->
+
       <br/>
       <md-input-container flex>
         <md-checkbox ng-model="module.practice" ng-disabled="module.module === 'KUTSEMOODUL_L'">{{'module.practice' | translate}}</md-checkbox>
@@ -155,7 +169,7 @@
     <span flex></span>
     <md-button class="md-raised md-primary" ng-click="save()">{{"main.button.save" | translate}}</md-button>
     <md-button class="md-raised" ng-click="delete()" ng-if="module.id && !module.addedToImplementationPlan">{{"main.button.delete" | translate}}</md-button>
-    <md-button class="md-raised" ng-click="back('#/vocationalCurriculum/' + curriculum + '/edit', vocationalCurriculumModuleForm)">{{"main.button.back" | translate}}</md-button>
+    <md-button class="md-raised" ng-click="back('#/vocationalCurriculum/' + curriculumId + '/edit', vocationalCurriculumModuleForm)">{{"main.button.back" | translate}}</md-button>
   </form>
 </div>
 <style>
@@ -167,9 +181,4 @@
     color: #d7dde5;
   }
 
-  .moduleOutcomes {
-    white-space: pre-wrap;
-    overflow-y: scroll;
-    max-height: 100px;
-  }
 </style>

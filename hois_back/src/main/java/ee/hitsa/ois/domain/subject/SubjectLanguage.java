@@ -1,15 +1,15 @@
 package ee.hitsa.ois.domain.subject;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import ee.hitsa.ois.domain.BaseEntityWithId;
-import ee.hitsa.ois.domain.Classifier;
-
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.Classifier;
 
 @Entity
 @Table(name = "subject_lang")

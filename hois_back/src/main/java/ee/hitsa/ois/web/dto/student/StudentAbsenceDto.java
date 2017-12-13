@@ -12,6 +12,7 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
     private Long id;
     private Boolean isAccepted;
     private Boolean userCanEdit;
+    private Boolean canAccept;
     private AutocompleteResult student;
     private String applicant;
     private String acceptor;
@@ -74,5 +75,13 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
 
     public void setAcceptor(String acceptor) {
         this.acceptor = acceptor;
+    }
+
+    public Boolean getCanAccept() {
+        return canAccept;
+    }
+
+    public void setCanAccept(Boolean canAccept) {
+        this.canAccept = canAccept;
     }
 }

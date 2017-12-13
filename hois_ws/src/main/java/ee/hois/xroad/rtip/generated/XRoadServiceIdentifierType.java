@@ -32,7 +32,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "XRoadServiceIdentifierType")
+@XmlType(name = "XRoadServiceIdentifierType", namespace = "http://x-road.eu/xsd/identifiers")
 public class XRoadServiceIdentifierType
     extends XRoadIdentifierType
 {

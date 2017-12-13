@@ -5,7 +5,7 @@ angular.module('hitsaOis')
 
     var sections = [];
 
-    function getAdminSections() {
+    function getAdminSections(authenticatedUser) {
       sections.push({
         name: 'main.menu.academicCalendar.label',
         type: 'link',
@@ -94,6 +94,10 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.documents.representativeApplications',
             url: "/studentrepresentatives/applications?_menu",
+          },
+          {
+            name: 'main.menu.documents.apel',
+            url: "/apelApplication?_menu"
           }
         ]
       });
@@ -207,6 +211,8 @@ angular.module('hitsaOis')
         ]
       });
 
+      sections = sections.concat(getScholarshipSectionForAdmin(authenticatedUser));
+
       sections.push({
         name: 'main.menu.reports.label',
         type: 'toggle',
@@ -300,12 +306,34 @@ angular.module('hitsaOis')
             url: "/ehis/student/export?_menu"
           },
           {
+            name: 'main.menu.dataexchange.kutseregister',
+            url: "/occupationcertificate/import?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.dataexchange.rtip',
+            url: "/rtip/sync?_menu"
+          },
+          {
             name: 'main.menu.dataexchange.ehisLogs',
             url: "/ehis/logs?_menu"
           },
           {
             name: 'main.menu.dataexchange.ekisLogs',
             url: "/ekis/logs?_menu"
+          },
+          {
+            name: 'main.menu.dataexchange.kutseregisterLogs',
+            url: "/kutseregister/logs?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.dataexchange.rtipLogs',
+            url: "/rtip/logs?_menu"
           },
           {
             name: 'main.menu.dataexchange.saisLogs',
@@ -381,6 +409,10 @@ angular.module('hitsaOis')
             name: 'main.menu.settings.users',
             id: 'users',
             url: "/persons?_menu"
+          },
+          {
+            name: 'main.menu.settings.apelSchools',
+            url: "/apelSchools?_menu"
           }
         ]
       });
@@ -549,7 +581,7 @@ angular.module('hitsaOis')
       });
     }
 
-    function getStudentSections() {
+    function getStudentSections(authenticatedUser) {
       sections.push({
         name: 'main.menu.curriculums.label',
         url: "/curriculum?_menu",
@@ -624,6 +656,8 @@ angular.module('hitsaOis')
         ]
       });
 
+      sections = sections.concat(getScholarshipSectionForStudent(authenticatedUser));
+
       sections.push({
         name: 'main.menu.documents.label',
         type: 'toggle',
@@ -639,6 +673,10 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.documents.practiceContracts',
             url: "/contracts?_menu"
+          },
+          {
+            name: 'main.menu.documents.apel',
+            url: "/apelApplication?_menu"
           }
         ]
       });
@@ -646,12 +684,16 @@ angular.module('hitsaOis')
 
     function getExternalExpertSections() {
       sections.push({
-        name: 'main.menu.curriculum.label',
+        name: 'main.menu.curriculum.label', // todo curricula-vs-curriculums
         type: 'toggle',
         pages: [
           {
+            name: 'main.menu.curriculum.schoolCurriculums',
+            url: "/curriculum?_menu"
+          },
+          {
             name: 'main.menu.curriculum.stateCurriculums',
-            url: "/stateCurriculum?_menu"
+            url: "/stateCurriculum?_menu",
           },
         ]
       });
@@ -731,6 +773,95 @@ angular.module('hitsaOis')
 
     var self;
     var menu = [];
+
+    function getScholarshipSectionForAdmin(authenticatedUser) {
+      var result = [];
+      if(authenticatedUser.higher && authenticatedUser.vocational) {
+        result.push({
+          name: 'main.menu.scholarships.label',
+          type: 'toggle',
+          pages: [
+            {
+              name: 'main.menu.scholarships.grants',
+              url: "/scholarships?grants"
+            },
+            {
+              name: 'main.menu.scholarships.grantApplications',
+              url: "/scholarships/applications/grants"
+            },
+            {
+              name: 'main.menu.scholarships.scholarships',
+              url: "/scholarships?scholarships"
+            },
+            {
+              name: 'main.menu.scholarships.scholarshipApplications',
+              url: "/scholarships/applications/scholarships"
+            },
+            {
+              name: 'main.menu.scholarships.drGrants',
+              url: "/scholarships?"
+            }
+          ]
+        });
+      } else if (authenticatedUser.higher) {
+        result.push({
+          name: 'main.menu.scholarships.scholarships',
+          type: 'link',
+          url: "/scholarships?scholarships"
+        });
+        result.push({
+          name: 'main.menu.scholarships.scholarshipApplications',
+          type: 'link',
+          url: "/scholarships/applications/scholarships"
+        });
+        result.push({
+          name: 'main.menu.scholarships.drGrants',
+          type: 'link',
+          url: "/scholarships?"
+        });
+        result.push({
+          name: 'main.menu.scholarships.grantApplications',
+          type: 'link',
+          url: "/scholarships/applications/grants"
+        });
+      } else {
+        result.push({
+          name: 'main.menu.scholarships.grants',
+          type: 'link',
+          url: "/scholarships?grants"
+        });
+        result.push({
+          name: 'main.menu.scholarships.grantApplications',
+          type: 'link',
+          url: "/scholarships/applications/grants"
+        });
+      }
+      return result;
+    }
+
+    function getScholarshipSectionForStudent(authenticatedUser) {
+      var result = [];
+      if (authenticatedUser.higher) {
+        result.push({
+          name: 'main.menu.scholarships.scholarships',
+          type: 'link',
+          url: "/scholarships/myData/scholarships"
+        });
+        result.push({
+          name: 'main.menu.scholarships.drGrants',
+          type: 'link',
+          url: "/scholarships/myData/drGrants"
+        });
+      } else {
+        result.push({
+          name: 'main.menu.scholarships.grants',
+          type: 'link',
+          url: "/scholarships/myData/grants"
+        });
+      }
+      return result;
+    }
+
 
     function onLocationChange() {
       var path = $location.path();
@@ -898,7 +1029,7 @@ angular.module('hitsaOis')
 
       switch(authenticatedUser.roleCode) {
         case "ROLL_A":
-          getAdminSections();
+          getAdminSections(authenticatedUser);
           break;
         case "ROLL_P":
           getMainAdminSections();
@@ -907,7 +1038,7 @@ angular.module('hitsaOis')
           getTeacherSections();
           break;
         case "ROLL_T":
-          getStudentSections();
+          getStudentSections(authenticatedUser);
           break;
         case "ROLL_L":
           getParentSections();

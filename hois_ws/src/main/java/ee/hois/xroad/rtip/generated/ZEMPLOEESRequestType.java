@@ -1,6 +1,7 @@
 
 package ee.hois.xroad.rtip.generated;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -8,7 +9,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 
 /**
@@ -72,19 +73,21 @@ import javax.xml.datatype.XMLGregorianCalendar;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "Z_EMPLOEESRequestType", namespace = "http://rtk-v6.x-road.eu", propOrder = {
+@XmlType(name = "Z_EMPLOEESRequestType", propOrder = {
 
 })
 public class ZEMPLOEESRequestType {
 
     @XmlElement(name = "COMPANYCODE")
     protected String companycode;
-    @XmlElement(name = "DATE_FROM")
+    @XmlElement(name = "DATE_FROM", type = String.class)
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "date")
-    protected XMLGregorianCalendar datefrom;
-    @XmlElement(name = "DATE_TO")
+    protected LocalDate datefrom;
+    @XmlElement(name = "DATE_TO", type = String.class)
+    @XmlJavaTypeAdapter(Adapter1 .class)
     @XmlSchemaType(name = "date")
-    protected XMLGregorianCalendar dateto;
+    protected LocalDate dateto;
     @XmlElement(name = "LAHKUJAD", required = true)
     protected ZEMPLOEESRequestType.LAHKUJAD lahkujad;
     @XmlElement(name = "PUUDUMINE", required = true)
@@ -121,10 +124,10 @@ public class ZEMPLOEESRequestType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getDATEFROM() {
+    public LocalDate getDATEFROM() {
         return datefrom;
     }
 
@@ -133,10 +136,10 @@ public class ZEMPLOEESRequestType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setDATEFROM(XMLGregorianCalendar value) {
+    public void setDATEFROM(LocalDate value) {
         this.datefrom = value;
     }
 
@@ -145,10 +148,10 @@ public class ZEMPLOEESRequestType {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public XMLGregorianCalendar getDATETO() {
+    public LocalDate getDATETO() {
         return dateto;
     }
 
@@ -157,10 +160,10 @@ public class ZEMPLOEESRequestType {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link String }
      *     
      */
-    public void setDATETO(XMLGregorianCalendar value) {
+    public void setDATETO(LocalDate value) {
         this.dateto = value;
     }
 

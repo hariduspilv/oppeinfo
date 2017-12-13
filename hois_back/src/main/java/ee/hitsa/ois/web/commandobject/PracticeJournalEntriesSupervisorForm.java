@@ -2,11 +2,18 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.List;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
+
 public class PracticeJournalEntriesSupervisorForm {
 
+    @Valid
     private List<PracticeJournalEntrySupervisorForm> practiceJournalEntries;
+    @Valid
     private List<OisFileForm> practiceJournalFiles;
+    @Size(max=10000)
     private String supervisorOpinion;
+    @Size(max=10000)
     private String supervisorComment;
 
     public List<PracticeJournalEntrySupervisorForm> getPracticeJournalEntries() {
@@ -16,8 +23,6 @@ public class PracticeJournalEntriesSupervisorForm {
     public void setPracticeJournalEntries(List<PracticeJournalEntrySupervisorForm> practiceJournalEntries) {
         this.practiceJournalEntries = practiceJournalEntries;
     }
-
-
 
     public List<OisFileForm> getPracticeJournalFiles() {
         return practiceJournalFiles;

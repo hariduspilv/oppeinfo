@@ -50,7 +50,7 @@ public abstract class OccupationModuleCapacitiesUtil {
     
 //    update module capacities
     
-    public static void updateModuleCapacitiesHours(CurriculumVersionOccupationModule occupationModule, List<Classifier> capacityTypes) {
+    public static void updateModuleCapacities(CurriculumVersionOccupationModule occupationModule, List<Classifier> capacityTypes) {
         
         Set<CurriculumVersionOccupationModuleCapacity> capacities = new HashSet<>();
                     
@@ -58,11 +58,26 @@ public abstract class OccupationModuleCapacitiesUtil {
             Short hours = getAllThemesCapacitiesByType(type, occupationModule.getThemes());
             CurriculumVersionOccupationModuleCapacity c = getCapacityByType(type, occupationModule);
             c.setHours(hours);
+            c.setContact(Boolean.valueOf(getContract(type, occupationModule.getThemes())));
             capacities.add(c);
         }
         occupationModule.setCapacities(capacities);
     }
     
+    private static boolean getContract(Classifier type, Set<CurriculumVersionOccupationModuleTheme> themes) {
+         
+        for(CurriculumVersionOccupationModuleTheme theme : themes) {
+            boolean result = false;
+            result = theme.getCapacities().stream()
+                    .anyMatch(c -> EntityUtil.getCode(type)
+                            .equals(EntityUtil.getCode(c.getCapacityType())) && Boolean.TRUE.equals(c.getContact()));
+            if(result) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static Short getAllThemesCapacitiesByType(Classifier type, Set<CurriculumVersionOccupationModuleTheme> themes) {
         short sum = 0;
         
@@ -81,7 +96,7 @@ public abstract class OccupationModuleCapacitiesUtil {
         if(!capacity.isPresent()) {
             return 0;
         }
-        return capacity.get().getHours();
+        return capacity.get().getHours().shortValue();
     }
 
     

@@ -1,9 +1,9 @@
 <div class="ois-form-layout-padding nomargin">
       <div layout="column" ng-cloak>
         <div flex>
-          <fieldset tabindex="1">
-            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
-            <div layout="column">
+          <fieldset tabindex="1" ng-if="module.canHaveOccupations">
+              <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{module.occupation ? 'module.occupationPartOccupationSpecialize' : 'module.partOccupation' | translate}}</legend>
+              <div layout="column">
                 <div ng-repeat="item in module.curriculumOccupations | orderBy: 'occupation'">
                     <md-checkbox ng-model="occupationsSelected[item.occupation]" disabled>
                   <hois-classifier-value ng-model="item.occupation" main-classifier-codes="KUTSE,OSAKUTSE" class="inline"></hois-classifier-value>
@@ -58,7 +58,7 @@
         </md-input-container>
         <md-input-container flex>
           <label>{{'module.objectivesEn' | translate}}</label>
-          <textarea ng-model="module.objectivesEn" md-select-on-focus readonly></textarea>
+          <textarea ng-model="module.objectivesEn" max-rows="10" md-select-on-focus readonly></textarea>
         </md-input-container>
         <div flex>
           <fieldset tabindex="4">
@@ -66,10 +66,10 @@
             <div layout="column">
               <div ng-repeat="item in module.outcomes track by $index" class="occupation-row align-center" layout="row" flex>
                 <div flex="45">
-                  <p class="moduleOutcomes">{{item.outcomeEt}}</p>
+                  <p class="scrollable">{{item.outcomeEt}}</p>
                 </div>
                 <div flex="40" flex-offset="5">
-                  <p class="moduleOutcomes">{{item.outcomeEn}}</p>
+                  <p class="scrollable">{{item.outcomeEn}}</p>
                 </div>
               </div>
             </div>
@@ -105,7 +105,7 @@
         </md-input-container>
       </div>
       <span flex></span>
-      <md-button class="md-raised" ng-click="back('#/vocationalCurriculum/' + curriculum + '/view')">{{"main.button.back" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="back('#/vocationalCurriculum/' + curriculumId + '/view')">{{"main.button.back" | translate}}</md-button>
   </div>
   <style>
     .link-no-underline {
@@ -116,9 +116,4 @@
       color: #d7dde5;
     }
 
-    .moduleOutcomes {
-      white-space: pre-wrap;
-      overflow-y: scroll;
-      max-height: 100px;
-    }
   </style>

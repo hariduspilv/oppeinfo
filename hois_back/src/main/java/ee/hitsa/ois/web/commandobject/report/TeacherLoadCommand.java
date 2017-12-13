@@ -9,6 +9,7 @@ public class TeacherLoadCommand {
     @NotNull
     private Long studyYear;
     private Long studyPeriod;
+    private EntityConnectionCommand module;
     private EntityConnectionCommand subject;
     private EntityConnectionCommand teacher;
 
@@ -26,6 +27,14 @@ public class TeacherLoadCommand {
 
     public void setStudyPeriod(Long studyPeriod) {
         this.studyPeriod = studyPeriod;
+    }
+
+    public EntityConnectionCommand getModule() {
+        return module;
+    }
+
+    public void setModule(EntityConnectionCommand module) {
+        this.module = module;
     }
 
     public EntityConnectionCommand getSubject() {

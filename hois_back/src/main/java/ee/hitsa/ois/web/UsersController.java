@@ -1,5 +1,12 @@
 package ee.hitsa.ois.web;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import ee.hitsa.ois.service.PersonService;
 import ee.hitsa.ois.service.UserService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -7,12 +14,6 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.dto.UserRolesDto;
 import ee.hitsa.ois.web.dto.UsersSearchDto;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/users")

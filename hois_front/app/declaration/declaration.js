@@ -253,6 +253,19 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
         });
       });
     };
+
+    $scope.showUncomposed = function() {
+      var DialogController = function (scope) {
+        QueryUtils.createQueryForm(scope, '/declarations/withoutDeclaration/', {order: 'p.lastname,p.firstname'});
+        scope.clearCriteria();
+        scope.loadData();
+      };
+
+      dialogService.showDialog('declaration/uncomposed.declarations.html', DialogController,
+        function () {
+      });
+    };
+
   }
 ]).controller('DeclarationStudentSearchController', ['$scope', '$sessionStorage', 'Classifier', 'QueryUtils', '$q',
   function ($scope, $sessionStorage, Classifier, QueryUtils, $q) {

@@ -137,18 +137,9 @@ angular.module('hitsaOis')
       });
     }
 
-    /**
-     * Theme can be saved without capacities only its load is zero
-     */
-    $scope.hasThemesWithCapacities = function() {
-      var moduleData = $scope.occupationModule;
-        if(ArrayUtils.isEmpty(moduleData.themes)) {
-          return false;
-        }
-        return angular.isDefined(moduleData.themes.find(function(el){
-          return !ArrayUtils.isEmpty(el.capacities);
-        }));
-    };
+    $scope.hasThemes = function() {
+      return $scope.occupationModule && !ArrayUtils.isEmpty($scope.occupationModule.themes);
+    }
 
     function getNewCapacities() {
       Endpoint.get({id: id}).$promise.then(function(response){

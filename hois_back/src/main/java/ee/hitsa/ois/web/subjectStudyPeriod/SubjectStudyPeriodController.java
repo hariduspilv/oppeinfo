@@ -47,7 +47,7 @@ public class SubjectStudyPeriodController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public SubjectStudyPeriodDto get(HoisUserDetails user, @WithEntity("id") SubjectStudyPeriod subjectStudyPeriod) {
+    public SubjectStudyPeriodDto get(HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, subjectStudyPeriod.getSubject().getSchool());
         return SubjectStudyPeriodDto.of(subjectStudyPeriod);
     }
@@ -60,33 +60,33 @@ public class SubjectStudyPeriodController {
 
     @PutMapping("/{id:\\d+}")
     public SubjectStudyPeriodDto update(
-            @WithVersionedEntity(value = "id", versionRequestBody = true) SubjectStudyPeriod subjectStudyPeriod, 
+            @WithVersionedEntity(versionRequestBody = true) SubjectStudyPeriod subjectStudyPeriod, 
             @Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user) {
         SubjectStudyPeriodValidationUtil.assertCanUpdate(user, subjectStudyPeriod);
         return get(user, subjectStudyPeriodService.update(subjectStudyPeriod, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") 
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") 
     SubjectStudyPeriod subjectStudyPeriod, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         SubjectStudyPeriodValidationUtil.assertCanUpdate(user, subjectStudyPeriod);
         subjectStudyPeriodService.delete(user, subjectStudyPeriod);
     }
     
     @GetMapping("/teacher/{id:\\d+}")
-    public AutocompleteResult getTeacher(HoisUserDetails user, @WithEntity("id") Teacher teacher) {
+    public AutocompleteResult getTeacher(HoisUserDetails user, @WithEntity Teacher teacher) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, teacher.getSchool());
         return AutocompleteResult.of(teacher); 
     }
         
     @GetMapping("/subject/{id:\\d+}")
-    public AutocompleteResult getSubject(HoisUserDetails user, @WithEntity("id") Subject subject) {
+    public AutocompleteResult getSubject(HoisUserDetails user, @WithEntity Subject subject) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, subject.getSchool());
         return AutocompleteResult.of(subject); 
     }
     
     @GetMapping("/studyPeriod/{id:\\d+}")
-    public AutocompleteResult getStudyPeriod(HoisUserDetails user, @WithEntity("id") StudyPeriod studyPeriod) {
+    public AutocompleteResult getStudyPeriod(HoisUserDetails user, @WithEntity StudyPeriod studyPeriod) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, studyPeriod.getStudyYear().getSchool());
         return AutocompleteResult.of(studyPeriod); 
     }

@@ -6,6 +6,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.hibernate.Hibernate;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
@@ -51,17 +53,12 @@ public class CurriculumStudyLanguage extends BaseEntityWithId {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        } else if (obj == null) {
+        }
+        if (obj == null || !Hibernate.getClass(this).equals(Hibernate.getClass(obj))) {
             return false;
         }
 
-        // TODO other can be any object
         CurriculumStudyLanguage other = (CurriculumStudyLanguage) obj;
-        if (studyLang == null) {
-            if (other.studyLang != null)
-                return false;
-        } else if (!studyLang.equals(other.studyLang))
-            return false;
-        return true;
+        return studyLang == null? other.studyLang == null : studyLang.equals(other.studyLang);
     }
 }

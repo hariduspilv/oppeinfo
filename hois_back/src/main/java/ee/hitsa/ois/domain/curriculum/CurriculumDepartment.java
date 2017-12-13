@@ -5,6 +5,8 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import org.hibernate.Hibernate;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
@@ -49,17 +51,12 @@ public class CurriculumDepartment extends BaseEntityWithId {
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        } else if (obj == null) {
+        }
+        if (obj == null || !Hibernate.getClass(this).equals(Hibernate.getClass(obj))) {
             return false;
         }
 
-        // TODO other can be any object
         CurriculumDepartment other = (CurriculumDepartment) obj;
-        if (schoolDepartment == null) {
-            if (other.schoolDepartment != null)
-                return false;
-        } else if (!schoolDepartment.equals(other.schoolDepartment))
-            return false;
-        return true;
+        return schoolDepartment == null ? other.schoolDepartment == null : schoolDepartment.equals(other.schoolDepartment);
     }
 }

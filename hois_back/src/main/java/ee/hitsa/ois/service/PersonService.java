@@ -123,7 +123,8 @@ public class PersonService {
         return UserDto.of(user);
     }
 
-    public User saveUser(UserForm userForm, User user) {
+    public User saveUser(HoisUserDetails userDetails, UserForm userForm, User user) {
+        EntityUtil.setUsername(userDetails.getUsername(), em);
         EntityUtil.bindToEntity(userForm, user, classifierRepository, "school", "userRights");
         user.setSchool(EntityUtil.getOptionalOne(School.class, userForm.getSchool(), em));
 
@@ -160,10 +161,10 @@ public class PersonService {
         return EntityUtil.save(user, em);
     }
 
-    public User createUser(UserForm userForm, Person person) {
+    public User createUser(HoisUserDetails userDetails, UserForm userForm, Person person) {
         User user = new User();
         user.setPerson(person);
-        return saveUser(userForm, user);
+        return saveUser(userDetails, userForm, user);
     }
 
     public void deleteUser(HoisUserDetails userDetails, User user) {

@@ -78,7 +78,7 @@ public class SubjectStudyPeriodStudentGroupController {
     }
         
     @GetMapping("/curriculum/{id:\\d+}")
-    public CurriculumDto getCurriculum(@WithEntity("id") Curriculum curriculum) {
+    public CurriculumDto getCurriculum(@WithEntity Curriculum curriculum) {
         CurriculumDto dto = new CurriculumDto();
         dto.setId(EntityUtil.getId(curriculum));
         dto.setNameEt(curriculum.getNameEt());

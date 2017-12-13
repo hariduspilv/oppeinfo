@@ -59,6 +59,11 @@ public class School extends BaseEntityWithId implements Translatable {
     private String emailDomain;
     private Boolean generateUserEmail;
     private String rtipSchoolCode;
+    private String adUrl;
+    private Long adPort;
+    private String adDomain;
+    private String adBase;
+    private String adIdcodeField;
 
     @JsonIgnore
     @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -180,4 +185,45 @@ public class School extends BaseEntityWithId implements Translatable {
     public void setRtipSchoolCode(String rtipSchoolCode) {
         this.rtipSchoolCode = rtipSchoolCode;
     }
+
+    public String getAdUrl() {
+        return adUrl;
+    }
+
+    public void setAdUrl(String adUrl) {
+        this.adUrl = adUrl;
+    }
+
+    public Long getAdPort() {
+        return adPort;
+    }
+
+    public void setAdPort(Long adPort) {
+        this.adPort = adPort;
+    }
+
+    public String getAdDomain() {
+        return adDomain;
+    }
+
+    public void setAdDomain(String adDomain) {
+        this.adDomain = adDomain;
+    }
+
+    public String getAdBase() {
+        return adBase;
+    }
+
+    public void setAdBase(String adBase) {
+        this.adBase = adBase;
+    }
+
+    public String getAdIdcodeField() {
+        return adIdcodeField;
+    }
+
+    public void setAdIdcodeField(String adIdcodeField) {
+        this.adIdcodeField = adIdcodeField;
+    }
+    
 }

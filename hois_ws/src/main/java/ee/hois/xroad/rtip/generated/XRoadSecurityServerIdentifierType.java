@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "XRoadSecurityServerIdentifierType")
+@XmlType(name = "XRoadSecurityServerIdentifierType", namespace = "http://x-road.eu/xsd/identifiers")
 public class XRoadSecurityServerIdentifierType
     extends XRoadIdentifierType
 {

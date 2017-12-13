@@ -19,11 +19,11 @@ import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.StudyYearScheduleRepository;
-import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
-import ee.hitsa.ois.web.dto.StudyYearDto;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
+import ee.hitsa.ois.web.dto.StudyYearDto;
 import ee.hitsa.ois.web.dto.StudyYearScheduleDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 

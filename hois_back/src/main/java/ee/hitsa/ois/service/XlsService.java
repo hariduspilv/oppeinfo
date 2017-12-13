@@ -33,6 +33,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -166,6 +167,16 @@ public class XlsService {
                 return null;
             }
             return Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+        }
+        
+        /**
+         * For cases when date is shown with other data in the same cell
+         */
+        public String dateAsString(LocalDate localDate) {
+            if(localDate == null) {
+                return null;
+            }
+            return DateUtils.date(localDate);
         }
     }
 }

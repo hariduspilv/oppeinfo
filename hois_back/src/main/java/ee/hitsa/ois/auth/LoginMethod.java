@@ -14,7 +14,7 @@ public enum LoginMethod {
      */
     LOGIN_TYPE_S,
     /**
-     * Just user id, for testing only
+     * Username/Password
      */
     LOGIN_TYPE_K
 }

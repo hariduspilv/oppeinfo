@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "XRoadIdentifierType", propOrder = {
+@XmlType(name = "XRoadIdentifierType", namespace = "http://x-road.eu/xsd/identifiers", propOrder = {
     "xRoadInstance",
     "memberClass",
     "memberCode",

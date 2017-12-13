@@ -1,0 +1,316 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>HOIS2 Login</title>
+<style>
+html {
+  font-family: Roboto,"Helvetica Neue",sans-serif;
+}
+#wrapper {
+  margin: 100px auto;
+  width: 700px;
+}
+#language {
+  color: rgba(0,0,0,0.54);
+  font-weight: 500;
+  text-align: right;
+  width: 100%;
+}
+#language button {
+  background: 0 0;
+  border: 0;
+  border-radius: 2px;
+  color: rgba(0,0,0,0.54);
+  cursor: pointer;
+  font-weight: 500;
+  outline: none;
+}
+#language button.selected {
+  color: rgb(255,64,129);
+}
+#language button:hover {
+  background-color: rgba(158,158,158,0.2);
+}
+#message {
+  color: red;
+  text-align: center;
+}
+#login {
+  margin: auto;
+  padding: 20px 50px;
+  width: 400px;
+}
+#login td {
+  padding: 5px;
+}
+#tabs {
+  border-color: rgba(0,0,0,0.12);
+  border-style: solid;
+  border-width: 0 0 1px;
+  text-align: center;
+}
+#tabs div {
+  color: rgba(0,0,0,0.54);
+  cursor: pointer;
+  display: inline-block;
+  font-weight: 500;
+  padding: 12px 24px;
+  text-align: center;
+}
+#tabs div.selected {
+  border-bottom: 2px solid rgb(255,64,129);
+  color: rgb(13,71,161);
+}
+#tab_content {
+  padding: 20px;
+}
+#tab_content input, #tab_content select {
+  background: #F5F5F5;
+  border-width: 0 0 1px;
+  border-color: rgba(0,0,0,0.12);
+  outline: none;
+  padding: 3px;
+}
+#tab_content input:focus, #tab_content select:focus {
+  border-width: 0;
+  border-bottom: 2px solid rgb(13,71,161);
+}
+#tab_content button {
+  background-color: rgb(13,71,161);
+  border: 0;
+  border-radius: 2px;
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,.26);
+  color: rgba(255,255,255,0.87);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 36px;
+  min-height: 36px;
+  min-width: 88px;
+}
+#tab_content button:hover {
+  background-color: rgb(30,136,229);
+}
+</style>
+</head>
+<body>
+<div id="wrapper">
+  <div id="main">
+    <div><img src="./images/HITSA_innov_logo_03.png"></div>
+    <div id="language">
+      <div><button class="selected">Est</button><button>Eng</button></div>
+    </div>
+    <div id="message"></div>
+    <div id="login">
+      <div id="tabs">
+        <div onclick="showTab(this, 'password')" class="selected">KASUTAJA</div>
+        <div onclick="showTab(this, 'idcard')">ID-KAART</div>
+        <div onclick="showTab(this, 'mobileid')">MOBIIL-ID</div>
+      </div>
+      <div id="tab_content">
+        <div id="password-tab">
+          <form action="?" method="post" onsubmit="return submitUserLogin()">
+            <table>
+            <tr> <td>Kool:</td> <td><select id="school" name="school"></select></td> </tr>
+            <tr> <td>Kasutajanimi:</td> <td><input type="text" id="username" name="username"></td> </tr>
+            <tr> <td>Parool:</td> <td><input type="password" id="password" name="password"></td> </tr>
+            <tr> <td> </td> <td><button type="submit">Logi sisse</button></td> 	</tr>
+            </table>
+          </form>
+        </div>
+        <div id="idcard-tab" style="display: none;">
+          <form action="?" method="post" onsubmit="return submitIdCardLogin()">
+            <button type="submit">Logi sisse</button>
+          </form>
+        </div>
+        <div id="mobileid-tab" style="display: none;">
+          <form action="?" method="post" onsubmit="return submitMobileIdLogin()">
+            <table>
+            <tr> <td>Mobiilinumber:</td> <td><input type="text" id="mobilenumber" name="mobilenumber" value="372"></td> </tr>
+            <tr> <td> </td> <td><button type="submit">Logi sisse</button></td> 	</tr>
+            </table>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+var BASE_URL = 'hois_back';
+var IDCARD_DOMAIN = 'idlogin';
+var NOT_MOBILE_ID_USER_ERROR = 301;
+var JWT_TOKEN_HEADER = 'Authorization';
+var XSRF_TOKEN_HEADER = 'X-XSRF-TOKEN';
+var jwt_token = null;
+function showMessage(msg) {
+  document.getElementById("message").innerHTML = msg;
+}
+function loginFailed() {
+  console.error('Login failed!');
+  showMessage('Sisselogimine ebaõnnestus!');
+}
+function hideTabs() {
+  var tabs = document.getElementById('tab_content').children;
+  for (let i = 0; i < tabs.length; i++) {
+    const tab = tabs[i];
+    tab.style.display = 'none';
+  }
+  var titles = document.getElementById('tabs').children;
+  for (let i = 0; i < titles.length; i++) {
+    const tab = titles[i];
+    tab.classList.remove('selected');
+  }
+}
+function showTab(tab, id) {
+  hideTabs();
+  const content = document.getElementById(id + '-tab');
+  content.style.display = '';
+  tab.classList.add('selected');
+}
+function submitUserLogin() {
+  var school = document.getElementById("school").value;
+  var username = document.getElementById("username").value;
+  var password = document.getElementById("password").value;
+  if (!username) {
+    return false;
+  }
+  if (school && password) {
+    submitLdapLogin({school: school, username: username, password: password});
+  } else {
+    finishLogin('authorization', 'Basic ' + btoa(username + ":" + "undefined"));
+  }
+  return false;
+}
+function getIdCardLoginUrl() {
+  var domain = location.host;
+  var cut = domain.indexOf('.');
+  if (cut > 0) {
+    domain = domain.substring(0, cut);
+  }
+  return location.protocol + '//' + IDCARD_DOMAIN + '.' + domain;
+}
+function submitIdCardLogin() {
+  var request = new XMLHttpRequest();
+  request.open("GET", getIdCardLoginUrl());
+  request.onreadystatechange = function () {
+    if(request.readyState === XMLHttpRequest.DONE) {
+      if(request.status === 200) {
+        finishLogin(JWT_TOKEN_HEADER, request.getResponseHeader(JWT_TOKEN_HEADER));
+      } else {
+        loginFailed();
+      }
+    }
+  };
+  request.send();
+  return false;
+}
+function submitMobileIdLogin() {
+  var mobilenumber = document.getElementById("mobilenumber").value;
+  if (!mobilenumber) {
+    return false;
+  }
+  doHttpPost('/mIdLogin', {mobileNumber: mobilenumber}, function(response, request) {
+    jwt_token = request.getResponseHeader(JWT_TOKEN_HEADER);
+    if (response.errorCode === NOT_MOBILE_ID_USER_ERROR) {
+      loginFailed();
+      showMessage('See number ei ole Mobiil-ID kasutaja');
+    } else if (response.errorCode) {
+      loginFailed();
+    } else if (response.challengeID) {
+      showMessage('Kontrolli koodi: ' + response.challengeID);
+      setTimeout(pollMobileIdStatus, 5000);
+    } else {
+      loginFailed();
+    }
+  }, loginFailed);
+  return false;
+}
+function successfulMobileIdStatus(response) {
+  if (response.status === 'USER_AUTHENTICATED') {
+    navigateToSso();
+  } else if (response.status === 'OUTSTANDING_TRANSACTION') {
+    setTimeout(pollMobileIdStatus, 4000);
+  } else {
+    console.log('mobileIdStatus: '+response.status);
+    loginFailed();
+  }
+}
+function pollMobileIdStatus() {
+  doHttpGet('/mIdStatus', {name: JWT_TOKEN_HEADER, value: jwt_token}, successfulMobileIdStatus, loginFailed);
+}
+function submitLdapLogin(credentials) {
+  doHttpPost('/ldap', credentials, navigateToSso, loginFailed);
+  return false;
+}
+function navigateToSso() {
+  window.location = BASE_URL+"/SingleSignOnService" + window.location.search;
+}
+function finishLogin(header, value) {
+  doHttpGet('/user', {name: header, value: value}, navigateToSso, loginFailed);
+}
+function doHttpGet(path, header, resolve, reject) {
+  var request = new XMLHttpRequest();
+  request.open("GET", BASE_URL + path);
+  if (header) {
+    request.setRequestHeader(header.name, header.value);
+  }
+  request.onreadystatechange = function () {
+    if(request.readyState === XMLHttpRequest.DONE) {
+      if(request.status === 200) {
+        resolve(JSON.parse(request.responseText));
+      } else {
+        reject();
+      }
+    }
+  };
+  request.send();
+}
+function doHttpPost(path, params, resolve, reject) {
+  var request = new XMLHttpRequest();
+  request.open("POST", BASE_URL + path);
+  request.setRequestHeader('Content-type', 'application/json;charset=UTF-8');
+  var xsrf_token = getCookie('XSRF-TOKEN');
+  if (xsrf_token) {
+    request.setRequestHeader(XSRF_TOKEN_HEADER, xsrf_token);
+  }
+  request.onreadystatechange = function () {
+    if(request.readyState === XMLHttpRequest.DONE) {
+      if(request.status === 200) {
+        resolve(JSON.parse(request.responseText), request);
+      } else {
+        reject();
+      }
+    }
+  };
+  request.send(JSON.stringify(params));
+}
+function getCookie(name) {
+  var cookies = document.cookie.split('; ');
+  for (let i = 0; i < cookies.length; i++) {
+    var c = cookies[i];
+    var keyvalue = c.split('=');
+    if (name === keyvalue[0]) {
+      return keyvalue[1];
+    }
+  }
+}
+function fillSchoolSelect(schools) {
+  schools.sort(function (a, b) {
+    return a.nameEt.localeCompare(b.nameEt);
+  });
+  var select = document.getElementById("school");
+  for (let i = 0; i < schools.length; i++) {
+    var school = schools[i];
+    var option = document.createElement('option');
+    option.text = school.nameEt;
+    option.value = school.id;
+    select.add(option);
+  }
+}
+doHttpGet('/autocomplete/ldapschools', null, fillSchoolSelect, function() {
+  console.error('Cannot get LDAP schools');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
+
+<md-button class="md-raised" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
+<br/>
+<table md-table class="secondary-table" ng-if="studentSubmitData.files.length > 0">
+  <thead md-head>
+    <tr md-row>
+      <th md-column>
+        <span>{{'file.nameAndFile' | translate}}</span>
+      </th>
+      <th md-column></th>
+    </tr>
+  </thead>
+  <tbody md-body>
+    <tr md-row ng-repeat="file in studentSubmitData.files | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+      <td md-cell>
+        <div layout="row" flex>
+          <div flex="80">
+            {{file.fname}}
+          </div>
+          <div flex>
+            <a ng-href="{{getUrl(file.oisFile)}}" target="_blank">
+              <md-icon md-font-set="material-icons">file_download</md-icon>
+            </a>
+          </div>
+        </div>
+      </td>
+      <td md-cell>
+        <md-button class="remove nomargin" ng-click="removeFromArray(studentSubmitData.files, file)">&times;</md-button>
+      </td>
+    </tr>
+  </tbody>
+</table>

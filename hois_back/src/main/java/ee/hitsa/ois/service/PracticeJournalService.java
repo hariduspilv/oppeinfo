@@ -48,6 +48,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.PracticeJournalUserRights;
 import ee.hitsa.ois.validation.ContractValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
@@ -83,8 +84,6 @@ public class PracticeJournalService {
     private ContractRepository contractRepository;
     @Autowired
     private Validator validator;
-
-    private static final int DAYS_AFTER_END_CAN_EDIT = 30;
 
     private static final String SEARCH_FROM = "from practice_journal pj "
             + "inner join student student on pj.student_id = student.id "
@@ -140,8 +139,8 @@ public class PracticeJournalService {
             dto.setCanStudentAddEntries(
                     Boolean.valueOf(JournalStatus.PAEVIK_STAATUS_T.name().equals(resultAsString(r, 4))
                             && Boolean.FALSE.equals(hasSupervisorOpinion)));
-            dto.setCanEdit(
-                    Boolean.valueOf(LocalDate.now().isBefore(dto.getEndDate().plusDays(DAYS_AFTER_END_CAN_EDIT))));
+
+            dto.setCanEdit(PracticeJournalUserRights.canEdit(dto.getEndDate()));
 
             Boolean hasPositiveModuleGrade = resultAsBoolean(r, 24);
             dto.setCanTeacherAddEntries(Boolean.valueOf(Boolean.FALSE.equals(hasPositiveModuleGrade)));
@@ -157,6 +156,8 @@ public class PracticeJournalService {
             dto.setEnterpriseContactPersonName(resultAsString(r, 13));
 
             dto.setStudentLastEntryDate(resultAsLocalDateTime(r, 14));
+            
+            dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.canAddEntries(user, dto)));
 
             AutocompleteResult module = new AutocompleteResult(resultAsLong(r, 15),
                     CurriculumUtil.moduleName(resultAsString(r, 17), resultAsString(r, 18), resultAsString(r, 16)),
@@ -241,9 +242,10 @@ public class PracticeJournalService {
             }, EntityUtil::bindToEntity);
     }
 
-    public PracticeJournal saveEntriesTeacher(PracticeJournal practiceJournal,
+    public PracticeJournal saveEntriesTeacher(HoisUserDetails user, PracticeJournal practiceJournal,
             PracticeJournalEntriesTeacherForm practiceJournalEntriesTeacherForm) {
         assertTeacherSaveEntries(practiceJournal);
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(practiceJournalEntriesTeacherForm, practiceJournal, classifierRepository,
                 "practiceJournalEntries", "practiceJournalFiles");
         updatePracticeJournalTeacherEntries(practiceJournal, practiceJournalEntriesTeacherForm);

@@ -47,8 +47,7 @@
       <legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: higherCurriculumVersionForm.$submitted && strictValidation() && !allSpecialitiesValid()}">{{'module.modules' | translate}}&nbsp;*</legend>
       <md-button class="md-raised" ng-click="openAddModuleDialog()" ng-if="!formState.readOnly && version.specialitiesReferenceNumbers.length > 0 && version.id && version.canChange">{{'module.add' | translate}}</md-button>
 
-      <div ng-repeat="spectiality in curriculum.specialities | filter: filterSpecialities | orderBy: currentLanguageNameField()"
-        layout="column" flex>
+      <div ng-repeat="spectiality in curriculum.specialities | filter: filterSpecialities | orderBy: currentLanguageNameField()" flex>
         <h2 class="md-title-small" ng-class="{invalid: higherCurriculumVersionForm.$submitted && strictValidation() && !specialityValid(spectiality.id)}">{{'curriculum.specialty.specialty' | translate}} {{$index + 1}}: {{currentLanguageNameField(spectiality)}}</h2>
         <div flex class="secondary-table-header" layout="row">
           <div flex="5">&nbsp;</div>
@@ -63,6 +62,7 @@
             <a href="" ng-click="openAddModuleDialog(module)" flex="70" ng-class="{invalid: higherCurriculumVersionForm.$submitted && !moduleHasSubjects(module) && strictValidation()}">
                                 {{'curriculum.module' | translate}} {{currentLanguageNameField(module)}} {{module.totalCredits}} EAP
                                 <span ng-if="module.type === 'KORGMOODUL_M'">({{currentLanguage()=='et' ? module.typeNameEt : module.typeNameEn}})</span>
+                                <span ng-if="module.type !== 'KORGMOODUL_M'">(<hois-classifier-value ng-model="module.type" main-classifier-code="KORGMOODUL" class="inline module-type"></hois-classifier-value>)</span>
                             </a>
           </div>
 
@@ -109,7 +109,7 @@
           <div ng-repeat="electiveModule in module.electiveModules | orderBy: currentLanguageNameField()" layout-align="start center"
             flex>
             <div class="sub-header2" layout-align="start center" layout="row">
-              <div>{{'module.optional' | translate}}: {{currentLanguageNameField(electiveModule)}}</div>
+              <div class="elective-module">{{'module.optional' | translate}}: {{currentLanguageNameField(electiveModule)}}</div>
             </div>
             <div ng-repeat="subject in module.subjects | filter: {optional: true} |
                                 filter: {electiveModule: electiveModule.referenceNumber} | orderBy: currentLanguageNameField()"
@@ -190,7 +190,7 @@
         <div ng-repeat="electiveModule in module.electiveModules | orderBy: currentLanguageNameField()" layout-align="start center"
           flex>
           <div class="sub-header2" layout-align="start center" layout="row">
-            <div>{{'module.optional' | translate}}: {{currentLanguageNameField(electiveModule)}}</div>
+            <div class="elective-module">{{'module.optional' | translate}}: {{currentLanguageNameField(electiveModule)}}</div>
           </div>
           <div ng-repeat="subject in module.subjects | filter: {optional: true} |
                                 filter: {electiveModule: electiveModule.referenceNumber} | orderBy: currentLanguageNameField()"
@@ -276,3 +276,10 @@
     <md-button class="md-raised md-default" ng-click="back('#/higherCurriculum/' + version.curriculum + '/view', higherCurriculumVersionForm)">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>
+
+<style>
+.module-type {
+  text-decoration: underline;
+}
+
+</style>

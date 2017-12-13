@@ -630,10 +630,10 @@ public class CurriculumControllerTests {
         partners.add(getCurriculumJointPartnerDto());
         curriculumForm.setJointPartners(partners);
 
-        Set<CurriculumOccupationDto> occupations = new HashSet<>();
-        occupations.add(getCurriculumOccupationDto("KUTSE_10431606"));
-        occupations.add(getCurriculumOccupationDto("KUTSE_10411912"));
-        curriculumForm.setOccupations(occupations);
+//        Set<CurriculumOccupationDto> occupations = new HashSet<>();
+//        occupations.add(getCurriculumOccupationDto("KUTSE_10431606"));
+//        occupations.add(getCurriculumOccupationDto("KUTSE_10411912"));
+//        curriculumForm.setOccupations(occupations);
 
         curriculumForm.setModules(Sets.newLinkedHashSet(getCurriculumModuleDto(), getCurriculumModuleDto()));
     }

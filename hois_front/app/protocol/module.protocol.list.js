@@ -6,7 +6,7 @@ angular.module('hitsaOis').controller('ModuleProtocolListController', function (
   $scope.criteria = {};
 
   function canCreateProtocol() {
-    return ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_M_TEEMAOIGUS_MOODULPROTOKOLL");
+    return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) &&  ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_M_TEEMAOIGUS_MOODULPROTOKOLL");
   }
 
   $scope.formState = {

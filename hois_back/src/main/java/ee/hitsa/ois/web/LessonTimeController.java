@@ -40,7 +40,7 @@ public class LessonTimeController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public LessonTimeGroupsDto get(@WithEntity("id") LessonTime lessonTime, HoisUserDetails user) {
+    public LessonTimeGroupsDto get(@WithEntity LessonTime lessonTime, HoisUserDetails user) {
         UserUtil.assertSameSchool(user, lessonTime.getSchool());
         return lessonTimeService.getLessonTimeBuildingGroupsDto(lessonTime.getLessonTimeBuildingGroup().getValidFrom(), user.getSchoolId());
     }

@@ -21,7 +21,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           url: function($route) { return '/saisClassifier/' + $route.current.params.code; }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KLASSIFIKAATOR]
         }
       });
 }]);

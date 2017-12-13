@@ -62,7 +62,7 @@ public class CertificateController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public CertificateDto get(HoisUserDetails user, @WithEntity("id") Certificate certificate) {
+    public CertificateDto get(HoisUserDetails user, @WithEntity Certificate certificate) {
         certificateValidationService.assertCanView(user, certificate);
         CertificateDto dto = CertificateDto.of(certificate);
         dto.setCanBeChanged(certificateValidationService.canBeChanged(user, certificate));
@@ -99,7 +99,7 @@ public class CertificateController {
 
     @PutMapping("/{id:\\d+}")
     public CertificateDto save(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) Certificate certificate, 
+            @WithVersionedEntity(versionRequestBody = true) Certificate certificate,
             @Valid @RequestBody CertificateForm form) {
         certificateValidationService.assertCanChange(user, certificate);
         certificateValidationService.validate(user, form);
@@ -123,7 +123,7 @@ public class CertificateController {
 
     @PutMapping("/order/{id:\\d+}")
     public CertificateDto saveAndOrder(HoisUserDetails user, 
-            @WithVersionedEntity(value = "id", versionRequestBody = true) Certificate certificate, 
+            @WithVersionedEntity(versionRequestBody = true) Certificate certificate,
             @Valid @RequestBody CertificateForm form) {
         certificateValidationService.assertCanChange(user, certificate);
         certificateValidationService.validate(user, form);
@@ -133,7 +133,7 @@ public class CertificateController {
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Certificate certificate, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Certificate certificate, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         certificateValidationService.assertCanChange(user, certificate);
         certificateService.delete(user, certificate);
     }

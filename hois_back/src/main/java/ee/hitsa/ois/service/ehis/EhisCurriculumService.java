@@ -13,9 +13,9 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
-import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.ClassifierConnect;
@@ -31,6 +31,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hois.soap.LogContext;
@@ -39,6 +40,7 @@ import ee.hois.xroad.ehis.generated.OisFailid;
 import ee.hois.xroad.ehis.generated.OisInfoteade;
 import ee.hois.xroad.ehis.generated.OisKutsestandard;
 import ee.hois.xroad.ehis.generated.OisKutsestandardid;
+import ee.hois.xroad.ehis.generated.OisOKSpetsialiseerumised;
 import ee.hois.xroad.ehis.generated.OisOppekava;
 import ee.hois.xroad.ehis.generated.OisOppekavaStaatus;
 import ee.hois.xroad.ehis.generated.OisOppekavad;
@@ -62,9 +64,9 @@ public class EhisCurriculumService extends EhisService {
     private static final Pattern PARTOCCUPATION_ID_PREFIX = Pattern.compile("^OSAKUTSE_(\\d+)$");
 
     private static final String OIS_OPPEKAVA_SERVICE_CODE = "oisOppekava";
-    public static final String OIS_OPPEKAVA_SERVICE = "ehis."+ OIS_OPPEKAVA_SERVICE_CODE + ".v1";
+    public static final String OIS_OPPEKAVA_SERVICE = "ehis."+ OIS_OPPEKAVA_SERVICE_CODE;
     private static final String OIS_OPPEKAVA_STAATUS_SERVICE_CODE = "oisOppekavaStaatus";
-    public static final String OIS_OPPEKAVA_STAATUS_SERVICE = "ehis."+ OIS_OPPEKAVA_STAATUS_SERVICE_CODE + ".v1";
+    public static final String OIS_OPPEKAVA_STAATUS_SERVICE = "ehis."+ OIS_OPPEKAVA_STAATUS_SERVICE_CODE;
 
     private static final Map<String, String> CURRICULUM_STATUS_FROM_EHIS_STATUS = new HashMap<>();
     static {
@@ -88,7 +90,11 @@ public class EhisCurriculumService extends EhisService {
 
         boolean higher = Boolean.TRUE.equals(curriculum.getHigher());
         OppekavaOis oppekavaOis = new OppekavaOis();
-        oppekavaOis.setOppekavaKood(curriculumCode(curriculum));
+        try {
+            oppekavaOis.setOppekavaKood(curriculumCode(curriculum));
+        } catch(@SuppressWarnings("unused") NumberFormatException e) {
+            throw new ValidationFailedException("curriculum.message.badEhisCode");
+        }
         oppekavaOis.setOppekavaLiik(higher ? "OK_LIIK_KORG" : "OK_LIIK_KUTSE");
         oppekavaOis.setOppekavaNimetus(curriculum.getNameEt());
         oppekavaOis.setOppekavaNimetusEng(curriculum.getNameEn());
@@ -117,7 +123,7 @@ public class EhisCurriculumService extends EhisService {
         oppekavaOis.setAkadKraad(higher && curriculum.getGrades() != null && !curriculum.getGrades().isEmpty() ? ehisValue(curriculum.getGrades().stream().findFirst().get().getEhisGrade()) : null);
         BigInteger practice;
         if(higher) {
-            CurriculumVersion cv = curriculum.getVersions().stream().findFirst().orElse(null);
+            CurriculumVersion cv = curriculum.getVersions().stream().filter(CurriculumUtil::isCurriculumVersionConfirmed).findFirst().orElse(null);
             if(cv != null) {
                 practice = cv.getModules().stream().flatMap(r -> r.getSubjects().stream()).map(r -> r.getSubject()).filter(r -> Boolean.TRUE.equals(r.getIsPractice()) && r.getCredits() != null).map(r -> r.getCredits()).reduce((x, y) -> x.add(y)).orElse(BigDecimal.ZERO).toBigInteger();
             } else {
@@ -127,6 +133,10 @@ public class EhisCurriculumService extends EhisService {
             practice = curriculum.getModules().stream().filter(r -> Boolean.TRUE.equals(r.getPractice()) && r.getCredits() != null).map(r -> r.getCredits()).reduce((x, y) -> x.add(y)).orElse(BigDecimal.ZERO).toBigInteger();
         }
         oppekavaOis.setPraktikaMaht(practice);
+        // empty element
+        OisOKSpetsialiseerumised specialities = new OisOKSpetsialiseerumised();
+        specialities.setOkSpetsialiseerumiseKood("");
+        oppekavaOis.getSpetsialiseerumised().add(specialities);
         oppekavaOis.setVastavusRiikOppekava(!higher && curriculum.getStateCurriculum() != null ? value(curriculum.getStateCurriculum().getStateCurrClass()) : null);
         if(Boolean.TRUE.equals(curriculum.getJoint())) {
             for(CurriculumJointPartner cjp : curriculum.getJointPartners()) {
@@ -146,11 +156,13 @@ public class EhisCurriculumService extends EhisService {
         if(curriculum.getOccupations().isEmpty()) {
             occupations.setPuudubKehtivKutsestandard(Integer.valueOf(1));
         } else {
+            boolean occupationStandard = false;
             for(CurriculumOccupation co : curriculum.getOccupations()) {
                 String occupationId = EntityUtil.getNullableCode(co.getOccupation());
                 if(occupationId != null) {
                     Matcher m = OCCUPATION_ID_PREFIX.matcher(occupationId);
                     if(m.matches()) {
+                        occupationStandard = true;
                         occupationId = value(co.getOccupation());
                         OisKutsestandard oisKutsestandard = new OisKutsestandard();
                         oisKutsestandard.setStandardReaId(new BigInteger(occupationId));
@@ -160,7 +172,8 @@ public class EhisCurriculumService extends EhisService {
                             oiskutseSpetsialiseerumine.setKutseSpetsialiseerumineReaId(new BigInteger(value(cos.getSpeciality())));
                             oisKutsestandard.getKutseSpetsialiseerumised().add(oiskutseSpetsialiseerumine);
                         }
-                        if(!higher) {
+                        if(!higher && false) {
+                            // XXX not used removed when confirmed
                             Set<String> partOccupationCodes = co.getOccupation().getChildConnects().stream().map(r -> EntityUtil.getCode(r.getClassifier())).collect(Collectors.toSet());
                             for(CurriculumOccupation cpo : curriculum.getOccupations()) {
                                 String partOccupationId = EntityUtil.getNullableCode(cpo.getOccupation());
@@ -176,6 +189,37 @@ public class EhisCurriculumService extends EhisService {
                             }
                         }
                         occupations.getKutsestandard().add(oisKutsestandard);
+                    }
+                }
+            }
+            if(!occupationStandard && !higher) {
+                // only partoccupations, determine occupations from partoccupations
+                Map<String, OisKutsestandard> occMap = new HashMap<>();
+                for(CurriculumOccupation cpo : curriculum.getOccupations()) {
+                    String partOccupationId = EntityUtil.getNullableCode(cpo.getOccupation());
+                    if(partOccupationId != null) {
+                        Matcher pm = PARTOCCUPATION_ID_PREFIX.matcher(partOccupationId);
+                        if(pm.matches()) {
+                            partOccupationId = value(cpo.getOccupation());
+                            OisOsakutse oisOsakutse = new OisOsakutse();
+                            oisOsakutse.setOsakutseReaId(new BigInteger(partOccupationId));
+                            // TODO find occupation
+                            Classifier occupation = cpo.getOccupation().getClassifierConnects().stream()
+                                    .filter(r -> MainClassCode.KUTSE.name().equals(r.getMainClassifierCode()))
+                                    .map(r -> r.getConnectClassifier()).findFirst().orElse(null);
+                            String occupationId = value(occupation);
+                            if(occupationId == null) {
+                                continue;
+                            }
+                            OisKutsestandard oisKutsestandard = occMap.get(occupationId);
+                            if(oisKutsestandard == null) {
+                                oisKutsestandard = new OisKutsestandard();
+                                oisKutsestandard.setStandardReaId(new BigInteger(occupationId));
+                                occupations.getKutsestandard().add(oisKutsestandard);
+                                occMap.put(occupationId, oisKutsestandard);
+                            }
+                            oisKutsestandard.getOsakutsed().add(oisOsakutse);
+                        }
                     }
                 }
             }
@@ -224,6 +268,12 @@ public class EhisCurriculumService extends EhisService {
         OppekavaStaatusOis oppekavaStaatusOis = new OppekavaStaatusOis();
         // FIXME why here string? Other places have as BigInteger
         String curriculumCode = curriculum.getMerCode();
+        BigInteger curriculumCodeNumber;
+        try {
+            curriculumCodeNumber = new BigInteger(curriculumCode);
+        } catch(@SuppressWarnings("unused") NumberFormatException e) {
+            throw new ValidationFailedException("curriculum.message.badEhisCode");
+        }
         oppekavaStaatusOis.setOppekavaKood(curriculumCode);
         // XXX create enum
         oppekavaStaatusOis.setOperatsioon("kontrollimine");
@@ -242,7 +292,7 @@ public class EhisCurriculumService extends EhisService {
 
         List<OisInfoteade> msgs = response.getResult();
         if(msgs != null && !msgs.isEmpty()) {
-            OisInfoteade msg = msgs.stream().filter(r -> r.getOppekavaKood() != null && r.getOppekavaKood().toString().equals(curriculumCode)).findFirst().orElse(null);
+            OisInfoteade msg = msgs.stream().filter(r -> r.getOppekavaKood() != null && curriculumCodeNumber.compareTo(r.getOppekavaKood()) == 0).findFirst().orElse(null);
             if(msg != null) {
                 if(BigInteger.ZERO.compareTo(msg.getVeakood()) != 0) {
                     throw new ValidationFailedException(msg.getTeade());

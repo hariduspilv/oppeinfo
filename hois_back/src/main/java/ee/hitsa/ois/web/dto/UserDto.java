@@ -1,12 +1,12 @@
 package ee.hitsa.ois.web.dto;
 
-import ee.hitsa.ois.domain.User;
-import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.commandobject.UserForm;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.web.commandobject.UserForm;
 
 public class UserDto extends UserForm {
 

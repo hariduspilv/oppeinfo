@@ -1,19 +1,6 @@
 package ee.hitsa.ois.enums;
 
 public enum PermissionObject {
-    
-    /**
-     * School administrator's permission
-     */
-    TEEMAOIGUS_A,
-    /**
-     * Student's permission
-     */
-    TEEMAOIGUS_T,
-    /**
-     * Main administrator's permission
-     */
-    TEEMAOIGUS_P,
 
     TEEMAOIGUS_AINE,
     TEEMAOIGUS_AINEOPPETAJA,
@@ -62,5 +49,6 @@ public enum PermissionObject {
     TEEMAOIGUS_TUNNIJAOTUSPLAAN,
     TEEMAOIGUS_TUNNIPLAAN,
     TEEMAOIGUS_VASTUVOTT,
+    TEEMAOIGUS_VOTA,
     TEEMAOIGUS_YLDTEADE
 }

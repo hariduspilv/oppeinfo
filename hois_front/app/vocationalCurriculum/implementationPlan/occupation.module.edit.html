@@ -17,15 +17,16 @@
           </div>
 
           <div ng-repeat="item in occupationModule.capacities | orderBy: 'nameEt' track by item.capacityType" layout="row" class="secondary-table-row">
-            <div flex="30">{{currentLanguageNameField(item)}}</div>
+            <div flex="30" class="occupation-module-capacity">{{currentLanguageNameField(item)}}</div>
             <div flex="30">
               <md-input-container flex>
                 <input ng-model="item.hours" type="number" min="0" max="999" pattern="^\d+$" aria-label="capacity hours" class="small-input"
-                  ng-readonly="hasThemesWithCapacities()" ng-required="item.contact">
+                  ng-readonly="hasThemes()" ng-required="item.contact">
               </md-input-container>
             </div>
             <div flex="40" layout="row">
-              <md-checkbox ng-model="item.contact" aria-label="capacity contact"></md-checkbox>
+              <md-checkbox ng-model="item.contact" aria-label="capacity contact" ng-disabled="hasThemes()"
+              class="occupation-module-capacity-contact"></md-checkbox>
             </div>
           </div>
         </fieldset>
@@ -104,11 +105,11 @@
       </div>
       <div>&nbsp;</div>
       <div flex>
-        <fieldset tabindex="3" ng-if="occupationModule.id">
+        <fieldset tabindex="3">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.themes' | translate}}</legend>
           <div layout="column">
             <div flex="10">
-              <md-button class="md-raised" ng-click="openAddThemeDialog()">{{'main.button.add' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="openAddThemeDialog()" ng-if="occupationModule.id">{{'main.button.add' | translate}}</md-button>
             </div>
             <div flex>
               <table md-table class="secondary-table">
@@ -124,13 +125,13 @@
                 <tbody md-body>
                   <tr md-row ng-repeat="theme in occupationModule.themes | orderBy: currentLanguageNameField()">
                     <td md-cell>
-                      <a class="md-primary" ng-click="openAddThemeDialog(theme)">{{currentLanguageNameField(theme)}}</a>
+                      <a class="md-primary one-row" ng-click="openAddThemeDialog(theme)">{{currentLanguageNameField(theme)}}</a>
                     </td>
                     <td md-cell>
                       {{theme.credits}}/{{theme.hours}}
                     </td>
                     <td md-cell>
-                      {{theme.subthemes}}
+                      <p class="scrollable">{{theme.subthemes}}</p>
                     </td>
                     <td md-cell>
                       {{theme.studyYearNumber}}

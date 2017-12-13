@@ -82,6 +82,11 @@
               <label>{{'teacher.isVocationalOrIsHigher' | translate}}</label>
               <hois-value value="vocationalHigher"></hois-value>
             </md-input-container>
+
+            <md-input-container flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
+              <label>{{'teacher.rtipNr' | translate}}</label>
+              <hois-value value="teacher.rtipNr"></hois-value>
+            </md-input-container>
           </div>
         </div>
       </div>
@@ -196,8 +201,14 @@
       <div ng-include="'teacher/teacher.mobility.view.html'"></div>
     </md-content>
   </md-tab>
+  <md-tab md-on-select="changeIsShowingRtipTab()" md-on-deselect="changeIsShowingRtipTab()" label="{{'teacher.rtipAbsence.label' | translate}}">
+    <md-content class="md-padding">
+      <div ng-include="'teacher/teacher.rtip.absence.view.html'"></div>
+    </md-content>
+  </md-tab>
 </md-tabs>
 <div layout="row" layout-margin ng-if="!auth.isTeacher()" >
-  <md-button ng-href="#/teachers/{{teacher.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+  <md-button ng-if="!isShowingRtipTab" ng-href="#/teachers/{{teacher.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+  <md-button ng-if="isShowingRtipTab" ng-click="updateData()" class="md-raised md-primary">{{'teacher.rtipAbsence.updateData' | translate}}</md-button>
   <md-button ng-click="back('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>

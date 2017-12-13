@@ -1,6 +1,7 @@
 package ee.hitsa.ois.domain.timetable;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -138,7 +139,7 @@ public class Journal extends BaseEntityWithId {
     }
 
     public Set<JournalStudent> getJournalStudents() {
-        return journalStudents;
+        return journalStudents != null ? journalStudents : (journalStudents = new HashSet<>());
     }
 
     public void setJournalStudents(Set<JournalStudent> journalStudents) {
@@ -146,7 +147,7 @@ public class Journal extends BaseEntityWithId {
     }
 
     public List<JournalOccupationModuleTheme> getJournalOccupationModuleThemes() {
-        return journalOccupationModuleThemes;
+        return journalOccupationModuleThemes != null ? journalOccupationModuleThemes : (journalOccupationModuleThemes = new ArrayList<>());
     }
 
     public void setJournalOccupationModuleThemes(List<JournalOccupationModuleTheme> journalOccupationModuleThemes) {

@@ -61,13 +61,13 @@ public class StateCurriculumController {
     private StateCurriculumValidationService stateCurriculumValidationService;
 
     @GetMapping("/print/{id:\\d+}/stateCurriculum.pdf")
-    public void print(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum, HttpServletResponse response) throws IOException {
+    public void print(HoisUserDetails user, @WithEntity StateCurriculum stateCurriculum, HttpServletResponse response) throws IOException {
         StateCurriculumValidationService.assertCanView(user, stateCurriculum);
         HttpUtil.pdf(response, EntityUtil.getId(stateCurriculum) + ".pdf", pdfService.generate(StateCurriculumReport.TEMPLATE_NAME, new StateCurriculumReport(stateCurriculum)));
     }
     
     @GetMapping("/{id:\\d+}")
-    public StateCurriculumDto get(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum) {
+    public StateCurriculumDto get(HoisUserDetails user, @WithEntity StateCurriculum stateCurriculum) {
         StateCurriculumValidationService.assertCanView(user, stateCurriculum);
         return stateCurriculumService.get(user, stateCurriculum);
     }
@@ -91,21 +91,20 @@ public class StateCurriculumController {
     public StateCurriculumDto create(HoisUserDetails user, @Valid @RequestBody StateCurriculumForm stateCurriculumForm) {
         StateCurriculumValidationService.assertCanCreate(user); 
         stateCurriculumValidationService.assertNameIsUnique(null, stateCurriculumForm);
-        return get(user, stateCurriculumService.create(stateCurriculumForm));
+        return get(user, stateCurriculumService.create(user, stateCurriculumForm));
     }
 
     @PutMapping("/{id:\\d+}")
-    public StateCurriculumDto save(HoisUserDetails user, @Valid @RequestBody StateCurriculumForm stateCurriculumForm, @WithEntity("id") StateCurriculum stateCurriculum) {
+    public StateCurriculumDto save(HoisUserDetails user, @Valid @RequestBody StateCurriculumForm stateCurriculumForm, @WithEntity StateCurriculum stateCurriculum) {
        StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
        stateCurriculumValidationService.assertNameIsUnique(stateCurriculum, stateCurriculumForm);
-       return get(user, stateCurriculumService.save(stateCurriculum, stateCurriculumForm));
+       return get(user, stateCurriculumService.save(user, stateCurriculum, stateCurriculumForm));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, 
-            @WithEntity("id") StateCurriculum stateCurriculum) {
+    public void delete(HoisUserDetails user, @WithEntity StateCurriculum stateCurriculum) {
         StateCurriculumValidationService.assertCanDelete(user, stateCurriculum);
-        stateCurriculumService.delete(stateCurriculum);
+        stateCurriculumService.delete(user, stateCurriculum);
     }
 
     @GetMapping("/unique")
@@ -129,41 +128,41 @@ public class StateCurriculumController {
     @PutMapping("/modules/{id:\\d+}")
     public StateCurriculumModuleDto updateModule(HoisUserDetails user, 
             @NotNull @Valid @RequestBody StateCurriculumModuleForm form, 
-            @WithEntity("id") StateCurriculumModule module) {
+            @WithEntity StateCurriculumModule module) {
         StateCurriculumValidationService.assertCanChange(user, module.getStateCurriculum());
-        return StateCurriculumModuleDto.of(stateCurriculumService.updateModule(module, form));
+        return StateCurriculumModuleDto.of(stateCurriculumService.updateModule(user, module, form));
     }
 
     @DeleteMapping("/modules/{id:\\d+}")
     public void deleteModule(HoisUserDetails user, 
-            @WithVersionedEntity(value = "id", versionRequestParam = "version") 
+            @WithVersionedEntity(versionRequestParam = "version") 
     StateCurriculumModule module, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         StateCurriculumValidationService.assertCanChange(user, module.getStateCurriculum());
-        stateCurriculumService.deleteModule(module);
+        stateCurriculumService.deleteModule(user, module);
     }
 
     @PutMapping("/close/{id:\\d+}")
-    public StateCurriculumDto close(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum) {
+    public StateCurriculumDto close(HoisUserDetails user, @WithEntity StateCurriculum stateCurriculum) {
         StateCurriculumValidationService.assertCanClose(user, stateCurriculum);
        return get(user, stateCurriculumService.setStatus(stateCurriculum, CurriculumStatus.OPPEKAVA_STAATUS_C));
     }
 
     @PutMapping("/closeAndSave/{id:\\d+}")
-    public StateCurriculumDto closeAndSave(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum,
+    public StateCurriculumDto closeAndSave(HoisUserDetails user, @WithEntity StateCurriculum stateCurriculum,
             @NotNull @Valid @RequestBody StateCurriculumForm form) {
        StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
        StateCurriculumValidationService.assertCanClose(user, stateCurriculum);
        stateCurriculumValidationService.assertNameIsUnique(stateCurriculum, form);
-       return get(user, stateCurriculumService.setStatusAndSave(stateCurriculum, form, CurriculumStatus.OPPEKAVA_STAATUS_C));
+       return get(user, stateCurriculumService.setStatusAndSave(user, stateCurriculum, form, CurriculumStatus.OPPEKAVA_STAATUS_C));
     }
     
     @PutMapping("/confirmAndSave/{id:\\d+}")
-    public StateCurriculumDto confirmAndSave(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum,
+    public StateCurriculumDto confirmAndSave(HoisUserDetails user, @WithEntity StateCurriculum stateCurriculum,
             @NotNull @Valid @RequestBody StateCurriculumForm form) {
        StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
        StateCurriculumValidationService.assertCanConfirm(user, stateCurriculum);
        stateCurriculumValidationService.validateStateCurriculumForm(form);
        stateCurriculumValidationService.assertNameIsUnique(stateCurriculum, form);
-       return get(user, stateCurriculumService.setStatusAndSave(stateCurriculum, form, CurriculumStatus.OPPEKAVA_STAATUS_K));
+       return get(user, stateCurriculumService.setStatusAndSave(user, stateCurriculum, form, CurriculumStatus.OPPEKAVA_STAATUS_K));
     }
 }

@@ -22,6 +22,7 @@ public class HttpUtil {
 
     private static final Pattern INVALID_FILENAME_SYMBOLS = Pattern.compile("[\\/:*?\"<>|]");
 
+    public static final NoContentResponse NO_CONTENT_RESPONSE = new NoContentResponse();
     public static final String APPLICATION_PDF = "application/pdf";
     public static final String APPLICATION_XML = "application/xml";
     public static final String APPLICATION_XLS = "application/vnd.ms-excel";
@@ -71,6 +72,12 @@ public class HttpUtil {
     public static class CreatedResponse extends ResponseEntity<Map<String, ?>> {
         public CreatedResponse(Long id) {
             super(Collections.singletonMap("id", id), HttpStatus.CREATED);
+        }
+    }
+
+    public static class NoContentResponse extends ResponseEntity<Void> {
+        public NoContentResponse() {
+            super(HttpStatus.NO_CONTENT);
         }
     }
 }

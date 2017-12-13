@@ -88,11 +88,19 @@ angular
     };
   });
 
-  $httpProvider.interceptors.push(function($q, $rootScope) {
+  $httpProvider.interceptors.push(function($q, $rootScope, $timeout) {
     var postMethods = ['POST', 'PUT', 'DELETE'];
     function showHideBusy(config, busy) {
       if(postMethods.indexOf(config.method) !== -1) {
-        $rootScope.$emit('backendBusy', {busy: busy});
+        function post() {
+          $rootScope.$emit('backendBusy', {busy: busy});
+        }
+        if(busy) {
+          post();
+        } else {
+          // delay hide to allow possible other requests set form busy again before trying to hide indicator
+          $timeout(post, 200);
+        }
       }
     }
 

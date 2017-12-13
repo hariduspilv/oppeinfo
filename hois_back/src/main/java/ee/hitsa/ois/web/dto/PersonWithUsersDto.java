@@ -1,13 +1,13 @@
 package ee.hitsa.ois.web.dto;
 
+import java.time.LocalDate;
+import java.util.Set;
+
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.PersonForm;
-
-import java.time.LocalDate;
-import java.util.Set;
 
 public class PersonWithUsersDto extends PersonForm {
     private Long id;

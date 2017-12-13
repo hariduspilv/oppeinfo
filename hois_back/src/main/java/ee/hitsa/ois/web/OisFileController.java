@@ -23,7 +23,7 @@ public class OisFileController {
      * higher/vocational curriculum forms
      */
     @GetMapping("/get/{id:\\d+}")
-    public void get(@WithEntity("id") OisFile oisFile, HttpServletResponse response) throws IOException {
+    public void get(@WithEntity OisFile oisFile, HttpServletResponse response) throws IOException {
         HttpUtil.file(response, oisFile.getFname(), oisFile.getFtype(), oisFile.getFdata());
     }
 }

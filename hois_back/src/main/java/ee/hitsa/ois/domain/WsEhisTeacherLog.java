@@ -1,13 +1,13 @@
 package ee.hitsa.ois.domain;
 
-import ee.hitsa.ois.domain.school.School;
-import ee.hitsa.ois.domain.teacher.Teacher;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.teacher.Teacher;
 
 @Entity
 public class WsEhisTeacherLog extends BaseLog {

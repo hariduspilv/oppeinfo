@@ -1,0 +1,176 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="stipendForm">
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipType' : 'stipend.grantType' | translate}}</label>
+          <hois-classifier-select ng-model="stipend.type" name="type" ng-change="stipendTypeChanged()" model-value-attr="code" main-classifier-code="STIPTOETUS"
+            ng-disabled="stipend.type" required show-only-values="formState.allowedStipendTypes"></hois-classifier-select>
+        </md-input-container>
+      </div>
+      <div ng-if="stipend.type">
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipName' : 'stipend.grantName' | translate}}</label>
+            <input type="text" ng-model="stipend.nameEt" name="nameEt" required md-maxlength="500">
+          </md-input-container>
+        </div>
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label class="textInput">{{'stipend.studyPeriod' | translate}}</label>
+            <hois-select required ng-model="stipend.studyPeriod" values="formState.studyPeriods"></hois-select>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+            <label>{{'stipend.applicationPeriod' | translate}}</label>
+            <input type="hidden">
+          </md-input-container>
+          <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+            <md-datepicker ng-required="required.applicationAndPaymentPeriod" ng-model="stipend.applicationStart" md-max-date="stipend.applicationEnd"
+              md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+            <md-datepicker ng-required="required.applicationAndPaymentPeriod" ng-model="stipend.applicationEnd" md-min-date="stipend.applicationStart"
+              md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+            <label>{{'stipend.paymentPeriod' | translate}}</label>
+            <input type="hidden">
+          </md-input-container>
+          <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+            <md-datepicker ng-required="required.applicationAndPaymentPeriod" ng-model="stipend.paymentStart" md-max-date="stipend.paymentEnd"
+              md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+            <md-datepicker ng-required="required.applicationAndPaymentPeriod" ng-model="stipend.paymentEnd" md-min-date="stipend.paymentStart"
+              md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+          </md-input-container>
+        </div>
+        <div layout="row" flex>
+          <md-input-container flex="45">
+            <label>{{'stipend.places' | translate}}</label>
+            <input ng-model="stipend.places" type="number" autofocus aria-label="places" min="0">
+          </md-input-container>
+          <md-input-container flex="50" flex-offset="5">
+            <label>{{'stipend.amountPaid' | translate}}</label>
+            <input ng-model="stipend.amountPaid" type="number" autofocus aria-label="amountPaid" min="0">
+          </md-input-container>
+        </div>
+        <div>
+          <div layout="row" flex="100">
+            <hois-autocomplete flex ng-model="formState.curriculum" method="curriculums" label="stipend.curriculums"></hois-autocomplete>
+          </div>
+          <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in stipend.curriculums">
+            <div layout="row" flex layout-align="start center">
+              <div flex="5">&nbsp;</div>
+              <div flex="50">{{curriculum.nameEt}}</div>
+              <div>
+                <a ng-click="deleteCurriculum(curriculum)" class="remove">&times;</a>
+              </div>
+            </div>
+          </div>
+          <div layout="row" flex>
+            <md-input-container flex="45" ng-if="display.studyLoad">
+              <label class="textInput">{{'stipend.studyLoad' | translate}}</label>
+              <hois-classifier-select required ng-model="stipend.studyLoads" name="type" model-value-attr="code" main-classifier-code="OPPEKOORMUS"
+                multiple></hois-classifier-select>
+            </md-input-container>
+            <md-input-container flex="45" ng-if="display.studyForm">
+              <label class="textInput">{{'stipend.studyForm' | translate}}</label>
+              <hois-classifier-select ng-required="required.studyForms" ng-model="stipend.studyForms" name="type" model-value-attr="code"
+                main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
+            </md-input-container>
+            <md-input-container flex="50" flex-offset="5">
+              <label class="textInput">{{'stipend.courses' | translate}}</label>
+              <hois-classifier-select ng-required="required.studyCourses" ng-model="stipend.courses" name="type" model-value-attr="code"
+                main-classifier-code="KURSUS" multiple></hois-classifier-select>
+            </md-input-container>
+          </div>
+          <div ng-if="display.avgPreviousCompletion">
+            <div layout="row" flex>
+              <md-input-container flex="45">
+                <label class="textInput">{{'stipend.averageMark' | translate}}</label>
+                <input ng-model="stipend.averageMark" type="number" autofocus aria-label="averageMark" min="0">
+              </md-input-container>
+              <md-input-container flex="50" flex-offset="5">
+                <label class="textInput">{{'stipend.priority' | translate}}</label>
+                <hois-classifier-select ng-model="stipend.averageMarkPriority" name="type" model-value-attr="code" main-classifier-code="PRIORITEET"></hois-classifier-select>
+              </md-input-container>
+            </div>
+            <div layout="row" flex>
+              <md-input-container flex="45">
+                <label class="textInput">{{'stipend.lastPeriodMark' | translate}}</label>
+                <input ng-model="stipend.lastPeriodMark" type="number" autofocus aria-label="averageMark" min="0">
+              </md-input-container>
+              <md-input-container flex="50" flex-offset="5">
+                <label class="textInput">{{'stipend.priority' | translate}}</label>
+                <hois-classifier-select ng-model="stipend.lastPeriodMarkPriority" name="type" model-value-attr="code" main-classifier-code="PRIORITEET"></hois-classifier-select>
+              </md-input-container>
+            </div>
+            <div layout="row" flex>
+              <md-input-container flex="45">
+                <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
+                <input ng-model="stipend.curriculumCompletion" type="number" autofocus aria-label="curriculumCompletion" min="0">
+              </md-input-container>
+              <md-input-container flex="50" flex-offset="5">
+                <label class="textInput">{{'stipend.priority' | translate}}</label>
+                <hois-classifier-select ng-model="stipend.curriculumCompletionPriority" name="type" model-value-attr="code" main-classifier-code="PRIORITEET"></hois-classifier-select>
+              </md-input-container>
+            </div>
+          </div>
+          <div layout="row" flex ng-if="display.maxAbsences">
+            <md-input-container flex="45">
+              <label class="textInput">{{'stipend.maxAbsences' | translate}}</label>
+              <input ng-model="stipend.maxAbsences" type="number" autofocus aria-label="maxAbsences" min="0">
+            </md-input-container>
+            <md-input-container flex="50" flex-offset="5">
+              <label class="textInput">{{'stipend.priority' | translate}}</label>
+              <hois-classifier-select ng-model="stipend.maxAbsencesPriority" name="type" model-value-attr="code" main-classifier-code="PRIORITEET"></hois-classifier-select>
+            </md-input-container>
+          </div>
+          <div layout="row">
+            <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'stipend.studyPeriodDates' | translate}}</label>
+              <input type="hidden">
+            </md-input-container>
+            <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+              <md-datepicker ng-required="required.matriculationStart" ng-model="stipend.studyStartPeriodStart" md-max-date="stipend.studyStartPeriodEnd"
+                md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+            </md-input-container>
+            <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+              <md-datepicker ng-required="required.matriculationStart" ng-model="stipend.studyStartPeriodEnd" md-min-date="stipend.studyStartPeriodStart"
+                md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+            </md-input-container>
+          </div>
+          <div layout="row" flex>
+            <md-checkbox ng-model="stipend.isAcademicLeave" aria-label="Is academic leave" ng-disabled="display.isAcademicLeaveRead"
+              flex="50">
+              {{'stipend.isAcademicLeave' | translate}}
+            </md-checkbox>
+            <md-checkbox ng-model="stipend.isTeacherConfirm" ng-if="display.isTeacherConfirm" aria-label="Is teache confir" ng-disabled="display.isTeacherConfirmRead"
+              flex="50">
+              {{'stipend.isTeacherConfirm' | translate}}
+            </md-checkbox>
+          </div>
+          <div layout="row">
+            <md-checkbox ng-model="stipend.isStudyBacklog" ng-if="display.isStudyBacklog" aria-label="Is study backlog" ng-disabled="display.isStudyBacklogRead"
+              flex="50">
+              {{'stipend.isStudyBacklog' | translate}}
+            </md-checkbox>
+            <md-checkbox ng-model="stipend.isFamilyIncomes" ng-if="display.isFamilyIncomes" aria-label="Is family incomes" flex="50">
+              {{'stipend.isFamilyIncomes' | translate}}
+            </md-checkbox>
+          </div>
+        </div>
+        <div layout="row">
+          <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="!stipend.isOpen" ng-click="publish()">{{'main.button.publish' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="back('#/scholarships/' + backString, stipendForm)">{{'main.button.back' | translate}}</md-button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

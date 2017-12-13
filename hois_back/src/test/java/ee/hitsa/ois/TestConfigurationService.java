@@ -58,6 +58,17 @@ public class TestConfigurationService {
 
     public void userToRoleInSchool(Role role, Long schoolId, TestRestTemplate restTemplate) {
         String userId = TestConfiguration.USER_ID;
+        User userWithRole = userWithRoleInSchool(userId, role, schoolId);
+        ResponseEntity<Object> userResponse = restTemplate.withBasicAuth(userId, "undefined").getForEntity("/user", null, Object.class);
+        setHeaders(userResponse);
+
+        if (getSessionCookie() != null && getXsrfCookie() != null) {
+            currentUser = userWithRole;
+            restTemplate.postForEntity("/changeUser", Collections.singletonMap("id", currentUser.getId()), Object.class);
+        }
+    }
+
+    public User userWithRoleInSchool(String userId, Role role, Long schoolId) {
         Person person = personRepository.findByIdcode(userId);
         if (person == null) {
             throw new UsernameNotFoundException("No person present with idcode : " + userId);
@@ -68,17 +79,10 @@ public class TestConfigurationService {
         qb.requiredCriteria("u.role.code = :role", "role", role);
         qb.optionalCriteria("u.school.id = :schoolId", "schoolId", schoolId);
         List<User> usersWithRole = qb.select(em).setMaxResults(1).getResultList();
-
         if (usersWithRole.isEmpty()) {
             throw new AssertionFailedException("Cannot find role " + role.name() + " for user " + userId);
         }
-        ResponseEntity<Object> userResponse = restTemplate.withBasicAuth(userId, "undefined").getForEntity("/user", null, Object.class);
-        setHeaders(userResponse);
-
-        if (getSessionCookie() != null && getXsrfCookie() != null) {
-            currentUser = usersWithRole.get(0);
-            restTemplate.postForEntity("/changeUser", Collections.singletonMap("id", currentUser.getId()), Object.class);
-        }
+        return usersWithRole.get(0);
     }
 
     public List<School> personSchools(Role role) {

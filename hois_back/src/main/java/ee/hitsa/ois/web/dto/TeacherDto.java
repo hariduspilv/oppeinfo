@@ -1,5 +1,9 @@
 package ee.hitsa.ois.web.dto;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -7,10 +11,6 @@ import ee.hitsa.ois.web.commandobject.teacher.TeacherContinuingEducationForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationForm;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
 
 public class TeacherDto extends TeacherForm {
 
@@ -71,4 +71,9 @@ public class TeacherDto extends TeacherForm {
     public void setTeacherMobility(Set<TeacherMobilityForm> teacherMobility) {
         this.teacherMobility = teacherMobility;
     }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
+    }
+    
 }

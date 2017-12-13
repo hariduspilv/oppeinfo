@@ -1,0 +1,48 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+
+  <div layout="column">
+    <form ng-submit="loadData()" novalidate>
+      <div layout="row" flex>
+        <md-input-container flex="20">
+          <label class="textInput">{{'stipend.grantType' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.type" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS" show-only-values="criteria.allowedStipendTypes"></hois-classifier-select>
+        </md-input-container>
+        <div layout="row" flex="20" flex-offset="5">
+          <hois-autocomplete flex ng-model="criteria.curriculum" method="curriculums" label="stipend.curriculum"></hois-autocomplete>
+        </div>
+        <md-input-container flex="20" flex-offset="5">
+          <label class="textInput">{{'stipend.courses' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.courses" name="type" model-value-attr="code" main-classifier-code="KURSUS" multiple></hois-classifier-select>
+        </md-input-container>
+        <div layout="row" flex="20" flex-offset="5">
+          <md-input-container flex>
+            <label class="textInput">{{'stipend.applicant' | translate}}</label>
+            <input type="text" ng-model="criteria.applicantName" name="nameEt" md-maxlength="500">
+          </md-input-container>
+        </div>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex="20">
+          <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipName' : 'stipend.grantName' | translate}}</label>
+          <input type="text" ng-model="criteria.nameEt" name="nameEt" md-maxlength="500">
+        </md-input-container>
+        <md-input-container flex="20" flex-offset="5">
+          <label class="textInput">{{'stipend.studyPeriod' | translate}}</label>
+          <hois-select ng-model="criteria.studyPeriod" values="studyPeriods"></hois-select>
+        </md-input-container>
+        <md-input-container flex="20" flex-offset="5">
+          <label class="textInput">{{'stipend.grantType' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.status" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS_STAATUS"></hois-classifier-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+      </div>
+    </form>
+
+    <br>
+  </div>
+</div>

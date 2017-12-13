@@ -25,12 +25,12 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
 @Transactional
 @Service
 public class SubjectStudyPeriodSearchService {
-    
-    private final String FROM = "from subject_study_period ssp " 
+
+    private static final String FROM = "from subject_study_period ssp "
             + "inner join subject s on s.id = ssp.subject_id "
             + "inner join study_period sp on ssp.study_period_id = sp.id ";
 
-    private final String SELECT = 
+    private static final String SELECT =
               "ssp.id as subjectStudyPeriodId, " 
             + "sp.name_et as spNameEt, sp.name_en as spNameEn, "
             + "s.id as subjectId, s.name_et as subNameEt, s.name_en as subNameEn, s.code, "
@@ -40,14 +40,14 @@ public class SubjectStudyPeriodSearchService {
             + "where ssp2.id = ssp.id ) as names, "
             + "(select count(*) from declaration_subject ds where ds.subject_study_period_id = ssp.id) as declared_students";
 
-    private final String FILTER_BY_TEACHER_NAME = "exists"
+    private static final String FILTER_BY_TEACHER_NAME = "exists"
             + "(select sspt.id " 
             + "from subject_study_period_teacher sspt "
             + "inner join teacher t on t.id = sspt.teacher_id " + "inner join person p on p.id = t.person_id "
             + "where upper(p.firstname || ' ' || p.lastname) like :teachersName "
             + "and sspt.subject_study_period_id = ssp.id)";
-    
-    private final String FILTER_BY_DECLARED_STUDENT_ID = "exists("
+
+    private static final String FILTER_BY_DECLARED_STUDENT_ID = "exists("
             + "select * "
             + "from subject_study_period ssp3 "
             + "left join declaration_subject ds on ds.subject_study_period_id = ssp3.id "
@@ -55,7 +55,7 @@ public class SubjectStudyPeriodSearchService {
             + "where d.student_id = :studentId "
             + "and ssp3.id = ssp.id)";
     
-    private final String FILTER_BY_TEACHER_ID = "exists "
+    private static final String FILTER_BY_TEACHER_ID = "exists "
             + "(select sspt.id " 
             + "from subject_study_period_teacher sspt "
             + "where "
@@ -84,7 +84,7 @@ public class SubjectStudyPeriodSearchService {
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, SELECT, em, pageable);
         return results.map(this::resultToDto);
     }
-    
+
     private SubjectStudyPeriodSearchDto resultToDto(Object r) {
         SubjectStudyPeriodSearchDto dto = new SubjectStudyPeriodSearchDto();
         dto.setId(resultAsLong(r, 0));
@@ -94,8 +94,8 @@ public class SubjectStudyPeriodSearchService {
         dto.setStudentsNumber(resultAsLong(r, 8));
         return dto;
     }
-    
-    private AutocompleteResult getSubject(Object r) {
+
+    private static AutocompleteResult getSubject(Object r) {
         Long id = resultAsLong(r, 3);
         String code = resultAsString(r, 6);
         String nameEtCode = resultAsString(r, 4) + "/" + code;
@@ -103,8 +103,8 @@ public class SubjectStudyPeriodSearchService {
         return new AutocompleteResult(id, nameEtCode,
                 nameEnCode);
     }
-    
-    private List<String> getTeachers(Object r) {
+
+    private static List<String> getTeachers(Object r) {
         String teachersNames = resultAsString(r, 7);
         if (teachersNames != null) {
             return Arrays.asList(teachersNames.split(";"));

@@ -83,27 +83,30 @@ public class CurriculumController {
     private SchoolService schoolService;
 
     @GetMapping("/{id:\\d+}")
-    public CurriculumDto get(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
+    public CurriculumDto get(HoisUserDetails user, @WithEntity Curriculum curriculum) {
         CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         return curriculumService.get(user, curriculum);
     }
 
     @GetMapping("/xml/{id:\\d+}/curriculum.xml")
-    public void curriculumXml(@WithEntity("id") Curriculum curriculum, HttpServletResponse response)
+    public void curriculumXml(HoisUserDetails user, @WithEntity Curriculum curriculum, HttpServletResponse response)
             throws IOException, JAXBException {
+        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         HttpUtil.xml(response, curriculum.getCode() + ".xml",
                 xmlService.generateFromObject(CurriculumXml.of(curriculum)));
     }
     
     @GetMapping("/xml/{id:\\d+}/curriculum.version.xml")
-    public void curriculumVersionXml(@WithEntity("id") CurriculumVersion curriculumVersion, HttpServletResponse response)
+    public void curriculumVersionXml(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion, HttpServletResponse response)
             throws IOException, JAXBException {
+        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
         HttpUtil.xml(response, curriculumVersion.getCode() + ".xml",
                 xmlService.generateFromObject(CurriculumVersionXml.get(curriculumVersion)));
     }
 
     @GetMapping("/print/{id:\\d+}/curriculum.pdf")
-    public void print(@WithEntity("id") CurriculumVersion curriculumVersion, HttpServletResponse response) throws IOException {
+    public void print(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion, HttpServletResponse response) throws IOException {
+        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
         HttpUtil.pdf(response, curriculumVersion.getCode() + ".pdf",
                 pdfService.generate(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculumVersion)));
     }
@@ -125,7 +128,7 @@ public class CurriculumController {
     }
     
     @PutMapping("/copy/curriculum/{id:\\d+}")
-    public CurriculumDto copyCurriculum(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
+    public CurriculumDto copyCurriculum(HoisUserDetails user, @WithEntity Curriculum curriculum) {
         CurriculumUtil.assertCanCreate(user);
         return CurriculumDto.onlyId(curriculumCopyService.copyCurriculum(user, curriculum));
     }
@@ -138,24 +141,24 @@ public class CurriculumController {
 
     @PutMapping("/{id:\\d+}")
     public CurriculumDto save(HoisUserDetails user, @NotNull @Valid @RequestBody CurriculumForm curriculumForm,
-            @WithEntity("id") Curriculum curriculum) {
+            @WithEntity Curriculum curriculum) {
         CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
 
         curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
         curriculumValidationService.validateCurriculumFormWithStatusCheck(curriculum, curriculumForm);
         curriculumValidationService.assertCodeAndMerCodeAreUnique(user, curriculumForm, curriculum);
 
-        return get(user, curriculumService.save(curriculum, curriculumForm));
+        return get(user, curriculumService.save(user, curriculum, curriculumForm));
     }
 
     @PutMapping("/close/{id:\\d+}")
-    public CurriculumDto closeCurriculum(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
+    public CurriculumDto closeCurriculum(HoisUserDetails user, @WithEntity Curriculum curriculum) {
         CurriculumUtil.assertCanClose(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         return get(user, curriculumService.closeCurriculum(curriculum));
     }
 
     @PutMapping("/saveAndProceed/{id:\\d+}")
-    public CurriculumDto saveAndProceedCurriculum(HoisUserDetails user, @WithEntity("id") Curriculum curriculum,
+    public CurriculumDto saveAndProceedCurriculum(HoisUserDetails user, @WithEntity Curriculum curriculum,
             @NotNull @Valid @RequestBody CurriculumForm curriculumForm) {
 
         String myEhisSchool = schoolService.getEhisSchool(user.getSchoolId());
@@ -166,11 +169,11 @@ public class CurriculumController {
         curriculumValidationService.validateCurriculumForm(curriculum, curriculumForm);
         curriculumValidationService.assertCodeAndMerCodeAreUnique(user, curriculumForm, curriculum);
 
-        return get(user, curriculumService.saveAndProceedCurriculum(curriculum, curriculumForm));
+        return get(user, curriculumService.saveAndProceedCurriculum(user, curriculum, curriculumForm));
     }
 
     @PutMapping("/sendToEhis/{id:\\d+}")
-    public CurriculumDto sendToEhis(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
+    public CurriculumDto sendToEhis(HoisUserDetails user, @WithEntity Curriculum curriculum) {
         
         CurriculumUtil.assertCanConfirm(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         curriculumValidationService.validateCurriculum(curriculum);
@@ -179,7 +182,7 @@ public class CurriculumController {
     }
 
     @PutMapping("/updateFromEhis/{id:\\d+}")
-    public CurriculumDto updateFromEhis(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
+    public CurriculumDto updateFromEhis(HoisUserDetails user, @WithEntity Curriculum curriculum) {
 
         CurriculumUtil.assertCanConfirm(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         curriculumValidationService.validateCurriculum(curriculum);
@@ -198,12 +201,11 @@ public class CurriculumController {
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
-        
+    public void delete(HoisUserDetails user, @WithEntity Curriculum curriculum) {
         CurriculumUtil.assertCanDelete(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         curriculumValidationService.assertCurriculumCanBeDeleted(curriculum);
 
-        curriculumService.delete(curriculum);
+        curriculumService.delete(user, curriculum);
     }
 
     @GetMapping("/areasOfStudyByGroupOfStudy/{code}")
@@ -224,7 +226,7 @@ public class CurriculumController {
     @PutMapping("/{curriculumId:\\d+}/grade/{id:\\d+}")
     public CurriculumGradeDto updateCurriculumGrade(HoisUserDetails user,
             @NotNull @Valid @RequestBody CurriculumGradeDto form, @WithEntity("curriculumId") Curriculum curriculum,
-            @WithEntity("id") CurriculumGrade grade) {
+            @WithEntity CurriculumGrade grade) {
         
         CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
@@ -234,13 +236,13 @@ public class CurriculumController {
 
     @DeleteMapping("/{curriculumId:\\d+}/grade/{id:\\d+}")
     public void deleteCurriculumGrade(HoisUserDetails user, @WithEntity("curriculumId") Curriculum curriculum,
-            @WithVersionedEntity(value = "id", versionRequestParam = "version") CurriculumGrade grade,
+            @WithVersionedEntity(versionRequestParam = "version") CurriculumGrade grade,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        
+
         CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
-        
-        curriculumService.deleteCurriculumGrade(grade);
+
+        curriculumService.deleteCurriculumGrade(user, grade);
     }
 
     @PostMapping("/{curriculumId:\\d+}/file")
@@ -260,8 +262,8 @@ public class CurriculumController {
 
         CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
-        
-        curriculumService.deleteCurriculumFile(curriculumFile);
+
+        curriculumService.deleteCurriculumFile(user, curriculumFile);
     }
 
     @PostMapping("/{curriculumId:\\d+}/speciality")
@@ -277,7 +279,7 @@ public class CurriculumController {
 
     @PutMapping("/{curriculumId:\\d+}/speciality/{id:\\d+}")
     public CurriculumSpecialityDto updateCurriculumSpeciality(HoisUserDetails user,
-            @NotNull @Valid @RequestBody CurriculumSpecialityDto dto, @WithEntity("id") CurriculumSpeciality speciality,
+            @NotNull @Valid @RequestBody CurriculumSpecialityDto dto, @WithEntity CurriculumSpeciality speciality,
             @WithEntity("curriculumId") Curriculum curriculum) {
         
         CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
@@ -287,19 +289,31 @@ public class CurriculumController {
     }
 
     @DeleteMapping("/{curriculumId:\\d+}/speciality/{id:\\d+}")
-    public void deleteCurriculumSpeciality(HoisUserDetails user, @WithEntity("id") CurriculumSpeciality speciality,
+    public void deleteCurriculumSpeciality(HoisUserDetails user, @WithEntity CurriculumSpeciality speciality,
             @WithEntity("curriculumId") Curriculum curriculum) {
 
         CurriculumUtil.assertCanChange(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
 
-        curriculumService.deleteCurriculumSpeciality(speciality);
+        curriculumService.deleteCurriculumSpeciality(user, speciality);
     }
 
+    /**
+     * Getting school departments on initial page load on new curriculum form 
+     * and on changing joint partners
+     */
     @GetMapping("/schoolDepartments")
     public List<AutocompleteResult> getSchoolDepartments(HoisUserDetails user, @Valid CurriculumSchoolDepartmentCommand command) {
         AssertionFailedException.throwIf(user.getSchoolId() == null && command.getCurriculum() == null, "no school and curriculum!");
         return curriculumService.getSchoolDepartments(user.getSchoolId(), command);
+    }
+    
+    /**
+     * Getting school departments on initial page load
+     */
+    @GetMapping("/schoolDepartments/{curriculumId:\\d+}")
+    public List<AutocompleteResult> getSchoolDepartments(@WithEntity("curriculumId") Curriculum curriculum) {
+        return curriculumService.getSchoolDepartments(curriculum);
     }
 
     @GetMapping("/studyLevels")

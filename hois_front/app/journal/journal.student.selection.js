@@ -20,7 +20,20 @@ angular.module('hitsaOis').controller('JournalStudentSelectionController', funct
   $scope.searchStudent = function() {
     dialogService.showDialog('journal/journal.searchStudent.dialog.html', function(dialogScope) {
       dialogScope.selectedStudents = [];
-      QueryUtils.createQueryForm(dialogScope, '/journals/' + entity.id + '/otherStudents', {});
+
+      // code below required for not querying for students already present on the form,
+      // thus avoiding double adding of the same student to the journal
+      var students = [];
+      if($scope.tabledata.content) {
+        students = $scope.tabledata.content.map(function(s){
+          return s.studentId;
+        });
+      }
+      $route.current.params._menu = true;
+
+      QueryUtils.createQueryForm(dialogScope, '/journals/' + entity.id + '/otherStudents', {
+        studentId: students
+      });
       dialogScope.loadData();
     }, function(submittedDialogScope) {
       submittedDialogScope.tabledata.content.forEach(function(it) {

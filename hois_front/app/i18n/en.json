@@ -39,6 +39,24 @@
     "of": "of",
     "logIn": "Log in",
     "logOut": "Log out",
+    "login": {
+      "user": {
+        "title": "User",
+        "school": "School",
+        "username": "Username",
+        "password": "Password"
+      },
+      "idcard": {
+        "title": "ID-card"
+      },
+      "mobileid": {
+        "title": "Mobile-ID",
+        "mobilenumber": "Mobile number",
+        "notMobileIdUser": "This number is not Mobile-ID user",
+        "instructions": "Please check the number on your phone screen to be same as below."
+      },
+      "error": "There was a problem logging in"
+    },
     "menu":{
       "curriculum": {
         "label": "Curricula"

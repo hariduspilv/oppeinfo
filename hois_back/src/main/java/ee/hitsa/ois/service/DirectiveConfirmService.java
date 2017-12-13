@@ -1,13 +1,11 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.enums.DirectiveType.*;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -51,6 +49,7 @@ import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.HoisException;
+import ee.hitsa.ois.message.AcademicLeaveEnding;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -61,6 +60,8 @@ import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
+import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForField;
 
 @Transactional
 @Service
@@ -79,6 +80,8 @@ public class DirectiveConfirmService {
     @Autowired
     private EmailGeneratorService emailGeneratorService;
     @Autowired
+    private MessageTemplateService messageTemplateService;
+    @Autowired
     private StudentService studentService;
     @Autowired
     private UserService userService;
@@ -89,12 +92,12 @@ public class DirectiveConfirmService {
         AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus()), "Invalid directive status");
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
-        List<Map.Entry<String, String>> allErrors = new ArrayList<>();
+        List<Error> allErrors = new ArrayList<>();
         if(directive.getDirectiveCoordinator() == null) {
-            allErrors.add(new AbstractMap.SimpleImmutableEntry<>("directiveCoordinator", "NotNull"));
+            allErrors.add(new ErrorForField("NotNull", "directiveCoordinator"));
         }
         if(directive.getStudents().isEmpty()) {
-            allErrors.add(new AbstractMap.SimpleImmutableEntry<>(null, "directive.missingstudents"));
+            allErrors.add(new Error("directive.missingstudents"));
         }
         Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
         Set<Long> changedStudents = DirectiveType.KASKKIRI_TYHIST.equals(directiveType) ? new HashSet<>(directiveService.changedStudentsForCancel(directive.getCanceledDirective())) : Collections.emptySet();
@@ -105,7 +108,7 @@ public class DirectiveConfirmService {
                 Set<ConstraintViolation<DirectiveStudent>> errors = validator.validate(ds, directiveType.validationGroup());
                 if(!errors.isEmpty()) {
                     for(ConstraintViolation<DirectiveStudent> e : errors) {
-                        allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, e.getPropertyPath().toString()), e.getMessage()));
+                        allErrors.add(new ErrorForField(e.getMessage(), propertyPath(rowNum, e.getPropertyPath().toString())));
                     }
                 }
             }
@@ -116,30 +119,32 @@ public class DirectiveConfirmService {
                 DirectiveStudent academicLeave = academicLeaves.get(EntityUtil.getId(ds.getStudent()));
                 LocalDate leaveCancel = ds.getStartDate();
                 if(academicLeave == null || leaveCancel.isBefore(DateUtils.periodStart(academicLeave)) || leaveCancel.isAfter(DateUtils.periodEnd(academicLeave))) {
-                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "startDate"), "InvalidValue"));
+                    allErrors.add(new ErrorForField("InvalidValue", propertyPath(rowNum, "startDate")));
                 }
             } else if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType)) {
                 // check by hand because for immatv it's filled automatically after directive confirmation
                 if(ds.getNominalStudyEnd() == null) {
-                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "nominalStudyEnd"), "NotNull"));
+                    allErrors.add(new ErrorForField("NotNull", propertyPath(rowNum, "nominalStudyEnd")));
                 }
                 // check by hand because it is required only in higher study
                 if(ds.getStudyLoad() == null && ds.getCurriculumVersion() != null && CurriculumUtil.isHigher(ds.getCurriculumVersion().getCurriculum())) {
-                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "studyLoad"), "NotNull"));
+                    allErrors.add(new ErrorForField("NotNull", propertyPath(rowNum, "studyLoad")));
                 }
             } else if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
                 // check that it's last modification of student
                 if(changedStudents.contains(EntityUtil.getId(ds.getStudent()))) {
-                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "fullname"), "StudentChanged"));
+                    allErrors.add(new ErrorForField("StudentChanged", propertyPath(rowNum, "fullname")));
                 }
             } else if(DirectiveType.KASKKIRI_VALIS.equals(directiveType)) {
                 boolean isAbroad = Boolean.TRUE.equals(ds.getIsAbroad());
                 if(isAbroad ? !StringUtils.hasText(ds.getAbroadSchool()) : ds.getEhisSchool() == null) {
-                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, isAbroad ? "abroadSchool" : "ehisSchool"), "NotNull"));
+                    allErrors.add(new ErrorForField("NotNull", propertyPath(rowNum, isAbroad ? "abroadSchool" : "ehisSchool")));
                 }
             }
             rowNum++;
         }
+
+        checkAutomaticMessageTemplates(directiveType, directive.getSchool(), allErrors);
 
         if(!allErrors.isEmpty()) {
             throw new ValidationFailedException(allErrors);
@@ -199,7 +204,7 @@ public class DirectiveConfirmService {
         directive.setConfirmer(confirmer);
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
-        if(KASKKIRI_TYHIST.equals(directiveType)) {
+        if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
             cancelDirective(directive);
         } else {
             Classifier studentStatus = directiveType.studentStatus() != null ? em.getReference(Classifier.class, directiveType.studentStatus().name()) : null;
@@ -243,15 +248,30 @@ public class DirectiveConfirmService {
             if(q.setMaxResults(1).getResultList().isEmpty()) {
                 // no canceled, update status
                 Student student = em.getReference(Student.class, studentId);
-                student.setStatus(em.getReference(Classifier.class, newStatus.name()));
-                studentService.saveWithHistory(student);
+                if(!ClassifierUtil.equals(newStatus, student.getStatus())) {
+                    student.setStatus(em.getReference(Classifier.class, newStatus.name()));
+                    studentService.saveWithHistory(student);
+                }
             }
+        }
+    }
+
+    public void sendAcademicLeaveEndingMessage(Job job) {
+        Long studentId = EntityUtil.getId(job.getStudent());
+        Long directiveId = EntityUtil.getId(job.getDirective());
+
+        List<DirectiveStudent> data = em.createQuery("select ds from DirectiveStudent ds where ds.student.id = ?1 and ds.directive.id = ?2 and ds.canceled = false", DirectiveStudent.class)
+            .setParameter(1, studentId).setParameter(2, directiveId).setMaxResults(1).getResultList();
+        if(!data.isEmpty()) {
+            DirectiveStudent directiveStudent = data.get(0);
+            AcademicLeaveEnding message = new AcademicLeaveEnding(directiveStudent);
+            automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_AP_LOPP, directiveStudent.getStudent(), message);
         }
     }
 
     private void updateStudentData(DirectiveType directiveType, DirectiveStudent directiveStudent, Classifier studentStatus, DirectiveStudent academicLeave) {
         Student student = directiveStudent.getStudent();
-        if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_IMMATV.equals(directiveType)) {
+        if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
             student = createStudent(directiveStudent);
         }
 
@@ -304,7 +324,7 @@ public class DirectiveConfirmService {
         }
 
         student = studentService.saveWithHistory(student);
-        if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_IMMATV.equals(directiveType)) {
+        if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
             // store reference to created student also into directive_student
             directiveStudent.setStudent(student);
             directiveStudent.setStudentHistory(student.getStudentHistory());
@@ -326,7 +346,7 @@ public class DirectiveConfirmService {
             Student student = ds.getStudent();
             DirectiveStudent cancelds = includedStudents.get(student.getId());
             if(cancelds != null) {
-                if(KASKKIRI_IMMAT.equals(canceledDirectiveType) || KASKKIRI_IMMATV.equals(canceledDirectiveType)) {
+                if(DirectiveType.KASKKIRI_IMMAT.equals(canceledDirectiveType) || DirectiveType.KASKKIRI_IMMATV.equals(canceledDirectiveType)) {
                     // undo create student. Logic similar to EKSMAT
                     student.setStudyEnd(confirmDate);
                     student.setStatus(em.getReference(Classifier.class, StudentStatus.OPPURSTAATUS_K.name()));
@@ -442,6 +462,32 @@ public class DirectiveConfirmService {
         // new role for student
         userService.enableUser(student, directiveStudent.getDirective().getConfirmDate());
         return student;
+    }
+
+    /**
+     * Check for automatic message templates existence
+     *
+     * @param directiveType
+     * @param school
+     * @param allErrors
+     */
+    private void checkAutomaticMessageTemplates(DirectiveType directiveType, School school, List<Error> allErrors) {
+        if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
+            return;
+        }
+        // for all other than KASKKIRI_TYHIST TEATE_LIIK_UUS_KK
+        requireValidTemplate(MessageType.TEATE_LIIK_UUS_KK, school, allErrors);
+        if(DirectiveType.KASKKIRI_AKAD.equals(directiveType) || DirectiveType.KASKKIRI_AKADK.equals(directiveType)) {
+            // for akad and akadk also send TEATE_LIIK_AP_LOPP
+            requireValidTemplate(MessageType.TEATE_LIIK_AP_LOPP, school, allErrors);
+        }
+    }
+
+    private void requireValidTemplate(MessageType type, School school, List<Error> allErrors) {
+        if(messageTemplateService.findValidTemplate(type, EntityUtil.getId(school), false) == null) {
+            allErrors.add(new Error("main.messages.error.configuration.missingAutomaticMessageTemplate",
+                    Collections.singletonMap("template", em.getReference(Classifier.class, type.name()).getNameEt())));
+        }
     }
 
     private static void copyDirectiveProperties(DirectiveType directiveType, Object source, Student student) {

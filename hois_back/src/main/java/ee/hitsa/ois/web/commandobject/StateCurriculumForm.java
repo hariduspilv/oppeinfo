@@ -61,7 +61,7 @@ public class StateCurriculumForm extends VersionedCommand {
     private String description;
     @Size(max=4000)
     private String riigiteatajaUrl;
-    @Size(max=20000)
+    @Size(max=4000)
     private String finalExamDescription;
 
     @NotNull

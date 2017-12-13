@@ -46,6 +46,7 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.LessonPlanModuleRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -88,7 +89,7 @@ public class ModuleProtocolService {
         qb.filter("p.is_vocational = true");
         qb.requiredCriteria("p.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria(
-                "exists (select protocol_id from protocol_vdata pvd where pvd.study_year_id = :studyYearId)",
+                "exists (select protocol_id from protocol_vdata pvd where pvd.protocol_id = p.id and pvd.study_year_id = :studyYearId)",
                 "studyYearId", cmd.getStudyYear());
         qb.optionalCriteria(
                 "exists (select protocol_id from protocol_student ps "
@@ -110,8 +111,8 @@ public class ModuleProtocolService {
                 "module", cmd.getModule());
         qb.optionalCriteria("p.status_code = :statusCode", "statusCode", cmd.getStatus());
         qb.optionalCriteria("p.protocol_nr = :protocolNr", "protocolNr", cmd.getProtocolNr());
-        qb.optionalCriteria("p.inserted > :from", "from", cmd.getInsertedFrom());
-        qb.optionalCriteria("p.inserted < :thru", "thru", cmd.getInsertedThru());
+        qb.optionalCriteria("p.inserted >= :from", "from", cmd.getInsertedFrom(), DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("p.inserted <= :thru", "thru", cmd.getInsertedThru(), DateUtils::lastMomentOfDay);
         qb.optionalCriteria("p.confirm_date > :from", "from", cmd.getConfirmDateFrom());
         qb.optionalCriteria("p.confirm_date < :thru", "thru", cmd.getConfirmDateThru());
 
@@ -372,8 +373,15 @@ public class ModuleProtocolService {
                 log.warn("student {} is already added to protocol {}", moduleProtocolStudentForm.getStudentId(),
                         protocol.getId());
             } else {
-                protocol.getProtocolStudents()
-                        .add(new ProtocolStudent(em.getReference(Student.class, moduleProtocolStudentForm.getStudentId())));
+                ProtocolStudent ps = new ProtocolStudent(em.getReference(Student.class, moduleProtocolStudentForm.getStudentId()));
+                ps.setProtocol(protocol);
+              protocol.getProtocolStudents().add(ps);
+                
+              /*
+               * Code below caused a system error in method ModuleProtocolStudentDto.of() (protocolStudent.protocol was null) 
+               */
+//                protocol.getProtocolStudents()
+//                        .add(new ProtocolStudent(em.getReference(Student.class, moduleProtocolStudentForm.getStudentId())));
             }
         }
         return EntityUtil.save(protocol, em);

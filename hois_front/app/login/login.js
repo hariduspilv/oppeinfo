@@ -1,7 +1,9 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('LoginController', function (message, $rootScope, $scope, AuthService, AUTH_EVENTS, $location, config, $mdDialog) {
+  .controller('LoginController', function (message, $rootScope, $scope, AuthService, AUTH_EVENTS, $location, config, $mdDialog, $timeout) {
+
+    var NOT_MOBILE_ID_USER_ERROR = 301;
 
     function setLoggedInVisuals(authenticatedUser) {
       if (angular.isObject(authenticatedUser) && angular.isObject(authenticatedUser.school)) {
@@ -22,12 +24,13 @@ angular.module('hitsaOis')
     };
 
     function successfulAuthentication(authenticatedUser) {
+      if ($scope.hideDialog) {
+        $mdDialog.hide();
+      }
       if (authenticatedUser) {
         $rootScope.$broadcast(AUTH_EVENTS.loginSuccess);
         $rootScope.setCurrentUser(authenticatedUser);
         setLoggedInVisuals(authenticatedUser);
-        $scope.error = false;
-        $mdDialog.hide();
       } else {
         $rootScope.setCurrentUser(null);
         setLoggedInVisuals(null);
@@ -36,43 +39,61 @@ angular.module('hitsaOis')
     }
 
     function failedAuthentication() {
-      $scope.error = true;
       $rootScope.$broadcast(AUTH_EVENTS.loginFailed);
       $location.path("/");
+      message.error('main.login.error');
     }
 
+    function successfulMobileId(response) {
+      $scope.jwt = response.jwt;
+      if (response.data.errorCode === NOT_MOBILE_ID_USER_ERROR) {
+        failedAuthentication();
+        $scope.showMessage('main.login.mobileid.notMobileIdUser');
+      } else if (response.data.errorCode) {
+        failedAuthentication();
+      } else if (response.data.challengeID) {
+        $scope.showMobileId(response.data.challengeID);
+        $timeout(pollMobileIdStatus, 5000);
+      } else {
+        failedAuthentication();
+      }
+    }
+
+    function successfulMobileIdStatus(response) {
+      if (response.status === 'USER_AUTHENTICATED') {
+        AuthService.login().then(successfulAuthentication, failedAuthentication);
+      } else if (response.status === 'OUTSTANDING_TRANSACTION') {
+        $timeout(pollMobileIdStatus, 4000);
+      } else {
+        console.log('mobileIdStatus: '+response.status);
+        $mdDialog.hide();
+        failedAuthentication();
+      }
+    }
+
+    function pollMobileIdStatus() {
+      AuthService.pollMobileIdStatus($scope.jwt).then(successfulMobileIdStatus, failedAuthentication);
+    }
+    
     var authenticate = function(credentials) {
-      var headers = credentials ? {authorization : "Basic " +
-        btoa(credentials.username + ":" + "undefined")
-        } : {};
-      AuthService.login(headers).then(successfulAuthentication, failedAuthentication);
-    };
-
-    var authenticateIdCard = function() {
-      AuthService.loginIdCard().then(successfulAuthentication, failedAuthentication);
-    };
-
-    var showAlert = function () {
-      authenticate();
-      if (!AuthService.isAuthorized) {
-        message.error('no-auth');
+      if (credentials && credentials.school && credentials.password) {
+        $scope.hideDialog = false;
+        AuthService.loginLdap(credentials).then(successfulAuthentication, failedAuthentication);
       }
     };
 
+    var authenticateIdCard = function() {
+      $scope.hideDialog = true;
+      AuthService.loginIdCard().then(successfulAuthentication, failedAuthentication);
+    };
+
+    var authenticateMobileId = function(mobilenumber) {
+      AuthService.loginMobileId(mobilenumber).then(successfulMobileId, failedAuthentication);
+    };
+
     authenticate();
-    $scope.credentials = {};
 
-    $rootScope.$on(AUTH_EVENTS.notAuthenticated, showAlert);
-    $rootScope.$on(AUTH_EVENTS.notAuthorized, showAlert);
     $rootScope.$on(AUTH_EVENTS.reAuthenticate, function () { authenticate(); });
-
-    $scope.login = function () {
-      authenticate($scope.credentials);
-    };
-
-    $scope.idlogin = function () {
-      authenticateIdCard();
-    };
 
     $scope.logout = function() {
       AuthService.logout().finally(function() {
@@ -96,11 +117,58 @@ angular.module('hitsaOis')
     };
 
     $scope.showLogin = function () {
-      $scope.error = false;
       $mdDialog.show({
-        controller: function () { this.parent = $scope; },
-        controllerAs: 'ctrl',
+        controller: function ($scope, School) {
+          School.getLdap().$promise.then(function (schools) {
+            $scope.schools = schools;
+            $scope.schools.sort(function (a, b) {
+              return $rootScope.currentLanguageNameField(a).localeCompare($rootScope.currentLanguageNameField(b));
+            });
+          });
+          $scope.credentials = {};
+          $scope.mobilenumber = '372';
+          $scope.cancel = function() {
+            $mdDialog.hide();
+          };
+          $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
+          $scope.login = function () {
+            $scope.userLoginForm.$setSubmitted();
+            if ($scope.userLoginForm.$valid && $scope.credentials.username) {
+              authenticate($scope.credentials);
+            }
+          };
+          $scope.idlogin = function () {
+            authenticateIdCard();
+          };
+          $scope.mIdLogin = function () {
+            if ($scope.mobilenumber) {
+              authenticateMobileId($scope.mobilenumber);
+            }
+          };
+        },
         templateUrl: 'login/login.dialog.html',
+        parent: angular.element(document.body),
+        clickOutsideToClose: true
+      });
+    };
+
+    $scope.showMobileId = function (challengeID) {
+      $mdDialog.show({
+        controller: function ($scope) {
+          $scope.challengeID = challengeID;
+        },
+        templateUrl: 'login/m-id.login.dialog.html',
+        parent: angular.element(document.body),
+        clickOutsideToClose: false
+      });
+    };
+
+    $scope.showMessage = function (message) {
+      $mdDialog.show({
+        controller: function ($scope) {
+          $scope.message = message;
+        },
+        templateUrl: 'login/message.login.dialog.html',
         parent: angular.element(document.body),
         clickOutsideToClose: true
       });

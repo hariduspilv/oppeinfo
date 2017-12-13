@@ -51,7 +51,7 @@ public class JournalStudent extends BaseEntityWithId {
     }
 
     public Set<JournalEntryStudent> getJournalEntryStudents() {
-        return journalEntryStudents;
+        return journalEntryStudents != null ? journalEntryStudents : (journalEntryStudents = new HashSet<>());
     }
 
     public void setJournalEntryStudents(Set<JournalEntryStudent> journalEntryStudents) {

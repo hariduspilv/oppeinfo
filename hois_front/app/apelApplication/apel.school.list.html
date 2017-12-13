@@ -1,0 +1,64 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="loadData()" novalidate>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'apel.apelSchool.schoolNameEt' | translate}}</label>
+            <input ng-model="criteria.name" name="name" type="text" autofocus>
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'apel.apelSchool.country' | translate}}</label>
+            <hois-classifier-select multiple ng-model="criteria.country" main-classifier-code="RIIK" model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-href="#/apelSchools/new">{{'main.button.create' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column>{{'apel.apelSchool.schoolNameEt' | translate}}</th>
+            <th md-column>{{'apel.apelSchool.schoolNameEn' | translate}}</th>
+            <th md-column>{{'apel.apelSchool.country' | translate}}</th>
+            <th md-column>{{'apel.apelSchool.schoolEHIS' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{row.nameEt}}</td>
+            <td md-cell>{{row.nameEn}}</td>
+            <td md-cell>
+              <hois-classifier-value ng-model="row.country" main-classifier-code="RIIK"></hois-classifier-value>
+            </td>
+            <td md-cell>
+              <hois-classifier-value ng-model="row.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value>
+            </td>
+            <td md-cell>
+              <div>
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/apelSchools/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+      md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>

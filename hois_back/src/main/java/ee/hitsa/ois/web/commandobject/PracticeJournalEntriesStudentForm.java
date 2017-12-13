@@ -2,9 +2,14 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.List;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Size;
+
 public class PracticeJournalEntriesStudentForm {
 
+    @Size(max=10000)
     private String practiceReport;
+    @Valid
     private List<PracticeJournalEntryStudentForm> practiceJournalEntries;
 
     public String getPracticeReport() {

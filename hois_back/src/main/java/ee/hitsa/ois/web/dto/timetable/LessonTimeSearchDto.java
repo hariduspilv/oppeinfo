@@ -12,7 +12,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class LessonTimeSearchDto {
 
     private Long id;
-    private Integer lessonNr;
+    private Short lessonNr;
     private LocalTime startTime;
     private LocalTime endTime;
     private Boolean dayMon;
@@ -26,15 +26,14 @@ public class LessonTimeSearchDto {
     private LocalDate validThru;
     private Set<AutocompleteResult> buildings;
 
-
     public static LessonTimeSearchDto of(LessonTime lessonTime) {
         LessonTimeSearchDto dto = EntityUtil.bindToDto(lessonTime, new LessonTimeSearchDto());
         dto.setValidFrom(lessonTime.getLessonTimeBuildingGroup().getValidFrom());
         dto.setValidThru(lessonTime.getLessonTimeBuildingGroup().getValidThru());
-        dto.setBuildings(lessonTime.getLessonTimeBuildingGroup().getBuildings().stream().map(AutocompleteResult::of).collect(Collectors.toSet()));
+        dto.setBuildings(lessonTime.getLessonTimeBuildingGroup().getBuildings().stream().map(AutocompleteResult::of)
+                .collect(Collectors.toSet()));
         return dto;
     }
-
 
     public Long getId() {
         return id;
@@ -44,11 +43,11 @@ public class LessonTimeSearchDto {
         this.id = id;
     }
 
-    public Integer getLessonNr() {
+    public Short getLessonNr() {
         return lessonNr;
     }
 
-    public void setLessonNr(Integer lessonNr) {
+    public void setLessonNr(Short lessonNr) {
         this.lessonNr = lessonNr;
     }
 
@@ -147,6 +146,5 @@ public class LessonTimeSearchDto {
     public void setBuildings(Set<AutocompleteResult> buildings) {
         this.buildings = buildings;
     }
-
 
 }

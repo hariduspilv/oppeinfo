@@ -1,11 +1,11 @@
 package ee.hitsa.ois.web.dto;
 
+import java.util.Set;
+
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.StudyYearForm;
-
-import java.util.Set;
 
 public class StudyYearDto extends StudyYearForm {
     private Long id;

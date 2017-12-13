@@ -121,6 +121,32 @@ public class LogsControllerTests {
     }
 
     @Test
+    public void kutseregisterLog() {
+        String url = "/logs/kutseregister";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("from", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("thru", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("errors", Boolean.TRUE);
+
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void rtipLog() {
+        String url = "/logs/rtip";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("from", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("thru", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("errors", Boolean.TRUE);
+
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void saisLog() {
         String url = "/logs/sais";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);

@@ -30,8 +30,7 @@
         </md-input-container>
       </div>
       <div layout="column">
-        <!--h5>{{'subject.creditsEap' | translate}}</h5-->
-      <label class="common-label" style="padding-bottom:12px;"> {{'subject.creditsEap' | translate}}</label>
+      <label class="common-label" style="padding-bottom:12px;"> {{'subject.credits' | translate}}</label>
         <div layout="row" flex>
           <div layout="column" flex>
             <div layout-gt-xs="row" flex="45" flex-xs="100">
@@ -59,7 +58,7 @@
         </div>
         <div layout="row" flex>
           <div layout="column" flex>
-            <md-input-container>
+            <md-input-container ng-show="formState.canViewAll">
               <label>{{'subject.status' | translate}}</label>
               <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="AINESTAATUS" multiple></hois-classifier-select>
             </md-input-container>
@@ -77,7 +76,7 @@
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <md-button class="md-raised" ng-href="#/subject/new">{{'main.button.create' | translate}}</md-button>
+        <md-button class="md-raised" ng-href="#/subject/new" ng-if="formState.canCreate">{{'main.button.create' | translate}}</md-button>
       </div>
     </div>
   </form>
@@ -90,12 +89,12 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
-          <th md-column md-order-by="{{currentLanguage()==='en' ? 'nameEn' : 'nameEt'}}"><span>{{'subject.name' | translate}}</span></th>
+          <th md-column md-order-by="{{currentLanguageNameField()}}"><span>{{'subject.name' | translate}}</span></th>
           <th md-column md-order-by="code"><span>{{'subject.code' | translate}}</span></th>
           <th md-column md-order-by="credits"><span>{{'subject.creditsEap' | translate}}</span></th>
-          <th md-column md-order-by="{{currentLanguage()==='en' ? 'assessment.nameEn' : 'assessment.nameEt'}}">{{'subject.assessment' | translate}}</th>
+          <th md-column md-order-by="{{currentLanguage('assessment')==='en' ? 'assessment.nameEn' : 'assessment.nameEt'}}">{{'subject.assessment' | translate}}</th>
           <th md-column >{{'subject.language' | translate}}</th>
-          <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'subject.status' | translate}}</th>
+          <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}" ng-if="formState.canViewAll">{{'subject.status' | translate}}</th>
           <th md-column md-order-by="{{currentLanguage()==='en' ? 'schoolDepartment.nameEn' : 'schoolDepartment.nameEt'}}">{{'school.department.department' | translate}}</th>
           <th md-column></th>
         </tr>
@@ -107,9 +106,9 @@
           <td md-cell>{{::row.credits}}</td>
           <td md-cell>{{currentLanguageNameField(row.assessment)}}</td>
           <td md-cell>{{subjectLanguages(row.languages)}}</td>
-          <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+          <td md-cell ng-if="formState.canViewAll">{{currentLanguageNameField(row.status)}}</td>
           <td md-cell>{{currentLanguageNameField(row.schoolDepartment)}}</td>
-          <td md-cell><md-button ng-if="!auth.isStudent()" md-no-ink class="md-primary change-button" ng-href="#/subject/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
+          <td md-cell><md-button ng-if="row.canEdit" md-no-ink class="md-primary change-button" ng-href="#/subject/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
         </tr>
         </tbody>
       </table>

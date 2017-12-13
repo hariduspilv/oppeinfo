@@ -31,6 +31,8 @@
       var TeacherPositionEhisEndpoint = QueryUtils.endpoint('/teachers/' + id + '/ehisPositions');
       var EmailGeneratorEndpoint = QueryUtils.endpoint('/school/generateEmail', {post: {method: 'POST'}});
 
+      var school = $route.current.locals.auth.school;
+      var onlyHigherSchool = school && school.higher && !school.vocational;
       $scope.occupations = QueryUtils.endpoint('/school/teacheroccupations/all').query();
 
       function afterLoad() {
@@ -69,7 +71,8 @@
 
       $scope.newTeacherPositionEhis = function () {
         $scope.teacher.teacherPositionEhis.push({
-          isVocational: true,
+          isVocational: !onlyHigherSchool,
+          isTeacher: onlyHigherSchool,
           language: 'EHIS_OPETAJA_KEEL_E'
         });
       };
@@ -430,5 +433,28 @@
     });
 
     $scope.teacher = Endpoint.get({id: id}, afterLoad);
+
+    $scope.changeIsShowingRtipTab = function () {
+      $scope.isShowingRtipTab = !$scope.isShowingRtipTab;
+      if ($scope.isShowingRtipTab) {
+        loadAbsences();
+      }
+    };
+
+    $scope.updateData = function () {
+      QueryUtils.endpoint('/teachers/' + id + '/rtip').save();
+      loadAbsences();
+    };
+
+    function loadAbsences() {
+      QueryUtils.createQueryForm($scope, '/teachers/' + id + '/absences', { order: 'startDate, endDate'});
+  
+      $scope.afterLoadData = function (resultData) {
+        $scope.tabledata.content = resultData.content;
+        $scope.tabledata.totalElements = resultData.totalElements;
+      };
+  
+      $scope.loadData();
+    }
   }]);
 }());

@@ -147,13 +147,10 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumStudyForm> studyForms = new HashSet<>();
 
-    @NotEmpty(groups = {ConfirmedVocational.class})
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
+    @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumModule> modules = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
+    @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumOccupation> occupations = new HashSet<>();
 
     @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)

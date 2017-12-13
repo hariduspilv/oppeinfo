@@ -34,5 +34,31 @@ public class TimetableStudentGroupDto {
     public void setCurriculumId(Long curriculumId) {
         this.curriculumId = curriculumId;
     }
+    
+    @Override 
+    public boolean equals(Object obj) {
+        if(obj == null) {
+            return false;
+        }
+        if(!TimetableStudentGroupDto.class.isAssignableFrom(obj.getClass())) {
+            return false;
+        }
+        final TimetableStudentGroupDto other = (TimetableStudentGroupDto) obj;
+        if(other.getId() == null || this.getId() == null) {
+            return false;
+        }
+        if(this.id == null || other.id == null) {
+            return false;
+        }
+        if(this.id.longValue() != other.id.longValue()) {
+            return false;
+        }
+        return true;
+    }
+    
+    @Override
+    public int hashCode() {
+        return this.id == null ? 31 : this.id.hashCode();
+    }
 
 }

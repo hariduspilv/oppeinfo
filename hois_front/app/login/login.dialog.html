@@ -1,30 +1,53 @@
 <md-dialog>
-  <form role="form">
-    <div role="dialog" layout="column" layout-align="center center" layout-padding>
-      <div>
-        <div class="alert alert-danger" ng-show="ctrl.parent.error">
-          There was a problem logging in. Please try again.
-        </div>
-
-        <div layout="row">
-          <div layout="column" style="padding-top:10px">
-            <md-button aria-label="id-card" ng-click="ctrl.parent.idlogin()">
-              <img class="png-icon" src="images/logo_id.gif" style="width: 88px; height: 31px;">
-            </md-button>
-            <md-button aria-label="mobile-id">
-              <img class="png-icon" src="images/logo_m-id.gif" style="width: 88px; height: 31px;">
-            </md-button>
-          </div>
-          <md-divider></md-divider>
-          <div layout="column" style="padding-left:10px">
-            <md-input-container>
-              <label for="username" flex>Kasutajanimi</label>
-              <input type="text" flex class="form-control" id="username" name="username" ng-model="ctrl.parent.credentials.username"/>
-            </md-input-container>
-            <md-button class="md-raised md-primary" ng-click="ctrl.parent.login()">{{ 'main.logIn' | translate }}</md-button>
-          </div>
-        </div>
-      </div>
+  <md-toolbar>
+    <div class="md-toolbar-tools" style="height: 40px">
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <span class="material-icons">close</span>
+      </md-button>
     </div>
-  </form>
+  </md-toolbar>
+  <md-dialog-content style="width:400px;height:300px;">
+    <md-tabs md-stretch-tabs="always" md-dynamic-height md-border-bottom md-no-pagination>
+      <md-tab label="{{ 'main.login.user.title' | translate }}">
+        <md-content class="md-padding">
+          <form name="userLoginForm">
+            <md-input-container class="md-block">
+              <label flex>{{ 'main.login.user.school' | translate }}</label>
+              <md-select flex class="form-control" name="school" ng-model="credentials.school" required>
+                <md-option ng-value="school.id" ng-repeat="school in schools">{{currentLanguageNameField(school)}}</md-option>
+              </md-select>
+            </md-input-container>
+            <md-input-container class="md-block">
+              <label flex>{{ 'main.login.user.username' | translate }}</label>
+              <input type="text" flex class="form-control" name="username" ng-model="credentials.username" required/>
+            </md-input-container>
+            <md-input-container class="md-block">
+              <label flex>{{ 'main.login.user.password' | translate }}</label>
+              <input type="password" flex class="form-control" name="password" ng-model="credentials.password" required/>
+            </md-input-container>
+            <md-button class="md-raised md-primary" ng-click="login()">{{ 'main.logIn' | translate }}</md-button>
+          </form>
+        </md-content>
+      </md-tab>
+      <md-tab label="{{ 'main.login.idcard.title' | translate }}">
+        <md-content class="md-padding">
+          <form name="idCardLoginForm">
+            <md-button class="md-raised md-primary" ng-click="idlogin()">{{ 'main.logIn' | translate }}</md-button>
+          </form>
+        </md-content>
+      </md-tab>
+      <md-tab label="{{ 'main.login.mobileid.title' | translate }}">
+        <md-content class="md-padding">
+          <form name="mobileIdLoginForm">
+            <md-input-container class="md-block">
+              <label flex>{{ 'main.login.mobileid.mobilenumber' | translate }}</label>
+              <input type="text" flex class="form-control" name="mobilenumber" ng-model="mobilenumber" required/>
+            </md-input-container>
+            <md-button class="md-raised md-primary" ng-click="mIdLogin()">{{ 'main.logIn' | translate }}</md-button>
+          </form>
+        </md-content>
+      </md-tab>
+    </md-tabs>
+  </md-dialog-content>
 </md-dialog>

@@ -51,18 +51,18 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
+import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
-import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
-import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
-import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm.LessonPlanGroupForm;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanCreateForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleJournalForm;
+import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
+import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm.LessonPlanGroupForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto;
@@ -304,6 +304,7 @@ public class LessonPlanService {
     }
 
     public Journal saveJournal(Journal journal, LessonPlanJournalForm form, HoisUserDetails user) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(form, journal, classifierRepository, "journalCapacityTypes", "journalTeachers", "journalOccupationModuleThemes", "groups", "journalRooms");
 
         List<JournalCapacityType> capacityTypes = journal.getJournalCapacityTypes();
@@ -345,9 +346,6 @@ public class LessonPlanService {
         LessonPlanModule lessonPlanModule = em.getReference(LessonPlanModule.class, form.getLessonPlanModuleId());
         assertSameSchool(journal, lessonPlanModule.getLessonPlan().getSchool());
         List<JournalOccupationModuleTheme> oldThemes = journal.getJournalOccupationModuleThemes();
-        if(oldThemes == null) {
-            journal.setJournalOccupationModuleThemes(oldThemes = new ArrayList<>());
-        }
         List<JournalOccupationModuleThemeHolder> fromForm = form.getJournalOccupationModuleThemes()
                 .stream()
                 .map(id -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModule, id)).collect(Collectors.toList());

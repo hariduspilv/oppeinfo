@@ -55,30 +55,31 @@ public class StudentGroupController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public StudentGroupDto get(HoisUserDetails user, @WithEntity("id") StudentGroup studentGroup) {
+    public StudentGroupDto get(HoisUserDetails user, @WithEntity StudentGroup studentGroup) {
         UserUtil.assertSameSchool(user, studentGroup.getSchool());
         return StudentGroupDto.of(studentGroup);
     }
 
     @PostMapping
     public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody StudentGroupForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
         return HttpUtil.created(studentGroupService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")
-    public StudentGroupDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentGroup studentGroup, @Valid @RequestBody StudentGroupForm form) {
-        UserUtil.assertSameSchool(user, studentGroup.getSchool());
+    public StudentGroupDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudentGroup studentGroup, @Valid @RequestBody StudentGroupForm form) {
+        UserUtil.assertIsSchoolAdmin(user, studentGroup.getSchool());
         return get(user, studentGroupService.save(user, studentGroup, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") StudentGroup studentGroup, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertSameSchool(user, studentGroup.getSchool());
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") StudentGroup studentGroup, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        UserUtil.assertIsSchoolAdmin(user, studentGroup.getSchool());
         studentGroupService.delete(user, studentGroup);
     }
 
     @GetMapping("/curriculumdata/{id:\\d+}")
-    public Map<String, ?> curriculumRelatedData(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
+    public Map<String, ?> curriculumRelatedData(HoisUserDetails user, @WithEntity Curriculum curriculum) {
         UserUtil.assertSameSchool(user, curriculum.getSchool());
         return studentGroupService.curriculumData(curriculum);
     }

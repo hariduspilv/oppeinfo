@@ -1,0 +1,78 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form novalidate name="occupationCertificateForm">
+      <div layout="row">
+        <md-input-container flex>
+          <label>{{'occupationcertificate.curriculum' | translate}}</label>
+          <hois-select ng-model="criteria.curriculumVersion" criteria="{higher: false, valid: true}" type="curriculumversion" multiple required></hois-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex>
+          <label>{{'occupationcertificate.studentGroup' | translate}}</label>
+          <hois-select ng-model="studentGroup" values="formState.studentGroups" multiple></hois-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100">
+          <label>{{'occupationcertificate.dateRange' | translate}}</label>
+          <input type="hidden">
+        </md-input-container>
+        <div flex="33">
+          <md-input-container flex>
+            <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"
+                           md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex>
+            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"
+                           md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+          </md-input-container>
+        </div>
+      </div>
+
+      <div layout="row">
+        <md-button class="md-raised md-primary" ng-click="importFromKutseregister()">{{'occupationcertificate.import' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>
+<div ng-if="results">
+  <div layout-padding >
+    <div flex>
+      <md-table-container>
+        <table md-table>
+          <thead md-head>
+            <tr md-row>
+              <th md-column >{{'occupationcertificate.certificateNr' | translate}}</th>
+              <th md-column >{{'occupationcertificate.idcode' | translate}}</th>
+              <th md-column >{{'occupationcertificate.firstname' | translate}}</th>
+              <th md-column >{{'occupationcertificate.lastname' | translate}}</th>
+              <th md-column >{{'occupationcertificate.typename' | translate}}</th>
+              <th md-column >{{'occupationcertificate.occupation' | translate}}</th>
+              <th md-column >{{'occupationcertificate.issuer' | translate}}</th>
+              <th md-column >{{'occupationcertificate.issueDate' | translate}}</th>
+              <th md-column >{{'occupationcertificate.validFrom' | translate}}</th>
+              <th md-column >{{'occupationcertificate.validThru' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in results" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{::row.certificateNr}}</td>
+              <td md-cell>{{::row.idcode}}</td>
+              <td md-cell>{{::row.firstname}}</td>
+              <td md-cell>{{::row.lastname}}</td>
+              <td md-cell>{{::row.type | translate}}</td>
+              <td md-cell>{{currentLanguageNameField(row.occupation)}}</td>
+              <td md-cell>{{::row.issuer}}</td>
+              <td md-cell>{{::row.issueDate | hoisDate}}</td>
+              <td md-cell>{{::row.validFrom | hoisDate}}</td>
+              <td md-cell>{{::row.validThru | hoisDate}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </div>
+  </div>
+</div>

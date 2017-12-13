@@ -236,8 +236,20 @@ public class ReportService {
         qb.optionalCriteria("jc.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
         qb.optionalCriteria("jt.teacher_id = :teacher", "teacher", criteria.getTeacher());
 
-        qb.groupBy("syc.name_et, syc.name_en, sp.name_et, sp.name_en, p.firstname, p.lastname, jt.teacher_id, jc.study_period_id");
+        if(higher) {
+            // subject filter
+            qb.optionalCriteria("jt.teacher_id in (select sspt.teacher_id from subject_study_period_teacher sspt " +
+                    "inner join subject_study_period ssp on sspt.subject_study_period_id = ssp.id " +
+                    "where ssp.study_period_id = sp.id and ssp.subject_id = :subject)", "subject", criteria.getSubject());
+        } else {
+            // module filter
+            qb.optionalCriteria("j.id in (select jot.journal_id from journal_omodule_theme jot " +
+                    "inner join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id = cvot.id " +
+                    "inner join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "+
+                    "where cvo.curriculum_module_id = :module)", "module", criteria.getModule());
+        }
 
+        qb.groupBy("syc.name_et, syc.name_en, sp.name_et, sp.name_en, p.firstname, p.lastname, jt.teacher_id, jc.study_period_id");
         Page<?> result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, sum(jc.hours), jt.teacher_id, jc.study_period_id", em, pageable);
 
         // calculate used teacher id and study period id values for returned page

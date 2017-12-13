@@ -102,6 +102,15 @@ public class DeclarationService {
     private static final String SUBJECT_EXTRACURRICULUM_SELECT = " distinct ssp.id as ssp1Id, s.id as subjectId, "
             + "s.name_et, s.name_en, s.code, s.credits, c.value, null as moduleId, "
             + " false as isOptional, array_to_string(teachers.teacher, ', ')";
+    
+    private static final String WITHOUT_DECLARATION_SELECT = " s.id, p.firstname, p.lastname, p.idcode, "
+            + "cv.id as cv_id, cv.code as cv_code, sg.id as sg_id, sg.code as sg_code ";
+    
+    private static final String WITHOUT_DECLARATION_FROM = " from student s "
+            + "join person p on p.id = s.person_id "
+            + "left join student_group sg on sg.id = s.student_group_id "
+            + "left join curriculum_version cv on cv.id = s.curriculum_version_id "
+            + "left join curriculum c on c.id = cv.curriculum_id ";
 
     public Page<DeclarationDto> search(HoisUserDetails user, DeclarationSearchCommand criteria, Pageable pageable) {
 
@@ -405,31 +414,6 @@ public class DeclarationService {
         }, result);
     }
 
-    public Page<AutocompleteResult> getStudentsWithoutDeclaration(UsersSearchCommand command, Pageable pageable,
-            Long schoolId) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s join person p on p.id = s.person_id "
-                + "join curriculum_version cv on cv.id = s.curriculum_version_id "
-                + "join curriculum c on c.id = cv.curriculum_id").sort(pageable);
-
-        Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
-        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
-        qb.requiredCriteria("s.status_code = :status", "status", StudentStatus.OPPURSTAATUS_O);
-        qb.filter("c.is_higher = true");
-        // select only students without declaration
-        qb.requiredCriteria(
-                "not exists(select d.student_id from declaration d "
-                        + "where d.student_id = s.id and d.study_period_id = :studyPeriodId)",
-                "studyPeriodId", studyPeriodId);
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name",
-                command.getName());
-
-        Page<Object[]> result = JpaQueryUtil.pagingResult(qb, "s.id, p.firstname, p.lastname", em, pageable);
-        return result.map(r -> {
-            String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
-            return new AutocompleteResult(resultAsLong(r, 0), name, name);
-        });
-    }
-
     public AutocompleteResult getCurrentStudyPeriod(Long schoolId) {
         Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
         return AutocompleteResult.of(em.getReference(StudyPeriod.class, studyPeriodId));
@@ -490,5 +474,42 @@ public class DeclarationService {
         q.setParameter(2, subjectStudyPeriodId);
         q.setParameter(3, declarationSubjectId);
         return !q.setMaxResults(1).getResultList().isEmpty();
+    }
+    
+    public Page<AutocompleteResult> getStudentsWithoutDeclaration(UsersSearchCommand command, Pageable pageable,
+            Long schoolId) {
+        return searchStudentsWithoutDeclaration(command, schoolId, pageable)
+                .map(s -> new AutocompleteResult(s.getId(), s.getFullname(), s.getFullname()));
+    }
+
+    public Page<StudentSearchDto> searchStudentsWithoutDeclaration(UsersSearchCommand command, Long schoolId, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(WITHOUT_DECLARATION_FROM).sort(pageable);
+
+        qb.requiredCriteria("s.school_id = :schoolId ", "schoolId", schoolId);
+        qb.requiredCriteria(" s.status_code in :active ", "active", StudentStatus.STUDENT_STATUS_ACTIVE);
+        qb.filter(" c.is_higher = true ");
+
+        qb.requiredCriteria(" not exists("
+                + "select d.id "
+                + "from declaration d "
+                + "where d.student_id = s.id and "
+                + "d.study_period_id = :currentStudyPeriod) ", 
+                "currentStudyPeriod", studyYearService.getCurrentStudyPeriod(schoolId));
+        
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name",
+                command.getName());
+        
+        Page<Object[]> results = JpaQueryUtil.pagingResult(qb, WITHOUT_DECLARATION_SELECT, em, pageable);
+        return results.map(r -> {
+            StudentSearchDto dto = new StudentSearchDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setIdcode(resultAsString(r, 3));
+            dto.setCurriculumVersion(
+                    new AutocompleteResult(resultAsLong(r, 4), resultAsString(r, 5), resultAsString(r, 5)));
+            dto.setStudentGroup(
+                    new AutocompleteResult(resultAsLong(r, 6), resultAsString(r, 7), resultAsString(r, 7)));
+            return dto;
+        });
     }
 }

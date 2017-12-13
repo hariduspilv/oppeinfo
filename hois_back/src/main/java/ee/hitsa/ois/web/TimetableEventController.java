@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.service.TimetableEventService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
@@ -63,8 +62,7 @@ public class TimetableEventController {
     @GetMapping("/timetableSearch/calendar")
     public TimetableCalendarDto searchTimetableIcs(@Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
-        Language lang = language.equals("et") ? Language.ET : Language.EN;
-        return timetableEventService.getSearchCalendar(criteria, lang);
+        return timetableEventService.getSearchCalendar(criteria, language);
     }
 
     @GetMapping("/timetableByGroup")
@@ -75,8 +73,7 @@ public class TimetableEventController {
     @GetMapping("/timetableByGroup/calendar")
     public TimetableCalendarDto groupTimetableIcs(@Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
-        Language lang = language.equals("et") ? Language.ET : Language.EN;
-        return timetableEventService.getGroupCalendar(criteria, lang);
+        return timetableEventService.getGroupCalendar(criteria, language);
     }
 
     @GetMapping("/timetableByTeacher")
@@ -87,8 +84,7 @@ public class TimetableEventController {
     @GetMapping("/timetableByTeacher/calendar")
     public TimetableCalendarDto teacherTimetableIcs(@Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
-        Language lang = language.equals("et") ? Language.ET : Language.EN;
-        return timetableEventService.getTeacherCalendar(criteria, lang);
+        return timetableEventService.getTeacherCalendar(criteria, language);
     }
     
     @GetMapping("/timetableByStudent")
@@ -101,8 +97,7 @@ public class TimetableEventController {
     public TimetableCalendarDto studentTimetableIcs(HoisUserDetails user,
             @Valid TimetableEventSearchCommand criteria, @RequestParam("lang") String language) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
-        Language lang = language.equals("et") ? Language.ET : Language.EN; 
-        return timetableEventService.getStudentCalendar(criteria, lang);
+        return timetableEventService.getStudentCalendar(criteria, language);
     }
     
     @GetMapping("/timetableByRoom")
@@ -113,7 +108,6 @@ public class TimetableEventController {
     @GetMapping("/timetableByRoom/calendar")
     public TimetableCalendarDto roomTimetableIcs(@Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
-        Language lang = language.equals("et") ? Language.ET : Language.EN;
-        return timetableEventService.getRoomCalendar(criteria, lang);
+        return timetableEventService.getRoomCalendar(criteria, language);
     }
 }

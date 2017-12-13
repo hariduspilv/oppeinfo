@@ -1,0 +1,244 @@
+<div class="ois-form-layout-padding" ng-cloak ng-show="!showMainForm">
+  <form name="higherCurriculumVersionForm" layout="column" class="nomargin" >
+    <fieldset tabindex="1">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.versionMainData' | translate}}</legend>
+      <div layout="column">
+        <md-input-container flex ng-if="!showMainForm">
+          <label>{{'curriculum.version.code' | translate}}</label>
+          <input name="code" ng-model="version.code" type="text" readonly>
+        </md-input-container>
+        <div layout="row" flex>
+          <md-input-container flex="45">
+            <label>{{'curriculum.version.firstAdmissionYear' | translate}}</label>
+            <md-select ng-model="version.admissionYear" disabled>
+              <md-option ng-repeat="year in ::admissionYears" ng-value="year" aria-label="{{year}}">{{year}}</md-option>
+            </md-select>
+          </md-input-container>
+          <md-input-container flex="50" flex-offset="5">
+            <label>{{'curriculum.version.type' | translate}}</label>
+            <hois-classifier-select ng-model="version.type" main-classifier-code="OPPEKAVA_VERSIOON_LIIK" model-value-attr="code"
+              disabled></hois-classifier-select>
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'curriculum.specialty.specialties' | translate}}</label>
+            <md-select multiple ng-model="version.specialitiesReferenceNumbers" disabled>
+              <md-option ng-repeat="speciality in curriculum.specialities | orderBy: currentLanguageNameField()" ng-value="speciality.referenceNumber">
+                {{currentLanguageNameField(speciality)}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+        <br>
+      </div>
+    </fieldset>
+    <div>&nbsp;</div>
+    <fieldset tabindex="2" flex>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.modules' | translate}}</legend>
+
+      <div ng-repeat="spectiality in curriculum.specialities | filter: filterSpecialities | orderBy: currentLanguageNameField()" flex>
+        <h2 class="md-title-small">{{'curriculum.specialty.specialty' | translate}} {{$index + 1}}: {{currentLanguageNameField(spectiality)}}</h2>
+        <div flex class="secondary-table-header" layout="row">
+          <div flex="5">&nbsp;</div>
+          <div flex="35">{{'subject.name' | translate}}</div>
+          <div flex="10">{{'subject.code' | translate}}</div>
+          <div flex="20">EAP</div>
+          <div></div>
+        </div>
+
+        <div layout="column" flex ng-repeat="module in version.modules | filter: {minorSpeciality: false} | filter: filterModulesBySpeciality(spectiality) | orderBy: currentLanguageNameField()">
+          <div layout="row" flex class="occupation-header" layout-align="start center">
+            <a href="" ng-click="openAddModuleDialog(module)" flex="70">
+                                {{'curriculum.module' | translate}} {{currentLanguageNameField(module)}} {{module.totalCredits}} EAP
+                                <span ng-if="module.type === 'KORGMOODUL_M'">({{currentLanguage()=='et' ? module.typeNameEt : module.typeNameEn}})</span>
+                                <span ng-if="module.type !== 'KORGMOODUL_M'">(<hois-classifier-value ng-model="module.type" main-classifier-code="KORGMOODUL" class="inline module-type"></hois-classifier-value>)</span>
+                            </a>
+          </div>
+
+          <div flex class="sub-header1" layout-align="start center" layout="row" ng-show="moduleMustHaveSubjects(module)">
+            <div>{{'subject.mandatory' | translate}}</div>
+          </div>
+          <div ng-repeat="subject in module.subjects | filter: {optional: false} | orderBy: currentLanguageNameField()" layout="row"
+            flex class="secondary-table-row" layout-align="start center">
+            <div flex="5">&nbsp;</div>
+            <div flex="35">{{currentLanguageNameField(subject)}}</div>
+            <div flex="10">{{subject.code}}</div>
+            <div flex="20">{{subject.credits}}</div>
+            <div></div>
+          </div>
+
+          <div layout="row" flex layout-align="start center" class="secondary-table-header" ng-show="moduleMustHaveSubjects(module)">
+            <div flex="5">&nbsp;</div>
+            <div flex="35">{{'main.OF' | translate}}</div>
+            <div flex="10">&nbsp;</div>
+            <div flex="20">{{module.compulsoryStudyCredits}}</div>
+            <div></div>
+          </div>
+
+          <div flex class="sub-header1" layout-align="start center" layout="row" ng-show="moduleMustHaveSubjects(module)">
+            <div>{{'subject.optional' | translate}}</div>
+          </div>
+          <div ng-repeat="subject in module.subjects |
+                        filter: {optional: true} | filter: {electiveModule: '!'} | orderBy: currentLanguageNameField()"
+            layout="row" flex class="secondary-table-row" layout-align="start center">
+            <div flex="5">&nbsp;</div>
+            <div flex="35">{{currentLanguageNameField(subject)}}</div>
+            <div flex="10">{{subject.code}}</div>
+            <div flex="20">{{subject.credits}}</div>
+            <div></div>
+          </div>
+
+          <div flex class="sub-header-italic" layout-align="start center" layout="row" style="padding-left: 10px" ng-show="moduleMustHaveSubjects(module)">
+            <div>{{'module.optionalsWithMinimum' | translate}}{{module.electiveModulesNumber}}</div>
+          </div>
+          <div ng-repeat="electiveModule in module.electiveModules | orderBy: currentLanguageNameField()" layout-align="start center"
+            flex>
+            <div class="sub-header2" layout-align="start center" layout="row">
+              <div class="elective-module">{{'module.optional' | translate}}: {{currentLanguageNameField(electiveModule)}}</div>
+            </div>
+            <div ng-repeat="subject in module.subjects | filter: {optional: true} |
+                                filter: {electiveModule: electiveModule.referenceNumber} | orderBy: currentLanguageNameField()"
+              layout="row" flex class="secondary-table-row" layout-align="start center">
+              <div flex="5">&nbsp;</div>
+              <div flex="35">{{currentLanguageNameField(subject)}}</div>
+              <div flex="10">{{subject.code}}</div>
+              <div flex="20">{{subject.credits}}</div>
+              <div></div>
+            </div>
+          </div>
+          <div layout="row" flex layout-align="start center" class="secondary-table-header">
+            <div flex="5">&nbsp;</div>
+            <div flex="35">{{'module.overallAtLeast' | translate}}</div>
+            <div flex="10">&nbsp;</div>
+            <div flex="20">{{module.optionalStudyCredits}}</div>
+            <div></div>
+          </div>
+        </div>
+
+        <!-- end show modules by specialities-->
+
+      </div>
+    </fieldset>
+    <div>&nbsp;</div>
+    <fieldset tabindex="3">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.minorSpecialty.minorSpecialties' | translate}}</legend>
+
+      <div layout="column" flex ng-repeat="module in version.modules | filter: {minorSpeciality: true} | orderBy: currentLanguageNameField()">
+        <div layout="row" flex class="occupation-header" layout-align="start center">
+          <a href="" ng-click="openAddMinorSpecialtyDialog(module)" flex="70">
+                                <span>{{'curriculum.minorSpecialty.minorSpecialty' | translate}} {{currentLanguageNameField(module)}} {{module.totalCredits}} EAP</span>
+                     </a>
+        </div>
+
+        <div flex class="sub-header1" layout-align="start center" layout="row">
+          <div>{{'subject.mandatory' | translate}}</div>
+        </div>
+        <div ng-repeat="subject in module.subjects | filter: {optional: false} | orderBy: currentLanguageNameField()" layout="row"
+          flex class="secondary-table-row" layout-align="start center">
+          <div flex="5">&nbsp;</div>
+          <div flex="35">{{currentLanguageNameField(subject)}}</div>
+          <div flex="10">{{subject.code}}</div>
+          <div flex="20">{{subject.credits}}</div>
+          <div></div>
+        </div>
+
+        <div layout="row" flex layout-align="start center" class="secondary-table-header">
+          <div flex="5">&nbsp;</div>
+          <div flex="35">{{'main.OF' | translate}}</div>
+          <div flex="10">&nbsp;</div>
+          <div flex="20">{{module.compulsoryStudyCredits}}</div>
+          <div></div>
+        </div>
+
+        <div flex class="sub-header1" layout-align="start center" layout="row">
+          <div>{{'subject.optional' | translate}}</div>
+        </div>
+        <div ng-repeat="subject in module.subjects |
+                        filter: {optional: true} | filter: {electiveModule: '!'} | orderBy: currentLanguageNameField()"
+          layout="row" flex class="secondary-table-row" layout-align="start center">
+          <div flex="5">&nbsp;</div>
+          <div flex="35">{{currentLanguageNameField(subject)}}</div>
+          <div flex="10">{{subject.code}}</div>
+          <div flex="20">{{subject.credits}}</div>
+          <div></div>
+        </div>
+        <div flex class="sub-header-italic" layout-align="start center" layout="row" style="padding-left: 10px">
+          <div>{{'module.optionalsWithMinimum' | translate}}{{module.electiveModulesNumber}}</div>
+        </div>
+        <div ng-repeat="electiveModule in module.electiveModules | orderBy: currentLanguageNameField()" layout-align="start center" flex>
+          <div class="sub-header2" layout-align="start center" layout="row">
+            <div class="elective-module">{{'module.optional' | translate}}: {{currentLanguageNameField(electiveModule)}}</div>
+          </div>
+          <div ng-repeat="subject in module.subjects | filter: {optional: true} |
+                                filter: {electiveModule: electiveModule.referenceNumber} | orderBy: currentLanguageNameField()"
+            layout="row" flex class="secondary-table-row" layout-align="start center">
+            <div flex="5">&nbsp;</div>
+            <div flex="35">{{currentLanguageNameField(subject)}}</div>
+            <div flex="10">{{subject.code}}</div>
+            <div flex="20">{{subject.credits}}</div>
+            <div></div>
+          </div>
+        </div>
+        <div layout="row" flex layout-align="start center" class="secondary-table-header">
+          <div flex="5">&nbsp;</div>
+          <div flex="35">{{'module.overallAtLeast' | translate}}</div>
+          <div flex="10">&nbsp;</div>
+          <div flex="20">{{module.optionalStudyCredits}}</div>
+          <div></div>
+        </div>
+      </div>
+    </fieldset>
+    <div>&nbsp;</div>
+    <fieldset tabindex="4">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.versionStatus' | translate}}</legend>
+      <div layout="row" flex="100">
+        <md-input-container flex="30" flex-sm="100" flex-xs="100">
+          <label>{{'main.validFrom' | translate}}</label>
+          <md-datepicker ng-model="version.validFrom" md-open-on-focus disabled></md-datepicker>
+        </md-input-container>
+
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4">
+          <label>{{'main.validTo' | translate}}</label>
+          <md-datepicker ng-model="version.validThru" md-min-date="version.validFrom" md-open-on-focus disabled></md-datepicker>
+        </md-input-container>
+      </div>
+      <div layout="row" class="top-margin form-readonly">
+        <md-input-container flex="30" flex-sm="100">
+          <label>{{'main.status' | translate}}</label>
+          <hois-classifier-value ng-model="version.status" main-classifier-code="OPPEKAVA_VERSIOON_STAATUS"></hois-classifier-value>
+        </md-input-container>
+      </div>
+    </fieldset>
+    <hois-created-modified object="version"></hois-created-modified>
+  </form>
+
+  <div layout="row">
+    <div ng-show="version.status === VERSION_STATUS.S">
+      <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="version.canChange">{{'main.button.change' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="confirm()" ng-if="version.canConfirm">{{'curriculum.statuschange.version.button.verify' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="version.canClose">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-click="copy()" ng-if="version.canChange">{{'main.button.copy' | translate}}</md-button>
+    </div>
+    <div ng-show="version.status === VERSION_STATUS.K">
+      <md-button class="md-raised md-primary" ng-if="version.canChange" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="version.canClose">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-if="version.canChange" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+    </div>
+    <div ng-show="version.status === VERSION_STATUS.C">
+      <md-button class="md-raised md-default" ng-if="version.canChange" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+    </div>
+
+    <a href="{{formState.curriculumPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="version.id">{{'main.button.print' | translate}}</a>
+    <a href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised" ng-if="version.id">XML</a>
+
+    <md-button class="md-raised md-default" ng-click="back('#/higherCurriculum/' + version.curriculum + '/view', higherCurriculumVersionForm)">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>
+
+<style>
+.module-type {
+  text-decoration: underline;
+}
+
+</style>

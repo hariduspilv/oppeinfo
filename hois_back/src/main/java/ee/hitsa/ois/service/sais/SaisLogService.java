@@ -1,18 +1,5 @@
 package ee.hitsa.ois.service.sais;
 
-import ee.hitsa.ois.domain.sais.WsSaisLog;
-import ee.hitsa.ois.domain.sais.WsSaisLogDetail;
-import ee.hitsa.ois.domain.school.School;
-import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.JpaNativeQueryBuilder;
-import ee.hitsa.ois.util.JpaQueryUtil;
-import ee.hitsa.ois.util.PersonUtil;
-import ee.hitsa.ois.util.UserUtil;
-import ee.hitsa.ois.web.commandobject.sais.SaisLogCommand;
-import ee.hitsa.ois.web.dto.sais.SaisLogDto;
-import ee.hois.soap.LogContext;
-import ee.hois.soap.LogResult;
-
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
@@ -31,6 +18,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import ee.hitsa.ois.domain.sais.WsSaisLog;
+import ee.hitsa.ois.domain.sais.WsSaisLogDetail;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.web.commandobject.sais.SaisLogCommand;
+import ee.hitsa.ois.web.dto.sais.SaisLogDto;
+import ee.hois.soap.LogContext;
+import ee.hois.soap.LogResult;
 
 @Transactional(TxType.REQUIRES_NEW)
 @Service

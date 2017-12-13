@@ -110,7 +110,7 @@
                 </td>
                 <td md-cell>
                   <md-input-container>
-                    <input ng-model="row.supervisorComment" type="text" aria-label="{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}">
+                    <input ng-model="row.supervisorComment" type="text" aria-label="{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}" md-maxlength="10000">
                   </md-input-container>
                 </td>
                 <td md-cell>
@@ -195,7 +195,7 @@
       <div layout="row">
         <md-input-container flex>
           <label>{{'practiceJournal.supervisorOpinion' | translate}}</label>
-          <input ng-model="practiceJournal.supervisorOpinion" type="text">
+          <input ng-model="practiceJournal.supervisorOpinion" type="text" md-maxlength="10000">
         </md-input-container>
       </div>
 

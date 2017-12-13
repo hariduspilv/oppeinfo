@@ -14,48 +14,68 @@
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
         <div layout="column">
 
-          <fieldset tabindex="1">
-            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
-
-            <div ng-repeat="occupation in occupations | orderBy: 'code'">
-              <md-checkbox ng-model="occupation.selected" ng-change="changeOccupation(occupation)" ng-disabled="readOnly">
-                <hois-classifier-value ng-model="occupation.code" main-classifier-codes="KUTSE" class="inline"></hois-classifier-value>
-              </md-checkbox>
+          <div flex>
+            <fieldset tabindex="1">
+              <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
               <div layout="column">
-                <div ng-repeat="subOccupation in occupation.subOccupations | orderBy: 'code'" layout="row">
-                  <div flex="5">&nbsp;</div>
-                  <md-checkbox ng-model="subOccupation.selected" ng-change="changeOccupation(subOccupation)" ng-disabled="readOnly">
-                    <hois-classifier-value ng-model="subOccupation" main-classifier-code="OSAKUTSE,SPETSKUTSE" class="inline"></hois-classifier-value>
+                <div ng-repeat="occupation in occupations | orderBy: 'code'">
+                  <md-checkbox ng-model="occupation.selected" ng-change="changeOccupation(occupation)" ng-disabled="readOnly">
+                    <hois-classifier-value ng-model="occupation.code" main-classifier-codes="KUTSE" class="inline"></hois-classifier-value>
                   </md-checkbox>
+                  <div layout="column">
+                    <div ng-repeat="subOccupation in occupation.subOccupations | orderBy: 'code'" layout="row">
+                      <div flex="5">&nbsp;</div>
+                      <md-checkbox ng-model="subOccupation.selected" ng-change="changeOccupation(subOccupation)" ng-disabled="readOnly">
+                        <hois-classifier-value ng-model="subOccupation" main-classifier-code="OSAKUTSE,SPETSKUTSE" class="inline"></hois-classifier-value>
+                      </md-checkbox>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+              <input style="display:none" type="number" readonly name="occupationsLength" ng-model="data.moduleOccupations.length" min="1"/>
+              <div class="invalid" ng-if="dialogForm.$submitted" ng-messages="dialogForm.occupationsLength.$error">
+                <div ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
+              </div>
 
-            <input style="display:none" type="number" readonly name="occupationsLength" ng-model="data.moduleOccupations.length" min="1" />
-            <div class="invalid" ng-if="dialogForm.$submitted" ng-messages="dialogForm.occupationsLength.$error">
-              <div ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
-            </div>
+              <p class="invalid" ng-show="dialogForm.$submitted && !occupationsValid">
+                {{'stateCurriculum.error.specialtiesInvalid' | translate}}
+              </p>
+              <md-input-container hide>
+                <input ng-model="occupationsValid" type="text" required>
+              </md-input-container>
+              <p class="invalid" ng-show="dialogForm.$submitted && !suboccupationsValid">
+                {{'stateCurriculum.error.partAndSpecOccupationsInvalid' | translate}}
+              </p>
+              <md-input-container hide>
+                <input ng-model="suboccupationsValid" type="text" required>
+              </md-input-container>
+            </fieldset>
+          </div>
+          <div>&nbsp;</div>
 
-            <p class="invalid" ng-show="dialogForm.$submitted && !occupationsValid">
-              {{'stateCurriculum.error.specialtiesInvalid' | translate}}
-            </p>
-            <md-input-container hide>
-              <input ng-model="occupationsValid" type="text" required>
+          <div layout="row" flex>
+            <md-input-container flex="45">
+              <label>{{'stateCurriculum.enter.module.type' | translate}}</label>
+              <hois-classifier-select ng-model="data.module" show-only-values="allowedModuleTypes" main-classifier-code="KUTSEMOODUL" required
+                ng-disabled="readOnly" model-value-attr="code"></hois-classifier-select>
             </md-input-container>
-            <p class="invalid" ng-show="dialogForm.$submitted && !suboccupationsValid">
-              {{'stateCurriculum.error.partAndSpecOccupationsInvalid' | translate}}
-            </p>
-            <md-input-container hide>
-              <input ng-model="suboccupationsValid" type="text" required>
+            <md-input-container flex="20" flex-sm="50" flex-xs="50" flex-offset="5">
+              <label>{{'stateCurriculum.enter.module.credits' | translate}}</label>
+              <input ng-model="data.credits" type="number" min="0" max="999" required name="credits" ng-readonly="readOnly" pattern="^\d+(\.\d{1})?$">
+              <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
+                <div ng-message="min">
+                  {{'stateCurriculum.enter.credits.positive' | translate}}
+                </div>
+                <div ng-message="max">
+                  {{'stateCurriculum.enter.credits.max' | translate}}
+                </div>
+                <div ng-message="pattern">
+                  {{'stateCurriculum.error.decimalPresision' | translate}}
+                </div>
+              </div>
             </md-input-container>
-          </fieldset>
-          <br>
+          </div>
 
-          <md-input-container>
-            <label>{{'stateCurriculum.enter.module.type' | translate}}</label>
-            <hois-classifier-select ng-model="data.module" main-classifier-code="KUTSEMOODUL" show-only-values="allowedModuleTypes" required
-              model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
-          </md-input-container>
           <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.nameEt' | translate}}</label>
             <input ng-model="data.nameEt" type="text" required md-maxlength="255" ng-readonly="readOnly">
@@ -65,27 +85,12 @@
             <input ng-model="data.nameEn" type="text" md-maxlength="255" ng-readonly="readOnly">
           </md-input-container>
           <md-input-container flex>
-            <label>{{'stateCurriculum.enter.module.credits' | translate}}</label>
-            <input ng-model="data.credits" type="number" min="0" max="999" required name="credits" ng-readonly="readOnly" pattern="^\d+(\.\d{1})?$">
-            <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
-              <div ng-message="min">
-                {{'stateCurriculum.enter.credits.positive' | translate}}
-              </div>
-              <div ng-message="max">
-                {{'stateCurriculum.enter.credits.max' | translate}}
-              </div>
-              <div ng-message="pattern">
-                {{'stateCurriculum.error.decimalPresision' | translate}}
-              </div>
-            </div>
-          </md-input-container>
-          <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.objectiveEt' | translate}}</label>
-            <textarea ng-model="data.objectivesEt" required md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
+            <textarea ng-model="data.objectivesEt" required md-maxlength="10000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
           <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.objectiveEn' | translate}}</label>
-            <textarea ng-model="data.objectivesEn" md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
+            <textarea ng-model="data.objectivesEn" md-maxlength="10000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
 
           <div flex>
@@ -108,18 +113,18 @@
                 <md-button class="md-primary" ng-click="saveOutcome()" ng-if="isEditingOutcome">{{'main.button.change' | translate}}</md-button>
               </div>
               <div layout="column">
-                <div ng-repeat="item in data.outcomes track by $index" class="occupation-row align-center" layout="row" flex>
+                <div ng-repeat="item in data.outcomes | orderBy: 'id' track by $index" class="occupation-row align-center" layout="row" flex>
                   <div flex="45">
                     <a ng-click="editOutcome(item)" ng-if="!readOnly">
-                      <pre class="moduleOutcomes">{{item.outcomesEt}}</pre>
+                      <p class="scrollable">{{item.outcomesEt}}</p>
                     </a>
-                    <pre class="moduleOutcomes" ng-if="readOnly">{{item.outcomesEt}}</pre>
+                    <p class="scrollable" ng-if="readOnly">{{item.outcomesEt}}</p>
                   </div>
                   <div flex="40" flex-offset="5">
                     <a ng-click="editOutcome(item)" ng-if="!readOnly">
-                      <p class="moduleOutcomes">{{item.outcomesEn}}</p>
+                      <p class="scrollable">{{item.outcomesEn}}</p>
                     </a>
-                    <p class="moduleOutcomes" ng-if="readOnly">{{item.outcomesEn}}</p>
+                    <p class="scrollable" ng-if="readOnly">{{item.outcomesEn}}</p>
                   </div>
                   <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
                   <div>
@@ -129,7 +134,7 @@
               </div>
             </fieldset>
           </div>
-
+          <div>&nbsp;</div>
           <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.criteriaEt' | translate}}</label>
             <textarea ng-model="data.assessmentsEt" required md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
@@ -139,7 +144,7 @@
             <textarea ng-model="data.assessmentsEn" md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
           <br>
-          <md-checkbox ng-model="data.isAdditional" aria-label="{{'stateCurriculum.enter.module.isAdditional' | translate}}">
+          <md-checkbox ng-model="data.isAdditional" aria-label="{{'stateCurriculum.enter.module.isAdditional' | translate}}" ng-disabled="readOnly">
             {{'stateCurriculum.enter.module.isAdditional' | translate}}
           </md-checkbox>
         </div>
@@ -154,11 +159,3 @@
   </form>
 </md-dialog>
 
-
-<style>
-  .moduleOutcomes {
-    white-space: pre-wrap;
-    overflow-y: scroll;
-    max-height: 100px;
-  }
-</style>

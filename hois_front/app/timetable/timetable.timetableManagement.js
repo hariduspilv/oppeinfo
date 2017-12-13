@@ -3,7 +3,7 @@
 angular.module('hitsaOis').controller('TimetableManagementController', ['$scope', 'message', 'QueryUtils', 'DataUtils', 'Classifier', '$location', 'dialogService',
   function ($scope, message, QueryUtils, DataUtils, Classifier, $location, dialogService) {
     var baseUrl = '/timetables';
-    $scope.formState = {xlsUrl: 'timetables/timetableDifference.xls'};
+    $scope.formState = {xlsDiffUrl: 'timetables/timetableDifference.xls', xlsPlanUrl: 'timetables/timetablePlan.xlsx'};
 
     QueryUtils.endpoint(baseUrl + '/managementSearchFormData').search().$promise.then(function (result) {
       $scope.formState.studyYears = result.studyYears;

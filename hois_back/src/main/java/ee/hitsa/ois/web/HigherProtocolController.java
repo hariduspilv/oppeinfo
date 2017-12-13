@@ -27,11 +27,11 @@ import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.HigherProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.HigherProtocolStudentSearchCommand;
+import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.HigherProtocolDto;
 import ee.hitsa.ois.web.dto.HigherProtocolSearchDto;
@@ -54,7 +54,7 @@ public class HigherProtocolController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public HigherProtocolDto get(HoisUserDetails user, @WithEntity("id") Protocol protocol) {
+    public HigherProtocolDto get(HoisUserDetails user, @WithEntity Protocol protocol) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         HigherProtocolDto dto = HigherProtocolDto.ofWithUserRights(user, protocol);
         higherProtocolService.setStudentsPracticeResults(dto);
@@ -62,7 +62,7 @@ public class HigherProtocolController {
     }
 
     @GetMapping("/print/{id:\\d+}/protocol.pdf")
-    public void print(HoisUserDetails user, @WithEntity("id") Protocol protocol, HttpServletResponse response)
+    public void print(HoisUserDetails user, @WithEntity Protocol protocol, HttpServletResponse response)
             throws IOException {
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
@@ -78,7 +78,7 @@ public class HigherProtocolController {
 
     @PutMapping("/{id:\\d+}")
     public HigherProtocolDto save(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @NotNull @Valid @RequestBody HigherProtocolSaveForm form) {
         HigherProtocolUtil.assertCanChange(user, protocol);
         HigherProtocolUtil.validate(form, protocol);
@@ -90,7 +90,7 @@ public class HigherProtocolController {
      */
     @PutMapping("/confirm/{id:\\d+}")
     public HigherProtocolDto confirm(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @SuppressWarnings("unused") @NotNull @RequestBody HigherProtocolSaveForm form) {
         HigherProtocolUtil.assertCanConfirm(user, protocol);
         return get(user, higherProtocolService.confirm(protocol, user));
@@ -98,7 +98,7 @@ public class HigherProtocolController {
 
     @PutMapping("/saveAndConfirm/{id:\\d+}")
     public HigherProtocolDto saveAndConfirm(HoisUserDetails user,
-            @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @NotNull @Valid @RequestBody HigherProtocolSaveForm form) {
         HigherProtocolUtil.assertCanChange(user, protocol);
         HigherProtocolUtil.assertCanConfirm(user, protocol);
@@ -121,7 +121,7 @@ public class HigherProtocolController {
 
     @GetMapping("/{id:\\d+}/calculate")
     public List<ProtocolStudentResultDto> calculateGrades(HoisUserDetails user,
-            @NotNull @Valid ProtocolCalculateCommand command, @WithEntity(value = "id") Protocol protocol) {
+            @NotNull @Valid ProtocolCalculateCommand command, @WithEntity Protocol protocol) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         return higherProtocolService.calculateGrades(command);
     }

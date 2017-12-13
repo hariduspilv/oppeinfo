@@ -2,6 +2,7 @@ package ee.hitsa.ois.service.curriculum;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -20,12 +21,14 @@ import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleCompetence;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOccupation;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
+import ee.hitsa.ois.domain.curriculum.CurriculumOccupation;
 import ee.hitsa.ois.enums.CurriculumDraft;
 import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumModuleRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -33,6 +36,7 @@ import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumModuleForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumModuleTypesCommand;
+import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeDto;
 
 @Transactional
@@ -48,20 +52,20 @@ public class CurriculumModuleService {
     @Autowired
     private CurriculumRepository curriculumRepository;
     
-    public CurriculumModule create(CurriculumModuleForm form) {
+    public CurriculumModule create(HoisUserDetails user, CurriculumModuleForm form) {
         CurriculumModule module = new CurriculumModule();
         Curriculum curriculum = curriculumRepository.getOne(form.getCurriculum());
-        curriculum.getModules().add(module);
         module.setCurriculum(curriculum);
-        return update(module, form);
+        return update(user, module, form);
     }
 
-    public CurriculumModule update(CurriculumModule module, CurriculumModuleForm dto) {
+    public CurriculumModule update(HoisUserDetails user, CurriculumModule module, CurriculumModuleForm dto) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(dto, module, classifierRepository, "occupations", "competences", "outcomes");
         updateOccupations(module, dto.getOccupations());
         updateCompetences(module, dto.getCompetences());
         updateOutcomes(module, dto.getOutcomes());
-        return curriculumModuleRepository.save(module);
+        return EntityUtil.save(module, em);
     }
 
     private void updateOccupations(CurriculumModule module, Set<String> occupations) {
@@ -77,24 +81,23 @@ public class CurriculumModuleService {
             return new CurriculumModuleCompetence(EntityUtil.validateClassifier(classifierRepository.getOne(competenceCode), MainClassCode.KOMPETENTS));
         });
     }
-
-    // TODO: rewrite using EntityUtil
-    private static void updateOutcomes(CurriculumModule module, Set<CurriculumModuleOutcomeDto> outcomes) {
-        Set<CurriculumModuleOutcome> newOutComes = new HashSet<>();
-        if(outcomes != null) {
-            for(CurriculumModuleOutcomeDto dto : outcomes) {
-                CurriculumModuleOutcome outcome = dto.getId() == null ? new CurriculumModuleOutcome() :
-                    EntityUtil.find(dto.getId(), module.getOutcomes()).get();
-
-                newOutComes.add(EntityUtil.bindToEntity(dto, outcome));
-            }
-        }
-        module.setOutcomes(newOutComes);
+    
+    private void updateOutcomes(CurriculumModule module, Set<CurriculumModuleOutcomeDto> outcomes) {
+        EntityUtil.bindEntityCollection(module.getOutcomes(), CurriculumModuleOutcome::getId, outcomes, 
+                CurriculumModuleOutcomeDto::getId, this::createOutcome, this::updateOutcome);
     }
 
-    public void delete(CurriculumModule module) {
+    private CurriculumModuleOutcome createOutcome(CurriculumModuleOutcomeDto dto) {
+        return updateOutcome(dto, new CurriculumModuleOutcome());
+    }
+
+    private CurriculumModuleOutcome updateOutcome(CurriculumModuleOutcomeDto dto, CurriculumModuleOutcome outcome) {
+        return EntityUtil.bindToEntity(dto, outcome);
+    }
+
+    public void delete(HoisUserDetails user, CurriculumModule module) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(module, em);
-        module.getCurriculum().getModules().remove(module);        
     }
 
     public Set<String> getPossibleModuleTypes(CurriculumModuleTypesCommand command) {
@@ -123,5 +126,16 @@ public class CurriculumModuleService {
         qb.requiredCriteria("c.code in :possibleTypes", "possibleTypes", possibleTypes);
         List<?> result = qb.select("c.code", em).getResultList();
         return StreamUtil.toMappedSet(r -> resultAsString(r, 0), result);        
+    }
+
+    public List<ClassifierSelection> getCompetences(Curriculum curriculum) {
+        Set<CurriculumOccupation> occupations = curriculum.getOccupations();
+        List<ClassifierSelection> result = new ArrayList<>();
+        for(CurriculumOccupation occupation : occupations) {
+            result.addAll(StreamUtil.toMappedList(c -> ClassifierSelection.of(c.getClassifier()), 
+                    occupation.getOccupation().getChildConnects()));
+        }
+        return result.stream().filter(c -> MainClassCode.KOMPETENTS.name().equals(c.getMainClassCode()))
+                .collect(Collectors.toList());
     }
 }

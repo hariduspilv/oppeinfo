@@ -3,7 +3,9 @@ package ee.hitsa.ois.service;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.mail.Message;
 
@@ -22,14 +24,12 @@ public class MailService {
 
     @Value("${hois.mail.receivers:#{null}}")
     private String testReceivers;
-
     @Value("${hois.mail.disable:#{null}}")
     private Boolean disable;
-
     @Autowired
     private JavaMailSender mailSender;
 
-    private ThreadLocal<ExecutorService> executorLocal = ThreadLocal.withInitial(Executors::newSingleThreadExecutor);
+    private final ExecutorService executorService = new ThreadPoolExecutor(0, 10, 300L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>());
 
     // IKE - emails are always sent together with system messages but we do not have to guarantee their arrival
     public void sendMail(String from, String to, String subject, String message) {
@@ -48,15 +48,14 @@ public class MailService {
         }
 
         try {
-            this.mailSender.send(mail -> {
-                mail.setFrom(from);
-                mail.setRecipients(Message.RecipientType.TO, receivers);
-                mail.setSubject(subject);
-                mail.setText(message);
-                executorLocal.get().submit(() -> {
-                    mailSender.send(mail);
-                    log.info("email {} sent to {}", subject, receivers);
+            executorService.execute(() -> {
+                mailSender.send(mail -> {
+                    mail.setFrom(from);
+                    mail.setRecipients(Message.RecipientType.TO, receivers);
+                    mail.setSubject(subject);
+                    mail.setText(message);
                 });
+                log.info("email {} sent to {}", subject, receivers);
             });
         } catch (Exception e) {
             log.error("sending email {} to {} failed", subject, receivers, e);

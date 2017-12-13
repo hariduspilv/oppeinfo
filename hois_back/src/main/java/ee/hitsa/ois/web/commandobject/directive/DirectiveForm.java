@@ -1,6 +1,5 @@
 package ee.hitsa.ois.web.commandobject.directive;
 
-import static ee.hitsa.ois.validation.DirectiveValidation.Immat;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -12,6 +11,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
+import ee.hitsa.ois.validation.DirectiveValidation.Immat;
 import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.validation.StudyPeriodRange;

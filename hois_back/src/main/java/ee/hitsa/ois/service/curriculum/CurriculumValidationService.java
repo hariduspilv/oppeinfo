@@ -40,7 +40,6 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumForm;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeDto;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumOccupationDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
 
@@ -131,17 +130,17 @@ public class CurriculumValidationService {
     public void validateVocationalCurriculumForm(Curriculum curriculum, CurriculumForm form) {
         ValidationFailedException.throwOnError(validator.validate(form, CurriculumValidator.ConfirmedVocational.class));
 
-        if(occupationRequired(curriculum) && !curriculumHasAnyOccupation(form)) {
+        if(occupationRequired(curriculum) && !curriculumHasAnyOccupation(curriculum)) {
             throw new ValidationFailedException("curriculum.error.noOccupation");
         }
         if(!anyModuleIsBasic(curriculum.getModules())) {
             throw new ValidationFailedException("curriculum.error.noBasicModule");
         }
-        if(curriculumHasAnyOccupation(form)) {
+        if(curriculumHasAnyOccupation(curriculum)) {
             if(!allModulesHaveOccupation(curriculum.getModules())) {
                 throw new ValidationFailedException("curriculum.error.notAllModulesHaveOccupation");
             }
-            if(!allOccupationsHaveBasicModule(form, curriculum)) {
+            if(!allOccupationsHaveBasicModule(curriculum)) {
                 throw new ValidationFailedException("curriculum.error.noPModules");
             }
         }
@@ -152,15 +151,6 @@ public class CurriculumValidationService {
 
     private static boolean allModulesHaveOccupation(Set<CurriculumModule> modules) {
         return modules.stream().allMatch(m -> !m.getOccupations().isEmpty());
-    }
-
-    private boolean allOccupationsHaveBasicModule(CurriculumForm form, Curriculum curriculum) {
-        for(CurriculumOccupationDto dto : form.getOccupations()) {
-            if(!occupationHasBasicModule(dto.getOccupation(), curriculum.getModules())) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private boolean occupationHasBasicModule(String occupationCode, Set<CurriculumModule> modules) {
@@ -190,11 +180,7 @@ public class CurriculumValidationService {
                 CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_RIIKLIK)
                 .contains(EntityUtil.getNullableCode(curriculum.getDraft()));
     }
-
-    private static boolean curriculumHasAnyOccupation(CurriculumForm form) {
-        return form.getOccupations() != null && !form.getOccupations().isEmpty();
-    }
-
+    
     // Curriculum validation
     public void validateCurriculum(Curriculum curriculum) {
         ValidationFailedException.throwOnError(validator.validate(curriculum, CurriculumValidator.Confirmed.class));
@@ -256,7 +242,7 @@ public class CurriculumValidationService {
     } 
 
     private static boolean hasAnyConfirmedVersion(Curriculum curriculum) {
-        return curriculum.getVersions().stream().anyMatch(v -> ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K, v.getStatus()));
+        return curriculum.getVersions().stream().anyMatch(CurriculumUtil::isCurriculumVersionConfirmed);
     }
 
     public void assertCurriculumCanBeDeleted(Curriculum curriculum) {
@@ -299,7 +285,7 @@ public class CurriculumValidationService {
     }
 
     public void validateCurriculumVersionFormWithStatus(CurriculumVersion curriculumVersion, CurriculumVersionDto dto) {
-        if(ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K, curriculumVersion.getStatus())) {
+        if(CurriculumUtil.isCurriculumVersionConfirmed(curriculumVersion)) {
             validateCurriculumVersionForm(curriculumVersion, dto);
         }
     }
@@ -316,10 +302,8 @@ public class CurriculumValidationService {
 
     private static Set<CurriculumVersionHigherModule> getSpecialitiesModules(Long speciality, CurriculumVersion version) {
         return version.getModules().stream().filter(m -> {
-            // TODO anyMatch
-            Set<Long> specialities = StreamUtil.toMappedSet(s -> EntityUtil.getId(s.getSpeciality()
-                    .getCurriculumSpeciality()), m.getSpecialities());
-            return specialities.contains(speciality);
+            return m.getSpecialities().stream().anyMatch(s -> EntityUtil.getId(s.getSpeciality()
+                  .getCurriculumSpeciality()).equals(speciality));
         }).collect(Collectors.toSet());
     }
 
@@ -362,7 +346,15 @@ public class CurriculumValidationService {
 
     private static void assertAllOccupationModulesValid(CurriculumVersion implementationPlan) {
         Curriculum curriculum = implementationPlan.getCurriculum();
-        if(curriculum.getModules().size() != implementationPlan.getOccupationModules().size()) {
+        
+        long curriculumModules = curriculum.getModules().stream()
+        .filter(m -> !CurriculumUtil.isFreeModule(m)).count();
+        
+        long implementationPlanModules = implementationPlan.getOccupationModules()
+        .stream().filter(m -> !CurriculumUtil.isFreeModule(m.getCurriculumModule()))
+        .count();
+        
+        if(curriculumModules != implementationPlanModules) {
             throw new ValidationFailedException("curriculum.error.implementationPlanNotAllModules");
         }
         for(CurriculumModule module : curriculum.getModules()) {
@@ -411,6 +403,9 @@ public class CurriculumValidationService {
     }
 
     private static boolean moduleHasOccupationModule(CurriculumModule module, CurriculumVersion implementationPlan) {
+        if(CurriculumUtil.isFreeModule(module)) {
+            return true;
+        }
         Optional<CurriculumVersionOccupationModule> occupationModule = implementationPlan.getOccupationModules().stream()
                 .filter(om -> module.equals(om.getCurriculumModule())).findFirst();
         return occupationModule.isPresent();

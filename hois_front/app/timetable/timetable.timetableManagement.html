@@ -60,7 +60,9 @@
             <md-button ng-if="row.id && !row.isHigher" md-no-ink class="md-primary change-button"
                        ng-click="copyTimetable(row.id)">{{'main.button.copy' | translate}}
             </md-button>
-            <md-button ng-if="row.id && !row.isHigher" ng-href="{{excel(formState.xlsUrl, {id: row.id})}}" target="_blank" class="md-primary change-button">{{'timetable.management.difference' | translate}}
+            <md-button ng-if="row.id && !row.isHigher" ng-href="{{excel(formState.xlsDiffUrl, {id: row.id})}}" target="_blank" class="md-primary change-button">{{'timetable.management.difference' | translate}}
+            </md-button>
+            <md-button ng-if="row.id && !row.isHigher" ng-href="{{excel(formState.xlsPlanUrl, {id: row.id})}}" target="_blank" class="md-primary change-button">{{'timetable.management.plan' | translate}}
             </md-button>
           </td>
         </tr>

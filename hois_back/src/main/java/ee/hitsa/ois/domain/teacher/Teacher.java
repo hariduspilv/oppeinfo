@@ -36,8 +36,13 @@ public class Teacher extends BaseEntityWithId {
     private Boolean isStudyPeriodScheduleLoad;
     private Boolean isActive;
 
+    private String rtipNr;
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private TeacherOccupation teacherOccupation;
+
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TeacherAbsence> teacherAbsence;
 
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TeacherPositionEhis> teacherPositionEhis;
@@ -102,14 +107,6 @@ public class Teacher extends BaseEntityWithId {
         isHigher = higher;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-
     public Short getScheduleLoad() {
         return scheduleLoad;
     }
@@ -118,12 +115,44 @@ public class Teacher extends BaseEntityWithId {
         this.scheduleLoad = scheduleLoad;
     }
 
+    public Boolean getIsStudyPeriodScheduleLoad() {
+        return isStudyPeriodScheduleLoad;
+    }
+
+    public void setIsStudyPeriodScheduleLoad(Boolean studyPeriodScheduleLoad) {
+        isStudyPeriodScheduleLoad = studyPeriodScheduleLoad;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public String getRtipNr() {
+        return rtipNr;
+    }
+
+    public void setRtipNr(String rtipNr) {
+        this.rtipNr = rtipNr;
+    }
+
     public TeacherOccupation getTeacherOccupation() {
         return teacherOccupation;
     }
 
     public void setTeacherOccupation(TeacherOccupation teacherOccupation) {
         this.teacherOccupation = teacherOccupation;
+    }
+
+    public List<TeacherAbsence> getTeacherAbsence() {
+        return teacherAbsence != null ? teacherAbsence : (teacherAbsence = new ArrayList<>());
+    }
+
+    public void setTeacherAbsence(List<TeacherAbsence> teacherAbsence) {
+        this.teacherAbsence = teacherAbsence;
     }
 
     public Set<TeacherPositionEhis> getTeacherPositionEhis() {
@@ -157,14 +186,6 @@ public class Teacher extends BaseEntityWithId {
 
     public void setTeacherQualification(Set<TeacherQualification> teacherQualification) {
         this.teacherQualification = teacherQualification;
-    }
-
-    public Boolean getIsStudyPeriodScheduleLoad() {
-        return isStudyPeriodScheduleLoad;
-    }
-
-    public void setIsStudyPeriodScheduleLoad(Boolean studyPeriodScheduleLoad) {
-        isStudyPeriodScheduleLoad = studyPeriodScheduleLoad;
     }
 
     public List<SubjectStudyPeriodTeacher> getSubjectStudyPeriods() {

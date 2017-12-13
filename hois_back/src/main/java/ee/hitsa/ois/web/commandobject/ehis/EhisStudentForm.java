@@ -1,10 +1,11 @@
 package ee.hitsa.ois.web.commandobject.ehis;
 
-import ee.hitsa.ois.enums.EhisStudentDataType;
-import ee.hitsa.ois.validation.DateRange;
+import java.time.LocalDate;
 
 import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
+
+import ee.hitsa.ois.enums.EhisStudentDataType;
+import ee.hitsa.ois.validation.DateRange;
 
 @DateRange(from = "from", thru = "thru")
 public class EhisStudentForm {

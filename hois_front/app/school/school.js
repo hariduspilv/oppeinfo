@@ -7,14 +7,20 @@
  * # School
  * Service in the hitsaOis.
  */
-angular.module('hitsaOis').factory('School', function ($resource, QueryUtils) {
+angular.module('hitsaOis').factory('School', ['QueryUtils',
+  function (QueryUtils) {
 
-  function School() {
+    function School() {
+    }
+
+    School.getAll = function () {
+      return QueryUtils.endpoint('/autocomplete/schools').query();
+    };
+
+    School.getLdap = function () {
+      return QueryUtils.endpoint('/autocomplete/ldapschools').query();
+    };
+
+    return School;
   }
-
-  School.getAll = function () {
-    return QueryUtils.endpoint('/autocomplete/schools').query();
-  };
-
-  return School;
-});
+]);

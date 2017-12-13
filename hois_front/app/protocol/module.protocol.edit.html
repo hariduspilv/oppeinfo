@@ -34,7 +34,7 @@
                     <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code" aria-label="grade" ng-change="gradeChanged()" ng-disabled="!protocol.canBeEdited"></hois-select>
                   </td>
                   <td md-cell>
-                    <a ng-if="row.status==='OPPURSTAATUS_K' && !row.grade && protocol.canBeEdited" ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
+                    <a ng-if="row.canBeDeleted && protocol.canBeEdited" ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
                   </td>
                 </tr>
               </tbody>

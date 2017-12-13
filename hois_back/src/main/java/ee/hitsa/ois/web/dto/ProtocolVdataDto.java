@@ -11,19 +11,20 @@ public class ProtocolVdataDto {
 
     private Long id;
     private AutocompleteResult curriculumVersionOccupationModule;
-    private BigDecimal moduleCredits = BigDecimal.ZERO;
+    private BigDecimal moduleCredits;
     private String assessment;
     private AutocompleteResult curriculumVersion;
     private AutocompleteResult studyYear;
     private AutocompleteResult teacher;
     private List<AutocompleteResult> outcomes;
+    private Long curriculum;
+    private Long curriculumModule;
 
     public static ProtocolVdataDto of(ProtocolVdata protocolVdata) {
         ProtocolVdataDto dto = new ProtocolVdataDto();
         dto.setCurriculumVersionOccupationModule(
                 AutocompleteResult.of(protocolVdata.getCurriculumVersionOccupationModule()));
-        protocolVdata.getCurriculumVersionOccupationModule().getYearCapacities()
-                .forEach(c -> dto.setModuleCredits(dto.getModuleCredits().add(c.getCredits())));
+        dto.setModuleCredits(protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule().getCredits());
         dto.setAssessment(
                 EntityUtil.getNullableCode(protocolVdata.getCurriculumVersionOccupationModule().getAssessment()));
         dto.setCurriculumVersion(AutocompleteResult.of(protocolVdata.getCurriculumVersion()));
@@ -31,6 +32,9 @@ public class ProtocolVdataDto {
         dto.setTeacher(AutocompleteResult.of(protocolVdata.getTeacher()));
         dto.setOutcomes(protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule().getOutcomes()
                 .stream().map(AutocompleteResult::of).collect(Collectors.toList()));
+        
+        dto.setCurriculum(EntityUtil.getId(protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule().getCurriculum()));
+        dto.setCurriculumModule(EntityUtil.getId(protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule()));
         return dto;
     }
 
@@ -98,4 +102,19 @@ public class ProtocolVdataDto {
         this.outcomes = outcomes;
     }
 
+    public Long getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(Long curriculum) {
+        this.curriculum = curriculum;
+    }
+
+    public Long getCurriculumModule() {
+        return curriculumModule;
+    }
+
+    public void setCurriculumModule(Long curriculumModule) {
+        this.curriculumModule = curriculumModule;
+    }
 }

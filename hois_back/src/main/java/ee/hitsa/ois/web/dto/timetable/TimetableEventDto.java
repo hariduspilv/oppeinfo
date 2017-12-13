@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -9,19 +10,23 @@ public class TimetableEventDto {
     private Long id;
     private LocalDateTime start;
     private LocalDateTime end;
-    private Integer lessonNr;
-    private List<AutocompleteResult> rooms;
-    private List<Long> teachers;
-    private Long journal;
-    private Long subjectStudyPeriod;
+    private List<AutocompleteResult> rooms = new ArrayList<>();
+    private List<Long> teachers = new ArrayList<>();
     private Long studentGroup;
     private String capacityType;
+
+    // vocational
+    private Integer lessonNr;
+    private Long journal;
+
+    // higher
+    private Long subjectStudyPeriod;
     private String subjectCode;
     private String subjectName;
 
     // TODO: make different classes with different cosntructors
     public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, Integer lessonNr, String capacityType,
-            Long journal, Long studentGroup) {
+            Long journal, Long studentGroup, String subjectName) {
         this.id = id;
         this.start = start;
         this.end = end;
@@ -29,14 +34,14 @@ public class TimetableEventDto {
         this.capacityType = capacityType;
         this.journal = journal;
         this.studentGroup = studentGroup;
+        this.subjectName = subjectName;
     }
 
-    public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, Integer lessonNr, String capacityType,
-            String subjectCode, Long studentGroup, String subjectName, Long subjectStudyPeriod) {
+    public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, String capacityType, String subjectCode,
+            Long studentGroup, String subjectName, Long subjectStudyPeriod) {
         this.id = id;
         this.start = start;
         this.end = end;
-        this.lessonNr = lessonNr;
         this.capacityType = capacityType;
         this.subjectCode = subjectCode;
         this.studentGroup = studentGroup;
@@ -44,12 +49,11 @@ public class TimetableEventDto {
         this.subjectStudyPeriod = subjectStudyPeriod;
     }
 
-    public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, Integer lessonNr, String capacityType,
-            String subjectCode, String subjectName, Long subjectStudyPeriod) {
+    public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, String capacityType, String subjectCode,
+            String subjectName, Long subjectStudyPeriod) {
         this.id = id;
         this.start = start;
         this.end = end;
-        this.lessonNr = lessonNr;
         this.capacityType = capacityType;
         this.subjectCode = subjectCode;
         this.subjectStudyPeriod = subjectStudyPeriod;
@@ -93,7 +97,9 @@ public class TimetableEventDto {
     }
 
     public void setRooms(List<AutocompleteResult> rooms) {
-        this.rooms = rooms;
+        if(rooms != null) {
+            this.rooms = rooms;
+        }
     }
 
     public List<Long> getTeachers() {
@@ -101,7 +107,9 @@ public class TimetableEventDto {
     }
 
     public void setTeachers(List<Long> teachers) {
-        this.teachers = teachers;
+        if(teachers != null) {
+            this.teachers = teachers;
+        }
     }
 
     public Long getJournal() {

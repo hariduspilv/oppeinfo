@@ -1,0 +1,136 @@
+<md-dialog aria-label="informal learning edit dialog" flex="80" flex-sm="80" flex-xs="100">
+  <form name="dialogForm" ng-submit="dialogForm.$valid && submitInformalLearning()" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"apel.informalLearnings.add" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div layout-padding>
+        <fieldset>
+          <legend class="md-title-small">{{'apel.informalLearnings.otherInformalLearnings' | translate}}</legend>
+          <md-button class="md-raised" ng-click="addNewInformalExperienceRow()">{{'main.button.addNewRow' | translate}}</md-button>
+          <md-table-container>
+            <table md-table md-progress="tabledata.$promise" class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column width="20%">{{'apel.informalLearnings.name' | translate}}</th>
+                  <th md-column width="20%">{{'apel.informalLearnings.placeTime' | translate}}</th>
+                  <th md-column width="10%">{{'apel.informalLearnings.hours' | translate}}</th>
+                  <th md-column width="20%">{{'apel.informalLearnings.documents' | translate}}</th>
+                  <th md-column width="25%">{{'apel.informalLearnings.type' | translate}}</th>
+                  <th md-column width="5%"></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="experience in record.informalExperiences" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>
+                    <md-input-container>
+                      <input ng-model="experience.nameEt" aria-label="nameEt" type="text" md-maxlength="255" required>
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                    <md-input-container>
+                      <input ng-model="experience.placeTime" aria-label="place and time" type="text" md-maxlength="255" required>
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                    <md-input-container>
+                      <input ng-model="experience.hours" aria-label="hours" type="number" ng-min="0" ng-max="99999" required>
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                    <md-input-container>
+                      <textarea ng-model="experience.documents" required md-maxlength="255" max-rows="2" aria-label="documents"></textarea>
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                    <md-input-container>
+                      <hois-classifier-select ng-model="experience.type" aria-label="type" model-value-attr="code" main-classifier-code="VOTA_INFORMAAL_LIIK"
+                        required></hois-classifier-select>
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                    <a class="remove nomargin" ng-click="removeInformalExperienceRow(experience)">&times;</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </fieldset>
+        <br>
+        <fieldset>
+          <legend class="md-title-small">{{'apel.informalLearnings.substitutableSubjects' | translate}}</legend>
+          <div flex="50">
+            <md-input-container style="width: 100%">
+              <label>{{'apel.informalLearnings.subject' | translate}}</label>
+              <md-select ng-model="selectedSubject" aria-label="{{'apel.informalLearnings.substitutableSubjects' | translate}}">
+                <md-option ng-repeat="val in subjects" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
+              </md-select>
+            </md-input-container>
+          </div>
+          <md-table-container>
+            <table md-table md-progress="tabledata.$promise" class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'apel.informalLearnings.subject' | translate}}</th>
+                  <th md-column>{{'apel.informalLearnings.module' | translate}}</th>
+                  <th md-column>{{'apel.informalLearnings.required' | translate}}</th>
+                  <th md-column>{{'apel.informalLearnings.creditsEAP' | translate}}</th>
+                  <th md-column>{{'apel.informalLearnings.acquiredSkills' | translate}}</th>
+                  <th md-column></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="subjectOrModule in record.informalSubjectsOrModules" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <ng-form name="subjectOrModuleForm">
+                    <td md-cell>
+                      <md-input-container>
+                        <hois-value ng-if="subjectOrModule.subject" value="currentLanguageNameField(subjectOrModule.subject)"></hois-value>
+                      </md-input-container>
+                    </td>
+                    <td md-cell>
+                      <md-input-container>
+                        <hois-value ng-if="subjectOrModule.curriculumVersionHmodule" value="currentLanguageNameField(subjectOrModule.curriculumVersionHmodule)"></hois-value>
+                      </md-input-container>
+                    </td>
+                    <td md-cell>
+                      <md-input-container>
+                        <span ng-if="subjectOrModule.isOptional">{{'main.yes' | translate}}</span>
+                        <span ng-if="!subjectOrModule.isOptional">{{'main.no' | translate}}</span>
+                      </md-input-container>
+                    </td>
+                    <td md-cell>
+                      <md-input-container>
+                        <hois-value ng-if="subjectOrModule.credits" value="subjectOrModule.credits"></hois-value>
+                      </md-input-container>
+                    </td>
+                    <td md-cell>
+                      <md-input-container>
+                        <textarea ng-model="subjectOrModule.skills" required md-maxlength="4000" max-rows="3" aria-label="{{'apel.informalLearnings.acquiredSkills' | translate}}"></textarea>
+                      </md-input-container>
+                    </td>
+                    <td md-cell>
+                      <a class="remove nomargin" ng-click="removeSubtitutableModuleTheme(subjectOrModule)">&times;</a>
+                    </td>
+                  </ng-form>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </fieldset>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button type="submit" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+      <md-button ng-if="record.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+      <md-button ng-click="cancel()" class="md-raised">{{'main.button.close' | translate}}</md-button>
+    </md-dialog-actions>
+    </div>
+  </form>
+</md-dialog>

@@ -32,10 +32,8 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.MessageStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.service.MessageTemplateService.HoisReflectivePropertyAccessor;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.DataUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
@@ -170,12 +168,7 @@ public class AutomaticMessageService {
         }
 
         Long schoolId = EntityUtil.getId(school);
-        MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId);
-        if (template == null) {
-            Classifier templateName = em.getReference(Classifier.class, type.name());
-            throw new BadConfigurationException("main.messages.error.configuration.missingAutomaticMessageTemplate",
-                    DataUtil.asMap("template", templateName != null ? templateName.getNameEt() : type.name()));
-        }
+        MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId, true);
 
         try {
             StandardEvaluationContext ctx = new StandardEvaluationContext(dataBean);

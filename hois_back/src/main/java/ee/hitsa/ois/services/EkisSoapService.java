@@ -2,6 +2,7 @@ package ee.hitsa.ois.services;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.function.Supplier;
 
 import javax.jws.HandlerChain;
@@ -11,6 +12,10 @@ import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import ee.hitsa.ois.domain.Classifier;
@@ -41,6 +46,8 @@ public class EkisSoapService implements EkisTahvelPort {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String SYSTEM_FAULT = "süsteemi viga";
+    private static final Authentication EKIS = new UsernamePasswordAuthenticationToken("EKIS", null,
+            Collections.singletonList((GrantedAuthority)(() -> "ROLE_EKIS")));
 
     @Autowired
     private EntityManager em;
@@ -112,7 +119,14 @@ public class EkisSoapService implements EkisTahvelPort {
 
     private static <T> T withExceptionHandler(Supplier<T> supplier) {
         try {
-            return supplier.get();
+            // set authentication to get audit log fields filled
+            Authentication oldAuthentication = SecurityContextHolder.getContext().getAuthentication();
+            SecurityContextHolder.getContext().setAuthentication(EKIS);
+            try {
+                return supplier.get();
+            } finally {
+                SecurityContextHolder.getContext().setAuthentication(oldAuthentication);
+            }
         } catch (HoisException e) {
             throw e;
         } catch (Throwable e) {

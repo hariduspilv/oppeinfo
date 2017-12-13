@@ -31,8 +31,8 @@
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.optionals' | translate}}</legend>
           <div ng-repeat="electiveModule in data.electiveModules | orderBy: currentLanguageNameField()" class="secondary-table-row"
             flex layout="row">
-            <div flex="95">
-              <p>{{currentLanguageNameField(electiveModule)}}</p>
+            <div flex>
+              <p class="elective-module">{{currentLanguageNameField(electiveModule)}}</p>
             </div>
           </div>
         </fieldset>

@@ -23,6 +23,7 @@ import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
 import ee.hois.xroad.ehis.generated.KhlOppekavaTaitmine;
+import ee.hois.xroad.ehis.generated.KhlVOTAArr;
 
 @Transactional
 @Service
@@ -63,6 +64,7 @@ public class EhisStudentService extends EhisService {
             break;
         case VOTA:
             throw new UnsupportedOperationException();
+            // vota(Student)
         default:
             break;
         }
@@ -82,6 +84,23 @@ public class EhisStudentService extends EhisService {
 
             KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
             khlKorgharidusMuuda.setOppekavaTaitmine(oppekavaTaitmine);
+            khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+
+            return makeRequest(student, khlOppeasutusList);
+        } catch (Exception e) {
+            return bindingException(student, e);
+        }
+    }
+
+    private WsEhisStudentLog vota(/* XXX not sure about parameter type */ Student student) {
+        try {
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+
+            KhlVOTAArr vota = new KhlVOTAArr();
+            // TODO fill vota records
+
+            KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+            khlKorgharidusMuuda.setVOTAKirjed(vota);
             khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
 
             return makeRequest(student, khlOppeasutusList);

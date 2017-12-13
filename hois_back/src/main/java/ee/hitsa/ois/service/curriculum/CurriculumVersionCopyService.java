@@ -1,15 +1,16 @@
 package ee.hitsa.ois.service.curriculum;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
 import javax.transaction.Transactional;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionElectiveModule;
@@ -45,6 +46,7 @@ public class CurriculumVersionCopyService {
         newCurriculumVersion
                 .setStatus(classifierRepository.findOne(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_S.name()));
         newCurriculumVersion.setCode(copied.getCode() + " COPIED");
+        newCurriculumVersion.setValidFrom(LocalDate.now());
         copySpecialities(newCurriculumVersion, copied.getSpecialities());
         copyHigherModules(newCurriculumVersion, copied.getModules());
         copyOccupationModules(newCurriculumVersion, copied.getOccupationModules());

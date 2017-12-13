@@ -27,9 +27,9 @@ import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanCreateForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
+import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto;
@@ -65,13 +65,13 @@ public class LessonPlanController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public LessonPlanDto get(HoisUserDetails user, @WithEntity("id") LessonPlan lessonPlan) {
+    public LessonPlanDto get(HoisUserDetails user, @WithEntity LessonPlan lessonPlan) {
         UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
         return lessonPlanService.get(lessonPlan);
     }
 
     @GetMapping("/byteacher/{id:\\d+}/{sy:\\d+}")
-    public LessonPlanByTeacherDto get(HoisUserDetails user, @WithEntity("id") Teacher teacher, @WithEntity("sy") StudyYear studyYear) {
+    public LessonPlanByTeacherDto get(HoisUserDetails user, @WithEntity Teacher teacher, @WithEntity("sy") StudyYear studyYear) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         UserUtil.assertSameSchool(user, teacher.getSchool());
         UserUtil.assertSameSchool(user, studyYear.getSchool());
@@ -79,7 +79,7 @@ public class LessonPlanController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public LessonPlanDto save(HoisUserDetails user, @WithEntity("id") @WithVersionedEntity(value = "id", versionRequestBody = true) LessonPlan lessonPlan, @Valid @RequestBody LessonPlanForm form) {
+    public LessonPlanDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) LessonPlan lessonPlan, @Valid @RequestBody LessonPlanForm form) {
         UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
         return get(user, lessonPlanService.save(lessonPlan, form));
     }
@@ -102,19 +102,19 @@ public class LessonPlanController {
     }
 
     @GetMapping("/journals/{id:\\d+}")
-    public LessonPlanJournalDto getJournal(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestParam("lessonPlanModule") Long lessonPlanModuleId) {
+    public LessonPlanJournalDto getJournal(HoisUserDetails user, @WithEntity Journal journal, @RequestParam("lessonPlanModule") Long lessonPlanModuleId) {
         UserUtil.assertSameSchool(user, journal.getSchool());
         return lessonPlanService.getJournal(journal, lessonPlanModuleId);
     }
 
     @PutMapping("/journals/{id:\\d+}")
-    public LessonPlanJournalDto saveJournal(HoisUserDetails user, @WithEntity("id") Journal journal, @Valid @RequestBody LessonPlanJournalForm form) {
+    public LessonPlanJournalDto saveJournal(HoisUserDetails user, @WithEntity Journal journal, @Valid @RequestBody LessonPlanJournalForm form) {
         UserUtil.assertIsSchoolAdmin(user, journal.getSchool());
         return getJournal(user, lessonPlanService.saveJournal(journal, form, user), form.getLessonPlanModuleId());
     }
 
     @DeleteMapping("/journals/{id:\\d+}")
-    public void deleteJournal(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Journal journal, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void deleteJournal(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Journal journal, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, journal.getSchool());
         lessonPlanService.deleteJournal(user, journal);
     }

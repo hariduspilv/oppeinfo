@@ -62,15 +62,6 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
         }
       })
-      .when('/absences', {
-        templateUrl: 'fakePages/fake.html',
-        controller: 'fakeController',
-        controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PUUDUMINE]
-        }
-      })
       .when('/examTimes', {
         templateUrl: 'fakePages/fake.html',
         controller: 'fakeController',
@@ -105,7 +96,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         resolve: { translationLoaDed: function($translate) { return $translate.onReady(); } },
         data: {
           authorizedRoles: [
-            USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPETAJA, 
+            USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPETAJA,
             USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR
           ]
         }

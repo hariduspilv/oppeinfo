@@ -1,5 +1,6 @@
 package ee.hitsa.ois.enums;
 
+import ee.hitsa.ois.message.AcademicLeaveEnding;
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
 import ee.hitsa.ois.message.PracticeJournalUniqueUrlMessage;
 import ee.hitsa.ois.message.StudentAbsenceCreated;
@@ -13,7 +14,7 @@ public enum MessageType {
 
     TEATE_LIIK_UUS_KK(StudentDirectiveCreated.class),
     TEATE_LIIK_MUUD_TUNNIPL(null),
-    TEATE_LIIK_AP_LOPP(null),
+    TEATE_LIIK_AP_LOPP(AcademicLeaveEnding.class),
     TEATE_LIIK_AV_KINNIT(ConfirmationNeededMessage.class),
     TEATE_LIIK_AV_OPPURI_ANDMED(StudentRepresentativeApplicationCreated.class),
     TEATE_LIIK_OP_ESINDAJA(StudentRepresentativeApplicationAccepted.class),

@@ -36,15 +36,18 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.SubjectUserRights;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 
 @Transactional
@@ -57,6 +60,8 @@ public class SubjectService {
     private SubjectRepository subjectRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private CurriculumVersionRepository curriculumVersionRepository;
 
     public Subject create(HoisUserDetails user, SubjectForm newSubject) {
         Subject subject = new Subject();
@@ -65,6 +70,7 @@ public class SubjectService {
     }
 
     public Subject save(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(newSubject, subject, classifierRepository, "status");
 
         subject.setSchool(em.getReference(School.class, user.getSchoolId()));
@@ -132,12 +138,13 @@ public class SubjectService {
     /**
      *  Curricula OR CurriculaVersion
      */
-    public Page<SubjectSearchDto> search(Long schoolId, SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
+    public Page<SubjectSearchDto> search(HoisUserDetails user, SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
+        Boolean canEdit = Boolean.valueOf(SubjectUserRights.hasPermissionToEdit(user));
         return subjectRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 
-            if (schoolId != null) {
-                filters.add(cb.equal(root.get("school").get("id"), schoolId));
+            if (user.getSchoolId() != null) {
+                filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
             }
 
             if (!CollectionUtils.isEmpty(subjectSearchCommand.getDepartments())) {
@@ -171,7 +178,12 @@ public class SubjectService {
             if (!CollectionUtils.isEmpty(subjectSearchCommand.getAssessments())) {
                 filters.add(root.get("assessment").get("code").in(subjectSearchCommand.getAssessments()));
             }
-
+            if(!SubjectUserRights.canViewAllSubjects(user)) {
+                if(subjectSearchCommand.getStatus() == null) {
+                    subjectSearchCommand.setStatus(new HashSet<>());
+                }
+                subjectSearchCommand.getStatus().add(SubjectStatus.AINESTAATUS_K.name());
+            }
             if (!CollectionUtils.isEmpty(subjectSearchCommand.getStatus())) {
                 filters.add(root.get("status").get("code").in(subjectSearchCommand.getStatus()));
             }
@@ -190,7 +202,11 @@ public class SubjectService {
             propertyContains(() -> root.get(nameField), cb, subjectSearchCommand.getName(), filters::add);
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(SubjectSearchDto::of);
+        }, pageable).map(subject -> {
+            SubjectSearchDto dto = SubjectSearchDto.of(subject);
+            dto.setCanEdit(canEdit);
+            return dto;
+        });
     }
 
     public void delete(HoisUserDetails user, Subject subject) {
@@ -213,5 +229,14 @@ public class SubjectService {
     public Subject saveAndUnconfirm(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
         subject.setStatus(classifierRepository.getOne(SubjectStatus.AINESTAATUS_P.name()));
         return save(user, subject, newSubject);
+    }
+
+    public SubjectDto get(HoisUserDetails user, Subject subject) {
+        SubjectDto dto = SubjectDto.of(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
+        dto.setCanEdit(SubjectUserRights.canEdit(user, subject));
+        dto.setCanDelete(SubjectUserRights.canDelete(user, subject));
+        dto.setCanSetActive(SubjectUserRights.canSetActive(user, subject));
+        dto.setCanSetPassive(SubjectUserRights.canSetPassive(user, subject));
+        return dto;
     }
 }

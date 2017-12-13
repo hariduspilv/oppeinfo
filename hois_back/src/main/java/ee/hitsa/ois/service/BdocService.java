@@ -9,7 +9,6 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.io.IOUtils;
 import org.digidoc4j.Configuration;
 import org.digidoc4j.Container;
 import org.digidoc4j.ContainerBuilder;
@@ -28,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StreamUtils;
 
 import ee.hitsa.ois.bdoc.UnsignedBdocContainer;
 import ee.hitsa.ois.domain.OisFile;
@@ -101,7 +101,7 @@ public class BdocService {
             OisFile bdoc = new OisFile();
             bdoc.setFname(fileNamePrefix + ".bdoc");
             bdoc.setFtype(BDOC_MIME_TYPE);
-            bdoc.setFdata(IOUtils.toByteArray(bdocInputStream));
+            bdoc.setFdata(StreamUtils.copyToByteArray(bdocInputStream));
             return bdoc;
         } catch (IOException e) {
             throw new HoisException("main.messages.error.bdocSigningFailed", e);

@@ -80,7 +80,7 @@ angular.module('hitsaOis').directive('oisHigherDrop', function () {
     },
     link: function (scope, element, attrs) {
       element.on('dragover', function (event) {
-        if (attrs.oisHigherDrop === "true" && this.childElementCount === 0) {
+        if (attrs.oisHigherDrop === "true") {
           event.preventDefault();
         }
       });
