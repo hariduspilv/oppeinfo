@@ -1,4 +1,4 @@
-VERSIOON: 0.5.0/20171213
+VERSIOON: 0.6.0/20171218
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -155,6 +155,12 @@ DOK9 - HOIS_analyys_andmevahetus.docx
         -------------------------------------------
         6.1 Teenus Z_EMPLOEES
         6.2 Teenus tootajaPohiandmed
+		
+		Andmevahetus Kutseregistriga
+        -------------------------------------------
+        7.1          Teenus kutsetunnistus
+        7.2          Teenus muutunudKutsestandardid
+
 
 		
 DOK10 - HOIS_analyys_opitulemused_paevikud.docx
@@ -216,6 +222,19 @@ DOK12 - HOIS_analyys_paringud.docx
 		2.3	Õppurite statistika perioodis
 		2.4	Õppekava täitmine
 		2.7	Õpetaja koormus (kõrg)
+		
+DOK13 - HOIS_analyys_oppetoetused_stipendiumid.docx
+        2.1 Õppetoetuste tingimuste koostamine
+        2.2 Õppetoetuste otsing – administratiivne töötaja
+        2.3 Õppetoetuste ja taotluste vaatamine – õppur
+        2.4 Õppetoetuse taotlemine
+        2.5 Õppetoetuste taotluste otsing, kinnitamine ja staatuste määramine
+        3.1 Stipendiumi tingimuste koostamine – administratiivne töötaja
+        3.2 Stipendiumite otsing – administratiivne töötaja
+        3.3 Stipendiumite ja taotluste vaatamine – õppur
+        3.4 Stipendiumi taotlemine – õppur
+        3.5 Stipendiumite taotluste otsing ja staatuste määramine – administratiivne töötaja
+
 
 MUU:	ID-kaardiga sisselogimine
 		Mobiil-IDga sisselogimine
