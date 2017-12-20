@@ -2,13 +2,29 @@
 
 angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope', 'Classifier', 'QueryUtils',
   function ($q, $scope, Classifier, QueryUtils) {
+    var certificateMapper = Classifier.valuemapper({occupationCode: 'KUTSE', partOccupationCode: 'OSAKUTSE', specialityCode: 'SPETSKUTSE'});
     var clMapper = Classifier.valuemapper({fin: 'FINALLIKAS', finSpecific: 'FINTAPSUSTUS', language: 'OPPEKEEL',
       studyLevel: 'OPPEASTE', studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', status: 'OPPURSTAATUS'});
-    QueryUtils.createQueryForm($scope, '/reports/students', {order: 'p.lastname,p.firstname'}, clMapper.objectmapper);
+
+    function certMapper(it) {
+      certificateMapper.objectmapper(it);
+      return {certificateNr: it.certificateNr, occupation: it.specialityCode || it.partOccupationCode || it.occupationCode};
+    }
+
+    function afterLoad(result) {
+      clMapper.objectmapper(result);
+      for(var i = 0, cnt = result.length; i < cnt; i++) {
+        result[i].occupationCertificates = (result[i].occupationCertificates || []).map(certMapper);
+      }
+    }
+    QueryUtils.createQueryForm($scope, '/reports/students', {order: 'p.lastname,p.firstname'}, afterLoad);
+
 
     $scope.formState = {xlsUrl: 'reports/students/students.xls'};
 
-    $q.all(clMapper.promises).then($scope.loadData);
+    $q.all(certificateMapper.promises).then(function() {
+      $q.all(clMapper.promises).then($scope.loadData);
+    });
   }
 ]).controller('ReportStudentStatisticsController', ['$scope', 'Classifier', 'QueryUtils',
   function ($scope, Classifier, QueryUtils) {

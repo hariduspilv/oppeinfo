@@ -9,7 +9,7 @@ html {
 }
 #wrapper {
   margin: 100px auto;
-  width: 700px;
+  width: 600px;
 }
 #language {
   color: rgba(0,0,0,0.54);
@@ -92,6 +92,9 @@ html {
 #tab_content button:hover {
   background-color: rgb(30,136,229);
 }
+#mobile-id-message h1 {
+  text-align: center;
+}
 </style>
 </head>
 <body>
@@ -99,67 +102,127 @@ html {
   <div id="main">
     <div><img src="./images/HITSA_innov_logo_03.png"></div>
     <div id="language">
-      <div><button class="selected">Est</button><button>Eng</button></div>
+      <div>
+        <button onclick="changeLanguage(this, 'et')" class="selected">Est</button>
+        <button onclick="changeLanguage(this, 'en')">Eng</button>
+      </div>
     </div>
     <div id="message"></div>
     <div id="login">
       <div id="tabs">
-        <div onclick="showTab(this, 'password')" class="selected">KASUTAJA</div>
-        <div onclick="showTab(this, 'idcard')">ID-KAART</div>
-        <div onclick="showTab(this, 'mobileid')">MOBIIL-ID</div>
+        <div onclick="showTab(this, 'password')" data-lang-key="user" class="selected">KASUTAJA</div>
+        <div onclick="showTab(this, 'idcard')" data-lang-key="idCard">ID-KAART</div>
+        <div onclick="showTab(this, 'mobileid')" data-lang-key="mobileId">MOBIIL-ID</div>
       </div>
       <div id="tab_content">
         <div id="password-tab">
           <form action="?" method="post" onsubmit="return submitUserLogin()">
             <table>
-            <tr> <td>Kool:</td> <td><select id="school" name="school"></select></td> </tr>
-            <tr> <td>Kasutajanimi:</td> <td><input type="text" id="username" name="username"></td> </tr>
-            <tr> <td>Parool:</td> <td><input type="password" id="password" name="password"></td> </tr>
-            <tr> <td> </td> <td><button type="submit">Logi sisse</button></td> 	</tr>
+            <tr> <td><span data-lang-key="school">Kool</span>:</td> 
+              <td><select id="school" name="school" required></select></td> </tr>
+            <tr> <td><span data-lang-key="username">Kasutajanimi</span>:</td> 
+              <td><input type="text" id="username" name="username" required></td> </tr>
+            <tr> <td><span data-lang-key="password">Parool</span>:</td> 
+              <td><input type="password" id="password" name="password" required></td> </tr>
+            <tr> <td> </td> <td><button type="submit" data-lang-key="logIn">Logi sisse</button></td> 	</tr>
             </table>
           </form>
         </div>
         <div id="idcard-tab" style="display: none;">
           <form action="?" method="post" onsubmit="return submitIdCardLogin()">
-            <button type="submit">Logi sisse</button>
+            <button type="submit" data-lang-key="logIn">Logi sisse</button>
           </form>
         </div>
         <div id="mobileid-tab" style="display: none;">
           <form action="?" method="post" onsubmit="return submitMobileIdLogin()">
             <table>
-            <tr> <td>Mobiilinumber:</td> <td><input type="text" id="mobilenumber" name="mobilenumber" value="372"></td> </tr>
-            <tr> <td> </td> <td><button type="submit">Logi sisse</button></td> 	</tr>
+            <tr> <td><span data-lang-key="mobilenumber">Mobiilinumber</span>:</td> 
+              <td><input type="text" id="mobilenumber" name="mobilenumber" value="372" required></td> </tr>
+            <tr> <td> </td> <td><button type="submit" data-lang-key="logIn">Logi sisse</button></td> 	</tr>
             </table>
           </form>
         </div>
       </div>
+      <div id="mobile-id-message"></div>
     </div>
   </div>
 </div>
 <script>
+var i18nFields = {
+  'et': 'nameEt',
+  'en': 'nameEn'
+};
+var i18n = {
+  'et': {
+    'user': 'KASUTAJA',
+    'idCard': 'ID-KAART',
+    'mobileId': 'MOBIIL-ID',
+    'school': 'Kool',
+    'username': 'Kasutajanimi',
+    'password': 'Parool',
+    'mobilenumber': 'Mobiilinumber',
+    'mobileinstructions': 'Toimige palun telefonile ilmuvate juhiste kohaselt. Enne PIN-koodi sisestamist veenduge, et telefoni ekraanil olev kontrollkood on sama, mis allpool näidatud. Peale edukat isikutuvastust suunatakse teid automaatselt järgmisele lehele.',
+    'logIn': 'Logi sisse'
+  },
+  'en': {
+    'user': 'USER',
+    'idCard': 'ID-CARD',
+    'mobileId': 'MOBILE-ID',
+    'school': 'School',
+    'username': 'Username',
+    'password': 'Password',
+    'mobilenumber': 'Mobile number',
+    'mobileinstructions': 'Please check the number on your phone screen to be same as below.',
+    'logIn': 'Log in'
+  }
+};
+var selectedLanguage = 'et';
 var BASE_URL = 'hois_back';
 var IDCARD_DOMAIN = 'idlogin';
 var NOT_MOBILE_ID_USER_ERROR = 301;
 var JWT_TOKEN_HEADER = 'Authorization';
 var XSRF_TOKEN_HEADER = 'X-XSRF-TOKEN';
 var jwt_token = null;
-function showMessage(msg) {
+function showError(msg) {
   document.getElementById("message").innerHTML = msg;
+}
+function clearError() {
+  document.getElementById("message").innerHTML = '';
 }
 function loginFailed() {
   console.error('Login failed!');
-  showMessage('Sisselogimine ebaõnnestus!');
+  document.getElementById("mobile-id-message").innerHTML = '';
+  showError('Sisselogimine ebaõnnestus!');
+}
+function translate(key) {
+  return i18n[selectedLanguage][key] || i18n.et[key];
+}
+function currentLanguageNameField(item) {
+  return item[i18nFields[selectedLanguage]] || item.nameEt;
+}
+function changeLanguage(button, lang) {
+  removeClass(document.querySelectorAll('#language button'), 'selected');
+  button.classList.add('selected');
+  selectedLanguage = lang;
+  var elems = document.querySelectorAll('[data-lang-key]');
+  for (let i = 0; i < elems.length; i++) {
+    const elem = elems[i];
+    elem.textContent = translate(elem.dataset.langKey);
+  }
+  getSchools();
 }
 function hideTabs() {
-  var tabs = document.getElementById('tab_content').children;
+  var tabs = document.querySelectorAll('#tab_content div');
   for (let i = 0; i < tabs.length; i++) {
     const tab = tabs[i];
     tab.style.display = 'none';
   }
-  var titles = document.getElementById('tabs').children;
-  for (let i = 0; i < titles.length; i++) {
-    const tab = titles[i];
-    tab.classList.remove('selected');
+  removeClass(document.querySelectorAll('#tabs div'), 'selected');
+}
+function removeClass(elements, name) {
+  for (let i = 0; i < elements.length; i++) {
+    const element = elements[i];
+    element.classList.remove(name);
   }
 }
 function showTab(tab, id) {
@@ -172,13 +235,9 @@ function submitUserLogin() {
   var school = document.getElementById("school").value;
   var username = document.getElementById("username").value;
   var password = document.getElementById("password").value;
-  if (!username) {
-    return false;
-  }
-  if (school && password) {
+  if (school && username && password) {
+    clearError();
     submitLdapLogin({school: school, username: username, password: password});
-  } else {
-    finishLogin('authorization', 'Basic ' + btoa(username + ":" + "undefined"));
   }
   return false;
 }
@@ -191,6 +250,7 @@ function getIdCardLoginUrl() {
   return location.protocol + '//' + IDCARD_DOMAIN + '.' + domain;
 }
 function submitIdCardLogin() {
+  clearError();
   var request = new XMLHttpRequest();
   request.open("GET", getIdCardLoginUrl());
   request.onreadystatechange = function () {
@@ -210,15 +270,17 @@ function submitMobileIdLogin() {
   if (!mobilenumber) {
     return false;
   }
+  clearError();
   doHttpPost('/mIdLogin', {mobileNumber: mobilenumber}, function(response, request) {
     jwt_token = request.getResponseHeader(JWT_TOKEN_HEADER);
     if (response.errorCode === NOT_MOBILE_ID_USER_ERROR) {
       loginFailed();
-      showMessage('See number ei ole Mobiil-ID kasutaja');
+      showError('See number ei ole Mobiil-ID kasutaja');
     } else if (response.errorCode) {
       loginFailed();
     } else if (response.challengeID) {
-      showMessage('Kontrolli koodi: ' + response.challengeID);
+      document.getElementById("mobile-id-message").innerHTML = '<p>' + translate('mobileinstructions') + '</p>'+
+        '<h1>' + response.challengeID + '</h1>';
       setTimeout(pollMobileIdStatus, 5000);
     } else {
       loginFailed();
@@ -297,20 +359,26 @@ function getCookie(name) {
 }
 function fillSchoolSelect(schools) {
   schools.sort(function (a, b) {
-    return a.nameEt.localeCompare(b.nameEt);
+    return currentLanguageNameField(a).localeCompare(currentLanguageNameField(b));
   });
   var select = document.getElementById("school");
+  for (let i = 0; i < select.options.length; i++) {
+    select.remove(i);
+  }
   for (let i = 0; i < schools.length; i++) {
     var school = schools[i];
     var option = document.createElement('option');
-    option.text = school.nameEt;
+    option.text = currentLanguageNameField(school);
     option.value = school.id;
     select.add(option);
   }
 }
-doHttpGet('/autocomplete/ldapschools', null, fillSchoolSelect, function() {
-  console.error('Cannot get LDAP schools');
-});
+function getSchools() {
+  doHttpGet('/autocomplete/ldapschools', null, fillSchoolSelect, function() {
+    console.error('Cannot get LDAP schools');
+  });
+}
+getSchools();
 </script>
 </body>
 </html>

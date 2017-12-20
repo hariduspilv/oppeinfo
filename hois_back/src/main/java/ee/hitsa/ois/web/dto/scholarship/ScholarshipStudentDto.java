@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.scholarship;
 
+import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.student.Student;
 
 public class ScholarshipStudentDto {
@@ -18,6 +19,15 @@ public class ScholarshipStudentDto {
         dto.setEmail(student.getEmail());
         dto.setAddress(student.getPerson().getAddress());
         dto.setStudentGroupCode(student.getStudentGroup().getCode());
+        return dto;
+    }
+    
+    public static ScholarshipStudentDto of(ScholarshipApplication application) {
+        ScholarshipStudentDto dto = new ScholarshipStudentDto();
+        dto.setPhone(application.getPhone());
+        dto.setEmail(application.getEmail());
+        dto.setAddress(application.getAddress());
+        dto.setStudentGroupCode(application.getStudentGroup().getCode());
         return dto;
     }
 

@@ -24,6 +24,7 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentHistory;
+import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
@@ -45,6 +46,7 @@ import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
@@ -79,6 +81,14 @@ public class StudentService {
     @Autowired
     private CurriculumVersionOccupationModuleRepository curriculumVersionOccupationModuleRepository;
 
+    /**
+     * Search students
+     *
+     * @param schoolId
+     * @param criteria
+     * @param pageable
+     * @return
+     */
     public Page<StudentSearchDto> search(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_LIST_FROM).sort(pageable);
 
@@ -140,6 +150,14 @@ public class StudentService {
         return EntityUtil.save(student, em);
     }
 
+    /**
+     * Absences of student
+     *
+     * @param user
+     * @param student
+     * @param pageable
+     * @return
+     */
     public StudentAbsenceSearchDto absences(HoisUserDetails user, Student student, Pageable pageable) {
         Long studentId = EntityUtil.getId(student);
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_absence sa").sort(pageable);
@@ -173,6 +191,15 @@ public class StudentService {
         return new StudentAbsenceSearchDto(data.getContent(), pageable, data.getTotalElements(), studentName, studentGroup, canAddAbsence);
     }
 
+    /**
+     * Create new absence of student.
+     * If absence is created by representative, send message about it to school admins.
+     *
+     * @param user
+     * @param student
+     * @param form
+     * @return
+     */
     public StudentAbsence create(HoisUserDetails user, Student student, StudentAbsenceForm form) {
         StudentAbsence absence = new StudentAbsence();
         absence.setStudent(student);
@@ -185,16 +212,36 @@ public class StudentService {
         return absence;
     }
 
+    /**
+     * Update absence of student
+     *
+     * @param absence
+     * @param form
+     * @return
+     */
     public StudentAbsence save(StudentAbsence absence, StudentAbsenceForm form) {
         EntityUtil.bindToEntity(form, absence);
         return EntityUtil.save(absence, em);
     }
 
+    /**
+     * Delete absence of student
+     *
+     * @param user
+     * @param absence
+     */
     public void delete(HoisUserDetails user, StudentAbsence absence) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(absence, em);
     }
 
+    /**
+     * Applications of student
+     *
+     * @param studentId
+     * @param pageable
+     * @return
+     */
     public Page<StudentApplicationDto> applications(Long studentId, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from application a join classifier type on type.code = a.type_code").sort(pageable);
 
@@ -214,6 +261,14 @@ public class StudentService {
         });
     }
 
+    /**
+     * Directives related to student
+     *
+     * @param user
+     * @param student
+     * @param pageable
+     * @return
+     */
     public Page<StudentDirectiveDto> directives(HoisUserDetails user, Student student, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive d").sort(pageable);
 
@@ -239,6 +294,12 @@ public class StudentService {
         });
     }
 
+    /**
+     * Subjects related to student
+     *
+     * @param student
+     * @return
+     */
     public List<AutocompleteResult> subjects(Student student) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject s "
                 + "inner join curriculum_version_hmodule_subject cvhms on cvhms.subject_id = s.id "
@@ -252,6 +313,13 @@ public class StudentService {
                     SubjectUtil.subjectName(resultAsString(r, 3), resultAsString(r, 2), resultAsDecimal(r, 4))), data);
     }
 
+    /**
+     * Student data for student view form, main data tab
+     *
+     * @param user
+     * @param student
+     * @return
+     */
     public StudentViewDto getStudentView(HoisUserDetails user, Student student) {
         StudentViewDto dto = StudentViewDto.of(student);
         // rights for editing student data, adding representative and displaying sensitive fields
@@ -266,6 +334,7 @@ public class StudentService {
         if (Boolean.TRUE.equals(dto.getIsVocational())) {
             dto.setCredits(protocolService.vocationalTotalCreditsOnCurrentCurriculum(student));
             dto.setKkh(protocolService.vocationalWeightedAverageGrade(student));
+            dto.setOccupationCertificates(occupationCertificates(student));
         }
         return dto;
     }
@@ -283,4 +352,11 @@ public class StudentService {
         return dto;
     }
 
+    private List<StudentOccupationCertificateDto> occupationCertificates(Student student) {
+        List<StudentOccupationCertificate> data = em.createQuery(
+                "select soc from StudentOccupationCertificate soc where soc.student.id = ?1 order by soc.issueDate desc", StudentOccupationCertificate.class)
+            .setParameter(1, EntityUtil.getId(student))
+            .getResultList();
+        return StreamUtil.toMappedList(StudentOccupationCertificateDto::new, data);
+    }
 }

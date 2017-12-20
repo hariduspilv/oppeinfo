@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import java.time.LocalDate;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ public class TeacherSearchDto {
      * Planned number of hours in studyPeriod
      */
     private Long hours;
+    private Boolean canEdit;
 
     public static TeacherSearchDto of(Teacher teacher) {
         TeacherSearchDto dto = new TeacherSearchDto();
@@ -32,10 +34,12 @@ public class TeacherSearchDto {
         dto.isActive = teacher.getIsActive();
         dto.teacherOccupation = AutocompleteResult.of(teacher.getTeacherOccupation());
         dto.schoolDepartments = StreamUtil.toMappedSet(o -> {
-            
+
             return AutocompleteResult.of(o.getSchoolDepartment());
-        }, teacher.getTeacherPositionEhis().stream().filter(o -> o.getSchoolDepartment() != null
-        ).collect(Collectors.toSet()));
+        }, teacher.getTeacherPositionEhis().stream().filter(o -> o.getSchoolDepartment() != null)
+                .filter(o -> !Boolean.TRUE.equals(o.getIsContractEnded()))
+                .filter(o -> o.getContractEnd() == null || !LocalDate.now().isAfter(o.getContractEnd()))
+                .collect(Collectors.toSet()));
         return dto;
     }
 
@@ -118,4 +122,13 @@ public class TeacherSearchDto {
     public void setHours(Long hours) {
         this.hours = hours;
     }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
+
 }

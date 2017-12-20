@@ -25,6 +25,12 @@ public class ModuleProtocolDto extends VersionedCommand {
     private OisFileViewDto oisFile;
     private boolean canBeEdited;
     private boolean canBeDeleted;
+    
+    public static ModuleProtocolDto onlyId(Protocol protocol) {
+        ModuleProtocolDto dto = new ModuleProtocolDto();
+        dto.setId(EntityUtil.getId(protocol));
+        return dto;
+    }
 
     public static ModuleProtocolDto of(Protocol protocol) {
         ModuleProtocolDto dto = EntityUtil.bindToDto(protocol, new ModuleProtocolDto(), "protocolStudents", "protocolVdata");

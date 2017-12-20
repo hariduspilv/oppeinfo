@@ -1,11 +1,11 @@
 \c postgres;
 
-SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'hois20';
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'hois';
 
-drop database if exists hois20;
+drop database if exists hois;
 
-create database hois20; 
-\c hois20;
+create database hois; 
+\c hois;
 
 CREATE SEQUENCE apel_application_comment_id_seq START 1;
 CREATE SEQUENCE apel_application_file_id_seq START 1;

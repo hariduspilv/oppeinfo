@@ -3,7 +3,6 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
@@ -44,6 +43,7 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.TeacherUserRights;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherContinuingEducationForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
@@ -53,7 +53,6 @@ import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherAbsenceDto;
 import ee.hitsa.ois.web.dto.TeacherDto;
 import ee.hitsa.ois.web.dto.TeacherSearchDto;
-import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolSearchDto;
 
 @Transactional
 @Service
@@ -88,7 +87,8 @@ public class TeacherService {
         return TeacherDto.of(teacher);
     }
 
-    public Page<TeacherSearchDto> search(TeacherSearchCommand criteria, Pageable pageable) {
+    public Page<TeacherSearchDto> search(HoisUserDetails user, TeacherSearchCommand criteria, Pageable pageable) {
+        Boolean canEdit = Boolean.valueOf(TeacherUserRights.hasPermissionToEdit(user));
         return teacherRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 
@@ -132,7 +132,11 @@ public class TeacherService {
             }
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(TeacherSearchDto::of);
+        }, pageable).map(teacher -> {
+            TeacherSearchDto dto = TeacherSearchDto.of(teacher);
+            dto.setCanEdit(canEdit);
+            return dto;
+        });
     }
 
     public void delete(HoisUserDetails user, Teacher teacher) {
@@ -323,12 +327,12 @@ public class TeacherService {
             positionEhis.setIsClassTeacher(Boolean.FALSE);
         }
     }
-    
+
     public Page<TeacherAbsenceDto> teacherAbsences(Teacher teacher, Pageable pageable) {
         Long teacherId = EntityUtil.getId(teacher);
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher_absence ta").sort(pageable);
         qb.requiredCriteria("ta.teacher_id = :teacherId", "teacherId", teacherId);
-        
+
         return JpaQueryUtil.pagingResult(qb, "ta.start_date, ta.end_date, ta.reason, ta.changed", em, pageable).map(r -> {
             TeacherAbsenceDto dto = new TeacherAbsenceDto();
             dto.setStartDate(resultAsLocalDate(r, 0));
@@ -337,5 +341,11 @@ public class TeacherService {
             dto.setChanged(resultAsLocalDateTime(r, 3));
             return dto;
         });
+    }
+
+    public TeacherDto get(HoisUserDetails user, Teacher teacher) {
+        TeacherDto dto = TeacherDto.of(teacher);  
+        dto.setCanEdit(Boolean.valueOf(TeacherUserRights.canEdit(user, teacher)));
+        return dto;
     }
 }

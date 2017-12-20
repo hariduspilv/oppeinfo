@@ -73,9 +73,8 @@ public class EhisTeacherExportService extends EhisService {
     private static final String LAE_OPPEJOUD_SERVICE_CODE = "laeOppejoud";
     private static final String LAE_PEDAGOOGID_SERVICE_CODE = "laePedagoogid";
     private static final String SUBSYSTEM_CODE = "ehis";
-    private static final String SERVICE_VERSION = "v1";
-    public static final String LAE_OPPEJOUD_SERVICE = String.format("%s.%s.%s", SUBSYSTEM_CODE, LAE_OPPEJOUD_SERVICE_CODE, SERVICE_VERSION);
-    public static final String LAE_PEDAGOOGID_SERVICE = String.format("%s.%s.%s", SUBSYSTEM_CODE, LAE_PEDAGOOGID_SERVICE_CODE, SERVICE_VERSION);
+    public static final String LAE_OPPEJOUD_SERVICE = String.format("%s.%s", SUBSYSTEM_CODE, LAE_OPPEJOUD_SERVICE_CODE);
+    public static final String LAE_PEDAGOOGID_SERVICE = String.format("%s.%s", SUBSYSTEM_CODE, LAE_PEDAGOOGID_SERVICE_CODE);
 
     private static final String EHIS_TOOSUHE_MUU = "EHIS_TOOSUHE_MUU";
     private static final String EHIS_KVALIFIKATSIOON_NIMI_MUU = "EHIS_KVALIFIKATSIOON_NIMI_MUU";

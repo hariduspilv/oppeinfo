@@ -11,7 +11,7 @@
             <input ng-model="criteria.idcode" type="text">
           </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column" ng-show="!showSchool">
+      <div layout="row" layout-sm="column" layout-xs="column" ng-if="!showSchool">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'teacher.occupation.label' | translate}}</label>
             <hois-select ng-model="criteria.teacherOccupation" values="teacherOccupations"></hois-select>
@@ -23,12 +23,12 @@
           </md-input-container>
       </div>
       <div layout="row">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-show="showSchool">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="showSchool">
           <label>{{'school.label' | translate}}</label>
           <hois-select ng-model="criteria.school" type="school"></hois-select>
         </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column" class="top-margin" ng-show="!showSchool">
+      <div layout="row" layout-sm="column" layout-xs="column" class="top-margin" ng-if="!showSchool">
         <md-checkbox
            ng-model="criteria.isActive"
            aria-label="{{'teacher.isActive' | translate}}">
@@ -50,23 +50,26 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
+          <th md-column md-order-by="school.{{currentLanguageNameField()}}" ng-if="showSchool">{{'school.label' | translate}}</th>
           <th md-column md-order-by="person.lastname,person.firstname">{{'teacher.person.name' | translate}}</th>
           <th md-column md-order-by="person.idcode">{{'teacher.person.idcode' | translate}}</th>
-          <th md-column md-order-by="school.{{currentLanguageNameField()}}" ng-if="showSchool">{{'school.label' | translate}}</th>
           <th md-column md-order-by="email">{{'teacher.email' | translate}}</th>
           <th md-column md-order-by="phone">{{'teacher.phone' | translate}}</th>
           <th md-column md-order-by="teacherOccupation.{{currentLanguage() === 'en' ? 'occupationEn' : 'occupationEt'}}"
             ng-if="!showSchool">{{'teacher.occupation.label' | translate}}</th>
           <th md-column ng-if="schoolHigher && !showSchool">{{'teacher.occupation.departments' | translate}}</th>
-          <th md-column md-order-by="isActive" ng-if="!showSchool">{{'teacher.isActive' | translate}}</th>
+          <th md-column md-order-by="isActive">{{'teacher.isActive' | translate}}</th>
           <th md-column></th>
         </tr>
         </thead>
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell><a ng-href="#/teachers/{{::row.id}}">{{::row.name}}</a></td>
-          <td md-cell>{{::row.idcode}}</td>
           <td md-cell ng-if="showSchool">{{currentLanguageNameField(row.school)}}</td>
+          <td md-cell>
+            <a ng-href="#/teachers/{{::row.id}}" ng-if="auth.school">{{::row.name}}</a>
+            <span ng-if="!auth.school">{{::row.name}}</span>
+          </td>
+          <td md-cell>{{::row.idcode}}</td>
           <td md-cell>{{::row.email}}</td>
           <td md-cell>{{::row.phone}}</td>
           <td md-cell ng-if="!showSchool">{{currentLanguageNameField(row.teacherOccupation)}}</td>
@@ -77,8 +80,12 @@
                 </tr>
             </table>
           </td>
-          <td md-cell ng-if="!showSchool">{{::row.isActive ? 'main.yes' : 'main.no' | translate}}</td>
-          <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/teachers/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
+          <td md-cell>{{::row.isActive ? 'main.yes' : 'main.no' | translate}}</td>
+          <td md-cell>
+            <md-button md-no-ink class="md-primary change-button" ng-href="#/teachers/{{::row.id}}/edit" ng-if="row.canEdit">
+              {{'main.button.change' | translate}}
+            </md-button>
+          </td>
         </tr>
         </tbody>
       </table>

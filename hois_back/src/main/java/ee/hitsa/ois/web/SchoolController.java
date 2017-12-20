@@ -273,7 +273,6 @@ public class SchoolController {
     public Map<String, ?> studyYearScheduleLegends(HoisUserDetails user) {
         School school = getSchool(user);
         Map<String, Object> response = new HashMap<>();
-        System.out.println(school.getStudyYearScheduleLegends());
         response.put("legends", StreamUtil.toMappedList(StudyYearScheduleLegendDto::of, school.getStudyYearScheduleLegends()));
         return response;
     }

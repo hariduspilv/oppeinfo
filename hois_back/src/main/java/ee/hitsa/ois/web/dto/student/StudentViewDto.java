@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.dto.student;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
@@ -11,6 +12,7 @@ import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 
 public class StudentViewDto extends StudentForm {
 
@@ -44,6 +46,7 @@ public class StudentViewDto extends StudentForm {
     private BigDecimal curriculumCredits;
     private BigDecimal credits;
     private BigDecimal kkh;
+    private List<StudentOccupationCertificateDto> occupationCertificates;
 
     public Long getId() {
         return id;
@@ -251,6 +254,14 @@ public class StudentViewDto extends StudentForm {
 
     public void setKkh(BigDecimal kkh) {
         this.kkh = kkh;
+    }
+
+    public List<StudentOccupationCertificateDto> getOccupationCertificates() {
+        return occupationCertificates;
+    }
+
+    public void setOccupationCertificates(List<StudentOccupationCertificateDto> occupationCertificates) {
+        this.occupationCertificates = occupationCertificates;
     }
 
     public static StudentViewDto of(Student student) {

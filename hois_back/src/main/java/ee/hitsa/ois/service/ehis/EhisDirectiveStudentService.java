@@ -18,6 +18,7 @@ import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.StudyLoad;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hois.xroad.ehis.generated.KhlAkadPuhkusAlgus;
@@ -326,7 +327,11 @@ public class EhisDirectiveStudentService extends EhisService {
         khlKorgharidusLisa.setOppekava(curriculumCode(student.getCurriculumVersion().getCurriculum()));
         khlKorgharidusLisa.setKlOppekeel(ehisValue(student.getLanguage()));
         khlKorgharidusLisa.setKlOppevorm(ehisValue(student.getStudyForm()));
-        khlKorgharidusLisa.setKlOppekoormus(ehisValue(student.getStudyLoad()));
+        if(student.getStudyLoad() == null) {
+            khlKorgharidusLisa.setKlOppekoormus(ehisValue(em.getReference(Classifier.class, StudyLoad.OPPEKOORMUS_MTA.name())));
+        } else {
+            khlKorgharidusLisa.setKlOppekoormus(ehisValue(student.getStudyLoad()));
+        }
         khlKorgharidusLisa.setKlRahastAllikas(ehisValue(student.getFinSpecific()));
 
         khlKorgharidusLisa.setKlEelnevHaridus(ehisValue(student.getPreviousStudyLevel()));

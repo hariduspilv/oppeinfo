@@ -67,7 +67,8 @@ public class CertificateService {
     public Page<CertificateSearchDto> search(HoisUserDetails user, CertificateSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(CERTIFICATE_FROM).sort(pageable);
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
-        qb.optionalCriteria("s.id = :studentId", "studentId", user.getStudentId());
+        qb.optionalCriteria("s.id = :studentId_1", "studentId_1", user.getStudentId());
+        qb.optionalCriteria("s.id = :studentId_2", "studentId_2", criteria.getStudent());
         qb.optionalContains("c.headline", "headline", criteria.getHeadline());
         qb.optionalContains("c.certificate_nr", "certificate_nr", criteria.getCertificateNr());
         qb.optionalCriteria("c.type_code in (:type)", "type", criteria.getType());

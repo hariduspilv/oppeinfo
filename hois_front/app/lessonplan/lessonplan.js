@@ -184,9 +184,9 @@
 
       QueryUtils.createQueryForm($scope, baseUrl, {});
     }
-  ]).controller('LessonplanEditController', ['$location', '$mdDialog', '$route', '$scope', 'message', 'Classifier', 'QueryUtils',
+  ]).controller('LessonplanEditController', ['$location', '$mdDialog', '$route', '$scope', 'message', 'Classifier', 'QueryUtils', 'dialogService',
 
-    function ($location, $mdDialog, $route, $scope, message, Classifier, QueryUtils) {
+    function ($location, $mdDialog, $route, $scope, message, Classifier, QueryUtils, dialogService) {
       var id = $route.current.params.id;
       var baseUrl = '/lessonplans';
       $scope.formState = {
@@ -230,6 +230,7 @@
         updateTotals($scope, grandTotals, capacityType, index);
       }
 
+      var copyOfRecord;
       QueryUtils.endpoint(baseUrl).get({
         id: id
       }).$promise.then(function (result) {
@@ -328,6 +329,7 @@
             initializeSpGrandTotals($scope, capacityType);
           });
           $scope.record = result;
+          updateCopyOfRecord();
         });
       });
 
@@ -412,12 +414,38 @@
       };
 
       $scope.update = function () {
-        $scope.record.$update().then(message.updateSuccess);
+        $scope.record.$update().then(message.updateSuccess).then(updateCopyOfRecord);
       };
+
+      function updateCopyOfRecord() {
+        copyOfRecord = angular.toJson($scope.record);
+      }
 
       $scope.getLegendByWeek = function (weekNr) {
         return $scope.formState.legends[weekNr];
       };
+
+      $scope.back = function() {
+        if(copyOfRecord === angular.toJson($scope.record)) {
+          redirectBack();
+        } else {
+          dialogService.confirmDialog({
+            prompt: 'lessonplan.changed.save',
+            accept: 'main.yes',
+            cancel: 'main.no'
+          },
+          function () {
+            $scope.record.$update().then(message.updateSuccess).then(redirectBack);
+          },
+          function() {
+            redirectBack();
+          });
+        }
+      };
+
+      function redirectBack() {
+        $location.path("/lessonplans/vocational");
+      }
     }
   ]).controller('LessonplanTeacherViewController', ['$location', '$mdDialog', '$route', '$scope', 'message', 'Classifier', 'QueryUtils',
 

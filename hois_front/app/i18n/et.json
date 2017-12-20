@@ -49,6 +49,9 @@
       "addNewRow": "Lisa uus rida",
       "refresh": "Värskenda",
       "publish": "Avalikusta",
+      "publishtoStudents": "Avalikusta õppuritele",
+      "accept": "Aktsepteeri",
+      "annul": "Tühista",
       "status": {
         "approving": "Menetle",
         "close": "Sulge ÕK",
@@ -245,10 +248,11 @@
         "apelSchools": "VÕTA koolid"
       },
       "mainData": {
-        "label": "Püsiandmed",
-        "schools": "Õppeasutused",
         "classifiers": "Klassifikaatorid",
+        "label": "Püsiandmed",
+        "occupationStandards": "Muutunud kutsestandardid",
         "saisClassifiers": "Klassifikaatorid SAISist",
+        "schools": "Õppeasutused",
         "users": "Kasutajad"
       },
       "timetableLink": {
@@ -394,12 +398,12 @@
         }
       },
       "dataexchange": {
-        "kutseregister": "Kutseregister",
-        "label": "Andmevahetus",
-        "rtip": "Käsitsi käivitatavad päringud",
         "ehisLogs": "EHISe andmevahetuse logi",
         "ekisLogs": "EKISe andmevahetuse logi",
+        "kutseregister": "Kutseregister",
         "kutseregisterLogs": "Kutseregistri logi",
+        "label": "Andmevahetus",
+        "rtip": "RTIP",
         "rtipLogs": "RTIPi andmevahetuse logi",
         "saisLogs": "SAISi andmevahetuse logi",
         "studentinfoExport": "Õppurid",
@@ -485,7 +489,7 @@
   "occupationcertificate": {
     "certificateNr": "Tunnistuse registrinumber",
     "curriculum": "Õppekava",
-    "dateRange": "Muutuste kuupäevade vahemik",
+    "dateRange": "Tunnistus väljastatud",
     "firstname": "eesnimi",
     "idcode": "Isikukood",
     "import": "Saada päring",
@@ -495,6 +499,7 @@
     "nostudents": "Õppureid ei leitud",
     "occupation": "Tunnistuse nimi ja tase",
     "studentGroup": "Õpperühm",
+    "student": "Õppur",
     "type": {
       "occupation": "Kutse",
       "partoccupation": "Osakutse",
@@ -612,6 +617,17 @@
       "headline": "Pealkiri",
       "label": "Käskkirjad",
       "type": "Käskkirja liik"
+    },
+    "occupationcertificate": {
+      "certificateNr": "Registrinumber",
+      "issueDate": "Väljastamise kuupäev",
+      "issuer": "Väljastaja",
+      "label": "Kutsetunnistused",
+      "language": "Keel",
+      "occupation": "Kutsestandard",
+      "partOccupation": "Osakutse/spetsialiseerumine",
+      "validFrom": "Kehtivuse alguskuupäev",
+      "validThru": "Kehtivuse lõppkuupäev"
     },
     "representative": {
       "add": "Lisa uus esindaja",
@@ -976,7 +992,7 @@
     "isUsable": "on kasutatav",
     "journalreference": "Viide tunniplaanile",
     "journals": "Päevikud",
-    "modulehours": "Mooduli maht",
+    "modulehours": "Mooduli maht tundides",
     "moduleTotal": "kokku",
     "plannedHoursTotal": "Planeeritud tundide arv kokku",
     "responsibleformodule": "Mooduli vastutaja",
@@ -1026,6 +1042,9 @@
       "single-event": "Üksiksündmus",
       "date": "Kuupäev",
       "time": "Aeg"
+    },
+    "changed": {
+      "save": "Tunnijaotusplaan on muutunud, kas soovid seda salvestada?"
     }
   },
   "message": {
@@ -1067,6 +1086,7 @@
     "validThru": "Kehtivuse lõppkuupäev"
   },
   "certificate": {
+    "certificates": "Tõendid",
     "ekisconfirm": "Kas oled kindel, et soovid tõendit tellida?",
     "type": "Tõendi liik",
     "headline": "Pealkiri",
@@ -1396,7 +1416,8 @@
     "message": {
       "statusUpdated": "Staatus on uuendatud",
       "ehisStatusUpdated": "Staatus on EHISest uuendatud",
-      "badEhisCode": "Õppekava HTM kood on vales formaadis"
+      "badEhisCode": "Õppekava HTM kood on vales formaadis",
+      "missingEhisCode": "Õppekava HTM kood puudub"
     },
     "error": {
       "numberOfElectiveModules": "Ei tohi olla suurem kui valikmoodulite arv",
@@ -2400,6 +2421,7 @@
   },
   "rtip": {
     "contract": "RTIP (lepingud)",
+    "dateRange": "Kuupäevade vahemik",
     "noschoolcode": "Koolil ei ole RTIP koodi",
     "sync": "RTIPga sünkroniseerimine"
   },
@@ -2487,6 +2509,7 @@
       "idcode": "Isikukood",
       "language": "Õppekeel",
       "name": "Õppuri nimi",
+      "occupationcertificate": "Kutsetunnistus",
       "status": "Õppuri staatus",
       "studentGroup": "Õpperühm",
       "studyForm": "Õppevorm",
@@ -2717,9 +2740,11 @@
       "subjectNameEtIsNull": "Õppeaine eesti keelne nimetus on kohustuslik",
       "subjectNameEnIsNull": "Õppeaine inglise keelne nimetus on kohustuslik",
       "subjectCodeIsNull": "Õppeaine kood on kohustuslik",
+      "subjectTransferredMoreThanOnce": "Õppeaine on üle kantud rohkem kui üks kord",
       "moduleIsNull": "Moodul on kohustuslik",
       "moduleNameEtIsNull": "Mooduli eesti keelne nimetus on kohustuslik",
-      "moduleNameEnIsNull": "Mooduli inglise keelne nimetus on kohustuslik"
+      "moduleNameEnIsNull": "Mooduli inglise keelne nimetus on kohustuslik",
+      "moduleTransferredMoreThanOnce": "Moodul või moodulisse kuuluv teema on üle kantud rohkem kui üks kord"
     }
   },
   "enterprise": {
@@ -2854,6 +2879,7 @@
     "studyLoad": "Õppekoormus",
     "courses": "Õppeaasta",
     "averageMark": "Keskmine hinne",
+    "averageMarkShort": "Kesk.",
     "priority": "Prioriteet",
     "lastPeriodMark": "Eelmise perioodi keskmine hinne",
     "curriculumCompletion": "Õppekava täidetuse protsent",
@@ -2873,9 +2899,11 @@
     "credits": "Sooritatud ainepunktide arv",
     "curriculum": "Õppekava",
     "applicant": "Õppur",
+    "nr": "Nr",
     "confirmations": {
       "publish": "Kas oled kindel, et soovid stipendiumi avalikustada?",
-      "isPublishedChange": "Stipendium on avalikustatud, kas oled kindel, et soovid seda muuta?"
+      "scholarshipIsPublishedChange": "Stipendium on avalikustatud, kas oled kindel, et soovid seda muuta?",
+      "grantIsPublishedChange": "Õppetoetus on avalikustatud, kas oled kindel, et soovid seda muuta?"
     },
     "student": {
       "grants": "Õppetoetused",
@@ -2902,7 +2930,9 @@
       "addFamilyMember": "Lisa pereliige",
       "status": "Staatus",
       "edit": "Muuda",
-      "professionalAchievements": "Erialased saavutused"
+      "professionalAchievements": "Erialased saavutused",
+      "idCode": "Isikukood",
+      "credits": "Ainepunktide arv"
     },
     "family": {
       "name": "Pereliige",
@@ -2915,7 +2945,10 @@
       "deleteRows": "Tabelis on rohkem liikmeid kui peres täiskasvanuid"
     },
     "messages": {
-      "applicationSuccessful": "Teie taotlus on esitatud"
+      "applicationSuccessful": "Teie taotlus on esitatud",
+      "error.curriculumsEmtpy": "Vähemalt üks õppekava peab olema lisatud",
+      "error.duplicateCurriculum": "See õppekava on juba lisatud",
+      "error.noStudentsSelected": "Ühtegi õppurit ei ole valitud, valida tuleb vähemalt üks õppur"
     }
   }
 }

@@ -257,14 +257,4 @@ angular.module('hitsaOis')
           $scope.occupationsValid = occupationsAreValid();
     };
 
-    /**
-     * Back buttons not always work properly on this form, that is why this is left here for testing in devhois.
-     * TODO: delete before the release on 13 December 2017
-     */
-    $scope.$watch('vocationalCurriculumModuleForm.$dirty', function(){
-        if($scope.vocationalCurriculumModuleForm) {
-            console.log("curriculum module form dirty: ", $scope.vocationalCurriculumModuleForm.$dirty);
-        }
-    });
-
   });

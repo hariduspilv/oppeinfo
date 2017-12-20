@@ -69,7 +69,7 @@
           <div flex="50">
             <md-input-container style="width: 100%">
               <label>{{'apel.informalLearnings.subject' | translate}}</label>
-              <md-select ng-model="selectedSubject" aria-label="{{'apel.informalLearnings.substitutableSubjects' | translate}}">
+              <md-select ng-model="selectedSubject" aria-label="{{'apel.informalLearnings.substitutableSubjects' | translate}}" ng-change="addSelectedSubject()">
                 <md-option ng-repeat="val in subjects" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
               </md-select>
             </md-input-container>

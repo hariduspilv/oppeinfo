@@ -21,6 +21,6 @@ public class MessageTemplateServiceTests {
 
     @Test
     public void findValidTemplate() {
-        messageTemplateService.findValidTemplate(MessageType.TEATE_LIIK_AV_KINNIT, Long.valueOf(1), false);
+        messageTemplateService.findValidTemplate(MessageType.TEATE_LIIK_AV_KINNIT, Long.valueOf(1));
     }
 }

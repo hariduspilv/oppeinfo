@@ -21,8 +21,10 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
         EntityUtil.bindToDto(term, dto, "studyPeriod");
         dto.setStudyForms(StreamUtil.toMappedList(t -> EntityUtil.getCode(t.getStudyForm()),
                 term.getScholarshipTermStudyForms()));
-        dto.setMatriculationRange(term.getStudyStartPeriodStart().format(formatter) + "-"
-                + term.getStudyStartPeriodEnd().format(formatter));
+        if(term.getStudyStartPeriodStart() != null) {
+            dto.setMatriculationRange(term.getStudyStartPeriodStart().format(formatter) + "-"
+                    + term.getStudyStartPeriodEnd().format(formatter));
+        }
         dto.setStudyPeriod(StudyPeriodDto.of(term.getStudyPeriod()));
         return dto;
     }

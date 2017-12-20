@@ -83,10 +83,10 @@ import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 public class AutocompleteService {
 
     private static final int MAX_ITEM_COUNT = 20;
-    private static final List<String> positiveHigherGrades = EnumUtil.toNameList(
+    private static final List<String> POSITIVE_HIGHER_GRADES = EnumUtil.toNameList(
             HigherAssessment.KORGHINDAMINE_A, HigherAssessment.KORGHINDAMINE_1, HigherAssessment.KORGHINDAMINE_2,
             HigherAssessment.KORGHINDAMINE_3, HigherAssessment.KORGHINDAMINE_4, HigherAssessment.KORGHINDAMINE_5);
-    private static final List<String> positiveVocationalGrades = EnumUtil.toNameList(
+    private static final List<String> POSITIVE_VOCATIONAL_GRADES = EnumUtil.toNameList(
             OccupationalGrade.KUTSEHINDAMINE_A, OccupationalGrade.KUTSEHINDAMINE_3, OccupationalGrade.KUTSEHINDAMINE_4,
             OccupationalGrade.KUTSEHINDAMINE_5);
 
@@ -235,7 +235,7 @@ public class AutocompleteService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("cvh.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
-                lookup.getCurriculumVersionId());
+                lookup.getCurriculumVersion());
         qb.optionalContains("cv.status_code",  "statusCode", lookup.getCurriculumVersionStatusCode());
 
         List<?> data = qb.select("cvh.id, cvh.name_et, cvh.name_en", em).getResultList();
@@ -250,21 +250,48 @@ public class AutocompleteService {
                 + " inner join curriculum_version cv on cvo.curriculum_version_id = cv.id"
                 + " inner join curriculum c on cv.curriculum_id = c.id";
 
+        if (lookup.getStudent() != null) {
+            from += " left join protocol_vdata pvd on cvo.id = pvd.curriculum_version_omodule_id"
+                    + " left join protocol p on pvd.protocol_id = p.id"
+                    + " left join protocol_student ps on p.id = ps.protocol_id";
+        }
+        
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.optionalCriteria("cvo.id = :id", "id", lookup.getId());
-        if (lookup.getCurriculumModules() == null || Boolean.TRUE.equals(lookup.getCurriculumModules())) {
-            qb.requiredCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
-                    lookup.getCurriculumVersionId());            
-        } else {
+        
+        if (Boolean.FALSE.equals(lookup.getCurriculumModules())) {
             qb.requiredCriteria("cvo.curriculum_version_id != :curriculumVersionId", "curriculumVersionId",
-                    lookup.getCurriculumVersionId());
-            qb.optionalCriteria("c.school_id = :schoolId",  "schoolId", lookup.getSchoolId());
+                    lookup.getCurriculumVersion());
+        } else if (lookup.getCurriculumVersion() != null){
+            qb.requiredCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
+                    lookup.getCurriculumVersion());
         }
+        qb.optionalCriteria("c.school_id = :schoolId",  "schoolId", lookup.getSchool());
+
         qb.optionalContains("cv.status_code",  "statusCode", lookup.getCurriculumVersionStatusCode());
         qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "cm.name_en" : "cm.name_et", "name", lookup.getName());
+        
+        if (lookup.getStudent() != null) {
+            qb.optionalCriteria("(ps.grade_code is null or ps.grade_code not in (:postiveGrades))", "postiveGrades", POSITIVE_VOCATIONAL_GRADES);
+            
+            if (Boolean.TRUE.equals(lookup.getOtherStudents())) {
+                qb.optionalCriteria(
+                        "ps.student_id in (select s2.id from student s join student s2 on s.person_id=s2.person_id and s.id!=s2.id where s2.id!=:studentId and s.id = :studentId)",
+                        "studentId", lookup.getStudent());
+            } else {
+                qb.optionalCriteria("(ps.grade_code is null or ps.student_id = :studentId)", "studentId", lookup.getStudent());
+                qb.optionalCriteria("cvo.id not in (select svr.curriculum_version_omodule_id from student_vocational_result svr where svr.student_id = :studentId)", "studentId", lookup.getStudent());                
+            }
+        }
+        
+        if (Language.EN.equals(lookup.getLang())) {
+            qb.sort("cm.name_en");
+        } else {
+            qb.sort("cm.name_et");
+        }
 
-        List<?> data = qb.select("cvo.id, cm.name_et, cm.name_en, cvo.assessment_code", em).getResultList();
+        List<?> data = qb.select("distinct cvo.id, cm.name_et, cm.name_en, cvo.assessment_code", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             return new CurriculumVersionOccupationModuleResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3));
         }, data);
@@ -406,10 +433,9 @@ public class AutocompleteService {
      */
     public List<SchoolDepartmentResult> schoolDepartments(Long schoolId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from school_department sd inner join school s on s.id = sd.school_id");
+        // optional for teacher's view form, when user is external expert
+        qb.optionalCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
 
-        qb.requiredCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
-
-        // FIXME why school_id is fetched when it's filtering criteria?
         List<?> data = qb.select("sd.id, sd.name_et, sd.name_en, sd.school_id, s.code", em).getResultList();
         return StreamUtil.toMappedList(r -> new SchoolDepartmentResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3), resultAsString(r, 4)), data);
     }
@@ -514,12 +540,25 @@ public class AutocompleteService {
                 : "cv.id != :curriculumVersionId", "curriculumVersionId", lookup.getCurriculumVersion());
         
         if (lookup.getStudent() != null) {
-            qb.optionalCriteria("ps.grade_code is null or ps.student_id = :studentId", "studentId", lookup.getStudent());
-            qb.optionalCriteria("ps.grade_code is null or ps.grade_code not in (:postiveGrades)", "postiveGrades", positiveHigherGrades);
-            qb.optionalCriteria("s.id not in (select shr.subject_id from student_higher_result shr where shr.student_id = :studentId)", "studentId", lookup.getStudent());
+            qb.optionalCriteria("(ps.grade_code is null or ps.grade_code not in (:postiveGrades))", "postiveGrades", POSITIVE_HIGHER_GRADES);
+            
+            if (Boolean.TRUE.equals(lookup.getOtherStudents())) {
+                qb.optionalCriteria(
+                        "ps.student_id in (select s2.id from student s join student s2 on s.person_id=s2.person_id and s.id!=s2.id where s2.id!=:studentId and s.id = :studentId)",
+                        "studentId", lookup.getStudent());
+            } else {
+                qb.optionalCriteria("(ps.grade_code is null or ps.student_id = :studentId)", "studentId", lookup.getStudent());
+                qb.optionalCriteria("s.id not in (select shr.subject_id from student_higher_result shr where shr.student_id = :studentId)", "studentId", lookup.getStudent());                
+            }
+        }
+        
+        if (Language.EN.equals(lookup.getLang())) {
+            qb.sort("s.name_en");
+        } else {
+            qb.sort("s.name_et");
         }
 
-        List<?> data = qb.select("s.id, s.name_et, s.name_en, s.code, s.credits", em).getResultList();
+        List<?> data = qb.select("distinct s.id, s.name_et, s.name_en, s.code, s.credits", em).getResultList();
         
         if (!lookup.getWithCredits().booleanValue()) {
             return StreamUtil.toMappedList(r -> {

@@ -114,7 +114,7 @@
     </div>
     <hois-created-modified object="subject"></hois-created-modified>
     <div layout="row">
-      <md-button ng-if="subject.canEdit" ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+      <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
 
       <md-button ng-if="subject.canSetActive" ng-click="saveAndConfirm()"
                  class="md-raised">{{'subject.activate' | translate}}</md-button>

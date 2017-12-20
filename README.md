@@ -1,4 +1,4 @@
-VERSIOON: 0.6.0/20171218
+VERSIOON: 0.6.1/20171220
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -243,21 +243,7 @@ MUU:	ID-kaardiga sisselogimine
         KRATT
 
 	   
-Testisikute kasutajanimed, kellena saab ÕISi sisse logida ja süsteemi testida (kasutajanimi - isiku nimi, rollid):
-37101010003 - Test1 Kasutaja1, peaadministraator, administratiivne töötaja Tallinna Polütehnikumis, Tallinna Tervishoiu Kõrgkoolis ja EBS-s
-37201010002 - Test2 Kasutaja2, administratiivne töötaja Tallinna Tehnikakõrgkoolis ja Tallinna Tervishoiu Kõrgkoolis, õpetaja Tallinna Tervishoiu Kõrgkoolis
-37301010005 - Test3 Kasutaja3, administratiivne töötaja Tallinna Polütehnikumis
-37401010008 - Test4 Kasutaja4, administratiivne töötaja Tallinna Tervishoiu Kõrgkoolis
-37501010000 - Test5 Kasutaja5, õpetaja Tallinna Tehnikakõrgkoolis, lapsevanem (Jüri Õppur1)
-50101010009 - Jüri Õppur1, õppur Tallinna Polütehnikumis
-60101010006 - Mari Õppur2, õppur Tallinna Polütehnikumis
-39001010000 - Juku Õppur3, õppur Tallinna Polütehnikumis
-49001010001 - Säde Õppur4, õppur Tallinna Polütehnikum
-48001010005 - Mari-Marie Õppur5, õppur Tallinna Tervishoiu Kõrgkoolis
-38001010009 - Mikk-Mihkel Õppur6, õppur Tallinna Tervishoiu Kõrgkoolis
-
-Tallinna Polütehnikumis on olemas üks kutseõppe õppekava
-Tallinna Tervishoiu Kõrgkoolis on olemas üks kõrgharidusõppe õppekava
+Skript loob 2 peaadministraatorit: Pirgit Kahro ja Irina Kelder (kasutaja Irina Kelder võib live'st ära kustutada)
 
 
 NB! Automaatteadete saatmiseks ÕISi on tekitatud kasutaja Hõis Automaatteade, palume seda mitte kustutada
@@ -267,7 +253,7 @@ EELDUS: ver. 0.4.3/20171023
 ------------------------------------------------------
 1. Serveris on installeeritud (opsüsteem Linux, nt CentOS Linux 7.2.x):
 	   1. PostgreSQL v 9.5.x
-	   2. Java Versioon 1.8
+	   2. Java Versioon vähemalt 1.8.144
 	   3. Nginx Versioon: 1.10
 	   4. Redis 3.2
 	   5. Gradle 3.x
@@ -293,7 +279,23 @@ EELDUS: ver. 0.4.3/20171023
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-Antud versiooniga andmebaasi muudatusi ei tule, seega antud samm tuleb vahele jätta
+KIRJELDUS: olemasolev andmebaas "hois" kustutatakse ja lisatakse uuesti andmebaas "hois", vajalikud tabelid ja klassifikaatorid. Andmebaasi skriptid asuvad "db" kaustas.
+EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku. Nginx serveris on seadistatud SSL
+
+Andmebaasi installeerimiseks:
+1. käivitada install.sql skript, nt
+   
+   psql -h devhois -f install.sql 2>&1 | tee log.txt
+   
+   , kus
+   
+   -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
+   -f install.sql - install faili nimi, install.sql ja db_data.sql peavad asuma samas kaustas, install.sql fail kasutab db_data.sql faili
+   log.txt - andmebaasi installeerimise logi fail
+   
+   Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja luuakse andmebaas, vajalikud tabelid ning andmed
+
+
 
 
 RAKENDUSE INSTALLEERIMINE:
@@ -481,29 +483,64 @@ NB! XXX - frontendi server, nt devhoisfront
 	
 	1. Tekitada uus kaust, kuhu pannakse hois asjad peale, nt /opt/hois
 	2. Laadida kood github'st ja pakkida see lahti hois kausta
-	3. Tekitada hois kausta application.properites fail (vt näidist application.properties) ja muuta järgmised parameetrid:
+	3. TAATi jaoks tekitada uus sertifikaat (võib kasutada ka olemasolevat) nt taat.crt ja sertiifikaadi privaatvõti nt taat.key. Privaatvõti peab olema  mitte krüpteeritud PKCS #8 formaadis
+	4. Tekitada hois kausta application.properites fail (vt näidist application.properties) ja muuta järgmised parameetrid:
 		1. spring.datasource.url - andmebaasi asukoht, vaikimisi lokaalne masin
 		2. spring.datasource.username - kasutajanimi, kes pääseb ligi hois andmebaasile
 		3. spring.datasource.password - eelnevalt sisestatud andmebaasi kasutaja salasõna
 		4. spring.redis.host - redise asukoht, vaikimisi localhost
 		5. spring.redis.port - redise port, vaikimisi 6379
 		6. spring.mail.host - e-maili saatmise host, vaikimisi mail.neti.ee
-		7. hois.mail.receivers  - e-maili saatja, vaikimisi hois@hois.ee
+		7. server.session.timeout - serveri timout sekundites
 		8. hois.frontend.baseUrl - HÕISi frontend url, nt https://devhois/#/
-		9. sais.endpoint - SAIS-i veebiteenuste pöördumise url kujul (SAISi veebiteenused hetkel realiseeritud vastu x-tee v5) http://TURVASERVER5/cgi-bin/consumer_proxy, nt 
-		10. sais.consumer - SAIS-i veebiteenuste kliendi reg. kood, nt 90005872
-		11. ehis.client.xRoadInstance - HITSA x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test
-		12. ehis.client.memberClass - HITSA nn memberClass vastavas keskkonaas (arenduses COM ja testis NGO), vaikimisi NGO
-		13. ehis.client.memberCode - HITSA reg. kood, vaikimisi 90005872
-		14. ehis.client.subsystemCode - HITSA allsüsteemi kood, vaikimisi generic-consumer
-		15. ehis.service.xRoadInstance - EHISe x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test, peab olema sama mis ehis.client.xRoadInstance
-		16. ehis.service.memberClass - EHISe nn memberClass vastavas keskkonnas, testis vaikimisi GOV
-		17. ehis.service.memberCode - EHISe reg. kood, vaikimisi 70000740
-		18. ehis.service.subsystemCode - EHISe allsüsteemi kood, vaikimisis ehis
-		19. ehis.user - päringu käivitaja kujul EE+ISIKUKOOD, nt EE38002240211
-		20. ehis.endpoint - EHISe veebiteenuste pöördumise url kujul (EHISe veebiteenused hetkel realiseeritud vastu x-tee v6) http://TURVASERVER6/cgi-bin/consumer_proxy
-		21. ekis.endpoint - EKISe veebiteenuste pöördumise koht
-		22. hois.digidoc4j.testMode - digiallkirjastamine viis, vaikimisi true (testimine)
+		9. sais.endpoint - SAIS-i veebiteenuste pöördumise url kujul http://TURVASERVER6/cgi-bin/consumer_proxy 
+		10. sais.client.xRoadInstance - HITSA x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test
+		11. sais.client.memberClass - HITSA nn memberClass vastavas keskkonaas (arenduses COM ja testis NGO), vaikimisi NGO
+		12. sais.client.memberCode - HITSA reg. kood, vaikimisi 90005872
+		13. sais.client.subsystemCode - HITSA allsüsteemi kood, vaikimisi generic-consumer
+		14. sais.service.xRoadInstance - SAIS-i x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test, peab olema sama mis sais.client.xRoadInstance
+		15. sais.service.memberClass - SAIS-i nn memberClass vastavas keskkonnas, testis vaikimisi NGO
+		16. sais.service.memberCode - SAIS-i reg. kood, vaikimisi 90005872
+		17. sais.service.subsystemCode - SAIS-i allsüsteemi kood, vaikimisis sais2
+		18. ehis.client.xRoadInstance - HITSA x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test
+		19. ehis.client.memberClass - HITSA nn memberClass vastavas keskkonaas (arenduses COM ja testis NGO), vaikimisi NGO
+		20. ehis.client.memberCode - HITSA reg. kood, vaikimisi 90005872
+		21. ehis.client.subsystemCode - HITSA allsüsteemi kood, vaikimisi generic-consumer
+		22. ehis.service.xRoadInstance - EHISe x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test, peab olema sama mis ehis.client.xRoadInstance
+		23. ehis.service.memberClass - EHISe nn memberClass vastavas keskkonnas, testis vaikimisi GOV
+		24. ehis.service.memberCode - EHISe reg. kood, vaikimisi 70000740
+		25. ehis.service.subsystemCode - EHISe allsüsteemi kood, vaikimisis ehis
+		26. ehis.user - päringu käivitaja kujul EE+ISIKUKOOD, nt EE38002240211
+		27. ehis.endpoint - EHISe veebiteenuste pöördumise url kujul (EHISe veebiteenused hetkel realiseeritud vastu x-tee v6) http://TURVASERVER6/cgi-bin/consumer_proxy
+		28. ekis.endpoint - EKISe veebiteenuste pöördumise koht
+		29. hois.digidoc4j.testMode - digiallkirjastamine viis, vaikimisi true (testimine)
+		30. rtip.client.xRoadInstance - HITSA x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test
+		31. rtip.client.memberClass - HITSA nn memberClass vastavas keskkonaas (arenduses COM ja testis NGO), vaikimisi NGO
+		32. rtip.client.memberCode - HITSA reg. kood, vaikimisi 90005872
+		33. rtip.client.subsystemCode - HITSA allsüsteemi kood, vaikimisi generic-consumer
+		34. rtip.service.xRoadInstance - RTIP-i x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test, peab olema sama mis rtip.client.xRoadInstance
+		35. rtip.service.memberClass - RTIP-i nn memberClass vastavas keskkonnas, testis vaikimisi GOV
+		36. rtip.service.memberCode - RTIP-i reg. kood, vaikimisi 70007340
+		37. rtip.service.subsystemCode - RTIP-i allsüsteemi kood, vaikimisis sap
+		38. rtip.user - päringu käivitaja kujul EE+ISIKUKOOD, nt EE38002240211
+		39. kutseregister.client.xRoadInstance - HITSA x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test
+		40. kutseregister.client.memberClass - HITSA nn memberClass vastavas keskkonaas (arenduses COM ja testis NGO), vaikimisi NGO
+		41. kutseregister.client.memberCode - HITSA reg. kood, vaikimisi 90005872
+		42. kutseregister.client.subsystemCode - HITSA allsüsteemi kood, vaikimisi generic-consumer
+		43. kutseregister.service.xRoadInstance - kutseregistri x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test, peab olema sama mis rtip.client.xRoadInstance
+		44. kutseregister.service.memberClass - kutseregistri nn memberClass vastavas keskkonnas, testis vaikimisi COM
+		45. kutseregister.service.memberCode - kutseregistri reg. kood, vaikimisi 90006414
+		46. kutseregister.service.subsystemCode - kutseregistri allsüsteemi kood, vaikimisis kutseregister
+		47. kutseregister.user - päringu käivitaja kujul EE+ISIKUKOOD, nt EE38002240211
+		48. mobileid.endpoint - Mobii-ID pöördumise koht, testis https://tsp.demo.sk.ee
+		49. mobileid.serviceName - Mobiil-ID-ga autentimiseks kokkulepitud teenus, testis Testimine
+		50. mobileid.messageToDisplay - Mobiil-ID-ga autentimisel kuvatav sõnum
+		51. idp.entity_id - TAATi jaoks vajaliku entity nimi (kasutatakse Januses konfigureerimisel), nt http://mock-idp
+		52. idp.private_key - TAATi jaoks vajaliku sertifikaadi võtme asukoht, nt /opt/hois/certs/taat.key
+		53. idp.certificate - TAATi jaoks vajaliku sertifikaadi asukoht, nt /opt/hois/certs/taat.crt
+		54. idp.clock_skew - TAATi ja HÕISe lubatud ajavahe sekundites
+		55. idp.login_redirect - TAATi jaoks vajalik HÕISi url, kuhu kasutaja sisselogimiseks suunatakse, nt https://devhois.fujitsu.ee/login.html
+
     4. Tekitada hois kausta frontend.config.js ja muuta järgmised parameetrid:
 		apiUrl - frontendi server, nt https://localhost/hois_back
 		idCardLoginUrl - ID-kaardiga sisselogimiseks seadistatud server (vt proxy_backend.conf, host peab olema avaliku kasutaja jaoks nime järgi kättesaadav, soovitatav kasutada kehtivat sertifikaati, self-signed sertifikaadiga serveris võivad tekkida mõningad probleemid ID-kaardiga autentimisel), nt https://idlogin.devhois
@@ -519,3 +556,15 @@ NB! XXX - frontendi server, nt devhoisfront
 		4. Käivitada käsk "grunt build"
 		5. Käivitada käsk "rm -Rf /opt/hois/html/*" (nginxist vana seisu tühjendamiseks)
 		6. Käivitada käsk "cp -r dist/. /opt/hois/html/" (kopeeritakse frontendi uus seis /opt/hois/html kausta)
+
+TAATi seadistamine:
+	1. Tekitada uus Connection, mille nimeks panna idp.entity_id parameetris toodud väärtus (nt http://mock-idp), liigiks valida SAML 2.0 IdP
+	2. Metadata alajaotuses seadistada järgmised parameetrid:
+		1. SingleSignOnService:0:Binding - urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect
+		2. SingleSignOnService:0:Location - HÕISi logini asukoht, peab olema kujul https://host/hois_back/SingleSignOnService, nt https://devhois.fujitsu.ee/hois_back/SingleSignOnService
+		3. certData - taat.crt faili sisu ilma BEGIN, END ja reavahdeta
+		4. Muud parameetrid võib täita vastavalt vajadusele
+
+Sisselogimine Active Directory (AD) kaudu:
+	AD kaudu sisselogimise üheks eelduseks on turvalise kanali olemasolu HÕISi backendi ja õppeasutuse AD vahel, lisaks õppeasutuse AD sertifikaat peab olema lisatud java default keystore'sse. Täpsem kirjeldus asub "HOIS_analyys_sisselogimine_AD.docx" dokumendis
+	

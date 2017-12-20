@@ -20,10 +20,12 @@
             <input type="hidden">
           </md-input-container>
         <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
-            <md-datepicker ng-required="!teacher.allDates" ng-model="teacher.changeDateFrom" md-max-date="teacher.changeDateTo" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-required="!teacher.allDates" ng-model="teacher.changeDateFrom" md-max-date="teacher.changeDateTo"></md-datepicker>
           </md-input-container>
         <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
-            <md-datepicker ng-required="!teacher.allDates" ng-model="teacher.changeDateTo" md-min-date="teacher.changeDateFrom" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+            <label>{{'main.thru' | translate}}</label>
+            <md-datepicker ng-required="!teacher.allDates" ng-model="teacher.changeDateTo" md-min-date="teacher.changeDateFrom"></md-datepicker>
           </md-input-container>
         </div>
       </div>

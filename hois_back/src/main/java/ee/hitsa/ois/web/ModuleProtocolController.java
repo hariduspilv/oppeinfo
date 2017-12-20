@@ -86,13 +86,17 @@ public class ModuleProtocolController {
         return dto;
     }
 
+    /**
+     * get() method was not used, because while building ModuleProtocolStudentDto, NPE appeared.
+     * Solution: return only id after creation, as only id is required anyway for redirection to edit form.
+     * Constructing DTO on edit form then goes without any problem. 
+     */
     @PostMapping
     public ModuleProtocolDto create(HoisUserDetails user,
             @Valid @RequestBody ModuleProtocolCreateForm moduleProtocolCreateForm) {
         ModuleProtocolValidationUtil.assertIsSchoolAdminOrTeacherResponsible(user, moduleProtocolCreateForm.getProtocolVdata().getTeacher());
-        return get(user, moduleProtocolService.create(user, moduleProtocolCreateForm));
+        return ModuleProtocolDto.onlyId(moduleProtocolService.create(user, moduleProtocolCreateForm));
     }
-
     @PutMapping("/{id:\\d+}")
     public ModuleProtocolDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,

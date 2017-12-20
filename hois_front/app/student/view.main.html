@@ -133,6 +133,50 @@
       </hois-collapsable>
     </div>
 
+    <div ng-if="student.isVocational && student.occupationCertificates && student.occupationCertificates.length > 0">
+      <hois-collapsable label="('student.occupationcertificate.label' | translate)">
+        <div ng-repeat="row in student.occupationCertificates">
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="20" flex-sm="100" flex-xs="100">
+              <label>{{'student.occupationcertificate.certificateNr' | translate}}</label>
+              <hois-value value="row.certificateNr"></hois-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'student.occupationcertificate.occupation' | translate}}</label>
+              <hois-classifier-value ng-model="row.occupationCode" main-classifier-code="KUTSE"></hois-classifier-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'student.occupationcertificate.partOccupation' | translate}}</label>
+              <hois-classifier-value ng-model="row.partOccupationSpecialityCode" main-classifier-codes="OSAKUTSE,SPETSKUTSE"></hois-classifier-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'student.occupationcertificate.language' | translate}}</label>
+              <hois-value value="row.language"></hois-value>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="20" flex-sm="100" flex-xs="100">
+              <label>{{'student.occupationcertificate.issuer' | translate}}</label>
+              <hois-value value="row.issuer"></hois-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'student.occupationcertificate.issueDate' | translate}}</label>
+              <hois-value value="row.issueDate | hoisDate"></hois-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'student.occupationcertificate.validFrom' | translate}}</label>
+              <hois-value value="row.validFrom | hoisDate"></hois-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'student.occupationcertificate.validThru' | translate}}</label>
+              <hois-value value="row.validThru | hoisDate"></hois-value>
+            </md-input-container>
+          </div>
+        </div>
+      </hois-collapsable>
+    </div>
+
     <div>
       <hois-collapsable label="('student.contact' | translate)">
 

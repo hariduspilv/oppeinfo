@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web.commandobject.scholarship;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.constraints.NotNull;
@@ -27,8 +26,8 @@ public class ScholarshipTermForm {
     private Long amountPaid;
     @NotNull
     private List<AutocompleteResult> curriculums;
-    private List<String> studyLoads = new ArrayList<>();
-    private List<String> studyForms = new ArrayList<>();
+    private List<String> studyLoads;
+    private List<String> studyForms;
     private List<String> courses;
     private Long averageMark;
     @ClassifierRestriction(MainClassCode.PRIORITEET)

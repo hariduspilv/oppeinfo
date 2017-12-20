@@ -61,10 +61,15 @@ public class KutseregisterLogService {
      * @param pageable
      * @return
      */
-    public Page<QfLogDto> search(Long schoolId, EhisLogCommand command, Pageable pageable) {
+    public Page<QfLogDto> search(HoisUserDetails user, EhisLogCommand command, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_qf_log l").sort(pageable);
 
-        qb.requiredCriteria("l.school_id = :schoolId", "schoolId", schoolId);
+        if(user.isSchoolAdmin()) {
+            qb.requiredCriteria("l.school_id = :schoolId", "schoolId", user.getSchoolId());
+        } else {
+            // main admin
+            qb.filter("l.school_id is null");
+        }
         qb.optionalCriteria("l.ws_name = :messageType", "messageType", command.getMessageType());
         qb.optionalCriteria("l.inserted >= :startFrom", "startFrom", command.getFrom(), d -> LocalDateTime.of(d, LocalTime.MIN));
         qb.optionalCriteria("l.inserted <= :startThru", "startThru", command.getThru(), d -> LocalDateTime.of(d, LocalTime.MAX));

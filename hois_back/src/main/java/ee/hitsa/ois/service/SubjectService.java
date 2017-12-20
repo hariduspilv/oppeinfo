@@ -233,10 +233,10 @@ public class SubjectService {
 
     public SubjectDto get(HoisUserDetails user, Subject subject) {
         SubjectDto dto = SubjectDto.of(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
-        dto.setCanEdit(SubjectUserRights.canEdit(user, subject));
-        dto.setCanDelete(SubjectUserRights.canDelete(user, subject));
-        dto.setCanSetActive(SubjectUserRights.canSetActive(user, subject));
-        dto.setCanSetPassive(SubjectUserRights.canSetPassive(user, subject));
+        dto.setCanEdit(Boolean.valueOf(SubjectUserRights.canEdit(user, subject)));
+        dto.setCanDelete(Boolean.valueOf(SubjectUserRights.canDelete(user, subject)));
+        dto.setCanSetActive(Boolean.valueOf(SubjectUserRights.canSetActive(user, subject)));
+        dto.setCanSetPassive(Boolean.valueOf(SubjectUserRights.canSetPassive(user, subject)));
         return dto;
     }
 }

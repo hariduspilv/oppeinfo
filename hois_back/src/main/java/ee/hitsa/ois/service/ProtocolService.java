@@ -68,7 +68,13 @@ public class ProtocolService {
         qb.parameter("curriculumVersionId", EntityUtil.getId(student.getCurriculumVersion()));
         qb.parameter("positiveValueGrades", OccupationalGrade.OCCUPATIONAL_VALUE_GRADE_POSITIVE);
 //      sum(ekap) is zero in some cases
-        return resultAsDecimal(qb.select("sum(grade_value * ekap) / sum(ekap)", em).getSingleResult(), 0);
+        Object result = qb.select("sum(grade_value * ekap) as grade_sum, sum(ekap) as credits_sum", em).getSingleResult();
+        BigDecimal gradeSum = resultAsDecimal(result, 0);
+        BigDecimal creditsSum = resultAsDecimal(result, 1);
+        if(gradeSum != null && creditsSum != null && BigDecimal.ZERO.compareTo(creditsSum) != 0) {
+            return gradeSum.divide(creditsSum, 3, BigDecimal.ROUND_HALF_UP);
+        }
+        return null;    
     }
 
     public List<StudentVocationalResultModuleThemeDto> vocationalResults(Student student) {

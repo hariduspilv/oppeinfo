@@ -80,23 +80,25 @@
                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
   </div>
-</div>
 
-<table md-table class="secondary-table" ng-if="auth.isStudent()">
-    <thead md-head>
-        <tr md-row>
-            <th md-column>{{'certificate.type' | translate}}</th>
-            <th md-column></th>
-        </tr>
-    </thead>
-    <tbody md-body>
-    <tr md-row ng-repeat="type in types" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell>{{currentLanguageNameField(type)}}</td>
-        <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/certificate/{{::type.code}}/new">
-                {{'certificate.order' | translate}}
-              </md-button>
-        </td>
-    </tr>
-    </tbody>
-</table>
+  <md-table-container>
+      <table md-table class="secondary-table" ng-if="auth.isStudent()">
+          <thead md-head>
+              <tr md-row>
+                  <th md-column>{{'certificate.type' | translate}}</th>
+                  <th md-column></th>
+              </tr>
+          </thead>
+          <tbody md-body>
+          <tr md-row ng-repeat="type in certificateTypes" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{currentLanguageNameField(type)}}</td>
+              <td md-cell>
+                    <md-button md-no-ink class="md-primary change-button" ng-href="#/certificate/{{::type.code}}/new">
+                      {{'certificate.order' | translate}}
+                    </md-button>
+              </td>
+          </tr>
+          </tbody>
+      </table>
+  </md-table-container>
+</div>

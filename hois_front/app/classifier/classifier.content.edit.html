@@ -62,13 +62,11 @@
             <br>
             <md-input-container>
                 <label class="textInput">{{'stateCurriculum.enter.validFrom' | translate}}</label>
-                <md-datepicker ng-model="classifier.validFrom" md-open-on-focus>
-                </md-datepicker>
+                <md-datepicker ng-model="classifier.validFrom"></md-datepicker>
             </md-input-container>
             <md-input-container>
                 <label class="textInput">{{'stateCurriculum.enter.validThru' | translate}}</label>
-                <md-datepicker ng-model="classifier.validThru" md-min-date="classifier.validFrom" md-open-on-focus>
-                </md-datepicker>
+                <md-datepicker ng-model="classifier.validThru" md-min-date="classifier.validFrom"></md-datepicker>
             </md-input-container>
 
           <div ng-repeat="connection in possibleConnections">

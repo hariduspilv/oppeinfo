@@ -13,7 +13,7 @@
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>
-          <md-datepicker ng-model="row.startDate" md-placeholder="{{'directive.student.akadCancelDate' | translate}}"></md-datepicker>
+          <md-datepicker ng-model="row.startDate"></md-datepicker>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row.idcode)" md-no-ink  class="remove">&times;</a>

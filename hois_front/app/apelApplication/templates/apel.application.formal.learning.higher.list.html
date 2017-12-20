@@ -16,7 +16,7 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in application.records" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row ng-repeat="row in application.records | filter:{isFormalLearning: true}" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell ng-if="!(application.status === 'VOTA_STAATUS_K')">
           <md-checkbox ng-if="(row.data[0].transfer === false || row.data[0].transfer === true) && canChangeTransferStatus" 
             ng-model="row.data[0].transfer" ng-click="changeFormalTransferStatus(row.data[0])" aria-label="{{'apel.formalLearnings.transfer' | translate}}"></md-checkbox>

@@ -421,12 +421,5 @@ angular.module('hitsaOis')
       }
     });
 
-    /**
-     * Back buttons not always work properly on this form, that is why this is left here for testing in devhois.
-     * TODO: delete before the release on 13 December 2017
-     */
-    $scope.$watch('vocationalCurriculumModuleImplementationPlanForm.$dirty', function(){
-      console.log("implementation plan form dirty: ", $scope.vocationalCurriculumModuleImplementationPlanForm.$dirty);
-    });
 
   });

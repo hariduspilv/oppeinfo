@@ -19,12 +19,14 @@
           </md-input-container>
           <div flex="33">
             <md-input-container flex>
+              <label>{{'main.from' | translate}}</label>
               <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" ng-if="displayDates.indexOf(criteria.dataType) !== -1"
-                             md-placeholder="{{'main.from' | translate}}" required></md-datepicker>
+                             required></md-datepicker>
             </md-input-container>
             <md-input-container flex>
+              <label>{{'main.thru' | translate}}</label>
               <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" ng-if="displayDates.indexOf(criteria.dataType) !== -1"
-                             md-placeholder="{{'main.thru' | translate}}" required></md-datepicker>
+                             required></md-datepicker>
             </md-input-container>
           </div>
         </div>

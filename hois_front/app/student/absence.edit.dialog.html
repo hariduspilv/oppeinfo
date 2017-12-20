@@ -16,10 +16,12 @@
 
         <div layout="row">
           <md-input-container flex>
-            <md-datepicker ng-model="record.validFrom" name="validFrom" md-placeholder="{{'student.absence.validFrom' | translate}}" required></md-datepicker>
+            <label>{{'student.absence.validFrom' | translate}}</label>
+            <md-datepicker ng-model="record.validFrom" name="validFrom" required></md-datepicker>
           </md-input-container>
           <md-input-container flex>
-            <md-datepicker ng-model="record.validThru" name="validThru" md-min-date="record.validFrom" md-placeholder="{{'student.absence.validThru' | translate}}"></md-datepicker>
+            <label>{{'student.absence.validThru' | translate}}</label>
+            <md-datepicker ng-model="record.validThru" name="validThru" md-min-date="record.validFrom"></md-datepicker>
           </md-input-container>
         </div>
 

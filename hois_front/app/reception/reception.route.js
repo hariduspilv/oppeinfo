@@ -29,9 +29,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           }
         },
         data: {
-          authorizedRoles: [
-            USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A
-          ]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_VASTUVOTT]
         }
       })
       .when('/reception/saisAdmission/import', {
@@ -70,7 +68,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_VASTUVOTT]
         }
       })
       .when('/reception/saisApplication/import', {

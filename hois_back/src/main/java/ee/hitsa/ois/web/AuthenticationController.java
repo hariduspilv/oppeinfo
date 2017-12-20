@@ -68,7 +68,6 @@ public class AuthenticationController {
     @ResponseBody
     public void idlogin(Principal principal, HttpServletResponse response) {
         //one minute token
-        System.out.println(hoisJwtProperties.getClaimLoginMethod());
         if (principal != null) {
             String token = Jwts.builder()
                     .setSubject(((EstonianIdCardAuthenticationToken)principal).getPrincipal().toString())

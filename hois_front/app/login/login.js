@@ -61,6 +61,8 @@ angular.module('hitsaOis')
 
     function successfulMobileIdStatus(response) {
       if (response.status === 'USER_AUTHENTICATED') {
+        $scope.hideDialog = false;
+        $mdDialog.hide();
         AuthService.login().then(successfulAuthentication, failedAuthentication);
       } else if (response.status === 'OUTSTANDING_TRANSACTION') {
         $timeout(pollMobileIdStatus, 4000);
@@ -75,11 +77,14 @@ angular.module('hitsaOis')
       AuthService.pollMobileIdStatus($scope.jwt).then(successfulMobileIdStatus, failedAuthentication);
     }
     
-    var authenticate = function(credentials) {
-      if (credentials && credentials.school && credentials.password) {
-        $scope.hideDialog = false;
-        AuthService.loginLdap(credentials).then(successfulAuthentication, failedAuthentication);
-      }
+    var authenticate = function() {
+      $scope.hideDialog = false;
+      AuthService.login().then(successfulAuthentication, failedAuthentication);
+    };
+
+    var authenticateUser = function(credentials) {
+      $scope.hideDialog = false;
+      AuthService.loginLdap(credentials).then(successfulAuthentication, failedAuthentication);
     };
 
     var authenticateIdCard = function() {
@@ -118,7 +123,7 @@ angular.module('hitsaOis')
 
     $scope.showLogin = function () {
       $mdDialog.show({
-        controller: function ($scope, School) {
+        controller: function ($scope, School, $localStorage) {
           School.getLdap().$promise.then(function (schools) {
             $scope.schools = schools;
             $scope.schools.sort(function (a, b) {
@@ -126,6 +131,9 @@ angular.module('hitsaOis')
             });
           });
           $scope.credentials = {};
+          if ($localStorage.ldapschool) {
+            $scope.credentials.school = $localStorage.ldapschool;
+          }
           $scope.mobilenumber = '372';
           $scope.cancel = function() {
             $mdDialog.hide();
@@ -133,8 +141,10 @@ angular.module('hitsaOis')
           $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
           $scope.login = function () {
             $scope.userLoginForm.$setSubmitted();
-            if ($scope.userLoginForm.$valid && $scope.credentials.username) {
-              authenticate($scope.credentials);
+            if ($scope.userLoginForm.$valid && $scope.credentials.school && 
+              $scope.credentials.username && $scope.credentials.password) {
+              $localStorage.ldapschool = $scope.credentials.school;
+              authenticateUser($scope.credentials);
             }
           };
           $scope.idlogin = function () {

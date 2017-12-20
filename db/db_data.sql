@@ -15904,8 +15904,10 @@ INSERT INTO user_role_default VALUES ('TEEMAOIGUS_YLDTEADE', 'OIGUS_V', 'ROLL_A'
 
 
 INSERT INTO "person" VALUES (-1, 'Hõis', 'Automaatteade', NULL, 'Automaat', NULL, now(), NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'hois2-test@hois.ee', null, NULL);
-INSERT INTO "person" VALUES (1, 'Pea', 'Kasutaja', '47909050309', 'Automaat', NULL, now(), NULL, 0, NULL, 'SUGU_N', 'RIIK_EST', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Automaat', NULL);
+INSERT INTO "person" VALUES (1, 'Irina', 'Kelder', '47909050309', 'Automaat', NULL, now(), NULL, 0, NULL, 'SUGU_N', 'RIIK_EST', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Automaat', NULL);
+INSERT INTO "person" VALUES (2, 'Pirgit', 'Kahro', '48501050314', 'Automaat', NULL, now(), NULL, 0, NULL, 'SUGU_N', 'RIIK_EST', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Automaat', NULL);
 INSERT INTO "user_" VALUES (1, null, 1, 'ROLL_P', now(), NULL, 0, 'Automaat', NULL, '2017-3-31', NULL, NULL);
+INSERT INTO "user_" VALUES (2, null, 2, 'ROLL_P', now(), NULL, 0, 'Automaat', NULL, '2017-3-31', NULL, NULL);
 
 insert into user_rights(user_id,permission_code,object_code,inserted,version,inserted_by)
 select uu.id,ur.permission_code,ur.object_code,now(),0,'Automaat'

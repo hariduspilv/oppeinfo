@@ -20,6 +20,7 @@ import ee.hitsa.ois.domain.school.School;
 @Entity
 public class ScholarshipTerm extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, name = "school_id", updatable = false)
     private School school;
     private String nameEt;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

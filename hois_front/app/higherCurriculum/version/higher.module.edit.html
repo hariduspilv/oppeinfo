@@ -154,7 +154,7 @@
                   </td>
                   <td md-cell>
                     <div ng-if="subject.optional && data.electiveModules.length > 0" layout="row" flex>
-                      <md-input-container flex>
+                      <md-input-container flex class="elective-module-subject">
                         <label>{{'module.optional' | translate}}</label>
                         <md-select ng-model="subject.electiveModule">
                           <md-option ng-value="null">

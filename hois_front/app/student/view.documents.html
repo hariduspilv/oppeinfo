@@ -27,39 +27,92 @@
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>{{::row.confirmDate | hoisDate}}</td>
             <td md-cell>
-            <a ng-if="(row.status.code === 'AVALDUS_STAATUS_KOOST') || (row.status.code === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())"
-              md-no-ink class="md-button md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</a>
-          </td>
+              <a ng-if="(row.status.code === 'AVALDUS_STAATUS_KOOST') || (row.status.code === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())"
+                md-no-ink class="md-button md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</a>
+            </td>
           </tr>
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination ng-if="applications.totalElements > applicationsCriteria.size" md-limit="applicationsCriteria.size" md-limit-options="[5, 10, 20, 50]"
-                         md-page="applicationsCriteria.page" md-total="{{applications.totalElements}}" md-on-paginate="loadApplications"
-                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+    <md-table-pagination ng-if="applications.totalElements > applicationsCriteria.size" md-limit="applicationsCriteria.size"
+      md-limit-options="[5, 10, 20, 50]" md-page="applicationsCriteria.page" md-total="{{applications.totalElements}}" md-on-paginate="loadApplications"
+      md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
 
     <br/>
     <md-table-container ng-if="auth.isStudent()">
       <table md-table md-progress="applicationTypes.$promise">
         <thead md-head>
-        <tr md-row>
-          <th md-column>{{'application.type' | translate}}</th>
-          <th md-column></th>
-        </tr>
+          <tr md-row>
+            <th md-column>{{'application.type' | translate}}</th>
+            <th md-column></th>
+          </tr>
         </thead>
         <tbody md-body>
-        <tr md-row ng-repeat="row in applicationTypes" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell>{{currentLanguageNameField(row)}}</td>
-          <td md-cell>
-            <div ng-if="applicationTypesApplicable[row.code].isAllowed === true" layout="row" layout-align="end end">
-              <a class="md-button md-primary" ng-href="#/applications/new?student={{studentId}}&type={{row.code}}">{{'main.button.apply' | translate}}</a>
-            </div>
-          </td>
-        </tr>
+          <tr md-row ng-repeat="row in applicationTypes" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(row)}}</td>
+            <td md-cell>
+              <div ng-if="applicationTypesApplicable[row.code].isAllowed === true" layout="row" layout-align="end end">
+                <a class="md-button md-primary" ng-href="#/applications/new?student={{studentId}}&type={{row.code}}">{{'main.button.apply' | translate}}</a>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
     </md-table-container>
     <br/>
+
+    <h2>{{'certificate.certificates' | translate}}</h2>
+    <md-table-container>
+      <table md-table md-progress="certificates.$promise">
+        <thead md-head md-order="certificatesCriteria.order" md-on-reorder="loadCertificates">
+          <tr md-row>
+            <th md-column md-order-by="c.certificateNr">{{'certificate.nr' | translate}}</th>
+            <th md-column md-order-by="type.{{currentLanguageNameField()}}">{{'certificate.type' | translate}}</th>
+            <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'certificate.status' | translate}}</th>
+            <th md-column md-order-by="c.headline">{{'certificate.headline' | translate}}</th>
+            <th md-column md-order-by="c.inserted">{{'certificate.inserted' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in certificates.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.certificateNr}}</td>
+            <td md-cell>
+              <a ng-href="#/certificate/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a>
+            </td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+            <td md-cell>{{::row.headline}}</td>
+            <td md-cell>{{row.inserted | hoisDate}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="certificatesCriteria.size" md-limit-options="[5, 10, 15]" md-page="certificatesCriteria.page"
+      md-total="{{certificatesCriteria.totalElements}}" md-on-paginate="loadCertificates" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+
+    <md-table-container>
+      <table md-table ng-if="auth.isStudent()">
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'certificate.type' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="type in certificateTypes" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(type)}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/certificate/{{::type.code}}/new">
+                {{'certificate.order' | translate}}
+              </md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+
+    <br>
 
     <h2>{{'student.directive.label' | translate}}</h2>
     <md-table-container>
@@ -87,8 +140,8 @@
       </table>
     </md-table-container>
     <md-table-pagination ng-if="directives.totalElements > directivesCriteria.size" md-limit="directivesCriteria.size" md-limit-options="[5, 10, 15]"
-                         md-page="directivesCriteria.page" md-total="{{directives.totalElements}}" md-on-paginate="loadDirectives"
-                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+      md-page="directivesCriteria.page" md-total="{{directives.totalElements}}" md-on-paginate="loadDirectives" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
 
     <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>

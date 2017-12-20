@@ -46,7 +46,7 @@
   </div>
   <div layout="row">
       <md-button class="md-raised md-primary" ng-if="record.canBeChanged" ng-href="/#/certificate/{{::record.id}}/edit">{{'main.button.change' | translate}}</md-button>
-      <md-button class="md-raised md-default" ng-href="/#/certificate">{{'main.button.back' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-click="back('#/certificate')">{{'main.button.back' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-if="record.canViewFromEkis"
        ng-href="{{getCertificateUrl(record.wdId)}}" target="_blank">{{'certificate.viewFromEkis' | translate}}</md-button>
   </div>

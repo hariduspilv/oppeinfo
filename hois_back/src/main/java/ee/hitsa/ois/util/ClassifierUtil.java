@@ -71,7 +71,6 @@ public class ClassifierUtil {
     }
 
     // sorters for classifiers
-    // this needs to be alphabetical not ordinal
     private static final Map<String, Comparator<ClassifierSelection>> CLASSIFIER_SORT = new HashMap<>();
     static {
         CLASSIFIER_SORT.put(MainClassCode.MAHT.name(), (a, b) -> {

@@ -13,6 +13,7 @@ public class CertificateSearchCommand {
     private String certificateNr;
     private LocalDate insertedFrom;
     private LocalDate insertedThru;
+    private Long student;
 
     public List<String> getType() {
         return type;
@@ -55,5 +56,11 @@ public class CertificateSearchCommand {
     }
     public void setName(String name) {
         this.name = name;
+    }
+    public Long getStudent() {
+        return student;
+    }
+    public void setStudent(Long student) {
+        this.student = student;
     }
 }

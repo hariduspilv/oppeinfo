@@ -1,14 +1,22 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
 
   <div layout="column">
-    <form ng-submit="loadData()" novalidate>
+    <form ng-submit="reloadTable()" name="applicationSearchForm">
       <div layout="row" flex>
         <md-input-container flex="20">
           <label class="textInput">{{'stipend.grantType' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.type" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS" show-only-values="criteria.allowedStipendTypes"></hois-classifier-select>
+          <hois-classifier-select required ng-model="criteria.type" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS"
+            show-only-values="formState.allowedStipendTypes" ng-change="resetCurriculum()"></hois-classifier-select>
         </md-input-container>
         <div layout="row" flex="20" flex-offset="5">
-          <hois-autocomplete flex ng-model="criteria.curriculum" method="curriculums" label="stipend.curriculum"></hois-autocomplete>
+          <md-input-container flex ng-if="criteria.type !== 'STIPTOETUS_POHI'">
+            <label class="textInput">{{'stipend.curriculums' | translate}}</label>
+            <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" multiple></hois-select>
+          </md-input-container>
+          <md-input-container flex ng-if="criteria.type === 'STIPTOETUS_POHI'">
+            <label class="textInput">{{'stipend.curriculum' | translate}}</label>
+            <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" required></hois-select>
+          </md-input-container>
         </div>
         <md-input-container flex="20" flex-offset="5">
           <label class="textInput">{{'stipend.courses' | translate}}</label>
@@ -17,14 +25,14 @@
         <div layout="row" flex="20" flex-offset="5">
           <md-input-container flex>
             <label class="textInput">{{'stipend.applicant' | translate}}</label>
-            <input type="text" ng-model="criteria.applicantName" name="nameEt" md-maxlength="500">
+            <input type="text" ng-model="criteria.studentName" name="nameEt" md-maxlength="500">
           </md-input-container>
         </div>
       </div>
 
       <div layout="row" flex>
         <md-input-container flex="20">
-          <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipName' : 'stipend.grantName' | translate}}</label>
+          <label class="textInput">{{'stipend.grantName' | translate}}</label>
           <input type="text" ng-model="criteria.nameEt" name="nameEt" md-maxlength="500">
         </md-input-container>
         <md-input-container flex="20" flex-offset="5">
@@ -32,17 +40,80 @@
           <hois-select ng-model="criteria.studyPeriod" values="studyPeriods"></hois-select>
         </md-input-container>
         <md-input-container flex="20" flex-offset="5">
-          <label class="textInput">{{'stipend.grantType' | translate}}</label>
+          <label class="textInput">{{'stipend.status' | translate}}</label>
           <hois-classifier-select ng-model="criteria.status" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS_STAATUS"></hois-classifier-select>
         </md-input-container>
       </div>
 
       <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button ng-click="reloadTable()" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
       </div>
     </form>
 
     <br>
+
+    <table md-table class="secondary-table" ng-if="submittedType">
+      <thead md-head>
+        <tr md-row>
+          <th md-column>
+            <md-input-container>
+              <md-checkbox ng-model="selectAllApplications" aria-label="mySchool" ng-change="updateAllApplicationCheckBoxes(selectAllApplications)">
+              </md-checkbox>
+            </md-input-container>
+          </th>
+          <th md-column>{{'stipend.nr' | translate}}</th>
+          <th md-column>{{'stipend.type' | translate}}</th>
+          <th md-column>{{'stipend.grantName' | translate}}</th>
+          <th md-column>{{'stipend.curriculum' | translate}}</th>
+          <th md-column>{{'stipend.applicant' | translate}}</th>
+          <th md-column>{{'stipend.student.idCode' | translate}}</th>
+          <!-- only for pohi and eri-->
+          <th md-column ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{'stipend.averageMarkShort' | translate}}</th>
+          <th md-column ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{'stipend.student.lastPeriodMark' | translate}}</th>
+          <th md-column ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{'stipend.student.curriculumCompletion' | translate}}</th>
+          <!-- only for soidu -->
+          <th md-column ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{'stipend.compensationReason' | translate}}</th>
+          <th md-column ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{'stipend.compensationFrequency' | translate}}</th>
+
+          <th md-column>{{'stipend.student.isTeacherConfirm' | translate}}</th>
+          <th md-column>{{'stipend.status' | translate}}</th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="application in applications" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>
+            <md-input-container>
+              <md-checkbox ng-model="application._selected" aria-label="mySchool">
+              </md-checkbox>
+            </md-input-container>
+          </td>
+          <td md-cell>-</td>
+          <td md-cell>{{currentLanguageNameField(application.type)}}</td>
+          <td md-cell>
+            <a href="#/scholarships/applications/{{application.id}}">{{application.termNameEt}}</a>
+          </td>
+          <td md-cell>{{application.curriculumCode ? application.curriculumCode : '-'}}</td>
+          <td md-cell>
+            <a href="#/students/{{application.studentId}}/main">{{application.studentName ? application.studentName : '-'}}</a>
+          </td>
+          <td md-cell>{{application.idcode ? application.idcode : '-'}}</td>
+          <!-- only for pohi and eri-->
+          <td md-cell ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{application.averageMark ? application.averageMark : '-'}}</td>
+          <td md-cell ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{application.lastPeriodMark ? application.lastPeriodMark : '-'}}</td>
+          <td md-cell ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{application.curriculumCompletion ? application.curriculumCompletion : '-'}}</td>
+          <!-- only for soidu -->
+          <td md-cell ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{application.compensationReason ? currentLanguageNameField(application.compensationReason) : '-'}}</td>
+          <td md-cell ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{application.compensationFrequency ? currentLanguageNameField(application.compensationFrequency) : '-'}}</td>
+          <td md-cell>{{application.isTeacherConfirm ? 'main.yes' : 'main.no' | translate}}</td>
+          <td md-cell>{{currentLanguageNameField(application.status)}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div layout="row" ng-if="applications.length > 0">
+      <md-button ng-click="accept()" class="md-raised md-primary">{{'main.button.accept' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="annul()">{{'main.button.annul' | translate}}</md-button>
+    </div>
   </div>
 </div>

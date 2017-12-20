@@ -9,10 +9,12 @@
               <input type="hidden">
             </md-input-container>
             <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
-              <md-datepicker required ng-model="criteria.createDateFrom" md-max-date="criteria.createDateTo" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+              <label>{{'main.from' | translate}}</label>
+              <md-datepicker required ng-model="criteria.createDateFrom" md-max-date="criteria.createDateTo"></md-datepicker>
             </md-input-container>
             <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
-              <md-datepicker required ng-model="criteria.createDateTo" md-min-date="criteria.createDateFrom" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+              <label>{{'main.thru' | translate}}</label>
+              <md-datepicker required ng-model="criteria.createDateTo" md-min-date="criteria.createDateFrom"></md-datepicker>
             </md-input-container>
           </div>
           <div layout="row">

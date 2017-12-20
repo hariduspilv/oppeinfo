@@ -23,6 +23,8 @@ public class TeacherDto extends TeacherForm {
     private Set<TeacherQualificationForm> teacherQualifications;
 
     private Set<TeacherMobilityForm> teacherMobility;
+    
+    private Boolean canEdit;
 
     public Long getId() {
         return id;
@@ -75,5 +77,12 @@ public class TeacherDto extends TeacherForm {
     public void setFullname(String fullname) {
         this.fullname = fullname;
     }
-    
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
 }

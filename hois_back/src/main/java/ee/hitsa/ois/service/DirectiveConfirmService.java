@@ -476,17 +476,10 @@ public class DirectiveConfirmService {
             return;
         }
         // for all other than KASKKIRI_TYHIST TEATE_LIIK_UUS_KK
-        requireValidTemplate(MessageType.TEATE_LIIK_UUS_KK, school, allErrors);
+        messageTemplateService.requireValidTemplate(MessageType.TEATE_LIIK_UUS_KK, school, allErrors);
         if(DirectiveType.KASKKIRI_AKAD.equals(directiveType) || DirectiveType.KASKKIRI_AKADK.equals(directiveType)) {
             // for akad and akadk also send TEATE_LIIK_AP_LOPP
-            requireValidTemplate(MessageType.TEATE_LIIK_AP_LOPP, school, allErrors);
-        }
-    }
-
-    private void requireValidTemplate(MessageType type, School school, List<Error> allErrors) {
-        if(messageTemplateService.findValidTemplate(type, EntityUtil.getId(school), false) == null) {
-            allErrors.add(new Error("main.messages.error.configuration.missingAutomaticMessageTemplate",
-                    Collections.singletonMap("template", em.getReference(Classifier.class, type.name()).getNameEt())));
+            messageTemplateService.requireValidTemplate(MessageType.TEATE_LIIK_AP_LOPP, school, allErrors);
         }
     }
 

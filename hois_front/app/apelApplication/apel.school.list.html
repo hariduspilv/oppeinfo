@@ -31,10 +31,10 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column>{{'apel.apelSchool.schoolNameEt' | translate}}</th>
-            <th md-column>{{'apel.apelSchool.schoolNameEn' | translate}}</th>
-            <th md-column>{{'apel.apelSchool.country' | translate}}</th>
-            <th md-column>{{'apel.apelSchool.schoolEHIS' | translate}}</th>
+            <th md-column md-order-by="nameEt">{{'apel.apelSchool.schoolNameEt' | translate}}</th>
+            <th md-column md-order-by="nameEn">{{'apel.apelSchool.schoolNameEn' | translate}}</th>
+            <th md-column md-order-by="countryCode">{{'apel.apelSchool.country' | translate}}</th>
+            <th md-column md-order-by="ehisSchoolCode">{{'apel.apelSchool.schoolEHIS' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>

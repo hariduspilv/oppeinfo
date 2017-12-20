@@ -1,0 +1,18 @@
+<div layout-padding>
+  <div flex>
+    <form layout="column" name="kutseregisterSyncForm">
+      <div layout="row">
+        <div flex="33">
+          <md-input-container flex>
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" required></md-datepicker>
+          </md-input-container>
+        </div>
+      </div>
+
+      <div layout="row">
+        <md-button class="md-raised" ng-click="occupationStandards()">{{'kutseregister.occupationStandards' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

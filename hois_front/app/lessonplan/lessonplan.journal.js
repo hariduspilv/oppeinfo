@@ -137,9 +137,9 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
           }
         }
       });
-      var formsateCaps = $scope.formState.capacityTypes;
+      var formstateCaps = $scope.formState.capacityTypes;
 
-      formsateCaps.forEach(function (it) {
+      formstateCaps.forEach(function (it) {
         if (angular.isDefined(capacities[it.code])) {
           it._selected = true;
           if (angular.isDefined(it.hours)) {

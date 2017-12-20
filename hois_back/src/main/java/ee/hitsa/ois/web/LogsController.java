@@ -76,19 +76,20 @@ public class LogsController {
 
     @GetMapping("/kutseregister")
     public Page<QfLogDto> kutseregisterSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return kutseregisterLogService.search(user.getSchoolId(), command, pageable);
+        UserUtil.assertIsMainAdminOrSchoolAdmin(user);
+        return kutseregisterLogService.search(user, command, pageable);
     }
 
     @GetMapping("/kutseregister/{id:\\d+}")
     public QfLogDto kutseregisterGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
+        UserUtil.assertIsMainAdminOrSchoolAdmin(user);
         return kutseregisterLogService.get(user, id, messageType);
     }
 
     // TODO remove - for testing only
     @PostMapping("/kutseregister/sync")
     public void kutseregisterSync(HoisUserDetails user, @RequestBody @Valid KutseregisterSyncForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsMainAdmin(user);
         kutseregisterService.muutunudKutsestandardid(form.getFrom());
     }
 

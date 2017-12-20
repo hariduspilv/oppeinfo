@@ -179,15 +179,15 @@
       var id = $route.current.params.id;
       var Endpoint = QueryUtils.endpoint('/teachers');
       var TeacherContinuingEducationsEndpoint = QueryUtils.endpoint('/teachers/' + id + '/continuingEducations');
-      
+
       function afterLoad() {
         setIsVocationalOrIsHigher($scope, $translate);
         $scope.currentNavItem = 'teacher.continuingEducation';
-        
+
         $scope.isHigher = $scope.teacher.isHigher;
         updateContinuingEducations($scope.teacher);
       }
-      
+
       if (id) {
         $scope.teacher = Endpoint.get({id: id}, afterLoad);
       } else {
@@ -240,15 +240,15 @@
       var id = $route.current.params.id;
       var Endpoint = QueryUtils.endpoint('/teachers');
       var TeacherQualificationsEndpoint = QueryUtils.endpoint('/teachers/' + id + '/qualifications');
-      
+
       function afterLoad() {
         setIsVocationalOrIsHigher($scope, $translate);
         $scope.currentNavItem = 'teacher.qualification';
-        
+
         $scope.isHigher = $scope.teacher.isHigher;
         updateQualifications($scope.teacher);
       }
-      
+
       if (id) {
         $scope.teacher = Endpoint.get({id: id}, afterLoad);
       } else {
@@ -301,25 +301,25 @@
       var id = $route.current.params.id;
       var Endpoint = QueryUtils.endpoint('/teachers');
       var TeacherMobilityEndpoint = QueryUtils.endpoint('/teachers/' + id + '/mobilities');
-      
+
       function afterLoad() {
         setIsVocationalOrIsHigher($scope, $translate);
         $scope.currentNavItem = 'teacher.mobility';
-        
+
         $scope.isHigher = $scope.teacher.isHigher;
         updateMobilities($scope.teacher);
       }
-      
+
       if (id) {
         $scope.teacher = Endpoint.get({id: id}, afterLoad);
       } else {
         $scope.teacher = new Endpoint({isActive: true, isStudyPeriodScheduleLoad: true, person: {citizenship: 'RIIK_EST'}});
       }
-      
+
       function updateMobilities(teacher) {
         if (teacher.teacherMobility) {
           DataUtils.convertStringToDates(teacher.teacherMobility, ['start', 'end']);
-  
+
           $scope.teacherMobility = new TeacherMobilityEndpoint({mobilities: teacher.teacherMobility});
           teacher.teacherMobility = undefined;
         }
@@ -343,7 +343,7 @@
           });
         }
       };
-  
+
       $scope.deleteMobility = function (mobility) {
         dialogService.confirmDialog({prompt: 'teacher.mobility.deleteConfirm'}, function () {
           if (mobility.id) {
@@ -362,11 +362,13 @@
   }]).controller('TeacherListController', ['$scope', '$route', 'QueryUtils', 'ArrayUtils', function ($scope, $route, QueryUtils, ArrayUtils) {
     QueryUtils.createQueryForm($scope, '/teachers', {order: 'person.lastname,person.firstname'});
 
+    $scope.auth = $route.current.locals.auth;
     $scope.showSchool = $route.current.locals.auth.isExternalExpert();
     $scope.schoolHigher = $route.current.locals.auth.school  && $route.current.locals.auth.school.higher;
 
-      //TODO: external expert has no school!
-    $scope.teacherOccupations = QueryUtils.endpoint('/teachers/teacheroccupations').query();
+    if(!$scope.auth.isExternalExpert()) {
+      $scope.teacherOccupations = QueryUtils.endpoint('/teachers/teacheroccupations').query();
+    }
 
     function setContains(set, item) {
       var ids = set.map(function(el){
@@ -448,12 +450,12 @@
 
     function loadAbsences() {
       QueryUtils.createQueryForm($scope, '/teachers/' + id + '/absences', { order: 'startDate, endDate'});
-  
+
       $scope.afterLoadData = function (resultData) {
         $scope.tabledata.content = resultData.content;
         $scope.tabledata.totalElements = resultData.totalElements;
       };
-  
+
       $scope.loadData();
     }
   }]);

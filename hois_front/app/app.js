@@ -45,7 +45,7 @@ angular
     });
     $translateProvider.preferredLanguage('et');
     $translateProvider.fallbackLanguage('et');
-    $translateProvider.useSanitizeValueStrategy('sanitizeParameters');
+    $translateProvider.useSanitizeValueStrategy('escapeParameters');
     //$translateProvider.useSanitizeValueStrategy('sce');
   })
   .config(function($compileProvider){

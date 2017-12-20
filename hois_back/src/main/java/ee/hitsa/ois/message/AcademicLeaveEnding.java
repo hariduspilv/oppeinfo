@@ -16,7 +16,7 @@ public class AcademicLeaveEnding {
         this.endDate = DateUtils.periodEnd(directiveStudent);
     }
 
-    public LocalDate getAkPuhkuseLoppemiseKuupaev() {
-        return endDate;
+    public String getAkPuhkuseLoppemiseKuupaev() {
+        return DateUtils.date(endDate);
     }
 }

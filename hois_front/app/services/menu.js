@@ -568,6 +568,10 @@ angular.module('hitsaOis')
             url: "/saisClassifier?_menu"
           },
           {
+            name: 'main.menu.mainData.occupationStandards',
+            url: "/occupationstandard?_menu"
+          },
+          {
             name: 'main.menu.mainData.users',
             url: "/persons?_menu"
           },
@@ -697,6 +701,11 @@ angular.module('hitsaOis')
           },
         ]
       });
+      sections.push({
+        name: 'main.menu.teachers.label',
+        type: 'link',
+        url: "/teachers?_menu"
+      });
     }
 
     function getParentSections() {
@@ -783,7 +792,7 @@ angular.module('hitsaOis')
           pages: [
             {
               name: 'main.menu.scholarships.grants',
-              url: "/scholarships?grants"
+              url: "/scholarships/grants"
             },
             {
               name: 'main.menu.scholarships.grantApplications',
@@ -791,7 +800,7 @@ angular.module('hitsaOis')
             },
             {
               name: 'main.menu.scholarships.scholarships',
-              url: "/scholarships?scholarships"
+              url: "/scholarships/scholarships"
             },
             {
               name: 'main.menu.scholarships.scholarshipApplications',
@@ -799,7 +808,7 @@ angular.module('hitsaOis')
             },
             {
               name: 'main.menu.scholarships.drGrants',
-              url: "/scholarships?"
+              url: "/scholarships"
             }
           ]
         });
@@ -807,7 +816,7 @@ angular.module('hitsaOis')
         result.push({
           name: 'main.menu.scholarships.scholarships',
           type: 'link',
-          url: "/scholarships?scholarships"
+          url: "/scholarships/scholarships"
         });
         result.push({
           name: 'main.menu.scholarships.scholarshipApplications',
@@ -817,7 +826,7 @@ angular.module('hitsaOis')
         result.push({
           name: 'main.menu.scholarships.drGrants',
           type: 'link',
-          url: "/scholarships?"
+          url: "/scholarships"
         });
         result.push({
           name: 'main.menu.scholarships.grantApplications',
@@ -828,7 +837,7 @@ angular.module('hitsaOis')
         result.push({
           name: 'main.menu.scholarships.grants',
           type: 'link',
-          url: "/scholarships?grants"
+          url: "/scholarships/grants"
         });
         result.push({
           name: 'main.menu.scholarships.grantApplications',

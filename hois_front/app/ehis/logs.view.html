@@ -16,12 +16,12 @@
           <div flex="50" flex-offset="5">
             <label class="textInput">{{'ehis.message.sentDatesRange' | translate}}</label>
             <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
-              <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"
-                             md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+              <label>{{'main.from' | translate}}</label>
+              <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"></md-datepicker>
             </md-input-container>
             <md-input-container flex flex-offset="5">
-              <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"
-                             md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+              <label>{{'main.thru' | translate}}</label>
+              <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
             </md-input-container>
           </div>
         </div>

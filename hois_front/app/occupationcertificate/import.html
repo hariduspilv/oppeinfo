@@ -11,7 +11,14 @@
       <div layout="row">
         <md-input-container flex>
           <label>{{'occupationcertificate.studentGroup' | translate}}</label>
-          <hois-select ng-model="studentGroup" values="formState.studentGroups" multiple></hois-select>
+          <hois-select ng-model="criteria.studentGroup" values="formState.studentGroups" multiple></hois-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex>
+          <label class="textInput">{{'occupationcertificate.student' | translate}}</label>
+          <input ng-model="criteria.studentName" type="text">
         </md-input-container>
       </div>
 
@@ -22,12 +29,12 @@
         </md-input-container>
         <div flex="33">
           <md-input-container flex>
-            <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"
-                           md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"></md-datepicker>
           </md-input-container>
           <md-input-container flex>
-            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"
-                           md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+            <label>{{'main.thru' | translate}}</label>
+            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
           </md-input-container>
         </div>
       </div>
@@ -63,7 +70,7 @@
               <td md-cell>{{::row.idcode}}</td>
               <td md-cell>{{::row.firstname}}</td>
               <td md-cell>{{::row.lastname}}</td>
-              <td md-cell>{{::row.type | translate}}</td>
+              <td md-cell>{{row.type | translate}}</td>
               <td md-cell>{{currentLanguageNameField(row.occupation)}}</td>
               <td md-cell>{{::row.issuer}}</td>
               <td md-cell>{{::row.issueDate | hoisDate}}</td>

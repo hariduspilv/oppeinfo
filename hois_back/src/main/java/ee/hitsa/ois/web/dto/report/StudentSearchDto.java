@@ -7,10 +7,12 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 
 public class StudentSearchDto {
 
@@ -28,6 +30,7 @@ public class StudentSearchDto {
     private final String finSpecific;
     private final String language;
     private final BigDecimal credits;
+    private List<StudentOccupationCertificateDto> occupationCertificates;
 
     public StudentSearchDto(Object record) {
         id = resultAsLong(record, 0);
@@ -101,5 +104,13 @@ public class StudentSearchDto {
 
     public BigDecimal getCredits() {
         return credits;
+    }
+
+    public List<StudentOccupationCertificateDto> getOccupationCertificates() {
+        return occupationCertificates;
+    }
+
+    public void setOccupationCertificates(List<StudentOccupationCertificateDto> occupationCertificates) {
+        this.occupationCertificates = occupationCertificates;
     }
 }

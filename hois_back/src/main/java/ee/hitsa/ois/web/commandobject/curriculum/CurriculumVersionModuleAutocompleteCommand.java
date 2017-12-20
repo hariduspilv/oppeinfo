@@ -4,17 +4,19 @@ import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 
 public class CurriculumVersionModuleAutocompleteCommand extends AutocompleteCommand{
     
-    private Long curriculumVersionId;
+    private Long curriculumVersion;
     private Boolean curriculumModules;
     private String curriculumVersionStatusCode;
-    private Long schoolId;
+    private Long school;
+    private Long student;
+    private Boolean otherStudents;
     
-    public Long getCurriculumVersionId() {
-        return curriculumVersionId;
+    public Long getCurriculumVersion() {
+        return curriculumVersion;
     }
 
-    public void setCurriculumVersionId(Long curriculumVersionId) {
-        this.curriculumVersionId = curriculumVersionId;
+    public void setCurriculumVersion(Long curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
     
     public Boolean getCurriculumModules() {
@@ -33,12 +35,28 @@ public class CurriculumVersionModuleAutocompleteCommand extends AutocompleteComm
         this.curriculumVersionStatusCode = curriculumVersionStatusCode;
     }
 
-    public Long getSchoolId() {
-        return schoolId;
+    public Long getSchool() {
+        return school;
     }
 
-    public void setSchoolId(Long schoolId) {
-        this.schoolId = schoolId;
+    public void setSchool(Long school) {
+        this.school = school;
+    }
+
+    public Long getStudent() {
+        return student;
+    }
+
+    public void setStudent(Long student) {
+        this.student = student;
+    }
+
+    public Boolean getOtherStudents() {
+        return otherStudents;
+    }
+
+    public void setOtherStudents(Boolean otherStudents) {
+        this.otherStudents = otherStudents;
     }
     
 }

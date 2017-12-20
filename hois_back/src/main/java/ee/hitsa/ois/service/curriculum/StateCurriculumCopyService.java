@@ -47,7 +47,7 @@ import ee.hitsa.ois.web.commandobject.StateCurriculumOccupationCopyCommand;
 @Transactional
 @Service
 public class StateCurriculumCopyService {
-    
+
     @Autowired
     private EntityManager em;
     @Autowired
@@ -56,13 +56,13 @@ public class StateCurriculumCopyService {
     private StateCurriculumRepository StateCurriculumRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
-    
-    private static Integer CREDITS_PER_TERM = 30;
-    private static Integer MONTHS_PER_TERM = 6;
-    
+
+    private static final Integer CREDITS_PER_TERM = Integer.valueOf(30);
+    private static final Integer MONTHS_PER_TERM = Integer.valueOf(6);
+
     private static final String FROM_CLASSIFIER_CONNECT = " from classifier_connect "
             + "join classifier c on c.code = classifier_connect.classifier_code ";
-    
+
     private static final String FILTER_BY_SCHOOL_STUDY_LEVEL = "classifier_code in "
             + "(select study_level_code "
             + "from school_study_level "
@@ -80,7 +80,7 @@ public class StateCurriculumCopyService {
     public Curriculum copyStateCurriculum(HoisUserDetails user, StateCurriculumCopyCommand command) {
         Curriculum newCurriculum = new Curriculum(); 
         StateCurriculum copied = StateCurriculumRepository.findOne(command.getId());
-        
+
         BeanUtils.copyProperties
         (copied, newCurriculum, "id", "school", "inserted", "insertedBy", "changed", "changedBy", "version", 
                 "validFrom", "validThru",  
@@ -95,9 +95,9 @@ public class StateCurriculumCopyService {
         newCurriculum.setConsecution(classifierRepository.getOne(CurriculumConsecution.OPPEKAVA_TYPE_E.name()));
         newCurriculum.setValidFrom(LocalDate.now());
         newCurriculum.setStateCurriculum(copied);
-        newCurriculum.setOccupation(getIsOccupation(command));
+        newCurriculum.setOccupation(Boolean.valueOf(isOccupation(command)));
         newCurriculum.setJoint(Boolean.FALSE);
-        newCurriculum.setCredits(BigDecimal.valueOf(copied.getCredits()));
+        newCurriculum.setCredits(BigDecimal.valueOf(copied.getCredits().longValue()));
         newCurriculum.setOrigStudyLevel(getStudyLevel(user.getSchoolId(), EntityUtil.getId(copied)));
         newCurriculum.setStudyPeriod(calculateStudyPeriod(copied.getCredits()));
         
@@ -107,7 +107,7 @@ public class StateCurriculumCopyService {
         return curriculumRepository.save(newCurriculum);
     }
 
-    private Boolean getIsOccupation(StateCurriculumCopyCommand command) {
+    private boolean isOccupation(StateCurriculumCopyCommand command) {
         Classifier c = classifierRepository.getOne(command.getOccupations().get(0).getOccupation());
         return MainClassCode.KUTSE.name().equals(c.getMainClassCode());
     }

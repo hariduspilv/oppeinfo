@@ -48,7 +48,7 @@ public class CurriculumVersionOccupationModuleService {
     
     private List<Classifier> getCapacityTypes() {
         return classifierRepository.findAllByMainClassCode(MainClassCode.MAHT.name())
-                .stream().filter(t -> Boolean.TRUE.equals(t.isVocational())).collect(Collectors.toList());
+                .stream().filter(t -> t.isVocational()).collect(Collectors.toList());
     }
     /**
      * Sets empty capacities to occupation modules and themes

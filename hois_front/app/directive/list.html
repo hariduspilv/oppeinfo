@@ -22,10 +22,12 @@
         </md-input-container>
 
         <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <md-datepicker ng-model="criteria.confirmDateFrom" md-placeholder="{{'directive.confirmDateFrom' | translate}}"></md-datepicker>
+          <label>{{'directive.confirmDateFrom' | translate}}</label>
+          <md-datepicker ng-model="criteria.confirmDateFrom"></md-datepicker>
         </md-input-container>
         <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <md-datepicker ng-model="criteria.confirmDateThru" md-min-date="directive.confirmDateFrom" md-placeholder="{{'directive.confirmDateThru' | translate}}"></md-datepicker>
+          <label>{{'directive.confirmDateThru' | translate}}</label>
+          <md-datepicker ng-model="criteria.confirmDateThru" md-min-date="directive.confirmDateFrom"></md-datepicker>
         </md-input-container>
       </div>
 
@@ -36,10 +38,12 @@
         </md-input-container>
 
         <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <md-datepicker ng-model="criteria.insertedFrom" md-placeholder="{{'directive.insertedFrom' | translate}}"></md-datepicker>
+          <label>{{'directive.insertedFrom' | translate}}</label>
+          <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
         </md-input-container>
         <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <md-datepicker ng-model="criteria.insertedThru" md-min-date="directive.insertedFrom" md-placeholder="{{'directive.insertedThru' | translate}}"></md-datepicker>
+          <label>{{'directive.insertedThru' | translate}}</label>
+          <md-datepicker ng-model="criteria.insertedThru" md-min-date="directive.insertedFrom"></md-datepicker>
         </md-input-container>
       </div>
 

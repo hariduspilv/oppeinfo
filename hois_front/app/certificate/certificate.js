@@ -10,23 +10,27 @@ angular.module('hitsaOis')
     $q.all(clMapper.promises).then($scope.loadData);
 
     if($scope.auth.isStudent()) {
-      $scope.types = Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK', filterValues: [CertificateType.TOEND_LIIK_MUU]}, function() {
-       // TODO use cheaper backend call to fetch student status only
-        QueryUtils.endpoint('/students').get({id: $scope.auth.student}).$promise.then(function(response) {
+      $scope.certificateTypes = Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK', filterValues: [CertificateType.TOEND_LIIK_MUU]}, function() {
+        QueryUtils.endpoint('/certificate/student/status').get({id: $scope.auth.student}).$promise.then(function(response) {
           var status = response.status;
           var forbiddenTypes = CertificateUtil.getForbiddenTypes(status);
-          $scope.types = $scope.types.filter(function(el){
+          $scope.certificateTypes = $scope.certificateTypes.filter(function(el){
             return forbiddenTypes.indexOf(el.code) === -1;
           });
         });
       });
     }
   }
-]).controller('CertificateStudentOrderController', ['$scope', 'Classifier', 'QueryUtils', '$route', '$location', 'dialogService', 'message',
-  function ($scope, Classifier, QueryUtils, $route, $location, dialogService, message) {
+]).controller('CertificateStudentOrderController', ['$scope', 'Classifier', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$rootScope',
+  function ($scope, Classifier, QueryUtils, $route, $location, dialogService, message, $rootScope) {
 
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl + '/order');
+    var id = $route.current.params.id;
+
+    $rootScope.removeLastUrlFromHistory(function(lastUrl){
+      return lastUrl && (lastUrl.indexOf('certificate/' + id + '/view') !== -1 || lastUrl.indexOf('certificate/new') !== -1);
+    });
 
     $scope.record = new Endpoint({type: $route.current.params.typeCode});
 
@@ -49,8 +53,8 @@ angular.module('hitsaOis')
       });
     };
   }
-]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$resource', 'config', '$q', 'CertificateUtil',
-  function ($scope, QueryUtils, $route, $location, dialogService, message, $resource, config, $q, CertificateUtil) {
+]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$resource', 'config', '$q', 'CertificateUtil', '$rootScope',
+  function ($scope, QueryUtils, $route, $location, dialogService, message, $resource, config, $q, CertificateUtil, $rootScope) {
 
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -58,6 +62,10 @@ angular.module('hitsaOis')
     var id = $route.current.params.id;
     var changedByOtherIdCodeChange = false;
     $scope.forbiddenTypes = [];
+
+    $rootScope.removeLastUrlFromHistory(function(lastUrl){
+      return lastUrl && (lastUrl.indexOf('certificate/' + id + '/view') !== -1 || lastUrl.indexOf('certificate/new') !== -1);
+    });
 
     function getFullname(person) {
       return person.firstname + ' ' + person.lastname;
@@ -82,6 +90,9 @@ angular.module('hitsaOis')
         setReadonlyContent($scope.record.content);
       }
       $scope.otherFound = true;
+      if($scope.certificateEditForm) {
+        $scope.certificateEditForm.$setPristine();
+      }
     }
 
     function setReadonlyContent(content) {

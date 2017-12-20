@@ -140,7 +140,7 @@ public class PracticeJournalService {
                     Boolean.valueOf(JournalStatus.PAEVIK_STAATUS_T.name().equals(resultAsString(r, 4))
                             && Boolean.FALSE.equals(hasSupervisorOpinion)));
 
-            dto.setCanEdit(PracticeJournalUserRights.canEdit(dto.getEndDate()));
+            dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(dto.getEndDate())));
 
             Boolean hasPositiveModuleGrade = resultAsBoolean(r, 24);
             dto.setCanTeacherAddEntries(Boolean.valueOf(Boolean.FALSE.equals(hasPositiveModuleGrade)));

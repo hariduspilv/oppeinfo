@@ -69,7 +69,7 @@ public class SubjectStudyPeriodTeacherController {
         command.setSchool(user.getSchoolId());
         command.setIsHigher(Boolean.TRUE);
         command.setIsActive(Boolean.TRUE);
-        return teacherService.search(command, pageable).map(t -> {
+        return teacherService.search(user, command, pageable).map(t -> {
             return new AutocompleteResult(t.getId(), t.getName(), t.getName());
         });
     }

@@ -1489,7 +1489,12 @@ md-grid-tile {
 .higher-curriculum-top-fieldset {
   max-height: 250px !important;
 }
+
 .elective-module{
   word-break: break-all;
   overflow-y: auto;
+}
+
+.elective-module-subject{
+  max-width: 200px;
 }

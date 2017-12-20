@@ -9,11 +9,13 @@
               <label>{{'reception.application.saisImportRange' | translate}}</label>
               <input type="hidden">
             </md-input-container>
-          <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
-              <md-datepicker  ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)" ng-model="criteria.applicationDateFrom" md-max-date="criteria.applicationDateTo" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+            <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'main.from' | translate}}</label>
+              <md-datepicker  ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)" ng-model="criteria.applicationDateFrom" md-max-date="criteria.applicationDateTo"></md-datepicker>
             </md-input-container>
-          <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
-              <md-datepicker  ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)" ng-model="criteria.applicationDateTo" md-min-date="criteria.applicationDateFrom" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+            <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'main.thru' | translate}}</label>
+              <md-datepicker  ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)" ng-model="criteria.applicationDateTo" md-min-date="criteria.applicationDateFrom"></md-datepicker>
             </md-input-container>
           </div>
           <div>

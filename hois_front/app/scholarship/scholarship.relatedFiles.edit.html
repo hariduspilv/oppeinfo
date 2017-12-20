@@ -1,6 +1,6 @@
-<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
+<legend ng-if="studentSubmitData.canApply || studentSubmitData.files.length > 0" md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
 
-<md-button class="md-raised" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
+<md-button ng-if="studentSubmitData.canApply" class="md-raised" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
 <br/>
 <table md-table class="secondary-table" ng-if="studentSubmitData.files.length > 0">
   <thead md-head>

@@ -21,7 +21,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); }},
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A], currentNavItem: 'lessonplan.vocational-byteacher'
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA
+        ], currentNavItem: 'lessonplan.vocational-byteacher'
       }
     })
     .when('/lessonplans/vocational/:id/edit', {
@@ -30,7 +33,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); }},
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A], currentNavItem: 'lessonplan.vocational'
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN], currentNavItem: 'lessonplan.vocational'
       }
     })
     .when('/lessonplans/vocational/byteacher/:id/:studyYear', {
@@ -39,7 +42,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); }},
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA
+        ]
       }
     })
     .when('/lessonplans/journals/new', {
@@ -48,7 +54,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); }},
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
       }
     })
     .when('/lessonplans/journals/:id/edit', {
@@ -57,7 +63,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); }},
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
       }
     })
     .when('/lessonplans/events', {

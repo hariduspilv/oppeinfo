@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,12 @@ public class CertificateController {
         CertificateDto dto = CertificateDto.of(certificate);
         dto.setCanBeChanged(certificateValidationService.canBeChanged(user, certificate));
         return dto;
+    }
+    
+    @GetMapping("/student/status/{id:\\d+}")
+    public Map<String, String> getStudentStatus(HoisUserDetails user, @WithEntity Student student) {
+        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        return Collections.singletonMap("status", EntityUtil.getCode(student.getStatus()));
     }
 
     @GetMapping("/content")

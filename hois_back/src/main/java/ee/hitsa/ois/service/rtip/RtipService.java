@@ -305,7 +305,7 @@ public class RtipService {
         Person person = teacher.getPerson();
         updateNotEmptyField(person::setFirstname, emploee.getVORNA());
         updateNotEmptyField(person::setLastname, emploee.getNACHN());
-        person = em.merge(person);
+        em.merge(person);
 
         updateNotEmptyField(teacher::setPhone, emploee.getLAUATELEFON());
         updateNotEmptyField(teacher::setEmail, emploee.getEMAIL());

@@ -33,13 +33,13 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.MessageTemplate;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MessageType;
-import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.MessageTemplateRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
 import ee.hitsa.ois.web.commandobject.MessageTemplateForm;
 import ee.hitsa.ois.web.commandobject.MessageTemplateSearchCommand;
 import ee.hitsa.ois.web.dto.MessageTemplateDto;
@@ -48,7 +48,7 @@ import ee.hitsa.ois.web.dto.MessageTemplateDto;
 @Service
 public class MessageTemplateService {
 
-    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Autowired
     private EntityManager em;
@@ -107,11 +107,9 @@ public class MessageTemplateService {
      *
      * @param type
      * @param schoolId
-     * @param required
      * @return
-     * @throws BadConfigurationException if required is true and message template is missing
      */
-    public MessageTemplate findValidTemplate(MessageType type, Long schoolId, boolean required) {
+    public MessageTemplate findValidTemplate(MessageType type, Long schoolId) {
         TypedQuery<MessageTemplate> q = em.createQuery(
                 "select t from MessageTemplate t where t.school.id = ?1 and t.type.code = ?2 and (t.validFrom is null or t.validFrom <= ?3) and (t.validThru is null or t.validThru >= ?3)", MessageTemplate.class);
         q.setParameter(1, schoolId);
@@ -120,20 +118,26 @@ public class MessageTemplateService {
         List<MessageTemplate> templates = q.setMaxResults(2).getResultList();
 
         if (templates.isEmpty()) {
-            log.error("no {} templates found for school {}", type.name(), schoolId);
+            LOG.error("No {} templates found for school {}", type.name(), schoolId);
         } else if (templates.size() > 1) {
-            log.error("Multiple {} templates found for school {}", type.name(), schoolId);
+            LOG.error("Multiple {} templates found for school {}", type.name(), schoolId);
         }
 
-        if(templates.isEmpty()) {
-            if(required) {
-                Classifier templateName = em.getReference(Classifier.class, type.name());
-                throw new BadConfigurationException("main.messages.error.configuration.missingAutomaticMessageTemplate",
-                        Collections.singletonMap("template", templateName.getNameEt()));
-            }
-            return null;
+        return templates.isEmpty() ? null : templates.get(0);
+    }
+
+    /**
+     * Check for template existence. If template is missing, add error to error list
+     *
+     * @param type
+     * @param school
+     * @param allErrors
+     */
+    public void requireValidTemplate(MessageType type, School school, List<Error> allErrors) {
+        if(findValidTemplate(type, EntityUtil.getId(school)) == null) {
+            allErrors.add(new Error("main.messages.error.configuration.missingAutomaticMessageTemplate",
+                    Collections.singletonMap("template", em.getReference(Classifier.class, type.name()).getNameEt())));
         }
-        return templates.get(0);
     }
 
     public Set<String> getUsedTypeCodes(Long schoolId, String code) {

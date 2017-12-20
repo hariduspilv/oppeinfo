@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +30,7 @@ import ee.hitsa.ois.service.rtip.RtipService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.HttpUtil.NoContentResponse;
+import ee.hitsa.ois.util.TeacherUserRightsValidator;
 import ee.hitsa.ois.util.TeacherUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -60,8 +62,8 @@ public class TeacherController {
     private EhisTeacherExportService ehisTeacherExportService;
 
     @GetMapping("/{id:\\d+}")
-    public TeacherDto get(@WithEntity Teacher teacher) {
-        return TeacherDto.of(teacher);
+    public TeacherDto get(HoisUserDetails user, @WithEntity Teacher teacher) {
+        return teacherService.get(user, teacher);
     }
 
     @GetMapping
@@ -69,7 +71,7 @@ public class TeacherController {
         if (!user.isExternalExpert()) {
             command.setSchool(user.getSchoolId());
         }
-        return teacherService.search(command, pageable);
+        return teacherService.search(user, command, pageable);
     }
 
     /**
@@ -86,7 +88,7 @@ public class TeacherController {
     
     @GetMapping("/{id:\\d+}/absences")
     public Page<TeacherAbsenceDto> teacherAbsences(HoisUserDetails user, @WithEntity Teacher teacher, Pageable pageable) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        TeacherUserRightsValidator.assertCanView(user, teacher);        
         return teacherService.teacherAbsences(teacher, pageable);
     }
 

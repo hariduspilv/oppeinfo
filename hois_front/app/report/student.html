@@ -115,6 +115,7 @@
             <th md-column>{{'report.student.finSpecific' | translate}}</th>
             <th md-column>{{'report.student.language' | translate}}</th>
             <th md-column>{{'report.student.credits' | translate}}</th>
+            <th md-column>{{'report.student.occupationcertificate' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
@@ -134,6 +135,12 @@
             <td md-cell>{{currentLanguageNameField(row.finSpecific)}}</td>
             <td md-cell>{{currentLanguageNameField(row.language)}}</td>
             <td md-cell>{{::row.credits}}</td>
+            <td md-cell>
+              <div ng-repeat="cert in row.occupationCertificates">
+                <hr ng-if="!$first">
+                {{::cert.certificateNr}}&nbsp;{{currentLanguageNameField(cert.occupation)}}
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>

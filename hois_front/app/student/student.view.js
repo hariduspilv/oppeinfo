@@ -298,7 +298,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       }
     }
 
-  }]).controller('StudentViewDocumentsController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', function ($q, $route, $scope, Classifier, QueryUtils) {
+  }]).controller('StudentViewDocumentsController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', 'CertificateUtil', 'CertificateType', function ($q, $route, $scope, Classifier, QueryUtils, CertificateUtil, CertificateType) {
    // var studentId = (auth.isStudent() ? auth.student : $route.current.params.id);
     $scope.studentId = ($route.current.locals.auth.isStudent() ? $route.current.locals.auth.student : $route.current.params.id);
     $scope.currentNavItem = 'student.documents';
@@ -351,6 +351,38 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
         $scope.afterDirectivesLoad(result.directives);
       });
     });
+
+
+
+    $scope.certificatesCriteria = {order: 'type.' + $scope.currentLanguageNameField(), size: 5, student: $scope.studentId};
+    $scope.certificates = {};
+    var certificatesMapper = Classifier.valuemapper({type: 'TOEND_LIIK', status: 'TOEND_STAATUS'});
+
+    function afterCertificatesLoad(result) {
+      $scope.certificatesCriteria.size = result.size;
+      $scope.certificatesCriteria.page = result.number + 1;
+      $scope.certificatesCriteria.totalElements = result.totalElements;
+      $scope.certificates.content = certificatesMapper.objectmapper(result.content);
+    }
+
+    $scope.loadCertificates = function() {
+      var query = QueryUtils.getQueryParams($scope.certificatesCriteria);
+      $scope.directives.$promise = QueryUtils.endpoint('/certificate').search(query, afterCertificatesLoad);
+    };
+    $scope.loadCertificates();
+
+    if($scope.auth.isStudent()) {
+      $scope.certificateTypes = Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK', filterValues: [CertificateType.TOEND_LIIK_MUU]}, function() {
+        QueryUtils.endpoint('/certificate/student/status').get({id: $scope.studentId}).$promise.then(function(response) {
+          var status = response.status;
+          var forbiddenTypes = CertificateUtil.getForbiddenTypes(status);
+          $scope.certificateTypes = $scope.certificateTypes.filter(function(el){
+            return forbiddenTypes.indexOf(el.code) === -1;
+          });
+        });
+      });
+    }
+
   }]).controller('StudentViewTimetableController', ['$scope', '$route', 'QueryUtils', 'GeneralTimetableUtils', function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
     $scope.generalTimetableUtils = new GeneralTimetableUtils();
     $scope.studentId = ($route.current.locals.auth.isStudent() ? $route.current.locals.auth.student : $route.current.params.id);

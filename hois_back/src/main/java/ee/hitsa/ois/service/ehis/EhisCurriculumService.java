@@ -6,10 +6,8 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -81,6 +79,13 @@ public class EhisCurriculumService extends EhisService {
     private String frontendBaseUrl;
 
     public void sendToEhis(HoisUserDetails userDetails, Curriculum curriculum) {
+        // EHIS oisOppekavad query is not working yet
+        if(true) {
+            if(!StringUtils.hasText(curriculum.getMerCode())) {
+                throw new ValidationFailedException("curriculum.message.missingEhisCode");
+            }
+            return;
+        }
         OisOppekava oisOppekava = new OisOppekava();
         oisOppekava.setRegNumber(value2(curriculum.getSchool().getEhisSchool()));
         Person person = em.getReference(Person.class, userDetails.getPersonId());
@@ -172,22 +177,6 @@ public class EhisCurriculumService extends EhisService {
                             oiskutseSpetsialiseerumine.setKutseSpetsialiseerumineReaId(new BigInteger(value(cos.getSpeciality())));
                             oisKutsestandard.getKutseSpetsialiseerumised().add(oiskutseSpetsialiseerumine);
                         }
-                        if(!higher && false) {
-                            // XXX not used removed when confirmed
-                            Set<String> partOccupationCodes = co.getOccupation().getChildConnects().stream().map(r -> EntityUtil.getCode(r.getClassifier())).collect(Collectors.toSet());
-                            for(CurriculumOccupation cpo : curriculum.getOccupations()) {
-                                String partOccupationId = EntityUtil.getNullableCode(cpo.getOccupation());
-                                if(partOccupationId != null) {
-                                    Matcher pm = PARTOCCUPATION_ID_PREFIX.matcher(partOccupationId);
-                                    if(pm.matches() && partOccupationCodes.contains(partOccupationId)) {
-                                        partOccupationId = value(cpo.getOccupation());
-                                        OisOsakutse oisOsakutse = new OisOsakutse();
-                                        oisOsakutse.setOsakutseReaId(new BigInteger(partOccupationId));
-                                        oisKutsestandard.getOsakutsed().add(oisOsakutse);
-                                    }
-                                }
-                            }
-                        }
                         occupations.getKutsestandard().add(oisKutsestandard);
                     }
                 }
@@ -271,8 +260,9 @@ public class EhisCurriculumService extends EhisService {
         BigInteger curriculumCodeNumber;
         try {
             curriculumCodeNumber = new BigInteger(curriculumCode);
-        } catch(@SuppressWarnings("unused") NumberFormatException e) {
-            throw new ValidationFailedException("curriculum.message.badEhisCode");
+        } catch(NumberFormatException | NullPointerException e) {
+            String msgCode = e instanceof NullPointerException ? "curriculum.message.missingEhisCode" : "curriculum.message.badEhisCode";
+            throw new ValidationFailedException(msgCode);
         }
         oppekavaStaatusOis.setOppekavaKood(curriculumCode);
         // XXX create enum
@@ -280,6 +270,15 @@ public class EhisCurriculumService extends EhisService {
         // TODO remove, for testing against mock server only
         oppekavaStaatusOis.setKommentaar(curriculum.getDescription());
         oisOppekavadStaatus.getOisOppekava().add(oppekavaStaatusOis);
+
+        // TODO remove this block
+        // EHIS oisOppekavadStaatus query is not working yet
+        if(true) {
+            // mark as confirmed
+            curriculum.setStatus(em.getReference(Classifier.class, "OPPEKAVA_STAATUS_K"));
+            curriculum.setEhisStatus(em.getReference(Classifier.class, "OPPEKAVA_EHIS_STAATUS_R"));
+            return;
+        }
 
         XRoadHeaderV4 header = getXroadHeader();
         header.getService().setServiceCode(OIS_OPPEKAVA_STAATUS_SERVICE_CODE);
@@ -330,12 +329,13 @@ public class EhisCurriculumService extends EhisService {
     }
 
     // TODO remove function - for mock test only
+    /*
     @Override
     protected XRoadHeaderV4 getXroadHeader() {
         XRoadHeaderV4 header = super.getXroadHeader();
         header.setEndpoint("http://localhost:8087/services/ehis");
         return header;
-    }
+    }*/
 
     @Override
     protected String getServiceCode() {

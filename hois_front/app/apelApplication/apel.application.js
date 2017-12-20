@@ -140,7 +140,7 @@
   }
 
   function getCurriculumModule(curriculumVersionId, QueryUtils, moduleId) {
-    return QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query({curriculumVersionId: curriculumVersionId}).$promise.then(function (modules) {
+    return QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query({curriculumVersion: curriculumVersionId}).$promise.then(function (modules) {
       for (var i = 0; i < modules.length; i++) {
         if (modules[i].id === moduleId) {
           return modules[i];
@@ -217,6 +217,14 @@
     for (var j = 0; j < record.formalReplacedSubjectsOrModules.length; j++) {
       DataUtils.convertObjectToIdentifier(record.formalReplacedSubjectsOrModules[j], ['subject', 'curriculumVersionOmodule']);
     }
+  }
+
+  function getReplacedSubjectsIds(replacedSubjects) {
+    var replacedSubjectsIds = [];
+    for (var i = 0; i < replacedSubjects.length; i++) {
+      replacedSubjectsIds.push(replacedSubjects[i].subject.id);
+    }
+    return replacedSubjectsIds;
   }
 
   angular.module('hitsaOis').controller('ApelApplicationEditController', function ($scope, $route, QueryUtils, ArrayUtils, oisFileService, 
@@ -356,6 +364,7 @@
       }
 
       dialogService.showDialog(dialogTemplate, function (dialogScope) {
+        dialogScope.student = $scope.application.student;
         dialogScope.curriculumVersionId = $scope.application.curriculumVersion.id;
         dialogScope.isVocational = $scope.application.curriculumVersion.isVocational;
 
@@ -414,7 +423,8 @@
         function getModulesAndThemes() {
           dialogScope.modulesAndThemes = [];
           QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query({
-            curriculumVersionId: dialogScope.curriculumVersionId,
+            student: dialogScope.student.id,            
+            curriculumVersion: dialogScope.curriculumVersionId,
             curriculumVersionStatusCode: "OPPEKAVA_VERSIOON_STAATUS_K"
           }).$promise.then(function (result) {
             result = sortByName(result);
@@ -427,6 +437,7 @@
                   nameEt: result[i].nameEt + "/" + themes[j].nameEt,
                   nameEn: result[i].nameEn + "/" + themes[j].nameEn,
                   isModule: false,
+                  moduleId: result[i].id
                 });
               }
             }
@@ -434,7 +445,8 @@
         }
 
         function getSubjects() {
-          QueryUtils.endpoint('/autocomplete/subjectsList').query().$promise.then(function (subjects) {
+          QueryUtils.endpoint('/autocomplete/subjectsList').query(
+            {student: dialogScope.student.id, curriculumSubjects: true, curriculumVersion: dialogScope.curriculumVersionId, withCredits: true}).$promise.then(function (subjects) {
             dialogScope.subjects = subjects;
           });
         }
@@ -458,9 +470,29 @@
           return array;
         }
 
-        dialogScope.$watch('selectedModuleOrTheme', function () {
-          if (dialogScope.selectedModuleOrTheme) {
-            if (dialogScope.selectedModuleOrTheme.isModule) {
+        function getReplacedModulesIds(replacedModules) {
+          var replacedModulesIds = [];
+          for (var i = 0; i < replacedModules.length; i++) {
+            if (replacedModules[i].isModule) {
+              replacedModulesIds.push(replacedModules[i].curriculumVersionOmodule.id);
+            }
+          }
+          return replacedModulesIds;
+        }
+
+        function getReplacedModuleThemesIds(replacedModules) {
+          var replacedModuleThemesIds = [];
+          for (var i = 0; i < replacedModules.length; i++) {
+            if (!replacedModules[i].isModule) {
+              replacedModuleThemesIds.push(replacedModules[i].curriculumVersionOmoduleTheme.id);
+            }
+          }
+          return replacedModuleThemesIds;
+        }
+
+        dialogScope.selectedModuleOrThemeChanged = function () {
+          if (dialogScope.selectedModuleOrTheme.isModule) {
+            if (!ArrayUtils.contains(getReplacedModulesIds(dialogScope.record.informalSubjectsOrModules), dialogScope.selectedModuleOrTheme.id)) {
               QueryUtils.endpoint('/occupationModule').get({id: dialogScope.selectedModuleOrTheme.id}).$promise.then(function (oModule) {
                 var outcomeIds = getThemesOutcomeIds(oModule.themes);
                 getOutcomes(outcomeIds, null).then(function(outcomes) {
@@ -469,7 +501,10 @@
                   addNewSubtitutableModuleTheme(dialogScope.selectedModuleOrTheme, hours, ekap, outcomes);
                 });
               });
-            } else {
+            }
+          } else {
+            if (!ArrayUtils.contains(getReplacedModulesIds(dialogScope.record.informalSubjectsOrModules), dialogScope.selectedModuleOrTheme.moduleId) &&
+              !ArrayUtils.contains(getReplacedModuleThemesIds(dialogScope.record.informalSubjectsOrModules), dialogScope.selectedModuleOrTheme.id)) {
               QueryUtils.endpoint('/occupationModule/theme').get({id: dialogScope.selectedModuleOrTheme.id}).$promise.then(function (theme) {
                 getOutcomes(theme.outcomes, null).then(function (outcomes) {
                   addNewSubtitutableModuleTheme(dialogScope.selectedModuleOrTheme, theme.hours, null, outcomes);
@@ -477,7 +512,7 @@
               });
             }
           }
-        });
+        };
 
         function getOutcomes(outcomeIds, acquiredOutcomeIds) {
           var promises = [];
@@ -549,8 +584,8 @@
           });
         }
 
-        dialogScope.$watch('selectedSubject', function () {
-          if (dialogScope.selectedSubject) {
+        dialogScope.addSelectedSubject = function () {
+          if (!ArrayUtils.contains(getReplacedSubjectsIds(dialogScope.record.informalSubjectsOrModules), dialogScope.selectedSubject.id)) {
             var subjectId = dialogScope.selectedSubject.id;
             QueryUtils.endpoint('/subject').get({id: subjectId}).$promise.then(function (subject) {
               var credits = subject.credits;
@@ -562,7 +597,7 @@
               });
             });
           }
-        });
+        };
 
         function getModules(subject) {
           var promises = [];
@@ -682,21 +717,24 @@
 
       dialogService.showDialog(dialogTemplate, function (dialogScope) {
         dialogScope.auth = $scope.auth;
+        dialogScope.student = $scope.application.student;
         dialogScope.currentDate = new Date();
         dialogScope.curriculumVersionId = $scope.application.curriculumVersion.id;
         dialogScope.isVocational = $scope.application.curriculumVersion.isVocational;
         dialogScope.apelSchools = QueryUtils.endpoint('/autocomplete/apelschools').query();
 
         if (dialogScope.isVocational) {
-          dialogScope.curriculumModules = QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query({curriculumVersionId: dialogScope.curriculumVersionId});
+          dialogScope.curriculumModules = QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query(
+            {student: dialogScope.student.id, curriculumVersion: dialogScope.curriculumVersionId});
           dialogScope.curriculumModules.$promise.then(function (modules) {
             for (var i = 0; i < modules.length; i++) {
               dialogScope.curriculumModules[i].credits = getEKAP(modules[i].themes);
             }
           });
         } else {
-          dialogScope.subjects = QueryUtils.endpoint('/autocomplete/subjectsList').query({withCredits: false});
-          dialogScope.curriculumModules = QueryUtils.endpoint('/autocomplete/curriculumversionhmodules').query({curriculumVersionId: dialogScope.curriculumVersionId});
+          dialogScope.subjects = QueryUtils.endpoint('/autocomplete/subjectsList').query(
+            {student: dialogScope.student.id, curriculumSubjects: true, curriculumVersion: dialogScope.curriculumVersionId, withCredits: true});
+          dialogScope.curriculumModules = QueryUtils.endpoint('/autocomplete/curriculumversionhmodules').query({curriculumVersion: dialogScope.curriculumVersionId});
         }
         
         function addNewEmptyFormalSubjectOrModule() {
@@ -832,19 +870,22 @@
         function getTransferableModules(typeCode) {
           if (typeCode === 'VOTA_AINE_LIIK_O') {
             QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query(
-              {curriculumModules: true, curriculumVersionId: dialogScope.curriculumVersionId}).$promise.then(function (modules) {
+              {student: dialogScope.student.id, curriculumModules: true, curriculumVersion: dialogScope.curriculumVersionId}).$promise.then(function (modules) {
               dialogScope.transferableModules = modules;
               setCurriculumVersionOmodule();
             });
           } else if (typeCode === 'VOTA_AINE_LIIK_M') {
             QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query(
-              {curriculumModules: false, curriculumVersionId: dialogScope.curriculumVersionId, schoolId: dialogScope.auth.school.id}).$promise.then(function (modules) {
+              {student: dialogScope.student.id, curriculumModules: false, curriculumVersion: dialogScope.curriculumVersionId, school: dialogScope.auth.school.id}).$promise.then(function (modules) {
               dialogScope.transferableModules = modules;
               setCurriculumVersionOmodule();
             });
           } else if (typeCode === 'VOTA_AINE_LIIK_V') {
-            dialogScope.transferableModules = null;
-            setCurriculumVersionOmodule();
+            QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query(
+              {student: dialogScope.student.id, otherStudents: true, school: dialogScope.auth.school.id}).$promise.then(function (modules) {
+              dialogScope.transferableModules = modules;
+              setCurriculumVersionOmodule();
+            });
           }
         }
 
@@ -866,19 +907,22 @@
         function getTransferableSubjects(typeCode) {
           if (typeCode === 'VOTA_AINE_LIIK_O') {
             QueryUtils.endpoint('/autocomplete/subjectsList').query(
-              {curriculumSubjects: true, curriculumVersion: dialogScope.curriculumVersionId, withCredits: false}).$promise.then(function (subjects) {
+              {student: dialogScope.student.id, curriculumSubjects: true, curriculumVersion: dialogScope.curriculumVersionId, withCredits: false}).$promise.then(function (subjects) {
               dialogScope.transferableSubjects = subjects;
               setSubject();
             });
           } else if (typeCode === 'VOTA_AINE_LIIK_M') {
             QueryUtils.endpoint('/autocomplete/subjectsList').query(
-              {curriculumSubjects: false, curriculumVersion: dialogScope.curriculumVersionId, withCredits: false}).$promise.then(function (subjects) {
+              {student: dialogScope.student.id, curriculumSubjects: false, curriculumVersion: dialogScope.curriculumVersionId, withCredits: false}).$promise.then(function (subjects) {
               dialogScope.transferableSubjects = subjects;
               setSubject();
             });
           } else if (typeCode === 'VOTA_AINE_LIIK_V') {
-            dialogScope.transferableSubjects = null;
-            setSubject();
+            QueryUtils.endpoint('/autocomplete/subjectsList').query(
+              {student: dialogScope.student.id, otherStudents: true, withCredits: false}).$promise.then(function (subjects) {
+              dialogScope.transferableSubjects = subjects;
+              setSubject();
+            });
           }
         }
 
@@ -920,7 +964,9 @@
         };
 
         dialogScope.subjectChanged = function (subject) {
-          getSubjectData(subject.id);
+          if (subject) {
+            getSubjectData(subject.id);
+          }
         };
 
         function getSubjectData(subjectId) {
@@ -941,13 +987,13 @@
             if (oModule.id !== dialogScope.record.curriculumVersionOmodule.id) {
               getModuleData(oModule);
             }
-          } else {
+          } else if (oModule) {
             getModuleData(oModule);
           }
         };
 
         function getModuleData(oModule) {
-          QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query({id: oModule.id, curriculumVersionId: dialogScope.curriculumVersionId}, function (occupationModules) {
+          QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query({id: oModule.id, curriculumVersion: dialogScope.curriculumVersionId}, function (occupationModules) {
             dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule = occupationModules[0];
             dialogScope.record.curriculumVersionOmodule = occupationModules[0];
             Classifier.get(occupationModules[0].assessment).$promise.then(function (assessment) {
@@ -1026,14 +1072,6 @@
             });
           }
         };
-
-        function getReplacedSubjectsIds(replacedSubjectsOrModules) {
-          var replacedSubjectsIds = [];
-          for (var i = 0; i < replacedSubjectsOrModules.length; i++) {
-            replacedSubjectsIds.push(replacedSubjectsOrModules[i].subject.id);
-          }
-          return replacedSubjectsIds;
-        }
 
         dialogScope.addSelectedSubject = function () {
           if (!ArrayUtils.contains(getReplacedSubjectsIds(dialogScope.record.formalReplacedSubjectsOrModules), dialogScope.selectedSubject.id)) {

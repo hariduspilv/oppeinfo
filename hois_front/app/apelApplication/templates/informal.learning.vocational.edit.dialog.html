@@ -69,7 +69,7 @@
           <div flex="50">
             <md-input-container style="width: 100%">
               <label>{{'apel.informalLearnings.module' | translate}}/{{'apel.informalLearnings.theme' | translate}}</label>
-              <md-select ng-model="selectedModuleOrTheme" aria-label="substitutable modules/themes">
+              <md-select ng-model="selectedModuleOrTheme" aria-label="substitutable modules/themes" ng-change="selectedModuleOrThemeChanged()">
                 <md-option ng-repeat="val in modulesAndThemes" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
               </md-select>
             </md-input-container>

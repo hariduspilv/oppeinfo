@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -41,6 +42,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
 import ee.hitsa.ois.web.commandobject.apelapplication.ApelApplicationCommentForm;
 import ee.hitsa.ois.web.commandobject.apelapplication.ApelApplicationForm;
@@ -306,7 +308,7 @@ public class ApelApplicationService {
         }, null);
     }
     
-    private void validateInformalSubjectOrModule(ApelApplicationRecord record, ApelApplicationInformalSubjectOrModule subjectOrModule) {
+    private static void validateInformalSubjectOrModule(ApelApplicationRecord record, ApelApplicationInformalSubjectOrModule subjectOrModule) {
         ApelApplication application = record.getApelApplication();
         
         if (application.getIsVocational().booleanValue()) {
@@ -321,20 +323,20 @@ public class ApelApplicationService {
             ApelApplicationFormalSubjectOrModule subjectOrModule = EntityUtil.bindToEntity(form, 
                     new ApelApplicationFormalSubjectOrModule(), "apelApplicationRecord", "apelSchool", "subject", "curriculumVersionHmodule", 
                     "curriculumVersionOmodule", "type", "grade", "assessment");
-            form.setApelSchool(form.getNewApelSchool() != null ? apelSchoolService.create(user, form.getNewApelSchool()).getId() : form.getApelSchool());
             subjectOrModule.setApelApplicationRecord(record);
-            updateFormalSubjectOrModule(subjectOrModule, form);
+            updateFormalSubjectOrModule(user, subjectOrModule, form);
             validateFormalSubjectOrModule(record, subjectOrModule);
             return subjectOrModule;
         }, (form, subjectOrModule) -> {
             EntityUtil.bindToEntity(form, subjectOrModule, "apelApplicationRecord", "apelSchool", "subject", "curriculumVersionHmodule", 
                     "curriculumVersionOmodule", "type", "grade", "assessment");
-            updateFormalSubjectOrModule(subjectOrModule, form);
+            updateFormalSubjectOrModule(user, subjectOrModule, form);
             validateFormalSubjectOrModule(record, subjectOrModule);
         });
     }
     
-    private void updateFormalSubjectOrModule(ApelApplicationFormalSubjectOrModule subjectOrModule, ApelApplicationFormalSubjectOrModuleForm form) {
+    private void updateFormalSubjectOrModule(HoisUserDetails user, ApelApplicationFormalSubjectOrModule subjectOrModule, ApelApplicationFormalSubjectOrModuleForm form) {
+        form.setApelSchool(form.getNewApelSchool() != null ? apelSchoolService.create(user, form.getNewApelSchool()).getId() : form.getApelSchool());
         subjectOrModule.setApelSchool(form.getApelSchool() != null ? em.getReference(ApelSchool.class, form.getApelSchool()): null);
         subjectOrModule.setSubject(form.getSubject() != null ? em.getReference(Subject.class, form.getSubject()) : null);
         subjectOrModule.setCurriculumVersionHmodule(form.getCurriculumVersionHmodule() != null 
@@ -346,7 +348,7 @@ public class ApelApplicationService {
         subjectOrModule.setAssessment(em.getReference(Classifier.class, form.getAssessment()));
     }
     
-    private void validateFormalSubjectOrModule(ApelApplicationRecord record, ApelApplicationFormalSubjectOrModule subjectOrModule) {
+    private static void validateFormalSubjectOrModule(ApelApplicationRecord record, ApelApplicationFormalSubjectOrModule subjectOrModule) {
         ApelApplication application = record.getApelApplication();
         
         if (application.getIsVocational().booleanValue()) {
@@ -377,7 +379,7 @@ public class ApelApplicationService {
         });
     }
     
-    private void validateFormalReplacedSubjectOrModule(ApelApplicationRecord record, ApelApplicationFormalReplacedSubjectOrModule subjectOrModule) {
+    private static void validateFormalReplacedSubjectOrModule(ApelApplicationRecord record, ApelApplicationFormalReplacedSubjectOrModule subjectOrModule) {
         ApelApplication application = record.getApelApplication();
         
         if (application.getIsVocational().booleanValue()) {
@@ -462,10 +464,62 @@ public class ApelApplicationService {
      * @return
      */
     public ApelApplication confirm(HoisUserDetails user, ApelApplication application) {
+        checkThatModulesOrSubjectsAreTransferredOnlyOnce(application);
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_C);
         application.setConfirmedBy(user.getUsername());
         application.setConfirmed(LocalDateTime.now());
         return EntityUtil.save(application, em);
+    }
+    
+    private static void checkThatModulesOrSubjectsAreTransferredOnlyOnce(ApelApplication application) {
+        HashSet<Long> transferredModuleOrSubjectIds = new HashSet<>();
+        HashSet<Long> transferredModulThemeIds = new HashSet<>();
+        application.getRecords().forEach(record -> {
+            record.getInformalSubjectsOrModules().forEach(informalSubjectOrModule -> {
+                if (Boolean.TRUE.equals(application.getIsVocational())) {
+                    addTransferredModuleId(informalSubjectOrModule, transferredModuleOrSubjectIds, transferredModulThemeIds);
+                } else {
+                    addTransferredSubjectId(informalSubjectOrModule, transferredModuleOrSubjectIds);
+                }
+            });
+            record.getFormalSubjectsOrModules().forEach(formalSubjectOrModule -> {
+                if (Boolean.TRUE.equals(application.getIsVocational())) {
+                    addTransferredModuleId(formalSubjectOrModule, transferredModuleOrSubjectIds);
+                } else {
+                    addTransferredSubjectId(formalSubjectOrModule, transferredModuleOrSubjectIds);
+                }
+            });
+        });
+    }
+    
+    private static void addTransferredModuleId(ApelApplicationInformalSubjectOrModule informalModule, HashSet<Long> transferredModuleIds, HashSet<Long> transferredModuleThemeIds) {
+        if (Boolean.TRUE.equals(informalModule.getTransfer())) {
+            if (informalModule.getCurriculumVersionOmoduleTheme() == null && transferredModuleIds
+                .add(informalModule.getCurriculumVersionOmodule().getId()) == false) {
+                throw new ValidationFailedException("apel.error.moduleTransferredMoreThanOnce");
+            } else if (informalModule.getCurriculumVersionOmoduleTheme() != null && 
+                    transferredModuleThemeIds.add(informalModule.getCurriculumVersionOmoduleTheme().getId()) == false){
+                throw new ValidationFailedException("apel.error.moduleTransferredMoreThanOnce");
+            }
+        }
+    }
+    
+    private static void addTransferredModuleId(ApelApplicationFormalSubjectOrModule formalModule, HashSet<Long> transferredModuleIds) {
+        if (Boolean.TRUE.equals(formalModule.getTransfer()) && transferredModuleIds.add(formalModule.getCurriculumVersionOmodule().getId()) == false) {
+            throw new ValidationFailedException("apel.error.moduleTransferredMoreThanOnce");
+        }
+    }
+    
+    private static void addTransferredSubjectId(ApelApplicationInformalSubjectOrModule informalSubject, HashSet<Long> transferredSubjectIds) {
+        if (Boolean.TRUE.equals(informalSubject.getTransfer()) && transferredSubjectIds.add(informalSubject.getSubject().getId()) == false) {
+            throw new ValidationFailedException("apel.error.subjectTransferredMoreThanOnce");
+        }
+    }
+    
+    private static void addTransferredSubjectId(ApelApplicationFormalSubjectOrModule formalSubject, HashSet<Long> transferredSubjectIds) {
+        if (Boolean.TRUE.equals(formalSubject.getTransfer()) && transferredSubjectIds.add(formalSubject.getSubject().getId()) == false) {
+            throw new ValidationFailedException("apel.error.subjectTransferredMoreThanOnce");
+        }
     }
     
     /**Set APEL application's status back to 'Submitted'

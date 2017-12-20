@@ -1,6 +1,5 @@
 package ee.hitsa.ois.service;
 
-import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -8,8 +7,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +19,6 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JobStatus;
 import ee.hitsa.ois.enums.JobType;
-import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
@@ -35,8 +31,6 @@ import ee.hitsa.ois.util.StreamUtil;
 @Transactional
 @Service
 public class JobService {
-
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final int ACADEMIC_LEAVE_MESSAGE_BEFORE_DAYS = 14;
     private static final List<String> AKAD_JOB_TYPES = EnumUtil.toNameList(JobType.JOB_AKAD_MINEK, JobType.JOB_AKAD_TULEK, JobType.JOB_AKAD_LOPP_TEADE);
@@ -255,13 +249,8 @@ public class JobService {
                 setJobStatus(job, JobStatus.JOB_STATUS_TAIDETUD);
                 break;
             case JOB_AKAD_LOPP_TEADE:
-                try {
-                    directiveConfirmService.sendAcademicLeaveEndingMessage(job);
-                    setJobStatus(job, JobStatus.JOB_STATUS_TAIDETUD);
-                } catch(BadConfigurationException e) {
-                    setJobStatus(job, JobStatus.JOB_STATUS_VIGA);
-                    LOG.error("Error while sending automatic message: ", e);
-                }
+                directiveConfirmService.sendAcademicLeaveEndingMessage(job);
+                setJobStatus(job, JobStatus.JOB_STATUS_TAIDETUD);
                 break;
             default:
                 break;

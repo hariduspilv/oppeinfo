@@ -7,6 +7,7 @@ public class SubjectAutocompleteCommand extends AutocompleteCommand {
     private Long curriculumVersion;
     private Boolean curriculumSubjects;
     private Long student;
+    private Boolean otherStudents;
 
     public Boolean getPractice() {
         return practice;
@@ -46,6 +47,14 @@ public class SubjectAutocompleteCommand extends AutocompleteCommand {
 
     public void setStudent(Long student) {
         this.student = student;
+    }
+
+    public Boolean getOtherStudents() {
+        return otherStudents;
+    }
+
+    public void setOtherStudents(Boolean otherStudents) {
+        this.otherStudents = otherStudents;
     }
     
 }

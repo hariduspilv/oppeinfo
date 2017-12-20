@@ -118,7 +118,7 @@
                   <hois-autocomplete ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_M'" flex ng-model="record.newTransferableSubjectOrModule.curriculumVersionOmodule"
                     method="curriculumversionomodulesandthemes" name="module" label="apel.formalLearnings.transferableModuleEt"
                     md-selected-item-change="moduleChanged(record.newTransferableSubjectOrModule.curriculumVersionOmodule)"
-                    additional-query-params="{curriculumModules: false, curriculumVersionId: curriculumVersionId, schoolId: auth.school.id}"
+                    additional-query-params="{student: student.id, curriculumModules: false, curriculumVersion: curriculumVersionId, school: auth.school.id}"
                     ng-model-options="{ debounce: 500 }" required="true">
                   </hois-autocomplete>
 

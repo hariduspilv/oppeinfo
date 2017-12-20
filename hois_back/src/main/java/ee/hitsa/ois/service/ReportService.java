@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +38,7 @@ import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
+import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
@@ -52,6 +54,14 @@ public class ReportService {
     @Autowired
     private XlsService xlsService;
 
+    /**
+     * Students report
+     *
+     * @param schoolId
+     * @param criteria
+     * @param pageable
+     * @return
+     */
     public Page<StudentSearchDto> students(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s inner join person p on s.person_id = p.id " +
                 "inner join curriculum_version cv on s.curriculum_version_id = cv.id " +
@@ -76,12 +86,36 @@ public class ReportService {
         qb.optionalCriteria("s.language_code = :language", "language", criteria.getLanguage());
 
         // TODO ainepunktid (last value of select)
-        return JpaQueryUtil.pagingResult(qb, "s.id, p.firstname, p.lastname, p.idcode, s.study_start, c.orig_study_level_code, " +
+        Page<StudentSearchDto> result = JpaQueryUtil.pagingResult(qb, "s.id, p.firstname, p.lastname, p.idcode, s.study_start, c.orig_study_level_code, " +
                 "cv.code, c.name_et, c.name_en, sg.code as student_group_code, s.study_load_code, s.study_form_code, s.status_code, " +
                 "s.fin_code, s.fin_specific_code, s.language_code, 50.0"
         , em, pageable).map(r -> new StudentSearchDto(r));
+
+        Set<Long> studentIds = result.getContent().stream().map(StudentSearchDto::getId).collect(Collectors.toSet());
+        if(!studentIds.isEmpty()) {
+            // load occupation certificates for every student
+            List<?> data = em.createNativeQuery("select soc.student_id, soc.certificate_nr, soc.occupation_code, soc.part_occupation_code, " +
+                    "soc.speciality_code from student_occupation_certificate soc where soc.student_id in (?1)")
+                    .setParameter(1, studentIds)
+                    .getResultList();
+            Map<Long, List<Object>> certificates = data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0)));
+            for(StudentSearchDto dto : result.getContent()) {
+                List<?> studentCertificates = certificates.getOrDefault(dto.getId(), Collections.emptyList());
+                dto.setOccupationCertificates(studentCertificates.stream().map(r -> {
+                    return new StudentOccupationCertificateDto(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4));
+                }).collect(Collectors.toList()));
+            }
+        }
+        return result;
     }
 
+    /**
+     * Students report in excel format
+     *
+     * @param schoolId
+     * @param criteria
+     * @return
+     */
     public byte[] studentsAsExcel(Long schoolId, StudentSearchCommand criteria) {
         List<StudentSearchDto> students = students(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
         Map<String, Object> data = new HashMap<>();

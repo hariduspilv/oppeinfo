@@ -12,6 +12,7 @@ public class OccupationCertificateImportForm {
     @NotEmpty
     private List<Long> curriculumVersion;
     private List<Long> studentGroup;
+    private String studentName;
     private LocalDate from;
     private LocalDate thru;
 
@@ -29,6 +30,14 @@ public class OccupationCertificateImportForm {
 
     public void setStudentGroup(List<Long> studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
     }
 
     public LocalDate getFrom() {

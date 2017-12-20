@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.util.DateUtils;
 
 public class StudentDirectiveCreated extends StudentMessage {
 
@@ -41,8 +42,8 @@ public class StudentDirectiveCreated extends StudentMessage {
         return directiveHeadline;
     }
 
-    public LocalDate getConfirmDate() {
-        return confirmDate;
+    public String getConfirmDate() {
+        return DateUtils.date(confirmDate);
     }
 
     public String getKaskkirjaNr() {
@@ -57,7 +58,7 @@ public class StudentDirectiveCreated extends StudentMessage {
         return directiveHeadline;
     }
 
-    public LocalDate getKaskkirjaKuupaev() {
-        return confirmDate;
+    public String getKaskkirjaKuupaev() {
+        return DateUtils.date(confirmDate);
     }
 }

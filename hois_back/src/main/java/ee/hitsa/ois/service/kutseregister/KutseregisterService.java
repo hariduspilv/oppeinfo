@@ -7,6 +7,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -75,6 +76,8 @@ public class KutseregisterService {
         qb.requiredCriteria("s.curriculum_version_id in (:curriculumVersion)", "curriculumVersion", criteria.getCurriculumVersion());
         qb.requiredCriteria("s.status_code in (:status)", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
         qb.optionalCriteria("s.student_group_id in (:studentGroup)", "studentGroup", criteria.getStudentGroup());
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getStudentName());
+
         List<?> students = qb.select("s.id, p.idcode, s.curriculum_version_id", em).getResultList();
         if(students.isEmpty()) {
             // no students found
@@ -176,15 +179,15 @@ public class KutseregisterService {
                     Classifier occupation = null, partOccupation = null, speciality = null;
                     if(OCCUPATION_CERTIFICATE_TYPE_OCCUPATION.equals(type)) {
                         // check for specialty certificate
-                        speciality = findOccupation(certificate.getSpetsialiseerumine(), SPECIALIZATION_PREFIX, studentDto, occupations);
+                        speciality = findOccupation(certificate.getSpetsialiseerumine(), SPECIALIZATION_PREFIX, certificate.getValjaantud(), occupations);
                         if(speciality != null) {
                             occupation = occupationFor(speciality);
                         } else if(!StringUtils.hasText(certificate.getSpetsialiseerumine())) {
                             // just occupation certificate
-                            occupation = findOccupation(certificate.getStandard(), OCCUPATION_PREFIX, studentDto, occupations);
+                            occupation = findOccupation(certificate.getStandard(), OCCUPATION_PREFIX, certificate.getValjaantud(), occupations);
                         }
                     } else if(OCCUPATION_CERTIFICATE_TYPE_PARTOCCUPATION.equals(type)) {
-                        partOccupation = findOccupation(certificate.getOsakutse(), PARTOCCUPATION_PREFIX, studentDto, occupations);
+                        partOccupation = findOccupation(certificate.getOsakutse(), PARTOCCUPATION_PREFIX, certificate.getValjaantud(), occupations);
                         occupation = occupationFor(partOccupation);
                     }
                     if(occupation == null) {
@@ -304,20 +307,25 @@ public class KutseregisterService {
         }
     }
 
-    private Classifier findOccupation(String occupationName, String prefix, StudentDto studentDto, List<OccupationDto> occupations) {
+    private Classifier findOccupation(String occupationName, String prefix, LocalDate issued, List<OccupationDto> occupations) {
         if(!StringUtils.hasText(occupationName)) {
             return null;
         }
+        List<OccupationDto> matches = new ArrayList<>();
         for(OccupationDto occ : occupations) {
             if(occupationName.equals(occ.getName()) ) {
                 String occupationCode = occ.getCode();
                 if(occupationCode != null && occupationCode.startsWith(prefix)) {
-                    // TODO validFrom/thru
-                    return em.getReference(Classifier.class, occupationCode);
+                    matches.add(occ);
                 }
             }
         }
-        return null;
+        // check validFrom/thru if there are more than one occupation with same name
+        OccupationDto match = matches.size() == 1 || issued == null ? matches.get(0) : matches.stream().filter(r -> {
+            return (r.getValidFrom() == null || !issued.isBefore(r.getValidFrom())) && (r.getValidThru() == null || !issued.isAfter(r.getValidThru()));
+        }).findAny().orElse(null);
+
+        return match != null ? em.getReference(Classifier.class, match.getCode()) : null;
     }
 
     private static Classifier occupationFor(Classifier partOccupation) {

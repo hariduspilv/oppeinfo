@@ -101,13 +101,20 @@
               </div>
 
               <div ng-if="isMySchool" layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_M'" flex="45" flex-sm="100" flex-xs="100">
                   <label>{{'apel.formalLearnings.transferableSubjectEt' | translate}}</label>
                   <md-select ng-model="record.subject" aria-label="subject" ng-change="subjectChanged(record.subject)" ng-model-options="{trackBy: '$value.id'}"
                     required>
                     <md-option ng-repeat="val in transferableSubjects" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
                   </md-select>
                 </md-input-container>
+
+                <hois-autocomplete ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_M'" flex="45" flex-sm="100" flex-xs="100" 
+                  ng-model="record.subject" method="subjects" name="subject" label="apel.formalLearnings.transferableSubjectEt" 
+                  additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId, withCredits: false}"
+                  md-selected-item-change="subjectChanged(record.subject)" ng-model-options="{ debounce: 500 }" required="true">
+                </hois-autocomplete>
+
                 <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'apel.formalLearnings.transferableSubjectEn' | translate}}</label>
                   <input type="text" value="{{record.newTransferableSubjectOrModule.subject.nameEn}}" disabled required>

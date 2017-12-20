@@ -32,6 +32,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.MessageStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.service.MessageTemplateService.HoisReflectivePropertyAccessor;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -45,7 +46,7 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 @Service
 public class AutomaticMessageService {
 
-    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final ExpressionParser spelParser = new SpelExpressionParser();
 
@@ -88,7 +89,7 @@ public class AutomaticMessageService {
 
     public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean, Message existingMessage, HoisUserDetails initiator) {
         if(!StudentUtil.hasRepresentatives(student)) {
-            log.error("no representatives found to send message to");
+            LOG.error("No representatives found to send message {} to", type.name());
             return;
         }
 
@@ -112,9 +113,9 @@ public class AutomaticMessageService {
 
     public void sendMessageToEnterprise(Enterprise enterprise, School school, MessageType type, Object dataBean) {
         Message message = getMessage(type, school, dataBean);
-        Person automaticSender = em.getReference(Person.class, PersonUtil.AUTOMATIC_SENDER_ID);
 
         if (message != null && StringUtils.hasText(enterprise.getContactPersonEmail())) {
+            Person automaticSender = em.getReference(Person.class, PersonUtil.AUTOMATIC_SENDER_ID);
             mailService.sendMail(automaticSender.getEmail(), enterprise.getContactPersonEmail(), message.getSubject(), message.getContent());
         }
     }
@@ -162,13 +163,27 @@ public class AutomaticMessageService {
                 .map(r -> em.getReference(Person.class, resultAsLong(r, 0))).collect(Collectors.toList());
     }
 
+    /**
+     * Get message for given message type
+     *
+     * @param type
+     * @param school
+     * @param dataBean
+     * @return
+     * @throws BadConfigurationException if there is no valid template for given message type
+     * @throws ValidationFailedException if dataBean is of wrong type
+     */
     private Message getMessage(MessageType type, School school, Object dataBean) {
         if (!type.validBean(dataBean)) {
             throw new ValidationFailedException(String.format("invalid data bean for template %s", type.name()));
         }
 
         Long schoolId = EntityUtil.getId(school);
-        MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId, true);
+        MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId);
+        if(template == null) {
+            LOG.error("Cannot send message {} in school {}: template is missing", type.name(), EntityUtil.getId(school));
+            return null;
+        }
 
         try {
             StandardEvaluationContext ctx = new StandardEvaluationContext(dataBean);
@@ -179,7 +194,7 @@ public class AutomaticMessageService {
             message.setContent(content);
             return message;
         } catch (Exception e) {
-            log.error("message {} could not be sent for school {}", type.name(), schoolId, e);
+            LOG.error("message {} could not be sent for school {}", type.name(), schoolId, e);
         }
         return null;
     }
@@ -190,7 +205,7 @@ public class AutomaticMessageService {
         }
 
         Message message = existingMessage;
-        if (existingMessage == null) {
+        if (message == null) {
             message = getMessage(type, school, dataBean);
             if (message != null) {
                 message.setSendersSchool(school);
