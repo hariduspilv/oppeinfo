@@ -19,7 +19,7 @@ CREATE SEQUENCE apel_application_record_id_seq START 1;
 CREATE SEQUENCE apel_school_id_seq START 1;
 CREATE SEQUENCE application_file_id_seq START 1;
 CREATE SEQUENCE application_id_seq START 1;
-CREATE SEQUENCE application_planned_subject_equivalent _id_seq START 1;
+CREATE SEQUENCE application_planned_subject_equivalent_id_seq START 1;
 CREATE SEQUENCE application_planned_subject_id_seq START 1;
 CREATE SEQUENCE building_id_seq START 1;
 CREATE SEQUENCE certificate_id_seq START 1;
@@ -644,7 +644,7 @@ COMMENT ON COLUMN "public"."application_planned_subject"."name" IS 'planeeritud 
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."application_planned_subject_equivalent";
 CREATE TABLE "public"."application_planned_subject_equivalent" (
-"id" int8 DEFAULT nextval('"application_planned_subject_equivalent _id_seq"'::regclass) NOT NULL,
+"id" int8 DEFAULT nextval('"application_planned_subject_equivalent_id_seq"'::regclass) NOT NULL,
 "application_planned_subject_id" int8 NOT NULL,
 "inserted" timestamp(6) NOT NULL,
 "subject_id" int8 NOT NULL,
@@ -5514,8 +5514,8 @@ ALTER TABLE "public"."application_planned_subject" ADD PRIMARY KEY ("id");
 -- ----------------------------
 -- Indexes structure for table application_planned_subject_equivalent
 -- ----------------------------
-CREATE INDEX "IXFK_application_planned_subject_equivalent _application_planne" ON "public"."application_planned_subject_equivalent" USING btree ("application_planned_subject_id");
-CREATE INDEX "IXFK_application_planned_subject_equivalent _subject" ON "public"."application_planned_subject_equivalent" USING btree ("subject_id");
+CREATE INDEX "IXFK_application_planned_subject_equivalent_application_planne" ON "public"."application_planned_subject_equivalent" USING btree ("application_planned_subject_id");
+CREATE INDEX "IXFK_application_planned_subject_equivalent_subject" ON "public"."application_planned_subject_equivalent" USING btree ("subject_id");
 
 -- ----------------------------
 -- Triggers structure for table application_planned_subject_equivalent
