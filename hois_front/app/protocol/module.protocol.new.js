@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($scope, $route, $location, QueryUtils, DataUtils, Classifier, message) {
+angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($scope, $route, $location, QueryUtils, DataUtils, Classifier, message, ArrayUtils) {
   $scope.auth = $route.current.locals.auth;
   $scope.formState = {
     selectedStudents: [],
@@ -41,12 +41,13 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
     return journalResult.map(function (it) { return it.value; }).join(' / ');
   };
 
-  $scope.selectedStudentsLength = function () {
-    return $scope.formState.selectedStudents.length;
-  };
-
   var ModuleProtocolEndpoint = QueryUtils.endpoint('/moduleProtocols');
   $scope.submit = function () {
+    if (ArrayUtils.isEmpty($scope.formState.selectedStudents)) {
+      message.error("moduleProtocol.error.noStudents");
+      return;
+    }
+
     var entity = {};
     entity.protocolVdata = {
       curriculumVersionOccupationModule: $scope.formState.curriculumVersionOccupationModule,

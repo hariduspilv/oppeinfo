@@ -7,21 +7,21 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.EstonianIdCode;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class PersonForm extends VersionedCommand {
 
-    @NotEmpty
+    @Required
     @EstonianIdCode
     private String idcode;
-    @NotEmpty
+    @Required
     @Size(max = 100)
     private String firstname;
-    @NotEmpty
+    @Required
     @Size(max = 100)
     private String lastname;
     private LocalDate birthdate;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.SUGU)
     private String sex;
     @Size(max = 100)

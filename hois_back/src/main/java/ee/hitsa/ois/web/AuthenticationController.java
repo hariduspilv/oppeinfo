@@ -95,6 +95,7 @@ public class AuthenticationController {
         }
         String token = Jwts.builder()
                 .setSubject(session.getUserIDCode())
+                .claim(hoisJwtProperties.getClaimMobileNumber(), mobileNumber)
                 .claim(hoisJwtProperties.getClaimSesscode(), session.getSesscode())
                 .claim(hoisJwtProperties.getClaimGivenname(), session.getUserGivenname())
                 .claim(hoisJwtProperties.getClaimSurname(), session.getUserSurname())
@@ -118,13 +119,15 @@ public class AuthenticationController {
         MobileIdStatus status = mobileIdService.status(sesscode.intValue());
         if ("USER_AUTHENTICATED".equals(status.getStatus())) {
             String idcode = claims.getSubject();
+            String mobileNumber = (String) claims.get(hoisJwtProperties.getClaimMobileNumber());
             String lastname = (String) claims.get(hoisJwtProperties.getClaimSurname());
             String firstname = (String) claims.get(hoisJwtProperties.getClaimGivenname());
             userService.createPersonUserIfNecessary(idcode, lastname, firstname);
             String username = claims.getSubject();
             HoisUserDetails hoisUserDetails = userDetailsService.loadUserByUsername(username);
-            EstonianIdCardAuthenticationToken token = new EstonianIdCardAuthenticationToken(username);
+            EstonianIdCardAuthenticationToken token = new EstonianIdCardAuthenticationToken(username); // TODO create and use mobile-id token ?
             hoisUserDetails.setLoginMethod(LoginMethod.LOGIN_TYPE_M);
+            hoisUserDetails.setMobileNumber(mobileNumber);
             token.setDetails(hoisUserDetails);
             token.setAuthenticated(true);
             SecurityContextHolder.getContext().setAuthentication(token);
@@ -147,7 +150,8 @@ public class AuthenticationController {
             return;
         }
         HoisUserDetails hoisUserDetails = userDetailsService.loadUserByUsername(idcode);
-        EstonianIdCardAuthenticationToken token = new EstonianIdCardAuthenticationToken(idcode);
+        PreAuthenticatedAuthenticationToken token = new PreAuthenticatedAuthenticationToken(hoisUserDetails, "", 
+                hoisUserDetails.getAuthorities());
         hoisUserDetails.setLoginMethod(LoginMethod.LOGIN_TYPE_K);
         token.setDetails(hoisUserDetails);
         token.setAuthenticated(true);
@@ -168,6 +172,8 @@ public class AuthenticationController {
             }
 
             HoisUserDetails userDetails = userDetailsService.getHoisUserDetails(newUser);
+            userDetails.setLoginMethod(oldUserDetails.getLoginMethod());
+            userDetails.setMobileNumber(oldUserDetails.getMobileNumber());
 
             AbstractAuthenticationToken auth = new PreAuthenticatedAuthenticationToken(principal, "", userDetails.getAuthorities());
             auth.setDetails(userDetails);

@@ -3,6 +3,9 @@ package ee.hitsa.ois.web.dto.scholarship;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
+
+import java.math.BigDecimal;
 
 import ee.hitsa.ois.util.PersonUtil;
 
@@ -10,14 +13,15 @@ public class ScholarshipApplicationSearchDto {
     private Long id;
     private Long place;
     private String type;
+    private Long term;
     private String termNameEt;
     private String curriculumCode;
     private Long studentId;
     private String studentName;
     private String idcode;
-    private Long averageMark;
-    private Long lastPeriodMark;
-    private Long curriculumCompletion;
+    private BigDecimal averageMark;
+    private BigDecimal lastPeriodMark;
+    private BigDecimal curriculumCompletion;
     private Boolean isTeacherConfirm;
     private String status;
 
@@ -29,19 +33,20 @@ public class ScholarshipApplicationSearchDto {
     public ScholarshipApplicationSearchDto(Object r) {
         this.id = resultAsLong(r, 0);
         this.type = resultAsString(r, 1);
-        this.termNameEt = resultAsString(r, 2);
-        this.curriculumCode = resultAsString(r, 3);
-        this.studentId = resultAsLong(r, 4);
-        this.studentName = PersonUtil.fullname(resultAsString(r, 5), resultAsString(r, 6));
-        this.idcode = resultAsString(r, 7);
-        this.averageMark = resultAsLong(r, 8);
-        this.lastPeriodMark = resultAsLong(r, 9);
-        this.curriculumCompletion = resultAsLong(r, 10);
-        this.isTeacherConfirm = resultAsBoolean(r, 11);
-        this.status = resultAsString(r, 12);
-        this.compensationReason = resultAsString(r, 13);
-        this.compensationFrequency = resultAsString(r, 14);
-        this.credits = resultAsLong(r, 15);
+        this.term = resultAsLong(r, 2);
+        this.termNameEt = resultAsString(r, 3);
+        this.curriculumCode = resultAsString(r, 4);
+        this.studentId = resultAsLong(r, 5);
+        this.studentName = PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7));
+        this.idcode = resultAsString(r, 8);
+        this.averageMark = resultAsDecimal(r, 9);
+        this.lastPeriodMark = resultAsDecimal(r, 10);
+        this.curriculumCompletion = resultAsDecimal(r, 11);
+        this.isTeacherConfirm = resultAsBoolean(r, 12);
+        this.status = resultAsString(r, 13);
+        this.compensationReason = resultAsString(r, 14);
+        this.compensationFrequency = resultAsString(r, 15);
+        this.credits = resultAsLong(r, 16);
     }
 
     public Long getId() {
@@ -66,6 +71,14 @@ public class ScholarshipApplicationSearchDto {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Long getTerm() {
+        return term;
+    }
+
+    public void setTerm(Long term) {
+        this.term = term;
     }
 
     public String getTermNameEt() {
@@ -108,27 +121,27 @@ public class ScholarshipApplicationSearchDto {
         this.idcode = idcode;
     }
 
-    public Long getAverageMark() {
+    public BigDecimal getAverageMark() {
         return averageMark;
     }
 
-    public void setAverageMark(Long averageMark) {
+    public void setAverageMark(BigDecimal averageMark) {
         this.averageMark = averageMark;
     }
 
-    public Long getLastPeriodMark() {
+    public BigDecimal getLastPeriodMark() {
         return lastPeriodMark;
     }
 
-    public void setLastPeriodMark(Long lastPeriodMark) {
+    public void setLastPeriodMark(BigDecimal lastPeriodMark) {
         this.lastPeriodMark = lastPeriodMark;
     }
 
-    public Long getCurriculumCompletion() {
+    public BigDecimal getCurriculumCompletion() {
         return curriculumCompletion;
     }
 
-    public void setCurriculumCompletion(Long curriculumCompletion) {
+    public void setCurriculumCompletion(BigDecimal curriculumCompletion) {
         this.curriculumCompletion = curriculumCompletion;
     }
 

@@ -3,6 +3,8 @@ package ee.hitsa.ois.util;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -10,37 +12,85 @@ import ee.hitsa.ois.web.commandobject.HigherProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
 import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
 
-public abstract class HigherProtocolUtil {
+public final class HigherProtocolUtil {
+    
+    private HigherProtocolUtil() {
+    }
+    
+    public static boolean hasPermissionToView(HoisUserDetails user) {
+        if(!UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
+            return false;
+        }
+        return user.isSchoolAdmin() || user.isTeacher();
+    }
+    
+    public static boolean canView(HoisUserDetails user, Protocol protocol) {
+        return hasPermissionToView(user) && UserUtil.isSameSchool(user, protocol.getSchool());
+    }
+    
+    public static boolean canCreate(HoisUserDetails user) {
+        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
+            return false;
+        }
+        return user.isSchoolAdmin() || user.isTeacher();
+    }
     
     public static boolean canChange(HoisUserDetails user, Protocol protocol) {
-        return user.isTeacher() && !ProtocolUtil.confirmed(protocol) || user.isSchoolAdmin();
+        
+        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
+            return false;
+        }
+        if(UserUtil.isSchoolAdmin(user, protocol.getSchool())) {
+            return true;
+        }
+        if(UserUtil.isTeacher(user, protocol.getSchool())) {
+            return !ProtocolUtil.confirmed(protocol);
+        }
+        return false;
     }
     
     public static boolean canConfirm(HoisUserDetails user, Protocol protocol) {
         if(ProtocolUtil.confirmed(protocol)) {
             return false;
         }
-        if(user.isSchoolAdmin()) {
-            return true;
-        }
-        if(!user.isTeacher()) {
+        if(!UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
             return false;
         }
-        return protocol.getProtocolHdata().getSubjectStudyPeriod().getTeachers().stream().anyMatch(t -> Boolean.TRUE.equals(t.getIsSignatory()) && 
-                EntityUtil.getId(t.getTeacher()).equals(user.getTeacherId()));
+        if(UserUtil.isSchoolAdmin(user, protocol.getSchool())) {
+            return true;
+        }
+        if(UserUtil.isTeacher(user, protocol.getSchool())) {
+            return protocol.getProtocolHdata().getSubjectStudyPeriod().getTeachers().stream().anyMatch(t -> Boolean.TRUE.equals(t.getIsSignatory()) && 
+                    EntityUtil.getId(t.getTeacher()).equals(user.getTeacherId()));
+        }
+        return false;
+    }
+    
+    public static void assertCanSearch(HoisUserDetails user) {
+        if(!hasPermissionToView(user)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void assertCanView(HoisUserDetails user, Protocol protocol) {
+        if(!canView(user, protocol)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void assertCanCreate(HoisUserDetails user) {
+        if(!canCreate(user)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
     }
     
     public static void assertCanChange(HoisUserDetails user, Protocol protocol) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
-
         if(!canChange(user, protocol)) {
             throw new ValidationFailedException("higherProtocol.error.noRightsToChange");
         }
     }
     
     public static void assertCanConfirm(HoisUserDetails user, Protocol protocol) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
-
         if(!canConfirm(user, protocol)) {
             throw new ValidationFailedException("higherProtocol.error.noRightsToConfirm");
         }

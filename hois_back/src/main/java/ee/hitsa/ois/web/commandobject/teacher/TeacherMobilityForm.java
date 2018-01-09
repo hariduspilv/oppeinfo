@@ -8,23 +8,24 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 @DateRange(from = "start", thru = "end")
 public class TeacherMobilityForm extends VersionedCommand {
+
     private Long id;
     @NotNull
     private LocalDate start;
     @NotNull
     private LocalDate end;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.EHIS_MOBIILSUS)
     private String target;
-    @NotEmpty
+    @Required
     @Size(max = 255)
     private String school;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.RIIK)
     private String state;
 

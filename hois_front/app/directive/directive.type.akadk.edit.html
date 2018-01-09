@@ -13,7 +13,10 @@
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>
-          <md-datepicker ng-model="row.startDate"></md-datepicker>
+          <md-datepicker ng-model="row.startDate" name="students[{{$index}}].startDate"></md-datepicker>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row.idcode)" md-no-ink  class="remove">&times;</a>

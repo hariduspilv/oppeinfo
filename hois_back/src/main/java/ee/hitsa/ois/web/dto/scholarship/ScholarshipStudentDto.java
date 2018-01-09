@@ -1,12 +1,16 @@
 package ee.hitsa.ois.web.dto.scholarship;
 
+import java.math.BigDecimal;
+
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
+import ee.hitsa.ois.util.EntityUtil;
 
 public class ScholarshipStudentDto {
-    private Long averageMark;
-    private Long lastPeriodMark;
-    private Long curriculumCompletion;
+    private BigDecimal averageMark;
+    private BigDecimal lastPeriodMark;
+    private BigDecimal curriculumCompletion;
     private Long absences;
     private String studentGroupCode;
     private String phone;
@@ -19,39 +23,43 @@ public class ScholarshipStudentDto {
         dto.setEmail(student.getEmail());
         dto.setAddress(student.getPerson().getAddress());
         dto.setStudentGroupCode(student.getStudentGroup().getCode());
-        return dto;
-    }
-    
-    public static ScholarshipStudentDto of(ScholarshipApplication application) {
-        ScholarshipStudentDto dto = new ScholarshipStudentDto();
-        dto.setPhone(application.getPhone());
-        dto.setEmail(application.getEmail());
-        dto.setAddress(application.getAddress());
-        dto.setStudentGroupCode(application.getStudentGroup().getCode());
+
+        StudentCurriculumCompletion completion = student.getStudentCurriculumCompletion();
+        if (completion != null) {
+            dto.setAverageMark(completion.getAverageMark());
+            dto.setLastPeriodMark(completion.getAverageMarkLastStudyPeriod());
+            dto.setCurriculumCompletion(completion.getStudyBacklog());
+        }
+        // TODO: Missing absences
         return dto;
     }
 
-    public Long getAverageMark() {
+    public static ScholarshipStudentDto of(ScholarshipApplication application) {
+        ScholarshipStudentDto dto = new ScholarshipStudentDto();
+        return EntityUtil.bindToDto(application, dto);
+    }
+
+    public BigDecimal getAverageMark() {
         return averageMark;
     }
 
-    public void setAverageMark(Long averageMark) {
+    public void setAverageMark(BigDecimal averageMark) {
         this.averageMark = averageMark;
     }
 
-    public Long getLastPeriodMark() {
+    public BigDecimal getLastPeriodMark() {
         return lastPeriodMark;
     }
 
-    public void setLastPeriodMark(Long lastPeriodMark) {
+    public void setLastPeriodMark(BigDecimal lastPeriodMark) {
         this.lastPeriodMark = lastPeriodMark;
     }
 
-    public Long getCurriculumCompletion() {
+    public BigDecimal getCurriculumCompletion() {
         return curriculumCompletion;
     }
 
-    public void setCurriculumCompletion(Long curriculumCompletion) {
+    public void setCurriculumCompletion(BigDecimal curriculumCompletion) {
         this.curriculumCompletion = curriculumCompletion;
     }
 

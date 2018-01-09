@@ -2,10 +2,11 @@ package ee.hitsa.ois.web.commandobject.scholarship;
 
 import java.util.List;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class ScholarshipApplicationSearchCommand {
-    @NotEmpty
+
+    @Required
     private String type;
     private List<Long> curriculum;
     private List<String> courses;
@@ -78,5 +79,4 @@ public class ScholarshipApplicationSearchCommand {
     public void setStudentGroup(String studentGroup) {
         this.studentGroup = studentGroup;
     }
-
 }

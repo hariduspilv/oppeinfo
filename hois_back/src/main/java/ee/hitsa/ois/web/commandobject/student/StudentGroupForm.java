@@ -10,14 +10,14 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 @DateRange
 public class StudentGroupForm extends VersionedCommand {
 
-    @NotEmpty
+    @Required
     @Size(max = 50)
     private String code;
     @NotNull
@@ -26,10 +26,10 @@ public class StudentGroupForm extends VersionedCommand {
     @NotNull
     private AutocompleteResult curriculum;
     private Long curriculumVersion;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.OPPEVORM)
     private String studyForm;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.OPPEKEEL)
     private String language;
     private AutocompleteResult teacher;

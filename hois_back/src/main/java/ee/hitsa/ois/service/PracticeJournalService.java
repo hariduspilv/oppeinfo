@@ -140,7 +140,7 @@ public class PracticeJournalService {
                     Boolean.valueOf(JournalStatus.PAEVIK_STAATUS_T.name().equals(resultAsString(r, 4))
                             && Boolean.FALSE.equals(hasSupervisorOpinion)));
 
-            dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(dto.getEndDate())));
+            dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate())));
 
             Boolean hasPositiveModuleGrade = resultAsBoolean(r, 24);
             dto.setCanTeacherAddEntries(Boolean.valueOf(Boolean.FALSE.equals(hasPositiveModuleGrade)));
@@ -265,7 +265,7 @@ public class PracticeJournalService {
 
     private static void updatePracticeJournalSupervisorFiles(PracticeJournal practiceJournal,
             PracticeJournalEntriesSupervisorForm practiceJournalEntriesSupervisorForm) {
-        EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalFiles(), PracticeJournalFile::getId,
+        EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalFiles(), EntityUtil::getId,
                 practiceJournalEntriesSupervisorForm.getPracticeJournalFiles(), OisFileForm::getId, dto -> {
                     PracticeJournalFile file = new PracticeJournalFile();
                     file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));
@@ -315,7 +315,7 @@ public class PracticeJournalService {
 
     private static void updatePracticeJournalFiles(PracticeJournal practiceJournal,
             PracticeJournalEntriesTeacherForm practiceJournalEntriesForm) {
-        EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalFiles(), PracticeJournalFile::getId,
+        EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalFiles(), EntityUtil::getId,
                 practiceJournalEntriesForm.getPracticeJournalFiles(), OisFileForm::getId, dto -> {
                     PracticeJournalFile file = new PracticeJournalFile();
                     file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));

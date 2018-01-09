@@ -1,5 +1,9 @@
 <div ng-cloak class="ois-form-layout-padding" style="overflow: scroll">
   <div layout="column">
+    <div flex="30" class="md-title">
+      <hois-classifier-value ng-model="record.studyYearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+      <span>{{'lessonplan.teacher' | translate}} {{record.teacherName}}</span>
+    </div>
     <div flex layout="row">
       <div flex="70" layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
         <span ng-repeat="c in formState.capacityTypes">
@@ -43,6 +47,12 @@
         <td rowspan="{{::keys(journal.hours).length+1}}" ng-if="$first">
           <div>
             <span style="float:left">
+              <span ng-repeat="studentGroup in journal.studentGroups">
+                <br ng-if="!$first"> {{studentGroup}}
+                <br ng-if="$last">
+              </span>
+              <br>
+
               <span ng-repeat="teacher in journal.teachers">
                 <br ng-if="!$first"> {{teacher.teacher.nameEt}}
               </span>

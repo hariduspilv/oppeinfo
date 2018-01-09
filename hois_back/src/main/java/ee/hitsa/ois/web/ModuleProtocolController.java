@@ -23,7 +23,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.bdoc.MobileIdSession;
 import ee.hitsa.ois.bdoc.UnsignedBdocContainer;
+import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.report.ModuleProtocolReport;
 import ee.hitsa.ois.service.AutocompleteService;
@@ -31,13 +33,14 @@ import ee.hitsa.ois.service.BdocService;
 import ee.hitsa.ois.service.ModuleProtocolService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.service.security.MobileIdStatus;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.ModuleProtocolUtil;
 import ee.hitsa.ois.util.ModuleProtocolValidationUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSaveForm;
@@ -47,6 +50,7 @@ import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.EntityMobileSignDto;
 import ee.hitsa.ois.web.dto.EntitySignDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolOccupationalModuleDto;
@@ -60,6 +64,7 @@ import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 public class ModuleProtocolController {
 
     private static final String BDOC_TO_SIGN = "moduleProtocolBdocContainerToSign";
+    private static final String MOBILE_SESSCODE = "moduleProtocolBdocMobileSesscode";
 
     @Autowired
     private ModuleProtocolService moduleProtocolService;
@@ -71,7 +76,7 @@ public class ModuleProtocolController {
     private PdfService pdfService;
 
     @GetMapping
-    public Page<ModuleProtocolSearchDto> search(HoisUserDetails user, ModuleProtocolSearchCommand command,
+    public Page<ModuleProtocolSearchDto> search(HoisUserDetails user, @Valid ModuleProtocolSearchCommand command,
             Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return moduleProtocolService.search(user, command, pageable);
@@ -178,6 +183,54 @@ public class ModuleProtocolController {
         return get(user, moduleProtocolService.confirm(user, protocol, null));
     }
 
+    @PostMapping("/{id:\\d+}/mobileSignToConfirm")
+    public EntityMobileSignDto mobileSignToConfirm(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
+            @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm, HttpSession httpSession) {
+        ModuleProtocolValidationUtil.assertCanEdit(user, protocol);
+
+        Protocol savedProtocol = moduleProtocolService.save(protocol, moduleProtocolSaveForm);
+        byte[] pdfData = pdfService.generate(ModuleProtocolReport.TEMPLATE_NAME, new ModuleProtocolReport(savedProtocol));
+        
+        MobileIdSession session = bdocService.mobileSign("mooduli_protokoll.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                pdfData,
+                user.getMobileNumber());
+
+        httpSession.setAttribute(MOBILE_SESSCODE, session.getSesscode());
+        return EntityMobileSignDto.of(savedProtocol, session.getChallengeID());
+    }
+
+    @RequestMapping("/{id:\\d+}/mobileSignStatus")
+    public MobileIdStatus mobileSignStatus(HttpSession httpSession) {
+        MobileIdStatus response = new MobileIdStatus();
+        Integer sesscode = (Integer) httpSession.getAttribute(MOBILE_SESSCODE);
+        if (sesscode != null) {
+            String statusCode = bdocService.mobileSignStatus(sesscode);
+            response.setStatus(statusCode);
+            if (BdocService.closeMobileSession(statusCode)) {
+                httpSession.removeAttribute(MOBILE_SESSCODE);
+            }
+        }
+        return response;
+    }
+
+    @PostMapping("/{id:\\d+}/mobileSignFinalize")
+    public ModuleProtocolDto mobileSignFinalize(HoisUserDetails user, 
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
+            @Valid @RequestBody VersionedCommand version, HttpSession httpSession) {
+        Integer sesscode = (Integer) httpSession.getAttribute(MOBILE_SESSCODE);
+        if (sesscode != null) {
+            OisFile signedBdoc = bdocService.getMobileSignedBdoc(sesscode, "protokoll");
+            if (signedBdoc != null) {
+                protocol.setOisFile(signedBdoc);
+                protocol = moduleProtocolService.confirm(user, protocol, null);
+            }
+            httpSession.removeAttribute(MOBILE_SESSCODE);
+        }
+        return get(user, protocol);
+    }
+
     @PostMapping("/{id:\\d+}/confirm")
     public ModuleProtocolDto confirm(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
@@ -207,7 +260,7 @@ public class ModuleProtocolController {
 
 class SignatureCommand extends VersionedCommand {
 
-    @NotEmpty
+    @Required
     private String signature;
 
     public String getSignature() {

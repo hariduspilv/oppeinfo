@@ -5,15 +5,18 @@ import java.time.LocalDate;
 import java.util.List;
 
 import ee.hitsa.ois.domain.WsEhisStudentLog;
+import ee.hitsa.ois.domain.apelapplication.ApelApplicationRecord;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.StreamUtil;
 
 public class EhisStudentReport {
 
     private List<Graduation> graduations;
     private List<CurriculaFulfilment> fulfilments;
     private List<ForeignStudy> foreignStudies;
+    private List<ApelApplication> apelApplications;
 
     public List<Graduation> getGraduations() {
         return graduations;
@@ -39,19 +42,56 @@ public class EhisStudentReport {
         this.foreignStudies = foreignStudies;
     }
 
+    public List<ApelApplication> getApelApplications() {
+        return apelApplications;
+    }
+
+    public void setApelApplications(List<ApelApplication> apelApplications) {
+        this.apelApplications = apelApplications;
+    }
+
+    public static class ApelApplication extends StudentReport {
+        private final List<StudyRecord> records;
+
+        public List<StudyRecord> getRecords() {
+            return records;
+        }
+
+        public ApelApplication(ee.hitsa.ois.domain.apelapplication.ApelApplication application, WsEhisStudentLog log) {
+            fill(application.getStudent(), log);
+            records = StreamUtil.toMappedList(StudyRecord::new, application.getRecords());
+        }
+
+        public static class StudyRecord {
+            private final BigDecimal credits;
+            private final Boolean isFormalLearning;
+
+            public StudyRecord(ApelApplicationRecord record) {
+                isFormalLearning = record.getIsFormalLearning();
+                // TODO
+                credits = BigDecimal.ZERO;
+            }
+
+            public BigDecimal getCredits() {
+                return credits;
+            }
+
+            public Boolean getIsFormalLearning() {
+                return isFormalLearning;
+            }
+        }
+    }
+
     public static class Graduation extends StudentReport {
         private String docNr;
-        private Boolean cumLaude;
+        private final Boolean cumLaude;
         private String academicNr;
 
-        public static Graduation of(DirectiveStudent directiveStudent, WsEhisStudentLog log) {
-            Graduation graduation = new Graduation();
-            graduation.fill(directiveStudent.getStudent(), log);
+        public Graduation(DirectiveStudent directiveStudent, WsEhisStudentLog log) {
+            fill(directiveStudent.getStudent(), log);
             //graduation.setDocNr();
-            graduation.setCumLaude(directiveStudent.getIsCumLaude());
+            cumLaude = directiveStudent.getIsCumLaude();
             //graduation.setAcademicNr();
-
-            return graduation;
         }
 
         public String getDocNr() {
@@ -66,10 +106,6 @@ public class EhisStudentReport {
             return cumLaude;
         }
 
-        public void setCumLaude(Boolean cumLaude) {
-            this.cumLaude = cumLaude;
-        }
-
         public String getAcademicNr() {
             return academicNr;
         }
@@ -80,68 +116,44 @@ public class EhisStudentReport {
     }
 
     public static class CurriculaFulfilment extends StudentReport {
-        private BigDecimal percentage;
-        private BigDecimal points;
+        private final BigDecimal percentage;
+        private final BigDecimal points;
 
-        public static CurriculaFulfilment of(Student student, WsEhisStudentLog log) {
-            CurriculaFulfilment fulfilment = new CurriculaFulfilment();
-            fulfilment.fill(student, log);
+        public CurriculaFulfilment(Student student, WsEhisStudentLog log) {
+            fill(student, log);
 
             // TODO currently no way to find
-            fulfilment.setPercentage(new BigDecimal(100));
+            percentage = new BigDecimal(100);
             // TODO currently no way to find
-            fulfilment.setPoints(new BigDecimal(50));
-            return fulfilment;
+            points = new BigDecimal(50);
         }
 
         public BigDecimal getPercentage() {
             return percentage;
         }
 
-        public void setPercentage(BigDecimal percentage) {
-            this.percentage = percentage;
-        }
-
         public BigDecimal getPoints() {
             return points;
-        }
-
-        public void setPoints(BigDecimal points) {
-            this.points = points;
         }
     }
 
     public static class ForeignStudy extends StudentReport {
-        private LocalDate fromDate;
-        private LocalDate toDate;
+        private final LocalDate fromDate;
+        private final LocalDate toDate;
 
-        public static ForeignStudy of(DirectiveStudent ds, WsEhisStudentLog log) {
-            ForeignStudy foreignStudy = new ForeignStudy();
-            foreignStudy.fill(ds.getStudent(), log);
+        public ForeignStudy(DirectiveStudent ds, WsEhisStudentLog log) {
+            fill(ds.getStudent(), log);
 
-            foreignStudy.setFromDate(DateUtils.periodStart(ds));
-            foreignStudy.setToDate(DateUtils.periodEnd(ds));
-
-            foreignStudy.setError(Boolean.valueOf(Boolean.TRUE.equals(log.getHasOtherErrors()) || Boolean.TRUE.equals(log.getHasXteeErrors())));
-            foreignStudy.setMessage(log.getLogTxt());
-
-            return foreignStudy;
+            fromDate = DateUtils.periodStart(ds);
+            toDate = DateUtils.periodEnd(ds);
         }
 
         public LocalDate getFromDate() {
             return fromDate;
         }
 
-        public void setFromDate(LocalDate fromDate) {
-            this.fromDate = fromDate;
-        }
-
         public LocalDate getToDate() {
             return toDate;
-        }
-
-        public void setToDate(LocalDate toDate) {
-            this.toDate = toDate;
         }
     }
 

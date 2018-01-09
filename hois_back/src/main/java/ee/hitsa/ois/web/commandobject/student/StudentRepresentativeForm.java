@@ -7,7 +7,7 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.EstonianIdCode;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class StudentRepresentativeForm extends VersionedCommand {
@@ -15,7 +15,7 @@ public class StudentRepresentativeForm extends VersionedCommand {
     @Valid
     @NotNull
     private StudentRepresentativePersonForm person;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.OPPURESINDAJA)
     private String relation;
     private Boolean isStudentVisible;
@@ -46,19 +46,19 @@ public class StudentRepresentativeForm extends VersionedCommand {
 
     public static class StudentRepresentativePersonForm {
 
-        @NotEmpty
+        @Required
         @Size(max = 255)
         private String firstname;
-        @NotEmpty
+        @Required
         @Size(max = 255)
         private String lastname;
-        @NotEmpty
+        @Required
         @EstonianIdCode
         private String idcode;
-        @NotEmpty
+        @Required
         @Size(max = 100)
         private String phone;
-        @NotEmpty
+        @Required
         @Size(max = 255)
         private String email;
 

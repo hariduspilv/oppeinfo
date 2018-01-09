@@ -4,7 +4,6 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -16,16 +15,9 @@ public class ApelApplicationInformalExperience extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private ApelApplicationRecord apelApplicationRecord;
     
-    @NotNull
     private String nameEt;
-    
-    @NotNull
     private String placeTime;
-    
-    @NotNull
     private Short hours;
-    
-    @NotNull
     private String documents;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

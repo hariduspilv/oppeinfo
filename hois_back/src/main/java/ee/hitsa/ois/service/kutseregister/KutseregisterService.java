@@ -7,12 +7,12 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -32,8 +32,12 @@ import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
+import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
@@ -76,7 +80,7 @@ public class KutseregisterService {
         qb.requiredCriteria("s.curriculum_version_id in (:curriculumVersion)", "curriculumVersion", criteria.getCurriculumVersion());
         qb.requiredCriteria("s.status_code in (:status)", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
         qb.optionalCriteria("s.student_group_id in (:studentGroup)", "studentGroup", criteria.getStudentGroup());
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getStudentName());
+        qb.optionalCriteria("s.id = :studentId", "studentId", criteria.getStudent());
 
         List<?> students = qb.select("s.id, p.idcode, s.curriculum_version_id", em).getResultList();
         if(students.isEmpty()) {
@@ -115,7 +119,7 @@ public class KutseregisterService {
         List<StudentOccupationCertificate> addedCerts = new ArrayList<>();
         for(Object s : students) {
             Long studentId = resultAsLong(s, 0);
-            StudentDto studentDto = new StudentDto(studentId, resultAsString(s, 1));
+            StudentDto studentDto = new StudentDto(schoolId, studentId, resultAsString(s, 1));
             Long curriculumVersionId = resultAsLong(s, 2);
             addedCerts.addAll(kutsetunnistus(studentDto, criteria.getFrom(), criteria.getThru(),
                     occupations.getOrDefault(curriculumVersionId, Collections.emptyList()),
@@ -177,18 +181,18 @@ public class KutseregisterService {
                     }
                     String type = certificate.getTyyp();
                     Classifier occupation = null, partOccupation = null, speciality = null;
-                    if(OCCUPATION_CERTIFICATE_TYPE_OCCUPATION.equals(type)) {
+                    if(OCCUPATION_CERTIFICATE_TYPE_OCCUPATION.equalsIgnoreCase(type)) {
                         // check for specialty certificate
                         speciality = findOccupation(certificate.getSpetsialiseerumine(), SPECIALIZATION_PREFIX, certificate.getValjaantud(), occupations);
                         if(speciality != null) {
-                            occupation = occupationFor(speciality);
+                            occupation = ClassifierUtil.parentFor(speciality, MainClassCode.KUTSE).orElse(null);
                         } else if(!StringUtils.hasText(certificate.getSpetsialiseerumine())) {
                             // just occupation certificate
                             occupation = findOccupation(certificate.getStandard(), OCCUPATION_PREFIX, certificate.getValjaantud(), occupations);
                         }
-                    } else if(OCCUPATION_CERTIFICATE_TYPE_PARTOCCUPATION.equals(type)) {
+                    } else if(OCCUPATION_CERTIFICATE_TYPE_PARTOCCUPATION.equalsIgnoreCase(type)) {
                         partOccupation = findOccupation(certificate.getOsakutse(), PARTOCCUPATION_PREFIX, certificate.getValjaantud(), occupations);
-                        occupation = occupationFor(partOccupation);
+                        occupation = ClassifierUtil.parentFor(partOccupation, MainClassCode.KUTSE).orElse(null);
                     }
                     if(occupation == null) {
                         // no matching (part)occupation
@@ -209,6 +213,15 @@ public class KutseregisterService {
                     em.persist(studentCertificate);
                     existingCertificates.add(certificateNr);
                     certificates.add(studentCertificate);
+                    // change "occupation exam passed" flag on directive
+                    em.createNativeQuery("update directive_student set is_occupation_exam_passed = true " +
+                            "where student_id = ?1 and canceled = false and " +
+                            "directive_id in (select d.id from directive d where d.status_code = ?2 and d.school_id = ?3 and d.type_code = ?4)")
+                        .setParameter(1, studentDto.getStudentId())
+                        .setParameter(2, DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name())
+                        .setParameter(3, studentDto.getSchoolId())
+                        .setParameter(4, DirectiveType.KASKKIRI_LOPET.name())
+                        .executeUpdate();
                 }
             }
         });
@@ -219,6 +232,7 @@ public class KutseregisterService {
         String value = occupation.getId().toString();
         String code = OCCUPATION_PREFIX + value;
         String name = occupation.getNimetus();
+        String version = Objects.toString(occupation.getVersioon(), null);
         String ekrLevel = occupation.getEkrtase();
         LocalDate validFrom = occupation.getKehtivusealgus();
         LocalDate validThru = occupation.getKehtivuselopp();
@@ -230,31 +244,41 @@ public class KutseregisterService {
             occ.setValue(value);
             occ.setMainClassCode(MainClassCode.KUTSE.name());
             occ.setNameEt(name);
-            occ.setExtraval1(ekrLevel);
+            occ.setExtraval1(version);
+            occ.setExtraval2(ekrLevel);
             occ.setValidFrom(validFrom);
             occ.setValidThru(validThru);
             em.persist(occ);
-            if(StringUtils.hasText(ekrLevel)) {
-                // add new connection to EKR
-                Classifier ekr = classifiers.get("EKR_" + ekrLevel);
-                if(ekr != null) {
+        } else {
+            // check if occupation changed
+            if(!Objects.equals(name, occ.getNameEt()) || !Objects.equals(version, occ.getExtraval1()) || !Objects.equals(ekrLevel, occ.getExtraval2()) ||
+               !Objects.equals(validFrom, occ.getValidFrom()) || !Objects.equals(validThru, occ.getValidThru())) {
+                occ.setNameEt(name);
+                occ.setExtraval1(version);
+                occ.setExtraval2(ekrLevel);
+                occ.setValidFrom(validFrom);
+                occ.setValidThru(validThru);
+                occ = em.merge(occ);
+            }
+        }
+        if(StringUtils.hasText(ekrLevel)) {
+            // check relation to EKR
+            Classifier ekr = classifiers.get("EKR_" + ekrLevel);
+            if(ekr == null) {
+                LOG.warn("Kutseregister sync: cannot find EKR classifier with code EKR_{}, connection from occupation {} to EKR not created", ekrLevel, code);
+            } else {
+                ClassifierConnect relatedEkr = ClassifierUtil.parentLinkFor(occ, MainClassCode.EKR).orElse(null);
+                if(relatedEkr == null) {
                     ClassifierConnect connect = new ClassifierConnect();
                     connect.setClassifier(occ);
                     connect.setConnectClassifier(ekr);
                     connect.setMainClassifierCode(MainClassCode.EKR.name());
                     em.persist(connect);
-                } else {
-                    LOG.warn("Kutseregister sync: cannot find EKR classifier with code EKR_{}, connection from occupation {} to EKR not created", ekrLevel, code);
+                } else if(!EntityUtil.getCode(ekr).equals(EntityUtil.getCode(relatedEkr.getConnectClassifier()))) {
+                    // changed
+                    relatedEkr.setConnectClassifier(ekr);
+                    em.merge(relatedEkr);
                 }
-            }
-        } else {
-            // check if changed
-            if(!name.equals(occ.getNameEt()) || !ekrLevel.equals(occ.getExtraval1()) || !validFrom.equals(occ.getValidFrom()) || !validThru.equals(occ.getValidThru())) {
-                occ.setNameEt(name);
-                occ.setExtraval1(ekrLevel);
-                occ.setValidFrom(validFrom);
-                occ.setValidThru(validThru);
-                occ = em.merge(occ);
             }
         }
         return occ;
@@ -266,26 +290,34 @@ public class KutseregisterService {
         String name = item.getNimetus();
 
         Classifier child = classifiers.get(code);
-        if(child != null) {
-            if(!child.getNameEt().equals(name)) {
+        if(child == null) {
+            // new child
+            child = new Classifier();
+            child.setCode(code);
+            child.setValue(value);
+            child.setMainClassCode(domain.name());
+            child.setNameEt(name);
+            em.persist(child);
+        }else {
+            // check if partoccupation/specialty changed
+            if(!Objects.equals(name, child.getNameEt())) {
                 child.setNameEt(name);
                 em.merge(child);
             }
-            return;
         }
-        // new child
-        child = new Classifier();
-        child.setCode(code);
-        child.setValue(value);
-        child.setMainClassCode(domain.name());
-        child.setNameEt(name);
-        em.persist(child);
-        // new connection to occupation
-        ClassifierConnect connect = new ClassifierConnect();
-        connect.setClassifier(child);
-        connect.setConnectClassifier(occupation);
-        connect.setMainClassifierCode(MainClassCode.KUTSE.name());
-        em.persist(connect);
+        // check relation to KUTSE
+        ClassifierConnect relatedOccupation = ClassifierUtil.parentLinkFor(child, MainClassCode.KUTSE).orElse(null);
+        if(relatedOccupation == null) {
+            ClassifierConnect connect = new ClassifierConnect();
+            connect.setClassifier(child);
+            connect.setConnectClassifier(occupation);
+            connect.setMainClassifierCode(MainClassCode.KUTSE.name());
+            em.persist(connect);
+        } else if(!EntityUtil.getCode(occupation).equals(EntityUtil.getCode(relatedOccupation.getConnectClassifier()))) {
+            // changed
+            relatedOccupation.setConnectClassifier(occupation);
+            em.merge(relatedOccupation);
+        }
     }
 
     private Map<String, Classifier> findClassifiers() {
@@ -313,7 +345,7 @@ public class KutseregisterService {
         }
         List<OccupationDto> matches = new ArrayList<>();
         for(OccupationDto occ : occupations) {
-            if(occupationName.equals(occ.getName()) ) {
+            if(occupationName.equalsIgnoreCase(occ.getName()) ) {
                 String occupationCode = occ.getCode();
                 if(occupationCode != null && occupationCode.startsWith(prefix)) {
                     matches.add(occ);
@@ -328,23 +360,19 @@ public class KutseregisterService {
         return match != null ? em.getReference(Classifier.class, match.getCode()) : null;
     }
 
-    private static Classifier occupationFor(Classifier partOccupation) {
-        if(partOccupation == null) {
-            return null;
-        }
-        // find matching occupation
-        return partOccupation.getClassifierConnects().stream()
-                .filter(r -> MainClassCode.KUTSE.name().equals(r.getMainClassifierCode()))
-                .findAny().map(r -> r.getConnectClassifier()).orElse(null);
-    }
-
     static class StudentDto {
+        private final Long schoolId;
         private final Long studentId;
         private final String idcode;
 
-        public StudentDto(Long studentId, String idcode) {
+        public StudentDto(Long schoolId, Long studentId, String idcode) {
+            this.schoolId = schoolId;
             this.studentId = studentId;
             this.idcode = idcode;
+        }
+
+        public Long getSchoolId() {
+            return schoolId;
         }
 
         public Long getStudentId() {

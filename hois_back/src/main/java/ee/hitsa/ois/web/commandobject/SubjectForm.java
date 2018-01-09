@@ -11,18 +11,18 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class SubjectForm extends VersionedCommand {
 
-    @NotEmpty
+    @Required
     @Size(max = 20)
     private String code;
-    @NotEmpty
+    @Required
     @Size(max = 255)
     private String nameEt;
-    @NotEmpty
+    @Required
     @Size(max = 255)
     private String nameEn;
     @Size(min = 1, max = 4000)
@@ -32,22 +32,22 @@ public class SubjectForm extends VersionedCommand {
     @DecimalMin("0.1")
     private BigDecimal credits;
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.HINDAMISVIIS)
     private String assessment;
 
     @Size(max = 10000)
     private String assessmentDescription;
-    @NotEmpty
+    @Required
     @Size(max = 10000)
     private String objectivesEt;
-    @NotEmpty
+    @Required
     @Size(max = 10000)
     private String objectivesEn;
-    @NotEmpty
+    @Required
     @Size(max = 10000)
     private String outcomesEt;
-    @NotEmpty
+    @Required
     @Size(max = 10000)
     private String outcomesEn;
     @Size(max = 4000)
@@ -75,7 +75,7 @@ public class SubjectForm extends VersionedCommand {
 
     private AutocompleteResult schoolDepartment;
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.AINESTAATUS)
     private String status;
 

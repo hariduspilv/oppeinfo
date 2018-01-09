@@ -8,6 +8,13 @@
         </md-input-container>
       </div>
 
+      <div flex ng-if="record.type === 'KASKKIRI_STIPTOET' || record.type === 'KASKKIRI_STIPTOETL'">
+        <md-input-container class="md-block">
+          <label class="textInput">{{'directive.scholarshipType' | translate}}</label>
+          <hois-classifier-select ng-model="record.scholarshipType" name="scholarshipType" ng-change="scholarshipTypeChanged()" ng-disabled="formState.state !== 'CHOOSETYPE'" model-value-attr="code" main-classifier-code="STIPTOETUS" criteria="{higher: formState.school.higher ? true : undefined, vocational: formState.school.vocational ? true : undefined}" required></hois-classifier-select>
+        </md-input-container>
+      </div>
+
       <div flex ng-if="formState.state === 'CHOOSETYPE' && formState.students && record.type !== 'KASKKIRI_IMMAT' && record.type !== 'KASKKIRI_IMMATV'">
         <div>&nbsp;</div>
         <md-table-container>

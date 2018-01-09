@@ -6,7 +6,9 @@ import java.util.List;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JournalUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -21,6 +23,13 @@ public class JournalSearchDto {
     private Integer usedHours;
     private String status;
     private List<String> curriculums = new ArrayList<>();
+    private Boolean canEdit;
+    
+    public static JournalSearchDto of(HoisUserDetails user, Journal journal) {
+        JournalSearchDto dto = of(journal);
+        dto.setCanEdit(Boolean.valueOf(JournalUtil.hasPermissionToChange(user, journal)));
+        return dto;
+    }
 
     public static JournalSearchDto of(Journal journal) {
         JournalSearchDto dto = EntityUtil.bindToDto(journal, new JournalSearchDto());
@@ -93,5 +102,10 @@ public class JournalSearchDto {
     public void setCurriculums(List<String> curriculums) {
         this.curriculums = curriculums;
     }
-
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
 }

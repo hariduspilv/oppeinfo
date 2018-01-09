@@ -51,10 +51,14 @@
     <div style="margin:1%">
         <div ng-repeat="absence in studentAbsences" style="font-size:13px">
             <div layout="row" flex>
-                <span>{{absence.entryDate | hoisDayMonth}}</span>
-            <span>{{absence.startLessonNr}}. {{'home.student.lesson' | translate}} &nbsp;</span>
-                <span style="font-weight: 500">{{absence.journalName}} &nbsp;</span>
-                <span>{{absence.teachers}}</span>
+                <div layout="row" layout-xs="column" flex="10" flex-md="15" flex-sm="20" flex-xs="30">
+                    <span>{{absence.entryDate | hoisDayMonth}} &nbsp;</span>
+                    <span ng-if="absence.startLessonNr">{{absence.startLessonNr}}. {{'home.student.lesson' | translate}} &nbsp;</span>
+                </div>
+                <div layout="row" layout-xs="column">
+                    <span style="font-weight: 500">{{absence.journalName}} &nbsp;</span>
+                    <span>{{absence.teachers}}</span>
+                </div>
             </div>
         </div>
     </div>

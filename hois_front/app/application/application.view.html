@@ -34,7 +34,9 @@
               <tr md-row ng-repeat="file in application.files | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>
                   {{file.oisFile.fname}}
-                  <a ng-href="{{getUrl(file.oisFile)}}" target="_blank"><md-icon md-font-set="material-icons">file_download</md-icon></a>
+                  <a ng-href="{{getUrl(file.oisFile, 'application')}}" target="_blank" rel="noopener noreferrer">
+                    <md-icon md-font-set="material-icons">file_download</md-icon>
+                  </a>
                 </td>
                 <td md-cell>
                   {{file.inserted | hoisDateTime}}

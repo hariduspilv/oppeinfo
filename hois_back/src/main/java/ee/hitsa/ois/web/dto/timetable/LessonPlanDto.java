@@ -27,6 +27,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class LessonPlanDto extends LessonPlanForm {
 
     private Long id;
+    private String studyYearCode;
     private String studentGroupCode;
     private List<StudyPeriodDto> studyPeriods;
     private List<Short> weekNrs;
@@ -35,6 +36,7 @@ public class LessonPlanDto extends LessonPlanForm {
 
     public static LessonPlanDto of(LessonPlan lessonPlan, Map<Long, Long> weekNrsLegends) {
         LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto());
+        dto.setStudyYearCode(lessonPlan.getStudyYear().getYear().getCode());
         dto.setStudentGroupCode(lessonPlan.getStudentGroup().getCode());
         dto.setStudyPeriods(lessonPlan.getStudyYear().getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList()));
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(lessonPlan.getStudyYear());
@@ -53,6 +55,14 @@ public class LessonPlanDto extends LessonPlanForm {
 
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    public String getStudyYearCode() {
+        return studyYearCode;
+    }
+
+    public void setStudyYearCode(String studyYearCode) {
+        this.studyYearCode = studyYearCode;
     }
 
     public String getStudentGroupCode() {
@@ -144,6 +154,7 @@ public class LessonPlanDto extends LessonPlanForm {
         private String groupProportion;
         private List<LessonPlanModuleJournalThemeDto> themes;
         private List<LessonPlanModuleJournalTeacherDto> teachers;
+        private List<String> studentGroups;
 
         public static LessonPlanModuleJournalDto of(Journal journal, LessonPlanCapacityMapper capacityMapper) {
             LessonPlanModuleJournalDto dto = new LessonPlanModuleJournalDto();
@@ -189,6 +200,14 @@ public class LessonPlanDto extends LessonPlanForm {
         public void setTeachers(List<LessonPlanModuleJournalTeacherDto> teachers) {
             this.teachers = teachers;
         }
+
+        public List<String> getStudentGroups() {
+            return studentGroups;
+        }
+
+        public void setStudentGroups(List<String> studentGroups) {
+            this.studentGroups = studentGroups;
+        }
     }
 
     public static class LessonPlanModuleJournalForTeacherDto extends LessonPlanModuleJournalDto {
@@ -207,6 +226,7 @@ public class LessonPlanDto extends LessonPlanForm {
             JournalTeacher currentTeacher = journal.getJournalTeachers().stream().filter(t -> EntityUtil.getId(t.getTeacher()).equals(teacherId)).findFirst().get();
             dto.setIsConfirmer(currentTeacher.getIsConfirmer());
             dto.setIsFiller(currentTeacher.getIsFiller());
+            dto.setStudentGroups(JournalDto.of(journal).getStudentGroups().stream().distinct().collect(Collectors.toList()));
             // all hours mapped by capacity type and week nr
             dto.setHours(capacityMapper.mapOutput(journal));
             return dto;

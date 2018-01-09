@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.scholarship;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,12 +12,13 @@ import ee.hitsa.ois.enums.ScholarshipStatus;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.dto.OisFileDto;
 
 public class ScholarshipApplicationDto {
+
     private Long id;
-    @NotEmpty
+    @Required
     @Size(max = 50)
     private String bankAccount;
     @Size(max = 4000)
@@ -30,7 +32,7 @@ public class ScholarshipApplicationDto {
     private String compensationReason;
     private String compensationFrequency;
     private String status;
-    private Long routeKm;
+    private BigDecimal routeKm;
     private List<OisFileDto> files;
     private List<ScholarshipApplicationFamilyDto> family;
     private Boolean canApply;
@@ -148,11 +150,11 @@ public class ScholarshipApplicationDto {
         this.status = status;
     }
 
-    public Long getRouteKm() {
+    public BigDecimal getRouteKm() {
         return routeKm;
     }
 
-    public void setRouteKm(Long routeKm) {
+    public void setRouteKm(BigDecimal routeKm) {
         this.routeKm = routeKm;
     }
 
@@ -179,5 +181,4 @@ public class ScholarshipApplicationDto {
     public void setCanApply(Boolean canApply) {
         this.canApply = canApply;
     }
-
 }

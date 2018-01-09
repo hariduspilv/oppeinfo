@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'message', 'Classifier', 'SspCapacities', 'DataUtils', function ($scope, QueryUtils, ArrayUtils, $route, message, Classifier, SspCapacities, DataUtils) {
-    var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId) : null;
-    var teacher = $route.current.params.teacherId ? parseInt($route.current.params.teacherId) : null;
+    var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId, 10) : null;
+    var teacher = $route.current.params.teacherId ? parseInt($route.current.params.teacherId, 10) : null;
     $scope.isNew = teacher === null && studyPeriodId === null;
     var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods/teachers/container');
     $scope.record = {};

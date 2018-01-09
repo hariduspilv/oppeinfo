@@ -140,7 +140,7 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
         if (angular.isObject(it.selectedBuildings)) {
           for (var p in it.selectedBuildings) {
             if (it.selectedBuildings.hasOwnProperty(p) && it.selectedBuildings[p] === true) {
-              lessonTimeBuildingGroup.buildings.push({id: parseInt(p)});
+              lessonTimeBuildingGroup.buildings.push({id: parseInt(p, 10)});
             }
           }
         }

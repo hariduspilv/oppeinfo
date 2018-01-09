@@ -3,7 +3,8 @@
       <form name="eventForm" ng-submit="eventForm.$valid && loadData()" novalidate>
         <div layout="row" flex="100">
           <md-input-container flex="30" flex-md="100" flex-sm="100" flex-xs="100">
-            <md-datepicker required ng-model="timetableEvent.date" md-placeholder="{{'main.date' | translate}}"></md-datepicker>
+            <label>{{'main.date' | translate}}</label>
+            <md-datepicker required ng-model="timetableEvent.date"></md-datepicker>
           </md-input-container>
         </div>
         <div layout="row" flex="100">

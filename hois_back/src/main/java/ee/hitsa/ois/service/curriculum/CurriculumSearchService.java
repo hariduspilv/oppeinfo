@@ -148,7 +148,7 @@ public class CurriculumSearchService {
             }
 
             List<Long> curriculumSchools = getSchools(user.getSchoolId(), criteria.getSchool());
-            if(!CollectionUtils.isEmpty(curriculumSchools)) {
+            if(!curriculumSchools.isEmpty()) {
                 filters.add(filterBySchools(root, query, cb, curriculumSchools));
             }
             return cb.and(filters.toArray(new Predicate[filters.size()]));

@@ -2,16 +2,16 @@ package ee.hitsa.ois.config;
 
 import java.util.Map;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
 
 public class XroadProperties {
 
-    @NotEmpty
+    @Required
     private String endpoint;
-    @NotEmpty
+    @Required
     private Map<String, String> client;
-    @NotEmpty
+    @Required
     private Map<String, String> service;
 
     public String getEndpoint() {

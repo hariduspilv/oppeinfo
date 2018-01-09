@@ -41,6 +41,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.student.Student;
@@ -149,7 +150,7 @@ public class JournalService {
             }
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(JournalSearchDto::of);
+        }, pageable).map(j -> JournalSearchDto.of(user, j));
     }
 
     private static void searchByTeacherCriteria(JournalSearchCommand command, Root<Journal> root,
@@ -189,12 +190,12 @@ public class JournalService {
     }
 
     public Journal confirm(Journal journal) {
-        journal.setStatus(classifierRepository.getOne(JournalStatus.PAEVIK_STAATUS_K.name()));
+        journal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_K.name()));
         return EntityUtil.save(journal, em);
     }
 
     public Journal unconfirm(Journal journal) {
-        journal.setStatus(classifierRepository.getOne(JournalStatus.PAEVIK_STAATUS_T.name()));
+        journal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
         return EntityUtil.save(journal, em);
     }
 
@@ -362,7 +363,7 @@ public class JournalService {
                 type -> EntityUtil.getCode(type.getCapacityType()), journalEntryForm.getJournalEntryCapacityTypes(),
                 it -> {
                     JournalEntryCapacityType type = new JournalEntryCapacityType();
-                    type.setCapacityType(classifierRepository.getOne(it));
+                    type.setCapacityType(em.getReference(Classifier.class, it));
                     return type;
                 });
     }
@@ -546,44 +547,19 @@ public class JournalService {
         Query q = em.createNativeQuery("select j.id, j.name_et, j.study_year_id, sy.year_code,"
                 + " count(case jes.absence_code when 'PUUDUMINE_H' then 1 else null end) as puudumine_h,"
                 + " count(case jes.absence_code when 'PUUDUMINE_P' then 1 else null end) as puudumine_p,"
-                + " count(case jes.absence_code when 'PUUDUMINE_V' then 1 else null end) as puudumine_v from journal j"
-                + " inner join journal_student js on j.id=js.journal_id"
-                + " inner join student s on js.student_id=s.id"
-                + " inner join study_year sy on j.study_year_id=sy.id"
-                + " inner join journal_entry je on je.journal_id=j.id"
+                + " count(case when jes.absence_code in ('PUUDUMINE_P', 'PUUDUMINE_V') then 1 else null end) as puudumine_pv from journal_entry je"
                 + " inner join journal_entry_student jes on jes.journal_entry_id=je.id"
+                + " inner join journal_student js on jes.journal_student_id = js.id"
+                + " inner join journal j on j.id = js.journal_id"
+                + " inner join study_year sy on j.study_year_id = sy.id"
+                + " inner join student s on s.id = js.student_id"
                 + " where s.id=?1 group by j.id, sy.year_code");
         q.setParameter(1, studentId);
 
-        List<?> data = q.getResultList();
-        return StreamUtil.toMappedList(r -> new StudentJournalDto((Object[])r), data);
+        List<?> studentJournals = q.getResultList();
+        return StreamUtil.toMappedList(r -> new StudentJournalDto((Object[])r, getStudentJournalEntries(studentId, resultAsLong(r, 0))), studentJournals);
     }
     
-    
-    /**
-     * Get student journal for view
-     * @param studentId
-     * @param journalId
-     * @return student journal with student's absences
-     */
-    public StudentJournalDto studentJournal(Long studentId, Long journalId) {
-        Query q = em.createNativeQuery("select j.id, j.name_et, j.study_year_id, sy.year_code,"
-                + " count(case jes.absence_code when 'PUUDUMINE_H' then 1 else null end) as puudumine_h,"
-                + " count(case jes.absence_code when 'PUUDUMINE_P' then 1 else null end) as puudumine_p,"
-                + " count(case jes.absence_code when 'PUUDUMINE_V' then 1 else null end) as puudumine_v from journal j"
-                + " inner join journal_student js on j.id=js.journal_id"
-                + " inner join student s on js.student_id=s.id"
-                + " inner join study_year sy on j.study_year_id=sy.id"
-                + " inner join journal_entry je on je.journal_id=j.id"
-                + " inner join journal_entry_student jes on jes.journal_entry_id=je.id"
-                + " where s.id=?1 and j.id=?2 group by j.id, sy.year_code");
-        q.setParameter(1, studentId);
-        q.setParameter(2, journalId);
-        Object studentJournal = q.getSingleResult();
-
-        List<StudentJournalEntryDto> journalEntries = getStudentJournalEntries(studentId, journalId);
-        return new StudentJournalDto((Object[]) studentJournal, journalEntries);
-    }
 
     private List<StudentJournalEntryDto> getStudentJournalEntries(Long studentId, Long journalId) {
         Query entriesQuery = em.createNativeQuery("select je.id, je.entry_type_code, je.entry_date, je.content,"
@@ -750,4 +726,44 @@ public class JournalService {
                 resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 5), resultAsLocalDateTime(r, 6), resultAsString(r, 7)), data);
     }
     
+    /**
+     * Confirms journals which meet following criteria:
+     *  - status = PAEVIK_STAATUS_T
+     *  - has any students added
+     *  - all student with status OPPURSTAATUS_O have final results
+     */
+    public Integer confirmAll(HoisUserDetails user) {
+        Long currentStudyYear = EntityUtil.getId(studyYearService.getCurrentStudyYear(user.getSchoolId()));
+        
+        Query q = em.createNativeQuery("update journal "
+                + "set status_code = :journalStatusConfirmed "
+                + "where id in ("
+                    + "select id "
+                    + "from journal j "
+                    + "where j.study_year_id = :currentStudyYear "
+                    + "and status_code = :journalStatusInWork "
+                    + "and exists ("
+                        + "select 1 from "
+                        + "journal_student js2 "
+                        + "where js2.journal_id = j.id) "
+                    + "and not exists("
+                        + "select 1 "
+                        + "from journal_student js "
+                        + "join student s on s.id = js.student_id and s.status_code = :studentStatus "
+                        + "where js.journal_id = j.id "
+                        + "and not exists("
+                            + "select je.id "
+                            + "from journal_entry je "
+                            + "join journal_entry_student jes on jes.journal_student_id = js.id "
+                            + "where je.entry_type_code = :finalResult "
+                            + "and jes.grade_code is not null )))");
+
+        q.setParameter("currentStudyYear", currentStudyYear);
+        q.setParameter("journalStatusConfirmed", JournalStatus.PAEVIK_STAATUS_K.name());
+        q.setParameter("journalStatusInWork", JournalStatus.PAEVIK_STAATUS_T.name());
+        q.setParameter("studentStatus", StudentStatus.OPPURSTAATUS_O.name());
+        q.setParameter("finalResult", JournalEntryType.SISSEKANNE_L.name());
+        
+        return Integer.valueOf(q.executeUpdate());
+    }
 }

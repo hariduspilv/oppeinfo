@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherViewController', ['$scope', 'QueryUtils', '$route', 'Classifier', 'SspCapacities',
   function ($scope, QueryUtils, $route, Classifier, SspCapacities) {
-    var studyPeriodId = parseInt($route.current.params.studyPeriodId);
+    var studyPeriodId = parseInt($route.current.params.studyPeriodId, 10);
     var teacher = $route.current.params.teacherId;
     var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods/teachers/container');
 

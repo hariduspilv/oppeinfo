@@ -200,7 +200,7 @@ public class UserService {
                 }
                 SecurityContextHolder.getContext().setAuthentication(createInitialAuthentication(person));
                 if (person.getId() == null) {
-                    person = personRepository.save(person);
+                    em.persist(person);
                 }
                 createUser(person);
             } finally {

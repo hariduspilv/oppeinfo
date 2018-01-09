@@ -2,8 +2,8 @@
 
 angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditController', ['$scope', 'QueryUtils', 'ArrayUtils', 'Classifier', '$route', 'message', 'dialogService', '$rootScope', 'SspCapacities', 'DataUtils', function ($scope, QueryUtils, ArrayUtils, Classifier, $route, message, dialogService, $rootScope, SspCapacities, DataUtils) {
 
-    var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId) : null;
-    var studentGroup = $route.current.params.studentGroupId ? parseInt($route.current.params.studentGroupId) : null;
+    var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId, 10) : null;
+    var studentGroup = $route.current.params.studentGroupId ? parseInt($route.current.params.studentGroupId, 10) : null;
     $scope.isEditing = studentGroup === null && studyPeriodId === null;
     var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/container');
 

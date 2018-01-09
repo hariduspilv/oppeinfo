@@ -22,9 +22,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.service.JournalService;
 import ee.hitsa.ois.service.JournalUnconfirmedService;
+import ee.hitsa.ois.service.StudyYearService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.JournalUtil;
@@ -60,6 +62,8 @@ public class JournalController {
     private JournalUnconfirmedService journalUnconfirmedService;
     @Autowired
     private EntityManager em;
+    @Autowired
+    private StudyYearService studyYearService;
 
     @GetMapping
     public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
@@ -185,12 +189,6 @@ public class JournalController {
         return journalService.studentJournals(studentId);
     }
 
-    @GetMapping("/{id:\\d+}/studentJournal")
-    public StudentJournalDto studentJournal(HoisUserDetails user, @PathVariable("id") Long journalId, @RequestParam("studentId") Long studentId) {
-        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
-        return journalService.studentJournal(studentId, journalId);
-    }
-
     @GetMapping("/studentJournalTasks")
     public StudentJournalTaskListDto studentJournalTasks(HoisUserDetails user, @RequestParam("studentId") Long studentId) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
@@ -207,6 +205,20 @@ public class JournalController {
     public List<JournalStudentDto> withoutFinalResult(HoisUserDetails user, @WithEntity Journal journal) {
         JournalValidationUtil.assertCanView(user);
         return JournalUtil.withoutFinalResult(journal);
+    }
+    
+    @GetMapping("/canConfirmAll")
+    public Map<String, Boolean> canConfirmAll(HoisUserDetails user) {
+        JournalValidationUtil.assertCanView(user);
+        StudyYear studyYear = studyYearService.getCurrentStudyYear(user.getSchoolId());
+        return Collections.singletonMap("canConfirmAll", Boolean.valueOf(JournalUtil.canConfirmAll(user, studyYear)));
+    }
+    
+    @PutMapping("/confirmAll")
+    public Map<String, Integer> confirmAll(HoisUserDetails user) {
+        StudyYear studyYear = studyYearService.getCurrentStudyYear(user.getSchoolId());
+        JournalValidationUtil.assertCanConfirmAll(user, studyYear);
+        return Collections.singletonMap("numberOfConfirmedJournals", journalService.confirmAll(user));
     }
 
     /**

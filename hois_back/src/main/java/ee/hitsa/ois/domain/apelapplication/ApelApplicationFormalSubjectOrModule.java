@@ -3,7 +3,6 @@ package ee.hitsa.ois.domain.apelapplication;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -22,14 +21,13 @@ public class ApelApplicationFormalSubjectOrModule extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private ApelApplicationRecord apelApplicationRecord;
 
-    @Column(nullable = false)
     private Boolean isMySchool;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier type;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = true)
     private ApelSchool apelSchool;
 
     private Boolean isOptional;
@@ -55,10 +53,8 @@ public class ApelApplicationFormalSubjectOrModule extends BaseEntityWithId {
 
     private Boolean transfer = Boolean.FALSE;
 
-    @Column(nullable = false)
     private String nameEt;
 
-    @Column(nullable = false)
     private String nameEn;
 
     private String subjectCode;

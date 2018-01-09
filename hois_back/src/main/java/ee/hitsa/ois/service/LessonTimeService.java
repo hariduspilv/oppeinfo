@@ -197,7 +197,7 @@ public class LessonTimeService {
         LessonTimeBuildingGroup previousGroup = getPreviousGroup(savedGroup.getBuildings(), savedGroup.getValidFrom(), schoolId);
         if (previousGroup != null) {
             previousGroup.setValidThru(savedGroup.getValidFrom().minusDays(1));
-            EntityUtil.save(previousGroup, em);
+            previousGroup = EntityUtil.save(previousGroup, em);
             log.info("lesson time building group {} valid thru updated, new value is {}", previousGroup.getId(), previousGroup.getValidThru().toString());
         }
     }

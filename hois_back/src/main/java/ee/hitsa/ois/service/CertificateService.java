@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Certificate;
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
@@ -196,6 +197,6 @@ public class CertificateService {
     }
 
     private void setCertificateStatus(Certificate certificate, CertificateStatus status) {
-        certificate.setStatus(classifierRepository.getOne(status.name()));
+        certificate.setStatus(em.getReference(Classifier.class, status.name()));
     }
 }

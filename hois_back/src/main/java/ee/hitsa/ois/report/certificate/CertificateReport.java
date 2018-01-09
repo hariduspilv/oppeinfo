@@ -2,6 +2,8 @@ package ee.hitsa.ois.report.certificate;
 
 import java.util.List;
 
+import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 
 public class CertificateReport {
@@ -16,6 +18,20 @@ public class CertificateReport {
         CertificateReport report = new CertificateReport();
         report.setSchool(student.getSchool().getNameEt());
         report.setStudent(CertificateReportStudent.of(student));
+        return report;
+    }
+    
+    public static CertificateReport of(Person person, School school) {
+        CertificateReport report = new CertificateReport();
+        report.setSchool(school.getNameEt());
+        report.setStudent(CertificateReportStudent.of(person));
+        return report;
+    }
+    
+    public static CertificateReport of(School school, String otherName, String otherIdcode) {
+        CertificateReport report = new CertificateReport();
+        report.setSchool(school.getNameEt());
+        report.setStudent(CertificateReportStudent.of(otherName, otherIdcode));
         return report;
     }
     

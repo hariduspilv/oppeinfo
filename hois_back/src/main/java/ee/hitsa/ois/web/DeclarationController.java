@@ -48,7 +48,7 @@ public class DeclarationController {
     }
 
     @GetMapping
-    public Page<DeclarationDto> search(HoisUserDetails user, DeclarationSearchCommand criteria, Pageable pageable) {
+    public Page<DeclarationDto> search(HoisUserDetails user, @Valid DeclarationSearchCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return declarationService.search(user, criteria, pageable);
     }

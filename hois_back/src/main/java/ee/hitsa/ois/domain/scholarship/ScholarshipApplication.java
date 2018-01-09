@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.scholarship;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +24,13 @@ public class ScholarshipApplication extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "scholarship_term_id", nullable = false, updatable = false)
     private ScholarshipTerm scholarshipTerm;
-    private Long averageMark;
-    private Long curriculumCompletion;
+    private BigDecimal averageMark;
+    private BigDecimal curriculumCompletion;
     private String addressAds;
     private String address;
     @Column(nullable = false)
     private String bankAccount;
-    private Long lastPeriodMark;
+    private BigDecimal lastPeriodMark;
     private Long absences;
     private String addInfo;
     private String bankAccountOwnerIdcode;
@@ -38,13 +39,14 @@ public class ScholarshipApplication extends BaseEntityWithId {
     private Classifier status;
     private LocalDate decisionDate;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", nullable = false, updatable = false)
     private Student student;
     private String phone;
     private String email;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private StudentGroup studentGroup;
     @Column(nullable = false)
-    private Long credits;
+    private BigDecimal credits;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
     private Boolean isTeacherConfirmed;
@@ -54,7 +56,7 @@ public class ScholarshipApplication extends BaseEntityWithId {
     private Long familyMembersAdult;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier compensationReason;
-    private Long routeKm;
+    private BigDecimal routeKm;
     private String compensationAddInfo;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier compensationFrequency;
@@ -73,19 +75,19 @@ public class ScholarshipApplication extends BaseEntityWithId {
         this.scholarshipTerm = scholarshipTerm;
     }
 
-    public Long getAverageMark() {
+    public BigDecimal getAverageMark() {
         return averageMark;
     }
 
-    public void setAverageMark(Long averageMark) {
+    public void setAverageMark(BigDecimal averageMark) {
         this.averageMark = averageMark;
     }
 
-    public Long getCurriculumCompletion() {
+    public BigDecimal getCurriculumCompletion() {
         return curriculumCompletion;
     }
 
-    public void setCurriculumCompletion(Long curriculumCompletion) {
+    public void setCurriculumCompletion(BigDecimal curriculumCompletion) {
         this.curriculumCompletion = curriculumCompletion;
     }
 
@@ -113,11 +115,11 @@ public class ScholarshipApplication extends BaseEntityWithId {
         this.bankAccount = bankAccount;
     }
 
-    public Long getLastPeriodMark() {
+    public BigDecimal getLastPeriodMark() {
         return lastPeriodMark;
     }
 
-    public void setLastPeriodMark(Long lastPeriodMark) {
+    public void setLastPeriodMark(BigDecimal lastPeriodMark) {
         this.lastPeriodMark = lastPeriodMark;
     }
 
@@ -201,11 +203,11 @@ public class ScholarshipApplication extends BaseEntityWithId {
         this.studentGroup = studentGroup;
     }
 
-    public Long getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Long credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 
@@ -265,11 +267,11 @@ public class ScholarshipApplication extends BaseEntityWithId {
         this.compensationReason = compensationReason;
     }
 
-    public Long getRouteKm() {
+    public BigDecimal getRouteKm() {
         return routeKm;
     }
 
-    public void setRouteKm(Long routeKm) {
+    public void setRouteKm(BigDecimal routeKm) {
         this.routeKm = routeKm;
     }
 

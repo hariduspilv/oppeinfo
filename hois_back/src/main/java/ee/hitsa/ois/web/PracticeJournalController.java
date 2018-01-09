@@ -31,7 +31,7 @@ import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.service.ContractService;
 import ee.hitsa.ois.service.PracticeJournalService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -164,8 +164,7 @@ public class PracticeJournalController {
     private static void assertSupervisorView(PracticeJournal practiceJournal) {
         if (practiceJournal == null) {
             throw new ValidationFailedException("practiceJournal.messages.noPracticeJournalFound");
-        } else if (JournalStatus.PAEVIK_STAATUS_K.name()
-                .equals(EntityUtil.getNullableCode(practiceJournal.getStatus()))) {
+        } else if (ClassifierUtil.equals(JournalStatus.PAEVIK_STAATUS_K, practiceJournal.getStatus())) {
             throw new ValidationFailedException("practiceJournal.messages.acessNotAllowedJournalStatusIsConfirmed");
         } else if (LocalDate.now()
                 .isAfter(practiceJournal.getContract().getEndDate().plusDays(DAYS_TO_ACCESS_AFTER_CONTRACT_END_DATE))) {

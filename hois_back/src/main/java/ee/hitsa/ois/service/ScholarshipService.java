@@ -5,11 +5,18 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -35,6 +42,7 @@ import ee.hitsa.ois.domain.scholarship.ScholarshipTermStudyLoad;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.Priority;
 import ee.hitsa.ois.enums.ScholarshipStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -47,6 +55,7 @@ import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCo
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipStudentApplicationForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipTermForm;
+import ee.hitsa.ois.web.dto.ScholarshipTermApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipStudentDto;
@@ -165,7 +174,7 @@ public class ScholarshipService {
 
     public List<ScholarshipTermStudentDto> availableStipends(Long studentId) {
         Student student = em.getReference(Student.class, studentId);
-        //TODO add check for which stipendium terms the student can apply to
+        // TODO add check for which stipendium terms the student can apply to
         List<ScholarshipTerm> result = em.createQuery(
                 "SELECT st FROM ScholarshipTerm st JOIN st.scholarshipTermCurriculums stc WHERE stc.curriculum.id = (?1) and st.isOpen = true",
                 ScholarshipTerm.class).setParameter(1, EntityUtil.getId(student.getCurriculumVersion().getCurriculum()))
@@ -196,7 +205,7 @@ public class ScholarshipService {
         result.put("studentSubmitData", ScholarshipApplicationDto.of(application));
         return result;
     }
-    
+
     public Map<String, Object> getApplicationView(ScholarshipApplication application) {
         Map<String, Object> result = new HashMap<>();
         result.put("stipend", ScholarshipTermApplicationDto.of(application.getScholarshipTerm()));
@@ -218,7 +227,10 @@ public class ScholarshipService {
         application.setStatus(em.getReference(Classifier.class, ScholarshipStatus.STIPTOETUS_STAATUS_K.name()));
         application.setStudent(student);
         application.setStudentGroup(student.getStudentGroup());
-        application.setCredits(Long.valueOf(666));
+        //TODO: replace the default value with an error
+        application.setCredits(
+                student.getStudentCurriculumCompletion() != null ? student.getStudentCurriculumCompletion().getCredits()
+                        : BigDecimal.ONE);
         application.setCurriculumVersion(student.getCurriculumVersion());
         application = bindApplicationFormToApplication(application, form);
         return EntityUtil.save(application, em);
@@ -240,7 +252,7 @@ public class ScholarshipService {
         EntityUtil.bindToEntity(form, application, classifierRepository, "files", "family");
         if (form.getFiles() != null) {
             List<ScholarshipApplicationFile> files = application.getScholarshipApplicationFiles();
-            EntityUtil.bindEntityCollection(files, f -> EntityUtil.getId(f), form.getFiles(), f -> f.getId(), f -> {
+            EntityUtil.bindEntityCollection(files, EntityUtil::getId, form.getFiles(), f -> f.getId(), f -> {
                 ScholarshipApplicationFile file = new ScholarshipApplicationFile();
                 file.setScholarshipApplication(application);
                 file.setOisFile(EntityUtil.bindToEntity(f.getOisFile(), new OisFile()));
@@ -254,7 +266,7 @@ public class ScholarshipService {
         }
         if (form.getFamily() != null && !form.getFamily().isEmpty()) {
             List<ScholarshipApplicationFamily> families = application.getScholarshipApplicationFamilies();
-            EntityUtil.bindEntityCollection(families, f -> EntityUtil.getId(f), form.getFamily(), f -> f.getId(), f -> {
+            EntityUtil.bindEntityCollection(families, EntityUtil::getId, form.getFamily(), f -> f.getId(), f -> {
                 ScholarshipApplicationFamily fam = new ScholarshipApplicationFamily();
                 fam.setScholarshipApplication(application);
                 return EntityUtil.bindToEntity(f, fam);
@@ -270,10 +282,8 @@ public class ScholarshipService {
                 "SELECT sa FROM ScholarshipApplication sa WHERE sa.scholarshipTerm.id = (?1) AND sa.student.id = (?2)",
                 ScholarshipApplication.class).setParameter(1, EntityUtil.getId(term))
                 .setParameter(2, EntityUtil.getId(student)).setMaxResults(1).getResultList();
-        if (result.isEmpty()) {
-            return null;
-        }
-        return result.get(0);
+
+        return result.isEmpty() ? null : result.get(0);
     }
 
     public ScholarshipApplicationDto getStudentApplicationDto(ScholarshipApplication application) {
@@ -290,8 +300,24 @@ public class ScholarshipService {
         return application;
     }
 
-    public List<ScholarshipApplicationSearchDto> applications(ScholarshipApplicationSearchCommand command,
+    public List<ScholarshipTermApplicationSearchDto> applications(ScholarshipApplicationSearchCommand command,
             HoisUserDetails user) {
+        List<ScholarshipApplicationSearchDto> applications = applicationsForCommand(command, user);
+        
+        Map<Long, List<ScholarshipApplicationSearchDto>> applicationsByTerms = applications.stream()
+                .collect(Collectors.groupingBy(r -> r.getTerm()));
+        Map<Long, ScholarshipTerm> termsById = StreamUtil.toMap(r -> EntityUtil.getId(r),
+                getTerms(applicationsByTerms.keySet()));
+        sortScholarshipApplicationsByTerms(applicationsByTerms, termsById);
+        
+        List<ScholarshipTermApplicationSearchDto> result = new ArrayList<>();
+        for(Map.Entry<Long, List<ScholarshipApplicationSearchDto>> entry : applicationsByTerms.entrySet()) {
+            result.add(new ScholarshipTermApplicationSearchDto(entry.getKey(), entry.getValue()));
+        }
+        return result;
+    }
+
+    private List<ScholarshipApplicationSearchDto> applicationsForCommand(ScholarshipApplicationSearchCommand command, HoisUserDetails user) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from scholarship_application sa" + " inner join scholarship_term st on st.id = sa.scholarship_term_id"
                         + " left join scholarship_term_course stc on stc.scholarship_term_id = st.id"
@@ -313,13 +339,20 @@ public class ScholarshipService {
         qb.requiredCriteria("sa.status_code != :compositionStatus", "compositionStatus",
                 ScholarshipStatus.STIPTOETUS_STAATUS_K.name());
 
-        String select = "distinct sa.id as application_id, st.type_code, st.name_et, c.code, s.id as student_id, p.firstname, p.lastname, p.idcode, sa.average_mark"
-                + ", sa.last_period_mark , sa.curriculum_completion, st.is_teacher_confirm, sa.status_code"
-                + ", sa.compensation_reason_code, sa.compensation_frequency_code, sa.credits";
+        String select = "distinct sa.id as application_id, st.type_code, st.id as term_id, st.name_et, c.code, s.id as student_id"
+                + ", p.firstname, p.lastname, p.idcode, sa.average_mark, sa.last_period_mark , sa.curriculum_completion"
+                + ", st.is_teacher_confirm, sa.status_code, sa.compensation_reason_code, sa.compensation_frequency_code, sa.credits";
         List<?> data = qb.select(select, em).getResultList();
-
-        // TODO: add creating the order of applications
         return StreamUtil.toMappedList(r -> new ScholarshipApplicationSearchDto(r), data);
+    }
+
+    private static void sortScholarshipApplicationsByTerms(Map<Long, List<ScholarshipApplicationSearchDto>> applicationsByTerms,
+            Map<Long, ScholarshipTerm> termsById) {
+        for (Map.Entry<Long, ScholarshipTerm> entry : termsById.entrySet()) {
+            ScholarshipTerm term = entry.getValue();
+            List<ScholarshipApplicationSearchDto> applications = applicationsByTerms.get(EntityUtil.getId(term));
+            Collections.sort(applications, comparatorForTerm(term));
+        }
     }
 
     public HttpStatus acceptApplications(ScholarshipApplicationListSubmitForm form) {
@@ -340,6 +373,11 @@ public class ScholarshipService {
         return em.createQuery("SELECT sa FROM ScholarshipApplication sa WHERE sa.id in (?1)",
                 ScholarshipApplication.class).setParameter(1, applications).getResultList();
     }
+    
+    private List<ScholarshipTerm> getTerms(Set<Long> terms) {
+        return em.createQuery("SELECT st FROM ScholarshipTerm st WHERE st.id in (?1)",
+                ScholarshipTerm.class).setParameter(1, terms).getResultList();
+    }
 
     private void updateApplicationStatuses(List<ScholarshipApplication> entities, Classifier status) {
         for (ScholarshipApplication application : entities) {
@@ -347,6 +385,33 @@ public class ScholarshipService {
             application.setDecisionDate(LocalDate.now());
             EntityUtil.save(application, em);
         }
+    }
+    
+    private static Comparator<ScholarshipApplicationSearchDto> comparatorForTerm(ScholarshipTerm term) {
+        Map<String, Function<ScholarshipApplicationSearchDto, BigDecimal>> priorityMapForTerm = new HashMap<>();
+
+        if (term.getAverageMarkPriority() != null) {
+            priorityMapForTerm.put(EntityUtil.getCode(term.getAverageMarkPriority()),
+                    ScholarshipApplicationSearchDto::getAverageMark);
+        }
+        if (term.getCurriculumCompletionPriority() != null) {
+            priorityMapForTerm.put(EntityUtil.getCode(term.getCurriculumCompletionPriority()),
+                    ScholarshipApplicationSearchDto::getCurriculumCompletion);
+        }
+        if (term.getLastPeriodMarkPriority() != null) {
+            priorityMapForTerm.put(EntityUtil.getCode(term.getLastPeriodMarkPriority()),
+                    ScholarshipApplicationSearchDto::getLastPeriodMark);
+        }
+
+        Comparator<ScholarshipApplicationSearchDto> comparator = Comparator
+                .comparing(priorityMapForTerm.get(Priority.PRIORITEET_1.name()), Comparator.reverseOrder());
+        if (priorityMapForTerm.get(Priority.PRIORITEET_2.name()) != null) {
+            comparator.thenComparing(priorityMapForTerm.get(Priority.PRIORITEET_2.name()), Comparator.reverseOrder());
+        }
+        if (priorityMapForTerm.get(Priority.PRIORITEET_3.name()) != null) {
+            comparator.thenComparing(priorityMapForTerm.get(Priority.PRIORITEET_3.name()), Comparator.reverseOrder());
+        }
+        return comparator;
     }
 
 }

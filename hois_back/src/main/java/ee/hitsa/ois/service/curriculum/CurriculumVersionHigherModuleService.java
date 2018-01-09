@@ -99,7 +99,7 @@ public class CurriculumVersionHigherModuleService {
                     EntityUtil.find(dto.getId(), module.getSubjects()).get();
 
                 EntityUtil.bindToEntity(dto, subject, "nameEt", "nameEt", "credits", "school", "subjectId", "electiveModule");
-                subject.setSubject(subjectRepository.getOne(dto.getSubjectId()));
+                subject.setSubject(em.getReference(Subject.class, dto.getSubjectId()));
                 subject.setModule(module);
                 
                 CurriculumVersionElectiveModule electiveModule = null;

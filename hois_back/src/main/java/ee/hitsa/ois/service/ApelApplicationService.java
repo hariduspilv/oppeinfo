@@ -5,7 +5,12 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -28,13 +33,16 @@ import ee.hitsa.ois.domain.apelapplication.ApelApplicationInformalSubjectOrModul
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationRecord;
 import ee.hitsa.ois.domain.apelapplication.ApelSchool;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
+import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApelApplicationUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -42,6 +50,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
 import ee.hitsa.ois.web.commandobject.apelapplication.ApelApplicationCommentForm;
@@ -56,6 +65,7 @@ import ee.hitsa.ois.web.commandobject.apelapplication.ApelApplicationSearchComma
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationSearchDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
 
 @Transactional
 @Service
@@ -63,9 +73,10 @@ public class ApelApplicationService {
 
     @Autowired
     private EntityManager em;
-    
     @Autowired
     private ApelSchoolService apelSchoolService;
+    @Autowired
+    private CurriculumVersionRepository curriculumVersionRepository;
 
     private static final String RPM_FROM = "from apel_application aa"
             + " inner join student s on aa.student_id = s.id"
@@ -471,43 +482,108 @@ public class ApelApplicationService {
         return EntityUtil.save(application, em);
     }
     
-    private static void checkThatModulesOrSubjectsAreTransferredOnlyOnce(ApelApplication application) {
-        HashSet<Long> transferredModuleOrSubjectIds = new HashSet<>();
-        HashSet<Long> transferredModulThemeIds = new HashSet<>();
+    private void checkThatSubjectsAreNotAlreadyTransferred(Long studentId, List<Long> transferredIds) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_higher_result shr");
+        qb.requiredCriteria("shr.student_id = :studentId", "studentId", studentId);
+        List<?> data = qb.select("shr.subject_id", em).getResultList();
+        List<Long> previouslyTransferredIds = StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
+        
+        if (listsHaveCommonIds(transferredIds, previouslyTransferredIds)) {
+            throw new ValidationFailedException("apel.error.subjectHasBeenPreviouslyTransferred");
+        }
+    }
+    
+    private void checkThatModulesAreNotAlreadyTransferred(Long studentId, List<Long> transferredIds) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_vocational_result svr");
+        qb.requiredCriteria("svr.student_id = :studentId", "studentId", studentId);
+        List<?> data = qb.select("svr.curriculum_version_omodule_id", em).getResultList();
+        List<Long> previouslyTransferredIds = StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
+        
+        if (listsHaveCommonIds(transferredIds, previouslyTransferredIds)) {
+            throw new ValidationFailedException("apel.error.moduleHasBeenPreviouslyTransferred");
+        }
+    }
+    
+    private static boolean listsHaveCommonIds(List<Long> transferredIds, List<Long> previouslyTransferredIds) {
+        for (Long transferredId : transferredIds) {
+            for (Long alreadyTransferredId : previouslyTransferredIds) {
+                if (transferredId.equals(alreadyTransferredId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    private void checkThatModulesOrSubjectsAreTransferredOnlyOnce(ApelApplication application) {
+        HashSet<Long> transferredSubjectIds = new HashSet<>();
+        HashSet<Map<Long, Long>> transferredModuleAndThemeIdsMaps = new HashSet<>();
         application.getRecords().forEach(record -> {
             record.getInformalSubjectsOrModules().forEach(informalSubjectOrModule -> {
                 if (Boolean.TRUE.equals(application.getIsVocational())) {
-                    addTransferredModuleId(informalSubjectOrModule, transferredModuleOrSubjectIds, transferredModulThemeIds);
+                    addTransferredModuleAndThemeIdsMap(informalSubjectOrModule, transferredModuleAndThemeIdsMaps);
                 } else {
-                    addTransferredSubjectId(informalSubjectOrModule, transferredModuleOrSubjectIds);
+                    addTransferredSubjectId(informalSubjectOrModule, transferredSubjectIds);
                 }
             });
             record.getFormalSubjectsOrModules().forEach(formalSubjectOrModule -> {
                 if (Boolean.TRUE.equals(application.getIsVocational())) {
-                    addTransferredModuleId(formalSubjectOrModule, transferredModuleOrSubjectIds);
+                    addTransferredModuleAndThemeIdsMap(formalSubjectOrModule, transferredModuleAndThemeIdsMaps);
                 } else {
-                    addTransferredSubjectId(formalSubjectOrModule, transferredModuleOrSubjectIds);
+                    addTransferredSubjectId(formalSubjectOrModule, transferredSubjectIds);
                 }
             });
         });
+        if (transferredSubjectIds.size() > 0) {
+            checkThatSubjectsAreNotAlreadyTransferred(application.getStudent().getId(), new ArrayList<>(transferredSubjectIds));
+        } else if (transferredModuleAndThemeIdsMaps.size() > 0) {
+            List<Long> transferredModuleIds = transferredModuleAndThemeIdsMaps.stream().map(m -> m.keySet().toArray(new Long[0])[0]).collect(Collectors.toList());
+            checkThatModulesAreNotAlreadyTransferred(application.getStudent().getId(), transferredModuleIds);
+        }
+    }
+
+    private static void addTransferredModuleAndThemeIdsMap(ApelApplicationInformalSubjectOrModule informalModule,
+            HashSet<Map<Long, Long>> transferredModuleAndThemeIdsMaps) {
+        if (Boolean.TRUE.equals(informalModule.getTransfer())) {
+            if (Boolean.TRUE.equals(informalModule.getTransfer()) && informalModule.getCurriculumVersionOmodule() != null
+                    && informalModule.getCurriculumVersionOmoduleTheme() == null) {
+                addTransferredModuleMap(transferredModuleAndThemeIdsMaps, informalModule.getCurriculumVersionOmodule().getId(), null);
+            } else if (Boolean.TRUE.equals(informalModule.getTransfer()) && informalModule.getCurriculumVersionOmodule() != null
+                    && informalModule.getCurriculumVersionOmoduleTheme() != null) {
+                addTransferredModuleMap(transferredModuleAndThemeIdsMaps, informalModule.getCurriculumVersionOmodule().getId(),
+                        informalModule.getCurriculumVersionOmoduleTheme().getId());
+            }
+        }
     }
     
-    private static void addTransferredModuleId(ApelApplicationInformalSubjectOrModule informalModule, HashSet<Long> transferredModuleIds, HashSet<Long> transferredModuleThemeIds) {
-        if (Boolean.TRUE.equals(informalModule.getTransfer())) {
-            if (informalModule.getCurriculumVersionOmoduleTheme() == null && transferredModuleIds
-                .add(informalModule.getCurriculumVersionOmodule().getId()) == false) {
-                throw new ValidationFailedException("apel.error.moduleTransferredMoreThanOnce");
-            } else if (informalModule.getCurriculumVersionOmoduleTheme() != null && 
-                    transferredModuleThemeIds.add(informalModule.getCurriculumVersionOmoduleTheme().getId()) == false){
+    private static void addTransferredModuleMap(HashSet<Map<Long, Long>> transferredModuleIds, Long moduleId, Long themeId) {
+        Map<Long, Long> fullModule = new HashMap<>();
+        Map<Long, Long> transfer = new HashMap<>();
+        fullModule.put(moduleId, null);
+        transfer.put(moduleId, themeId);
+        
+        if (themeId == null && (isModuleOrThemeFromModuleAlreadyTransferred(moduleId, transferredModuleIds) ||transferredModuleIds.add(transfer) == false)) {
+            throw new ValidationFailedException("apel.error.moduleTransferredMoreThanOnce");
+        } else if (themeId != null && (transferredModuleIds.contains(fullModule) || transferredModuleIds.add(transfer) == false)) {
+            throw new ValidationFailedException("apel.error.moduleTransferredMoreThanOnce");
+        }
+    }
+
+    private static void addTransferredModuleAndThemeIdsMap(ApelApplicationFormalSubjectOrModule formalModule, HashSet<Map<Long, Long>> transferredModuleAndThemeIdsMaps) {
+        if (formalModule.getCurriculumVersionOmodule() != null) {
+            Map<Long, Long> transfer = new HashMap<>();
+            Long moduleId = formalModule.getCurriculumVersionOmodule().getId();
+            transfer.put(moduleId, null);
+            
+            if (Boolean.TRUE.equals(formalModule.getTransfer()) && (isModuleOrThemeFromModuleAlreadyTransferred(moduleId, transferredModuleAndThemeIdsMaps)
+                    || transferredModuleAndThemeIdsMaps.add(transfer) == false)) {
                 throw new ValidationFailedException("apel.error.moduleTransferredMoreThanOnce");
             }
         }
     }
     
-    private static void addTransferredModuleId(ApelApplicationFormalSubjectOrModule formalModule, HashSet<Long> transferredModuleIds) {
-        if (Boolean.TRUE.equals(formalModule.getTransfer()) && transferredModuleIds.add(formalModule.getCurriculumVersionOmodule().getId()) == false) {
-            throw new ValidationFailedException("apel.error.moduleTransferredMoreThanOnce");
-        }
+    private static boolean isModuleOrThemeFromModuleAlreadyTransferred(Long moduleId, HashSet<Map<Long, Long>> transferredModuleAndThemeIdsMaps) {
+        return transferredModuleAndThemeIdsMaps.stream().anyMatch(e -> e.containsKey(moduleId));
     }
     
     private static void addTransferredSubjectId(ApelApplicationInformalSubjectOrModule informalSubject, HashSet<Long> transferredSubjectIds) {
@@ -555,6 +631,23 @@ public class ApelApplicationService {
         application.setConfirmedBy(null);
         application.setConfirmed(null);
         return EntityUtil.save(application, em);
+    }
+    
+    public CurriculumVersionHigherModuleDto subjectModule(Subject subject) {
+        List<CurriculumVersion> versions = curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId());
+        List<CurriculumVersionHigherModule> modules = new ArrayList<>(); 
+        
+        versions.forEach(v -> v.getModules().forEach(m -> modules.add(m)));
+        
+        for (int i = 0; i < modules.size(); i++) {
+            List<CurriculumVersionHigherModuleSubject> subjects = modules.get(i).getSubjects().stream().collect(Collectors.toList());
+            for (int j = 0; j < subjects.size(); j++) {
+                if (subjects.get(j).getSubject().getId().equals(subject.getId())) {
+                    return CurriculumVersionHigherModuleDto.of(modules.get(i));
+                }
+            }
+        }
+        return null;
     }
     
 }

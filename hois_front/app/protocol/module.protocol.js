@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolController', function ($scope, $route, Classifier, $q, ArrayUtils, QueryUtils, message, $location, dialogService, $window, oisFileService, config) {
+angular.module('hitsaOis').controller('ModuleProtocolController', function ($scope, $route, Classifier, $q, ArrayUtils, QueryUtils, message, $location, dialogService, $mdDialog, $window, oisFileService, config, $timeout) {
   var endpoint = '/moduleProtocols/';
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', status: 'PROTOKOLL_STAATUS' });
@@ -69,7 +69,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
   }
 
   function canConfirm() {
-    return allProtocolStudentsGraded() && ($scope.auth.loginMethod === 'ID_CARD' || $scope.auth.loginMethod === 'MOBILE_ID');
+    return allProtocolStudentsGraded() && ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M');
   }
 
   function entityToDto(entity) {
@@ -95,9 +95,10 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     loadGradesSelect();
   }
 
-
   $scope.deleteProtocolStudent = function (protocolStudent) {
-    ArrayUtils.remove($scope.protocol.protocolStudents, protocolStudent);
+    dialogService.confirmDialog({prompt: 'moduleProtocol.prompt.deleteStudent'}, function() {
+      ArrayUtils.remove($scope.protocol.protocolStudents, protocolStudent);
+    });
   };
 
   $scope.addProtocolStudents = function () {
@@ -162,6 +163,53 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     });
   }
 
+  function mobileSignBeforeConfirm() {
+    QueryUtils.endpoint('/moduleProtocols/' + $scope.protocol.id + '/mobileSignToConfirm').save({
+      version: $scope.protocol.version,
+      protocolStudents: $scope.protocol.protocolStudents
+    }, function (result) {
+      if (result.challengeID) {
+        $scope.signVersion = result.version;
+        $mdDialog.show({
+          controller: function ($scope) {
+            $scope.challengeID = result.challengeID;
+          },
+          templateUrl: 'protocol/module.protocol.mobileSign.dialog.html',
+          parent: angular.element(document.body),
+          clickOutsideToClose: false
+        });
+        $scope.mobileIdPolls = 0;
+        $timeout(pollMobileSignStatus, config.mobileIdInitialDelay);
+      } else {
+        message.error('main.messages.error.mobileIdSignFailed');
+      }
+    });
+  }
+
+  function pollMobileSignStatus() {
+    QueryUtils.endpoint('/moduleProtocols/' + $scope.protocol.id + '/mobileSignStatus').get(
+      function (response) {
+        if (response.status === 'SIGNATURE') {
+          $mdDialog.hide();
+          QueryUtils.endpoint('/moduleProtocols/' + $scope.protocol.id + '/mobileSignFinalize').save({
+            version: $scope.signVersion
+          }, function (result) {
+            message.info('moduleProtocol.messages.confirmed');
+            entityToDto(result);
+          });
+        } else if (response.status === 'OUTSTANDING_TRANSACTION') {
+          $scope.mobileIdPolls++;
+          if ($scope.mobileIdPolls < config.mobileIdMaxPolls) {
+            $timeout(pollMobileSignStatus, config.mobileIdPollInterval);
+          }
+        } else {
+          console.log('mobileSignStatus: '+response.status);
+          $mdDialog.hide();
+          message.error('main.messages.error.mobileIdSignFailed');
+        }
+      });
+  }
+  
   $scope.confirm = function () {
     if ($scope.auth.isAdmin()) {
       QueryUtils.endpoint(endpoint + $scope.protocol.id + '/confirm').save({
@@ -172,7 +220,11 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
         entityToDto(result);
       });
     } else {
-      signBeforeConfirm();
+      if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
+        signBeforeConfirm();
+      } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
+        mobileSignBeforeConfirm();
+      }
     }
   };
 

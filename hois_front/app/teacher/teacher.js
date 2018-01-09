@@ -359,7 +359,8 @@
           }
         });
       };
-  }]).controller('TeacherListController', ['$scope', '$route', 'QueryUtils', 'ArrayUtils', function ($scope, $route, QueryUtils, ArrayUtils) {
+  }]).controller('TeacherListController', ['$scope', '$route', 'QueryUtils', 'ArrayUtils', 'USER_ROLES',
+  function ($scope, $route, QueryUtils, ArrayUtils, USER_ROLES) {
     QueryUtils.createQueryForm($scope, '/teachers', {order: 'person.lastname,person.firstname'});
 
     $scope.auth = $route.current.locals.auth;
@@ -369,6 +370,15 @@
     if(!$scope.auth.isExternalExpert()) {
       $scope.teacherOccupations = QueryUtils.endpoint('/teachers/teacheroccupations').query();
     }
+
+    function canCreate() {
+      return $scope.auth.isAdmin() && ArrayUtils.includes($scope.auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA);
+    }
+
+    $scope.formState = {
+      canCreate: canCreate()
+    };
+
 
     function setContains(set, item) {
       var ids = set.map(function(el){
@@ -436,27 +446,23 @@
 
     $scope.teacher = Endpoint.get({id: id}, afterLoad);
 
+    QueryUtils.createQueryForm($scope, '/teachers/' + id + '/absences');
+    $scope.criteria.order = '-startDate';
+    $scope.afterLoadData = function (resultData) {
+      $scope.tabledata.content = resultData.content;
+      $scope.tabledata.totalElements = resultData.totalElements;
+    };
+
     $scope.changeIsShowingRtipTab = function () {
       $scope.isShowingRtipTab = !$scope.isShowingRtipTab;
       if ($scope.isShowingRtipTab) {
-        loadAbsences();
+        $scope.loadData();
       }
     };
 
     $scope.updateData = function () {
       QueryUtils.endpoint('/teachers/' + id + '/rtip').save();
-      loadAbsences();
-    };
-
-    function loadAbsences() {
-      QueryUtils.createQueryForm($scope, '/teachers/' + id + '/absences', { order: 'startDate, endDate'});
-
-      $scope.afterLoadData = function (resultData) {
-        $scope.tabledata.content = resultData.content;
-        $scope.tabledata.totalElements = resultData.totalElements;
-      };
-
       $scope.loadData();
-    }
+    };
   }]);
 }());

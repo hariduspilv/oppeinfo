@@ -72,26 +72,6 @@ public class MessageService {
             + "left join school s on s.id = u.school_id ";
     private static final String PERSON_SELECT =
             " distinct u.id, p.id as personId, p.firstname, p.lastname, p.idcode, u.role_code, u.student_id ";
-    private static final String STUDENT_PERSON_TEACHER_FROM =
-            " from student s "
-            + "left join person p1 on s.person_id = p1.id "
-            + "left join student_group sg on sg.id = s.student_group_id "
-            + "left join student_representative sr on sr.student_id = s.id "
-            + "left join teacher t on t.id = sg.teacher_id "
-            + "left join person p2 on p2.id = sr.person_id "
-            + "left join person p3 on p3.id = t.person_id "
-            + "left join curriculum c on sg.curriculum_id = c.id";
-    private static final String SELECT_TEACHERS = "distinct p3.id as teacherPersonId, p3.firstname as teacherFirstname, "
-                + "p3.lastname as teacherLastname, p3.idcode as teacherIdcode";
-    private static final String SELECT_STUDENTS = "distinct p1.id as studentPersonId, s.id as studentId, "
-                + "p1.firstname as studFirstname, p1.lastname as studLastname, p1.idcode as studIdcode, "
-                + "sg.id as sgId, sg.code as sgCode, "
-                + "c.id as curriculumId, c.name_et as curriculumNameEt, c.name_en as curriculumNameEn ";
-    private static final String SELECT_PARENTS = "distinct p2.id as repPersonId, p2.firstname as repFirstname, "
-                + "p2.lastname as repLastname, p2.idcode as repIdcode,"
-                + "sg.id as sgId, sg.code as sgCode, "
-                + "c.id as curriculumId, c.name_et as curriculumNameEt, c.name_en as curriculumNameEn, "
-                + "s.id as studentId";
 
     @Autowired
     private ClassifierRepository classifierRepository;
@@ -280,75 +260,104 @@ public class MessageService {
         }, result);
     }
 
+    /**
+     * Finds following teachers:
+     *  - student group teacher
+     *  - higher student: teacher, whose subject was declared
+     *  - vocational student: lesson plan teacher
+     *  
+     *  note, that student_representative.is_student_visible is considered
+     */
     private List<MessageReceiverDto> searchParentsTeachers(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
-        qb.optionalContains(Arrays.asList("p3.firstname", "p3.lastname", "p3.firstname || ' ' || p3.lastname"), "name", criteria.getName());
-        qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
-
-        qb.requiredCriteria("t.id in (select sg.teacher_id "
-                + "from student_group sg "
-                + "join student s on s.student_group_id = sg.id "
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(" from teacher t join person p on p.id = t.person_id ");
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
+        qb.requiredCriteria("t.school_id = :schoolId", "schoolId", user.getSchoolId());
+        
+        qb.requiredCriteria(" (exists(select s.id from student s "
+                + "join student_group sg on sg.id = s.student_group_id "
                 + "join student_representative sr on sr.student_id = s.id "
-                + "where sr.person_id = :parentsPersonId "
-                + "union all "
-                + "select sspt.teacher_id "
+                + "where sg.teacher_id = t.id "
+                + "and sr.is_student_visible "
+                + "and sr.person_id = :personId) "
+                + "or exists(select d.id "
                 + "from declaration d "
                 + "join declaration_subject ds on ds.declaration_id = d.id "
                 + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id "
                 + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
                 + "join student_representative sr on sr.student_id = d.student_id "
-                + "where sr.person_id = :parentsPersonId)", "parentsPersonId", user.getPersonId());
+                + "where sspt.teacher_id = t.id and sr.is_student_visible and sr.person_id = :personId) "
+                + "or exists(select s.id from student s "
+                + "join student_group sg on sg.id = s.student_group_id "
+                + "join lesson_plan lp on lp.student_group_id = sg.id "
+                + "join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id "
+                + "join student_representative sr on sr.student_id = s.id "
+                + "where lpm.teacher_id = t.id and sr.is_student_visible and sr.person_id = :personId) )", "personId", user.getPersonId());
 
-        List<?> result = qb.select(SELECT_TEACHERS, em).getResultList();
+        List<?> result = qb.select(" distinct p.id, p.firstname, p.lastname ", em).getResultList();
         return mapUserSearchDtoPage(result, Role.ROLL_O);
     }
 
+    /**
+     * Finds following teachers:
+     *  - student group teacher
+     *  - higher student: teacher, whose subject was declared
+     *  - vocational student: lesson plan teacher
+     */
     private List<MessageReceiverDto> searchStudentsTeachers(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
-        qb.optionalContains(Arrays.asList("p3.firstname", "p3.lastname", "p3.firstname || ' ' || p3.lastname"), "name", criteria.getName());
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(" from teacher t join person p on p.id = t.person_id ");
+        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
 
-        qb.requiredCriteria("t.id in (select sg.teacher_id from student_group sg "
-                + "join student s on s.student_group_id = sg.id where s.id = :studentId "
-                + "union all "
-                + "select sspt.teacher_id "
+        qb.requiredCriteria(" (exists(select s.id from student s "
+                + "join student_group sg on sg.id = s.student_group_id "
+                + "where sg.teacher_id = t.id "
+                + "and s.id = :studentId) "
+                + "or exists(select d.id "
                 + "from declaration d "
                 + "join declaration_subject ds on ds.declaration_id = d.id "
                 + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id "
                 + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
-                + "where d.student_id = :studentId) ", "studentId", user.getStudentId());
+                + "where d.student_id = :studentId and sspt.teacher_id = t.id) "
+                + " or exists(select s.id from student s "
+                + "join student_group sg on sg.id = s.student_group_id "
+                + "join lesson_plan lp on lp.student_group_id = sg.id "
+                + "join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id "
+                + "where lpm.teacher_id = t.id and s.id = :studentId) )", "studentId", user.getStudentId());
 
-        qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
-        qb.filter(" p3.id is not null");
+        qb.requiredCriteria("t.school_id = :schoolId", "schoolId", user.getSchoolId());
 
-        List<?> result = qb.select(SELECT_TEACHERS, em).getResultList();
+        List<?> result = qb.select(" distinct p.id, p.firstname, p.lastname ", em).getResultList();
         return mapUserSearchDtoPage(result, Role.ROLL_O);
     }
 
     private List<MessageReceiverDto> searchTeachersStudents(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
-        qb.optionalContains(Arrays.asList("p1.firstname", "p1.lastname", "p1.firstname || ' ' || p1.lastname"), "name", criteria.getName());
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(" from student s "
+                + "left join person p on s.person_id = p.id left join student_group sg on sg.id = s.student_group_id "
+                + "left join curriculum c on sg.curriculum_id = c.id ");
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
 
-        qb.requiredCriteria("s.id in ("
-                + " select s2.id "
-                + "from student s2 "
-                + "join student_group sg on sg.id = s2.student_group_id "
-                + "where sg.teacher_id = :teacherId "
-                + "union all "
-                + "select d.student_id "
-                + "from declaration d "
-                + "join declaration_subject ds on d.id = ds.declaration_id "
-                + "join subject_study_period ssp on ds.subject_study_period_id = ssp.id "
+        qb.requiredCriteria(" (sg.teacher_id = :teacherId "
+                
+                + "or exists( select d.id from declaration d "
+                + "join declaration_subject ds on ds.declaration_id = d.id "
+                + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id "
                 + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
-                + "where sspt.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
+                + "where sspt.teacher_id = :teacherId and d.student_id = s.id) "
+                
+                + "or exists( select lp.id from lesson_plan lp "
+                + "join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id "
+                + "where lpm.teacher_id = :teacherId "
+                + "and lp.student_group_id = sg.id ) )", "teacherId", user.getTeacherId());
 
-        List<?> result = qb.select(SELECT_STUDENTS, em).getResultList();
+        List<?> result = qb.select(" distinct p.id as studentPersonId, s.id as studentId, "
+                + "p.firstname, p.lastname, p.idcode, "
+                + "sg.id as sgId, sg.code as sgCode, "
+                + "c.id as curriculumId, c.name_et, c.name_en ", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             MessageReceiverDto dto = new MessageReceiverDto();
             dto.setPersonId(resultAsLong(r, 0));
             dto.setId(resultAsLong(r, 1));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)));
-//            dto.setIdcode(resultAsString(r, 4));
             dto.setRole(Arrays.asList(Role.ROLL_T.name()));
             AutocompleteResult studentGroup = new AutocompleteResult(resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 6));
             dto.setStudentGroup(studentGroup);
@@ -359,32 +368,37 @@ public class MessageService {
     }
 
     private List<MessageReceiverDto> searchTeachersParents(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
-        qb.optionalContains(Arrays.asList("p2.firstname", "p2.lastname", "p2.firstname || ' ' || p2.lastname"), "name", criteria.getName());
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(" from student_representative sr "
+                + "join person p on sr.person_id = p.id "
+                + "join student s on s.id = sr.student_id "
+                + "left join student_group sg on sg.id = s.student_group_id "
+                + "left join curriculum c on sg.curriculum_id = c.id ");
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
         
-//        qb.requiredCriteria("p3.id = :teachersPersonId", "teachersPersonId", user.getPersonId());
-
-        qb.requiredCriteria("s.id in ("
-                + " select s2.id "
-                + "from student s2 "
-                + "join student_group sg on sg.id = s2.student_group_id "
-                + "where sg.teacher_id = :teacherId "
-                + "union all "
-                + "select d.student_id "
-                + "from declaration d "
-                + "join declaration_subject ds on d.id = ds.declaration_id "
-                + "join subject_study_period ssp on ds.subject_study_period_id = ssp.id "
+        qb.requiredCriteria(" (sg.teacher_id = :teacherId "
+                
+                + "or exists( select d.id from declaration d "
+                + "join declaration_subject ds on ds.declaration_id = d.id "
+                + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id "
                 + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
-                + "where sspt.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
+                + "where sspt.teacher_id = :teacherId and d.student_id = s.id) "
+                
+                + "or exists( select lp.id from lesson_plan lp "
+                + "join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id "
+                + "where lpm.teacher_id = :teacherId "
+                + "and lp.student_group_id = sg.id ) )", "teacherId", user.getTeacherId());
         
-        List<?> result = qb.select(SELECT_PARENTS, em).getResultList();
+        List<?> result = qb.select("distinct p.id as repPersonId, p.firstname, "
+                + "p.lastname, p.idcode,"
+                + "sg.id as sgId, sg.code, "
+                + "c.id as curriculumId, c.name_et, c.name_en, "
+                + "s.id as studentId", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             MessageReceiverDto dto = new MessageReceiverDto();
             dto.setPersonId(resultAsLong(r, 0));
             dto.setId(resultAsLong(r, 9));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
-//            dto.setIdcode(resultAsString(r, 3));
             dto.setRole(Arrays.asList(Role.ROLL_L.name()));
             AutocompleteResult studentGroup = new AutocompleteResult(resultAsLong(r, 4), resultAsString(r, 5), resultAsString(r, 5));
             dto.setStudentGroup(studentGroup);
@@ -399,7 +413,6 @@ public class MessageService {
             MessageReceiverDto dto = new MessageReceiverDto();
             dto.setPersonId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
-//            dto.setIdcode(resultAsString(r, 3));
             dto.setRole(Arrays.asList(role.name()));
             return dto;
         }, result);

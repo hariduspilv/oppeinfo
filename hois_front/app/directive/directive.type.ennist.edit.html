@@ -21,7 +21,10 @@
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{currentLanguageNameField(row.oldCurriculumVersion)}}</td>
         <td md-cell>
-          <hois-select ng-model="row.studentGroup" values="formState.studentGroupMap[row.oldCurriculumVersion.id]" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+          <hois-select ng-model="row.studentGroup" name="students[{{$index}}].studentGroup" values="formState.studentGroupMap[row.oldCurriculumVersion.id]" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].studentGroup'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell ng-if="formState.school.higher">
           <hois-classifier-value ng-model="row.oldStudyLoad" criteria="{higher: true}" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>
@@ -30,7 +33,10 @@
           <hois-classifier-value ng-model="row.oldStudyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
         </td>
         <td md-cell>
-          <md-datepicker ng-model="row.nominalStudyEnd"></md-datepicker>
+          <md-datepicker ng-model="row.nominalStudyEnd" name="students[{{$index}}].nominalStudyEnd"></md-datepicker>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].nominalStudyEnd'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.oldFin" main-classifier-code="FINALLIKAS"></hois-classifier-value>

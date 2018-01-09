@@ -41,7 +41,6 @@ import org.opensaml.xmlsec.signature.SignableXMLObject;
 import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.Signer;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -173,7 +172,7 @@ public class SAMLBuilder {
                 return Optional.of(textContent);
             }
             List<XMLObject> unknownXMLObjects = xsAny.getUnknownXMLObjects();
-            if (!CollectionUtils.isEmpty(unknownXMLObjects)) {
+            if (!unknownXMLObjects.isEmpty()) {
                 XMLObject xmlObject = unknownXMLObjects.get(0);
                 if (xmlObject instanceof NameID) {
                     NameID nameID = (NameID) xmlObject;

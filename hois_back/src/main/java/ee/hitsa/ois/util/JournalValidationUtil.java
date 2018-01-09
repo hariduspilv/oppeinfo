@@ -1,10 +1,14 @@
 package ee.hitsa.ois.util;
 
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
-public abstract class JournalValidationUtil extends JournalUtil {
+public final class JournalValidationUtil extends JournalUtil {
+    
+    private JournalValidationUtil(){
+    }
     
     public static void assertCanView(HoisUserDetails user) {
         if(!hasPermissionToView(user)) {
@@ -49,6 +53,12 @@ public abstract class JournalValidationUtil extends JournalUtil {
     public static void assertCanAddStudent(HoisUserDetails user, Journal journal) {
         if (!hasPermissionToChange(user, journal)) {
             throw new ValidationFailedException("journal.messages.addingStudentIsNotAllowed");
+        }
+    }
+
+    public static void assertCanConfirmAll(HoisUserDetails user, StudyYear studyYear) {
+        if(!canConfirmAll(user, studyYear)) {
+            throw new ValidationFailedException("journal.messages.confirmAllNotAllowed");
         }
     }
 

@@ -123,7 +123,7 @@ public class SubjectStudyPeriodStudentGroupSearchService {
         qb.requiredCriteria("sg.student_group_id = :studentGroup", "studentGroup", studentGroup);
         qb.filter(" t.start_date <= current_date ");
         qb.filter(" t.end_date >= current_date ");
-        List<?> result = qb.select(TIMETABLE_SELECT, em).getResultList();
+        List<?> result = qb.select(TIMETABLE_SELECT, em).setMaxResults(1).getResultList();
         if(result.isEmpty()) {
             return null;
         }

@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class SubjectStudyPeriodForm  extends VersionedCommand {
     @Valid
@@ -24,7 +24,7 @@ public class SubjectStudyPeriodForm  extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.DEKLARATSIOON)
     private String declarationType;
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.PAEVIK_GRUPI_JAOTUS)
     private String groupProportion;
 

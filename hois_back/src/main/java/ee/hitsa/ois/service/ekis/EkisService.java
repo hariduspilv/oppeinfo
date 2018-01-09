@@ -95,9 +95,12 @@ public class EkisService {
         } else {
             person = certificate.getStudent().getPerson();
         }
-        request.setStudent(person.getFullname());
-        request.setEmail(person.getEmail());
-
+        if(person != null) {
+            request.setStudent(person.getFullname());
+            request.setEmail(person.getEmail());
+        } else {
+            request.setStudent(certificate.getOtherName());
+        }
         request.setSubject(certificate.getHeadline());
         request.setBody(certificate.getContent());
         request.setItemCreator(certificate.getSignatoryIdcode());
@@ -283,6 +286,11 @@ public class EkisService {
         case KASKKIRI_OVORM:
             content.setForm(value(ds.getStudyForm()));
             content.setGroup(studentGroup(ds));
+            break;
+        case KASKKIRI_STIPTOET:
+        case KASKKIRI_STIPTOETL:
+            content.setStartDate(date(ds.getStartDate()));
+            content.setEndDate(date(ds.getEndDate()));
             break;
         case KASKKIRI_VALIS:
             content.setStartDate(periodStart(ds));

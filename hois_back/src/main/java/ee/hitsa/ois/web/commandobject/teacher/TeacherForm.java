@@ -13,7 +13,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.EstonianIdCode;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -29,10 +29,10 @@ public class TeacherForm extends VersionedCommand {
     private Boolean isActive = Boolean.TRUE;
     private AutocompleteResult teacherOccupation;
     private Boolean isStudyPeriodScheduleLoad = Boolean.FALSE;
-    @NotEmpty
+    @Required
     @Size(max = 100)
     private String email;
-    @NotEmpty
+    @Required
     @Size(max = 100)
     private String phone;
     @NotNull
@@ -133,19 +133,19 @@ public class TeacherForm extends VersionedCommand {
         private Long id;
         @EstonianIdCode
         private String idcode;
-        @NotEmpty
+        @Required
         @Size(max = 100)
         private String firstname;
-        @NotEmpty
+        @Required
         @Size(max = 100)
         private String lastname;
-        @NotEmpty
+        @Required
         @ClassifierRestriction(MainClassCode.RIIK)
         private String citizenship;
         @Size(max = 100)
         private String nativeLanguage;
         private LocalDate birthdate;
-        @NotEmpty
+        @Required
         @ClassifierRestriction(MainClassCode.SUGU)
         private String sex;
         @Size(max = 100)
@@ -239,14 +239,14 @@ public class TeacherForm extends VersionedCommand {
 
         private Long id;
         private Boolean isVocational = Boolean.FALSE;
-        @NotEmpty
+        @Required
         @ClassifierRestriction(MainClassCode.EHIS_AMETIKOHT)
         private String position;
         @Size(max = 255)
         private String positionSpecificationEt;
         @Size(max = 255)
         private String positionSpecificationEn;
-        @NotEmpty
+        @Required
         @ClassifierRestriction(MainClassCode.EHIS_LEPING)
         private String contractType;
         @NotNull

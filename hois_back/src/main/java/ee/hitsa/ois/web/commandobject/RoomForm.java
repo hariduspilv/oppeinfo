@@ -4,16 +4,15 @@ import java.util.List;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class RoomForm extends VersionedCommand {
 
-    @NotNull
+    @Required
     private Long building;
-    @NotEmpty
+    @Required
     @Size(max = 20)
     private String code;
     @Size(max = 255)
@@ -74,9 +73,9 @@ public class RoomForm extends VersionedCommand {
 
     public static class RoomEquipmentCommand {
 
-        @NotEmpty
+        @Required
         private String equipment;
-        @NotNull
+        @Required
         @Min(0)
         private Long equipmentCount;
 

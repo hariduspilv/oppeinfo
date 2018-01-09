@@ -18,6 +18,8 @@ import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.StudyPeriodDto;
 
 public class LessonPlanByTeacherDto {
 
+    private final String studyYearCode;
+    private final String teacherName;
     private final List<StudyPeriodDto> studyPeriods;
     private final List<Short> weekNrs;
     private final List<LessonPlanModuleJournalDto> journals;
@@ -25,6 +27,8 @@ public class LessonPlanByTeacherDto {
     private final List<LocalDate> weekBeginningDates;
 
     public LessonPlanByTeacherDto(StudyYear studyYear, List<Journal> journals, List<LessonPlanByTeacherSubjectDto> subjects, Teacher teacher) {
+        studyYearCode = studyYear.getYear().getCode();
+        teacherName = teacher.getPerson().getFullname();
         studyPeriods = studyYear.getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList());
         weekNrs = studyPeriods.stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList());
         weekBeginningDates = studyPeriods.stream().flatMap(r -> r.getWeekBeginningDates().stream()).collect(Collectors.toList());
@@ -32,6 +36,14 @@ public class LessonPlanByTeacherDto {
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(studyYear);
         this.journals = journals.stream().map(r -> LessonPlanModuleJournalForTeacherDto.of(r, capacityMapper, teacher)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList());
         this.subjects = subjects;
+    }
+
+    public String getStudyYearCode() {
+        return studyYearCode;
+    }
+    
+    public String getTeacherName() {
+        return teacherName;
     }
 
     public List<StudyPeriodDto> getStudyPeriods() {

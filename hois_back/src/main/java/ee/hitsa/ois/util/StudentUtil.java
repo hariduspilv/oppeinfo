@@ -47,6 +47,6 @@ public class StudentUtil {
     }
 
     public static boolean hasRepresentatives(Student student) {
-        return StreamUtil.nullSafeList(student.getRepresentatives()).stream().filter(StudentRepresentative::getIsStudentVisible).findFirst().isPresent();
+        return StreamUtil.nullSafeList(student.getRepresentatives()).stream().anyMatch(StudentRepresentative::getIsStudentVisible);
     }
 }

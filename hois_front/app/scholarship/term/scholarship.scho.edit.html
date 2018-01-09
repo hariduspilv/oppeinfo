@@ -76,7 +76,8 @@
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.priority' | translate}}</label>
-      <hois-classifier-select ng-model="stipend.averageMarkPriority" name="type" model-value-attr="code" main-classifier-code="PRIORITEET"></hois-classifier-select>
+      <hois-select ng-model="stipend.averageMarkPriority" values="formState.priorities | filter: averageMarkPriorityFilter"
+        show-property="value" value-property="code"></hois-select>
     </md-input-container>
   </div>
   <div layout="row" flex>
@@ -86,7 +87,8 @@
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.priority' | translate}}</label>
-      <hois-classifier-select ng-model="stipend.lastPeriodMarkPriority" name="type" model-value-attr="code" main-classifier-code="PRIORITEET"></hois-classifier-select>
+      <hois-select ng-model="stipend.lastPeriodMarkPriority" values="formState.priorities | filter: lastPeriodMarkPriorityFilter"
+        show-property="value" value-property="code"></hois-select>
     </md-input-container>
   </div>
   <div layout="row" flex>
@@ -96,7 +98,8 @@
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.priority' | translate}}</label>
-      <hois-classifier-select ng-model="stipend.curriculumCompletionPriority" name="type" model-value-attr="code" main-classifier-code="PRIORITEET"></hois-classifier-select>
+      <hois-select ng-model="stipend.curriculumCompletionPriority" values="formState.priorities | filter: curriculumCompletionPriorityFilter"
+        show-property="value" value-property="code"></hois-select>
     </md-input-container>
   </div>
   <div layout="row">
@@ -105,11 +108,17 @@
       <input type="hidden">
     </md-input-container>
     <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
-      <md-datepicker required ng-model="stipend.studyStartPeriodStart" md-max-date="stipend.studyStartPeriodEnd" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+      <md-datepicker ng-model="stipend.studyStartPeriodStart" md-max-date="stipend.studyStartPeriodEnd" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
     </md-input-container>
     <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
-      <md-datepicker required ng-model="stipend.studyStartPeriodEnd" md-min-date="stipend.studyStartPeriodStart" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+      <md-datepicker ng-model="stipend.studyStartPeriodEnd" md-min-date="stipend.studyStartPeriodStart" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
     </md-input-container>
+  </div>
+  <div layout="row" flex>
+    <md-checkbox ng-model="stipend.isAcademicLeave" aria-label="Is academic leave" ng-disabled="display.isAcademicLeaveRead"
+      flex="50">
+      {{'stipend.isAcademicLeave' | translate}}
+    </md-checkbox>
   </div>
 </div>
 <div layout="row">

@@ -9,6 +9,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     $scope.formState = {state: (id || canceledDirective ? 'EDIT' : 'CHOOSETYPE'), students: undefined, changedStudents: [],
                         selectedStudents: [], excludedTypes: ['KASKKIRI_KYLALIS'], school: Session.school || {},
                         higherStudyForms: Classifier.queryForDropdown({mainClassCode: 'OPPEVORM', higher: true})};
+
     if(!canceledDirective) {
       $scope.formState.excludedTypes.push('KASKKIRI_TYHIST');
     }
@@ -108,7 +109,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     }
 
     function studentsToDirective(students, callback) {
-      var data = {type: $scope.record.type, canceledDirective: canceledDirective,
+      var data = {type: $scope.record.type, scholarshipType: $scope.record.scholarshipType, canceledDirective: canceledDirective,
                   curriculumVersion: $scope.formState.curriculumVersion, studyLevel: $scope.formState.studyLevel,
                   students: students.map(function(i) { return i.id; })};
 
@@ -180,14 +181,20 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       if(data.type === 'KASKKIRI_EKSMAT') {
         data.application = true;
       }
+      var scholarship = data.type === 'KASKKIRI_STIPTOET' || data.type === 'KASKKIRI_STIPTOETL';
+      if(scholarship) {
+        data.scholarshipType = $scope.record.scholarshipType;
+      }
       if(data.type !== 'KASKKIRI_IMMAT' && data.type !== 'KASKKIRI_IMMATV') {
-        QueryUtils.endpoint(baseUrl+'/findstudents').search(data, function(result) {
-          $scope.formState.students = result.content;
-          $scope.formState.selectedStudents = [];
-          if(!$scope.formState.students.length) {
-            message.info('directive.nostudentsfound');
-          }
-        });
+        if(!scholarship || data.scholarshipType) {
+          QueryUtils.endpoint(baseUrl+'/findstudents').search(data, function(result) {
+            $scope.formState.students = result.content;
+            $scope.formState.selectedStudents = [];
+            if(!$scope.formState.students.length) {
+              message.info('directive.nostudentsfound');
+            }
+          });
+        }
       } else {
         $scope.formState.students = [];
         if(data.type === 'KASKKIRI_IMMATV' && !$scope.formState.saisCurriculumVersions) {
@@ -195,6 +202,12 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         }
       }
       setTemplateUrl();
+    };
+
+    $scope.scholarshipTypeChanged = function() {
+      if($scope.record.scholarshipType) {
+        $scope.directiveTypeChanged();
+      }
     };
 
     $scope.addDirective = function() {
@@ -232,6 +245,9 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         return;
       }
       var data = {type: directiveType, directive: id};
+      if(directiveType === 'KASKKIRI_STIPTOET' || directiveType === 'KASKKIRI_STIPTOETL') {
+        data.scholarshipType = $scope.record.scholarshipType;
+      }
       $mdDialog.show({
         controller: function($scope) {
           var baseUrl = '/directives/findstudents';
@@ -335,7 +351,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         // save first
         beforeSave();
         $scope.record.$update().then(afterLoad).then(function() {
-          QueryUtils.endpoint(baseUrl + '/sendtoconfirm').update({id: $scope.record.id}).$promise.then(function() {
+          QueryUtils.endpoint(baseUrl + '/sendtoconfirm').update({id: $scope.record.id, form: function() { return $scope.directiveForm;}}).$promise.then(function() {
             message.info('directive.sentToConfirm');
             $location.url(baseUrl + '/' + $scope.record.id + '/view?_noback');
           });

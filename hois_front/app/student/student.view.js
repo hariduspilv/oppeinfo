@@ -16,7 +16,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     Endpoint.get({ id: studentId }, function (result) {
       $scope.student = result;
       if ($scope.student.photo) {
-        $scope.student.imageUrl = oisFileService.getUrl($scope.student.photo);
+        $scope.student.imageUrl = oisFileService.getUrl($scope.student.photo, 'student');
       } else {
         $scope.student.imageUrl = '?' + new Date().getTime();
       }
@@ -193,9 +193,9 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
         studyYearModulesThemes.results.forEach(function (moduleTheme) {
           if (moduleTheme.grade && VocationalGradeUtil.isPositive(moduleTheme.grade.code)) {
             if(VocationalGradeUtil.isDistinctive(moduleTheme.grade.code)) {
-              var grade = parseInt(moduleTheme.grade.value);
+              var grade = parseInt(moduleTheme.grade.value, 10);
               creditsSumForAverage += moduleTheme.credits;
-              gradeCreditsSum += moduleTheme.credits * parseInt(grade);
+              gradeCreditsSum += moduleTheme.credits * parseInt(grade, 10);
             }
             creditsSum += moduleTheme.credits;
           }
@@ -225,7 +225,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
   };
 
   $scope.positiveGrade = function (grade) {
-    return (angular.isNumber(grade) && grade > 2) || (angular.isString(grade) && parseInt(grade) > 2);
+    return (angular.isNumber(grade) && grade > 2) || (angular.isString(grade) && parseInt(grade, 10) > 2);
   };
 
   function loadVocationalResults() {

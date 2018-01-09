@@ -2,15 +2,15 @@ package ee.hitsa.ois.web.commandobject;
 
 import javax.validation.constraints.NotNull;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class OisFileCommand extends VersionedCommand {
 
     @NotNull
     private byte[] fdata;
-    @NotEmpty
+    @Required
     private String fname;
-    @NotEmpty
+    @Required
     private String ftype;
 
     public byte[] getFdata() {

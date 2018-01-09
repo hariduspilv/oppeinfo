@@ -7,15 +7,15 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class SchoolForm extends VersionedCommand {
 
     private String nameEt;
-    @NotEmpty
+    @Required
     @Size(max = 255)
     private String nameEn;
-    @NotEmpty
+    @Required
     @Size(max = 255)
     private String email;
     @Size(max = 10)
@@ -32,7 +32,7 @@ public class SchoolForm extends VersionedCommand {
     @Valid
     private OisFileCommand logo;
     private Boolean deleteCurrentLogo;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.EHIS_KOOL)
     private String ehisSchool;
     @Size(max = 255)

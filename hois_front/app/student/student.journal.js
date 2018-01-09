@@ -58,14 +58,24 @@
         scope.nextWeekIndex = scope.weeks[shownWeekIndex + 1] ? shownWeekIndex + 1 : null;
     }
 
-    angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'QueryUtils', '$mdDialog', 'Classifier', 
-        function ($scope, $route, QueryUtils, $mdDialog, Classifier) {
+    angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'QueryUtils', '$mdDialog', 'Classifier', 'ArrayUtils',
+        function ($scope, $route, QueryUtils, $mdDialog, Classifier, ArrayUtils) {
             $scope.currentNavItem = 'journals';
+
             var studentId = $route.current.locals.auth.student;
 
             QueryUtils.endpoint('/journals/studentJournals/').query({studentId: studentId}).$promise.then(function (result) {
+                getEntryType(result);
                 $scope.journalsByYears = getJournalsSortedByYearCodes(result);
             });
+
+            function getEntryType(journals) {
+                for (var i = 0; i < journals.length; i++) {
+                    for (var j = 0; j < journals[i].journalEntries.length; j++) {
+                        journals[i].journalEntries[j].entryTypeClassifier = Classifier.get(journals[i].journalEntries[j].entryType);
+                    }
+                }
+            }
 
             function getJournalYearCodes(journals) {
                 var yearCodes = [];
@@ -99,7 +109,17 @@
                 return journalYears;
             }
 
-            $scope.showJournal = function (journalId) {
+            $scope.resultIsPostive = function (result) {
+                var postiveResults = ['A', '3', '4', '5'];
+                return ArrayUtils.contains(postiveResults, result);
+            };
+
+            $scope.isTestButNotFinal = function (entryType) {
+                var boldResults = ['SISSEKANNE_E', "SISSEKANNE_I", "SISSEKANNE_H"];
+                return ArrayUtils.contains(boldResults, entryType);
+            }
+
+            $scope.showJournal = function (journal) {
                 $mdDialog.show({
                     controller: function ($scope) {
                         $scope.journalEntryTypeColors = {
@@ -116,7 +136,7 @@
                         $scope.getEntryColor = function (type) {
                             return $scope.journalEntryTypeColors[type];
                         };
-                        $scope.journal = QueryUtils.endpoint('/journals/' + journalId + '/studentJournal/').search({ studentId: studentId });
+                        $scope.journal = journal;
                         $scope.close = $mdDialog.hide;
                     },
                     templateUrl: 'student/student.journal.dialog.html',

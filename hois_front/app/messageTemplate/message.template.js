@@ -10,13 +10,13 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
     $scope.isValid = function(record) {
         return (!record.validFrom || new Date(record.validFrom) <= new Date()) && (!record.validThru || new Date(record.validThru) >= new Date());
     };
-}]).controller('MessageTemplateEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', 
-  function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
+}]).controller('MessageTemplateEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', '$rootScope',
+  function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils, $rootScope) {
 
     $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1;
 
     $scope.getIsValid = function() {
-        $scope.isValid = 
+        $scope.isValid =
         ($scope.record.validFrom === undefined || $scope.record.validFrom === null || $scope.record.validFrom <= new Date()) &&
         ($scope.record.validThru === undefined || $scope.record.validThru === null || $scope.record.validThru >= new Date());
     };
@@ -25,11 +25,19 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
       DataUtils.convertStringToDates($scope.record, ['validFrom', 'validThru']);
       getUsedTypes();
       $scope.getIsValid();
+      if($scope.messageTemplateForm) {
+        $scope.messageTemplateForm.$setPristine();
+      }
     }
 
     var baseUrl = '/messageTemplate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
+
+    $rootScope.removeLastUrlFromHistory(function(lastUrl){
+      return lastUrl === '#/messageTemplate/' + id + '/view' ||
+             lastUrl === '#/messageTemplate/new';
+      });
 
     if(id) {
         $scope.record = Endpoint.get({id: id}, afterLoad);

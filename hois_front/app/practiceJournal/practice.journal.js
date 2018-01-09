@@ -67,8 +67,16 @@ angular.module('hitsaOis').controller('PracticeJournalEditController', function 
     });
   }
 
+  function setModuleCredits() {
+    if($scope.practiceJournal.module && !$scope.practiceJournal.theme) {
+      $scope.practiceJournal.credits = $scope.formState.modulesById[$scope.practiceJournal.module].credits;
+      $scope.practiceJournal.hours = $scope.practiceJournal.credits * CREDITS_TO_HOURS_MULTIPLIER;
+    }
+  }
+
   $scope.moduleChanged = function (moduleId) {
     if ($scope.formState.modulesById[moduleId]) {
+      setModuleCredits();
       $scope.formState.themes = $scope.formState.modulesById[moduleId].themes.map(function (it) { return it.theme; });
 
       if (!angular.isDefined(entity) && angular.isString($scope.formState.modulesById[moduleId].assessmentMethodsEt)) {
@@ -85,6 +93,8 @@ angular.module('hitsaOis').controller('PracticeJournalEditController', function 
       if (!angular.isDefined(entity) && angular.isString($scope.formState.themesById[themeId].subthemes)) {
         $scope.practiceJournal.practicePlan = $scope.formState.themesById[themeId].subthemes;
       }
+    } else {
+      setModuleCredits();
     }
   };
 

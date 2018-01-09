@@ -19,7 +19,7 @@
           </span>
           <div ng-if="!application.isVocational" ng-include="'apelApplication/templates/apel.application.formal.learning.higher.list.html'"
             style="margin-bottom: 20px"></div>
-          <md-button ng-if="editing" class="md-raised md-default" ng-click="editFormalLearning()">{{'main.button.create' | translate}}</md-button>
+          <md-button ng-if="application.status === 'VOTA_STAATUS_K'" class="md-raised md-default" ng-click="editFormalLearning()">{{'main.button.create' | translate}}</md-button>
         </fieldset>
       </div>
       <br>
@@ -27,13 +27,13 @@
       <div ng-hide="!application.student">
         <fieldset style="min-width: 0;">
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.informalLearnings.labelWithSubTitle' | translate}}</legend>
-          <span ng-repeat="record in application.records | filter:{isFormalLearning: false}">
+          <span ng-repeat="record in application.records | filter:{isFormalLearning: false} | orderBy:'id'">
               <div ng-if="application.isVocational" ng-include="'apelApplication/templates/apel.application.informal.learning.vocational.list.html'"
                 style="margin-bottom: 20px"></div>
               <div ng-if="!application.isVocational" ng-include="'apelApplication/templates/apel.application.informal.learning.higher.list.html'" 
                 style="margin-bottom: 20px"></div>
             </span>
-          <md-button ng-if="editing" class="md-raised md-default" ng-click="editInformalLearning()">{{'main.button.create' | translate}}</md-button>
+          <md-button ng-if="application.status === 'VOTA_STAATUS_K'" class="md-raised md-default" ng-click="editInformalLearning()">{{'main.button.create' | translate}}</md-button>
         </fieldset>
       </div>
       <br>
@@ -89,7 +89,7 @@
                       {{file.oisFile.fname}}
                     </div>
                     <div flex>
-                      <a ng-href="{{getUrl(file.oisFile)}}" target="_blank">
+                      <a ng-href="{{getUrl(file.oisFile, 'apelapplication')}}" target="_blank" rel="noopener noreferrer">
                         <md-icon md-font-set="material-icons">file_download</md-icon>
                       </a>
                     </div>

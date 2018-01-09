@@ -5,7 +5,10 @@ import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
-public abstract class TeacherUserRights {
+public final class TeacherUserRights {
+    
+    private TeacherUserRights() {
+    }
     
     public static boolean hasPermissionToView(HoisUserDetails user) {
         return (user.isSchoolAdmin() || user.isExternalExpert() || user.isTeacher()) && 
@@ -26,5 +29,15 @@ public abstract class TeacherUserRights {
     public static boolean canEdit(HoisUserDetails user, Teacher teacher) {
         return hasPermissionToEdit(user) && UserUtil.isSameSchool(user, teacher.getSchool());
     }
+    
+    public static boolean canConfirm(HoisUserDetails user, Teacher teacher) {
+        return canConfirm(user) && UserUtil.isSameSchool(user, teacher.getSchool());
+    }
+    
+    public static boolean canConfirm(HoisUserDetails user) {
+        return user.isSchoolAdmin() && 
+                UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPETAJA);
+    }
+
 
 }

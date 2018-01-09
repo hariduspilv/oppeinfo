@@ -10,17 +10,17 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyForm;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionSpeciality;
-import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
+import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -40,11 +40,11 @@ public class CurriculumVersionService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private CurriculumRepository curriculumRepository;
+    private SchoolService schoolService;
 
     public CurriculumVersion createVersion(CurriculumVersionDto dto) {
         CurriculumVersion curriculumVersion = new CurriculumVersion();
-        curriculumVersion.setCurriculum(curriculumRepository.findOne(dto.getCurriculum()));
+        curriculumVersion.setCurriculum(em.getReference(Curriculum.class, dto.getCurriculum()));
         setCurriculumVersionStatus(curriculumVersion, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_S);
         CurriculumVersion updatedCurriculumVersion = updateVersion(curriculumVersion.getCurriculum(), curriculumVersion, dto);
         return EntityUtil.save(updatedCurriculumVersion, em);
@@ -85,7 +85,7 @@ public class CurriculumVersionService {
     }
 
     private void setCurriculumVersionStatus(CurriculumVersion curriculumVersion, CurriculumVersionStatus status) {
-        curriculumVersion.setStatus(classifierRepository.getOne(status.name()));
+        curriculumVersion.setStatus(em.getReference(Classifier.class, status.name()));
     }
 
     public CurriculumVersion save(HoisUserDetails user, CurriculumVersion curriculumVersion,
@@ -127,17 +127,16 @@ public class CurriculumVersionService {
     }
 
     public CurriculumVersionDto get(HoisUserDetails user, CurriculumVersion curriculumVersion) {
-        
+
         CurriculumVersionDto dto = CurriculumVersionDto.of(curriculumVersion);
         Curriculum curriculum = curriculumVersion.getCurriculum();
-        
-        String myEhisShool = user.getSchoolId() != null ? 
-        em.getReference(School.class, user.getSchoolId()).getEhisSchool().getCode() : null;
+
+        String myEhisShool = schoolService.getEhisSchool(user.getSchoolId());
         dto.setCanChange(CurriculumUtil.canChange(user, myEhisShool, curriculum));
         dto.setCanConfirm(CurriculumUtil.canConfirm(user, myEhisShool, curriculum));
         dto.setCanClose(CurriculumUtil.canClose(user, myEhisShool, curriculum));
         dto.setCanDelete(CurriculumUtil.canDelete(user, myEhisShool, curriculum));
-        
+
         return dto;
     }
 

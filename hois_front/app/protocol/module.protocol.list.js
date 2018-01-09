@@ -1,12 +1,12 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolListController', function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, ArrayUtils) {
+angular.module('hitsaOis').controller('ModuleProtocolListController', function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, ArrayUtils, USER_ROLES) {
   $scope.auth = $route.current.locals.auth;
   $scope.search = {};
   $scope.criteria = {};
 
   function canCreateProtocol() {
-    return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) &&  ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_M_TEEMAOIGUS_MOODULPROTOKOLL");
+    return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) &&  ArrayUtils.contains($scope.auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_MOODULPROTOKOLL);
   }
 
   $scope.formState = {

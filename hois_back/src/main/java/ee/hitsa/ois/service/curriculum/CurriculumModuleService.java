@@ -26,8 +26,6 @@ import ee.hitsa.ois.enums.CurriculumDraft;
 import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumModuleRepository;
-import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -47,14 +45,10 @@ public class CurriculumModuleService {
     private EntityManager em;
     @Autowired
     private ClassifierRepository classifierRepository;
-    @Autowired
-    private CurriculumModuleRepository curriculumModuleRepository;
-    @Autowired
-    private CurriculumRepository curriculumRepository;
-    
+
     public CurriculumModule create(HoisUserDetails user, CurriculumModuleForm form) {
         CurriculumModule module = new CurriculumModule();
-        Curriculum curriculum = curriculumRepository.getOne(form.getCurriculum());
+        Curriculum curriculum = em.getReference(Curriculum.class, form.getCurriculum());
         module.setCurriculum(curriculum);
         return update(user, module, form);
     }
@@ -70,18 +64,18 @@ public class CurriculumModuleService {
 
     private void updateOccupations(CurriculumModule module, Set<String> occupations) {
         EntityUtil.bindEntityCollection(module.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), occupations, occupationCode -> {
-            Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupationCode),
+            Classifier c = EntityUtil.validateClassifier(em.getReference(Classifier.class, occupationCode),
                     MainClassCode.OSAKUTSE, MainClassCode.KUTSE, MainClassCode.SPETSKUTSE);
             return new CurriculumModuleOccupation(c);
           });
     }
-    
+
     private void updateCompetences(CurriculumModule module, Set<String> competences) {
         EntityUtil.bindEntityCollection(module.getCompetences(), c -> EntityUtil.getCode(c.getCompetence()), competences, competenceCode -> {
-            return new CurriculumModuleCompetence(EntityUtil.validateClassifier(classifierRepository.getOne(competenceCode), MainClassCode.KOMPETENTS));
+            return new CurriculumModuleCompetence(EntityUtil.validateClassifier(em.getReference(Classifier.class, competenceCode), MainClassCode.KOMPETENTS));
         });
     }
-    
+
     private void updateOutcomes(CurriculumModule module, Set<CurriculumModuleOutcomeDto> outcomes) {
         EntityUtil.bindEntityCollection(module.getOutcomes(), CurriculumModuleOutcome::getId, outcomes, 
                 CurriculumModuleOutcomeDto::getId, this::createOutcome, this::updateOutcome);
@@ -106,7 +100,7 @@ public class CurriculumModuleService {
                 .stream().map(t -> t.name()).collect(Collectors.toSet());
         
         if(command.getCurriculum() != null) {
-            Curriculum c = curriculumRepository.getOne(command.getCurriculum());
+            Curriculum c = em.getReference(Curriculum.class, command.getCurriculum());
 
             if(ClassifierUtil.equals(CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_RIIKLIK, c.getDraft())) {
                 possibleTypes.remove(CurriculumModuleType.KUTSEMOODUL_P.name());
@@ -118,14 +112,14 @@ public class CurriculumModuleService {
                 possibleTypes.add(CurriculumModuleType.KUTSEMOODUL_V.name());
             }
             if(command.getModule() != null) {
-                CurriculumModule m = curriculumModuleRepository.getOne(command.getModule());
+                CurriculumModule m = em.getReference(CurriculumModule.class, command.getModule());
                 possibleTypes.add(EntityUtil.getCode(m.getModule()));
             }
         }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from classifier c");
         qb.requiredCriteria("c.code in :possibleTypes", "possibleTypes", possibleTypes);
         List<?> result = qb.select("c.code", em).getResultList();
-        return StreamUtil.toMappedSet(r -> resultAsString(r, 0), result);        
+        return StreamUtil.toMappedSet(r -> resultAsString(r, 0), result);
     }
 
     public List<ClassifierSelection> getCompetences(Curriculum curriculum) {

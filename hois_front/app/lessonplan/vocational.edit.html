@@ -1,10 +1,11 @@
 <div ng-cloak class="ois-form-layout-padding" style="overflow: scroll">
   <div layout="column">
+    <div flex="30" class="md-title">
+      <hois-classifier-value ng-model="record.studyYearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+      <span>{{'lessonplan.studentGroup' | translate}} {{record.studentGroupCode}}</span>
+    </div>
     <div flex layout="row">
       <div flex="50" layout="row" layout-align="start center">
-        <div flex="15">
-          <span class="common-label">{{'lessonplan.studentGroup' | translate}} {{record.studentGroupCode}}</span>
-        </div>
         <div flex="20">
           <md-checkbox ng-model="record.isUsable">
             {{'lessonplan.isUsable' | translate}}

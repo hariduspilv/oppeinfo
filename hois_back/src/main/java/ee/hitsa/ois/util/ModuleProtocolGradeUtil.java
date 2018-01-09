@@ -18,7 +18,7 @@ import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.VocationalGradeType;
 
 public abstract class ModuleProtocolGradeUtil {
-    
+
     private static final int SCALE = 5;
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
     /**
@@ -26,7 +26,7 @@ public abstract class ModuleProtocolGradeUtil {
      * If average grade is equal to this or larger, then grade is positive (A)
      */
     private static final BigDecimal NOT_DISTINCTIVE_POSITIVE_THRESHOLD = BigDecimal.valueOf(2.5);
-    
+
     public static OccupationalGrade calculateGrade(ProtocolStudent ps) {
         boolean isDisinctive = isDistinctive(ps.getProtocol().getProtocolVdata());
         List<JournalStudent> journalStudents = getJournalStudents(ps);
@@ -36,7 +36,7 @@ public abstract class ModuleProtocolGradeUtil {
         List<JournalEntryStudent> finalResults = getFinalResults(journalStudents);
 
         BigDecimal average = calculateAverage(finalResults);
-        return isDisinctive ? distinctiveGrade(average) : notDistinctiveGrade(average);        
+        return isDisinctive ? distinctiveGrade(average) : notDistinctiveGrade(average);
     }
 
     private static boolean isDistinctive(ProtocolVdata protocolVdata) {
@@ -45,9 +45,9 @@ public abstract class ModuleProtocolGradeUtil {
     }
 
     private static List<JournalStudent> getJournalStudents(ProtocolStudent ps) {
-        return ps.getStudent().getJournalStudents().stream().collect(Collectors.toList());
+        return ps.getStudent().getJournalStudents();
     }
-    
+
     private static List<JournalStudent> getJournalStudentsForThisModule(
             List<JournalStudent> journalStudents, Long occupationModule) {
         return journalStudents.stream()
@@ -56,11 +56,11 @@ public abstract class ModuleProtocolGradeUtil {
                         EntityUtil.getId(jt.getCurriculumVersionOccupationModuleTheme().getModule())
                                 .equals(occupationModule))).collect(Collectors.toList());
     }
-    
+
     private static boolean isFinalResult(JournalEntryStudent jes) {
         return ClassifierUtil.equals(JournalEntryType.SISSEKANNE_L, jes.getJournalEntry().getEntryType());
     }
-    
+
     private static List<JournalEntryStudent> getFinalResults(List<JournalStudent> results) {
         ArrayList<JournalEntryStudent> finalResults = new ArrayList<>();
         for(JournalStudent js : results) {
@@ -71,9 +71,8 @@ public abstract class ModuleProtocolGradeUtil {
     }
 
     private static BigDecimal calculateAverage(List<JournalEntryStudent> finalResults) {
-        
         BigDecimal total = BigDecimal.ZERO;
-        
+
         for(JournalEntryStudent jes : finalResults) {
             String grade = EntityUtil.getNullableCode(jes.getGrade());
             List<BigDecimal> proportions = StreamUtil
@@ -83,20 +82,20 @@ public abstract class ModuleProtocolGradeUtil {
         }
         return total;
     }
-    
+
     private static BigDecimal getProportion(JournalOccupationModuleTheme t) {
         return t.getCurriculumVersionOccupationModuleTheme().getProportion().divide(HUNDRED, SCALE, BigDecimal.ROUND_HALF_UP);
     }
-    
+
     private static Stream<JournalOccupationModuleTheme> getThemes(JournalEntryStudent jes) {
         return jes.getJournalEntry().getJournal().getJournalOccupationModuleThemes().stream()
                 .filter(ModuleProtocolGradeUtil::notNullProportion);
     }
-    
+
     private static boolean notNullProportion(JournalOccupationModuleTheme t) {
         return t.getCurriculumVersionOccupationModuleTheme().getProportion() != null;
     }
-    
+
     public static BigDecimal add(BigDecimal total, List<BigDecimal> proportions, String grade) {
         BigDecimal sum = total;
         if(!CollectionUtils.isEmpty(proportions)){
@@ -109,12 +108,12 @@ public abstract class ModuleProtocolGradeUtil {
     public static BigDecimal getMark(String grade) {
         return BigDecimal.valueOf(OccupationalGrade.valueOf(grade).getMark());
     }
-    
+
     public static OccupationalGrade notDistinctiveGrade(BigDecimal average) {
         return positiveNotDistinctiveGrade(average) ? 
                 OccupationalGrade.KUTSEHINDAMINE_A : OccupationalGrade.KUTSEHINDAMINE_MA;
     }
-    
+
     public static boolean positiveNotDistinctiveGrade(BigDecimal average) {
         return average.compareTo(NOT_DISTINCTIVE_POSITIVE_THRESHOLD) >= 0;
     }

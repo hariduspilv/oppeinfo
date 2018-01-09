@@ -137,7 +137,9 @@
                     <hois-value value="row.hours"></hois-value>
                   </div>
                 </td>
-                <td md-cell>{{row.supervisorComment}}</td>
+                <td md-cell>
+                  <hois-value value="row.supervisorComment"></hois-value>
+                </td>
                 <td md-cell>
                   <md-input-container ng-if="auth.isTeacher()">
                     <input ng-model="row.teacherComment" type="text" aria-label="{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}" md-maxlength="10000">
@@ -201,7 +203,7 @@
               <tr md-row ng-repeat="file in practiceJournal.practiceJournalFiles | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>
                   {{file.oisFile.fname}}
-                  <a ng-href="{{getUrl(file.oisFile)}}" target="_blank">
+                  <a ng-href="{{getUrl(file.oisFile, 'practicejournal')}}" target="_blank" rel="noopener noreferrer">
                     <md-icon md-font-set="material-icons">file_download</md-icon>
                   </a>
                 </td>

@@ -50,7 +50,7 @@ public class ApplicationController {
     }
 
     @GetMapping
-    public Page<ApplicationSearchDto> search(ApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
+    public Page<ApplicationSearchDto> search(@Valid ApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
         return applicationService.search(user, command, pageable);
     }

@@ -11,7 +11,11 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       STIPTOETUS_MUU: 'scholarship/term/scholarship.scho.edit.html',
       STIPTOETUS_TULEMUS: 'scholarship/term/scholarship.scho.edit.html'
     };
+
     $scope.formState = {};
+    $scope.formState.priorities = Classifier.queryForDropdown({
+      mainClassCode: 'PRIORITEET'
+    });
     var id = $route.current.params.id;
     var baseUrl = '/scholarships';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -112,6 +116,26 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       }
       return true;
     }
+
+    $scope.averageMarkPriorityFilter = function (value) {
+      var otherValues = [$scope.stipend.lastPeriodMarkPriority, $scope.stipend.curriculumCompletionPriority, $scope.stipend.maxAbsencesPriority];
+      return otherValues.indexOf(value.code) === -1;
+    };
+
+    $scope.lastPeriodMarkPriorityFilter = function (value) {
+      var otherValues = [$scope.stipend.averageMarkPriority, $scope.stipend.curriculumCompletionPriority, $scope.stipend.maxAbsencesPriority];
+      return otherValues.indexOf(value.code) === -1;
+    };
+
+    $scope.curriculumCompletionPriorityFilter = function (value) {
+      var otherValues = [$scope.stipend.averageMarkPriority, $scope.stipend.lastPeriodMarkPriority, $scope.stipend.maxAbsencesPriority];
+      return otherValues.indexOf(value.code) === -1;
+    };
+
+    $scope.maxAbsencesPriorityFilter = function (value) {
+      var otherValues = [$scope.stipend.averageMarkPriority, $scope.stipend.lastPeriodMarkPriority, $scope.stipend.curriculumCompletionPriority];
+      return otherValues.indexOf(value.code) === -1;
+    };
   }
 ]).controller('ScholarshipViewController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route',
   function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route) {

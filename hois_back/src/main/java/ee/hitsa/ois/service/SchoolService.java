@@ -49,11 +49,10 @@ public class SchoolService {
 
     public byte[] getLogo(Long schoolId) {
         List<OisFile> logo = em.createQuery("select s.logo from School s where s.id=?1", OisFile.class)
-                .setParameter(1, schoolId).getResultList();
-        if (logo.isEmpty()) {
-            return null;
-        }
-        return logo.get(0).getFdata();
+                .setParameter(1, schoolId)
+                .setMaxResults(1).getResultList();
+
+        return logo.isEmpty() ? null : logo.get(0).getFdata();
     }
 
     public SchoolDto create(SchoolForm schoolForm) {
@@ -147,7 +146,7 @@ public class SchoolService {
      */
     public String getEhisSchool(Long schoolId) {
         return schoolId != null ? 
-                em.getReference(School.class, schoolId).getEhisSchool().getCode() : null;
+                EntityUtil.getCode(em.getReference(School.class, schoolId).getEhisSchool()) : null;
     }
 
     public static class SchoolType {

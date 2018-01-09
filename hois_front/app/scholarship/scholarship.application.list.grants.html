@@ -80,15 +80,15 @@
           <th md-column>{{'stipend.status' | translate}}</th>
         </tr>
       </thead>
-      <tbody md-body>
-        <tr md-row ng-repeat="application in applications" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tbody md-body ng-repeat="term in applications">
+        <tr md-row ng-repeat="application in term.applications track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell>
             <md-input-container>
               <md-checkbox ng-model="application._selected" aria-label="mySchool">
               </md-checkbox>
             </md-input-container>
           </td>
-          <td md-cell>-</td>
+          <td md-cell>{{$index + 1}}</td>
           <td md-cell>{{currentLanguageNameField(application.type)}}</td>
           <td md-cell>
             <a href="#/scholarships/applications/{{application.id}}">{{application.termNameEt}}</a>

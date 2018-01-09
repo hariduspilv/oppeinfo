@@ -1,8 +1,10 @@
 package ee.hitsa.ois.util;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.Journal;
@@ -15,7 +17,10 @@ import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 
-public abstract class JournalUtil {
+public class JournalUtil {
+    
+    protected JournalUtil(){
+    }
     
     public static boolean confirmed(Journal journal) {
         return ClassifierUtil.equals(JournalStatus.PAEVIK_STAATUS_K, journal.getStatus());
@@ -91,5 +96,13 @@ public abstract class JournalUtil {
     
     public static boolean teacherCanRemoveStudent(Journal journal) {
         return journal.getJournalEntries().isEmpty();
+    }
+
+    /**
+     * Show "confirm all" button for school administrator 2 weeks before the end of study year
+     */
+    public static boolean canConfirmAll(HoisUserDetails user, StudyYear studyYear) {
+        return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_PAEVIK) &&
+                LocalDate.now().plusWeeks(2).isAfter(studyYear.getEndDate());
     }
 }

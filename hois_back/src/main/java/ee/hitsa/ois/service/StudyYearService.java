@@ -162,7 +162,9 @@ public class StudyYearService {
         //TODO: what if study year is not found? Should we return previous study year or next study year instead of null?
         LocalDate now = LocalDate.now();
         List<StudyYear> data = em.createQuery("select sy from StudyYear sy where sy.school.id = ?1 and sy.startDate <= ?2 and sy.endDate >= ?2", StudyYear.class)
-            .setParameter(1, schoolId).setParameter(2, now).setMaxResults(1).getResultList();
+            .setParameter(1, schoolId)
+            .setParameter(2, now)
+            .setMaxResults(1).getResultList();
         return data.isEmpty() ? null : data.get(0);
     }
 }

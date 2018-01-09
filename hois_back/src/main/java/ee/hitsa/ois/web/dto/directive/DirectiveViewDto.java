@@ -25,6 +25,7 @@ public class DirectiveViewDto {
     private String preamble;
     private AutocompleteResult canceledDirective;
     private String canceledDirectiveType;
+    private String scholarshipType;
     private LocalDateTime inserted;
     private List<DirectiveViewStudentDto> students;
     private List<DirectiveSearchDto> cancelingDirectives;
@@ -117,6 +118,14 @@ public class DirectiveViewDto {
 
     public void setCanceledDirectiveType(String canceledDirectiveType) {
         this.canceledDirectiveType = canceledDirectiveType;
+    }
+
+    public String getScholarshipType() {
+        return scholarshipType;
+    }
+
+    public void setScholarshipType(String scholarshipType) {
+        this.scholarshipType = scholarshipType;
     }
 
     public LocalDateTime getInserted() {

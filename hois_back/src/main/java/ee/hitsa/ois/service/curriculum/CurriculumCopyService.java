@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumJointPartner;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
@@ -23,8 +24,6 @@ import ee.hitsa.ois.domain.curriculum.CurriculumOccupationSpeciality;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.CurriculumDraft;
 import ee.hitsa.ois.enums.CurriculumStatus;
-import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -32,16 +31,12 @@ import ee.hitsa.ois.util.StreamUtil;
 @Transactional
 @Service
 public class CurriculumCopyService {
-    
+
     @Autowired
     private EntityManager em;
     @Autowired
-    private CurriculumRepository curriculumRepository;
-    @Autowired
-    private ClassifierRepository classifierRepository;
-    @Autowired
     private CurriculumService curriculumService;
-    
+
     public Curriculum copyCurriculum(HoisUserDetails user, Curriculum copiedCurriculum) {
         Curriculum newCurriculum = new Curriculum(); 
         BeanUtils.copyProperties
@@ -49,24 +44,24 @@ public class CurriculumCopyService {
                 "ehisStatus", "ehisChanged", "higher", "code", "merCode", "validFrom", "validThru",  
                 "studyLanguages", "departments", "files", "grades", "jointPartners", "specialities", 
                 "studyForms", "modules", "occupations", "versions");
-        
+
         String oldCode = copiedCurriculum.getCode() != null ? copiedCurriculum.getCode() : "";
         newCurriculum.setCode(oldCode + " COPY");
         newCurriculum.setSchool(em.getReference(School.class, user.getSchoolId()));
         newCurriculum.setHigher(Boolean.FALSE);
-        newCurriculum.setStatus(classifierRepository.getOne(CurriculumStatus.OPPEKAVA_STAATUS_S.name()));
-        newCurriculum.setDraft(classifierRepository.getOne(CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_KOOL.name()));
+        newCurriculum.setStatus(em.getReference(Classifier.class, CurriculumStatus.OPPEKAVA_STAATUS_S.name()));
+        newCurriculum.setDraft(em.getReference(Classifier.class, CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_KOOL.name()));
         newCurriculum.setValidFrom(LocalDate.now());
-        
+
         curriculumService.updateLanguages(newCurriculum, StreamUtil.toMappedSet(l -> EntityUtil.getCode(l.getStudyLang()), copiedCurriculum.getStudyLanguages()));
         curriculumService.updateStudyForms(newCurriculum, StreamUtil.toMappedSet(sf -> EntityUtil.getCode(sf.getStudyForm()), copiedCurriculum.getStudyForms()));
         curriculumService.updateDepartments(newCurriculum, StreamUtil.toMappedSet(d -> EntityUtil.getId(d.getSchoolDepartment()), copiedCurriculum.getDepartments()));
-        
+
         copyJointPartners(newCurriculum, copiedCurriculum.getJointPartners());
         copyOccupations(newCurriculum, copiedCurriculum.getOccupations());
         copyModules(newCurriculum, copiedCurriculum.getModules());
-        
-        return curriculumRepository.save(newCurriculum);
+
+        return EntityUtil.save(newCurriculum, em);
     }
 
     private static void copyJointPartners(Curriculum newCurriculum, Set<CurriculumJointPartner> jointPartners) {

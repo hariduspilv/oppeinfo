@@ -10,13 +10,13 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeDto;
 
 public class CurriculumModuleForm extends VersionedCommand {
-    
-    @NotEmpty
+
+    @Required
     @ClassifierRestriction(MainClassCode.KUTSEMOODUL)
     private String module;
     
@@ -57,7 +57,7 @@ public class CurriculumModuleForm extends VersionedCommand {
     @Size(max=20000)
     private String assessmentsEn;
     
-    @NotEmpty
+    @Required
     private Set<CurriculumModuleOutcomeDto> outcomes;
 
     public String getModule() {

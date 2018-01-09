@@ -6,7 +6,7 @@ import java.util.List;
 import ee.hitsa.ois.validation.DateRange;
 
 @DateRange(from = "insertedFrom", thru = "insertedThru")
-@DateRange(from = "submitedFrom", thru = "submitedThru")
+@DateRange(from = "submittedFrom", thru = "submittedThru")
 public class ApplicationSearchCommand {
 
     private List<String> type;

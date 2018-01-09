@@ -175,7 +175,7 @@ public class StateCurriculumService {
 
     public StateCurriculum create(HoisUserDetails user, StateCurriculumForm stateCurriculumForm) {
         StateCurriculum stateCurriculum = new StateCurriculum();
-        stateCurriculum.setStatus(classifierRepository.getOne(CurriculumStatus.OPPEKAVA_STAATUS_S.name()));
+        stateCurriculum.setStatus(em.getReference(Classifier.class, CurriculumStatus.OPPEKAVA_STAATUS_S.name()));
         return save(user, stateCurriculum, stateCurriculumForm);
     }
 
@@ -211,7 +211,7 @@ public class StateCurriculumService {
 
     private void updateModuleOccupations(StateCurriculumModule module, Set<String> moduleOccupations) {
         EntityUtil.bindEntityCollection(module.getModuleOccupations(), o -> EntityUtil.getCode(o.getOccupation()), moduleOccupations, occupation -> {
-            Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupation),
+            Classifier c = EntityUtil.validateClassifier(em.getReference(Classifier.class, occupation),
                     MainClassCode.KUTSE, MainClassCode.OSAKUTSE, MainClassCode.SPETSKUTSE);
 
             return new StateCurriculumModuleOccupation(c);
@@ -220,7 +220,7 @@ public class StateCurriculumService {
 
     private void updateStateCurriculumOccupations(StateCurriculum stateCurriculum, Set<String> occupations) {
         EntityUtil.bindEntityCollection(stateCurriculum.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), occupations, occupation -> {
-            return new StateCurriculumOccupation(EntityUtil.validateClassifier(classifierRepository.getOne(occupation), MainClassCode.KUTSE));
+            return new StateCurriculumOccupation(EntityUtil.validateClassifier(em.getReference(Classifier.class, occupation), MainClassCode.KUTSE));
         });
     }
 
@@ -237,7 +237,7 @@ public class StateCurriculumService {
     }
 
     public StateCurriculumModule createModule(StateCurriculumModuleForm form) {
-        StateCurriculum stateCurriculum = stateCurriculumRepository.getOne(form.getStateCurriculum());
+        StateCurriculum stateCurriculum = em.getReference(StateCurriculum.class, form.getStateCurriculum());
         updateStateCurriculumOccupations(stateCurriculum, form.getStateCurriculumOccupations());
         StateCurriculumModule module = createModule(form, stateCurriculum);
         EntityUtil.save(stateCurriculum, em);
@@ -259,12 +259,12 @@ public class StateCurriculumService {
     }
 
     public StateCurriculum setStatus(StateCurriculum stateCurriculum, CurriculumStatus status) {
-        stateCurriculum.setStatus(classifierRepository.getOne(status.name()));
+        stateCurriculum.setStatus(em.getReference(Classifier.class, status.name()));
         return EntityUtil.save(stateCurriculum, em);
     }
 
     public StateCurriculum setStatusAndSave(HoisUserDetails user, StateCurriculum stateCurriculum, StateCurriculumForm form, CurriculumStatus status) {
-        stateCurriculum.setStatus(classifierRepository.getOne(status.name()));
+        stateCurriculum.setStatus(em.getReference(Classifier.class, status.name()));
         return save(user, stateCurriculum, form);
     }
 

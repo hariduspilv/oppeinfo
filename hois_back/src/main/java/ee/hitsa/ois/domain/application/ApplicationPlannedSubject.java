@@ -14,7 +14,7 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.validation.ApplicationValidation.Valis;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @Entity
 public class ApplicationPlannedSubject extends BaseEntityWithId {
@@ -24,13 +24,13 @@ public class ApplicationPlannedSubject extends BaseEntityWithId {
     private Application application;
 
     @Size(max = 1000)
-    @NotEmpty(groups = {Valis.class})
+    @Required(groups = {Valis.class})
     private String name;
 
     @Valid
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "application_planned_subject_id", nullable = false, updatable = false)
-    @NotEmpty(groups = {Valis.class})
+    @Required(groups = {Valis.class})
     private Set<ApplicationPlannedSubjectEquivalent> equivalents = new HashSet<>();
 
     public Application getApplication() {
@@ -56,5 +56,4 @@ public class ApplicationPlannedSubject extends BaseEntityWithId {
     public void setEquivalents(Set<ApplicationPlannedSubjectEquivalent> equivalents) {
         this.equivalents = equivalents;
     }
-
 }

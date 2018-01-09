@@ -28,8 +28,8 @@ import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCo
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipStudentApplicationForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipTermForm;
+import ee.hitsa.ois.web.dto.ScholarshipTermApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationDto;
-import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermStudentDto;
@@ -56,7 +56,7 @@ public class ScholarshipController {
     }
     
     @GetMapping("/applications")
-    public List<ScholarshipApplicationSearchDto> applications(@Valid ScholarshipApplicationSearchCommand command, HoisUserDetails user) {
+    public List<ScholarshipTermApplicationSearchDto> applications(@Valid ScholarshipApplicationSearchCommand command, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
         return scholarshipService.applications(command, user);
     }

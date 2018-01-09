@@ -2,13 +2,13 @@ package ee.hitsa.ois.web.commandobject;
 
 import javax.validation.constraints.Size;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class GenerateEmailCommand {
 
     @Size(max = 255)
     private String firstname;
-    @NotEmpty
+    @Required
     @Size(max = 255)
     private String lastname;
 

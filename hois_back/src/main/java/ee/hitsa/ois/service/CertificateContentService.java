@@ -8,12 +8,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.persistence.EntityManager;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -22,11 +26,13 @@ import ee.hitsa.ois.enums.StudyPeriodEventType;
 import ee.hitsa.ois.report.certificate.CertificateReport;
 import ee.hitsa.ois.report.certificate.CertificateReportSession;
 import ee.hitsa.ois.report.certificate.CertificateStudentResult;
+import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.CertificateContentCommand;
 import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
 
@@ -35,6 +41,8 @@ public class CertificateContentService {
 
     private static final String PATH = "certificates/";
 
+    @Autowired
+    private EntityManager em;
     @Autowired
     private StudyYearService studyYearService;
     @Autowired
@@ -45,7 +53,40 @@ public class CertificateContentService {
     private ProtocolService protocolService;
     @Autowired 
     private ClassifierService classifierService;
+    @Autowired
+    private PersonRepository personRepository;
 
+    public String generate(CertificateContentCommand command) {
+        CertificateReport report = null;
+        CertificateType type = CertificateType.valueOf(command.getType());
+        boolean isHigher = false;
+
+        if(command.getStudent() != null) {
+            Student student = em.getReference(Student.class, command.getStudent());
+            report = CertificateReport.of(student);
+            setStudentResults(report, student, type);
+            
+            StudyYear studyYear = studyYearService.getCurrentStudyYear(command.getSchool());
+            report.setStudyYear(studyYear.getYear().getNameEt());
+            setSessions(report, studyYear, type);
+            setLastSession(report, studyYear, type);
+            isHigher = StudentUtil.isHigher(student);
+            
+        } else if(command.getOtherIdcode() != null) {
+            Person person = personRepository.findByIdcode(command.getOtherIdcode());
+            School school = em.getReference(School.class, command.getSchool());
+            if(person != null) {
+                report = CertificateReport.of(person, school);
+            } else {
+                report = CertificateReport.of(school, command.getOtherName(), command.getOtherIdcode());
+            }
+        } else {
+            throw new ValidationFailedException("certificate.error.content");
+        }
+        return templateService.evaluateTemplate(getTemplateName(isHigher, type), 
+                Collections.singletonMap("content", report));
+    }
+    
     public String generate(Student student, CertificateType type) {
         CertificateReport report = CertificateReport.of(student);
         StudyYear studyYear = studyYearService.getCurrentStudyYear(EntityUtil.getId(student.getSchool()));

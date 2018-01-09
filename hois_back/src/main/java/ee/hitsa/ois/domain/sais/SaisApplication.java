@@ -16,7 +16,7 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @Entity
 public class SaisApplication extends BaseEntityWithId {
@@ -29,11 +29,11 @@ public class SaisApplication extends BaseEntityWithId {
     private LocalDate submitted;
     private LocalDate saisChanged;
 
-    @NotEmpty
+    @Required
     @Size(max = 100)
     private String firstname;
 
-    @NotEmpty
+    @Required
     @Size(max = 100)
     private String lastname;
 
@@ -66,7 +66,7 @@ public class SaisApplication extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
 
-    @NotEmpty
+    @Required
     @Size(max = 100)
     private String applicationNr;
 
@@ -102,221 +102,177 @@ public class SaisApplication extends BaseEntityWithId {
     @JoinColumn(name = "sais_application_id", nullable = false, updatable = false)
     private Set<SaisApplicationOtherData> otherData = new HashSet<>();
 
-
     public SaisAdmission getSaisAdmission() {
         return saisAdmission;
     }
-
 
     public void setSaisAdmission(SaisAdmission saisAdmission) {
         this.saisAdmission = saisAdmission;
     }
 
-
     public LocalDate getSubmitted() {
         return submitted;
     }
-
 
     public void setSubmitted(LocalDate submitted) {
         this.submitted = submitted;
     }
 
-
     public LocalDate getSaisChanged() {
         return saisChanged;
     }
-
 
     public void setSaisChanged(LocalDate saisChanged) {
         this.saisChanged = saisChanged;
     }
 
-
     public String getFirstname() {
         return firstname;
     }
-
 
     public void setFirstname(String firstname) {
         this.firstname = firstname;
     }
 
-
     public String getLastname() {
         return lastname;
     }
-
 
     public void setLastname(String lastname) {
         this.lastname = lastname;
     }
 
-
     public LocalDate getBirthdate() {
         return birthdate;
     }
-
 
     public void setBirthdate(LocalDate birthdate) {
         this.birthdate = birthdate;
     }
 
-
     public String getIdcode() {
         return idcode;
     }
-
 
     public void setIdcode(String idcode) {
         this.idcode = idcode;
     }
 
-
     public String getForeignIdcode() {
         return foreignIdcode;
     }
-
 
     public void setForeignIdcode(String foreignIdcode) {
         this.foreignIdcode = foreignIdcode;
     }
 
-
     public String getAddress() {
         return address;
     }
-
 
     public void setAddress(String address) {
         this.address = address;
     }
 
-
     public Classifier getSex() {
         return sex;
     }
-
 
     public void setSex(Classifier sex) {
         this.sex = sex;
     }
 
-
     public String getPhone() {
         return phone;
     }
-
 
     public void setPhone(String phone) {
         this.phone = phone;
     }
 
-
     public String getEmail() {
         return email;
     }
-
 
     public void setEmail(String email) {
         this.email = email;
     }
 
-
     public Classifier getFin() {
         return fin;
     }
-
 
     public void setFin(Classifier fin) {
         this.fin = fin;
     }
 
-
     public BigDecimal getPoints() {
         return points;
     }
-
 
     public void setPoints(BigDecimal points) {
         this.points = points;
     }
 
-
     public Classifier getStatus() {
         return status;
     }
-
 
     public void setStatus(Classifier status) {
         this.status = status;
     }
 
-
     public String getApplicationNr() {
         return applicationNr;
     }
-
 
     public void setApplicationNr(String applicationNr) {
         this.applicationNr = applicationNr;
     }
 
-
     public Classifier getCitizenship() {
         return citizenship;
     }
-
 
     public void setCitizenship(Classifier citizenship) {
         this.citizenship = citizenship;
     }
 
-
     public Classifier getStudyLoad() {
         return studyLoad;
     }
-
 
     public void setStudyLoad(Classifier studyLoad) {
         this.studyLoad = studyLoad;
     }
 
-
     public Classifier getResidenceCountry() {
         return residenceCountry;
     }
-
 
     public void setResidenceCountry(Classifier residenceCountry) {
         this.residenceCountry = residenceCountry;
     }
 
-
     public Classifier getStudyForm() {
         return studyForm;
     }
-
 
     public void setStudyForm(Classifier studyForm) {
         this.studyForm = studyForm;
     }
 
-
     public Classifier getLanguage() {
         return language;
     }
-
 
     public void setLanguage(Classifier language) {
         this.language = language;
     }
 
-
     public String getSaisId() {
         return saisId;
     }
-
 
     public void setSaisId(String saisId) {
         this.saisId = saisId;
@@ -334,29 +290,23 @@ public class SaisApplication extends BaseEntityWithId {
         return graduatedSchools;
     }
 
-
     public void setGraduatedSchools(Set<SaisApplicationGraduatedSchool> graduatedSchools) {
         this.graduatedSchools = graduatedSchools;
     }
-
 
     public Set<SaisApplicationGrade> getGrades() {
         return grades;
     }
 
-
     public void setGrades(Set<SaisApplicationGrade> grades) {
         this.grades = grades;
     }
-
 
     public Set<SaisApplicationOtherData> getOtherData() {
         return otherData;
     }
 
-
     public void setOtherData(Set<SaisApplicationOtherData> otherData) {
         this.otherData = otherData;
     }
-
 }

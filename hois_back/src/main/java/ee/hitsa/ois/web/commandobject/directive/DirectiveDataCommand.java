@@ -4,13 +4,15 @@ import java.util.List;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class DirectiveDataCommand {
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.KASKKIRI)
     private String type;
+    @ClassifierRestriction(MainClassCode.STIPTOETUS)
+    private String scholarshipType;
     private List<Long> curriculumVersion;
     private List<String> studyLevel;
     private Long canceledDirective;
@@ -22,6 +24,14 @@ public class DirectiveDataCommand {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getScholarshipType() {
+        return scholarshipType;
+    }
+
+    public void setScholarshipType(String scholarshipType) {
+        this.scholarshipType = scholarshipType;
     }
 
     public List<Long> getCurriculumVersion() {

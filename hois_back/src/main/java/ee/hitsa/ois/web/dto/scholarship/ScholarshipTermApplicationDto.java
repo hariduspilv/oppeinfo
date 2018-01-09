@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.scholarship;
 
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -12,7 +13,7 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
     private Boolean isAcademicLeave;
     private StudyPeriodDto studyPeriod;
     private List<String> studyForms;
-    private Long amountPaid;
+    private BigDecimal amountPaid;
     private String matriculationRange;
 
     public static ScholarshipTermApplicationDto of(ScholarshipTerm term) {
@@ -53,11 +54,11 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
         this.studyForms = studyForms;
     }
 
-    public Long getAmountPaid() {
+    public BigDecimal getAmountPaid() {
         return amountPaid;
     }
 
-    public void setAmountPaid(Long amountPaid) {
+    public void setAmountPaid(BigDecimal amountPaid) {
         this.amountPaid = amountPaid;
     }
 

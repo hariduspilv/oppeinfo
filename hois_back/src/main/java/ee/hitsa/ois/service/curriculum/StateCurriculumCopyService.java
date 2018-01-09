@@ -33,9 +33,6 @@ import ee.hitsa.ois.enums.CurriculumConsecution;
 import ee.hitsa.ois.enums.CurriculumDraft;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumRepository;
-import ee.hitsa.ois.repository.StateCurriculumRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -50,15 +47,9 @@ public class StateCurriculumCopyService {
 
     @Autowired
     private EntityManager em;
-    @Autowired
-    private CurriculumRepository curriculumRepository;
-    @Autowired
-    private StateCurriculumRepository StateCurriculumRepository;
-    @Autowired
-    private ClassifierRepository classifierRepository;
 
-    private static final Integer CREDITS_PER_TERM = Integer.valueOf(30);
-    private static final Integer MONTHS_PER_TERM = Integer.valueOf(6);
+    private static final long CREDITS_PER_TERM = 30;
+    private static final long MONTHS_PER_TERM = 6;
 
     private static final String FROM_CLASSIFIER_CONNECT = " from classifier_connect "
             + "join classifier c on c.code = classifier_connect.classifier_code ";
@@ -79,7 +70,7 @@ public class StateCurriculumCopyService {
 
     public Curriculum copyStateCurriculum(HoisUserDetails user, StateCurriculumCopyCommand command) {
         Curriculum newCurriculum = new Curriculum(); 
-        StateCurriculum copied = StateCurriculumRepository.findOne(command.getId());
+        StateCurriculum copied = em.getReference(StateCurriculum.class, command.getId());
 
         BeanUtils.copyProperties
         (copied, newCurriculum, "id", "school", "inserted", "insertedBy", "changed", "changedBy", "version", 
@@ -90,36 +81,36 @@ public class StateCurriculumCopyService {
         newCurriculum.setCode("ADD CODE");
         newCurriculum.setSchool(em.getReference(School.class, user.getSchoolId()));
         newCurriculum.setHigher(Boolean.FALSE);
-        newCurriculum.setStatus(classifierRepository.getOne(CurriculumStatus.OPPEKAVA_STAATUS_S.name()));
-        newCurriculum.setDraft(classifierRepository.getOne(CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_RIIKLIK.name()));
-        newCurriculum.setConsecution(classifierRepository.getOne(CurriculumConsecution.OPPEKAVA_TYPE_E.name()));
+        newCurriculum.setStatus(em.getReference(Classifier.class, CurriculumStatus.OPPEKAVA_STAATUS_S.name()));
+        newCurriculum.setDraft(em.getReference(Classifier.class, CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_RIIKLIK.name()));
+        newCurriculum.setConsecution(em.getReference(Classifier.class, CurriculumConsecution.OPPEKAVA_TYPE_E.name()));
         newCurriculum.setValidFrom(LocalDate.now());
         newCurriculum.setStateCurriculum(copied);
         newCurriculum.setOccupation(Boolean.valueOf(isOccupation(command)));
         newCurriculum.setJoint(Boolean.FALSE);
         newCurriculum.setCredits(BigDecimal.valueOf(copied.getCredits().longValue()));
         newCurriculum.setOrigStudyLevel(getStudyLevel(user.getSchoolId(), EntityUtil.getId(copied)));
-        newCurriculum.setStudyPeriod(calculateStudyPeriod(copied.getCredits()));
-        
+        newCurriculum.setStudyPeriod(Integer.valueOf(calculateStudyPeriod(copied.getCredits())));
+
         copyOccupations(newCurriculum, command.getOccupations());
         copyModules(newCurriculum, copied, command.getOccupations());
-        
-        return curriculumRepository.save(newCurriculum);
+
+        return EntityUtil.save(newCurriculum, em);
     }
 
     private boolean isOccupation(StateCurriculumCopyCommand command) {
-        Classifier c = classifierRepository.getOne(command.getOccupations().get(0).getOccupation());
+        Classifier c = em.getReference(Classifier.class, command.getOccupations().get(0).getOccupation());
         return MainClassCode.KUTSE.name().equals(c.getMainClassCode());
     }
 
-    public static Integer calculateStudyPeriod(Long credits) {
+    public static int calculateStudyPeriod(Long credits) {
         if(credits.equals(Long.valueOf(0))) {
-            return Integer.valueOf(0);
+            return 0;
         }
-        return BigDecimal.valueOf(credits).multiply(BigDecimal.valueOf(MONTHS_PER_TERM))
+        return BigDecimal.valueOf(credits.longValue()).multiply(BigDecimal.valueOf(MONTHS_PER_TERM))
                 .divide(BigDecimal.valueOf(CREDITS_PER_TERM), 0, BigDecimal.ROUND_HALF_UP).intValue();
     }
-    
+
     /**
      * Why List<?> data is used:
      * There may be no query results. 
@@ -129,18 +120,17 @@ public class StateCurriculumCopyService {
      * Another option would be catching exception and throwing a custom one
      */
     private Classifier getStudyLevel(Long schoolId, Long stateCurriculum) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(FROM_CLASSIFIER_CONNECT);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(FROM_CLASSIFIER_CONNECT).sort("classifier_code");
         qb.filter("classifier_code like 'OPPEASTE%' ");
         qb.filter(" c.valid ");
         qb.requiredCriteria(FILTER_BY_STATE_CURRICULUM_EKR_LEVEL, "stateCurriculum", stateCurriculum);
         qb.requiredCriteria(FILTER_BY_SCHOOL_STUDY_LEVEL, "school", schoolId);
-        qb.sort("classifier_code limit 1"); //TODO: is it proper use of limit?
-        List<?> data = qb.select(" classifier_code", em).getResultList();
+        List<?> data = qb.select(" classifier_code", em).setMaxResults(1).getResultList();
         if(data.isEmpty()) {
             throw new ValidationFailedException("curriculum.error.noSuchStudyLevel");
         }
         String code = resultAsString(data.get(0), 0);
-        return classifierRepository.getOne(code);
+        return em.getReference(Classifier.class, code);
     }
 
     private void copyOccupations(Curriculum newCurriculum, List<StateCurriculumOccupationCopyCommand> occupations) {
@@ -154,7 +144,7 @@ public class StateCurriculumCopyService {
     private CurriculumOccupation copyOccupation(Curriculum newCurriculum, StateCurriculumOccupationCopyCommand occupation) {
         CurriculumOccupation newOccupation  = new CurriculumOccupation();
         newOccupation.setCurriculum(newCurriculum);
-        newOccupation.setOccupation(classifierRepository.getOne(occupation.getOccupation()));
+        newOccupation.setOccupation(em.getReference(Classifier.class, occupation.getOccupation()));
         newOccupation.setOccupationGrant(Boolean.FALSE);
         copySpecialities(newOccupation, occupation.getSpecialities());
         return newOccupation;
@@ -168,17 +158,17 @@ public class StateCurriculumCopyService {
             }
         }
     }
-    
+
     private CurriculumOccupationSpeciality copySpeciality(String speciality) {
         CurriculumOccupationSpeciality newSpeciality = new CurriculumOccupationSpeciality();
-        newSpeciality.setSpeciality(classifierRepository.getOne(speciality));
+        newSpeciality.setSpeciality(em.getReference(Classifier.class, speciality));
         return newSpeciality;
     }
 
     private void copyModules(Curriculum newCurriculum, StateCurriculum copied,
             List<StateCurriculumOccupationCopyCommand> occupations) {
         Set<String> codes = getOccupations(occupations);
-        if(!CollectionUtils.isEmpty(copied.getModules())) {
+        if(!copied.getModules().isEmpty()) {
             newCurriculum.setModules(new HashSet<>());
             for(StateCurriculumModule module : copied.getModules()) {            
                 if(moduleMustBeCopied(module, codes)) {
@@ -187,7 +177,7 @@ public class StateCurriculumCopyService {
             }
         }
     }
-    
+
     private CurriculumModule copyModule(Curriculum newCurriculum, StateCurriculumModule copied, Set<String> codes) {
         CurriculumModule newModule = new CurriculumModule();
         BeanUtils.copyProperties(copied, newModule, "id", "inserted", "insertedBy", "changed", "changedBy", "version");
@@ -197,7 +187,7 @@ public class StateCurriculumCopyService {
         copyModuleOccupations(newModule, copied.getModuleOccupations(), codes);
         return newModule;
     }
-    
+
     private static void copyOutcomes(CurriculumModule newModule, Set<StateCurriculumModuleOutcome> outcomes) {
         if(!CollectionUtils.isEmpty(outcomes)) {
             newModule.setOutcomes(new HashSet<>());
@@ -214,7 +204,7 @@ public class StateCurriculumCopyService {
         return module.getModuleOccupations().stream()
                 .anyMatch(m -> moduleOccupationAdded(m, occupations));
     }
-    
+
     /**
      * @param m - state curriculum module occupation
      * @param occupations - set of occupations, partoccupations and specialities 
@@ -233,16 +223,16 @@ public class StateCurriculumCopyService {
              newModule.getOccupations().add(copyModuleOccupation(o));
         }
     }
-    
+
     private static Set<String> getCopiedModuleOccupations(Set<StateCurriculumModuleOccupation> moduleOccupations, Set<String> occupations) {
         return moduleOccupations.stream()
                 .filter(m -> moduleOccupationAdded(m, occupations))
                 .map(m -> EntityUtil.getCode(m.getOccupation())).collect(Collectors.toSet());
     }
-    
+
     private CurriculumModuleOccupation copyModuleOccupation(String occupation) {
         CurriculumModuleOccupation cmo = new CurriculumModuleOccupation();
-        cmo.setOccupation(classifierRepository.getOne(occupation));
+        cmo.setOccupation(em.getReference(Classifier.class, occupation));
         return cmo;
     }
 
@@ -255,14 +245,14 @@ public class StateCurriculumCopyService {
         result.addAll(getSpecialities(occupations));
         return result;
     }
-    
+
     /**
      * @return specialties selected by user from all occupations
      */
     private static Set<String> getSpecialities(List<StateCurriculumOccupationCopyCommand> occupations) {
         Set<String> result = new HashSet<>();
         for(StateCurriculumOccupationCopyCommand occupation : occupations) {
-            if(!CollectionUtils.isEmpty(occupation.getSpecialities())) {
+            if(occupation.getSpecialities() != null) {
                 result.addAll(occupation.getSpecialities());
             }
         }

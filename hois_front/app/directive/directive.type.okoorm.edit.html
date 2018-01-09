@@ -16,10 +16,16 @@
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{'directive.student.studyLoad'+row.studyLoad | translate}}</td>
         <td md-cell>
-          <hois-classifier-value ng-model="row.fin" main-classifier-code="FINALLIKAS"></hois-classifier-value>
+          <hois-classifier-value ng-model="row.fin" name="students[{{$index}}].fin" main-classifier-code="FINALLIKAS"></hois-classifier-value>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].fin'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.finSpecific" filter-values="[row.oldFinSpecific]" model-value-attr="code" main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.finSpecific" name="students[{{$index}}].finSpecific" filter-values="[row.oldFinSpecific]" model-value-attr="code" main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].finSpecific'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row.idcode)" md-no-ink  class="remove">&times;</a>

@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,7 +32,6 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.CurriculumValidator;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -176,11 +174,10 @@ public class CurriculumValidationService {
 
     private static boolean occupationRequired(Curriculum curriculum) {
         // TODO use static constant
-        return EnumUtil.toNameSet(CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_KUTSE,
-                CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_RIIKLIK)
-                .contains(EntityUtil.getNullableCode(curriculum.getDraft()));
+        return ClassifierUtil.oneOf(curriculum.getDraft(), CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_KUTSE,
+                CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_RIIKLIK);
     }
-    
+
     // Curriculum validation
     public void validateCurriculum(Curriculum curriculum) {
         ValidationFailedException.throwOnError(validator.validate(curriculum, CurriculumValidator.Confirmed.class));
@@ -406,9 +403,7 @@ public class CurriculumValidationService {
         if(CurriculumUtil.isFreeModule(module)) {
             return true;
         }
-        Optional<CurriculumVersionOccupationModule> occupationModule = implementationPlan.getOccupationModules().stream()
-                .filter(om -> module.equals(om.getCurriculumModule())).findFirst();
-        return occupationModule.isPresent();
+        return implementationPlan.getOccupationModules().stream().anyMatch(om -> module.equals(om.getCurriculumModule()));
     }
 
     // Common for higher & vocational curriculum versions

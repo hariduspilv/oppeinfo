@@ -4,7 +4,7 @@
       <tr md-row>
         <th md-column ng-if="!(application.status === 'VOTA_STAATUS_K')" colspan="1">{{'apel.formalLearnings.transfer' | translate}}</th>
         <th md-column>{{'apel.formalLearnings.school' | translate}}</th>
-        <th md-column>{{'apel.formalLearnings.subject' | translate}}</th>
+        <th md-column>{{'apel.formalLearnings.subject' | translate}} ({{'apel.formalLearnings.code' | translate}})</th>
         <th md-column>{{'apel.formalLearnings.creditsEAP' | translate}}</th>
         <th md-column>{{'apel.formalLearnings.assessment' | translate}}</th>
         <th md-column>{{'apel.formalLearnings.result' | translate}}</th>
@@ -24,7 +24,7 @@
             ng-model="row.data[0].transfer" ng-click="changeFormalTransferStatus(row.data[0])" aria-label="{{'apel.formalLearnings.transfer' | translate}}" ng-disabled="true"></md-checkbox>
         </td>
         <td md-cell>{{currentLanguageNameField(row.data[0].school)}}</td>
-        <td md-cell>{{currentLanguageNameField(row.data[0].subject)}}</td>
+        <td md-cell>{{currentLanguageNameField(row.data[0].subject)}} ({{row.data[0].code}})</td>
         <td md-cell>{{row.data[0].credits}}</td>
         <td md-cell>{{row.data[0].assessment.value}}</td>
         <td md-cell>{{row.data[0].grade.value}}</td>

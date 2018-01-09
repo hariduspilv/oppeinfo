@@ -14,6 +14,19 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PROTOKOLL]
         }
       })
+      .when('/higherProtocols/new', {
+        templateUrl: 'higherProtocol/higher.protocol.new.html',
+        controller: 'HigherProtocolNewController',
+        controllerAs: 'higherProtocolNewController',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          isCreate: function (){return true;}
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PROTOKOLL]
+        }
+      })
       .when('/higherProtocols/:id/:action', {
         templateUrl: function(urlAttrs) {
           return urlAttrs.action === 'edit' ? 'higherProtocol/higher.protocol.edit.html' : 'higherProtocol/higher.protocol.view.html';

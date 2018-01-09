@@ -35,11 +35,7 @@
   </md-input-container>
 </div>
 <div layout="row" flex>
-  <md-input-container flex="45">
-    <label>{{'stipend.places' | translate}}</label>
-    <input ng-model="stipend.places" type="number" autofocus aria-label="places" min="0" max="99999">
-  </md-input-container>
-  <md-input-container flex="50" flex-offset="5">
+  <md-input-container flex="100">
     <label>{{'stipend.amountPaid' | translate}}</label>
     <input ng-model="stipend.amountPaid" type="number" autofocus aria-label="amountPaid" min="0" max="9999">
   </md-input-container>
@@ -75,11 +71,11 @@
       <input type="hidden">
     </md-input-container>
     <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
-      <md-datepicker ng-required="required.matriculationStart" ng-model="stipend.studyStartPeriodStart" md-max-date="stipend.studyStartPeriodEnd"
+      <md-datepicker ng-model="stipend.studyStartPeriodStart" md-max-date="stipend.studyStartPeriodEnd"
         md-placeholder="{{'main.from' | translate}}"></md-datepicker>
     </md-input-container>
     <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
-      <md-datepicker ng-required="required.matriculationStart" ng-model="stipend.studyStartPeriodEnd" md-min-date="stipend.studyStartPeriodStart"
+      <md-datepicker ng-model="stipend.studyStartPeriodEnd" md-min-date="stipend.studyStartPeriodStart"
         md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
     </md-input-container>
   </div>

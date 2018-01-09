@@ -22,12 +22,14 @@ public class Student extends StudentBase {
     private Person person;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private School school;
-    @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, fetch = FetchType.LAZY)
+    @OneToOne(cascade = { CascadeType.PERSIST, CascadeType.REMOVE }, fetch = FetchType.LAZY)
     private StudentHistory studentHistory;
     @OneToMany(mappedBy = "student")
     private List<StudentRepresentative> representatives;
     @OneToMany(mappedBy = "student")
     private List<JournalStudent> journalStudents;
+    @OneToOne(optional = true, fetch = FetchType.LAZY, mappedBy = "student")
+    private StudentCurriculumCompletion studentCurriculumCompletion;
 
     public Person getPerson() {
         return person;
@@ -68,4 +70,13 @@ public class Student extends StudentBase {
     public void setJournalStudents(List<JournalStudent> journalStudents) {
         this.journalStudents = journalStudents;
     }
+
+    public StudentCurriculumCompletion getStudentCurriculumCompletion() {
+        return studentCurriculumCompletion;
+    }
+
+    public void setStudentCurriculumCompletion(StudentCurriculumCompletion studentCurriculumCompletion) {
+        this.studentCurriculumCompletion = studentCurriculumCompletion;
+    }
+
 }

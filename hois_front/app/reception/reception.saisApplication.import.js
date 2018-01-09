@@ -10,9 +10,8 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController'
   $scope.importApplications = function() {
     if($scope.applicationImportForm.$valid) {
       var selectedCodes = Classifier.getSelectedCodes($scope.statusList);
-      if(selectedCodes.length > 1) {
-        $scope.criteria.status = selectedCodes;
-      }
+      $scope.criteria.status = selectedCodes.length > 0 ? selectedCodes : undefined;
+
       QueryUtils.endpoint('/saisApplications/importSais').save($scope.criteria).$promise.then(function(result) {
         clMapper.objectmapper(result.successful);
         $scope.failed = result.failed;

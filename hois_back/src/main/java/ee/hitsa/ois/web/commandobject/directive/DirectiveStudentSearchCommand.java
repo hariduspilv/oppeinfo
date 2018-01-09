@@ -3,7 +3,7 @@ package ee.hitsa.ois.web.commandobject.directive;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.validation.EstonianIdCode;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class DirectiveStudentSearchCommand {
 
@@ -14,8 +14,9 @@ public class DirectiveStudentSearchCommand {
     @EstonianIdCode
     private String idcode;
     private Boolean application;
-    @NotEmpty
+    @Required
     private String type;
+    private String scholarshipType;
     private Long directive;
 
     public String getFirstname() {
@@ -56,6 +57,14 @@ public class DirectiveStudentSearchCommand {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getScholarshipType() {
+        return scholarshipType;
+    }
+
+    public void setScholarshipType(String scholarshipType) {
+        this.scholarshipType = scholarshipType;
     }
 
     public Long getDirective() {

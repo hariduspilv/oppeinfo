@@ -21,6 +21,14 @@ angular.module('hitsaOis')
         return name;
     };
 
+    function canSend() {
+      return $scope.auth.isAdmin() || $scope.auth.isTeacher() || $scope.auth.isStudent() || $scope.auth.isParent();
+    }
+
+    $scope.formState = {
+      canSend: canSend()
+    };
+
 }]).controller('messageAutomaticSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route',function ($scope, QueryUtils, DataUtils, $route) {
     $scope.currentNavItem = 'message.automaticSent';
     QueryUtils.createQueryForm($scope, '/message/sent/automatic', {order: "-inserted"});
@@ -49,6 +57,13 @@ angular.module('hitsaOis')
     DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
     $scope.auth = $route.current.locals.auth;
 
+    function canSend() {
+      return $scope.auth.isAdmin() || $scope.auth.isTeacher() || $scope.auth.isStudent() || $scope.auth.isParent();
+    }
+
+    $scope.formState = {
+      canSend: canSend()
+    };
 
 }]).controller('messageViewController', ['$scope', 'QueryUtils', '$route', 'DataUtils', '$resource', 'config', function ($scope, QueryUtils, $route, DataUtils, $resource, config) {
     var baseUrl = '/message';
@@ -57,7 +72,7 @@ angular.module('hitsaOis')
 
     var backUrl = $route.current.params.backUrl;
     $scope.formState = {};
-    
+
     switch(backUrl) {
         case "received":
             $scope.formState.backUrl = "#/messages/received";
@@ -67,7 +82,7 @@ angular.module('hitsaOis')
             $scope.formState.backUrl = "#/messages/automatic/sent";
             $scope.isSent = true;
             break;
-        default: 
+        default:
             $scope.isSent = true;
             $scope.formState.backUrl = "#/messages/sent";
     }
@@ -77,7 +92,7 @@ angular.module('hitsaOis')
         $scope.record.receivers =  $scope.record.receiversNames.join("; ");
         setRead();
     }
-    
+
     $scope.record = Endpoint.get({id: id}, afterLoad);
 
     function setRead() {
@@ -147,12 +162,13 @@ angular.module('hitsaOis')
             break;
         case "automaticSent":
             $scope.formState.backUrl = "#/messages/automatic/sent";
-            break; 
-        default: 
+            break;
+        default:
             $scope.formState.backUrl = "#/messages/sent";
     }
 
     // $scope.targetGroups = ["ROLL_O", "ROLL_T", "ROLL_L", "ROLL_P"];
+    $scope.targetGroups = [];
     if($scope.auth.isAdmin()) {
         $scope.targetGroups = ["ROLL_O", "ROLL_T", "ROLL_L", "ROLL_P"];
     } else  if($scope.auth.isTeacher()) {
@@ -245,10 +261,10 @@ angular.module('hitsaOis')
                 idcode: s.idcode,
                 fullname: s.fullname,
                 // role: ["ROLL_T"],
-                role: s.role, 
+                role: s.role,
                 studyForm: s.studyForm,
                 curriculum: s.curriculum,
-                studentGroup: s.studentGroup, 
+                studentGroup: s.studentGroup,
             };
         });
         return list;
@@ -256,11 +272,11 @@ angular.module('hitsaOis')
 
     function filterReceivers() {
         $scope.receivers = $scope.receivers.filter(function(r){
-            return (isStudentsParent(r) || includesOrEmpty(r.role, $scope.targetGroup)) && 
-            (r.addedWithAutocomplete || 
-            includesOrEmpty($scope.curriculum, r.curriculum ? r.curriculum.id : null) && 
-            includesOrEmpty($scope.studentGroup, r.studentGroup ? r.studentGroup.id : null) && 
-            includesOrEmpty($scope.studyForm, r.studyForm) && 
+            return (isStudentsParent(r) || includesOrEmpty(r.role, $scope.targetGroup)) &&
+            (r.addedWithAutocomplete ||
+            includesOrEmpty($scope.curriculum, r.curriculum ? r.curriculum.id : null) &&
+            includesOrEmpty($scope.studentGroup, r.studentGroup ? r.studentGroup.id : null) &&
+            includesOrEmpty($scope.studyForm, r.studyForm) &&
             includesOrEmpty($scope.studyGroupStudentsParents, r.studentGroup ? r.studentGroup.id : null));
         });
     }
@@ -273,7 +289,7 @@ angular.module('hitsaOis')
 
     $scope.tarGetGroupChanged = function() {
         /*
-        filterReceivers() did not work in the following scenario: 
+        filterReceivers() did not work in the following scenario:
         user adds a student which has representative and then selects Parents as target group.
         In that case student's representative hadn't been removed from the list.
         So now list of receivers is just completely cleared.
@@ -356,7 +372,7 @@ angular.module('hitsaOis')
                 idcode: p.idcode,
                 fullname: p.fullname,
                 role: ["ROLL_L"],
-                studentGroup: p.studentGroup, 
+                studentGroup: p.studentGroup,
                 curriculum: p.curriculum,
                 addedWithAutocomplete: addedWithAutocomplete
             };

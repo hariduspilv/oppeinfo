@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.service.sais.SaisClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.sais.SaisClassifierSearchCommand;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
 
@@ -30,7 +30,7 @@ public class SaisClassifierController {
     }
 
     @GetMapping("/{parentCode}")
-    public Page<SaisClassifierSearchDto> search(@NotEmpty @PathVariable("parentCode") String parentCode, SaisClassifierSearchCommand command, Pageable pageable, HoisUserDetails user) {
+    public Page<SaisClassifierSearchDto> search(@Required @PathVariable("parentCode") String parentCode, SaisClassifierSearchCommand command, Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsMainAdmin(user);
         return saisClassifierService.search(parentCode, command, pageable);
     }

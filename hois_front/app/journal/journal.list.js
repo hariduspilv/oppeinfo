@@ -1,10 +1,25 @@
 'use strict';
 
-angular.module('hitsaOis').controller('JournalListController', function ($scope, $route, QueryUtils, Classifier, $q) {
+angular.module('hitsaOis').controller('JournalListController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, message) {
   $scope.auth = $route.current.locals.auth;
   $scope.search = {};
   var clMapper = Classifier.valuemapper({ status: 'PAEVIK_STAATUS' });
   var promises = clMapper.promises;
+
+  $scope.formState = {};
+
+  QueryUtils.endpoint('/journals/canConfirmAll').search().$promise.then(function(response){
+    $scope.formState.canConfirmAll = response.canConfirmAll;
+  });
+
+  $scope.confirmAll = function() {
+    dialogService.confirmDialog({prompt: 'journal.prompt.confirmAll'}, function() {
+      QueryUtils.endpoint('/journals/confirmAll').put().$promise.then(function(response){
+        message.info('journal.messages.allConfirmed', {numberOfConfirmedJournals: response.numberOfConfirmedJournals});
+        $scope.loadData();
+      });
+    });
+  };
 
   $scope.criteriaDefer = $q.defer();
   QueryUtils.createQueryForm($scope, '/journals', {}, clMapper.objectmapper);

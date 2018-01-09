@@ -21,7 +21,7 @@ import ee.hitsa.ois.util.CurriculumVersionYearCapacitiesUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 
 public class CurriculumVersionDto extends InsertedChangedVersionDto {
@@ -48,11 +48,11 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     @Size(max=20000)
     private String description;
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.OPPEKAVA_VERSIOON_LIIK)
     private String type;
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.OPPEKAVA_VERSIOON_STAATUS)
     private String status;
     private Long schoolDepartment;

@@ -4,26 +4,28 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @Component
 @Validated
 @ConfigurationProperties("hois.jwt")
 public class HoisJwtProperties {
 
-    @NotEmpty
+    @Required
     private String secret = "changeMe";
-    @NotEmpty
+    @Required
     private String header = "Authorization";
-    @NotEmpty
+    @Required
     private String tokenPrefix = "Bearer";
-    @NotEmpty
+    @Required
     private String claimLoginMethod = "loginMethod";
-    @NotEmpty
+    @Required
+    private String claimMobileNumber = "mobileNumber";
+    @Required
     private String claimSesscode = "sesscode";
-    @NotEmpty
+    @Required
     private String claimGivenname = "givenname";
-    @NotEmpty
+    @Required
     private String claimSurname = "surname";
 
     public String getSecret() {
@@ -57,6 +59,14 @@ public class HoisJwtProperties {
     public void setClaimLoginMethod(String claimLoginMethod) {
         this.claimLoginMethod = claimLoginMethod;
     }
+    
+    public String getClaimMobileNumber() {
+        return claimMobileNumber;
+    }
+    
+    public void setClaimMobileNumber(String claimMobileNumber) {
+        this.claimMobileNumber = claimMobileNumber;
+    }
 
     public String getClaimSesscode() {
         return claimSesscode;
@@ -81,5 +91,4 @@ public class HoisJwtProperties {
     public void setClaimSurname(String claimSurname) {
         this.claimSurname = claimSurname;
     }
-
 }

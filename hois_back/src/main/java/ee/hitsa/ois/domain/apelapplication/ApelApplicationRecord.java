@@ -9,7 +9,6 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 
@@ -20,7 +19,6 @@ public class ApelApplicationRecord extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private ApelApplication apelApplication;
     
-    @NotNull
     private Boolean isFormalLearning;
     
     @OneToMany(mappedBy="apelApplicationRecord", cascade = CascadeType.ALL, orphanRemoval = true)

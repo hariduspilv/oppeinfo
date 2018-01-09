@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,8 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.enums.CertificateType;
-import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.CertificateContentService;
 import ee.hitsa.ois.service.CertificateService;
 import ee.hitsa.ois.service.CertificateValidationService;
@@ -32,7 +29,6 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.CertificateContentCommand;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.commandobject.CertificateSearchCommand;
@@ -51,8 +47,6 @@ public class CertificateController {
     private CertificateContentService certificateContentService;
     @Autowired
     private EkisService ekisService;
-    @Autowired
-    private StudentRepository studentRepository;
     @Autowired
     private CertificateValidationService certificateValidationService;
 
@@ -78,17 +72,13 @@ public class CertificateController {
 
     @GetMapping("/content")
     public Map<String, String> getContent(HoisUserDetails user, @Valid CertificateContentCommand command) {
-        if(user.isStudent()) {
-            command.setStudent(user.getStudentId());
-        } else if(command.getStudent() == null) {
-            throw new ValidationFailedException("no.student");
-        }
-        Student student = studentRepository.findOne(command.getStudent());
-        UserUtil.assertIsSchoolAdminOrStudent(user, student.getSchool());
-
-        Map<String, String> response = new HashMap<>();
-        response.put("content", certificateContentService.generate(student, CertificateType.valueOf(command.getType())));
-        return response;
+      UserUtil.assertIsSchoolAdminOrStudent(user);
+      if(user.isStudent()) {
+        command.setStudent(user.getStudentId());
+      }
+      command.setSchool(user.getSchoolId());
+      return Collections.singletonMap("content", 
+                certificateContentService.generate(command));
     }
 
     @GetMapping("/signatories")

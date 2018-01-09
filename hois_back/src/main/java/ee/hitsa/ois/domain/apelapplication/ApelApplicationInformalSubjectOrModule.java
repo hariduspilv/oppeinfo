@@ -9,7 +9,6 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -44,7 +43,6 @@ public class ApelApplicationInformalSubjectOrModule extends BaseEntityWithId {
     @OneToMany(mappedBy="apelApplicationInformalSubjectOrModule", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ApelApplicationInformalSubjectOrModuleOutcomes> outcomes = new ArrayList<>();
     
-    @NotNull
     private String skills;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

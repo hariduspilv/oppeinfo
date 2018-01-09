@@ -112,7 +112,7 @@ public class CurriculumOccupationService {
 
     private void updateSpecialities(CurriculumOccupation occupation, Set<String> specialities) {
         EntityUtil.bindEntityCollection(occupation.getSpecialities(), s -> EntityUtil.getCode(s.getSpeciality()), specialities, specialityCode -> {
-            Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(specialityCode), MainClassCode.SPETSKUTSE);
+            Classifier c = EntityUtil.validateClassifier(em.getReference(Classifier.class, specialityCode), MainClassCode.SPETSKUTSE);
             return new CurriculumOccupationSpeciality(c);
         });
     }

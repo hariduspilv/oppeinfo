@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherProtocolSearchController', function ($scope, $route, $location, QueryUtils, DataUtils, Classifier, message, $q, dialogService, ArrayUtils) {
+angular.module('hitsaOis').controller('HigherProtocolSearchController', function ($scope, $route, QueryUtils, DataUtils, Classifier, message, $q, ArrayUtils, USER_ROLES) {
   $scope.auth = $route.current.locals.auth;
   var baseUrl = "/higherProtocols";
 
@@ -17,51 +17,21 @@ angular.module('hitsaOis').controller('HigherProtocolSearchController', function
     }
   }
 
+  function canCreate() {
+    return ($scope.auth.isAdmin() || $scope.auth.isTeacher()) &&
+    ArrayUtils.includes($scope.auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PROTOKOLL);
+  }
+
+  $scope.formState = {
+    canCreate: canCreate()
+  };
+
+
   $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(function() {
     setCurrentStudyPeriod();
     $scope.loadData();
   });
 
   $scope.$watch('criteria.studyPeriod', setCurrentStudyPeriod);
-
-  $scope.openCreateProtocolDialog = function() {
-    var DialogController = function (scope) {
-      scope.record = {
-        protocolType: 'PROTOKOLLI_LIIK_P',
-        students: []
-      };
-
-      scope.subjectStudyPeriods = QueryUtils.endpoint(baseUrl + "/subjectStudyPeriods").query();
-
-      function getStudents() {
-        if(scope.record.protocolType && scope.record.subjectStudyPeriod) {
-          QueryUtils.endpoint(baseUrl + "/students").query(scope.record).$promise.then(function(response){
-            scope.record.students = [];
-            scope.students = response;
-          });
-        }
-      }
-
-      scope.$watch('record.subjectStudyPeriod', getStudents);
-      scope.$watch('record.protocolType', getStudents);
-
-      scope.save = function() {
-        scope.dialogForm.$setSubmitted();
-        if(ArrayUtils.isEmpty(scope.record.students)) {
-          message.error("higherProtocol.error.noStudents");
-          return;
-        }
-        scope.submit(scope);
-      };
-    };
-
-    dialogService.showDialog('higherProtocol/higher.protocol.create.dialog.html', DialogController,
-      function (submitScope) {
-        new Endpoint(submitScope.record).$save().then(function(response){
-          message.info('main.messages.create.success');
-          $location.path(baseUrl + '/'+ response.id +'/edit');
-        });
-      });
-  };
 
 });

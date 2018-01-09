@@ -11,13 +11,13 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class CurriculumOccupationDto extends VersionedCommand {
 
     private Long id;
-    @NotEmpty
+    @Required
     @ClassifierRestriction({MainClassCode.KUTSE, MainClassCode.OSAKUTSE})
     private String occupation;
     @NotNull

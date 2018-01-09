@@ -327,11 +327,8 @@ public class EhisDirectiveStudentService extends EhisService {
         khlKorgharidusLisa.setOppekava(curriculumCode(student.getCurriculumVersion().getCurriculum()));
         khlKorgharidusLisa.setKlOppekeel(ehisValue(student.getLanguage()));
         khlKorgharidusLisa.setKlOppevorm(ehisValue(student.getStudyForm()));
-        if(student.getStudyLoad() == null) {
-            khlKorgharidusLisa.setKlOppekoormus(ehisValue(em.getReference(Classifier.class, StudyLoad.OPPEKOORMUS_MTA.name())));
-        } else {
-            khlKorgharidusLisa.setKlOppekoormus(ehisValue(student.getStudyLoad()));
-        }
+        Classifier studyLoad = student.getStudyLoad() == null ? em.getReference(Classifier.class, StudyLoad.OPPEKOORMUS_MTA.name()) : student.getStudyLoad();
+        khlKorgharidusLisa.setKlOppekoormus(ehisValue(studyLoad));
         khlKorgharidusLisa.setKlRahastAllikas(ehisValue(student.getFinSpecific()));
 
         khlKorgharidusLisa.setKlEelnevHaridus(ehisValue(student.getPreviousStudyLevel()));

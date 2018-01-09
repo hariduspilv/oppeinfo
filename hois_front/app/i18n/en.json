@@ -29,7 +29,8 @@
       "error": {
         "fileTooLarge": "File size should not exceed ",
         "wrongExtension": "Only following file extensions are allowed: ",
-        "notFound": "Not found"
+        "notFound": "Not found",
+        "mobileIdSignFailed": "Signing failed"
       },
       "form-has-errors" : "Form has errors"
     },

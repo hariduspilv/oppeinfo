@@ -1,6 +1,8 @@
 package ee.hitsa.ois.web;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfiguration;
+import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.enums.Role;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -20,6 +24,18 @@ public class AutocompleteControllerTests {
 
     @Autowired
     private TestRestTemplate restTemplate;
+    @Autowired
+    private TestConfigurationService testConfigurationService;
+
+    @Before
+    public void setUp() {
+        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
+    }
+
+    @After
+    public void cleanUp() {
+        testConfigurationService.setSessionCookie(null);
+    }
 
     @Test
     public void buildings() {
@@ -269,7 +285,7 @@ public class AutocompleteControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
-        uri = "/autocomplete/students?studyinge=true";
+        uri = "/autocomplete/students?studying=true";
         responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -285,6 +301,11 @@ public class AutocompleteControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         uri = "/autocomplete/students?higher=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uri = "/autocomplete/students?curriculumVersion=1&studentGroup=1";
         responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -320,7 +341,7 @@ public class AutocompleteControllerTests {
         Assert.assertNotNull(response);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
-    
+
     @Test
     public void journalsAndSubjects() {
         String uri = "/autocomplete/journalsAndSubjects";

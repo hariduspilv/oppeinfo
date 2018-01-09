@@ -2,11 +2,11 @@ package ee.hitsa.ois.web.commandobject;
 
 import javax.validation.constraints.Size;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class BuildingForm extends VersionedCommand {
 
-    @NotEmpty
+    @Required
     @Size(max = 20)
     private String code;
     @Size(max = 255)

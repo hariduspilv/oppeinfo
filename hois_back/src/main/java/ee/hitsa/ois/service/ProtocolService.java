@@ -74,7 +74,7 @@ public class ProtocolService {
         if(gradeSum != null && creditsSum != null && BigDecimal.ZERO.compareTo(creditsSum) != 0) {
             return gradeSum.divide(creditsSum, 3, BigDecimal.ROUND_HALF_UP);
         }
-        return null;    
+        return null;
     }
 
     public List<StudentVocationalResultModuleThemeDto> vocationalResults(Student student) {

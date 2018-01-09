@@ -8,17 +8,17 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @DateRange(from = "startDate", thru = "endDate")
 public class StudyPeriodForm extends VersionedCommand {
 
-    @NotEmpty
+    @Required
     @Size(max = 100)
     private String nameEt;
     @Size(max = 100)
     private String nameEn;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.OPPEPERIOOD)
     private String type;
     @NotNull

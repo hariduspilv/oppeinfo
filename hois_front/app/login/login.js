@@ -53,7 +53,8 @@ angular.module('hitsaOis')
         failedAuthentication();
       } else if (response.data.challengeID) {
         $scope.showMobileId(response.data.challengeID);
-        $timeout(pollMobileIdStatus, 5000);
+        $scope.mobileIdPolls = 0;
+        $timeout(pollMobileIdStatus, config.mobileIdInitialDelay);
       } else {
         failedAuthentication();
       }
@@ -65,7 +66,10 @@ angular.module('hitsaOis')
         $mdDialog.hide();
         AuthService.login().then(successfulAuthentication, failedAuthentication);
       } else if (response.status === 'OUTSTANDING_TRANSACTION') {
-        $timeout(pollMobileIdStatus, 4000);
+        $scope.mobileIdPolls++;
+        if ($scope.mobileIdPolls < config.mobileIdMaxPolls) {
+          $timeout(pollMobileIdStatus, config.mobileIdPollInterval);
+        }
       } else {
         console.log('mobileIdStatus: '+response.status);
         $mdDialog.hide();

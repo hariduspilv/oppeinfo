@@ -31,12 +31,12 @@ import ee.hitsa.ois.enums.FinSource;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudyLoad;
 import ee.hitsa.ois.exception.BadConfigurationException;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -74,8 +74,6 @@ public class SaisAdmissionService {
     private SaisLogService saisLogService;
     @Autowired
     private CurriculumVersionRepository curriculumVersionRepository;
-    @Autowired
-    private ClassifierRepository classifierRepository;
     @Autowired
     private ClassifierService classifierService;
 
@@ -128,10 +126,10 @@ public class SaisAdmissionService {
         // XXX maybe ignore values with getExtraval1 missing and when multiple items with same values, use first one
         Map<String, Classifier> oppevormMap = StreamUtil.toMap(Classifier::getValue, classifierService.findAllByMainClassCode(MainClassCode.OPPEVORM));
 
-        Classifier finallikasRe = classifierRepository.getOne(FinSource.FINALLIKAS_RE.name());
-        Classifier finallikasRev = classifierRepository.getOne(FinSource.FINALLIKAS_REV.name());
-        Classifier oppekoormusOsa = classifierRepository.getOne(StudyLoad.OPPEKOORMUS_OSA.name());
-        Classifier oppekoormusTais = classifierRepository.getOne(StudyLoad.OPPEKOORMUS_TAIS.name());
+        Classifier finallikasRe = em.getReference(Classifier.class, FinSource.FINALLIKAS_RE.name());
+        Classifier finallikasRev = em.getReference(Classifier.class, FinSource.FINALLIKAS_REV.name());
+        Classifier oppekoormusOsa = em.getReference(Classifier.class, StudyLoad.OPPEKOORMUS_OSA.name());
+        Classifier oppekoormusTais = em.getReference(Classifier.class, StudyLoad.OPPEKOORMUS_TAIS.name());
 
         List<Admission> addmissions = response.getAdmissions() != null ? response.getAdmissions().getAdmission() : null;
         for(Admission admission : StreamUtil.nullSafeList(addmissions)) {
@@ -201,7 +199,7 @@ public class SaisAdmissionService {
                 saisAdmission.setStudyForm(oppevormMap.get(DEFAULT_OPPEVORM));
             }
             saisAdmission.setPlaces(admission.getAdmissionCount());
-            result.add(SaisAdmissionSearchDto.of(saisAdmissionRepository.save(saisAdmission)));
+            result.add(SaisAdmissionSearchDto.of(EntityUtil.save(saisAdmission, em)));
         }
     }
 

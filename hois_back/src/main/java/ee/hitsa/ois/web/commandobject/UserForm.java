@@ -4,21 +4,19 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.constraints.NotNull;
-
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @DateRange
 public class UserForm extends VersionedCommand {
 
     private EntityConnectionCommand school;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.ROLL)
     private String role;
-    @NotNull
+    @Required
     private LocalDate validFrom;
     private LocalDate validThru;
     private Map<String, List<String>> rights;

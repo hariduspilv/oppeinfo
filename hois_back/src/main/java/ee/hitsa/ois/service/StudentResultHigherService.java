@@ -107,7 +107,7 @@ public class StudentResultHigherService {
     }
 
     private List<StudentHigherSubjectResultDto> getStudentResults(Student student) {
-        List<ProtocolStudent> studentResults = protocolStudentRepository.findByStudent(EntityUtil.getId(student));
+        List<ProtocolStudent> studentResults = protocolStudentRepository.findByStudent(EntityUtil.getId(student)).stream().filter(ps -> ps.getGrade() != null).collect(Collectors.toList());
         return StreamUtil.toMappedList(StudentHigherSubjectResultDto::ofFromProtocolStudent, studentResults);
     }
 
@@ -196,7 +196,7 @@ public class StudentResultHigherService {
     private static BigDecimal calculateCredits(List<StudentHigherSubjectResultDto> modulesPositiveResults, Boolean isOptional) {
         Optional<BigDecimal> credits = modulesPositiveResults.stream().filter(r -> isOptional.equals(r.getIsOptional()))
                 .map(r -> r.getSubject().getCredits()).reduce((c, sum) -> c.add(sum));
-        return credits.isPresent() ? credits.get() : BigDecimal.ZERO;
+        return credits.orElse(BigDecimal.ZERO);
     }
 
     private static BigDecimal calculateTotalDifference(StudentHigherModuleResultDto module) {

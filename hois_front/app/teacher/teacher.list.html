@@ -38,7 +38,7 @@
       <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <md-button ng-href="#/teachers/new" ng-if="!showSchool" class="md-raised">{{'main.button.create' | translate}}</md-button>
+          <md-button ng-href="#/teachers/new" ng-if="formState.canCreate" class="md-raised">{{'main.button.create' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
     </form>

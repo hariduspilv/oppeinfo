@@ -17,7 +17,6 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -299,10 +298,10 @@ public class DeclarationService {
             return null;
         }
 
-        TypedQuery<Declaration> q = em.createQuery("select d from Declaration d where d.student.id = ?1 and d.studyPeriod.id = ?2", Declaration.class);
-        q.setParameter(1, studentId);
-        q.setParameter(2, studyPeriodId);
-        List<Declaration> result = q.setMaxResults(1).getResultList();
+        List<Declaration> result = em.createQuery("select d from Declaration d where d.student.id = ?1 and d.studyPeriod.id = ?2", Declaration.class)
+                .setParameter(1, studentId)
+                .setParameter(2, studyPeriodId)
+                .setMaxResults(1).getResultList();
         return result.isEmpty() ? null : result.get(0);
     }
 

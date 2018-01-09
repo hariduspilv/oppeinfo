@@ -109,6 +109,7 @@ public abstract class EhisService {
         KhlOppeasutus khlOppeasutus = new KhlOppeasutus();
 
         String koolId = ehisValue(student.getSchool().getEhisSchool());
+        // FIXME strings are allowed values too
         khlOppeasutus.setKoolId(koolId != null ? new BigInteger(koolId) : null);
 
         khlOppeasutus.getOppur().add(getKhlOppurMuutmine(student, true));

@@ -49,9 +49,10 @@ public class MessageController {
     public Page<MessageSearchDto> searchSent(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
         return messageService.searchSent(user, criteria, pageable);
     }
-    
+
     @GetMapping("/sent/automatic")
     public Page<MessageSearchDto> searchSentAutomatic(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
         return messageService.searchSentAutomatic(user.getSchoolId(), criteria, pageable);
     }
 

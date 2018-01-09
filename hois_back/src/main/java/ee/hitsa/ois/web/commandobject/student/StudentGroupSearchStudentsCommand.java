@@ -2,7 +2,7 @@ package ee.hitsa.ois.web.commandobject.student;
 
 import javax.validation.constraints.NotNull;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 public class StudentGroupSearchStudentsCommand {
@@ -11,9 +11,9 @@ public class StudentGroupSearchStudentsCommand {
     @NotNull
     private EntityConnectionCommand curriculum;
     private Long curriculumVersion;
-    @NotEmpty
+    @Required
     private String language;
-    @NotEmpty
+    @Required
     private String studyForm;
 
     public Long getId() {

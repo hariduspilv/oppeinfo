@@ -6,7 +6,7 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
@@ -23,13 +23,13 @@ public class ApelApplicationInformalSubjectOrModuleForm extends InsertedChangedV
     private Boolean isOptional;
     private Boolean transfer;
     
-    @NotEmpty
+    @Required
     @ClassifierRestriction({MainClassCode.KORGHINDAMINE, MainClassCode.KUTSEHINDAMINE})
     private String grade;
     
     private List<ApelApplicationInformalSubjectOrModuleOutcomesForm> outcomes;
     
-    @NotEmpty
+    @Required
     @Size(max = 4000)
     private String skills;
 
@@ -112,5 +112,4 @@ public class ApelApplicationInformalSubjectOrModuleForm extends InsertedChangedV
     public void setSkills(String skills) {
         this.skills = skills;
     }
-    
 }

@@ -17,16 +17,14 @@
             <label>{{'ehis.student.sentDatesRange' | translate}}</label>
             <input type="hidden">
           </md-input-container>
-          <div flex="33">
+          <div flex="33" ng-if="displayDates.indexOf(criteria.dataType) !== -1">
             <md-input-container flex>
               <label>{{'main.from' | translate}}</label>
-              <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" ng-if="displayDates.indexOf(criteria.dataType) !== -1"
-                             required></md-datepicker>
+              <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" required></md-datepicker>
             </md-input-container>
             <md-input-container flex>
               <label>{{'main.thru' | translate}}</label>
-              <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" ng-if="displayDates.indexOf(criteria.dataType) !== -1"
-                             required></md-datepicker>
+              <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" required></md-datepicker>
             </md-input-container>
           </div>
         </div>

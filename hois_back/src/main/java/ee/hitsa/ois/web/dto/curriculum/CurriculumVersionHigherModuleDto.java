@@ -17,7 +17,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.CurriculumValidator.HigherModule;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class CurriculumVersionHigherModuleDto extends VersionedCommand {
@@ -60,7 +60,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     private Short electiveModulesNumber;
     @NotNull
     private Boolean minorSpeciality;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.KORGMOODUL)
     private String type;
 
@@ -72,7 +72,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
      * These are actually curriculum version specialties.
      * Used for saving
      */
-    @NotEmpty(groups = {HigherModule.class})
+    @Required(groups = {HigherModule.class})
     private Set<Long> specialitiesReferenceNumbers;
     
     /**

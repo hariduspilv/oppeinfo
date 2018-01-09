@@ -8,7 +8,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class CurriculumGradeDto extends VersionedCommand {
@@ -26,7 +26,7 @@ public class CurriculumGradeDto extends VersionedCommand {
     @Size(max=255)
     private String nameGenitiveEt;
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.AKAD_KRAAD)
     private String ehisGrade;
 
@@ -74,5 +74,4 @@ public class CurriculumGradeDto extends VersionedCommand {
     public void setEhisGrade(String ehisGrade) {
         this.ehisGrade = ehisGrade;
     }
-
 }

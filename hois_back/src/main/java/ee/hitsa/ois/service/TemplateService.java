@@ -3,6 +3,7 @@ package ee.hitsa.ois.service;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -73,6 +74,7 @@ public class TemplateService {
             Map<String, Filter> filters = new HashMap<>();
             filters.put("translate", new TranslateFilter());
             filters.put("hoisDate", new DateFilter());
+            filters.put("hoisDateTime", new DateTimeFilter());
             return filters;
         }
     }
@@ -105,6 +107,23 @@ public class TemplateService {
                 return null;
             }
             return ((LocalDate)input).format(format);
+        }
+    }
+    
+    static class DateTimeFilter implements Filter {
+        private final DateTimeFormatter format = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+        
+        @Override
+        public List<String> getArgumentNames() {
+            return null;
+        }
+        
+        @Override
+        public Object apply(Object input, Map<String, Object> args) {
+            if(input == null) {
+                return null;
+            }
+            return ((LocalDateTime)input).format(format);
         }
     }
 

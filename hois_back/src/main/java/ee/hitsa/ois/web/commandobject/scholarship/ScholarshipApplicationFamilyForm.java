@@ -1,13 +1,15 @@
 package ee.hitsa.ois.web.commandobject.scholarship;
 
+import java.math.BigDecimal;
+
 public class ScholarshipApplicationFamilyForm {
     private Long id;
     private String name;
-    private Long netSalary;
-    private Long otherIncome;
-    private Long pension;
-    private Long stateBenefit;
-    private long unemplyedBenefit;
+    private BigDecimal netSalary;
+    private BigDecimal otherIncome;
+    private BigDecimal pension;
+    private BigDecimal stateBenefit;
+    private BigDecimal unemployedBenefit;
 
     public Long getId() {
         return id;
@@ -25,44 +27,44 @@ public class ScholarshipApplicationFamilyForm {
         this.name = name;
     }
 
-    public Long getNetSalary() {
+    public BigDecimal getNetSalary() {
         return netSalary;
     }
 
-    public void setNetSalary(Long netSalary) {
+    public void setNetSalary(BigDecimal netSalary) {
         this.netSalary = netSalary;
     }
 
-    public Long getOtherIncome() {
+    public BigDecimal getOtherIncome() {
         return otherIncome;
     }
 
-    public void setOtherIncome(Long otherIncome) {
+    public void setOtherIncome(BigDecimal otherIncome) {
         this.otherIncome = otherIncome;
     }
 
-    public Long getPension() {
+    public BigDecimal getPension() {
         return pension;
     }
 
-    public void setPension(Long pension) {
+    public void setPension(BigDecimal pension) {
         this.pension = pension;
     }
 
-    public Long getStateBenefit() {
+    public BigDecimal getStateBenefit() {
         return stateBenefit;
     }
 
-    public void setStateBenefit(Long stateBenefit) {
+    public void setStateBenefit(BigDecimal stateBenefit) {
         this.stateBenefit = stateBenefit;
     }
 
-    public long getUnemplyedBenefit() {
-        return unemplyedBenefit;
+    public BigDecimal getUnemployedBenefit() {
+        return unemployedBenefit;
     }
 
-    public void setUnemplyedBenefit(long unemplyedBenefit) {
-        this.unemplyedBenefit = unemplyedBenefit;
+    public void setUnemployedBenefit(BigDecimal unemployedBenefit) {
+        this.unemployedBenefit = unemployedBenefit;
     }
 
 }

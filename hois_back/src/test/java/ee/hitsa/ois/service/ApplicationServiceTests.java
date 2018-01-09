@@ -18,7 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.TestConfigurationService;
@@ -82,13 +81,13 @@ public class ApplicationServiceTests {
 
     @Test
     public void testAkadConstraintsMustBeHigher() {
-        Assert.assertFalse(CollectionUtils.isEmpty(studentRepository.findAll()));
+        Assert.assertFalse(studentRepository.findAll().isEmpty());
         ApplicationForm applicationForm = getAkadApplicationForm(occupationalStudent);
         applicationForm.setStartDate(LocalDate.now());
         applicationForm.setEndDate(LocalDate.now().plusYears(1));
 
         Set<ConstraintViolation<ApplicationForm>> errors = validator.validate(applicationForm);
-        Assert.assertTrue(CollectionUtils.isEmpty(errors));
+        Assert.assertTrue(errors.isEmpty());
 
         ValidationFailedException result = null;
         try {
@@ -103,13 +102,13 @@ public class ApplicationServiceTests {
 
     @Test
     public void testAkadConstraintsPeriodIsTooLong() {
-        Assert.assertFalse(CollectionUtils.isEmpty(studentRepository.findAll()));
+        Assert.assertFalse(studentRepository.findAll().isEmpty());
         ApplicationForm applicationForm = getAkadApplicationForm(student);
         applicationForm.setStartDate(LocalDate.now());
         applicationForm.setEndDate(LocalDate.now().plusYears(2));
 
         Set<ConstraintViolation<ApplicationForm>> errors = validator.validate(applicationForm);
-        Assert.assertTrue(CollectionUtils.isEmpty(errors));
+        Assert.assertTrue(errors.isEmpty());
 
         ValidationFailedException result = null;
         try {

@@ -4,14 +4,15 @@ import java.time.DayOfWeek;
 
 import javax.validation.constraints.NotNull;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class TimetableEventVocationalForm extends TimetableEventForm {
+
     @NotNull
     private Long journal;
     @NotNull
     private Long lessonTime;
-    @NotEmpty
+    @Required
     private String selectedDay;
 
     public Long getJournal() {

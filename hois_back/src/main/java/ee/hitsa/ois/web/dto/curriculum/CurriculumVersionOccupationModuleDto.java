@@ -15,7 +15,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
@@ -38,7 +38,7 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     private String learningMethodsEt;
     private String assessmentMethodsEt;
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMISVIIS)
     private String assessment;
 

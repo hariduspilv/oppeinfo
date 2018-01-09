@@ -10,7 +10,6 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -34,7 +33,6 @@ public class ApelApplication extends BaseEntityWithId {
     private String confirmedBy;
     private LocalDateTime confirmed;
     
-    @NotNull
     private Boolean isVocational;
     
     @OneToMany(mappedBy="apelApplication", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -49,13 +49,13 @@ public class HigherProtocolController {
     @GetMapping
     public Page<HigherProtocolSearchDto> search(HoisUserDetails user,
             @NotNull @Valid HigherProtocolSearchCommand criteria, Pageable pageable) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        HigherProtocolUtil.assertCanSearch(user);
         return higherProtocolService.search(user, criteria, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
     public HigherProtocolDto get(HoisUserDetails user, @WithEntity Protocol protocol) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
+        HigherProtocolUtil.assertCanView(user, protocol);
         HigherProtocolDto dto = HigherProtocolDto.ofWithUserRights(user, protocol);
         higherProtocolService.setStudentsPracticeResults(dto);
         return dto;
@@ -64,14 +64,14 @@ public class HigherProtocolController {
     @GetMapping("/print/{id:\\d+}/protocol.pdf")
     public void print(HoisUserDetails user, @WithEntity Protocol protocol, HttpServletResponse response)
             throws IOException {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
+        HigherProtocolUtil.assertCanView(user, protocol);
         HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
                 pdfService.generate(HigherProtocolReport.TEMPLATE_NAME, new HigherProtocolReport(protocol)));
     }
 
     @PostMapping
     public HigherProtocolDto create(HoisUserDetails user, @NotNull @Valid @RequestBody HigherProtocolCreateForm form) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        HigherProtocolUtil.assertCanCreate(user);
         HigherProtocolUtil.assertStudentsAdded(form);
         return HigherProtocolDto.ofWithIdOnly(higherProtocolService.create(user, form));
     }

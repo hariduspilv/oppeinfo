@@ -12,7 +12,9 @@ angular.module('hitsaOis').controller('KutseregisterSyncController', ['$scope', 
         return false;
       }
 
-      QueryUtils.endpoint('/logs/kutseregister/sync').post($scope.criteria);
+      QueryUtils.endpoint('/logs/kutseregister/sync').post($scope.criteria, function() {
+        message.info('occupationcertificate.importDone');
+      });
     };
   }
 ]);

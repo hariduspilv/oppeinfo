@@ -21,7 +21,8 @@ import ee.hitsa.ois.domain.apelapplication.ApelApplication;
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationComment;
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationFile;
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationRecord;
-import ee.hitsa.ois.report.ApelApplicationReport;
+import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.report.apelapplication.ApelApplicationReport;
 import ee.hitsa.ois.service.ApelApplicationService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -38,6 +39,7 @@ import ee.hitsa.ois.web.commandobject.apelapplication.ApelApplicationSearchComma
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationFileDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationSearchDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
 
 @RestController
 @RequestMapping("/apelApplications")
@@ -48,42 +50,47 @@ public class ApelApplicationController {
     @Autowired
     private PdfService pdfService;
 
-    
     @GetMapping
-    public Page<ApelApplicationSearchDto> search(ApelApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
+    public Page<ApelApplicationSearchDto> search(@Valid ApelApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdminOrStudent(user);
         return apelApplicationService.search(user, command, pageable);
     }
-    
+
     @GetMapping("/{id:\\d+}")
     public ApelApplicationDto get(HoisUserDetails user, @WithEntity ApelApplication application) {
-        UserUtil.assertIsSchoolAdminOrStudent(user);
+        if (!UserUtil.canViewApelApplication(user, application)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
         return apelApplicationService.get(application);
     }
-    
+
     @PostMapping
     public ApelApplicationDto create(HoisUserDetails user, @Valid @RequestBody ApelApplicationForm applicationForm) {
         UserUtil.assertIsSchoolAdminOrStudent(user);
         ApelApplication savedApplication = apelApplicationService.create(user, applicationForm);
         return get(user, savedApplication);
     }
-    
+
     @PutMapping("/{id:\\d+}")
     public ApelApplicationDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) ApelApplication application,
             @Valid @RequestBody ApelApplicationForm applicationForm) {
-        UserUtil.assertIsSchoolAdminOrStudent(user, application.getSchool());
+        if (!UserUtil.canViewApelApplication(user, application)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
         return get(user, apelApplicationService.save(user, application,  applicationForm));
     }
-    
+
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user,
             @WithVersionedEntity(versionRequestParam = "version") ApelApplication application,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdminOrStudent(user, application.getSchool());
+        if (!UserUtil.canEditApelApplication(user, application)) {
+            throw new ValidationFailedException("apel.error.nopermission");
+        }
         apelApplicationService.delete(user, application);
     }
-    
+
     @PutMapping("/{id:\\d+}/submit")
     public ApelApplicationDto submit(HoisUserDetails user, @WithEntity ApelApplication application) {
         if (!UserUtil.canSubmitApelApplication(user, application)) {
@@ -92,7 +99,7 @@ public class ApelApplicationController {
         ApelApplication submittedApplication = apelApplicationService.submit(application);
         return get(user, submittedApplication);
     }
-    
+
     @PutMapping("/{id:\\d+}/sendToConfirm")
     public ApelApplicationDto sendToConfirm(HoisUserDetails user, @WithEntity ApelApplication application) {
         if (!UserUtil.canSendToConfirmApelApplication(user, application)) {
@@ -101,7 +108,7 @@ public class ApelApplicationController {
         ApelApplication sentToConfirmApplication = apelApplicationService.sendToConfirm(application);
         return get(user, sentToConfirmApplication);
     }
-    
+
     @PutMapping("/{id:\\d+}/sendBackToCreation")
     public ApelApplicationDto sendBackToCreation(HoisUserDetails user, @WithEntity ApelApplication application) {
         if (!UserUtil.canSendBackToCreation(user, application)) {
@@ -110,7 +117,7 @@ public class ApelApplicationController {
         ApelApplication sentBackToCreationApplication = apelApplicationService.sendBackToCreation(application);
         return get(user, sentBackToCreationApplication);
     }
-    
+
     @PutMapping("/{id:\\d+}/confirm")
     public ApelApplicationDto confirm(HoisUserDetails user, @WithEntity ApelApplication application) {
         if (!UserUtil.canConfirmApelApplication(user, application)) {
@@ -119,7 +126,7 @@ public class ApelApplicationController {
         ApelApplication confirmedApplication = apelApplicationService.confirm(user, application);
         return get(user, confirmedApplication);
     }
-    
+
     @PutMapping("/{id:\\d+}/sendBack")
     public ApelApplicationDto sendBack(HoisUserDetails user, @WithEntity ApelApplication application) {
         if (!UserUtil.canSendBackApelApplication(user, application)) {
@@ -128,7 +135,7 @@ public class ApelApplicationController {
         ApelApplication sentBackApplication = apelApplicationService.sendBack(application);
         return get(user, sentBackApplication);
     }
-    
+
     @PutMapping("/{id:\\d+}/reject")
     public ApelApplicationDto reject(HoisUserDetails user, @WithEntity ApelApplication application,
             @Valid @RequestBody ApelApplicationCommentForm applicationCommentForm) {
@@ -138,7 +145,7 @@ public class ApelApplicationController {
         ApelApplication rejectedApplication = apelApplicationService.reject(application, applicationCommentForm);
         return get(user, rejectedApplication);
     }
-    
+
     @PutMapping("/{id:\\d+}/removeConfirmation")
     public ApelApplicationDto removeConfirmation(HoisUserDetails user, @WithEntity ApelApplication application) {
         if (!UserUtil.canRemoveConfirmationApelApplication(user, application)) {
@@ -147,8 +154,7 @@ public class ApelApplicationController {
         ApelApplication removedConfirmationApplication = apelApplicationService.removeConfirmation(application);
         return get(user, removedConfirmationApplication);
     }
-  
-    
+
     @PostMapping("/{applicationId:\\d+}/record")
     public ApelApplicationDto createRecord(HoisUserDetails user,
             @Valid @RequestBody ApelApplicationRecordForm recordForm,
@@ -159,7 +165,7 @@ public class ApelApplicationController {
         apelApplicationService.createRecord(user, application, recordForm);
         return get(user, application);
     }
-    
+
     @PutMapping("/{applicationId:\\d+}/record/{id:\\d+}")
     public ApelApplicationDto updateRecord(HoisUserDetails user,
             @Valid @RequestBody ApelApplicationRecordForm recordForm,
@@ -171,7 +177,7 @@ public class ApelApplicationController {
         apelApplicationService.updateRecord(user, recordForm, record);
         return get(user, application);
     }
-    
+
     @DeleteMapping("/{applicationId:\\d+}/record/{id:\\d+}")
     public ApelApplicationDto deleteRecord(HoisUserDetails user, @WithEntity("applicationId") ApelApplication application,
             @WithVersionedEntity(versionRequestParam = "version") ApelApplicationRecord record,
@@ -202,7 +208,7 @@ public class ApelApplicationController {
         }
         apelApplicationService.deleteFile(user, file);
     }
-    
+
     @PostMapping("/{applicationId:\\d+}/comment")
     public ApelApplicationDto createComment(HoisUserDetails user,
             @Valid @RequestBody ApelApplicationCommentForm commentForm,
@@ -213,7 +219,7 @@ public class ApelApplicationController {
         apelApplicationService.createComment(application, commentForm);
         return get(user, application);
     }
-    
+
     /* TODO: not used right now an might never be */
     @PutMapping("/{applicationId:\\d+}/comment/{id:\\d+}")
     public ApelApplicationDto updateComment(HoisUserDetails user,
@@ -226,7 +232,7 @@ public class ApelApplicationController {
         apelApplicationService.updateComment(commentForm, comment);
         return get(user, application);
     }
-    
+
     @DeleteMapping("/{applicationId:\\d+}/comment/{id:\\d+}")
     public ApelApplicationDto deleteComment(HoisUserDetails user, @WithEntity("applicationId") ApelApplication application,
             @WithVersionedEntity(versionRequestParam = "version") ApelApplicationComment comment,
@@ -237,12 +243,24 @@ public class ApelApplicationController {
         apelApplicationService.deleteComment(user, comment);
         return get(user, application);
     }
-    
+
     @GetMapping("/print/{id:\\d+}/application.pdf")
     public void print(HoisUserDetails user, @WithEntity ApelApplication application, HttpServletResponse response)
             throws IOException {
-        UserUtil.assertIsSchoolAdminOrStudent(user);
+        if (!UserUtil.canViewApelApplication(user, application)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+
+        String templateName = Boolean.TRUE.equals(application.getIsVocational()) ?
+                ApelApplicationReport.VOCATIONAL_TEMPLATE_NAME : ApelApplicationReport.HIGHER_TEMPLATE_NAME;
+
         HttpUtil.pdf(response, application.getId() + ".pdf",
-                pdfService.generate(ApelApplicationReport.TEMPLATE_NAME, new ApelApplicationReport(application)));
+                pdfService.generate(templateName, new ApelApplicationReport(application)));
+    }
+
+    @GetMapping("/subjectModule/{subjectId:\\d+}")
+    public CurriculumVersionHigherModuleDto subjectModule(HoisUserDetails user, @WithEntity("subjectId") Subject subject) {
+        UserUtil.assertIsSchoolAdminOrStudent(user);
+        return apelApplicationService.subjectModule(subject);
     }
 }

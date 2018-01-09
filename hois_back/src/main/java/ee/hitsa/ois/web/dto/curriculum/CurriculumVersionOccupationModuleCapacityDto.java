@@ -8,14 +8,14 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleCapacity;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class CurriculumVersionOccupationModuleCapacityDto extends VersionedCommand {
 
     private Long id;
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.MAHT)
     private String capacityType;
 

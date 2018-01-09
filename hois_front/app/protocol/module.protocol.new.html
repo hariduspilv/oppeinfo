@@ -35,10 +35,6 @@
 
         <br/>
 
-        <input style="display:none" type="number" readonly name="selectedStudentsLength" ng-model="selectedStudentsLength" ng-model-options="{ getterSetter: true }"  min="1"  />
-        <div md-colors="{color: 'warn-A400'}" ng-messages="moduleProtocolNewForm.selectedStudentsLength.$error">
-          <div ng-if="moduleProtocolNewForm.$submitted" ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
-        </div>
         <div flex>
           <md-table-container>
             <table md-table md-progress="tabledata.$promise" md-row-select multiple ng-model="formState.selectedStudents">
@@ -65,7 +61,7 @@
         <br/>
 
         <div layout="row">
-          <md-button class="md-raised md-primary" type="submit">{{'moduleProtocol.addAllSelectedStudentsToProtocol' | translate}}</md-button>
+          <md-button class="md-raised md-primary" type="submit">{{'moduleProtocol.create' | translate}}</md-button>
           <md-button class="md-raised" ng-click="back('#/moduleProtocols/')">{{'main.button.back' | translate}}</md-button>
         </div>
       </div>

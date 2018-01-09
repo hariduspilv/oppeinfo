@@ -4,11 +4,11 @@ import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class ModuleProtocolCommand {
 
-    @NotEmpty
+    @Required
     private List<Long> students;
     @NotNull
     private Long curriculumVersionOccupationModule;

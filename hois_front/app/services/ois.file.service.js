@@ -28,15 +28,14 @@ angular.module('hitsaOis')
       return 'data:' + oisFile.ftype + ';base64,' + oisFile.fdata;
     };
 
-    factory.getUrl = function(file) {
+    factory.getUrl = function(file, type) {
       if(!file) {
         return;
       }
-      if (file && file.oisFile) {
-        return file.id ? config.apiUrl + '/oisfile/get/' + file.oisFile.id : factory.getFileUrl(file.oisFile);
-      } else {
-        return file.id ? config.apiUrl + '/oisfile/get/' + file.id : factory.getFileUrl(file);
+      if (file.oisFile) {
+        return file.id ? config.apiUrl + '/oisfile/get/' + type + '/' + file.oisFile.id : factory.getFileUrl(file.oisFile);
       }
+      return file.id ? config.apiUrl + '/oisfile/get/' + type + '/' + file.id : factory.getFileUrl(file);
     };
 
     return factory;

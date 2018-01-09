@@ -25,31 +25,52 @@
         <td md-cell><input type="text" ng-readonly="row._found" ng-model="row.firstname"></td>
         <td md-cell><input type="text" ng-readonly="row._found" ng-model="row.lastname"></td>
         <td md-cell>
-          <hois-select ng-model="row.curriculumVersion" values="formState.curriculumVersions" ng-change="curriculumVersionChanged(row)" aria-label="{{'directive.student.curriculumVersion' | translate}}"></hois-select>
+          <hois-select ng-model="row.curriculumVersion" name="students[{{$index}}].curriculumVersion" values="formState.curriculumVersions" ng-change="curriculumVersionChanged(row)" aria-label="{{'directive.student.curriculumVersion' | translate}}"></hois-select>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].curriculumVersion'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell ng-if="formState.school.higher">
           <hois-classifier-select ng-model="row.studyLoad" criteria="{higher: true}" model-value-attr="code" main-classifier-code="OPPEKOORMUS" aria-label="{{'directive.student.studyLoad' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.studyForm" show-only-values="visibleStudyForms(row.curriculumVersion)" model-value-attr="code" main-classifier-code="OPPEVORM" aria-label="{{'directive.student.studyForm' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.studyForm" name="students[{{$index}}].studyForm" show-only-values="visibleStudyForms(row.curriculumVersion)" model-value-attr="code" main-classifier-code="OPPEVORM" aria-label="{{'directive.student.studyForm' | translate}}"></hois-classifier-select>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].studyForm'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
           <md-datepicker ng-model="row.nominalStudyEnd"></md-datepicker>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.fin" model-value-attr="code" main-classifier-code="FINALLIKAS" aria-label="{{'directive.student.fin' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.fin" name="students[{{$index}}].fin" model-value-attr="code" main-classifier-code="FINALLIKAS" aria-label="{{'directive.student.fin' | translate}}"></hois-classifier-select>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].fin'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.finSpecific" model-value-attr="code" main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.finSpecific" name="students[{{$index}}].finSpecific" model-value-attr="code" main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].finSpecific'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.language" show-only-values="formState.languageMap[row.curriculumVersion]" model-value-attr="code" main-classifier-code="OPPEKEEL" aria-label="{{'directive.student.language' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.language" name="students[{{$index}}].language" show-only-values="formState.languageMap[row.curriculumVersion]" model-value-attr="code" main-classifier-code="OPPEKEEL" aria-label="{{'directive.student.language' | translate}}"></hois-classifier-select>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].language'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
-          <hois-select ng-model="row.studentGroup" values="formState.studentGroupMap[row.curriculumVersion]" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+          <hois-select ng-model="row.studentGroup" name="students[{{$index}}].studentGroup" values="formState.studentGroupMap[row.curriculumVersion]" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].studentGroup'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.previousStudyLevel" model-value-attr="code" main-classifier-code="OPPEASTE" aria-label="{{'directive.student.previousStudyLevel' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.previousStudyLevel" name="students[{{$index}}].previousStudyLevel" model-value-attr="code" main-classifier-code="OPPEASTE" aria-label="{{'directive.student.previousStudyLevel' | translate}}"></hois-classifier-select>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].previousStudyLevel'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row.idcode)" md-no-ink  class="remove">&times;</a>

@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.WsEhisTeacherLog;
@@ -395,8 +394,7 @@ public class EhisTeacherExportService extends EhisService {
             PedagoogTasemekoolitus koolitus = new PedagoogTasemekoolitus();
             koolitus.setKlKvalDok(ehisValue(q.getQualification()));
             if(q.getQualification() != null) {
-                ClassifierConnect c = q.getQualification().getClassifierConnects().stream().filter(r -> MainClassCode.EHIS_OPJ_KVAL.name().equals(r.getMainClassifierCode())).findFirst().orElse(null);
-                Classifier qualification = c != null ? c.getConnectClassifier() : null;
+                Classifier qualification = ClassifierUtil.parentFor(q.getQualification(), MainClassCode.EHIS_OPJ_KVAL).orElse(null);
                 koolitus.setKlKval(ehisValue(qualification));
             }
             koolitus.setKlRiik(value2(q.getState()));

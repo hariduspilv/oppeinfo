@@ -7,6 +7,8 @@ import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.sais.SaisApplication;
+import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
+import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.FinSource;
@@ -30,6 +32,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
     private String curriculumGrade;
+    private String bankAccount;
     private Boolean applicationIsPeriod;
     private LocalDate applicationStartDate;
     private LocalDate applicationEndDate;
@@ -116,6 +119,14 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.curriculumGrade = curriculumGrade;
     }
 
+    public String getBankAccount() {
+        return bankAccount;
+    }
+
+    public void setBankAccount(String bankAccount) {
+        this.bankAccount = bankAccount;
+    }
+
     public Boolean getApplicationIsPeriod() {
         return applicationIsPeriod;
     }
@@ -154,6 +165,22 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
     public void setApplicationStudyPeriodEnd(AutocompleteResult applicationStudyPeriodEnd) {
         this.applicationStudyPeriodEnd = applicationStudyPeriodEnd;
+    }
+
+    public static DirectiveStudentDto of(ScholarshipApplication application, DirectiveType directiveType) {
+        DirectiveStudentDto dto = of(application.getStudent(), directiveType);
+        ScholarshipTerm term = application.getScholarshipTerm();
+        if("STIPTOETUS_ERI".equals(EntityUtil.getCode(term.getType()))) {
+            dto.setStartDate(application.getScholarshipFrom());
+            dto.setEndDate(application.getScholarshipThru());
+        } else {
+            dto.setStartDate(term.getPaymentStart());
+            dto.setEndDate(term.getPaymentEnd());
+        }
+        dto.setBankAccount(application.getBankAccount());
+        dto.setAmountPaid(term.getAmountPaid());
+        dto.setScholarshipApplication(application.getId());
+        return dto;
     }
 
     public static DirectiveStudentDto of(Application application, DirectiveType directiveType) {
@@ -305,6 +332,6 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         dto.setIdcode(person.getIdcode());
         dto.setFirstname(person.getFirstname());
         dto.setLastname(person.getLastname());
-        dto.setFullname(person.getFullname());        
+        dto.setFullname(person.getFullname());
     }
 }

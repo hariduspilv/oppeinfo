@@ -2,8 +2,8 @@
 
 angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectEditController', ['$scope','QueryUtils', 'ArrayUtils', '$route', 'message', 'Classifier',  'SspCapacities', 'DataUtils', function ($scope, QueryUtils, ArrayUtils, $route, message, Classifier, SspCapacities, DataUtils) {
 
-    var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId) : null;
-    var subject = $route.current.params.subjectId ? parseInt($route.current.params.subjectId) : null;
+    var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId, 10) : null;
+    var subject = $route.current.params.subjectId ? parseInt($route.current.params.subjectId, 10) : null;
     $scope.isNew = subject === null && studyPeriodId === null;
     var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods/subjects/container');
     $scope.record = {};

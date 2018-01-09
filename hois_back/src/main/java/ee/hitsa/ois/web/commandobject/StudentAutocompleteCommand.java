@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.util.List;
+
 public class StudentAutocompleteCommand extends AutocompleteCommand {
 
     private Boolean active;
@@ -8,6 +10,8 @@ public class StudentAutocompleteCommand extends AutocompleteCommand {
     private Boolean academicLeave;
     private Boolean nominalStudy;
     private Boolean higher;
+    private List<Long> curriculumVersion;
+    private List<Long> studentGroup;
 
     public Boolean getActive() {
         return active;
@@ -57,4 +61,19 @@ public class StudentAutocompleteCommand extends AutocompleteCommand {
         this.higher = higher;
     }
 
+    public List<Long> getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public void setCurriculumVersion(List<Long> curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
+    }
+
+    public List<Long> getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(List<Long> studentGroup) {
+        this.studentGroup = studentGroup;
+    }
 }

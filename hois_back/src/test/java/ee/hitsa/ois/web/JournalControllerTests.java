@@ -184,16 +184,6 @@ public class JournalControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
     
-    public void studentJournal() {
-        testConfigurationService.userToRole(Role.ROLL_T, restTemplate);
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment(journal.getId().toString(), "studentJournal");
-        uriBuilder.queryParam("studentId", STUDENT_ID);
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
-        Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    }
-    
     @Test
     public void studentJournalTasks() {
         testConfigurationService.userToRole(Role.ROLL_T, restTemplate);

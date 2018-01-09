@@ -15,6 +15,7 @@ public class ModuleProtocolSearchDto {
     private LocalDate inserted;
     private LocalDate confirmDate;
     private String confirmer;
+    private Boolean canEdit;
 
     public Long getId() {
         return id;
@@ -88,4 +89,11 @@ public class ModuleProtocolSearchDto {
         this.confirmer = confirmer;
     }
 
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
 }

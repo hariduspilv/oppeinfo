@@ -222,12 +222,12 @@ public class TeacherService {
         person.setEmail(personForm.getEmail());
         person.setPhone(personForm.getPhone());
         person.setNativeLanguage(personForm.getNativeLanguage());
-        Classifier citizenship = classifierRepository.getOne(personForm.getCitizenship());
+        Classifier citizenship = em.getReference(Classifier.class, personForm.getCitizenship());
         if (citizenship == null || !MainClassCode.RIIK.name().equals(citizenship.getMainClassCode())) {
             throw new ValidationFailedException("person.citizenship", "null");
         }
         person.setCitizenship(citizenship);
-        person.setSex(EntityUtil.validateClassifier(classifierRepository.getOne(teacherForm.getPerson().getSex()), MainClassCode.SUGU));
+        person.setSex(EntityUtil.validateClassifier(em.getReference(Classifier.class, teacherForm.getPerson().getSex()), MainClassCode.SUGU));
         // TODO: generate from idcode
         if (personForm.getBirthdate() != null) {
             if (LocalDate.now().isAfter(personForm.getBirthdate())) {

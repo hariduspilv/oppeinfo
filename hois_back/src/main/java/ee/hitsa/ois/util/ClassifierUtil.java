@@ -4,10 +4,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.service.ClassifierService;
@@ -57,6 +59,33 @@ public class ClassifierUtil {
             }
         }
         return false;
+    }
+
+    /**
+     * Find parent classifier for given mainClassCode
+     *
+     * @param child
+     * @param mainClassCode
+     * @return empty Optional if parent was not found
+     */
+    public static Optional<Classifier> parentFor(Classifier child, MainClassCode mainClassCode) {
+        return parentLinkFor(child, mainClassCode).map(r -> r.getConnectClassifier());
+    }
+
+    /**
+     * Find link to parent classifier for given mainClassCode
+     * @param child
+     * @param mainClassCode
+     * @return empty Optional if parent link was not found
+     */
+    public static Optional<ClassifierConnect> parentLinkFor(Classifier child, MainClassCode mainClassCode) {
+        if(child == null) {
+            return Optional.empty();
+        }
+        // find matching parent link
+        return child.getClassifierConnects().stream()
+                .filter(r -> mainClassCode.name().equals(r.getMainClassifierCode()))
+                .findAny();
     }
 
     public static List<ClassifierSelection> sort(List<String> mainClassCodes, List<ClassifierSelection> data) {

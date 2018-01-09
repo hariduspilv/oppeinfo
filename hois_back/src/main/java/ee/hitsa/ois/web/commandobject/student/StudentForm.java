@@ -6,7 +6,7 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class StudentForm extends VersionedCommand {
@@ -21,7 +21,7 @@ public class StudentForm extends VersionedCommand {
     private String studentCard;
     @Size(max = 255)
     private String schoolEmail;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.OPPEASTE)
     private String previousStudyLevel;
 
@@ -89,19 +89,19 @@ public class StudentForm extends VersionedCommand {
 
     public static class StudentPersonForm {
 
-        @NotEmpty
+        @Required
         @Size(max = 255)
         private String email;
-        @NotEmpty
+        @Required
         @Size(max = 100)
         private String phone;
-        @NotEmpty
+        @Required
         @ClassifierRestriction(MainClassCode.RIIK)
         private String residenceCountry;
-        @NotEmpty
+        @Required
         @Size(max = 255)
         private String address;
-        @NotEmpty
+        @Required
         @Size(max = 20)
         private String postcode;
 

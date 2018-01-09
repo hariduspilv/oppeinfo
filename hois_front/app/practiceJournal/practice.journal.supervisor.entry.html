@@ -9,6 +9,10 @@
             <hois-value value="practiceJournal.student.nameEt"></hois-value>
           </md-input-container>
           <md-input-container flex>
+            <label>{{'practiceJournal.school' | translate}}</label>
+            <hois-value value="currentLanguageNameField(practiceJournal.school)"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
             <label>{{'student.curriculum' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.studentCurriculumVersion)"></hois-value>
           </md-input-container>
@@ -39,7 +43,7 @@
         </div>
 
         <div ng-if="practiceJournal.subject" layout="row" flex>
-          <md-input-container flex>
+          <md-input-container flex="50">
             <label>{{'practiceJournal.subject' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.subject)"></hois-value>
           </md-input-container>
@@ -64,15 +68,15 @@
           </md-input-container>
         </div>
         <div layout="row" flex>
-          <md-input-container flex>
+          <md-input-container flex="25">
             <label>{{'practiceJournal.startDate' | translate}}</label>
             <hois-value value="practiceJournal.startDate | hoisDate"></hois-value>
           </md-input-container>
-          <md-input-container flex>
+          <md-input-container flex="25">
             <label>{{'practiceJournal.endDate' | translate}}</label>
             <hois-value value="practiceJournal.endDate | hoisDate"></hois-value>
           </md-input-container>
-          <md-input-container flex>
+          <md-input-container flex="50">
             <label>{{'practiceJournal.schoolSupervisor' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.teacher)"></hois-value>
           </md-input-container>
@@ -164,7 +168,7 @@
               <tr md-row ng-repeat="file in practiceJournal.practiceJournalFiles | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>
                   {{file.oisFile.fname}}
-                  <a ng-href="{{getUrl(file.oisFile)}}" target="_blank">
+                  <a ng-href="{{getUrl(file.oisFile, 'practicejournal')}}" target="_blank" rel="noopener noreferrer">
                     <md-icon md-font-set="material-icons">file_download</md-icon>
                   </a>
                 </td>

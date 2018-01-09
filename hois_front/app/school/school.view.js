@@ -6,7 +6,7 @@ angular.module('hitsaOis').controller('SchoolViewController', ['$route', '$scope
 
     $scope.school = QueryUtils.endpoint('/school').get({id: id}, function() {
       if($scope.school.logo) {
-        $scope.school.imageUrl = oisFileService.getUrl($scope.school.logo);
+        $scope.school.imageUrl = oisFileService.getUrl($scope.school.logo, 'school');
       } else {
         $scope.school.imageUrl = '?' + new Date().getTime();
       }

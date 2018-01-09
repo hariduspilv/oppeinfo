@@ -7,7 +7,7 @@ import javax.persistence.ManyToOne;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @Entity
 public class SaisApplicationGrade extends BaseEntityWithId {
@@ -17,14 +17,14 @@ public class SaisApplicationGrade extends BaseEntityWithId {
     private SaisApplication saisApplication;
 
     @Size(max = 255)
-    @NotEmpty
+    @Required
     private String subjectName;
 
     @Size(max = 100)
     private String subjectType;
 
     @Size(max = 100)
-    @NotEmpty
+    @Required
     private String grade;
 
     public SaisApplication getSaisApplication() {
@@ -58,5 +58,4 @@ public class SaisApplicationGrade extends BaseEntityWithId {
     public void setGrade(String grade) {
         this.grade = grade;
     }
-
 }

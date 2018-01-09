@@ -1,6 +1,7 @@
 package ee.hitsa.ois.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -28,6 +29,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private HoisUserDetailsService userDetailsService;
     @Autowired
     private HoisJwtProperties hoisJwtProperties;
+    @Value("${hois.frontend.baseUrl}")
+    private String frontendBaseUrl;
 
     @Autowired
     public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
@@ -51,7 +54,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             .addFilter(new JwtAuthorizationFilter(authenticationManager(), userDetailsService, hoisJwtProperties))
             .csrf().csrfTokenRepository(getRootCookieCsrfTokenRepository());
 
-        http.logout().addLogoutHandler(userDetailsService);
+        http.logout()
+                .addLogoutHandler(userDetailsService)
+                .logoutSuccessUrl(frontendBaseUrl);
     }
 
     private static CsrfTokenRepository getRootCookieCsrfTokenRepository() {

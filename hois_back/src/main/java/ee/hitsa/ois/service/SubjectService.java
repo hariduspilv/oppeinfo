@@ -82,7 +82,7 @@ public class SubjectService {
         EntityUtil.bindEntityCollection(subject.getSubjectLanguages(), language -> EntityUtil.getCode(language.getLanguage()), newSubject.getLanguages(), code -> {
             SubjectLanguage subjectLanguage = new SubjectLanguage();
             subjectLanguage.setSubject(subject);
-            subjectLanguage.setLanguage(EntityUtil.validateClassifier(classifierRepository.getOne(code), MainClassCode.OPPEKEEL));
+            subjectLanguage.setLanguage(EntityUtil.validateClassifier(em.getReference(Classifier.class, code), MainClassCode.OPPEKEEL));
             return subjectLanguage;
         });
         bindConnections(subject, newSubject);
@@ -103,9 +103,9 @@ public class SubjectService {
         Set<SubjectConnect> connections = target.getSubjectConnections();
         Set<SubjectConnect> newConnections = new HashSet<>();
 
-        bindSubjectConnect(target, classifierRepository.getOne(SubjectConnection.AINESEOS_EK.name()), connections, newConnections, subjects.stream().filter(it -> mandatory.contains(it.getId())).collect(Collectors.toSet()));
-        bindSubjectConnect(target, classifierRepository.getOne(SubjectConnection.AINESEOS_EV.name()), connections, newConnections, subjects.stream().filter(it -> recommended.contains(it.getId())).collect(Collectors.toSet()));
-        bindSubjectConnect(target, classifierRepository.getOne(SubjectConnection.AINESEOS_A.name()), connections, newConnections, subjects.stream().filter(it -> substitute.contains(it.getId())).collect(Collectors.toSet()));
+        bindSubjectConnect(target, SubjectConnection.AINESEOS_EK, connections, newConnections, subjects.stream().filter(it -> mandatory.contains(it.getId())).collect(Collectors.toSet()));
+        bindSubjectConnect(target, SubjectConnection.AINESEOS_EV, connections, newConnections, subjects.stream().filter(it -> recommended.contains(it.getId())).collect(Collectors.toSet()));
+        bindSubjectConnect(target, SubjectConnection.AINESEOS_A, connections, newConnections, subjects.stream().filter(it -> substitute.contains(it.getId())).collect(Collectors.toSet()));
 
         List<Long> ids = new ArrayList<>();
         ids.add(target.getId());
@@ -120,7 +120,9 @@ public class SubjectService {
         target.setSubjectConnections(newConnections);
     }
 
-    private static void bindSubjectConnect(Subject primarySubject, Classifier connectionType, Set<SubjectConnect> connections, Set<SubjectConnect> newConnections, Collection<Subject> connectSubjects) {
+    private void bindSubjectConnect(Subject primarySubject, SubjectConnection subjectConnection, Set<SubjectConnect> connections, Set<SubjectConnect> newConnections, Collection<Subject> connectSubjects) {
+        Classifier connectionType = em.getReference(Classifier.class, subjectConnection.name());
+
         // TODO use EntityUtil.bindEntityCollection
         Map<Long, SubjectConnect> m = connections.stream()
                 .filter(it -> Objects.equals(EntityUtil.getCode(it.getConnection()), EntityUtil.getCode(connectionType)))
@@ -222,12 +224,12 @@ public class SubjectService {
     }
 
     public Subject saveAndConfirm(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
-        subject.setStatus(classifierRepository.getOne(SubjectStatus.AINESTAATUS_K.name()));
+        subject.setStatus(em.getReference(Classifier.class, SubjectStatus.AINESTAATUS_K.name()));
         return save(user, subject, newSubject);
     }
 
     public Subject saveAndUnconfirm(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
-        subject.setStatus(classifierRepository.getOne(SubjectStatus.AINESTAATUS_P.name()));
+        subject.setStatus(em.getReference(Classifier.class, SubjectStatus.AINESTAATUS_P.name()));
         return save(user, subject, newSubject);
     }
 

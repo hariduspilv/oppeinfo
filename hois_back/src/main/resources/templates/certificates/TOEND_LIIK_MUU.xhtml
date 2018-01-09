@@ -1,0 +1,1 @@
+{{ content.school }} tõendab, et {% if content.student.fullname != null %} {{ content.student.fullname }}{% else %}{{ content.student.firstname }} {{ content.student.lastname }} {% endif %} {% if content.student.idcode != null %}(ik {{ content.student.idcode }}) {% endif %}

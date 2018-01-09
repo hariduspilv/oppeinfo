@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.BeanUtils;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionElectiveModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
@@ -25,8 +27,6 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleThemeCapa
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionSpeciality;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
-import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.util.EntityUtil;
 
 @Transactional
@@ -34,9 +34,7 @@ import ee.hitsa.ois.util.EntityUtil;
 public class CurriculumVersionCopyService {
 
     @Autowired
-    private ClassifierRepository classifierRepository;
-    @Autowired
-    private CurriculumVersionRepository curriculumVersionRepository;
+    private EntityManager em;
 
     public CurriculumVersion copy(CurriculumVersion copied) {
         CurriculumVersion newCurriculumVersion = new CurriculumVersion();
@@ -44,14 +42,14 @@ public class CurriculumVersionCopyService {
                 "version", "validFrom", "validThru", "modules", "specialities", "occupationModules", "status", "code");
 
         newCurriculumVersion
-                .setStatus(classifierRepository.findOne(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_S.name()));
+                .setStatus(em.getReference(Classifier.class, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_S.name()));
         newCurriculumVersion.setCode(copied.getCode() + " COPIED");
         newCurriculumVersion.setValidFrom(LocalDate.now());
         copySpecialities(newCurriculumVersion, copied.getSpecialities());
         copyHigherModules(newCurriculumVersion, copied.getModules());
         copyOccupationModules(newCurriculumVersion, copied.getOccupationModules());
-        
-        return curriculumVersionRepository.save(newCurriculumVersion);
+
+        return EntityUtil.save(newCurriculumVersion, em);
     }
 
     private static void copyOccupationModules(CurriculumVersion newCurriculumVersion,
@@ -73,7 +71,6 @@ public class CurriculumVersionCopyService {
         }
     }
 
-
     private static void copyCapacities(CurriculumVersionOccupationModule newModule,
             Set<CurriculumVersionOccupationModuleCapacity> capacities) {
         if(!CollectionUtils.isEmpty(capacities)) {
@@ -91,7 +88,6 @@ public class CurriculumVersionCopyService {
             }
         }
     }
-    
 
     private static void copyYearCapacities(CurriculumVersionOccupationModule newModule,
             Set<CurriculumVersionOccupationModuleYearCapacity> yearCapacities) {
@@ -221,7 +217,7 @@ public class CurriculumVersionCopyService {
             }
         }
     }
-    
+
     private static void setElectiveModule(CurriculumVersionHigherModule newModule,
             CurriculumVersionHigherModuleSubject newSubject, CurriculumVersionHigherModuleSubject copiedSubject) {
         if(copiedSubject.getElectiveModule() == null) {
@@ -255,9 +251,6 @@ public class CurriculumVersionCopyService {
             CurriculumVersionHigherModuleSpeciality copied) {
         Optional<CurriculumVersionSpeciality> spec = newModule.getCurriculumVersion().getSpecialities().stream()
         .filter(vs -> EntityUtil.getId(vs.getCurriculumSpeciality()).equals(EntityUtil.getId(copied.getSpeciality().getCurriculumSpeciality()))).findFirst();
-        if(spec.isPresent()) {
-            return spec.get();
-        }
-        return null;
+        return spec.orElse(null);
     }
 }

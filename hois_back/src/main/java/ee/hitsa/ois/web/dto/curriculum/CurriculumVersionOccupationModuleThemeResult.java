@@ -6,6 +6,7 @@ import java.util.Map;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleThemeCapacity;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteResult {
@@ -16,7 +17,7 @@ public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteRe
     public CurriculumVersionOccupationModuleThemeResult (CurriculumVersionOccupationModuleTheme cvomt) {
         super(cvomt.getId(), cvomt.getNameEt(), cvomt.getNameEt());
         for(CurriculumVersionOccupationModuleThemeCapacity cap : cvomt.getCapacities()) {
-            capacities.put(cap.getCapacityType().getCode(), cap.getHours());
+            capacities.put(EntityUtil.getCode(cap.getCapacityType()), cap.getHours());
         }
     }
     

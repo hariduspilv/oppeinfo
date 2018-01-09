@@ -42,6 +42,9 @@ public class Directive extends BaseEntityWithId {
     private Directive canceledDirective;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier cancelType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
+    private Classifier scholarshipType;
     @OneToMany(mappedBy = "directive", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DirectiveStudent> students;
 
@@ -155,6 +158,14 @@ public class Directive extends BaseEntityWithId {
 
     public void setCancelType(Classifier cancelType) {
         this.cancelType = cancelType;
+    }
+
+    public Classifier getScholarshipType() {
+        return scholarshipType;
+    }
+
+    public void setScholarshipType(Classifier scholarshipType) {
+        this.scholarshipType = scholarshipType;
     }
 
     public List<DirectiveStudent> getStudents() {

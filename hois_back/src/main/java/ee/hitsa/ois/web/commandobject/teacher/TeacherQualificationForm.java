@@ -9,19 +9,19 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class TeacherQualificationForm extends VersionedCommand {
-    private Long id;
 
-    @NotEmpty
+    private Long id;
+    @Required
     @ClassifierRestriction(MainClassCode.EHIS_KVALIFIKATSIOON)
     private String qualification;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.EHIS_KVALIFIKATSIOON_NIMI)
     private String qualificationName;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.RIIK)
     private String state;
     @ClassifierRestriction(MainClassCode.EHIS_EESTI_OPPEASUTUS)

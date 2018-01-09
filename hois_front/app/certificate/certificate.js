@@ -53,8 +53,8 @@ angular.module('hitsaOis')
       });
     };
   }
-]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$resource', 'config', '$q', 'CertificateUtil', '$rootScope',
-  function ($scope, QueryUtils, $route, $location, dialogService, message, $resource, config, $q, CertificateUtil, $rootScope) {
+]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$resource', 'config', '$q', 'CertificateUtil', '$rootScope', '$timeout',
+  function ($scope, QueryUtils, $route, $location, dialogService, message, $resource, config, $q, CertificateUtil, $rootScope, $timeout) {
 
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -129,9 +129,14 @@ angular.module('hitsaOis')
         return;
       }
       $scope.record.content = null;
-      if($scope.record.student && $scope.record.type && !$scope.isOtherCertificate()) {
+      if($scope.record.type && ($scope.record.student || $scope.record.otherIdcode && $scope.isOtherCertificate())) {
         QueryUtils.endpoint(baseUrl + "/content").search(
-          {student: $scope.record.student, type: $scope.record.type}
+          {
+            student: $scope.record.student,
+            type: $scope.record.type,
+            otherIdcode: $scope.record.otherIdcode,
+            otherName: $scope.record.otherName
+          }
         ).$promise.then(function(response) {
           $scope.record.content = response.content;
           if(!$scope.contentEditable()) {
@@ -147,6 +152,19 @@ angular.module('hitsaOis')
         $scope.forbiddenTypes = [];
       }
       loadContent();
+    });
+
+
+    $scope.$watch('record.otherIdcode', function(){
+      if($scope.record.otherIdcode) {
+        $timeout(loadContent, 1000);
+      }
+    });
+
+    $scope.$watch('record.otherName', function(){
+      if($scope.record.otherName && $scope.record.otherIdcode) {
+        $timeout(loadContent, 1000);
+      }
     });
 
     $scope.querySearch = function (text) {
@@ -298,6 +316,10 @@ angular.module('hitsaOis')
     function getFullname(person) {
       return person.firstname + ' ' + person.lastname;
     }
+
+    $scope.isOtherCertificate = function(){
+      return CertificateUtil.isOtherCertificate($scope.record);
+    };
 
     function afterLoad() {
       if($scope.record.student) {

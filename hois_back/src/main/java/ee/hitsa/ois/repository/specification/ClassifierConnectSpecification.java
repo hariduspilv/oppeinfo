@@ -51,7 +51,7 @@ public class ClassifierConnectSpecification implements Specification<ClassifierC
         }
 
         //do not allow query with no restrictions
-        if (CollectionUtils.isEmpty(filters)) {
+        if (filters.isEmpty()) {
             throw new ValidationFailedException("queryWithNoParametersIsNotAllowed");
         }
 

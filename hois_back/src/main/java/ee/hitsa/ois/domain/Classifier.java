@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.Translatable;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @Entity
 public class Classifier extends BaseEntity implements Translatable {
@@ -26,17 +26,17 @@ public class Classifier extends BaseEntity implements Translatable {
 
     @Id
     @Size(max = 100)
-    @NotEmpty
+    @Required
     // https://hibernate.atlassian.net/browse/HHH-3718
     private String code;
 
-    @NotEmpty
+    @Required
     @Size(max = 50)
     private String value;
     @Size(max = 50)
     private String value2;
 
-    @NotEmpty
+    @Required
     @Size(max = 1000)
     private String nameEt;
     @Size(max = 1000)
@@ -234,6 +234,4 @@ public class Classifier extends BaseEntity implements Translatable {
     public Set<ClassifierConnect> getChildConnects() {
         return childConnects != null ? childConnects : (childConnects = new HashSet<>());
     }
-    
-    
 }

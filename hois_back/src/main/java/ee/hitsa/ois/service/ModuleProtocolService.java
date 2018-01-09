@@ -42,7 +42,6 @@ import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.StudentStatus;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.LessonPlanModuleRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -51,10 +50,10 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.ModuleProtocolGradeUtil;
+import ee.hitsa.ois.util.ModuleProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSaveForm;
@@ -76,8 +75,6 @@ public class ModuleProtocolService {
 
     @Autowired
     private EntityManager em;
-    @Autowired
-    private ClassifierRepository classifierRepository;
     @Autowired
     private LessonPlanModuleRepository lessonPlanModuleRepository;
 
@@ -107,14 +104,14 @@ public class ModuleProtocolService {
                 "exists (select protocol_id "
                 + "from protocol_vdata pvd "
                 + "join curriculum_version_omodule omodule on pvd.curriculum_version_omodule_id = omodule.id "
-                + "where omodule.curriculum_module_id in :module)",
+                + "where pvd.protocol_id = p.id and omodule.curriculum_module_id in :module)",
                 "module", cmd.getModule());
         qb.optionalCriteria("p.status_code = :statusCode", "statusCode", cmd.getStatus());
         qb.optionalCriteria("p.protocol_nr = :protocolNr", "protocolNr", cmd.getProtocolNr());
         qb.optionalCriteria("p.inserted >= :from", "from", cmd.getInsertedFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("p.inserted <= :thru", "thru", cmd.getInsertedThru(), DateUtils::lastMomentOfDay);
-        qb.optionalCriteria("p.confirm_date > :from", "from", cmd.getConfirmDateFrom());
-        qb.optionalCriteria("p.confirm_date < :thru", "thru", cmd.getConfirmDateThru());
+        qb.optionalCriteria("p.confirm_date >= :from", "from", cmd.getConfirmDateFrom(), DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("p.confirm_date <= :thru", "thru", cmd.getConfirmDateThru(), DateUtils::lastMomentOfDay);
 
         if (user.isTeacher()) {
             qb.requiredCriteria("pvd.teacher_id = :teacherId", "teacherId", user.getTeacherId());
@@ -122,7 +119,7 @@ public class ModuleProtocolService {
 
         Map<Long, ModuleProtocolSearchDto> dtoById = new HashMap<>();
         Page<ModuleProtocolSearchDto> result = JpaQueryUtil
-                .pagingResult(qb, "p.id, p.protocol_nr, p.status_code, p.inserted, p.confirm_date, p.confirmer", em, pageable)
+                .pagingResult(qb, "p.id, p.protocol_nr, p.status_code, p.inserted, p.confirm_date, p.confirmer, pvd.teacher_id", em, pageable)
                 .map(r -> {
                     ModuleProtocolSearchDto dto = new ModuleProtocolSearchDto();
                     dto.setId(resultAsLong(r, 0));
@@ -131,6 +128,7 @@ public class ModuleProtocolService {
                     dto.setInserted(resultAsLocalDate(r, 3));
                     dto.setConfirmDate(resultAsLocalDate(r, 4));
                     dto.setConfirmer(resultAsString(r, 5));
+                    dto.setCanEdit(Boolean.valueOf(ModuleProtocolUtil.canEdit(user, ProtocolStatus.valueOf(dto.getStatus()), resultAsLong(r, 6))));
                     dtoById.put(dto.getId(), dto);
                     return dto;
                 });
@@ -184,6 +182,8 @@ public class ModuleProtocolService {
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
                 curriculumVersionId);
+        qb.optionalCriteria(" exists(select id from lesson_plan_module "
+               + "where curriculum_version_omodule_id = cvo.id and teacher_id = :teacherId) ", "teacherId", user.getTeacherId());
 
         String select = "cvo.id, cv.code, cm.name_et, mcl.name_et as mcl_name_et, cm.name_en, mcl.name_en as mcl_name_en";
         List<?> data = qb.select(select, em).getResultList();
@@ -281,7 +281,7 @@ public class ModuleProtocolService {
     public Protocol create(HoisUserDetails user, ModuleProtocolCreateForm form) {
         Protocol protocol = EntityUtil.bindToEntity(form, new Protocol(), "protocolStudents", "protocolVdata");
         protocol.setIsVocational(Boolean.TRUE);
-        protocol.setStatus(classifierRepository.getOne(ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
+        protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
         protocol.setSchool(em.getReference(School.class, user.getSchoolId()));
         protocol.setProtocolNr(ProtocolUtil.generateProtocolNumber(em));
         protocol.setProtocolStudents(form.getProtocolStudents().stream().map(dto -> {
@@ -337,10 +337,8 @@ public class ModuleProtocolService {
         List<ProtocolStudent> removedStudents = oldStudents.stream()
                 .filter(oldStudent -> !newIds.contains(oldStudent.getId())).collect(Collectors.toList());
         for (ProtocolStudent protocolStudent : removedStudents) {
-            if (!StudentUtil.hasQuit(protocolStudent.getStudent())) {
-                throw new ValidationFailedException("moduleProtocol.messages.cantRemoveNonDismissedStudent");
-            } else if (protocolStudent.getGrade() != null) {
-                throw new ValidationFailedException("moduleProtocol.messages.cantRemoveGradedStudent");
+            if(!ModuleProtocolUtil.studentCanBeDeleted(protocolStudent)) {
+                throw new ValidationFailedException("moduleProtocol.messages.cantRemoveStudent");
             }
         }
     }
@@ -388,7 +386,7 @@ public class ModuleProtocolService {
     }
 
     public Protocol confirm(HoisUserDetails user, Protocol protocol, ModuleProtocolSaveForm moduleProtocolSaveForm) {
-        protocol.setStatus(classifierRepository.getOne(ProtocolStatus.PROTOKOLL_STAATUS_K.name()));
+        protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_K.name()));
         protocol.setConfirmDate(LocalDate.now());
         protocol.setConfirmer(user.getUsername());
         Protocol confirmedProtocol = null;

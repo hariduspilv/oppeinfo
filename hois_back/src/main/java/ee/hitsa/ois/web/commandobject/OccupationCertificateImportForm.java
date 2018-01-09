@@ -4,15 +4,15 @@ import java.time.LocalDate;
 import java.util.List;
 
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @DateRange(from = "from", thru = "thru")
 public class OccupationCertificateImportForm {
 
-    @NotEmpty
+    @Required
     private List<Long> curriculumVersion;
     private List<Long> studentGroup;
-    private String studentName;
+    private EntityConnectionCommand student;
     private LocalDate from;
     private LocalDate thru;
 
@@ -32,12 +32,12 @@ public class OccupationCertificateImportForm {
         this.studentGroup = studentGroup;
     }
 
-    public String getStudentName() {
-        return studentName;
+    public EntityConnectionCommand getStudent() {
+        return student;
     }
 
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
+    public void setStudent(EntityConnectionCommand student) {
+        this.student = student;
     }
 
     public LocalDate getFrom() {

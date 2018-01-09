@@ -19,6 +19,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -474,10 +475,9 @@ public class SaisApplicationService {
         } else {
             EntityUtil.bindToEntity(saisApplication, existingSaisApplication);
         }
-        saisAdmissionRepository.save(saisAdmission);
+        saisAdmission = EntityUtil.save(saisAdmission, em);
 
         dto.getSuccessful().add(new SaisApplicationImportedRowDto(rowNr, saisApplication.getApplicationNr()));
-
     }
 
     public String sampleCsvFile() {
@@ -528,7 +528,9 @@ public class SaisApplicationService {
 
         while(request != null && request.getPage() != null) {
             SaisApplicationResponse response = saisClient.applicationsExport(xRoadHeader, request);
-            fetchedCount += applyPaging(request, response.getResult(), fetchedCount);
+            if(response.getResult() != null) {
+                fetchedCount += applyPaging(request, response.getResult(), fetchedCount);
+            }
 
             saisLogService.withResponse(response, schoolId, (result, logContext) -> {
 
@@ -601,7 +603,7 @@ public class SaisApplicationService {
             EstonianIdCodeValidator idCodeValidator) {
         SaisApplication saisApplication;
         SaisAdmission saisAdmission = null;
-        if(prevApp != null && prevApp.getIdcode().equals(application.getIdCode())) {
+        if(prevApp != null && Objects.equals(prevApp.getIdcode(), application.getIdCode()) && Objects.equals(prevApp.getForeignIdcode(), application.getOtherIdNumber())) {
             saisApplication = prevApp;
         } else {
             saisApplication = new SaisApplication();
@@ -725,9 +727,8 @@ public class SaisApplicationService {
         }
 
         saisAdmission.getApplications().add(saisApplication);
-        saisAdmissionRepository.save(saisAdmission);
 
-        return new SaisApplicationImportedRowDto(saisApplication, null);
+        return new SaisApplicationImportedRowDto(EntityUtil.save(saisApplication, em), null);
     }
 
     private Map<Long, Long> directiveStudentsWithSaisApplication(List<Long> saisApplicationIds) {

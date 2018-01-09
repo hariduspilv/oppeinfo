@@ -17,8 +17,7 @@
 
       <div layout="row">
         <md-input-container flex>
-          <label class="textInput">{{'occupationcertificate.student' | translate}}</label>
-          <input ng-model="criteria.studentName" type="text">
+          <hois-autocomplete ng-model="criteria.student" method="students" additional-query-params="{active: true, curriculumVersion: criteria.curriculumVersion, studentGroup: criteria.studentGroup}" label="occupationcertificate.student"></hois-autocomplete>
         </md-input-container>
       </div>
 

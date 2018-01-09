@@ -144,7 +144,7 @@ public class MidtermTaskService {
     private Set<MidtermTaskStudentResultDto> removeEmptyStudentResults(Set<MidtermTaskStudentResultDto> studentResults) {
         return studentResults.stream()
                 .filter(r -> {
-                    MidtermTask task = midtermTaskRepository.getOne(r.getMidtermTask());
+                    MidtermTask task = em.getReference(MidtermTask.class, r.getMidtermTask());
                     if(MidtermTaskUtil.resultIsText(task)) {
                         return r.getPointsTxt() != null && !r.getPointsTxt().isEmpty();
                     }

@@ -1,0 +1,38 @@
+<md-table-container>
+  <table md-table class="secondary-table">
+    <thead md-head>
+      <tr md-row>
+        <th md-column>{{'directive.student.fullname' | translate}}</th>
+        <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column class="required">{{'directive.student.stipStartDate' | translate}}</th>
+        <th md-column class="required">{{'directive.student.stipEndDate' | translate}}</th>
+        <th md-column>{{'directive.student.stipEndReason' | translate}}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{::row.fullname}}</td>
+        <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>
+          <md-datepicker name="startDate" ng-model="row.startDate"></md-datepicker>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.required">
+            {{'main.required' | translate}}
+          </div>
+        </td>
+        <td md-cell>
+          <md-datepicker name="endDate" ng-model="row.endDate"></md-datepicker>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].endDate'].$error.required">
+            {{'main.required' | translate}}
+          </div>
+        </td>
+        <td md-cell>
+          <hois-classifier-value ng-model="row.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
+        </td>
+        <td md-cell>
+          <a ng-click="deleteStudent(row.idcode)" md-no-ink  class="remove">&times;</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</md-table-container>

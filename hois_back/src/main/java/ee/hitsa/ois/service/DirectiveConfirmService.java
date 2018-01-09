@@ -261,7 +261,9 @@ public class DirectiveConfirmService {
         Long directiveId = EntityUtil.getId(job.getDirective());
 
         List<DirectiveStudent> data = em.createQuery("select ds from DirectiveStudent ds where ds.student.id = ?1 and ds.directive.id = ?2 and ds.canceled = false", DirectiveStudent.class)
-            .setParameter(1, studentId).setParameter(2, directiveId).setMaxResults(1).getResultList();
+            .setParameter(1, studentId)
+            .setParameter(2, directiveId)
+            .setMaxResults(1).getResultList();
         if(!data.isEmpty()) {
             DirectiveStudent directiveStudent = data.get(0);
             AcademicLeaveEnding message = new AcademicLeaveEnding(directiveStudent);
@@ -397,8 +399,8 @@ public class DirectiveConfirmService {
         }
     }
 
-    private void updateApplicationStatus(DirectiveStudent directive, Classifier applicationStatus) {
-        Application application = directive.getApplication();
+    private void updateApplicationStatus(DirectiveStudent directiveStudent, Classifier applicationStatus) {
+        Application application = directiveStudent.getApplication();
         if(application != null) {
             application.setStatus(applicationStatus);
             EntityUtil.save(application, em);

@@ -38,4 +38,10 @@ public interface DirectiveValidation {
 
     interface Valis extends DirectiveValidation {
     }
+
+    interface Stiptoet extends DirectiveValidation {
+    }
+
+    interface Stiptoetl extends DirectiveValidation {
+    }
 }

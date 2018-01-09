@@ -9,7 +9,7 @@ import javax.validation.Valid;
 
 import ee.hitsa.ois.domain.timetable.LessonTimeBuildingGroup;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class LessonTimeBuildingGroupDto {
@@ -18,7 +18,7 @@ public class LessonTimeBuildingGroupDto {
     private LocalDate validFrom;
     private LocalDate validThru;
 
-    @NotEmpty
+    @Required
     private Set<AutocompleteResult> buildings = new HashSet<>();
     @Valid
     private Set<LessonTimeDto> lessonTimes = new HashSet<>();
@@ -69,5 +69,4 @@ public class LessonTimeBuildingGroupDto {
     public void setLessonTimes(Set<LessonTimeDto> lessonTimes) {
         this.lessonTimes = lessonTimes;
     }
-
 }

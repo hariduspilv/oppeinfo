@@ -369,7 +369,7 @@ public class LessonPlanService {
                 } else {
                     lp = em.getReference(LessonPlan.class, lessonPlanId);
                 }
-                LessonPlanModule lpm = getLessonPlanModule(lessonPlanModules, lp.getId(), lpg.getCurriculumVersionOccupationModule());
+                LessonPlanModule lpm = getLessonPlanModule(lessonPlanModules, EntityUtil.getId(lp), lpg.getCurriculumVersionOccupationModule());
                 if(lpm == null) {
                     lpm = new LessonPlanModule();
                     lpm.setLessonPlan(lp);

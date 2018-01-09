@@ -1,23 +1,27 @@
 package ee.hitsa.ois.domain.student;
 
+import java.math.BigDecimal;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 
-import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.BaseTask;
 
 @Entity
-public class StudentCurriculumCompletion extends BaseEntityWithId {
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+public class StudentCurriculumCompletion extends BaseTask {
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id")
     private Student student;
-    private Long studyBacklog;
-    private Long studyBacklogWithoutGraduate;
-    private Long averageMark;
-    private Long averageMarkLastStudyPeriod;
-    private Long averageMarkBeforeCurrentStudyPeriod;
-    private Long credits;
-    private Long creditsLastStudyPeriod;
-    private Long creditsbeforeCurrentStudyPeriod;
+    private BigDecimal studyBacklog;
+    private BigDecimal studyBacklogWithoutGraduate;
+    private BigDecimal averageMark;
+    private BigDecimal averageMarkLastStudyPeriod;
+    private BigDecimal averageMarkBeforeCurrentStudyPeriod;
+    private BigDecimal credits;
+    private BigDecimal creditsLastStudyPeriod;
+    private BigDecimal creditsBeforeCurrentStudyPeriod;
 
     public Student getStudent() {
         return student;
@@ -27,68 +31,68 @@ public class StudentCurriculumCompletion extends BaseEntityWithId {
         this.student = student;
     }
 
-    public Long getStudyBacklog() {
+    public BigDecimal getStudyBacklog() {
         return studyBacklog;
     }
 
-    public void setStudyBacklog(Long studyBacklog) {
+    public void setStudyBacklog(BigDecimal studyBacklog) {
         this.studyBacklog = studyBacklog;
     }
 
-    public Long getStudyBacklogWithoutGraduate() {
+    public BigDecimal getStudyBacklogWithoutGraduate() {
         return studyBacklogWithoutGraduate;
     }
 
-    public void setStudyBacklogWithoutGraduate(Long studyBacklogWithoutGraduate) {
+    public void setStudyBacklogWithoutGraduate(BigDecimal studyBacklogWithoutGraduate) {
         this.studyBacklogWithoutGraduate = studyBacklogWithoutGraduate;
     }
 
-    public Long getAverageMark() {
+    public BigDecimal getAverageMark() {
         return averageMark;
     }
 
-    public void setAverageMark(Long averageMark) {
+    public void setAverageMark(BigDecimal averageMark) {
         this.averageMark = averageMark;
     }
 
-    public Long getAverageMarkLastStudyPeriod() {
+    public BigDecimal getAverageMarkLastStudyPeriod() {
         return averageMarkLastStudyPeriod;
     }
 
-    public void setAverageMarkLastStudyPeriod(Long averageMarkLastStudyPeriod) {
+    public void setAverageMarkLastStudyPeriod(BigDecimal averageMarkLastStudyPeriod) {
         this.averageMarkLastStudyPeriod = averageMarkLastStudyPeriod;
     }
 
-    public Long getAverageMarkBeforeCurrentStudyPeriod() {
+    public BigDecimal getAverageMarkBeforeCurrentStudyPeriod() {
         return averageMarkBeforeCurrentStudyPeriod;
     }
 
-    public void setAverageMarkBeforeCurrentStudyPeriod(Long averageMarkBeforeCurrentStudyPeriod) {
+    public void setAverageMarkBeforeCurrentStudyPeriod(BigDecimal averageMarkBeforeCurrentStudyPeriod) {
         this.averageMarkBeforeCurrentStudyPeriod = averageMarkBeforeCurrentStudyPeriod;
     }
 
-    public Long getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Long credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 
-    public Long getCreditsLastStudyPeriod() {
+    public BigDecimal getCreditsLastStudyPeriod() {
         return creditsLastStudyPeriod;
     }
 
-    public void setCreditsLastStudyPeriod(Long creditsLastStudyPeriod) {
+    public void setCreditsLastStudyPeriod(BigDecimal creditsLastStudyPeriod) {
         this.creditsLastStudyPeriod = creditsLastStudyPeriod;
     }
 
-    public Long getCreditsbeforeCurrentStudyPeriod() {
-        return creditsbeforeCurrentStudyPeriod;
+    public BigDecimal getCreditsBeforeCurrentStudyPeriod() {
+        return creditsBeforeCurrentStudyPeriod;
     }
 
-    public void setCreditsbeforeCurrentStudyPeriod(Long creditsbeforeCurrentStudyPeriod) {
-        this.creditsbeforeCurrentStudyPeriod = creditsbeforeCurrentStudyPeriod;
+    public void setCreditsBeforeCurrentStudyPeriod(BigDecimal creditsBeforeCurrentStudyPeriod) {
+        this.creditsBeforeCurrentStudyPeriod = creditsBeforeCurrentStudyPeriod;
     }
 
 }

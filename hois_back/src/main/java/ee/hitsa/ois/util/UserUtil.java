@@ -55,6 +55,10 @@ public abstract class UserUtil {
         }
         return false;
     }
+    
+    public static boolean canViewApelApplication(HoisUserDetails user, ApelApplication application) {
+        return isSchoolAdmin(user, application.getSchool()) || isSame(user, application.getStudent());
+    }
 
     public static boolean canEditApelApplication(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());

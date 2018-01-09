@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @DateRange(from = "startDate", thru = "endDate")
 public class TimetableEditForm {
@@ -19,7 +19,7 @@ public class TimetableEditForm {
     private LocalDate startDate;
     @NotNull
     private LocalDate endDate;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.TUNNIPLAAN_LIIK)
     private String code;
 
@@ -54,11 +54,11 @@ public class TimetableEditForm {
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
-    
+
     public String getCode() {
         return code;
     }
-    
+
     public void setCode(String code) {
         this.code = code;
     }

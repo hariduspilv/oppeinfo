@@ -10,7 +10,7 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.StudyPeriodRange;
 import ee.hitsa.ois.web.dto.ApplicationDto;
 import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
@@ -24,11 +24,11 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     @NotNull
     private AutocompleteResult student;
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.AVALDUS_STAATUS)
     private String status;
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.AVALDUS_LIIK)
     private String type;
 
@@ -324,5 +324,4 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     public void setFiles(Set<OisFileForm> files) {
         this.files = files;
     }
-
 }

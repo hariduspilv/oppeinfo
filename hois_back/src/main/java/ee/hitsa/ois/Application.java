@@ -35,6 +35,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -167,7 +168,7 @@ public class Application {
                 @Override
                 public String deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                     String value = p.getText();
-                    return value != null ? value.trim() : null;
+                    return StringUtils.hasText(value) ? value.trim() : null;
                 }
             });
         };

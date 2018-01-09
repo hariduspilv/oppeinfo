@@ -3,15 +3,15 @@ package ee.hitsa.ois.web.commandobject.directive;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.validation.EstonianIdCode;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class DirectiveCoordinatorForm extends VersionedCommand {
 
-    @NotEmpty
+    @Required
     @Size(max = 100)
     private String name;
-    @NotEmpty
+    @Required
     @EstonianIdCode
     private String idcode;
     private Boolean isDirective;

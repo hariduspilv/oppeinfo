@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.scholarship;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -18,16 +19,16 @@ public class ScholarshipTermDto {
     private LocalDate paymentStart;
     private LocalDate paymentEnd;
     private Long places;
-    private Long amountPaid;
+    private BigDecimal amountPaid;
     private List<AutocompleteResult> curriculums;
     private List<String> studyLoads;
     private List<String> studyForms;
     private List<String> courses;
-    private Long averageMark;
+    private BigDecimal averageMark;
     private String averageMarkPriority;
-    private Long lastPeriodMark;
+    private BigDecimal lastPeriodMark;
     private String lastPeriodMarkPriority;
-    private Long curriculumCompletion;
+    private BigDecimal curriculumCompletion;
     private String curriculumCompletionPriority;
     private Long maxAbsences;
     private String maxAbsencesPriority;
@@ -125,11 +126,11 @@ public class ScholarshipTermDto {
         this.places = places;
     }
 
-    public Long getAmountPaid() {
+    public BigDecimal getAmountPaid() {
         return amountPaid;
     }
 
-    public void setAmountPaid(Long amountPaid) {
+    public void setAmountPaid(BigDecimal amountPaid) {
         this.amountPaid = amountPaid;
     }
 
@@ -165,11 +166,11 @@ public class ScholarshipTermDto {
         this.courses = courses;
     }
 
-    public Long getAverageMark() {
+    public BigDecimal getAverageMark() {
         return averageMark;
     }
 
-    public void setAverageMark(Long averageMark) {
+    public void setAverageMark(BigDecimal averageMark) {
         this.averageMark = averageMark;
     }
 
@@ -181,11 +182,11 @@ public class ScholarshipTermDto {
         this.averageMarkPriority = averageMarkPriority;
     }
 
-    public Long getLastPeriodMark() {
+    public BigDecimal getLastPeriodMark() {
         return lastPeriodMark;
     }
 
-    public void setLastPeriodMark(Long lastPeriodMark) {
+    public void setLastPeriodMark(BigDecimal lastPeriodMark) {
         this.lastPeriodMark = lastPeriodMark;
     }
 
@@ -197,11 +198,11 @@ public class ScholarshipTermDto {
         this.lastPeriodMarkPriority = lastPeriodMarkPriority;
     }
 
-    public Long getCurriculumCompletion() {
+    public BigDecimal getCurriculumCompletion() {
         return curriculumCompletion;
     }
 
-    public void setCurriculumCompletion(Long curriculumCompletion) {
+    public void setCurriculumCompletion(BigDecimal curriculumCompletion) {
         this.curriculumCompletion = curriculumCompletion;
     }
 

@@ -29,6 +29,7 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     private Long studentId;
     private Long teacherId;
     private LoginMethod loginMethod;
+    private String mobileNumber;
 
     HoisUserDetails(User user, List<String> roles) {
         super(PersonUtil.fullnameAndIdcode(user.getPerson()), "undefined", getAuthorities(roles));
@@ -92,6 +93,14 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
         this.loginMethod = loginMethod;
     }
 
+    public String getMobileNumber() {
+        return mobileNumber;
+    }
+    
+    public void setMobileNumber(String mobileNumber) {
+        this.mobileNumber = mobileNumber;
+    }
+    
     public Long getStudentId() {
         return studentId;
     }

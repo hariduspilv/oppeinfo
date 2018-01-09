@@ -6,20 +6,20 @@ import java.util.List;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @DateRange
 public class GeneralMessageForm extends VersionedCommand {
 
-    @NotEmpty
+    @Required
     @Size(max = 1000)
     private String title;
-    @NotEmpty
+    @Required
     @Size(max = 4000)
     private String content;
     private LocalDate validFrom;
     private LocalDate validThru;
-    @NotEmpty
+    @Required
     private List<String> targets;
 
     public String getTitle() {

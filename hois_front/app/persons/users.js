@@ -8,7 +8,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
 
     $scope.auth = $route.current.locals.auth;
     $scope.noSchool = ['ROLL_P', 'ROLL_V'];
-    $scope.filterValues = ['ROLL_L', 'ROLL_O', 'ROLL_T'];
+    $scope.filterValues = ['ROLL_L', 'ROLL_O', 'ROLL_T', 'ROLL_X'];
     if (!$scope.auth.isMainAdmin()) {
       $scope.filterValues.push('ROLL_P');
     }

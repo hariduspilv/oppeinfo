@@ -12,6 +12,10 @@ public class CertificateReportStudent {
     
     private String firstname;
     private String lastname;
+    /**
+     * User for certificates of type "other"
+     */
+    private String fullname;
     private String idCode;
     private String studyForm;
     private String studyLoad;
@@ -45,7 +49,22 @@ public class CertificateReportStudent {
         reportStudent.setHasQuit(StudentUtil.hasQuit(student));
         return reportStudent;
     }
-    
+
+    public static CertificateReportStudent of(Person person) {
+        CertificateReportStudent reportStudent = new CertificateReportStudent();
+        reportStudent.setFirstname(person.getFirstname());
+        reportStudent.setLastname(person.getLastname());
+        reportStudent.setIdCode(person.getIdcode());        
+        return reportStudent;
+    }
+
+    public static CertificateReportStudent of(String otherName, String otherIdcode) {
+        CertificateReportStudent reportStudent = new CertificateReportStudent();
+        reportStudent.setFullname(otherName);
+        reportStudent.setIdCode(otherIdcode);
+        return reportStudent;
+    }
+
     public boolean isHasQuit() {
         return hasQuit;
     }
@@ -111,5 +130,11 @@ public class CertificateReportStudent {
     }
     public void setIdCode(String idCode) {
         this.idCode = idCode;
+    }
+    public String getFullname() {
+        return fullname;
+    }
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
     }
 }

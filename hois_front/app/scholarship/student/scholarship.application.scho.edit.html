@@ -46,6 +46,11 @@
           <label class="textInput">{{'stipend.studyPeriodDates' | translate}}</label>
           <hois-value value="stipend.matriculationRange"></hois-value>
         </md-input-container>
+        <div flex="50" flex-offset="5">
+          <md-checkbox ng-model="stipend.isAcademicLeave" disabled aria-label="Is academic leave">
+            {{'stipend.isAcademicLeave' | translate}}
+          </md-checkbox>
+        </div>
       </div>
     </div>
   </fieldset>

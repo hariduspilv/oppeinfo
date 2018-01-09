@@ -14,7 +14,7 @@ import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -24,21 +24,21 @@ public class LessonPlanJournalForm extends VersionedCommand {
     @NotNull
     private Long lessonPlanModuleId;
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMISVIIS)
     private String assessment;
-    @NotEmpty
+    @Required
     @Size(max = 255)
     private String nameEt;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.PAEVIK_GRUPI_JAOTUS)
     private String groupProportion;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.MAHT)
     private List<String> journalCapacityTypes;
     @Valid
     private List<LessonPlanJournalTeacherForm> journalTeachers;
-    @NotEmpty
+    @Required
     private List<Long> journalOccupationModuleThemes;
     @Valid
     private List<LessonPlanGroupForm> groups;

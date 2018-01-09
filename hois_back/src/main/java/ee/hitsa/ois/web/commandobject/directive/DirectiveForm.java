@@ -1,28 +1,28 @@
 package ee.hitsa.ois.web.commandobject.directive;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
-
-import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.DirectiveValidation.Immat;
 import ee.hitsa.ois.validation.EstonianIdCode;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.StudyPeriodRange;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class DirectiveForm extends VersionedCommand {
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.KASKKIRI)
     private String type;
-    @NotEmpty
+    @Required
     @Size(max = 500)
     private String headline;
     @Size(max = 4000)
@@ -31,6 +31,8 @@ public class DirectiveForm extends VersionedCommand {
     private Long canceledDirective;
     @ClassifierRestriction(MainClassCode.KASKKIRI_TYHISTAMISE_VIIS)
     private String cancelType;
+    @ClassifierRestriction(MainClassCode.STIPTOETUS)
+    private String scholarshipType;
     @Valid
     private List<? extends DirectiveFormStudent> students;
     private List<Long> selectedStudents;
@@ -83,6 +85,14 @@ public class DirectiveForm extends VersionedCommand {
         this.cancelType = cancelType;
     }
 
+    public String getScholarshipType() {
+        return scholarshipType;
+    }
+
+    public void setScholarshipType(String scholarshipType) {
+        this.scholarshipType = scholarshipType;
+    }
+
     public List<? extends DirectiveFormStudent> getStudents() {
         return students;
     }
@@ -103,13 +113,13 @@ public class DirectiveForm extends VersionedCommand {
     @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
     public static class DirectiveFormStudent {
         private Long id;
-        @NotBlank(groups = Immat.class)
+        @Required(groups = Immat.class)
         @EstonianIdCode
         private String idcode;
-        @NotBlank(groups = Immat.class)
+        @Required(groups = Immat.class)
         @Size(max = 255)
         private String firstname;
-        @NotBlank(groups = Immat.class)
+        @Required(groups = Immat.class)
         @Size(max = 255)
         private String lastname;
         private LocalDate startDate;
@@ -145,10 +155,12 @@ public class DirectiveForm extends VersionedCommand {
         private String abroadPurpose;
         @ClassifierRestriction(MainClassCode.VALISKOOL_PROGRAMM)
         private String abroadProgramme;
-
+        @Min(0)
+        private BigDecimal amountPaid;
         private Long application;
         private Long student;
         private Long saisApplication;
+        private Long scholarshipApplication;
 
         public Long getId() {
             return id;
@@ -358,6 +370,14 @@ public class DirectiveForm extends VersionedCommand {
             this.abroadProgramme = abroadProgramme;
         }
 
+        public BigDecimal getAmountPaid() {
+            return amountPaid;
+        }
+
+        public void setAmountPaid(BigDecimal amountPaid) {
+            this.amountPaid = amountPaid;
+        }
+
         public Long getApplication() {
             return application;
         }
@@ -380,6 +400,14 @@ public class DirectiveForm extends VersionedCommand {
 
         public void setSaisApplication(Long saisApplication) {
             this.saisApplication = saisApplication;
+        }
+
+        public Long getScholarshipApplication() {
+            return scholarshipApplication;
+        }
+
+        public void setScholarshipApplication(Long scholarshipApplication) {
+            this.scholarshipApplication = scholarshipApplication;
         }
     }
 }

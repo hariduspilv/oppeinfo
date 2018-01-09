@@ -75,10 +75,10 @@
       <input type="hidden">
     </md-input-container>
     <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
-      <md-datepicker required ng-model="stipend.studyStartPeriodStart" md-max-date="stipend.studyStartPeriodEnd" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+      <md-datepicker ng-model="stipend.studyStartPeriodStart" md-max-date="stipend.studyStartPeriodEnd" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
     </md-input-container>
     <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
-      <md-datepicker required ng-model="stipend.studyStartPeriodEnd" md-min-date="stipend.studyStartPeriodStart" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+      <md-datepicker ng-model="stipend.studyStartPeriodEnd" md-min-date="stipend.studyStartPeriodStart" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
     </md-input-container>
   </div>
 </div>

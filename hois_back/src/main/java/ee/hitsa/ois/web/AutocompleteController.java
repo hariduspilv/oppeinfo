@@ -39,6 +39,7 @@ import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
+import ee.hitsa.ois.web.dto.SubjectResult;
 import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOModulesAndThemesResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
@@ -149,12 +150,12 @@ public class AutocompleteController {
     }
 
     @GetMapping("/subjects")
-    public Page<AutocompleteResult> subjects(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
+    public Page<SubjectResult> subjects(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
         return asPage(autocompleteService.subjects(user.getSchoolId(), lookup));
     }
 
     @GetMapping("/subjectsList")
-    public List<AutocompleteResult> subjectsAsList(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
+    public List<SubjectResult> subjectsAsList(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
         return autocompleteService.subjects(user.getSchoolId(), lookup);
     }
 

@@ -60,7 +60,7 @@ public class StudentHigherSubjectResultDto {
 
     public void calculateIsOk() {
         if(grades != null && !grades.isEmpty()) {
-            Collections.sort(grades, Comparator.comparing(StudentHigherSubjectResultGradeDto::getGradeDate));
+            Collections.sort(grades, Comparator.comparing(StudentHigherSubjectResultGradeDto::getGradeDate, Comparator.nullsFirst(Comparator.naturalOrder())));
             lastGrade = calculateLastGrade();
             isOk = Boolean.valueOf(lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade()));
         } else {

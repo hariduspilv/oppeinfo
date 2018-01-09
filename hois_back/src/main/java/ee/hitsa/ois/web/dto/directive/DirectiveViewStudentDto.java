@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.directive;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.Person;
@@ -53,6 +54,8 @@ public class DirectiveViewStudentDto {
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
     private String curriculumGrade;
+    private String bankAccount;
+    private BigDecimal amountPaid;
 
     public Long getStudent() {
         return student;
@@ -356,6 +359,22 @@ public class DirectiveViewStudentDto {
 
     public void setCurriculumGrade(String curriculumGrade) {
         this.curriculumGrade = curriculumGrade;
+    }
+
+    public String getBankAccount() {
+        return bankAccount;
+    }
+
+    public void setBankAccount(String bankAccount) {
+        this.bankAccount = bankAccount;
+    }
+
+    public BigDecimal getAmountPaid() {
+        return amountPaid;
+    }
+
+    public void setAmountPaid(BigDecimal amountPaid) {
+        this.amountPaid = amountPaid;
     }
 
     public static DirectiveViewStudentDto of(DirectiveStudent directiveStudent) {

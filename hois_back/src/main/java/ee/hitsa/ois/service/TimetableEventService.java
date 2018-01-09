@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherAbsence;
@@ -34,7 +35,6 @@ import ee.hitsa.ois.domain.timetable.TimetableEventTeacher;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.TimetableEventRepeat;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -69,8 +69,6 @@ public class TimetableEventService {
     private TimetableGenerationService timetableGenerationService;
     @Autowired
     private EntityManager em;
-    @Autowired
-    private ClassifierRepository classifierRepository;
 
     public Map<String, ?> searchFormData(Long schoolId) {
         Map<String, Object> data = new HashMap<>();
@@ -92,8 +90,8 @@ public class TimetableEventService {
         te.setEnd(form.getDate().atTime(form.getEndTime()));
         te.setName(form.getName());
         te.setConsiderBreak(Boolean.FALSE);
-        te.setRepeatCode(Boolean.TRUE.equals(form.getRepeat()) ? classifierRepository.getOne(form.getRepeatCode())
-                : classifierRepository.getOne(TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI.name()));
+        te.setRepeatCode(Boolean.TRUE.equals(form.getRepeat()) ? em.getReference(Classifier.class, form.getRepeatCode())
+                : em.getReference(Classifier.class, TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI.name()));
         addTimetableEventTimes(te, form);
         return EntityUtil.save(te, em);
     }

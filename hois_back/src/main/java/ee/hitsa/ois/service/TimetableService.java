@@ -37,6 +37,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
@@ -57,7 +58,6 @@ import ee.hitsa.ois.domain.timetable.TimetableObjectStudentGroup;
 import ee.hitsa.ois.enums.TimetableEventRepeat;
 import ee.hitsa.ois.enums.TimetableStatus;
 import ee.hitsa.ois.enums.TimetableType;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.TimetableObjectRepository;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -110,9 +110,7 @@ public class TimetableService {
     private EntityManager em;
     @Autowired
     private TimetableObjectRepository timetableObjectRepository;
-    @Autowired
-    private ClassifierRepository classifierRepository;
-    
+
     private static final List<String> publicTimetables = EnumUtil.toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P);
     private static final List<String> adminAndTeacherTimetables = EnumUtil
             .toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P, TimetableStatus.TUNNIPLAAN_STAATUS_K);
@@ -177,7 +175,7 @@ public class TimetableService {
     }
 
     private Timetable setStatus(Timetable timetable, TimetableStatus status) {
-        timetable.setStatus(classifierRepository.getOne(status.name()));
+        timetable.setStatus(em.getReference(Classifier.class, status.name()));
         return timetable;
     }
 
@@ -463,8 +461,8 @@ public class TimetableService {
             timetableEvent.setStart(form.getStartTime());
             timetableEvent.setEnd(form.getStartTime().plusMinutes(LESSON_LENGTH * form.getLessonAmount().longValue()));
             timetableEvent.setLessons(form.getLessonAmount());
-            timetableEvent.setRepeatCode(classifierRepository.getOne(form.getRepeatCode()));
-            timetableEvent.setCapacityType(classifierRepository.getOne(form.getCapacityType()));
+            timetableEvent.setRepeatCode(em.getReference(Classifier.class, form.getRepeatCode()));
+            timetableEvent.setCapacityType(em.getReference(Classifier.class, form.getCapacityType()));
             timetableEvent.setConsiderBreak(Boolean.FALSE);
             Subject sub = object.getSubjectStudyPeriod().getSubject();
             timetableEvent.setName(sub.getNameEt() + " (" + sub.getCode() + ")");
@@ -609,11 +607,11 @@ public class TimetableService {
         timetableEvent.setStart(start.atTime(lessonTime.getStartTime()));
         timetableEvent.setEnd(start.atTime(lessonTime.getEndTime()));
         timetableEvent
-                .setRepeatCode(classifierRepository.getOne(TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI.name()));
+                .setRepeatCode(em.getReference(Classifier.class, TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI.name()));
         timetableEvent.setLessonNr(lessonTime.getLessonNr());
         timetableEvent.setConsiderBreak(Boolean.FALSE);
         if (form.getCapacityType() != null && !form.getCapacityType().isEmpty()) {
-            timetableEvent.setCapacityType(classifierRepository.getOne(form.getCapacityType()));
+            timetableEvent.setCapacityType(em.getReference(Classifier.class, form.getCapacityType()));
         }
         return timetableEvent;
     }
@@ -871,7 +869,7 @@ public class TimetableService {
         Timetable timetable = new Timetable();
         timetable.setIsHigher(Boolean.valueOf(TimetableType.isHigher(form.getCode())));
         timetable.setSchool(em.getReference(School.class, user.getSchoolId()));
-        timetable.setStatus(classifierRepository.getOne(TimetableStatus.TUNNIPLAAN_STAATUS_S.name()));
+        timetable.setStatus(em.getReference(Classifier.class, TimetableStatus.TUNNIPLAAN_STAATUS_S.name()));
         EntityUtil.bindToEntity(form, timetable);
         timetable.setStudyPeriod(em.getReference(StudyPeriod.class, form.getStudyPeriod()));
         return EntityUtil.save(timetable, em);
@@ -881,7 +879,7 @@ public class TimetableService {
         EntityUtil.bindToEntity(form, timetable);
         timetable.setIsHigher(Boolean.valueOf(TimetableType.isHigher(form.getCode())));
         timetable.setSchool(em.getReference(School.class, user.getSchoolId()));
-        timetable.setStatus(classifierRepository.getOne(TimetableStatus.TUNNIPLAAN_STAATUS_S.name()));
+        timetable.setStatus(em.getReference(Classifier.class, TimetableStatus.TUNNIPLAAN_STAATUS_S.name()));
         timetable.setStudyPeriod(em.getReference(StudyPeriod.class, form.getStudyPeriod()));
         return EntityUtil.save(timetable, em);
     }

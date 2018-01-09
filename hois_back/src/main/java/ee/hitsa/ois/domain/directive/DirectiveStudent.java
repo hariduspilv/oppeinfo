@@ -1,12 +1,12 @@
 package ee.hitsa.ois.domain.directive;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -16,10 +16,12 @@ import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.sais.SaisApplication;
+import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.util.Period;
+import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.DirectiveValidation.Akad;
 import ee.hitsa.ois.validation.DirectiveValidation.Akadk;
 import ee.hitsa.ois.validation.DirectiveValidation.Eksmat;
@@ -30,9 +32,12 @@ import ee.hitsa.ois.validation.DirectiveValidation.Lopet;
 import ee.hitsa.ois.validation.DirectiveValidation.Okava;
 import ee.hitsa.ois.validation.DirectiveValidation.Okoorm;
 import ee.hitsa.ois.validation.DirectiveValidation.Ovorm;
+import ee.hitsa.ois.validation.DirectiveValidation.Stiptoet;
 import ee.hitsa.ois.validation.DirectiveValidation.Valis;
 import ee.hitsa.ois.validation.PeriodRange;
+import ee.hitsa.ois.validation.Required;
 
+@DateRange(from = "startDate", thru = "endDate", groups = Stiptoet.class)
 @PeriodRange(groups = {Akad.class, Valis.class})
 @Entity
 public class DirectiveStudent extends BaseEntityWithId implements Period {
@@ -40,38 +45,39 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private Directive directive;
-    @NotNull(groups = {Akad.class, Akadk.class, Eksmat.class, Ennist.class, Finm.class, Lopet.class, Okava.class, Okoorm.class, Ovorm.class, Valis.class})
+    @Required(groups = {Akad.class, Akadk.class, Eksmat.class, Ennist.class, Finm.class, Lopet.class, Okava.class, Okoorm.class, Ovorm.class, Valis.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Student student;
-    @NotNull(groups = {Akadk.class})
+    @Required(groups = {Akadk.class, Stiptoet.class})
     private LocalDate startDate;
+    @Required(groups = Stiptoet.class)
     private LocalDate endDate;
-    @NotNull(groups = {Akad.class, Eksmat.class})
+    @Required(groups = {Akad.class, Eksmat.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier reason;
-    @NotNull(groups = {Okoorm.class}) // Immat is checked by hand (only higher)
+    @Required(groups = {Okoorm.class}) // Immat is checked by hand (only higher)
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyLoad;
-    @NotNull(groups = {Immat.class, Lopet.class, Okava.class})
+    @Required(groups = {Immat.class, Lopet.class, Okava.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
-    @NotNull(groups = {Immat.class, Okava.class, Ovorm.class})
+    @Required(groups = {Immat.class, Okava.class, Ovorm.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyForm;
-    @NotNull(groups = {Ennist.class, Immat.class, Okava.class})
+    @Required(groups = {Ennist.class, Immat.class, Okava.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private StudentGroup studentGroup;
     @ManyToOne(fetch = FetchType.LAZY)
-    @NotNull(groups = {Finm.class, Immat.class, Okoorm.class})
+    @Required(groups = {Finm.class, Immat.class, Okoorm.class})
     private Classifier fin;
-    @NotNull(groups = {Finm.class, Immat.class, Okoorm.class})
+    @Required(groups = {Finm.class, Immat.class, Okoorm.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier finSpecific;
-    @NotNull(groups = Immat.class)
+    @Required(groups = Immat.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier language;
     // temporary switched off
-    // @NotNull(groups = Lopet.class)
+    // @Required(groups = Lopet.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumGrade curriculumGrade;
     private Boolean isPeriod;
@@ -79,27 +85,27 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private StudyPeriod studyPeriodStart;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudyPeriod studyPeriodEnd;
-    @NotNull(groups = Ennist.class) // Immat is checked by hand
+    @Required(groups = Ennist.class) // Immat is checked by hand
     private LocalDate nominalStudyEnd;
-    @NotNull(groups = Valis.class)
+    @Required(groups = Valis.class)
     private Boolean isAbroad;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier ehisSchool;
-    @NotNull(groups = Valis.class)
+    @Required(groups = Valis.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier country;
-    @NotNull(groups = Valis.class)
+    @Required(groups = Valis.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier abroadPurpose;
-    @NotNull(groups = Valis.class)
+    @Required(groups = Valis.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier abroadProgramme;
     private String abroadSchool;
     private String email;
-    @NotNull(groups = Immat.class)
+    @Required(groups = Immat.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier previousStudyLevel;
-    @NotNull(groups = Lopet.class)
+    @Required(groups = Lopet.class)
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
     @ManyToOne(fetch = FetchType.LAZY)
@@ -107,7 +113,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(updatable = false)
     private Application application;
-    @NotNull(groups = Immat.class)
+    @Required(groups = Immat.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private Person person;
     @ManyToOne(fetch = FetchType.LAZY)
@@ -116,6 +122,12 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @JoinColumn(updatable = false)
     private SaisApplication saisApplication;
     private Boolean canceled;
+    private String bankAccount;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
+    private ScholarshipApplication scholarshipApplication;
+    @Required(groups = Stiptoet.class)
+    private BigDecimal amountPaid;
 
     public Directive getDirective() {
         return directive;
@@ -384,5 +396,29 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
 
     public void setCanceled(Boolean canceled) {
         this.canceled = canceled;
+    }
+
+    public String getBankAccount() {
+        return bankAccount;
+    }
+
+    public void setBankAccount(String bankAccount) {
+        this.bankAccount = bankAccount;
+    }
+
+    public ScholarshipApplication getScholarshipApplication() {
+        return scholarshipApplication;
+    }
+
+    public void setScholarshipApplication(ScholarshipApplication scholarshipApplication) {
+        this.scholarshipApplication = scholarshipApplication;
+    }
+
+    public BigDecimal getAmountPaid() {
+        return amountPaid;
+    }
+
+    public void setAmountPaid(BigDecimal amountPaid) {
+        this.amountPaid = amountPaid;
     }
 }

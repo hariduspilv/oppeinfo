@@ -1,16 +1,18 @@
 package ee.hitsa.ois.web.dto.scholarship;
 
+import java.math.BigDecimal;
+
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplicationFamily;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class ScholarshipApplicationFamilyDto {
     private Long id;
     private String name;
-    private Long netSalary;
-    private Long otherIncome;
-    private Long pension;
-    private Long stateBenefit;
-    private Long unemployedBenefit;
+    private BigDecimal netSalary;
+    private BigDecimal otherIncome;
+    private BigDecimal pension;
+    private BigDecimal stateBenefit;
+    private BigDecimal unemployedBenefit;
 
     public static ScholarshipApplicationFamilyDto of(ScholarshipApplicationFamily fam) {
         ScholarshipApplicationFamilyDto dto = new ScholarshipApplicationFamilyDto();
@@ -33,47 +35,44 @@ public class ScholarshipApplicationFamilyDto {
         this.name = name;
     }
 
-    public Long getNetSalary() {
+    public BigDecimal getNetSalary() {
         return netSalary;
     }
 
-    public void setNetSalary(Long netSalary) {
+    public void setNetSalary(BigDecimal netSalary) {
         this.netSalary = netSalary;
     }
 
-    public Long getOtherIncome() {
+    public BigDecimal getOtherIncome() {
         return otherIncome;
     }
 
-    public void setOtherIncome(Long otherIncome) {
+    public void setOtherIncome(BigDecimal otherIncome) {
         this.otherIncome = otherIncome;
     }
 
-    public Long getPension() {
+    public BigDecimal getPension() {
         return pension;
     }
 
-    public void setPension(Long pension) {
+    public void setPension(BigDecimal pension) {
         this.pension = pension;
     }
 
-    public Long getStateBenefit() {
+    public BigDecimal getStateBenefit() {
         return stateBenefit;
     }
 
-    public void setStateBenefit(Long stateBenefit) {
+    public void setStateBenefit(BigDecimal stateBenefit) {
         this.stateBenefit = stateBenefit;
     }
 
-    public Long getUnemployedBenefit() {
+    public BigDecimal getUnemployedBenefit() {
         return unemployedBenefit;
     }
 
-    public void setUnemployedBenefit(Long unemployedBenefit) {
+    public void setUnemployedBenefit(BigDecimal unemployedBenefit) {
         this.unemployedBenefit = unemployedBenefit;
     }
-    
-    
-
 
 }

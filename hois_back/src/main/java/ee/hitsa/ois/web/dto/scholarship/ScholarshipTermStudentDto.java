@@ -1,14 +1,15 @@
 package ee.hitsa.ois.web.dto.scholarship;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
-    private Long averageMark;
-    private Long lastPeriodMark;
-    private Long curriculumCompletion;
+    private BigDecimal averageMark;
+    private BigDecimal lastPeriodMark;
+    private BigDecimal curriculumCompletion;
     private Long maxAbsences;
     private Boolean isTeacherConfirm;
     private String status;
@@ -29,27 +30,27 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
         return dto;
     }
 
-    public Long getAverageMark() {
+    public BigDecimal getAverageMark() {
         return averageMark;
     }
 
-    public void setAverageMark(Long averageMark) {
+    public void setAverageMark(BigDecimal averageMark) {
         this.averageMark = averageMark;
     }
 
-    public Long getLastPeriodMark() {
+    public BigDecimal getLastPeriodMark() {
         return lastPeriodMark;
     }
 
-    public void setLastPeriodMark(Long lastPeriodMark) {
+    public void setLastPeriodMark(BigDecimal lastPeriodMark) {
         this.lastPeriodMark = lastPeriodMark;
     }
 
-    public Long getCurriculumCompletion() {
+    public BigDecimal getCurriculumCompletion() {
         return curriculumCompletion;
     }
 
-    public void setCurriculumCompletion(Long curriculumCompletion) {
+    public void setCurriculumCompletion(BigDecimal curriculumCompletion) {
         this.curriculumCompletion = curriculumCompletion;
     }
 

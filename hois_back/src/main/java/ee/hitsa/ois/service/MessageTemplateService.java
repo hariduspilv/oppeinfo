@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -110,12 +109,12 @@ public class MessageTemplateService {
      * @return
      */
     public MessageTemplate findValidTemplate(MessageType type, Long schoolId) {
-        TypedQuery<MessageTemplate> q = em.createQuery(
-                "select t from MessageTemplate t where t.school.id = ?1 and t.type.code = ?2 and (t.validFrom is null or t.validFrom <= ?3) and (t.validThru is null or t.validThru >= ?3)", MessageTemplate.class);
-        q.setParameter(1, schoolId);
-        q.setParameter(2, type.name());
-        q.setParameter(3, LocalDate.now());
-        List<MessageTemplate> templates = q.setMaxResults(2).getResultList();
+        List<MessageTemplate> templates = em.createQuery(
+                "select t from MessageTemplate t where t.school.id = ?1 and t.type.code = ?2 and (t.validFrom is null or t.validFrom <= ?3) and (t.validThru is null or t.validThru >= ?3)", MessageTemplate.class)
+                .setParameter(1, schoolId)
+                .setParameter(2, type.name())
+                .setParameter(3, LocalDate.now())
+                .setMaxResults(2).getResultList();
 
         if (templates.isEmpty()) {
             LOG.error("No {} templates found for school {}", type.name(), schoolId);

@@ -7,7 +7,7 @@ import javax.persistence.ManyToOne;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @Entity
 public class SaisApplicationOtherData extends BaseEntityWithId {
@@ -17,11 +17,11 @@ public class SaisApplicationOtherData extends BaseEntityWithId {
     private SaisApplication saisApplication;
 
     @Size(max = 255)
-    @NotEmpty
+    @Required
     private String otherDataName;
 
     @Size(max = 4000)
-    @NotEmpty
+    @Required
     private String otherDataValue;
 
     public SaisApplication getSaisApplication() {
@@ -47,5 +47,4 @@ public class SaisApplicationOtherData extends BaseEntityWithId {
     public void setOtherDataValue(String otherDataValue) {
         this.otherDataValue = otherDataValue;
     }
-
 }

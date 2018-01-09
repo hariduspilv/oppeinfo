@@ -91,13 +91,13 @@ public class CurriculumService {
         Curriculum curriculum = new Curriculum();
         curriculum.setSchool(em.getReference(School.class, user.getSchoolId()));
         if(Boolean.TRUE.equals(curriculumForm.getHigher())) {
-            curriculum.setDraft(classifierRepository.getOne(CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_PUUDUB.name()));
-            curriculum.setConsecution(classifierRepository.getOne(CurriculumConsecution.OPPEKAVA_TYPE_E.name()));
+            curriculum.setDraft(em.getReference(Classifier.class, CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_PUUDUB.name()));
+            curriculum.setConsecution(em.getReference(Classifier.class, CurriculumConsecution.OPPEKAVA_TYPE_E.name()));
             curriculum.setOccupation(Boolean.FALSE);
             updateGrades(curriculum, curriculumForm.getGrades());
             updateCurriculumSpecialities(curriculum, curriculumForm.getSpecialities());
         } else {
-            curriculum.setDraft(classifierRepository.getOne(curriculumForm.getDraft()));
+            curriculum.setDraft(em.getReference(Classifier.class, curriculumForm.getDraft()));
         }
         setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_S);
         curriculum.setHigher(curriculumForm.getHigher());
@@ -138,23 +138,23 @@ public class CurriculumService {
     private void updateJointPartner(CurriculumJointPartnerDto dto, CurriculumJointPartner partner) {
         EntityUtil.bindToEntity(dto, partner, classifierRepository);
     }
-    
+
     /**
      * Is joint partner is deleted from curriculum, 
      * then its school departments should be deleted from implementation plans
      */
     private void updateVersionsSchoolDepartments(Curriculum curriculum) {
         Set<String> ehisSchools = new HashSet<>();
-        ehisSchools.add(EntityUtil.getCode(curriculum.getSchool().getEhisSchool()));        
+        ehisSchools.add(EntityUtil.getCode(curriculum.getSchool().getEhisSchool()));
         ehisSchools.addAll(StreamUtil.toMappedSet(p -> EntityUtil.getCode(p.getEhisSchool()), curriculum.getJointPartners().stream().filter(p -> p.getEhisSchool() != null)));
-        
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from school_department sd join school s on s.id = sd.school_id ");
 
         qb.requiredCriteria("s.ehis_school_code in :ehisSchools", "ehisSchools", ehisSchools);
 
         List<?> data = qb.select("sd.id", em).getResultList();
         List<Long> schoolDepartments = StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
-        
+
         for(CurriculumVersion version: curriculum.getVersions()) {
             if(!schoolDepartments.contains(EntityUtil.getNullableId(version.getSchoolDepartment()))) {
                 version.setSchoolDepartment(null);
@@ -224,7 +224,7 @@ public class CurriculumService {
     void updateStudyForms(Curriculum curriculum, Set<String> studyForms) {
         EntityUtil.bindEntityCollection(curriculum.getStudyForms(), sf -> EntityUtil.getCode(sf.getStudyForm()), studyForms, studyForm -> {
             // add new link
-            Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(studyForm), MainClassCode.OPPEVORM);
+            Classifier c = EntityUtil.validateClassifier(em.getReference(Classifier.class, studyForm), MainClassCode.OPPEVORM);
             return new CurriculumStudyForm(c);
         });
     }
@@ -233,7 +233,7 @@ public class CurriculumService {
         EntityUtil.bindEntityCollection(target.getStudyLanguages(), e -> EntityUtil.getCode(e.getStudyLang()), languageCodes, code -> {
             CurriculumStudyLanguage csl = new CurriculumStudyLanguage();
             csl.setCurriculum(target);
-            csl.setStudyLang(classifierRepository.getOne(code));
+            csl.setStudyLang(em.getReference(Classifier.class, code));
             return csl;
         });
     }
@@ -241,7 +241,7 @@ public class CurriculumService {
     public Curriculum closeCurriculum(Curriculum curriculum) {
         setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_C);
         if(!curriculum.getVersions().isEmpty()) {
-            Classifier statusClosed = classifierRepository.findOne(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
+            Classifier statusClosed = em.getReference(Classifier.class, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
             for(CurriculumVersion version : curriculum.getVersions()) {
                 version.setStatus(statusClosed);
             }
@@ -251,7 +251,7 @@ public class CurriculumService {
 
     public Curriculum sendToEhis(HoisUserDetails user, Curriculum curriculum) {
         ehisCurriculumService.sendToEhis(user, curriculum);
-        curriculum.setEhisStatus(classifierRepository.findOne(CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_A.name()));
+        curriculum.setEhisStatus(em.getReference(Classifier.class, CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_A.name()));
         curriculum.setEhisChanged(LocalDate.now());
         return EntityUtil.save(curriculum, em);
     }
@@ -334,20 +334,19 @@ public class CurriculumService {
     }
 
     private void setCurriculumStatus(Curriculum curriculum, CurriculumStatus status) {
-        curriculum.setStatus(classifierRepository.getOne(status.name()));
+        curriculum.setStatus(em.getReference(Classifier.class, status.name()));
     }
 
     public CurriculumDto get(HoisUserDetails user, Curriculum curriculum) {
         CurriculumDto dto = CurriculumDto.of(curriculum);
-        String myEhisShool = user.getSchoolId() != null ? 
-                em.getReference(School.class, user.getSchoolId()).getEhisSchool().getCode() : null;
+        String myEhisShool = schoolService.getEhisSchool(user.getSchoolId());
         dto.setCanChange(CurriculumUtil.canChange(user, myEhisShool, curriculum));
         dto.setCanConfirm(CurriculumUtil.canConfirm(user, myEhisShool, curriculum));
         dto.setCanClose(CurriculumUtil.canClose(user, myEhisShool, curriculum));
         dto.setCanDelete(CurriculumUtil.canDelete(user, myEhisShool, curriculum));
-        
+
         dto.setVersions(StreamUtil.toMappedSet(CurriculumVersionDto::forCurriculumForm, curriculum.getVersions()
-                .stream().filter(v -> CurriculumUtil.canView(user, schoolService.getEhisSchool(user.getSchoolId()), v))));
+                .stream().filter(v -> CurriculumUtil.canView(user, myEhisShool, v))));
         if(Boolean.TRUE.equals(curriculum.getHigher())) {
             setJointPartnersDeletePermissions(curriculum, dto.getJointPartners());
         }
@@ -359,10 +358,10 @@ public class CurriculumService {
     }
     
     private static void setJointPartnersDeletePermissions(Curriculum curriculum,
-            Set<CurriculumJointPartnerDto> jointPartners) {        
-        
+            Set<CurriculumJointPartnerDto> jointPartners) {
+
         Set<String> subjectsEhisSchools = new HashSet<>();
-        
+
         for(CurriculumVersion version : curriculum.getVersions()) {
             for(CurriculumVersionHigherModule module : version.getModules()) {
                 for(CurriculumVersionHigherModuleSubject subject : module.getSubjects()) {
@@ -370,15 +369,11 @@ public class CurriculumService {
                 }
             }
         }
-        for(CurriculumJointPartnerDto partner : jointPartners) {    
-            if(subjectsEhisSchools.contains(partner.getEhisSchool())) {
-                partner.setHasSubjects(Boolean.TRUE);
-            } else {
-                partner.setHasSubjects(Boolean.FALSE);
-            }
+        for(CurriculumJointPartnerDto partner : jointPartners) {
+            partner.setHasSubjects(Boolean.valueOf(subjectsEhisSchools.contains(partner.getEhisSchool())));
         }
     }
-    
+
     public List<AutocompleteResult> getSchoolDepartments(Curriculum curriculum) {
         CurriculumSchoolDepartmentCommand command = new CurriculumSchoolDepartmentCommand();
         command.setCurriculum(EntityUtil.getId(curriculum));

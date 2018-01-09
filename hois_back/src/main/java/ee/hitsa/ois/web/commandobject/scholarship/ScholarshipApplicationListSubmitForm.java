@@ -2,10 +2,11 @@ package ee.hitsa.ois.web.commandobject.scholarship;
 
 import java.util.List;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class ScholarshipApplicationListSubmitForm {
-    @NotEmpty
+
+    @Required
     private List<Long> applications;
 
     public List<Long> getApplications() {
@@ -15,5 +16,4 @@ public class ScholarshipApplicationListSubmitForm {
     public void setApplications(List<Long> applications) {
         this.applications = applications;
     }
-
 }

@@ -4,7 +4,10 @@ import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
-public class ModuleProtocolValidationUtil extends ModuleProtocolUtil {
+public final class ModuleProtocolValidationUtil {
+    
+    private ModuleProtocolValidationUtil(){
+    }
 
     public static void assertIsSchoolAdminOrTeacherResponsible(HoisUserDetails user, Long teacherId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
@@ -14,13 +17,13 @@ public class ModuleProtocolValidationUtil extends ModuleProtocolUtil {
     }
 
     public static void assertCanEdit(HoisUserDetails user, Protocol protocol) {
-        if(!canEdit(user, protocol)) {
+        if(!ModuleProtocolUtil.canEdit(user, protocol)) {
             throw new ValidationFailedException("moduleProtocol.error.noPermissionToEdit");
         }
     }
 
     public static void assertCanDelete(HoisUserDetails user, Protocol protocol) {
-        if(!canDelete(user, protocol)) {
+        if(!ModuleProtocolUtil.canDelete(user, protocol)) {
             throw new ValidationFailedException("moduleProtocol.error.noPermissionToDelete");
         }
     }

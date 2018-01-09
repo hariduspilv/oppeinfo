@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>VÕTA taotlus</title>
+  <style type="text/css">
+    {% include "styles.css" %}
+
+    table {
+      page-break-inside: avoid;
+    }
+  </style>
+</head>
+
+<body>
+  <table>
+    <p class="reporttableheader">{{ "report.apel.application.title" | translate }}</p>
+    <table class="personaldatatable" align="center">
+      <tr>
+        <td>{{ "report.apel.application.personalData.studentName" | translate }}:</td>
+        <td>{{ content.name }}</td>
+      </tr>
+      <tr>
+        <td>{{ "report.apel.application.personalData.curriculumVersion" | translate }}:</td>
+        <td>  {{ content.curriculumVersion }}</td>
+      </tr>
+      <tr>
+        <td>{{ "report.apel.application.personalData.inserted" | translate }}:</td>
+        <td>  {{ content.inserted | hoisDate }}</td>
+      </tr>
+      <tr>
+        <td>{{ "report.apel.application.personalData.status" | translate }}:</td>
+        <td>  {{ content.status }}</td>
+      </tr>
+      {% if content.status == "Kinnitatud" or content.status == "Confirmed" %}
+      <tr>
+        <td>{{ "report.apel.application.personalData.confirmed" | translate }}:</td>
+        <td>  {{ content.confirmed | hoisDate }}</td>
+      </tr>
+      {% endif %}
+    </table>
+
+    {% for record in content.records %} 
+      {% if loop.index == 0 %}
+      <p class="reporttablesubheader">{{ "report.apel.application.formalLearning" | translate }}</p>
+      {% endif %}
+
+      {% for replacedSubjectOrModule in record.formalReplacedSubjectsOrModules %}
+        {% if loop.index == 0 %}
+          <table class="reporttable">
+          <tr>
+              <td class="reporttableheader" colspan="2">{{ "report.apel.application.ownSchool" | translate }}</td>
+          </tr>
+          <tr>
+              <td class="label">{{ "report.apel.application.formalReplacedSubjectsOrModules.name" | translate }}</td>
+              <td class="label">{{ "report.apel.application.formalReplacedSubjectsOrModules.creditsEKAP" | translate }}</td>
+          </tr>
+        {% endif %}
+
+          <tr>
+            <td>{{ replacedSubjectOrModule.name }}</td>
+            <td>{{ replacedSubjectOrModule.credits }}</td>
+          </tr>
+
+        {% if loop.index == loop.length - 1 %}
+          </table>
+          <br/><br/>
+        {% endif %}
+      {% endfor %}
+
+      {% for formalSubjectOrModule in record.formalSubjectsOrModules %} 
+        {% if loop.index == 0 %}
+          <table class="reporttable">
+            <tr>
+                <td class="reporttableheader" colspan="8">{{ "report.apel.application.formalSubjectsOrModules.modulesTitle" | translate }}</td>
+            </tr>
+            <tr>
+              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.school" | translate }}</td>
+              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.name" | translate }}</td>
+              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.creditsEKAP" | translate }}</td>
+              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.assessment" | translate }}</td>
+              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.grade" | translate }}</td>
+              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.gradeDate" | translate }}</td>
+              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.teachers" | translate }}</td>
+              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.transfer" | translate }}</td>
+            </tr>
+        {% endif %}
+
+          <tr>
+            <td>{{ formalSubjectOrModule.school }}</td>
+            <td>{{ formalSubjectOrModule.name }}</td>
+            <td>{{ formalSubjectOrModule.credits }}</td>
+            <td>{{ formalSubjectOrModule.assessment }}</td>
+            <td>{{ formalSubjectOrModule.grade }}</td>
+            <td>{{ formalSubjectOrModule.gradeDate | hoisDate }}</td>
+            <td>{{ formalSubjectOrModule.teachers }}</td>
+            <td>
+                {% if formalSubjectOrModule.transfer %}
+                X
+                {% endif %}
+            </td>
+          </tr>
+
+        {% if loop.index == loop.length - 1 %}
+          </table>
+          <br/>
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+
+    {% for record in content.records %} 
+      {% if loop.index == 0 %}
+      <p class="reporttablesubheader">{{ "report.apel.application.informalLearning" | translate }}</p>
+      {% endif %}
+      
+      {% for informalSubjectOrModule in record.informalSubjectsOrModules %} 
+        {% if loop.index == 0 %}
+          <table class="reporttable">
+            <tr>
+              <td class="reporttableheader" colspan="7">{{ "report.apel.application.ownSchool" | translate }}</td>
+            </tr>
+            <tr>
+              <td class="label">{{ "report.apel.application.informalSubjectsOrModules.name" | translate }}</td>
+              <td class="label">{{ "report.apel.application.informalSubjectsOrModules.hours" | translate }}</td>
+              <td class="label">{{ "report.apel.application.informalSubjectsOrModules.creditsEKAP" | translate }}</td>
+              <td class="label">{{ "report.apel.application.informalSubjectsOrModules.grade" | translate }}</td>
+              <td class="label">{{ "report.apel.application.informalSubjectsOrModules.outcomes" | translate }}</td>
+              <td class="label">{{ "report.apel.application.informalSubjectsOrModules.skills" | translate }}</td>
+              <td class="label">{{ "report.apel.application.informalSubjectsOrModules.transfer" | translate }}</td>
+            </tr>
+        {% endif %}
+
+          <tr>
+            <td>{{ informalSubjectOrModule.name }}</td>
+            <td>{{ informalSubjectOrModule.hours }}</td>
+            <td>{{ informalSubjectOrModule.credits }}</td>
+            <td>{{ informalSubjectOrModule.grade }}</td>
+            <td>
+              <ul style="list-style-type:circle; padding-left: 15px">
+                {% for outcome in informalSubjectOrModule.outcomes %}
+                  <li>{{ outcome }}</li>
+                {% endfor %}
+              </ul>
+            </td>
+            <td>{{ informalSubjectOrModule.skills }}</td>
+            <td>
+              {% if informalSubjectOrModule.transfer %} X {% endif %}
+            </td>
+          </tr>
+
+        {% if loop.index == loop.length - 1 %}
+          </table>
+          <br/><br/>
+        {% endif %}
+      {% endfor %}
+
+      {% for informalExperience in record.informalExperiences %} 
+        {% if loop.index == 0 %}
+        <table class="reporttable">
+          <tr>
+              <td class="reporttableheader" colspan="5">{{ "report.apel.application.informalExperiences.title" | translate }}</td>
+          </tr>
+          <tr>
+            <td class="label">{{ "report.apel.application.informalExperiences.name" | translate }}</td>
+            <td class="label">{{ "report.apel.application.informalExperiences.placeTime" | translate }}</td>
+            <td class="label">{{ "report.apel.application.informalExperiences.hours" | translate }}</td>
+            <td class="label">{{ "report.apel.application.informalExperiences.documents" | translate }}</td>
+            <td class="label">{{ "report.apel.application.informalExperiences.type" | translate }}</td>
+          </tr>
+        {% endif %}
+
+          <tr>
+            <td>{{ informalExperience.name }}</td>
+            <td>{{ informalExperience.placeTime }}</td>
+            <td>{{ informalExperience.hours }}</td>
+            <td>{{ informalExperience.documents }}</td>
+            <td>{{ informalExperience.type }}</td>
+          </tr>
+
+        {% if loop.index == loop.length - 1 %}
+          </table>
+          <br/>
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    <br/><br/>
+
+    {% for comment in content.comments %} 
+      {% if loop.index == 0 %}
+      <p class="reporttablesubheader">{{ "report.apel.application.comments.title" | translate }}</p>
+      <table class="reporttable">
+        <tr>
+          <td class="label">{{ "report.apel.application.comments.addedBy" | translate }}</td>
+          <td class="label">{{ "report.apel.application.comments.additionDate" | translate }}</td>
+          <td class="label">{{ "report.apel.application.comments.comment" | translate }}</td>
+        </tr>
+      {% endif %}  
+
+        <tr>
+          <td>{{ comment.insertedBy }}</td>
+          <td>{{ comment.inserted | hoisDateTime }}</td>
+          <td>{{ comment.addInfo }}</td>
+        </tr>
+    
+      {% if loop.index == loop.length - 1 %}
+        </table>
+        <br/>
+      {% endif %}
+    {% endfor %}
+    <br/><br/>
+
+    <table width="100%">
+      <tr>
+        <td align="left">_______________</td>
+        <td align="right">_______________</td>
+      </tr>
+      <tr>
+        <td align="left">{{ "report.apel.application.date" | translate }}</td>
+        <td align="right">{{ "report.apel.application.signature" | translate }}</td>
+      </tr>
+    </table>
+  </table>
+</body>
+</html>

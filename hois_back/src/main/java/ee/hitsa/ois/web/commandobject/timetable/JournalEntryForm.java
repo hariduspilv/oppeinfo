@@ -12,11 +12,11 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.JournalEntryValidation.Homework;
 import ee.hitsa.ois.validation.JournalEntryValidation.Lesson;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class JournalEntryForm {
 
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.SISSEKANNE)
     private String entryType;
     @Size(max=100)

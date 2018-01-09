@@ -18,7 +18,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); } },
-      data: authorizedRoles
+        data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA]}
     })
     .when('/teachers/:id/edit', {
       templateUrl: 'teacher/teacher.edit.html',
@@ -26,7 +26,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); }},
-      data: authorizedRoles
+        data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA]}
     })
     .when('/teachers/:id/continuingEducation', {
       templateUrl: 'teacher/teacher.continuing.education.edit.html',

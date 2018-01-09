@@ -17,12 +17,27 @@
                 <table md-table>
                     <tbody md-body>
                         <tr md-row ng-repeat="journal in year.journals" ng-class-odd="'odd'" ng-class-even="'even'">
-                            <td md-cell width="20%"><a ng-click="showJournal(journal.id)">{{journal.nameEt}}</a></td>
-                            <td md-cell width="20%">
-                                <span>{{'student.journal.absences' | translate}}: {{journal.absenceH}}, </span>
-                                <span>{{'student.journal.includingAbsencesWithoutReason' | translate}}: {{journal.absenceP}}</span>
+                            <td md-cell width="20%"><a ng-click="showJournal(journal)">{{journal.nameEt}}</a></td>
+                            <td md-cell>
+                                <span ng-repeat="result in journal.journalEntries | filter : {gradeValue: ''}"
+                                ng-class="{good: result.entryType === 'SISSEKANNE_L' && resultIsPostive(result.gradeValue), 
+                                bad: result.entryType === 'SISSEKANNE_L' && !resultIsPostive(result.gradeValue),
+                                bold: isTestButNotFinal(result.entryType)}">
+                                {{result.gradeValue}} &nbsp
+                                <md-tooltip ng-if="result.gradeValue">
+                                    {{result.gradeInserted | hoisDate}}
+                                    <span ng-if="result.entryType">,&nbsp;</span> {{currentLanguageNameField(result.entryTypeClassifier)}}
+                                    <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
+                                </md-tooltip>
+                            </span>
                             </td>
-                            <td md-cell>{{'student.journal.lateForClass' | translate}}: {{journal.absenceV}}</td>
+                            <td md-cell width="20%">
+                                <span>{{'student.journal.absences' | translate}}: {{journal.absencePV}}, </span>
+                                <span>{{'student.journal.includingAbsencesWithoutReason' | translate}}: 
+                                    <span ng-class="{bad: journal.absenceP > 0}">{{journal.absenceP}}</span>
+                                </span>
+                            </td>
+                            <td md-cell>{{'student.journal.lateForClass' | translate}}: {{journal.absenceH}}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -30,3 +45,22 @@
         </hois-collapsable>
     </div>
 </div>
+
+<style>
+.good {
+    color: rgb(13,71,161);
+    font-weight: 500;
+    font-size: 18px;
+}
+    
+.bad {
+    color: red;
+    font-weight: 500;
+    font-size: 18px;
+}
+
+.bold {
+    font-weight: 500;
+}
+
+</style>

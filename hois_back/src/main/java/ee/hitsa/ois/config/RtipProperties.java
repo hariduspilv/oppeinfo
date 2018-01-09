@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
 
 @Component
@@ -12,7 +12,7 @@ import ee.hois.xroad.helpers.XRoadHeaderV4;
 @ConfigurationProperties("rtip")
 public class RtipProperties extends XroadProperties {
 
-    @NotEmpty
+    @Required
     private String user;
 
     public String getUser() {

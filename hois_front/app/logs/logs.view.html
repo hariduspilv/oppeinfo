@@ -51,7 +51,7 @@
             <th md-column md-order-by="inserted">{{'logs.time' | translate}}</th>
             <th md-column ng-if="logType === 'ekis'">{{'logs.directive' | translate}}</th>
             <th md-column>{{'logs.error' | translate}}</th>
-            <th md-column ng-if="logType !== 'sais'">{{'logs.message' | translate}}</th>
+            <th md-column>{{'logs.message' | translate}}</th>
             <th md-column>{{'logs.insertedBy' | translate}}</th>
           </tr>
         </thead>
@@ -63,7 +63,7 @@
             <td md-cell>{{::row.inserted | hoisDateTime}}</td>
             <td md-cell ng-if="logType === 'ekis'">{{currentLanguageNameField(row.directive)}}</td>
             <td md-cell>{{row.error ? 'main.yes' : 'main.no' | translate}}</td>
-            <td md-cell ng-if="logType !== 'sais'">{{::row.logTxt}}</td>
+            <td md-cell>{{::row.logTxt}}</td>
             <td md-cell>{{::row.insertedBy}}</td>
           </tr>
         </tbody>

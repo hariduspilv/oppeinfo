@@ -30,8 +30,11 @@
           <input type="text" ng-if="row.isAbroad" ng-model="row.abroadSchool">
         </td>
         <td md-cell>
-          <hois-classifier-select ng-if="row.isAbroad" ng-model="row.country" model-value-attr="code" filter-values="['RIIK_EST']" main-classifier-code="RIIK" aria-label="{{'directive.student.country' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-if="row.isAbroad" ng-model="row.country" name="students[{{$index}}].country" model-value-attr="code" filter-values="['RIIK_EST']" main-classifier-code="RIIK" aria-label="{{'directive.student.country' | translate}}"></hois-classifier-select>
           <hois-classifier-value ng-if="!row.isAbroad" ng-model="row.country" main-classifier-code="RIIK"></hois-classifier-value>
+          <div class="invalid" ng-if="row.isAbroad" ng-show="directiveForm['students['+$index+'].country'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
           <md-radio-group name="isPeriod" ng-model="row.isPeriod" layout="row">
@@ -48,10 +51,16 @@
           <md-datepicker ng-if="!row.isPeriod" ng-model="row.endDate"></md-datepicker>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.abroadPurpose" model-value-attr="code" main-classifier-code="VALISOPE_EESMARK" aria-label="{{'directive.student.abroadPurpose' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.abroadPurpose" name="students[{{$index}}].abroadPurpose" model-value-attr="code" main-classifier-code="VALISOPE_EESMARK" aria-label="{{'directive.student.abroadPurpose' | translate}}"></hois-classifier-select>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].abroadPurpose'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.abroadProgramme" model-value-attr="code" main-classifier-code="VALISKOOL_PROGRAMM" aria-label="{{'directive.student.abroadProgramme' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.abroadProgramme" name="students[{{$index}}].abroadProgramme" model-value-attr="code" main-classifier-code="VALISKOOL_PROGRAMM" aria-label="{{'directive.student.abroadProgramme' | translate}}"></hois-classifier-select>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].abroadProgramme'].$error.required">
+            {{'main.required' | translate}}
+          </div>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row.idcode)" md-no-ink class="remove">&times;</a>

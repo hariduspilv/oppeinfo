@@ -2,20 +2,19 @@ package ee.hitsa.ois.web.commandobject.student;
 
 import java.time.LocalDate;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 @DateRange
 public class StudentAbsenceForm extends VersionedCommand {
 
-    @NotNull
+    @Required
     private LocalDate validFrom;
     private LocalDate validThru;
-    @NotEmpty
+    @Required
     @Size(max = 1000)
     private String cause;
 

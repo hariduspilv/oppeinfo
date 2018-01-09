@@ -1,11 +1,11 @@
 package ee.hitsa.ois.web.commandobject;
 
 import ee.hitsa.ois.validation.EstonianIdCode;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class PersonLookupCommand {
 
-    @NotEmpty
+    @Required
     @EstonianIdCode
     private String idcode;
     private String role;

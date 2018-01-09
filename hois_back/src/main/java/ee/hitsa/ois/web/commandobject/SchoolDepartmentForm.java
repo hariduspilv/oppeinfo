@@ -2,24 +2,23 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.time.LocalDate;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @DateRange
 public class SchoolDepartmentForm extends VersionedCommand {
 
-    @NotEmpty
+    @Required
     @Size(max = 255)
     private String nameEt;
     @Size(max = 255)
     private String nameEn;
-    @NotEmpty
+    @Required
     @Size(max = 50)
     private String code;
-    @NotNull
+    @Required
     private LocalDate validFrom;
     private LocalDate validThru;
     private Long parentSchoolDepartment;

@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsEhisCurriculumLog;
@@ -29,6 +28,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -79,6 +79,7 @@ public class EhisCurriculumService extends EhisService {
     private String frontendBaseUrl;
 
     public void sendToEhis(HoisUserDetails userDetails, Curriculum curriculum) {
+        // TODO remove this block
         // EHIS oisOppekavad query is not working yet
         if(true) {
             if(!StringUtils.hasText(curriculum.getMerCode())) {
@@ -119,8 +120,7 @@ public class EhisCurriculumService extends EhisService {
         if(higher) {
             group = curriculum.getGroup();
         } else if(curriculum.getIscedClass() != null) {
-            ClassifierConnect c = curriculum.getIscedClass().getClassifierConnects().stream().filter(r -> MainClassCode.OPPEKAVAGRUPP.name().equals(r.getMainClassifierCode())).findFirst().orElse(null);
-            group = c != null ? c.getConnectClassifier() : null;
+            group = ClassifierUtil.parentFor(curriculum.getIscedClass(), MainClassCode.OPPEKAVAGRUPP).orElse(null);
         } else {
             group = null;
         }
@@ -192,10 +192,7 @@ public class EhisCurriculumService extends EhisService {
                             partOccupationId = value(cpo.getOccupation());
                             OisOsakutse oisOsakutse = new OisOsakutse();
                             oisOsakutse.setOsakutseReaId(new BigInteger(partOccupationId));
-                            // TODO find occupation
-                            Classifier occupation = cpo.getOccupation().getClassifierConnects().stream()
-                                    .filter(r -> MainClassCode.KUTSE.name().equals(r.getMainClassifierCode()))
-                                    .map(r -> r.getConnectClassifier()).findFirst().orElse(null);
+                            Classifier occupation = ClassifierUtil.parentFor(cpo.getOccupation(), MainClassCode.KUTSE).orElse(null);
                             String occupationId = value(occupation);
                             if(occupationId == null) {
                                 continue;
@@ -243,6 +240,11 @@ public class EhisCurriculumService extends EhisService {
             if(BigInteger.ZERO.compareTo(msg.getVeakood()) != 0) {
                 throw new ValidationFailedException(msg.getTeade());
             }
+            // update merCode from EHIS
+            BigInteger htmCode = msg.getOppekavaKood();
+            if(htmCode != null) {
+                curriculum.setMerCode(htmCode.toString());
+            }
         }
     }
 
@@ -265,9 +267,9 @@ public class EhisCurriculumService extends EhisService {
             throw new ValidationFailedException(msgCode);
         }
         oppekavaStaatusOis.setOppekavaKood(curriculumCode);
-        // XXX create enum
+        // XXX should create enum?
         oppekavaStaatusOis.setOperatsioon("kontrollimine");
-        // TODO remove, for testing against mock server only
+        // TODO remove next row, for testing against mock server only
         oppekavaStaatusOis.setKommentaar(curriculum.getDescription());
         oisOppekavadStaatus.getOisOppekava().add(oppekavaStaatusOis);
 
@@ -299,7 +301,8 @@ public class EhisCurriculumService extends EhisService {
                 String ehisStatus = msg.getOppekavaStaatus();
                 if(StringUtils.hasText(ehisStatus)) {
                     Classifier es = em.createQuery("select c from Classifier c where c.mainClassCode = ?1 and c.value= ?2", Classifier.class)
-                            .setParameter(1, MainClassCode.OPPEKAVA_EHIS_STAATUS.name()).setParameter(2, ehisStatus).getResultList().stream().findFirst().orElse(null);
+                            .setParameter(1, MainClassCode.OPPEKAVA_EHIS_STAATUS.name())
+                            .setParameter(2, ehisStatus).setMaxResults(1).getResultList().stream().findAny().orElse(null);
 
                     if(es != null) {
                         curriculum.setEhisStatus(es);

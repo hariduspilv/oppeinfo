@@ -1,7 +1,9 @@
 package ee.hitsa.ois;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 
@@ -31,6 +33,8 @@ public class TestConfigurationService {
     private PersonRepository personRepository;
     @Autowired
     private HoisUserDetailsService hoisUserDetailsService;
+    @Autowired
+    private TestProperties properties;
 
     private String sessionCookie;
     private String xsrfCookie;
@@ -56,11 +60,22 @@ public class TestConfigurationService {
         userToRoleInSchool(role, null, restTemplate);
     }
 
+    public void getXsrfCookie(TestRestTemplate restTemplate) {
+        ResponseEntity<Object> userResponse = restTemplate.getForEntity("/user", null, Object.class);
+        setHeaders(userResponse);
+    }
+
     public void userToRoleInSchool(Role role, Long schoolId, TestRestTemplate restTemplate) {
         String userId = TestConfiguration.USER_ID;
         User userWithRole = userWithRoleInSchool(userId, role, schoolId);
-        ResponseEntity<Object> userResponse = restTemplate.withBasicAuth(userId, "undefined").getForEntity("/user", null, Object.class);
-        setHeaders(userResponse);
+        getXsrfCookie(restTemplate);
+        Map<String, Object> request = new HashMap<>();
+        request.put("school", properties.getLdapSchool());
+        request.put("username", properties.getLdapUsername());
+        request.put("password", properties.getLdapPassword());
+        ResponseEntity<Object> loginResponse = restTemplate.postForEntity("/ldap", request, Object.class);
+        setHeaders(loginResponse); // setSessionCookie
+
 
         if (getSessionCookie() != null && getXsrfCookie() != null) {
             currentUser = userWithRole;

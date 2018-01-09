@@ -12,7 +12,7 @@ public class StudentJournalDto {
     private final String yearCode;
     private final Short absenceH;
     private final Short absenceP;
-    private final Short absenceV;
+    private final Short absencePV;
     private final List<StudentJournalEntryDto> journalEntries;
     
     public StudentJournalDto(Object[] row) {
@@ -22,7 +22,7 @@ public class StudentJournalDto {
         this.yearCode = (String) row[3];
         this.absenceH = resultAsShort(row, 4);
         this.absenceP = resultAsShort(row, 5);
-        this.absenceV = resultAsShort(row, 6);
+        this.absencePV = resultAsShort(row, 6);
         this.journalEntries = null;
     }
     
@@ -33,7 +33,7 @@ public class StudentJournalDto {
         this.yearCode = (String) row[3];
         this.absenceH = resultAsShort(row, 4);
         this.absenceP = resultAsShort(row, 5);
-        this.absenceV = resultAsShort(row, 6);
+        this.absencePV = resultAsShort(row, 6);
         this.journalEntries = journalEntries;
     }
 
@@ -61,8 +61,8 @@ public class StudentJournalDto {
         return absenceP;
     }
 
-    public Short getAbsenceV() {
-        return absenceV;
+    public Short getAbsencePV() {
+        return absencePV;
     }
     
     public List<StudentJournalEntryDto> getJournalEntries() {

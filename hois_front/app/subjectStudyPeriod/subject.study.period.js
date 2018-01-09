@@ -48,13 +48,28 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
 
-    var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId) : null;
-    var studentGroupId = $route.current.params.studentGroupId ? parseInt($route.current.params.studentGroupId) : null;
-    var subjectId = $route.current.params.subjectId ? parseInt($route.current.params.subjectId) : null;
-    var teacherId = $route.current.params.teacherId ? parseInt($route.current.params.teacherId) : null;
+    var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId, 10) : null;
+    var studentGroupId = $route.current.params.studentGroupId ? parseInt($route.current.params.studentGroupId, 10) : null;
+    var subjectId = $route.current.params.subjectId ? parseInt($route.current.params.subjectId, 10) : null;
+    var teacherId = $route.current.params.teacherId ? parseInt($route.current.params.teacherId, 10) : null;
 
     $scope.hasObligatoryStudentGroup = studentGroupId !== null;
     $scope.obligatoryTeacher = teacherId;
+
+    QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
+      $scope.studentGroups = result.filter(function(el){
+          return studentGroupId ? el.id !== studentGroupId : true;
+      }).map(function(el){
+          var newEl = el;
+          newEl.nameEt = el.code;
+          newEl.nameEn = el.code;
+          return newEl;
+      });
+    });
+
+    $rootScope.removeLastUrlFromHistory(function(lastUrl){
+      return lastUrl && (lastUrl.indexOf('subjectStudyPeriod/' + id + '/view') !== -1);
+    });
 
     if(studentGroupId) {
       $scope.studentGroup = QueryUtils.endpoint('/studentgroups').get({id: studentGroupId});
@@ -89,17 +104,6 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     }
 
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
-
-    QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
-        $scope.studentGroups = result.filter(function(el){
-            return studentGroupId ? el.id !== studentGroupId : true;
-        }).map(function(el){
-            var newEl = el;
-            newEl.nameEt = el.code;
-            newEl.nameEn = el.code;
-            return newEl;
-        });
-    });
 
     $scope.subjects = QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query();
 

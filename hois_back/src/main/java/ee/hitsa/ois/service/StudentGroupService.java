@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -190,9 +189,9 @@ public class StudentGroupService {
         List<String> studyForms;
         if(CurriculumUtil.isHigher(curriculum)) {
             // only study forms with higher flag set
-            TypedQuery<String> q = em.createQuery("select code from Classifier where main_class_code = ?1 and higher = true", String.class);
-            q.setParameter(1, MainClassCode.OPPEVORM.name());
-            studyForms = q.getResultList();
+            studyForms = em.createQuery("select code from Classifier where main_class_code = ?1 and higher = true", String.class)
+                .setParameter(1, MainClassCode.OPPEVORM.name())
+                .getResultList();
         } else {
             studyForms = StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getStudyForm()), curriculum.getStudyForms());
         }

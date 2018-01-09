@@ -11,6 +11,7 @@ public class SaisLogDto {
     private final LocalDateTime inserted;
     private final String insertedBy;
     private final Boolean error;
+    private String logTxt;
 
     public SaisLogDto(Long id, String wsName, LocalDateTime inserted, String insertedBy, Boolean error) {
         this.id = id;
@@ -54,5 +55,13 @@ public class SaisLogDto {
 
     public Boolean getError() {
         return error;
+    }
+
+    public void setLogTxt(String logTxt) {
+        this.logTxt = logTxt;
+    }
+
+    public String getLogTxt() {
+        return logTxt;
     }
 }

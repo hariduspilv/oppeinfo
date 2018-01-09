@@ -8,7 +8,7 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class MessageTemplateForm extends VersionedCommand {
     
@@ -19,7 +19,7 @@ public class MessageTemplateForm extends VersionedCommand {
     private String content;
     private LocalDate validFrom;
     private LocalDate validThru;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.TEATE_LIIK)
     private String type;
     

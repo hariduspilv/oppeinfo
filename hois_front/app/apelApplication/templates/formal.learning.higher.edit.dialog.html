@@ -138,7 +138,7 @@
                   <input type="text" value="{{record.newTransferableSubjectOrModule.subjectCode}}" disabled required>
                 </md-input-container>
                 <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.subjectCredits' | translate}} ({{'apel.formalLearnings.credits' | translate}})</label>
+                  <label>{{'apel.formalLearnings.subjectCredits' | translate}} ({{'apel.formalLearnings.EAP' | translate}})</label>
                   <input type="text" value="{{record.newTransferableSubjectOrModule.credits}}" disabled required>
                 </md-input-container>
               </div>
@@ -149,7 +149,7 @@
                   <input type="text" ng-model="record.newTransferableSubjectOrModule.subjectCode" md-maxlength="20" required>
                 </md-input-container>
                 <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.subjectCredits' | translate}} ({{'apel.formalLearnings.credits' | translate}})</label>
+                  <label>{{'apel.formalLearnings.subjectCredits' | translate}} ({{'apel.formalLearnings.EAP' | translate}})</label>
                   <input type="number" ng-model="record.newTransferableSubjectOrModule.credits" ng-min="0" ng-max="999.9" required>
                 </md-input-container>
               </div>
@@ -165,17 +165,25 @@
                     main-classifier-code="HINDAMISVIIS" ng-change="assessmentTypeChanged(record.newTransferableSubjectOrModule.assessment)"
                     required></hois-classifier-select>
                 </md-input-container>
-                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'apel.formalLearnings.result' | translate}}</label>
                   <hois-select ng-model="record.newTransferableSubjectOrModule.grade" values="grades" show-property="value" value-property="code"
                     aria-label="grade" required></hois-select>
                 </md-input-container>
+                <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'apel.formalLearnings.result' | translate}}</label>
+                  <input value="{{record.newTransferableSubjectOrModule.grade.value}}" disabled></input>
+                </md-input-container>
               </div>
 
               <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100">
                   <label>{{'apel.formalLearnings.resultDate' | translate}}</label>
                   <md-datepicker ng-model="record.newTransferableSubjectOrModule.gradeDate" md-max-date="currentDate" md-open-on-focus></md-datepicker>
+                </md-input-container>
+                <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100">
+                  <label>{{'apel.formalLearnings.resultDate' | translate}}</label>
+                  <input value="{{record.newTransferableSubjectOrModule.gradeDate | hoisDate}}" disabled></input>
                 </md-input-container>
                 <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'apel.formalLearnings.teachers' | translate}}</label>

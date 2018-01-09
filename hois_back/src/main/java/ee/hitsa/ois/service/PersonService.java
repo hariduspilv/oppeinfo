@@ -130,7 +130,10 @@ public class PersonService {
 
         // load allowed codes
         List<?> cl = em.createNativeQuery("select c.code, c.main_class_code from classifier c where (c.main_class_code = ?1 and c.code in (select object_code from user_role_default where role_code = ?2)) or c.main_class_code = ?3")
-                .setParameter(1, MainClassCode.TEEMAOIGUS.name()).setParameter(2, EntityUtil.getCode(user.getRole())).setParameter(3, MainClassCode.OIGUS.name()).getResultList();
+                .setParameter(1, MainClassCode.TEEMAOIGUS.name())
+                .setParameter(2, EntityUtil.getCode(user.getRole()))
+                .setParameter(3, MainClassCode.OIGUS.name())
+                .getResultList();
         Set<String> objects = StreamUtil.toMappedSet(r -> resultAsString(r, 0), cl.stream().filter(r -> MainClassCode.TEEMAOIGUS.name().equals(resultAsString(r, 1))));
         Set<String> permissions = StreamUtil.toMappedSet(r -> resultAsString(r, 0), cl.stream().filter(r -> MainClassCode.OIGUS.name().equals(resultAsString(r, 1))));
 

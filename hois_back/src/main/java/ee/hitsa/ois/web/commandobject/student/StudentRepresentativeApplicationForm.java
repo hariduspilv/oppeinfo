@@ -5,19 +5,19 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.EstonianIdCode;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 public class StudentRepresentativeApplicationForm {
 
     @EstonianIdCode
     private String studentIdcode;
-    @NotEmpty
+    @Required
     @Size(max = 100)
     private String phone;
-    @NotEmpty
+    @Required
     @Size(max = 255)
     private String email;
-    @NotEmpty
+    @Required
     @ClassifierRestriction(MainClassCode.OPPURESINDAJA)
     private String relation;
 

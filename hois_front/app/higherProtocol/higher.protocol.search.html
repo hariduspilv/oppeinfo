@@ -71,7 +71,7 @@
       <br><br><br>
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="openCreateProtocolDialog()">{{'main.button.create' | translate}}</md-button>
+        <md-button class="md-raised" ng-href="#/higherProtocols/new" ng-if="formState.canCreate">{{'main.button.create' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
       </div>
     </form>

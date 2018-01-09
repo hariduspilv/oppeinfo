@@ -15,6 +15,7 @@ public class PracticeJournalDto extends VersionedCommand {
     private Long id;
     private String status;
     private AutocompleteResult student;
+    private AutocompleteResult school;
     private AutocompleteResult studentCurriculumVersion;
     private String studentStudyForm;
     private AutocompleteResult module;
@@ -259,5 +260,13 @@ public class PracticeJournalDto extends VersionedCommand {
 
     public void setIsHigher(Boolean isHigher) {
         this.isHigher = isHigher;
+    }
+
+    public AutocompleteResult getSchool() {
+        return school;
+    }
+
+    public void setSchool(AutocompleteResult school) {
+        this.school = school;
     }
 }

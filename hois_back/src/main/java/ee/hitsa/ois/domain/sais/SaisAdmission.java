@@ -16,20 +16,20 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 
 @Entity
 public class SaisAdmission extends BaseEntityWithId {
 
-    @NotEmpty
+    @Required
     @Size(max = 100)
     private String code;
 
-    @NotEmpty
+    @Required
     @Size(max = 1000)
     private String name;
 
-    @NotEmpty
+    @Required
     @Size(max = 50)
     private String saisId;
 
@@ -116,7 +116,6 @@ public class SaisAdmission extends BaseEntityWithId {
         this.places = places;
     }
 
-
     public LocalDate getPeriodEnd() {
         return periodEnd;
     }
@@ -164,5 +163,4 @@ public class SaisAdmission extends BaseEntityWithId {
     public void setApplications(Set<SaisApplication> applications) {
         this.applications = applications;
     }
-
 }

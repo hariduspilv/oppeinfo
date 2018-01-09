@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.commandobject.scholarship;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -7,12 +8,13 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
 
 public class ScholarshipStudentApplicationForm {
+
     private Long id;
-    @NotEmpty
+    @Required
     @Size(max = 50)
     private String bankAccount;
     @Size(max = 4000)
@@ -27,7 +29,7 @@ public class ScholarshipStudentApplicationForm {
     private String compensationReason;
     @ClassifierRestriction(MainClassCode.STIPTOETUS_HYVITAMINE)
     private String compensationFrequency;
-    private Long routeKm;
+    private BigDecimal routeKm;
 
     private List<OisFileForm> files;
     private List<ScholarshipApplicationFamilyForm> family;
@@ -136,12 +138,11 @@ public class ScholarshipStudentApplicationForm {
         this.compensationFrequency = compensationFrequency;
     }
 
-    public Long getRouteKm() {
+    public BigDecimal getRouteKm() {
         return routeKm;
     }
 
-    public void setRouteKm(Long routeKm) {
+    public void setRouteKm(BigDecimal routeKm) {
         this.routeKm = routeKm;
     }
-
 }

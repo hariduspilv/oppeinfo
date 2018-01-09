@@ -5,25 +5,11 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'messa
   var CURRICULA_FULFILMENT = 'CURRICULA_FULFILMENT';
   var FOREIGN_STUDY = 'FOREIGN_STUDY';
   var GRADUATION = 'GRADUATION';
-  //var VOTA = 'VOTA';
+  var VOTA = 'VOTA';
 
-  $scope.dataTypes = [
-    CURRICULA_FULFILMENT,
-    FOREIGN_STUDY,
-    GRADUATION/*,
-    VOTA*/
-  ];
-
-  $scope.displayDates = [
-    FOREIGN_STUDY,
-    GRADUATION/*,
-    VOTA*/
-  ];
-
-  $scope.criteria = {
-    from: new Date(),
-    thru: new Date()
-  };
+  $scope.dataTypes = [CURRICULA_FULFILMENT, FOREIGN_STUDY, GRADUATION, VOTA];
+  $scope.displayDates = [FOREIGN_STUDY, GRADUATION, VOTA];
+  $scope.criteria = {from: new Date(), thru: new Date()};
 
   $scope.exportStudents = function() {
     if($scope.studentExportForm.$valid) {

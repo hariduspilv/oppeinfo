@@ -76,7 +76,8 @@
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.priority' | translate}}</label>
-      <hois-classifier-select ng-model="stipend.averageMarkPriority" name="type" model-value-attr="code" main-classifier-code="PRIORITEET"></hois-classifier-select>
+      <hois-select ng-model="stipend.averageMarkPriority" values="formState.priorities | filter: averageMarkPriorityFilter"
+        show-property="value" value-property="code"></hois-select>
     </md-input-container>
   </div>
   <div layout="row" flex>
@@ -86,7 +87,8 @@
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.priority' | translate}}</label>
-      <hois-classifier-select ng-model="stipend.lastPeriodMarkPriority" name="type" model-value-attr="code" main-classifier-code="PRIORITEET"></hois-classifier-select>
+      <hois-select ng-model="stipend.lastPeriodMarkPriority" values="formState.priorities | filter: lastPeriodMarkPriorityFilter"
+        show-property="value" value-property="code"></hois-select>
     </md-input-container>
   </div>
   <div layout="row" flex>
@@ -96,7 +98,8 @@
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.priority' | translate}}</label>
-      <hois-classifier-select ng-model="stipend.curriculumCompletionPriority" name="type" model-value-attr="code" main-classifier-code="PRIORITEET"></hois-classifier-select>
+      <hois-select ng-model="stipend.curriculumCompletionPriority" values="formState.priorities | filter: curriculumCompletionPriorityFilter"
+        show-property="value" value-property="code"></hois-select>
     </md-input-container>
   </div>
   <div layout="row">
@@ -115,8 +118,7 @@
     <md-checkbox ng-model="stipend.isStudyBacklog" aria-label="Is study backlog" flex="50">
       {{'stipend.isStudyBacklog' | translate}}
     </md-checkbox>
-    <md-checkbox ng-model="stipend.isTeacherConfirm" aria-label="Is teache confir"
-      flex="50">
+    <md-checkbox ng-model="stipend.isTeacherConfirm" aria-label="Is teache confirm" flex="50">
       {{'stipend.isTeacherConfirm' | translate}}
     </md-checkbox>
   </div>
