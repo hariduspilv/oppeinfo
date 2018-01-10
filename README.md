@@ -568,3 +568,12 @@ TAATi seadistamine:
 Sisselogimine Active Directory (AD) kaudu:
 	AD kaudu sisselogimise üheks eelduseks on turvalise kanali olemasolu HÕISi backendi ja õppeasutuse AD vahel, lisaks õppeasutuse AD sertifikaat peab olema lisatud java default keystore'sse. Täpsem kirjeldus asub "HOIS_analyys_sisselogimine_AD.docx" dokumendis
 	
+Usaldusväärsete sertifikaatide lisamine (vajalik x-tee6 https ühenduse jaoks). Antud tegevus tuleb korrata ka java versiooni uuendamisel või pärast käskluse update-ca-trust käivitamist:
+		1. Rakendusserverisse tuleb lisada usaldusväärsete sertifikaatide hulka x-tee6 turvaserveri sertifikaat. Selleks tuleb käivitada järgmine käsk:
+			keytool -importcert -alias XXX -keystore YYY -storepass ZZZ -file FFF
+			, kus
+			XXX - sertifikaadi alias, nt xtee6 vms
+			YYY - usaldusväärsete sertifikaatide asukoht (cacerts), nt /etc/pki/ca-trust/extracted/java/cacerts
+			ZZZ - cacerts salasõna, nt changeit
+			FFF - sertifikaadi faili asukoht, nt /opt/hois/ssl/x-tee6.pem
+		2. Peale sertifikaatide	lisamist tuleb hois_back.jar ueusti käivitada	
