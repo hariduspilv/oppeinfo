@@ -556,7 +556,7 @@ NB! XXX - frontendi server, nt devhoisfront
 		   cp /opt/hois/frontend.config.js app/config.js
 		2. Käivitada käsk "npm install"
 		3. Käivitada käsk "bower install" või "bower install --force"
-		4. Käivitada käsk "grunt build"
+		4. Käivitada käsk "grunt build"  
 		5. Käivitada käsk "rm -Rf /opt/hois/html/*" (nginxist vana seisu tühjendamiseks)
 		6. Käivitada käsk "cp -r dist/. /opt/hois/html/" (kopeeritakse frontendi uus seis /opt/hois/html kausta)
 
