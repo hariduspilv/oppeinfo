@@ -124,7 +124,7 @@ public class DirectiveForm extends VersionedCommand {
         private String lastname;
         private LocalDate startDate;
         private LocalDate endDate;
-        @ClassifierRestriction({MainClassCode.AKADPUHKUS_POHJUS, MainClassCode.EKSMAT_POHJUS})
+        @ClassifierRestriction({MainClassCode.AKADPUHKUS_POHJUS, MainClassCode.EKSMAT_POHJUS, MainClassCode.KASKKIRI_STIPTOETL_POHJUS})
         private String reason;
         @ClassifierRestriction(MainClassCode.OPPEVORM)
         private String studyForm;

@@ -50,7 +50,7 @@
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <md-button class="md-raised" ng-href="#/directives/new">{{'directive.create' | translate}}</md-button>
+        <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASKKIRI')" ng-href="#/directives/new">{{'directive.create' | translate}}</md-button>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
 	  </fieldset>
@@ -83,7 +83,8 @@
             <td md-cell>{{::row.inserted | hoisDate}}</td>
             <td md-cell>{{::row.confirmDate | hoisDate}}</td>
             <td md-cell>
-              <md-button ng-if="row.status.code === 'KASKKIRI_STAATUS_KOOSTAMISEL'" md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button ng-if="row.status.code === 'KASKKIRI_STAATUS_KOOSTAMISEL' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASKKIRI')" 
+                md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

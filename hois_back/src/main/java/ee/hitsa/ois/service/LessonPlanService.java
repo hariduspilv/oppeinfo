@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -346,12 +347,13 @@ public class LessonPlanService {
         LessonPlanModule lessonPlanModule = em.getReference(LessonPlanModule.class, form.getLessonPlanModuleId());
         assertSameSchool(journal, lessonPlanModule.getLessonPlan().getSchool());
         List<JournalOccupationModuleTheme> oldThemes = journal.getJournalOccupationModuleThemes();
-        List<JournalOccupationModuleThemeHolder> fromForm = form.getJournalOccupationModuleThemes()
-                .stream()
-                .map(id -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModule, id)).collect(Collectors.toList());
+        List<JournalOccupationModuleThemeHolder> fromForm = StreamUtil.toMappedList(id -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModule, id), form.getJournalOccupationModuleThemes());
 
         if(form.getGroups() != null && !form.getGroups().isEmpty()) {
-            Map<Long, Long> lessonPlanIds = findLessonPlanByStudyYearAndStudentGroup(journal.getStudyYear(), StreamUtil.toMappedList(LessonPlanGroupForm::getStudentGroup, form.getGroups()));
+            Set<Long> groupIds = StreamUtil.toMappedSet(LessonPlanGroupForm::getStudentGroup, form.getGroups());
+            Map<Long, Long> lessonPlanIds = findLessonPlanByStudyYearAndStudentGroup(journal.getStudyYear(), groupIds);
+            createMissingPlansAndAdd(groupIds, lessonPlanIds, EntityUtil.getId(journal.getStudyYear()), user);
+
             List<LessonPlanModule> lessonPlanModules = lessonPlanModuleRepository.findAll((root, query, cb) -> {
                 List<Predicate> filters = new ArrayList<>();
                 filters.add(root.get("lessonPlan").get("id").in(lessonPlanIds.values()));
@@ -379,9 +381,7 @@ public class LessonPlanService {
                     EntityUtil.save(lpm, em);
                 }
                 final LessonPlanModule lessonPlanModuleForSave = lpm;
-                fromForm.addAll(lpg.getCurriculumVersionOccupationModuleThemes()
-                        .stream()
-                        .map(cvomt -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModuleForSave, cvomt)).collect(Collectors.toList()));
+                fromForm.addAll(StreamUtil.toMappedList(cvomt -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModuleForSave, cvomt), lpg.getCurriculumVersionOccupationModuleThemes()));
             }
         }
 
@@ -395,6 +395,18 @@ public class LessonPlanService {
         return EntityUtil.save(journal, em);
     }
 
+    private void createMissingPlansAndAdd(Collection<Long> newGroupIds, Map<Long, Long> lessonPlanIds, Long studyYearId, HoisUserDetails user) {
+        newGroupIds.removeAll(lessonPlanIds.keySet());
+        // add lesson plans for student groups not already present
+        for(Long missingGroupId : newGroupIds) {
+            LessonPlanCreateForm lpCreateForm = new LessonPlanCreateForm();
+            lpCreateForm.setStudentGroup(missingGroupId);
+            lpCreateForm.setStudyYear(studyYearId);
+            LessonPlan lp = create(user, lpCreateForm);
+            lessonPlanIds.put(missingGroupId, EntityUtil.getId(lp));
+        }
+    }
+
     private static LessonPlanModule getLessonPlanModule(List<LessonPlanModule> lessonPlanModules, Long lessonPlan, Long cvom) {
         return lessonPlanModules.stream().filter(p ->
             EntityUtil.getId(p.getLessonPlan()).equals(lessonPlan) &&
@@ -406,7 +418,7 @@ public class LessonPlanService {
         EntityUtil.deleteEntity(journal, em);
     }
 
-    private Map<Long, Long> findLessonPlanByStudyYearAndStudentGroup(StudyYear studyYear, List<Long> studentGroup) {
+    private Map<Long, Long> findLessonPlanByStudyYearAndStudentGroup(StudyYear studyYear, Collection<Long> studentGroup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from lesson_plan lp");
 
         qb.requiredCriteria("lp.study_year_id = :studyYear", "studyYear", EntityUtil.getId(studyYear));

@@ -10,20 +10,18 @@ public abstract class StudentAbsenceUtil {
 
     public static boolean canCreate(HoisUserDetails user, Student student) {
         return UserUtil.isAdultStudent(user, student) || 
-                UserUtil.isSchoolAdmin(user, student.getSchool()) || 
-                UserUtil.isStudentGroupTeacher(user, student) || 
+                ((UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isStudentGroupTeacher(user, student)) && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PUUDUMINE)) ||
                 UserUtil.isStudentRepresentative(user, student);
     }
-    
+
     public static boolean canEdit(HoisUserDetails user, StudentAbsence absence) {
         Student student = absence.getStudent();
         return !accepted(absence) && 
                 (UserUtil.isAdultStudent(user, student) || 
-                UserUtil.isSchoolAdmin(user, student.getSchool()) || 
-                UserUtil.isStudentGroupTeacher(user, student) || 
+                ((UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isStudentGroupTeacher(user, student)) && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PUUDUMINE)) ||
                 UserUtil.isStudentRepresentative(user, student));
     }
-    
+
     /**
      * Light method for search form. 
      * User do not see other absences on search form anyway, 
@@ -33,12 +31,12 @@ public abstract class StudentAbsenceUtil {
         return (user.isSchoolAdmin() || user.isTeacher()) &&
               UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_PUUDUMINE);
     }
-    
+
     public static boolean hasPermissionToSearch(HoisUserDetails user) {
         return (user.isSchoolAdmin() || user.isTeacher()) &&
               UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PUUDUMINE);
     }
-    
+
     public static boolean canAccept(HoisUserDetails user, StudentAbsence absence) {
         Student student = absence.getStudent();
         return !accepted(absence) && 
@@ -46,7 +44,7 @@ public abstract class StudentAbsenceUtil {
                UserUtil.isStudentGroupTeacher(user, student))
               && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_PUUDUMINE);
     }
-    
+
     private static boolean accepted(StudentAbsence absence) {
         return Boolean.TRUE.equals(absence.getIsAccepted());
     }

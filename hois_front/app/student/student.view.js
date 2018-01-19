@@ -365,11 +365,13 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       $scope.certificates.content = certificatesMapper.objectmapper(result.content);
     }
 
-    $scope.loadCertificates = function() {
-      var query = QueryUtils.getQueryParams($scope.certificatesCriteria);
-      $scope.directives.$promise = QueryUtils.endpoint('/certificate').search(query, afterCertificatesLoad);
-    };
-    $scope.loadCertificates();
+    if(!$scope.auth.isTeacher()) {
+      $scope.loadCertificates = function() {
+        var query = QueryUtils.getQueryParams($scope.certificatesCriteria);
+        $scope.directives.$promise = QueryUtils.endpoint('/certificate').search(query, afterCertificatesLoad);
+      };
+      $scope.loadCertificates();
+    }
 
     if($scope.auth.isStudent()) {
       $scope.certificateTypes = Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK', filterValues: [CertificateType.TOEND_LIIK_MUU]}, function() {

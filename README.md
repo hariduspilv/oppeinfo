@@ -1,4 +1,4 @@
-VERSIOON: 0.6.1/20171220
+VERSIOON: 0.6.2/20180118
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -234,6 +234,8 @@ DOK13 - HOIS_analyys_oppetoetused_stipendiumid.docx
         3.3 Stipendiumite ja taotluste vaatamine – õppur
         3.4 Stipendiumi taotlemine – õppur
         3.5 Stipendiumite taotluste otsing ja staatuste määramine – administratiivne töötaja
+		3.6	Stipendiumi määramise käskkiri
+		3.7	Stipendiumi maksmise lõpetamise käskkiri
 
 
 MUU:	ID-kaardiga sisselogimine
@@ -243,13 +245,11 @@ MUU:	ID-kaardiga sisselogimine
         KRATT
 
 	   
-Skript loob 2 peaadministraatorit: Pirgit Kahro ja Irina Kelder (kasutaja Irina Kelder võib live'st ära kustutada)
-
 
 NB! Automaatteadete saatmiseks ÕISi on tekitatud kasutaja Hõis Automaatteade, palume seda mitte kustutada
 	   
 
-EELDUS: ver. 0.4.3/20171023
+EELDUS: ver. 0.6.1/20171220
 ------------------------------------------------------
 1. Serveris on installeeritud (opsüsteem Linux, nt CentOS Linux 7.2.x):
 	   1. PostgreSQL v 9.5.x
@@ -279,21 +279,21 @@ EELDUS: ver. 0.4.3/20171023
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" kustutatakse ja lisatakse uuesti andmebaas "hois", vajalikud tabelid ja klassifikaatorid. Andmebaasi skriptid asuvad "db" kaustas.
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skriptid asuvad "db" kaustas.
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku. Nginx serveris on seadistatud SSL
 
 Andmebaasi installeerimiseks:
-1. käivitada install.sql skript, nt
+1. käivitada install20180118.sql skript, nt
    
-   psql -h devhois -f install.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20180118.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install.sql - install faili nimi, install.sql ja db_data.sql peavad asuma samas kaustas, install.sql fail kasutab db_data.sql faili
+   -f install20180118.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
-   Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja luuakse andmebaas, vajalikud tabelid ning andmed
+   Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
 
 
 
@@ -545,6 +545,9 @@ NB! XXX - frontendi server, nt devhoisfront
 		apiUrl - frontendi server, nt https://localhost/hois_back
 		idCardLoginUrl - ID-kaardiga sisselogimiseks seadistatud server (vt proxy_backend.conf, host peab olema avaliku kasutaja jaoks nime järgi kättesaadav, soovitatav kasutada kehtivat sertifikaati, self-signed sertifikaadiga serveris võivad tekkida mõningad probleemid ID-kaardiga autentimisel), nt https://idlogin.devhois
 		ekisUrl - EKISe lepingute, käskkirjade, tõendite asukoht, testimiseks kasutatakse https://kis-test.hm.ee/?wdsturi=3Dpage%3=Dview_dynobj%26pid%3D
+		mobileIdInitialDelay - mobiil-ID sisselogimisel mitme millisekundi pärast esimest korda küsitakse (nt 5000)
+		mobileIdPollInterval - mobiil-ID sisselogimisel pollimise intervaal millisekundites (nt 4000)
+		mobileIdMaxPolls - mobiil-ID sisselogimisel mitu korda maksimaalselt pollitakse, nt 15
 	5. Backendi ehitamiseka paigaldamiseks
 		1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta
 		2. veenduda, et /opt/hois kaustas on olemas muudetud application.properties fail ja käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.

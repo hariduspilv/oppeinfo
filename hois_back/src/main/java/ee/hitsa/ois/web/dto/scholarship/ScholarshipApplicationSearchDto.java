@@ -18,17 +18,19 @@ public class ScholarshipApplicationSearchDto {
     private String curriculumCode;
     private Long studentId;
     private String studentName;
+    private String firstName;
+    private String lastName;
     private String idcode;
     private BigDecimal averageMark;
     private BigDecimal lastPeriodMark;
     private BigDecimal curriculumCompletion;
+    private BigDecimal credits;
     private Boolean isTeacherConfirm;
     private String status;
 
     private String compensationReason;
     private String compensationFrequency;
 
-    private Long credits;
 
     public ScholarshipApplicationSearchDto(Object r) {
         this.id = resultAsLong(r, 0);
@@ -38,6 +40,8 @@ public class ScholarshipApplicationSearchDto {
         this.curriculumCode = resultAsString(r, 4);
         this.studentId = resultAsLong(r, 5);
         this.studentName = PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7));
+        this.firstName = resultAsString(r, 6);
+        this.lastName = resultAsString(r, 7);
         this.idcode = resultAsString(r, 8);
         this.averageMark = resultAsDecimal(r, 9);
         this.lastPeriodMark = resultAsDecimal(r, 10);
@@ -46,7 +50,7 @@ public class ScholarshipApplicationSearchDto {
         this.status = resultAsString(r, 13);
         this.compensationReason = resultAsString(r, 14);
         this.compensationFrequency = resultAsString(r, 15);
-        this.credits = resultAsLong(r, 16);
+        this.credits = resultAsDecimal(r, 16);
     }
 
     public Long getId() {
@@ -103,6 +107,22 @@ public class ScholarshipApplicationSearchDto {
 
     public void setStudentId(Long studentId) {
         this.studentId = studentId;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getStudentName() {
@@ -177,11 +197,11 @@ public class ScholarshipApplicationSearchDto {
         this.compensationFrequency = compensationFrequency;
     }
 
-    public Long getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Long credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 

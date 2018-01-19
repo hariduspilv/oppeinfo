@@ -465,7 +465,15 @@ public class DirectiveService {
         dto.setInserted(LocalDateTime.now());
         dto.setInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(user.getUsername()));
         // directive type as default headline
-        dto.setHeadline(em.getReference(Classifier.class, cmd.getType()).getNameEt());
+        String headline = em.getReference(Classifier.class, cmd.getType()).getNameEt();
+        String directiveType = dto.getType();
+        if(DirectiveType.KASKKIRI_STIPTOET.name().equals(directiveType) || DirectiveType.KASKKIRI_STIPTOETL.name().equals(directiveType)) {
+            if(dto.getScholarshipType() != null) {
+                String scholarshipType = em.getReference(Classifier.class, dto.getScholarshipType()).getNameEt();
+                headline = String.format("%s (%s)", headline, scholarshipType.toLowerCase());
+            }
+        }
+        dto.setHeadline(headline);
         return dto;
     }
 
@@ -530,7 +538,7 @@ public class DirectiveService {
             }
         } else if(KASKKIRI_STIPTOETL.equals(directiveType)) {
             // load startDate/endDate from latest KASKKIRI_STIPTOET directive
-            List<?> data = em.createNativeQuery("select ds.student_id, ds.start_date, ds.end_date from directive_student ds join directive d on ds.directive_id = d.id where ds.student_id in (?1) and d.type_code = ?2 and d.status_code =?3 and ds.canceled = false order by ds.id desc")
+            List<?> data = em.createNativeQuery("select ds.student_id, ds.start_date, ds.end_date from directive_student ds join directive d on ds.directive_id = d.id where ds.student_id in (?1) and d.type_code = ?2 and d.status_code =?3 and ds.canceled = false order by d.confirm_date desc")
                 .setParameter(1, studentIds)
                 .setParameter(2, DirectiveType.KASKKIRI_STIPTOET.name())
                 .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
@@ -574,7 +582,8 @@ public class DirectiveService {
         DirectiveType directiveType = DirectiveType.valueOf(criteria.getType());
         boolean scholarship = isScholarship(criteria.getType());
         if(scholarship) {
-            qb.requiredCriteria("exists(select a.id from scholarship_application a join scholarship_term t on a.scholarship_term_id = t.id where a.student_id = s.id and t.type_code = :applicationType and a.status_code in (:applicationStatus))", "applicationType", criteria.getScholarshipType());
+            qb.requiredCriteria("exists(select a.id from scholarship_application a join scholarship_term t on a.scholarship_term_id = t.id "+
+                    "where a.student_id = s.id and t.type_code = :applicationType and a.status_code in (:applicationStatus) and not exists(select 1 from directive_student dsa where dsa.scholarship_application_id = a.id and dsa.canceled = false))", "applicationType", criteria.getScholarshipType());
             qb.parameter("applicationStatus", ScholarshipStatus.STIPTOETUS_STAATUS_A.name());
         } else {
             if(DirectiveType.ONLY_FROM_APPLICATION.contains(directiveType)) {

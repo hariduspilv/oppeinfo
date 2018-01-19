@@ -35,6 +35,8 @@ import ee.hois.xroad.sais2.service.SaisClient;
 @Service
 public class SaisClassifierService {
 
+    static final String ESTONIAN = "ESTONIAN";
+
     @Autowired
     private SaisClassifierRepository saisClassifierRepository;
     @Autowired
@@ -91,7 +93,7 @@ public class SaisClassifierService {
                         case "ENGLISH":
                             sc.setNameEn(name);
                             break;
-                        case "ESTONIAN":
+                        case ESTONIAN:
                             sc.setNameEt(name);
                             break;
                         default:

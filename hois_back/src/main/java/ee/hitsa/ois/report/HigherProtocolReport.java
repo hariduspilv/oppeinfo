@@ -3,7 +3,6 @@ package ee.hitsa.ois.report;
 import static ee.hitsa.ois.util.TranslateUtil.name;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -48,8 +47,7 @@ public class HigherProtocolReport {
         confirmDate = protocol.getConfirmDate();
         teachers = PersonUtil.sorted(ssp.getTeachers().stream().map(t -> t.getTeacher().getPerson()));
         this.protocolStudents = protocol.getProtocolStudents().stream()
-                .sorted(Comparator.comparing(ps -> ps.getStudent().getPerson().getFirstname(), 
-                        String.CASE_INSENSITIVE_ORDER))
+                .sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getStudent().getPerson(), o2.getStudent().getPerson()))
                 .map(ps -> new ProtocolStudentReport(ps))
                 .collect(Collectors.toList());
     }

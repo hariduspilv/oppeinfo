@@ -10,23 +10,24 @@ public class JournalEntryStudentHistoryDto {
     private String grade;
     private LocalDateTime gradeInserted;
 
-    public static JournalEntryStudentHistoryDto of(JournalEntryStudentHistory journalEntryStudentHistory) {
-        JournalEntryStudentHistoryDto dto = EntityUtil.bindToDto(journalEntryStudentHistory, new JournalEntryStudentHistoryDto());
-        return dto;
+    public JournalEntryStudentHistoryDto(JournalEntryStudentHistory journalEntryStudentHistory) {
+        grade = EntityUtil.getNullableCode(journalEntryStudentHistory.getGrade());
+        gradeInserted = journalEntryStudentHistory.getGradeInserted();
     }
-
 
     public String getGrade() {
         return grade;
     }
+
     public void setGrade(String grade) {
         this.grade = grade;
     }
+
     public LocalDateTime getGradeInserted() {
         return gradeInserted;
     }
+
     public void setGradeInserted(LocalDateTime gradeInserted) {
         this.gradeInserted = gradeInserted;
     }
-
 }

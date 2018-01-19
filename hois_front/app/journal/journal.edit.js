@@ -172,6 +172,20 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         return js && js.absence === 'PUUDUMINE_V' || row.hasAcceptedAbsence;
       };
 
+      function setAbsenceCheckboxValue(it) {
+        switch (it.absence) {
+          case "PUUDUMINE_V":
+            it.excused = true;
+            break;
+          case "PUUDUMINE_H":
+            it.late = true;
+            break;
+          case "PUUDUMINE_P":
+            it.withoutReason = true;
+            break;
+        }
+      }
+
       dialogScope.journalEntry = {};
       dialogScope.selectedCapacityTypes = {};
       dialogScope.journalEntryStudents = {};
@@ -182,6 +196,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         angular.extend(dialogScope.journalEntry, editEntity);
         dialogScope.entryDateCalendar = dialogScope.journalEntry.entryDate;
         editEntity.journalEntryStudents.forEach(function (it) {
+          setAbsenceCheckboxValue(it);
           dialogScope.journalEntryStudents[it.journalStudent] = it;
           DataUtils.convertStringToDates(it.journalEntryStudentHistories, ["gradeInserted"]);
           classifierMapper.objectmapper(it.journalEntryStudentHistories);
@@ -193,6 +208,17 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
       setForbiddenTypes(dialogScope, editEntity);
 
+      function changeAbsenceCheckboxValues(journalEntryStudents, row, absence) {
+        switch (absence) {
+          case "PUUDUMINE_H":
+            journalEntryStudents[row.id].withoutReason = false;
+            break;
+          case "PUUDUMINE_P":
+            journalEntryStudents[row.id].late = false;
+            break;
+        }
+      }
+
       dialogScope.changedJournalEntryStudents = [];
       dialogScope.journalEntryStudentChanged = function (journalEntryStudents, row) {
         if (!angular.isObject(journalEntryStudents[row.id])) {
@@ -202,6 +228,17 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         if (dialogScope.changedJournalEntryStudents.indexOf(journalEntryStudents[row.id]) === -1) {
           dialogScope.changedJournalEntryStudents.push(journalEntryStudents[row.id]);
         }
+      };
+      dialogScope.journalEntryStudentAbsenceChanged = function (journalEntryStudents, row, checkboxValue, absence) {
+        if (!angular.isObject(journalEntryStudents[row.id])) {
+          journalEntryStudents[row.id] = {};
+        }
+        journalEntryStudents[row.id].journalStudent = row.id;
+        journalEntryStudents[row.id].absence = checkboxValue ? absence : null;
+        if (dialogScope.changedJournalEntryStudents.indexOf(journalEntryStudents[row.id]) === -1) {
+          dialogScope.changedJournalEntryStudents.push(journalEntryStudents[row.id]);
+        }
+        changeAbsenceCheckboxValues(journalEntryStudents, row, absence);
       };
       dialogScope.setJournalEntryDefaultName = function (name) {
         var holder = { entryType: name };

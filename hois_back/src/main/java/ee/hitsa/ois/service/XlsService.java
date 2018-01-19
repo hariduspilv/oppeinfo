@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -34,6 +33,7 @@ import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -159,16 +159,16 @@ public class XlsService {
         }
 
         public String joinAutocomplete(List<AutocompleteResult> elements) {
-            return !CollectionUtils.isEmpty(elements) ? String.join(", ", elements.stream().map(this::name).collect(Collectors.toList())) : "-";
+            return !CollectionUtils.isEmpty(elements) ? String.join(", ", StreamUtil.toMappedList(this::name, elements)) : "-";
         }
-        
+
         public Date date(LocalDate localDate) {
             if(localDate == null) {
                 return null;
             }
             return Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
         }
-        
+
         /**
          * For cases when date is shown with other data in the same cell
          */

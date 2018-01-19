@@ -2,7 +2,6 @@ package ee.hitsa.ois.web.commandobject.timetable;
 
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -13,6 +12,7 @@ import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
@@ -130,8 +130,7 @@ public class LessonPlanJournalForm extends VersionedCommand {
 
         public static LessonPlanGroupForm of(Entry<StudentGroup, List<JournalOccupationModuleTheme>> entry) {
             LessonPlanGroupForm dto = new LessonPlanGroupForm();
-            dto.setCurriculumVersionOccupationModuleThemes(entry.getValue().stream()
-                    .map(it -> EntityUtil.getId(it.getCurriculumVersionOccupationModuleTheme())).collect(Collectors.toList()));
+            dto.setCurriculumVersionOccupationModuleThemes(StreamUtil.toMappedList(it -> EntityUtil.getId(it.getCurriculumVersionOccupationModuleTheme()), entry.getValue()));
             dto.setCurriculumVersionOccupationModule(
                     EntityUtil.getId(entry.getValue().get(0).getCurriculumVersionOccupationModuleTheme().getModule()));
             dto.setStudentGroup(entry.getKey().getId());

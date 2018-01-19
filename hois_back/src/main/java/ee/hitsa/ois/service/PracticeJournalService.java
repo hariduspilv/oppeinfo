@@ -9,6 +9,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -24,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.domain.PracticeJournalEntry;
@@ -38,12 +38,9 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.ContractRepository;
-import ee.hitsa.ois.repository.PracticeJournalRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
-import ee.hitsa.ois.util.DataUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -73,15 +70,11 @@ public class PracticeJournalService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private PracticeJournalRepository practiceJournalRepository;
-    @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private StudyYearService studyYearService;
     @Autowired
     private ModuleProtocolService moduleProtocolService;
-    @Autowired
-    private ContractRepository contractRepository;
     @Autowired
     private Validator validator;
 
@@ -176,10 +169,16 @@ public class PracticeJournalService {
             return dto;
         });
     }
-
+    
     public PracticeJournalDto get(PracticeJournal practiceJournal) {
         PracticeJournalDto dto = PracticeJournalDto.of(practiceJournal);
         dto.setCanDelete(Boolean.valueOf(canDelete(practiceJournal)));
+        return dto;
+    }
+
+    public PracticeJournalDto get(HoisUserDetails user, PracticeJournal practiceJournal) {
+        PracticeJournalDto dto = get(practiceJournal);
+        dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate())));
         return dto;
     }
 
@@ -328,17 +327,26 @@ public class PracticeJournalService {
     }
 
     public PracticeJournal getFromSupervisorUrl(String uuid) {
-        Contract contract = contractRepository.findBySupervisorUrl(uuid);
-        if (contract == null) {
-            log.error("no contract found. {}", DataUtil.asMap("uuid", uuid));
+        List<?> data = em.createNativeQuery("select c.id from contract c where c.supervisor_url = ?1")
+                .setParameter(1, uuid)
+                .setMaxResults(1).getResultList();
+        if (data.isEmpty()) {
+            log.error("no contract found. uuid={}", uuid);
             return null;
         }
-        PracticeJournal practiceJournal = practiceJournalRepository.findByContractId(EntityUtil.getId(contract));
+        Long contractId = resultAsLong(data.get(0), 0);
+        PracticeJournal practiceJournal = findByContractId(contractId);
         if (practiceJournal == null) {
-            log.error("no practice journal found. {}", DataUtil.asMap("uuid", uuid, "contractId", EntityUtil.getId(contract)));
+            log.error("no practice journal found. uuid={}, contractId={}", uuid, contractId);
         }
 
         return practiceJournal;
     }
 
+    public PracticeJournal findByContractId(Long contractId) {
+        List<PracticeJournal> result = em.createQuery("select pj from PracticeJournal pj where pj.contract.id = ?", PracticeJournal.class)
+                .setParameter(1, contractId)
+                .setMaxResults(1).getResultList();
+        return result.isEmpty() ? null : result.get(0);
+    }
 }

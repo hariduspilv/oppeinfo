@@ -110,7 +110,7 @@
 
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button ng-if="!auth.isStudent()" class="md-raised" ng-click="newContract()">{{'main.button.create' | translate}}</md-button>
+        <md-button ng-if="!auth.isStudent() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" class="md-raised" ng-click="newContract()">{{'main.button.create' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
@@ -149,8 +149,10 @@
                 <md-button md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
               </div>
               <div ng-if="!auth.isStudent()">
-                <md-button ng-if="row.status.code==='LEPING_STAATUS_S'" md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
-                <md-button ng-if="row.status.code!=='LEPING_STAATUS_S'" md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
+                <md-button ng-if="row.status.code==='LEPING_STAATUS_S' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" md-no-ink class="md-primary change-button" 
+                  ng-href="#/contracts/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+                <md-button ng-if="row.status.code!=='LEPING_STAATUS_S' || !isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" md-no-ink class="md-primary change-button" 
+                  ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
               </div>
             </td>
           </tr>

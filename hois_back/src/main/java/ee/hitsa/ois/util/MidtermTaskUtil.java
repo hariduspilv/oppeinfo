@@ -35,7 +35,7 @@ public abstract class MidtermTaskUtil {
                 .stream().anyMatch(p -> ProtocolUtil.confirmed(p.getProtocol()) &&
                         protocolIncludesStudent(p, declarationSubject));
     }
-    
+
     private static boolean protocolIncludesStudent(ProtocolHdata p, DeclarationSubject declarationSubject) {
         return p.getProtocol().getProtocolStudents().stream().anyMatch(ps -> 
         EntityUtil.getId(declarationSubject.getDeclaration().getStudent())

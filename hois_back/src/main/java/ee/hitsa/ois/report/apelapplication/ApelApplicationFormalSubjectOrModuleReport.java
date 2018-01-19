@@ -7,6 +7,7 @@ import ee.hitsa.ois.domain.apelapplication.ApelApplicationFormalSubjectOrModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.TranslateUtil;
 
 public class ApelApplicationFormalSubjectOrModuleReport {
     
@@ -25,25 +26,25 @@ public class ApelApplicationFormalSubjectOrModuleReport {
     public ApelApplicationFormalSubjectOrModuleReport(ApelApplicationFormalSubjectOrModule formalSubjectOrModule, Language lang) {
         if (Boolean.TRUE.equals(formalSubjectOrModule.getIsMySchool())) {
             School applicationSchool = formalSubjectOrModule.getApelApplicationRecord().getApelApplication().getSchool(); 
-            school = Language.EN.equals(lang) ? applicationSchool.getNameEn() : applicationSchool.getNameEt();
+            school = TranslateUtil.name(applicationSchool, lang);
         } else {
-            school = Language.EN.equals(lang) ? formalSubjectOrModule.getApelSchool().getNameEn() : formalSubjectOrModule.getApelSchool().getNameEt();
+            school = TranslateUtil.name(formalSubjectOrModule.getApelSchool(), lang);
         }
         
         if (formalSubjectOrModule.getSubject() != null) {
-           name = Language.EN.equals(lang) ? formalSubjectOrModule.getSubject().getNameEn() : formalSubjectOrModule.getSubject().getNameEt();
+           name = TranslateUtil.name(formalSubjectOrModule.getSubject(), lang);
            code = formalSubjectOrModule.getSubjectCode();
-           module = Language.EN.equals(lang) ? formalSubjectOrModule.getCurriculumVersionHmodule().getNameEn() : formalSubjectOrModule.getCurriculumVersionHmodule().getNameEt();
+           module = TranslateUtil.name(formalSubjectOrModule.getCurriculumVersionHmodule(), lang);
         } else if (formalSubjectOrModule.getCurriculumVersionOmodule() != null) {
             CurriculumModule curriculumModule = formalSubjectOrModule.getCurriculumVersionOmodule().getCurriculumModule();
-            name = Language.EN.equals(lang) ? curriculumModule.getNameEn() : curriculumModule.getNameEt();
+            name = TranslateUtil.name(curriculumModule, lang);
             code = null;
             module = null;
         } else {
-            name = Language.EN.equals(lang) ? formalSubjectOrModule.getNameEn() : formalSubjectOrModule.getNameEt();
+            name = TranslateUtil.name(formalSubjectOrModule, lang);
             code = formalSubjectOrModule.getSubjectCode();
             if (formalSubjectOrModule.getCurriculumVersionHmodule() != null) {
-                module = Language.EN.equals(lang) ? formalSubjectOrModule.getCurriculumVersionHmodule().getNameEn() : formalSubjectOrModule.getCurriculumVersionHmodule().getNameEt();
+                module = TranslateUtil.name(formalSubjectOrModule.getCurriculumVersionHmodule(), lang);
             } else {
                 module = null;
             }
@@ -51,7 +52,7 @@ public class ApelApplicationFormalSubjectOrModuleReport {
         
         isCompulsory = Boolean.valueOf(!formalSubjectOrModule.getIsOptional().booleanValue());
         credits = formalSubjectOrModule.getCredits();
-        assessment = Language.EN.equals(lang) ? formalSubjectOrModule.getAssessment().getNameEn() : formalSubjectOrModule.getAssessment().getNameEt();
+        assessment = TranslateUtil.name(formalSubjectOrModule.getAssessment(), lang);
         grade = formalSubjectOrModule.getGrade().getValue();
         gradeDate = formalSubjectOrModule.getGradeDate();
         teachers = formalSubjectOrModule.getTeachers();
@@ -101,5 +102,4 @@ public class ApelApplicationFormalSubjectOrModuleReport {
     public Boolean getTransfer() {
         return transfer;
     }
-    
 }

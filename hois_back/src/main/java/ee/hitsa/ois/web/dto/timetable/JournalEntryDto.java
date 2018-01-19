@@ -4,11 +4,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 
 public class JournalEntryDto {
@@ -29,8 +29,8 @@ public class JournalEntryDto {
 
     public static JournalEntryDto of(JournalEntry journalEntry) {
         JournalEntryDto dto = EntityUtil.bindToDto(journalEntry, new JournalEntryDto(), "journalEntryStudents", "journalEntryCapacityTypes");
-        dto.setJournalEntryStudents(journalEntry.getJournalEntryStudents().stream().map(JournalEntryStudentDto::of).collect(Collectors.toList()));
-        dto.setJournalEntryCapacityTypes(journalEntry.getJournalEntryCapacityTypes().stream().map(type -> EntityUtil.getCode(type.getCapacityType())).collect(Collectors.toList()));
+        dto.setJournalEntryStudents(StreamUtil.toMappedList(JournalEntryStudentDto::of, journalEntry.getJournalEntryStudents()));
+        dto.setJournalEntryCapacityTypes(StreamUtil.toMappedList(type -> EntityUtil.getCode(type.getCapacityType()), journalEntry.getJournalEntryCapacityTypes()));
         return dto;
     }
 

@@ -218,7 +218,7 @@ public class ModuleProtocolController {
     @PostMapping("/{id:\\d+}/mobileSignFinalize")
     public ModuleProtocolDto mobileSignFinalize(HoisUserDetails user, 
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
-            @Valid @RequestBody VersionedCommand version, HttpSession httpSession) {
+            @SuppressWarnings("unused") @RequestBody VersionedCommand version, HttpSession httpSession) {
         Integer sesscode = (Integer) httpSession.getAttribute(MOBILE_SESSCODE);
         if (sesscode != null) {
             OisFile signedBdoc = bdocService.getMobileSignedBdoc(sesscode, "protokoll");

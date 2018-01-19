@@ -19,7 +19,7 @@
                         <tr md-row ng-repeat="journal in year.journals" ng-class-odd="'odd'" ng-class-even="'even'">
                             <td md-cell width="20%"><a ng-click="showJournal(journal)">{{journal.nameEt}}</a></td>
                             <td md-cell>
-                                <span ng-repeat="result in journal.journalEntries | filter : {gradeValue: ''}"
+                                <span ng-repeat="result in journal.journalEntries | filter : {gradeValue: ''} | orderBy: ['!entryDate', '-entryDate']"
                                 ng-class="{good: result.entryType === 'SISSEKANNE_L' && resultIsPostive(result.gradeValue), 
                                 bad: result.entryType === 'SISSEKANNE_L' && !resultIsPostive(result.gradeValue),
                                 bold: isTestButNotFinal(result.entryType)}">

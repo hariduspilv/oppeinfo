@@ -13,7 +13,8 @@
     <md-dialog-content>
       <div layout-padding>
         <fieldset>
-          <legend class="md-title-small">{{'apel.informalLearnings.otherInformalLearnings' | translate}}</legend>
+          <legend ng-class="{invalid: dialogForm.$submitted && (!record.informalExperiences || record.informalExperiences.length === 0)}"
+            class="md-title-small">{{'apel.informalLearnings.otherInformalLearnings' | translate}}</legend>
           <md-button class="md-raised" ng-click="addNewInformalExperienceRow()">{{'main.button.addNewRow' | translate}}</md-button>
           <md-table-container>
             <table md-table md-progress="tabledata.$promise" class="secondary-table">
@@ -41,7 +42,7 @@
                   </td>
                   <td md-cell>
                     <md-input-container>
-                      <input ng-model="experience.hours" aria-label="hours" type="number" ng-min="0" ng-max="99999" required>
+                      <input ng-model="experience.hours" aria-label="hours" type="number" ng-min="0" ng-max="99999">
                     </md-input-container>
                   </td>
                   <td md-cell>
@@ -52,7 +53,7 @@
                   <td md-cell>
                     <md-input-container>
                       <hois-classifier-select ng-model="experience.type" aria-label="type" model-value-attr="code" main-classifier-code="VOTA_INFORMAAL_LIIK"
-                        required></hois-classifier-select>
+                        md-no-asterisk required></hois-classifier-select>
                     </md-input-container>
                   </td>
                   <td md-cell>
@@ -65,7 +66,8 @@
         </fieldset>
         <br>
         <fieldset>
-          <legend class="md-title-small">{{'apel.informalLearnings.substitutableModulesThemes' | translate}}</legend>
+          <legend ng-class="{invalid: dialogForm.$submitted && (!record.informalSubjectsOrModules || record.informalSubjectsOrModules.length === 0)}"
+            class="md-title-small">{{'apel.informalLearnings.substitutableModulesThemes' | translate}}</legend>
           <div flex="50">
             <md-input-container style="width: 100%">
               <label>{{'apel.informalLearnings.module' | translate}}/{{'apel.informalLearnings.theme' | translate}}</label>
@@ -105,8 +107,8 @@
                     </td>
                     <td md-cell>
                       <md-input-container>
-                        <hois-value ng-if="subjectOrModule.isModule" value="subjectOrModule.hours.toString() + '/' + subjectOrModule.EKAP.toString()"></hois-value>
-                        <hois-value ng-if="!subjectOrModule.isModule" value="subjectOrModule.hours"></hois-value>
+                        <hois-value ng-if="subjectOrModule.EKAP" value="subjectOrModule.hours.toString() + '/' + subjectOrModule.EKAP.toString()"></hois-value>
+                        <hois-value ng-if="!subjectOrModule.EKAP" value="subjectOrModule.hours"></hois-value>
                       </md-input-container>
                     </td>
                     <td md-cell>
@@ -115,7 +117,7 @@
                       </md-input-container>
                     </td>
                     <td md-cell>
-                      <md-input-container ng-repeat="outcome in subjectOrModule.outcomes">
+                      <md-input-container ng-repeat="outcome in subjectOrModule.outcomes | orderBy: 'curriculumModuleOutcomes.id'" layout="row">
                         <md-checkbox ng-model="outcome.acquired" aria-label="{{'apel.informalLearnings.outcomes' | translate}}"></md-checkbox>
                         {{currentLanguage() === 'en' ? outcome.curriculumModuleOutcomes.outcomeEn : outcome.curriculumModuleOutcomes.outcomeEt}}
                       </md-input-container>

@@ -3,11 +3,9 @@ package ee.hitsa.ois.service.curriculum;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -30,6 +28,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumModuleForm;
@@ -95,10 +94,7 @@ public class CurriculumModuleService {
     }
 
     public Set<String> getPossibleModuleTypes(CurriculumModuleTypesCommand command) {
-        
-        Set<String> possibleTypes = Arrays.asList(CurriculumModuleType.values())
-                .stream().map(t -> t.name()).collect(Collectors.toSet());
-        
+        Set<String> possibleTypes = EnumUtil.toNameSet(CurriculumModuleType.values());
         if(command.getCurriculum() != null) {
             Curriculum c = em.getReference(Curriculum.class, command.getCurriculum());
 
@@ -116,6 +112,7 @@ public class CurriculumModuleService {
                 possibleTypes.add(EntityUtil.getCode(m.getModule()));
             }
         }
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from classifier c");
         qb.requiredCriteria("c.code in :possibleTypes", "possibleTypes", possibleTypes);
         List<?> result = qb.select("c.code", em).getResultList();
@@ -129,7 +126,6 @@ public class CurriculumModuleService {
             result.addAll(StreamUtil.toMappedList(c -> ClassifierSelection.of(c.getClassifier()), 
                     occupation.getOccupation().getChildConnects()));
         }
-        return result.stream().filter(c -> MainClassCode.KOMPETENTS.name().equals(c.getMainClassCode()))
-                .collect(Collectors.toList());
+        return StreamUtil.toFilteredList(c -> MainClassCode.KOMPETENTS.name().equals(c.getMainClassCode()), result);
     }
 }

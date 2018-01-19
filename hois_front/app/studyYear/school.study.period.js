@@ -31,17 +31,28 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       }
     });
   })
-  .controller('StudyYearsListController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
+  .controller('StudyYearsListController', function ($scope, QueryUtils, USER_ROLES, AuthService) {
     $scope.endpoint = QueryUtils.endpoint('/school/studyYears');
     $scope.tabledata = $scope.endpoint.query();
-  }])
-  .controller('StudyYearsEditController', ['$location', '$mdDialog', '$route', '$scope', '$translate', 'Classifier', 'dialogService', 'message', 'DataUtils','QueryUtils', function ($location, $mdDialog, $route, $scope, $translate, Classifier, dialogService, message, DataUtils, QueryUtils) {
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEPERIOOD);
+  })
+  .controller('StudyYearsEditController', function ($location, $mdDialog, $route, $scope, $translate, Classifier, dialogService, message, DataUtils, 
+      QueryUtils, USER_ROLES, AuthService) {
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEPERIOOD);
+
     var id = $route.current.params.id;
     var code = $route.current.params.code;
 
     var Endpoint = QueryUtils.endpoint('/school/studyYears');
 
     var periodTypes = Classifier.valuemapper({type: 'OPPEPERIOOD'});
+    $scope.eventTypes = {};
+    Classifier.queryForDropdown({mainClassCode: 'SYNDMUS'}, function(arrayResult) {
+      arrayResult.forEach(function(classifier) {
+        var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu};
+        $scope.eventTypes[option.code] = option;
+      });
+    });
 
     function afterLoad() {
       DataUtils.convertStringToDates($scope.studyYear, ['startDate', 'endDate']);
@@ -312,5 +323,5 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         }
       }
     };
-  }])
+  })
 ;

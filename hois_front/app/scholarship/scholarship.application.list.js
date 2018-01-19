@@ -6,6 +6,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     $scope.criteria = {};
     $scope.formState = {};
     $scope.formState.allowedStipendTypes = $route.current.locals.params.allowedStipendTypes;
+    var stipend = $route.current.locals.params.stipend;
 
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
     var clMapper = Classifier.valuemapper({
@@ -20,12 +21,12 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
 
     $q.all(promises).then(function () {
       $scope.criteria.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
-      if(!('_menu' in $route.current.params)) {
-        $scope.fromStorage = function(key) {
+      if (!('_menu' in $route.current.params)) {
+        $scope.fromStorage = function (key) {
           return JSON.parse($sessionStorage[key] || '{}');
         };
         var storedCriteria = $scope.fromStorage(baseUrl + '/applications');
-        if(angular.isNumber(storedCriteria.page)) {
+        if (angular.isNumber(storedCriteria.page)) {
           storedCriteria.page = storedCriteria.page + 1;
         }
         angular.extend($scope.criteria, storedCriteria);
@@ -38,14 +39,22 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
         message.error('main.messages.form-has-errors');
         return false;
       }
-      QueryUtils.endpoint(baseUrl + '/applications').query($scope.criteria, function (result) {
-        if (angular.isArray(result)) {
-          if (result.length < 1) {
-            message.error('main.messages.error.notFound');
+      QueryUtils.endpoint(baseUrl + '/applications').search($scope.criteria, function (result) {
+        if (angular.isArray(result.applications)) {
+          if (result.applications.length < 1) {
+            message.info('main.messages.error.notFound');
+            $scope.applications = [];
+            $scope.allowedCount = 0;
+          } else {
+            $scope.applications = clMapper.objectmapper(result.applications);
+            $scope.allowedCount = result.allowedCount;
           }
+        } else {
+          message.info('main.messages.error.notFound');
+          $scope.applications = [];
+          $scope.allowedCount = 0;
         }
         $scope.submittedType = $scope.criteria.type;
-        $scope.applications = clMapper.objectmapper(result);
       });
     };
 
@@ -67,28 +76,37 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
       });
     }
 
-    function checkSelected() {
-      return chosenApplications().length > 0;
-    }
-
     $scope.accept = function () {
-      if (checkSelected()) {
+      var applications = chosenApplications();
+      if (applications.length > 0) {
         QueryUtils.endpoint(baseUrl + '/acceptApplications').put({
-          applications: chosenApplications()
-        }, function () {
-          $scope.reloadTable();
-        });
+          applications: $scope.applications.filter(function (it) {
+            return it._selected;
+          })
+        }, $scope.reloadTable);
       } else {
         message.error('stipend.messages.error.noStudentsSelected');
       }
     };
 
     $scope.annul = function () {
-      if (checkSelected()) {
-        QueryUtils.endpoint(baseUrl + '/annulApplications').put({
-          applications: chosenApplications()
-        }, function () {
-          $scope.reloadTable();
+      var applications = chosenApplications();
+      if (applications.length > 0) {
+        $location.path('/scholarships/applications/annul').search({
+          ids: applications,
+          stipend: stipend
+        });
+      } else {
+        message.error('stipend.messages.error.noStudentsSelected');
+      }
+    };
+
+    $scope.reject = function () {
+      var applications = chosenApplications();
+      if (applications.length > 0) {
+        $location.path('/scholarships/applications/reject').search({
+          ids: applications,
+          stipend: stipend
         });
       } else {
         message.error('stipend.messages.error.noStudentsSelected');
@@ -102,5 +120,42 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
       }
       previousType = $scope.criteria.type;
     };
+  }
+]).controller('ScholarshipRejectionController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'ArrayUtils',
+  function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, ArrayUtils) {
+    var baseUrl = '/scholarships';
+    //if this form is currently being used for stipend or grant
+    var stipend = $route.current.params.stipend;
+    QueryUtils.endpoint(baseUrl + '/studentProfilesRejection').query({
+      id: $route.current.params.ids
+    }, function (result) {
+      if (angular.isArray(result)) {
+        if (result.length < 1) {
+          message.info('main.messages.error.notFound');
+        } else {
+          $scope.rejections = result;
+        }
+      }
+    });
+
+    $scope.reject = function () {
+      QueryUtils.endpoint(baseUrl + '/rejectApplications').put({
+        applications: $scope.rejections
+      }, function () {
+        message.info('main.messages.update.success');
+        $location.path('/scholarships/applications/' + (stipend ? 'scholarships' : 'grants'));
+      });
+    };
+
+    $scope.annul = function () {
+      QueryUtils.endpoint(baseUrl + '/annulApplications').put({
+        applications: $scope.rejections
+      }, function () {
+        message.info('main.messages.update.success');
+        $location.path('/scholarships/applications/' + (stipend ? 'scholarships' : 'grants'));
+      });
+    };
+
+    $scope.removeFromArray = ArrayUtils.remove;
   }
 ]);

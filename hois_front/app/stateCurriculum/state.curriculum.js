@@ -91,18 +91,36 @@ angular.module('hitsaOis')
           message.error(messages.errorMessage);
           return false;
       }
-      if($scope.strictValidation()) {
-          if(!allOccuppationsValid()) {
-              message.error('stateCurriculum.error.occupationsCredids');
-              return false;
-          }
-          if(!allSpetsOccupationsValid()) {
-              message.error('stateCurriculum.error.spetsOccupationsCredids');
-              return false;
-          }
-      }
       return true;
     }
+
+    $scope.occupationCheckBeforeSave = function (endpoint, messages) {
+      if (!allOccuppationsValid()) {
+        dialogService.confirmDialog({
+          prompt: 'stateCurriculum.occupationsCreditsConfirmConfirm'
+        }, function () {
+          $scope.allSpetsOccupationsValidBeforeSave(endpoint, messages);
+        }, function () {
+          return false;
+        });
+      } else {
+        $scope.allSpetsOccupationsValidBeforeSave(endpoint, messages);
+      }
+    };
+
+    $scope.allSpetsOccupationsValidBeforeSave = function (endpoint, messages) {
+      if (!allSpetsOccupationsValid()) {
+        dialogService.confirmDialog({
+          prompt: 'stateCurriculum.spetsOccupationsCredidsConfirm'
+        }, function () {
+          update(endpoint, messages);
+        }, function () {
+          return false;
+        });
+      } else {
+        update(endpoint, messages);
+      }
+    };
 
     function createCurriculum(messages) {
       if(!validationPassed(messages)) {
@@ -149,9 +167,15 @@ angular.module('hitsaOis')
 
     function setStatus(endpoint, messages) {
       dialogService.confirmDialog({prompt: messages.prompt}, function() {
-        update(endpoint, messages);
+        if($scope.formState.strictValidation) {
+            $scope.occupationCheckBeforeSave(endpoint, messages);
+        } else {
+            update(endpoint, messages);
+        }
       });
     }
+
+
 
     $scope.confirmAndSave = function() {
       $scope.formState.strictValidation = true;

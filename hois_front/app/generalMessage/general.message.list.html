@@ -1,36 +1,36 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-      <fieldset tabindex="1">
-          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-    <form ng-submit="loadData()" novalidate>
+    <fieldset tabindex="1">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate>
         <div flex layout="column">
           <md-input-container>
             <label class="textInput">{{'generalmessage.title' | translate}}</label>
             <input ng-model="criteria.title" type="text" autofocus>
           </md-input-container>
           <md-input-container>
-              <label>{{'generalmessage.targets' | translate}}</label>
-              <hois-classifier-select ng-model="criteria.targets" model-value-attr="code" main-classifier-code="ROLL" multiple></hois-classifier-select>
-            </md-input-container>
+            <label>{{'generalmessage.targets' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.targets" model-value-attr="code" main-classifier-code="ROLL" multiple></hois-classifier-select>
+          </md-input-container>
 
-	<div layout="row" flex>
-          <md-input-container>
-		     <label>{{'generalmessage.validFrom' | translate}}</label>
-             <md-datepicker ng-model="criteria.validFrom"></md-datepicker>
-          </md-input-container>
-          <md-input-container flex-offset="5">
-			  <label>{{'generalmessage.validThru' | translate}}</label>
-             <md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom"></md-datepicker>
-          </md-input-container>
-</div>
+          <div layout="row" flex>
+            <md-input-container>
+              <label>{{'generalmessage.validFrom' | translate}}</label>
+              <md-datepicker ng-model="criteria.validFrom"></md-datepicker>
+            </md-input-container>
+            <md-input-container flex-offset="5">
+              <label>{{'generalmessage.validThru' | translate}}</label>
+              <md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom"></md-datepicker>
+            </md-input-container>
+          </div>
 
           <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="#/generalmessages/new">{{'main.button.create' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE')" ng-href="#/generalmessages/new">{{'main.button.create' | translate}}</md-button>
           </div>
         </div>
-    </form>
+      </form>
     </fieldset>
   </div>
 </div>
@@ -62,14 +62,14 @@
               </table>
             </td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/generalmessages/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE')" ng-href="#/generalmessages/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
-                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
-                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+      md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
   </div>
 </div>

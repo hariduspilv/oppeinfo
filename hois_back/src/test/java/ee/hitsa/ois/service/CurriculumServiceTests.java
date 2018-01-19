@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.junit.Assert;
@@ -24,9 +25,8 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
 import ee.hitsa.ois.domain.school.School;
-import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.enums.CurriculumConsecution;
+import ee.hitsa.ois.util.EntityUtil;
 
 /**
  * Created in order to test Curriculum mapping with dependent objects
@@ -48,23 +48,19 @@ public class CurriculumServiceTests {
     private static final List<String> LANGUAGES = Arrays.asList("OPPEKEEL_E", "OPPEKEEL_I", "OPPEKEEL_V");
 
     @Autowired
-    private ClassifierRepository classifierRepository;
-    @Autowired
-    private CurriculumRepository curriculumRepository;
-    @Autowired
-    private SchoolRepository schoolRepository;
+    private EntityManager em;
 
     @Test
     public void crud() {
         //create
-        Classifier testClassifier = classifierRepository.getOne("OPPEKAVA_TYPE_E");
-        Curriculum c = getValidCurriculum(NAME, NUMBER, schoolRepository.getOne(SCHOOL_ID), testClassifier);
+        Classifier testClassifier = em.getReference(Classifier.class, CurriculumConsecution.OPPEKAVA_TYPE_E.name());
+        Curriculum c = getValidCurriculum(NAME, NUMBER, em.getReference(School.class, SCHOOL_ID), testClassifier);
         Set<CurriculumStudyLanguage> studyLanguages = new HashSet<>();
-        studyLanguages.add(getValidCurriculumStudyLang(classifierRepository.getOne(LANGUAGES.get(0))));
-        studyLanguages.add(getValidCurriculumStudyLang(classifierRepository.getOne(LANGUAGES.get(1))));
+        studyLanguages.add(getValidCurriculumStudyLang(em.getReference(Classifier.class, LANGUAGES.get(0))));
+        studyLanguages.add(getValidCurriculumStudyLang(em.getReference(Classifier.class, LANGUAGES.get(1))));
         c.setStudyLanguages(studyLanguages);
 
-        c = curriculumRepository.save(c);
+        c = EntityUtil.save(c, em);
         Assert.assertNotNull(c);
         Assert.assertNotNull(c.getId());
         Assert.assertNotNull(c.getInserted());
@@ -72,7 +68,7 @@ public class CurriculumServiceTests {
         // update field
         String newName = NAME.concat(NAME);
         c.setNameEt(newName);
-        c = curriculumRepository.save(c);
+        c = EntityUtil.save(c, em);
         Assert.assertEquals(newName, c.getNameEt());
 
         // ....update list of languages
@@ -91,12 +87,12 @@ public class CurriculumServiceTests {
         studyLanguages = new HashSet<>();
         studyLanguages.add(c.getStudyLanguages().iterator().next());
         studyLanguages.add(c.getStudyLanguages().iterator().next());
-        studyLanguages.add(getValidCurriculumStudyLang(classifierRepository.getOne(LANGUAGES.get(2))));
+        studyLanguages.add(getValidCurriculumStudyLang(em.getReference(Classifier.class, LANGUAGES.get(2))));
         c.setStudyLanguages(studyLanguages);
 
 
         // check
-        c = curriculumRepository.save(c);
+        c = EntityUtil.save(c, em);
         Assert.assertEquals(2, c.getStudyLanguages().size());
 
         i = c.getStudyLanguages().iterator();
@@ -109,7 +105,7 @@ public class CurriculumServiceTests {
 
         // read
         Long id = c.getId();
-        Curriculum c2 = curriculumRepository.getOne(id);
+        Curriculum c2 = em.getReference(Curriculum.class, id);
         Assert.assertEquals(id, c2.getId());
 
     }

@@ -34,6 +34,7 @@ import ee.hitsa.ois.enums.CurriculumDraft;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
@@ -100,7 +101,7 @@ public class StateCurriculumCopyService {
 
     private boolean isOccupation(StateCurriculumCopyCommand command) {
         Classifier c = em.getReference(Classifier.class, command.getOccupations().get(0).getOccupation());
-        return MainClassCode.KUTSE.name().equals(c.getMainClassCode());
+        return ClassifierUtil.mainClassCodeEquals(MainClassCode.KUTSE, c);
     }
 
     public static int calculateStudyPeriod(Long credits) {

@@ -30,11 +30,14 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
     QueryUtils.endpoint(baseUrl + '/' + id + '/application').get({}, function (result) {
       $scope.stipend = result.stipend;
       $scope.studentInfo = result.studentInfo;
-      $scope.studentSubmitData = result.studentSubmitData;
       $scope.templateName = templateMap[result.stipend.type];
       if (result.stipend.type === 'STIPTOETUS_ERI') {
         calculateSumsForFamilyBlock($scope.studentSubmitData.family);
       }
+      if(!result.studentSubmitData.compensationFrequency) {
+        result.studentSubmitData.compensationFrequency = 'STIPTOETUS_HYVITAMINE_1';
+      }
+      afterLoad(result);
     });
 
     $scope.openAddFileDialog = function () {
@@ -71,8 +74,8 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
     }
 
     function afterLoad(result) {
-      result.studentSubmitData.canApply = result.studentSubmitData.status === 'STIPTOETUS_STAATUS_K';
-      $scope.studentSubmitData = result;
+      result.studentSubmitData.canApply = (result.studentSubmitData.id === null || result.studentSubmitData.status === 'STIPTOETUS_STAATUS_K' || result.studentSubmitData.status === 'STIPTOETUS_STAATUS_T');
+      $scope.studentSubmitData = result.studentSubmitData;
     }
 
     $scope.apply = function (form) {
@@ -146,6 +149,8 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
 
     var baseUrl = '/scholarships';
     var id = $route.current.params.id;
+    $scope.auth = $route.current.locals.auth;
+
 
     function loadApplication() {
       QueryUtils.endpoint(baseUrl + '/application/' + id).get({}, function (result) {

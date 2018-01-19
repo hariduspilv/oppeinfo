@@ -17,7 +17,7 @@ public abstract class SubjectUserRights {
         }
         return false;
     }
-    
+
     public static boolean canViewAllSubjects(HoisUserDetails user) {
         return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_AINE);
     }
@@ -33,7 +33,7 @@ public abstract class SubjectUserRights {
         return user.isSchoolAdmin()
                 && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AINE);
     }
-    
+
     public static boolean canEdit(HoisUserDetails user, Subject subject) {
         return hasPermissionToEdit(user) && UserUtil.isSameSchool(user, subject.getSchool());
     }

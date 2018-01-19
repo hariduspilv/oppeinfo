@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.repository.JournalEntryStudentRepository;
@@ -134,10 +135,15 @@ public class StudentAbsenceService {
     }
 
     public boolean hasUnaccepted(HoisUserDetails user) {
+        StudyYear currentYear = studyYearService.getCurrentStudyYear(user.getSchoolId());
+        if(currentYear == null) {
+            return false;
+        }
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_absence sa join student s on s.id = sa.student_id");
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.filter("sa.is_accepted = false");
-        qb.requiredCriteria(FILTER_BY_STUDY_YEAR, "studyYear", EntityUtil.getId(studyYearService.getCurrentStudyYear(user.getSchoolId())));
+        qb.requiredCriteria(FILTER_BY_STUDY_YEAR, "studyYear", EntityUtil.getId(currentYear));
         if(user.isTeacher()) {
             qb.requiredCriteria("s.student_group_id in (select sg.id from student_group sg where sg.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
         }

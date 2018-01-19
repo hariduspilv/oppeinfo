@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.xml.namespace.QName;
 
@@ -42,6 +41,8 @@ import org.opensaml.xmlsec.signature.Signature;
 import org.opensaml.xmlsec.signature.support.SignatureConstants;
 import org.opensaml.xmlsec.signature.support.Signer;
 import org.springframework.util.StringUtils;
+
+import ee.hitsa.ois.util.StreamUtil;
 
 /**
  * 
@@ -224,11 +225,11 @@ public class SAMLBuilder {
         Attribute attribute = buildSAMLObject(Attribute.class, Attribute.DEFAULT_ELEMENT_NAME);
         attribute.setName(name);
         attribute.setNameFormat("urn:oasis:names:tc:SAML:2.0:attrname-format:uri");
-        List<XSString> xsStringList = values.stream().map(value -> {
+        List<XSString> xsStringList = StreamUtil.toMappedList(value -> {
             XSString stringValue = stringBuilder.buildObject(AttributeValue.DEFAULT_ELEMENT_NAME, XSString.TYPE_NAME);
             stringValue.setValue(value);
             return stringValue;
-        }).collect(Collectors.toList());
+        }, values);
 
         attribute.getAttributeValues().addAll(xsStringList);
         return attribute;

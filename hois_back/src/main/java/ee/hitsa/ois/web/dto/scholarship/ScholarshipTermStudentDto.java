@@ -7,6 +7,7 @@ import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
+    private Long applicationId;
     private BigDecimal averageMark;
     private BigDecimal lastPeriodMark;
     private BigDecimal curriculumCompletion;
@@ -28,6 +29,14 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
         ScholarshipTermStudentDto dto = new ScholarshipTermStudentDto();
         EntityUtil.bindToDto(term, dto);
         return dto;
+    }
+
+    public Long getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(Long applicationId) {
+        this.applicationId = applicationId;
     }
 
     public BigDecimal getAverageMark() {

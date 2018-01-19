@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 
 public abstract class HigherModuleCreditsUtil {
-    
+
     /**
      * set compulsory and total credits
      */
@@ -25,5 +25,4 @@ public abstract class HigherModuleCreditsUtil {
     private static BigDecimal getTotalCredits(CurriculumVersionHigherModule module) {
         return module.getCompulsoryStudyCredits().add(module.getOptionalStudyCredits());
     }
-
 }

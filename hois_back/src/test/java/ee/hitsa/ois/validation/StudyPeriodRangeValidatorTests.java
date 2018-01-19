@@ -12,7 +12,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
-import ee.hitsa.ois.web.commandobject.ApplicationForm;
+import ee.hitsa.ois.web.commandobject.application.ApplicationForm;
 
 @Transactional
 @RunWith(SpringRunner.class)

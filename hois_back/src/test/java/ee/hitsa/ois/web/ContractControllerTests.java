@@ -36,9 +36,9 @@ import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
-import ee.hitsa.ois.repository.PracticeJournalRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
+import ee.hitsa.ois.service.PracticeJournalService;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.ContractForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -65,7 +65,7 @@ public class ContractControllerTests {
     @Autowired
     private EntityManager em;
     @Autowired
-    private PracticeJournalRepository practiceJournalRepository;
+    private PracticeJournalService practiceJournalService;
 
     private ContractDto contract;
     private Student student;
@@ -182,7 +182,7 @@ public class ContractControllerTests {
         contract = responseEntity.getBody();
 
         Assert.assertEquals(contract.getStatus(), ContractStatus.LEPING_STAATUS_S.name());
-        PracticeJournal practiceJournal = practiceJournalRepository.findByContractId(contract.getId());
+        PracticeJournal practiceJournal = practiceJournalService.findByContractId(contract.getId());
         Assert.assertNull(practiceJournal);
 
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT + "/sendToEkis").pathSegment(contract.getId().toString());
@@ -192,14 +192,14 @@ public class ContractControllerTests {
 
         Assert.assertEquals(contract.getStatus(), ContractStatus.LEPING_STAATUS_Y.name());
 
-        practiceJournal = practiceJournalRepository.findByContractId(contract.getId());
+        practiceJournal = practiceJournalService.findByContractId(contract.getId());
         Assert.assertNotNull(practiceJournal);
 
     }
 
     private void delete() {
         if (contract != null && contract.getId() != null) {
-            PracticeJournal practiceJournal = practiceJournalRepository.findByContractId(contract.getId());
+            PracticeJournal practiceJournal = practiceJournalService.findByContractId(contract.getId());
             if (practiceJournal != null) {
                 UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/practiceJournals")
                         .pathSegment(practiceJournal.getId().toString());

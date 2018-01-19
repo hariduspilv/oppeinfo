@@ -97,6 +97,7 @@ public class HigherProtocolService {
         Page<Protocol> protocols = protocolRepository.findAll((root, query, cb) -> {
 
             List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("isFinal"), Boolean.FALSE));
             filters.add(cb.equal(root.get("isVocational"), Boolean.FALSE));
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
 
@@ -155,6 +156,7 @@ public class HigherProtocolService {
 
     public Protocol create(HoisUserDetails user, HigherProtocolCreateForm form) {
         Protocol protocol = new Protocol();
+        protocol.setIsFinal(Boolean.FALSE);
         protocol.setIsVocational(Boolean.FALSE);
         protocol.setProtocolNr(ProtocolUtil.generateProtocolNumber(em));
         protocol.setSchool(em.getReference(School.class, user.getSchoolId()));

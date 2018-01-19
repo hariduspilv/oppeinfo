@@ -39,7 +39,7 @@
   <br/>
 
   <fieldset tabindex="1">
-    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.student.myData' | translate}}</legend>
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{auth.isStudent() ? 'stipend.student.myData' : 'stipend.student.studentData' | translate}}</legend>
     <div class="form-readonly ois-form-layout-padding">
       <div layout="row" flex>
         <md-input-container flex="45">
@@ -78,7 +78,7 @@
                 <hois-classifier-value ng-model="studentSubmitData.compensationReason" main-classifier-code="STIPTOETUS_HYVITAMINE_POHJUS"></hois-classifier-value>
               </md-input-container>
             </div>
-            <div layout="row">
+            <div layout="row" ng-if="studentSubmitData.compensationReason === 'STIPTOETUS_HYVITAMINE_POHJUS_I'">
               <md-input-container flex>
                 <label>{{'stipend.routeKm' | translate}}</label>
                 <hois-value value="studentSubmitData.routeKm"></hois-value>
@@ -98,12 +98,19 @@
             </fieldset>
           </div>
         </div>
+        <div layout="row" flex ng-if="studentSubmitData.compensationReason === 'STIPTOETUS_HYVITAMINE_POHJUS_M'">
+          <md-input-container flex="100" flex-md="100" flex-sm="100" flex-xs="100">
+            <label>{{'stipend.student.specificReason' | translate}}</label>
+            <hois-value value="studentSubmitData.addInfo"></hois-value>
+          </md-input-container>
+        </div>
         <br/>
 
         <div ng-include="'scholarship/scholarship.relatedFiles.edit.html'"></div>
         <br/>
         <div layout="row">
-          <md-button class="md-raised md-primary" ng-if="studentSubmitData.status !== 'STIPTOETUS_STAATUS_A'" ng-click="accept()">{{'main.button.accept' | translate}}</md-button>
+          <md-button class="md-raised md-primary" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS') && studentSubmitData.status !== 'STIPTOETUS_STAATUS_A'"
+            ng-click="accept()">{{'main.button.accept' | translate}}</md-button>
           <md-button class="md-raised" ng-click="back('#/scholarships/applications/grants')">{{'main.button.back' | translate}}</md-button>
         </div>
 

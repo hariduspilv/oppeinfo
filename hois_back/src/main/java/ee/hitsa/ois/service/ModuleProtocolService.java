@@ -72,6 +72,7 @@ import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 public class ModuleProtocolService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final String FINAL_EXAM_CODE = "KUTSEMOODUL_L";
 
     @Autowired
     private EntityManager em;
@@ -83,6 +84,7 @@ public class ModuleProtocolService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from protocol p "
                 + "inner join protocol_vdata pvd on pvd.protocol_id = p.id").sort(pageable);
 
+        qb.filter("p.is_final = false");
         qb.filter("p.is_vocational = true");
         qb.requiredCriteria("p.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria(
@@ -180,6 +182,7 @@ public class ModuleProtocolService {
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("cm.module_code != :module_code", "module_code", FINAL_EXAM_CODE);
         qb.requiredCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
                 curriculumVersionId);
         qb.optionalCriteria(" exists(select id from lesson_plan_module "
@@ -280,15 +283,17 @@ public class ModuleProtocolService {
     @org.springframework.transaction.annotation.Transactional(isolation = Isolation.SERIALIZABLE, propagation = Propagation.REQUIRES_NEW)
     public Protocol create(HoisUserDetails user, ModuleProtocolCreateForm form) {
         Protocol protocol = EntityUtil.bindToEntity(form, new Protocol(), "protocolStudents", "protocolVdata");
+        protocol.setIsFinal(Boolean.FALSE);
+        protocol.setIsVocational(Boolean.TRUE);
         protocol.setIsVocational(Boolean.TRUE);
         protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
         protocol.setSchool(em.getReference(School.class, user.getSchoolId()));
         protocol.setProtocolNr(ProtocolUtil.generateProtocolNumber(em));
-        protocol.setProtocolStudents(form.getProtocolStudents().stream().map(dto -> {
+        protocol.setProtocolStudents(StreamUtil.toMappedList(dto -> {
             ProtocolStudent protocolStudent = EntityUtil.bindToEntity(dto, new ProtocolStudent());
             protocolStudent.setStudent(em.getReference(Student.class, dto.getStudentId()));
             return protocolStudent;
-        }).collect(Collectors.toList()));
+        }, form.getProtocolStudents()));
         ProtocolVdata protocolVdata = protocolVdataFromDto(form.getProtocolVdata());
         protocolVdata.setProtocol(protocol);
         protocol.setProtocolVdata(protocolVdata);
@@ -334,8 +339,7 @@ public class ModuleProtocolService {
 
     private static void assertRemovedStudents(List<ProtocolStudent> oldStudents, List<ProtocolStudent> newStudents) {
         Set<Long> newIds = StreamUtil.toMappedSet(ProtocolStudent::getId, newStudents);
-        List<ProtocolStudent> removedStudents = oldStudents.stream()
-                .filter(oldStudent -> !newIds.contains(oldStudent.getId())).collect(Collectors.toList());
+        List<ProtocolStudent> removedStudents = StreamUtil.toFilteredList(oldStudent -> !newIds.contains(oldStudent.getId()), oldStudents);
         for (ProtocolStudent protocolStudent : removedStudents) {
             if(!ModuleProtocolUtil.studentCanBeDeleted(protocolStudent)) {
                 throw new ValidationFailedException("moduleProtocol.messages.cantRemoveStudent");

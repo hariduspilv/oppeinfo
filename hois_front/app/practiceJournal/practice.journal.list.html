@@ -74,7 +74,7 @@
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <md-button ng-if="formState.canCreate" class="md-raised" ng-click="newPracticeJournal()">{{'practiceJournal.button.createWithoutContract' | translate}}</md-button>
+        <md-button ng-if="formState.canCreate && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK')" class="md-raised" ng-click="newPracticeJournal()">{{'practiceJournal.button.createWithoutContract' | translate}}</md-button>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
     </form>
@@ -114,7 +114,8 @@
             <td md-cell>
               <div layout="column">
                 <md-button ng-if="row.canAddEntries" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/entries/edit">{{'practiceJournal.button.fill' | translate}}</md-button>
-                <md-button ng-if="row.canEdit && (auth.isTeacher() || auth.isAdmin())" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+                <md-button ng-if="row.canEdit && (auth.isTeacher() || (auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK')))" 
+                  md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
               </div>
             </td>
           </tr>

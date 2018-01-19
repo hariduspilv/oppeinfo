@@ -38,7 +38,7 @@
         </md-input-container>
       </div>
     </div>
-    <md-button ng-href="#/persons/{{::person.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+    <md-button ng-href="#/persons/{{::person.id}}/edit?_noback" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA')" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
     <md-button ng-click="back('#/persons')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </form>
   <div ng-if="person.id">
@@ -46,7 +46,7 @@
    <fieldset>
    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'user.role' | translate}}</legend>
     <div layout="row" class="align-center">
-      <md-button class="md-raised" ng-if="person.id" ng-href="#/persons/{{::person.id}}/users/new">{{'main.button.create' | translate}}</md-button>
+      <md-button class="md-raised" ng-if="person.id && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA')" ng-href="#/persons/{{::person.id}}/users/new">{{'main.button.create' | translate}}</md-button>
     </div >
     <div layout="row">
       <div ng-include="'persons/users.table.html'" flex></div>

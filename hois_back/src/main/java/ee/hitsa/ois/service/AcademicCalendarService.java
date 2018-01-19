@@ -50,11 +50,12 @@ public class AcademicCalendarService {
      */
     public AcademicCalendarDto academicCalendar(Long schoolId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
-        if (studyYear != null) {
-            String yearCode = EntityUtil.getCode(studyYear.getYear());
-            List<AcademicCalendarEventDto> events = getAcademicCalendarEvents(studyYear.getId(), schoolId);
-            return new AcademicCalendarDto(yearCode, events);
+        if (studyYear == null) {
+            return null;
         }
-        return null;
+
+        String yearCode = EntityUtil.getCode(studyYear.getYear());
+        List<AcademicCalendarEventDto> events = getAcademicCalendarEvents(studyYear.getId(), schoolId);
+        return new AcademicCalendarDto(yearCode, events);
     }
 }

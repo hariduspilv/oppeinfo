@@ -13,9 +13,10 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.util.Translatable;
 
 @Entity
-public class ApelApplicationFormalSubjectOrModule extends BaseEntityWithId {
+public class ApelApplicationFormalSubjectOrModule extends BaseEntityWithId implements Translatable {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
@@ -160,6 +161,7 @@ public class ApelApplicationFormalSubjectOrModule extends BaseEntityWithId {
         this.transfer = transfer;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -168,6 +170,7 @@ public class ApelApplicationFormalSubjectOrModule extends BaseEntityWithId {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }

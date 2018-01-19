@@ -6,7 +6,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -146,8 +145,7 @@ public class AutomaticMessageService {
         qb.optionalCriteria("p.id = :initiatorId", "initiatorId", initiator != null ? initiator.getPersonId() : null);
 
         List<?> results = qb.select("p.id", em).getResultList();
-        return results.stream()
-                .map(r -> em.getReference(Person.class, resultAsLong(r, 0))).collect(Collectors.toList());
+        return StreamUtil.toMappedList(r -> em.getReference(Person.class, resultAsLong(r, 0)), results);
     }
 
     private List<Person> getPersonsWithRole(School school, Role role) {
@@ -159,8 +157,7 @@ public class AutomaticMessageService {
         qb.validNowCriteria("u.valid_from", "u.valid_thru");
 
         List<?> results = qb.select("p.id", em).getResultList();
-        return results.stream()
-                .map(r -> em.getReference(Person.class, resultAsLong(r, 0))).collect(Collectors.toList());
+        return StreamUtil.toMappedList(r -> em.getReference(Person.class, resultAsLong(r, 0)), results);
     }
 
     /**

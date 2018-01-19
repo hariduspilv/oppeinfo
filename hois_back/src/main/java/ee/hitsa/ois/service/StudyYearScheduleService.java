@@ -51,9 +51,7 @@ public class StudyYearScheduleService {
                 .filter(d -> d.getId() != null).map(StudyYearScheduleDto::getId).collect(Collectors.toSet());
         delete(schoolId, schedulesCmd, oldSchedulesDtosIds);
 
-        List<StudyYearScheduleDto> newSchedulesDtos = schedulesCmd.getStudyYearSchedules()
-                .stream().filter(s -> s.getId() == null).collect(Collectors.toList());
-
+        List<StudyYearScheduleDto> newSchedulesDtos = StreamUtil.toFilteredList(s -> s.getId() == null, schedulesCmd.getStudyYearSchedules());
         if(!newSchedulesDtos.isEmpty()) {
             School school = em.getReference(School.class, schoolId);
             List<StudyYearSchedule> newSchedules = StreamUtil.toMappedList(dto -> {

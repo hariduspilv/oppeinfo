@@ -7,7 +7,6 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -61,7 +60,6 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumJointPartnerDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
-
 
 @Transactional
 @Service
@@ -404,9 +402,6 @@ public class CurriculumService {
                 em.getReference(Curriculum.class, command.getCurriculum()).getSchool() : 
                     em.getReference(School.class, schoolId);
         List<String> studyLevels = StreamUtil.toMappedList(sl -> EntityUtil.getCode(sl.getStudyLevel()), school.getStudyLevels());
-        if(Boolean.TRUE.equals(command.getIsHigher())) {
-            return studyLevels.stream().filter(StudyLevelUtil::isHigher).collect(Collectors.toList());
-        } 
-        return studyLevels.stream().filter(StudyLevelUtil::isVocational).collect(Collectors.toList());
+        return StreamUtil.toFilteredList(Boolean.TRUE.equals(command.getIsHigher()) ? StudyLevelUtil::isHigher : StudyLevelUtil::isVocational, studyLevels);
     }
 }

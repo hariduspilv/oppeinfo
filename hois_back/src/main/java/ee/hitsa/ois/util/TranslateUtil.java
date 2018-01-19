@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentMap;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.exception.BadConfigurationException;
 
-public class TranslateUtil {
+public abstract class TranslateUtil {
 
     /**
      * Get name of object in given language

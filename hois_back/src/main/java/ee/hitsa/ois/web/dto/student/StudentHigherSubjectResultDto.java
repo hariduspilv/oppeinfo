@@ -26,16 +26,6 @@ public class StudentHigherSubjectResultDto {
     private Boolean isExtraCurriculum;
     private Boolean isOk;
 
-    public static StudentHigherSubjectResultDto ofFromProtocolStudent(ProtocolStudent protocolStudent) {
-        StudentHigherSubjectResultDto dto = new StudentHigherSubjectResultDto();
-        dto.setSubject(getSubjectDto(protocolStudent.getProtocol().getProtocolHdata().getSubjectStudyPeriod().getSubject()));
-        dto.setIsExtraCurriculum(Boolean.TRUE);
-        dto.setIsOk(Boolean.FALSE);
-        dto.setIsOptional(Boolean.TRUE);
-        dto.getGrades().add(StudentHigherSubjectResultGradeDto.of(protocolStudent));
-        return dto;
-    }
-
     public static StudentHigherSubjectResultDto ofFromHigherModuleSubject(CurriculumVersionHigherModuleSubject higherModuleSubject) {
         StudentHigherSubjectResultDto dto = new StudentHigherSubjectResultDto();
         dto.setSubject(getSubjectDto(higherModuleSubject.getSubject()));

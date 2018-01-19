@@ -2,6 +2,9 @@ package ee.hitsa.ois.web;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.EntityManager;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -21,7 +24,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.repository.CommitteeRepository;
 import ee.hitsa.ois.web.dto.CommitteeDto;
 import ee.hitsa.ois.web.dto.CommitteeMemberDto;
 
@@ -37,7 +39,7 @@ public class CommitteeControllerTest {
     @Autowired
     private TestConfigurationService testConfigurationService;
     @Autowired
-    private CommitteeRepository committeeRepository;
+    private EntityManager em;
 
     private Long committeeId;
 
@@ -67,7 +69,10 @@ public class CommitteeControllerTest {
     
     @Test
     public void databaseNotPolluted() {
-        Assert.assertFalse(committeeRepository.existsByAddInfo(TEXT));
+        List<?> data = em.createNativeQuery("select c.id from committee c where c.add_info = ?1")
+                .setParameter(1, TEXT)
+                .setMaxResults(1).getResultList();
+        Assert.assertTrue(data.isEmpty());
     }
 
     @Test

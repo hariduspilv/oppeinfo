@@ -6,7 +6,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.enums.StudentStatus;
 
-public class StudentUtil {
+public abstract class StudentUtil {
 
     public static boolean isActive(Student student) {
         String status = EntityUtil.getNullableCode(student.getStatus());
@@ -16,7 +16,7 @@ public class StudentUtil {
     public static boolean isStudying(Student student) {
         return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_O, student.getStatus());
     }
-    
+
     public static boolean hasFinished(Student student) {
         return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_L, student.getStatus());
     }
@@ -24,15 +24,15 @@ public class StudentUtil {
     public static boolean isOnAcademicLeave(Student student) {
         return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_A, student.getStatus());
     }
-    
+
     public static boolean isHigher(Student student) {
         return CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum());
     }
-    
+
     public static boolean isVocational(Student student) {
         return CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum());
     }
-    
+
     public static boolean hasQuit(Student student) {
         return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_K, student.getStatus());
     }

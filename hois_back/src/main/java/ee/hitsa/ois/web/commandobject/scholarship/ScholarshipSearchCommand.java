@@ -7,6 +7,7 @@ public class ScholarshipSearchCommand {
     private String type;
     private String nameEt;
     private List<String> allowedStipendTypes;
+    private Long isOpen;
 
     public Long getStudyPeriod() {
         return studyPeriod;
@@ -38,6 +39,14 @@ public class ScholarshipSearchCommand {
 
     public void setAllowedStipendTypes(List<String> allowedStipendTypes) {
         this.allowedStipendTypes = allowedStipendTypes;
+    }
+
+    public Long getIsOpen() {
+        return isOpen;
+    }
+
+    public void setIsOpen(Long isOpen) {
+        this.isOpen = isOpen;
     }
 
 }

@@ -7,13 +7,13 @@ import ee.hitsa.ois.validation.Required;
 public class ScholarshipApplicationListSubmitForm {
 
     @Required
-    private List<Long> applications;
+    private List<ScholarshiApplicationRejectionForm> applications;
 
-    public List<Long> getApplications() {
+    public List<ScholarshiApplicationRejectionForm> getApplications() {
         return applications;
     }
 
-    public void setApplications(List<Long> applications) {
+    public void setApplications(List<ScholarshiApplicationRejectionForm> applications) {
         this.applications = applications;
     }
 }

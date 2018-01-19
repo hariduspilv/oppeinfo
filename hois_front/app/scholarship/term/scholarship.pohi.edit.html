@@ -12,7 +12,7 @@
 </div>
 <div layout="row">
   <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-    <label>{{'stipend.applicationPeriod' | translate}}</label>
+    <label class="required">{{'stipend.applicationPeriod' | translate}}</label>
     <input type="hidden">
   </md-input-container>
   <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
@@ -24,7 +24,7 @@
 </div>
 <div layout="row">
   <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-    <label>{{'stipend.paymentPeriod' | translate}}</label>
+    <label class="required">{{'stipend.paymentPeriod' | translate}}</label>
     <input type="hidden">
   </md-input-container>
   <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
@@ -41,7 +41,7 @@
   </md-input-container>
   <md-input-container flex="50" flex-offset="5">
     <label>{{'stipend.amountPaid' | translate}}</label>
-    <input ng-model="stipend.amountPaid" type="number" autofocus aria-label="amountPaid" min="0" max="9999">
+    <input required ng-model="stipend.amountPaid" type="number" autofocus aria-label="amountPaid" min="0" max="9999">
   </md-input-container>
 </div>
 <div>
@@ -61,7 +61,7 @@
     <md-input-container flex="45">
       <label class="textInput">{{'stipend.studyForm' | translate}}</label>
       <hois-classifier-select ng-required="required.studyForms" ng-model="stipend.studyForms" name="type" model-value-attr="code"
-        main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
+        main-classifier-code="OPPEVORM" multiple filter-values="filteredStudyForm"></hois-classifier-select>
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.courses' | translate}}</label>
@@ -76,8 +76,8 @@
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.priority' | translate}}</label>
-      <hois-select ng-model="stipend.averageMarkPriority" values="formState.priorities | filter: averageMarkPriorityFilter"
-        show-property="value" value-property="code"></hois-select>
+      <hois-select ng-model="stipend.averageMarkPriority" values="formState.priorities | filter: averageMarkPriorityFilter" show-property="value"
+        value-property="code"></hois-select>
     </md-input-container>
   </div>
   <div layout="row" flex>
@@ -109,8 +109,8 @@
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.priority' | translate}}</label>
-      <hois-select ng-model="stipend.maxAbsencesPriority" values="formState.priorities | filter: maxAbsencesPriorityFilter"
-        model-value-attr="code" show-property="value" value-property="code"></hois-select>
+      <hois-select ng-model="stipend.maxAbsencesPriority" values="formState.priorities | filter: maxAbsencesPriorityFilter" model-value-attr="code"
+        show-property="value" value-property="code"></hois-select>
     </md-input-container>
   </div>
   <div layout="row">
@@ -138,5 +138,6 @@
 <div layout="row">
   <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id" ng-click="publish()">{{'main.button.publishtoStudents' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="stipend.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
   <md-button class="md-raised" ng-click="back('#/scholarships/grants', stipendForm)">{{'main.button.back' | translate}}</md-button>
 </div>

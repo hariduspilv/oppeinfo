@@ -133,7 +133,9 @@
 
       <div layout="row">
         <md-button class="md-raised md-default" ng-click="back('#/contracts/')">{{'main.button.back' | translate}}</md-button>
-        <md-button ng-if="contract.status === 'LEPING_STAATUS_Y' || contract.status === 'LEPING_STAATUS_S'" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button ng-if="(auth.isAdmin() && contract.status === 'LEPING_STAATUS_Y' || contract.status === 'LEPING_STAATUS_S')
+          && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" class="md-raised" 
+          ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         <md-button ng-if="contract.wdId && (contract.status === 'LEPING_STAATUS_Y' || contract.status === 'LEPING_STAATUS_L' || contract.status === 'LEPING_STAATUS_K')"
           class="md-raised md-default" ng-href="{{getEkisContractUrl(contract.wdId)}}" target="_blank">{{'contract.button.viewContractFromEkis' | translate}}</md-button>
       </div>

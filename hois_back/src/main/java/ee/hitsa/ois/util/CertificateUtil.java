@@ -9,7 +9,7 @@ import java.security.cert.X509Certificate;
 
 import javax.servlet.http.HttpServletRequest;
 
-public class CertificateUtil {
+public abstract class CertificateUtil {
 
     private static final String CERTIFICATE_TYPE = "X.509";
     private static final String CERTIFICATE_HEADER = "SSL_CLIENT_CERT";
@@ -52,5 +52,4 @@ public class CertificateUtil {
     public static byte[] hexToBytes(String hex) {
         return new BigInteger(hex, HEX_RADIX).toByteArray();
     }
-
 }

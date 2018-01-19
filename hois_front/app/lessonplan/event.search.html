@@ -83,7 +83,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{::row.name}}</td>
+            <td md-cell>{{row.nameEt}}</td>
             <td md-cell>{{::row.date | hoisDate}}</td>
             <td md-cell>{{::row.timeStart | hoisTime}}-{{::row.timeEnd | hoisTime}}</td>
             <td md-cell><span ng-repeat="teacher in row.teachers">{{::teacher.name}}{{$last ? "" : ", "}}</span></td>
@@ -91,7 +91,7 @@
             <td md-cell><span ng-repeat="group in row.studentGroups">{{::group.code}}{{$last ? "" : ", "}}</span></td>
             <td md-cell>{{::row.singleEvent ? "jah" : "ei"}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/lessonplans/event/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/timetable/timetableEvent/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

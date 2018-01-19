@@ -10,15 +10,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.timetable.TimetableEvent;
+import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.service.TimetableEventService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableSingleEventForm;
 import ee.hitsa.ois.web.dto.timetable.TimetableByGroupDto;
@@ -40,18 +43,34 @@ public class TimetableEventController {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return timetableEventService.searchFormData(user.getSchoolId());
     }
+    
+    /*
+     * Management of timetable events is handled via timetable event times, because those are the objects that
+     * the user is interested in, not the parent objects that hold multiple events 
+     */
+    @GetMapping("/{id:\\d+}")
+    public TimetableSingleEventForm get(HoisUserDetails user, @WithEntity TimetableEventTime eventTime) {
+        //UserUtil.assertIsSchoolAdmin(user, eventTime.getTimetableEvent().getTimetableObject().getTimetable().getSchool());
+        return timetableEventService.get(eventTime);
+    }
 
     @GetMapping
     public Page<TimetableEventSearchDto> search(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria,
             Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return timetableEventService.search(criteria, pageable);
+        return timetableEventService.search(criteria, pageable, user);
     }
     
     @PostMapping
-    public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
+    public TimetableSingleEventForm create(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return HttpUtil.created(timetableEventService.createEvent(form));
+        return timetableEventService.getTimetableSingleEventForm(timetableEventService.createEvent(form, user.getSchoolId()));
+    }
+    
+    @PutMapping("/{id:\\d+}")
+    public TimetableSingleEventForm update(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return timetableEventService.getTimetableSingleEventForm(timetableEventService.updateEvent(form, user.getSchoolId()));
     }
     
     @GetMapping("/timetableSearch")

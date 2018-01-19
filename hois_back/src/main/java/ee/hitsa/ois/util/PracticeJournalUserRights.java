@@ -8,19 +8,16 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.dto.PracticeJournalSearchDto;
 
 public final class PracticeJournalUserRights {
-    
-    private PracticeJournalUserRights(){
-    }
-    
+
     private static final int DAYS_AFTER_END_CAN_EDIT = 30;
-    
+
     public static boolean canEdit(HoisUserDetails user, LocalDate endDate) {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRAKTIKAPAEVIK)){
             return false;
         }
         return LocalDate.now().isBefore(endDate.plusDays(DAYS_AFTER_END_CAN_EDIT));
     }
-    
+
     public static boolean canAddEntries(HoisUserDetails user, PracticeJournalSearchDto dto) {
         if(!canEdit(user, dto.getEndDate())) {
             return false;

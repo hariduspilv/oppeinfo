@@ -20,7 +20,7 @@ import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public abstract class UserUtil {
-    
+
     public static boolean hasPermission(HoisUserDetails user, Permission permission, PermissionObject object) {
         String s = "ROLE_" + permission.name() + "_" + object.name();
         return user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(s));
@@ -45,7 +45,7 @@ public abstract class UserUtil {
         }
         return false;
     }
-    
+
     public static boolean canUpdateInformalSubjectOrModuleTransferStatus(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
@@ -55,7 +55,7 @@ public abstract class UserUtil {
         }
         return false;
     }
-    
+
     public static boolean canViewApelApplication(HoisUserDetails user, ApelApplication application) {
         return isSchoolAdmin(user, application.getSchool()) || isSame(user, application.getStudent());
     }
@@ -68,7 +68,7 @@ public abstract class UserUtil {
         }
         return false;
     }
-    
+
     public static boolean canSubmitApelApplication(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
@@ -77,7 +77,7 @@ public abstract class UserUtil {
         }
         return false;
     }
-    
+
     public static boolean canSendToConfirmApelApplication(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
@@ -86,7 +86,7 @@ public abstract class UserUtil {
         }
         return false;
     }
-    
+
     public static boolean canSendBackToCreation(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
@@ -95,7 +95,7 @@ public abstract class UserUtil {
         }
         return false;
     }
-    
+
     public static boolean canConfirmApelApplication(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
@@ -105,7 +105,7 @@ public abstract class UserUtil {
         }
         return false;
     }
-    
+
     public static boolean canRemoveConfirmationApelApplication(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
@@ -115,7 +115,7 @@ public abstract class UserUtil {
         }
         return false;
     }
-    
+
     public static boolean canSendBackApelApplication(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
@@ -124,7 +124,7 @@ public abstract class UserUtil {
         }
         return false;
     }
-    
+
     public static boolean canRejectApelApplication(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
@@ -190,7 +190,7 @@ public abstract class UserUtil {
     public static boolean isSchoolAdmin(HoisUserDetails user, School school) {
         return user.isSchoolAdmin() && EntityUtil.getId(school).equals(user.getSchoolId());
     }
-    
+
     public static boolean isStudent(HoisUserDetails user, School school) {
         return user.isStudent() && EntityUtil.getId(school).equals(user.getSchoolId());
     }
@@ -202,7 +202,7 @@ public abstract class UserUtil {
     public static boolean isSame(HoisUserDetails user, Student student) {
         return user.getPersonId().equals(EntityUtil.getId(student.getPerson()));
     }
-    
+
     public static boolean isSamePerson(HoisUserDetails user, Person person) {
         return user.getPersonId().equals(EntityUtil.getId(person));
     }
@@ -218,11 +218,11 @@ public abstract class UserUtil {
     public static boolean isStudentGroupTeacher(HoisUserDetails user, Student student) {
         if(isTeacher(user, student.getSchool()) && student.getStudentGroup() != null) {
             Teacher teacher = student.getStudentGroup().getTeacher();
-            return user.getTeacherId().equals(EntityUtil.getId(teacher));
+            return user.getTeacherId().equals(EntityUtil.getNullableId(teacher));
         }
         return false;
     }
-    
+
     public static boolean isMainAdminOrExternalExpert(HoisUserDetails user) {
         return user.isMainAdmin() || user.isExternalExpert();
     }
@@ -236,11 +236,11 @@ public abstract class UserUtil {
     public static boolean isTeacher(HoisUserDetails user, School school) {
         return user.isTeacher() && EntityUtil.getId(school).equals(user.getSchoolId());
     }
-    
+
     public static boolean isSchoolAdminOrStudent(HoisUserDetails user, School school) {
         return isSchoolAdmin(user, school) || isStudent(user, school);
     }
-    
+
     public static boolean isSameSchool(HoisUserDetails user, School school) {
         Long schoolId = user.getSchoolId();
         return schoolId != null && schoolId.equals(EntityUtil.getNullableId(school));
@@ -270,7 +270,7 @@ public abstract class UserUtil {
     public static void assertIsSchoolAdminOrTeacher(HoisUserDetails user) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isTeacher(), "User is not school admin or teacher");
     }
-    
+
     public static void assertIsSchoolAdminOrTeacher(HoisUserDetails user, School school) {
         AssertionFailedException.throwIf(!isSchoolAdmin(user, school) && !isTeacher(user, school), "User is not school admin or teacher in given school");
     }
@@ -303,7 +303,7 @@ public abstract class UserUtil {
         AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isStudent() && !user.isRepresentative(),
                 "User is not school admin, student, or student representative");
     }
-    
+
     public static void assertCanViewStudent(HoisUserDetails user, Student student) {
         AssertionFailedException.throwIf(!canViewStudent(user, student),
                 "User is not allowed to see student's information");

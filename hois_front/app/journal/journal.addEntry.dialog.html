@@ -91,19 +91,23 @@
                       <span><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}</span>
                     </td>
                     <td md-cell>
-                      <md-input-container>
-                        <div ng-if="hasAcceptedAbsence(row)">
-                          <md-radio-group ng-model="journalEntryStudents[row.id].absence" layout="row" aria-label="absence"
-                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" ng-disabled="!row.canEdit">
-                          <md-radio-button value="PUUDUMINE_V" aria-label="PUUDUMINE_V">{{absenceOptions["PUUDUMINE_V"].value}}</md-radio-button>
-                        </md-radio-group>
-                        </div>
-                        <md-radio-group ng-if="!hasAcceptedAbsence(row)" ng-model="journalEntryStudents[row.id].absence" layout="row" aria-label="absence"
-                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" ng-disabled="!row.canEdit">
-                          <md-radio-button value="PUUDUMINE_H" aria-label="PUUDUMINE_H">{{absenceOptions["PUUDUMINE_H"].value}}</md-radio-button>
-                          <md-radio-button value="PUUDUMINE_P" aria-label="PUUDUMINE_P">{{absenceOptions["PUUDUMINE_P"].value}}</md-radio-button>
-                        </md-radio-group>
-                      </md-input-container>
+                      <div layout="row" layout-sm="column" layout-xs="column">
+                        <md-input-container ng-if="hasAcceptedAbsence(row)">
+                          <md-checkbox ng-model="journalEntryStudents[row.id].excused" aria-label="PUUDUMINE_V" ng-disabled="true">
+                            {{absenceOptions["PUUDUMINE_V"].value}}
+                          </md-checkbox>
+                        </md-input-container>
+                        <md-input-container ng-if="!hasAcceptedAbsence(row)" layout="row" layout-align="start center" flex>
+                          <md-checkbox ng-model="journalEntryStudents[row.id].late" aria-label="PUUDUMINE_H" ng-disabled="!row.canEdit"  
+                            ng-change="journalEntryStudentAbsenceChanged(journalEntryStudents, row, journalEntryStudents[row.id].late, 'PUUDUMINE_H')">
+                            {{absenceOptions["PUUDUMINE_H"].value}}
+                          </md-checkbox>
+                          <md-checkbox ng-model="journalEntryStudents[row.id].withoutReason" aria-label="PUUDUMINE_P" ng-disabled="!row.canEdit" style="margin-left: 30px"
+                            ng-change="journalEntryStudentAbsenceChanged(journalEntryStudents, row, journalEntryStudents[row.id].withoutReason, 'PUUDUMINE_P')">
+                            {{absenceOptions["PUUDUMINE_P"].value}}
+                          </md-checkbox>
+                        </md-input-container>
+                      </div>
                     </td>
                     <td md-cell>
                       <span ng-repeat="gradeHistory in journalEntryStudents[row.id].journalEntryStudentHistories | orderBy: 'gradeInserted'">

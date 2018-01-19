@@ -437,8 +437,7 @@ public class CurriculumValidationService {
     }
 
     public void assertOutcomesBoundWithThemesNotDeleted(CurriculumModule module, Set<CurriculumModuleOutcomeDto> outcomes) {
-        List<Long> oldOutcomes = module.getOutcomes().stream()
-                .map(EntityUtil::getId).collect(Collectors.toList());
+        List<Long> oldOutcomes = StreamUtil.toMappedList(EntityUtil::getId, module.getOutcomes());
         List<Long> newOutcomes = outcomes.stream()
                 .filter(o -> o.getId() != null)
                 .map(o -> o.getId()).collect(Collectors.toList());

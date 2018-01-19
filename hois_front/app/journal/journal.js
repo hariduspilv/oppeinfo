@@ -1,9 +1,18 @@
 'use strict';
 
-angular.module('hitsaOis').controller('JournalController', function ($scope, $route, QueryUtils, ArrayUtils, message) {
+angular.module('hitsaOis').controller('JournalController', function ($scope, $route, QueryUtils, ArrayUtils, message, $location) {
   $scope.auth = $route.current.locals.auth;
 
+  function assertPermissionToEdit(entity) {
+    if ($route.current.params.action === 'edit' && !entity.canEdit) {
+      message.error('main.messages.error.nopermission');
+      $location.path('');
+    }
+  }
+
   function entityToForm(entity) {
+    assertPermissionToEdit(entity);
+
     $scope.journal = entity;
     if (!angular.isString(entity.endDate)) {
       $scope.journal.endDate = entity.studyYearEndDate;

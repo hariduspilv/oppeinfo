@@ -4,6 +4,8 @@ import java.security.cert.X509Certificate;
 
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
+import ee.hitsa.ois.service.security.HoisUserDetails;
+
 public class EstonianIdCardAuthenticationToken extends PreAuthenticatedAuthenticationToken {
 
     private X509Certificate certificate;
@@ -13,10 +15,10 @@ public class EstonianIdCardAuthenticationToken extends PreAuthenticatedAuthentic
         this.setCertificate(certificate);
     }
 
-    public EstonianIdCardAuthenticationToken(String personCode) {
-        super(personCode, personCode);
+    public EstonianIdCardAuthenticationToken(HoisUserDetails userDetails) {
+        super(userDetails, "");
     }
-
+    
     public X509Certificate getCertificate() {
         return certificate;
     }

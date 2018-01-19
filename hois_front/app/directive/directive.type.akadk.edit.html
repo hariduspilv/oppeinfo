@@ -17,6 +17,10 @@
           <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.required">
             {{'main.required' | translate}}
           </div>
+          <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.serverside">
+            <span ng-repeat="err in directiveForm['students['+$index+'].startDate'].$serverError">{{err.code | translate}}</span>
+            <br ng-if="!$last">
+          </div>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row.idcode)" md-no-ink  class="remove">&times;</a>

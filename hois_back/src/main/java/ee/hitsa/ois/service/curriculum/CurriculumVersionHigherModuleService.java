@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
@@ -150,7 +149,7 @@ public class CurriculumVersionHigherModuleService {
         CurriculumVersion version = em.getReference(CurriculumVersion.class, command.getCurriculumVersion());
         Long schoolId = EntityUtil.getId(version.getCurriculum().getSchool());
         List<CurriculumJointPartner> estonianJointPartners = 
-                version.getCurriculum().getJointPartners().stream().filter(jp -> jp.getEhisSchool() != null).collect(Collectors.toList());
+                StreamUtil.toFilteredList(jp -> jp.getEhisSchool() != null, version.getCurriculum().getJointPartners());
         List<String> pointPartnersEhisSchools = StreamUtil.toMappedList(jp -> EntityUtil.getCode(jp.getEhisSchool()), estonianJointPartners);
 
         List<Subject> subjects = subjectRepository.findAll((root, query, cb) -> {

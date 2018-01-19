@@ -11,7 +11,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   $scope.now = new Date();
 
   function entityToForm(savedApplication) {
-    DataUtils.convertStringToDates(savedApplication, ["startDate", "endDate"]);
+    DataUtils.convertStringToDates(savedApplication, ['startDate', 'endDate']);
     if (angular.isArray(savedApplication.plannedSubjects)) {
       savedApplication.plannedSubjects.forEach(function (plannedSubject) {
         if (angular.isArray(plannedSubject.equivalents)) {
@@ -79,49 +79,47 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   }
 
   function applicationOkava(student, loadFormDeferred) {
-    var allCurriculumVersions;
-    Curriculum.queryVersions({ valid: true }).$promise.then(function (result) {
-      allCurriculumVersions = result;
-      $scope.curriculumVersions = allCurriculumVersions.filter(function (it) { return it.id !== student.curriculumVersion.id; });
-      loadFormDeferred.resolve();
-    });
+    var allCurriculumVersions = Curriculum.queryVersions({ valid: true });
     if ($scope.isCreate === true) {
       $scope.application.oldStudyForm = student.studyForm;
       $scope.application.oldCurriculumVersion = student.curriculumVersion;
     }
 
-    var allStudyForms = [];
-    var filterStudyForms = function (selectedCurriculumVersion) {
+    var allStudyForms = Classifier.queryForDropdown({ mainClassCode: 'OPPEVORM' });
+    function filterStudyForms() {
+      var newCurriculumVersion = $scope.application.newCurriculumVersion;
+      var selectedCurriculumVersion = newCurriculumVersion ? allCurriculumVersions.find(function (it) { return it.id === newCurriculumVersion.id; }) : undefined;
       var higher = angular.isObject(selectedCurriculumVersion) ? !selectedCurriculumVersion.isVocational : $scope.auth.school.higher;
       var vocational = angular.isObject(selectedCurriculumVersion) ? selectedCurriculumVersion.isVocational : $scope.auth.school.vocational;
 
-      var filterStudyForms = [];
-      for(var i = 0; i < allStudyForms.length; i++) {
-        var studyForm = allStudyForms[i];
-        if(selectedCurriculumVersion && angular.isString(selectedCurriculumVersion.studyForm)) {
-          if (studyForm.code === selectedCurriculumVersion.studyForm) {
-            filterStudyForms.push(studyForm);
-            break;
-          }
-        } else {
-          if (higher && studyForm.higher) {
-            filterStudyForms.push(studyForm);
-          } else if (vocational && studyForm.vocational) {
-            filterStudyForms.push(studyForm);
-          }
-        }
+      var studyForms;
+      if(selectedCurriculumVersion && angular.isString(selectedCurriculumVersion.studyForm)) {
+        studyForms = [selectedCurriculumVersion.studyForm];
+      } else {
+        studyForms = allStudyForms.filter(function(it) {
+          return (higher && it.higher) || (vocational && it.vocational);
+        }).map(function(it) { return it.code;});
       }
-      $scope.studyForms = filterStudyForms;
-    };
-    allStudyForms = Classifier.queryForDropdown({ mainClassCode: 'OPPEVORM' }, filterStudyForms);
+      $scope.allowedStudyForms = studyForms;
+    }
 
     $scope.newCurriculumVersionSelected = function () {
       var selectedCurriculumVersion = allCurriculumVersions.find(function (it) { return it.id === $scope.application.newCurriculumVersion.id; });
       if (angular.isObject(selectedCurriculumVersion)) {
-        $scope.application.newStudyForm = selectedCurriculumVersion.studyForm;
-        filterStudyForms(selectedCurriculumVersion);
+        allStudyForms.$promise.then(function() {
+          $scope.application.newStudyForm = selectedCurriculumVersion.studyForm;
+          filterStudyForms();
+        });
       }
     };
+
+    allCurriculumVersions.$promise.then(function (result) {
+      $scope.curriculumVersions = result.filter(function (it) { return it.id !== student.curriculumVersion.id; });
+      allStudyForms.$promise.then(function() {
+        filterStudyForms();
+        loadFormDeferred.resolve();
+      });
+    });
   }
 
   function applicationAkad(loadFormDeferred) {
@@ -131,16 +129,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, loadFormDeferred.resolve);
   }
 
-  function applicationAkadk(loadFormDeferred, academicLeaveApplication) {
-    if ($scope.isCreate === true) {
-      if (!angular.isObject(academicLeaveApplication) || !angular.isNumber(academicLeaveApplication.id)) {
-        loadFormDeferred.reject('application.messages.academicLeaveApplicationNotfound');
-      } else {
-        DataUtils.convertStringToDates(academicLeaveApplication, ["startDate", "endDate"]);
-        $scope.application.academicApplication = academicLeaveApplication;
-      }
-    }
-
+  function applicationAkadk(loadFormDeferred) {
+    DataUtils.convertStringToDates($scope.application.academicApplication.directiveStudent, ['startDate', 'endDate']);
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, loadFormDeferred.resolve);
   }
 
@@ -193,14 +183,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       $scope.application.isAbroad = false;
     }
 
-    var promises = [];
-    $scope.studentSubjects = QueryUtils.endpoint('/students/' + $scope.application.student.id + '/subjects').query({});
-    promises.push($scope.studentSubjects.$promise);
-
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query({});
-    promises.push($scope.studyPeriods.$promise);
-
-    $q.all(promises).then(loadFormDeferred.resolve);
+    $scope.studentSubjects = QueryUtils.endpoint('/students/' + $scope.application.student.id + '/subjects').query();
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+    $q.all([$scope.studentSubjects.$promise, $scope.studyPeriods.$promise]).then(loadFormDeferred.resolve);
   }
 
   function applicationEksmat(loadFormDeferred) {
@@ -222,19 +207,22 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     } else if (type === 'AVALDUS_LIIK_AKADK') {
       if ($scope.isCreate === true) {
         QueryUtils.endpoint('/applications/student/' + studentId + '/validAcademicLeave').search(function (academicLeaveApplication) {
-          applicationAkadk(loadFormDeferred, academicLeaveApplication);
+          if (!angular.isObject(academicLeaveApplication) || !angular.isNumber(academicLeaveApplication.id)) {
+            loadFormDeferred.reject('application.messages.academicLeaveApplicationNotfound');
+          } else {
+            $scope.application.academicApplication = academicLeaveApplication;
+            applicationAkadk(loadFormDeferred);
+          }
         });
       } else {
         applicationAkadk(loadFormDeferred);
       }
-    } else {
-      if ($scope.application.type === 'AVALDUS_LIIK_AKAD') {
-        applicationAkad(loadFormDeferred);
-      } else if ($scope.application.type === 'AVALDUS_LIIK_VALIS') {
-        applicationValis(loadFormDeferred);
-      } else if ($scope.application.type === 'AVALDUS_LIIK_EKSMAT') {
-        applicationEksmat(loadFormDeferred);
-      }
+    } else if ($scope.application.type === 'AVALDUS_LIIK_AKAD') {
+      applicationAkad(loadFormDeferred);
+    } else if ($scope.application.type === 'AVALDUS_LIIK_VALIS') {
+      applicationValis(loadFormDeferred);
+    } else if ($scope.application.type === 'AVALDUS_LIIK_EKSMAT') {
+      applicationEksmat(loadFormDeferred);
     }
 
     loadFormDeferred.promise.then(function () {
@@ -322,12 +310,12 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
           message.info('main.messages.update.success');
           entityToForm(application);
           $scope.applicationForm.$setPristine();
-        });
+        }).catch(angular.noop);
       } else {
         application.$save().then(function () {
           message.info('main.messages.create.success');
           $location.path('/applications/' + application.id + '/edit');
-        });
+        }).catch(angular.noop);
       }
     }
   };
@@ -342,7 +330,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
         } else {
           $location.path('/applications');
         }
-      });
+      }).catch(angular.noop);
     });
   };
 

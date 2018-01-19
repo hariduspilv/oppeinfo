@@ -8,7 +8,7 @@ angular.module('hitsaOis').factory('resourceErrorHandler', function ($q, message
       } else if (response.status === 409) {
         message.error('main.messages.record.modified');
       } else if (response.data && response.data._errors) {
-        var form = response.config.data.form;
+        var form = response.config && response.config.data ? response.config.data.form : undefined;
         form = form ? form() : undefined;
         angular.forEach(response.data._errors, function (err) {
           if(err.field && form) {
@@ -24,9 +24,16 @@ angular.module('hitsaOis').factory('resourceErrorHandler', function ($q, message
                 }
                 ctrl.$setValidity(err.code, false);
               } else {
-                // ctrl.$serverError = ctrl.$serverError || [];
-                // ctrl.$serverError.push(err);
-                // ctrl.$setValidity('servererror', false);
+                if(!ctrl.$validators.serverside) {
+                  // add validator
+                  ctrl.$validators.serverside = function() {
+                    return true;
+                  };
+                }
+
+                ctrl.$serverError = ctrl.$serverError || [];
+                ctrl.$serverError.push(err);
+                ctrl.$setValidity('serverside', false);
               }
               return;
             }

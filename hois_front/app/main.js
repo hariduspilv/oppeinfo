@@ -229,18 +229,20 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
         $mdDateLocale.formatDate = function (date) {
           if(angular.isDefined(date)) {
             var m = moment(date);
-            return m.isValid() ? m.format('DD.MM.YYYY') : null;
-          } else {
-            return null;
+            if(m.isValid()) {
+              return m.format('DD.MM.YYYY');
+            }
           }
+          return null;
         };
         $mdDateLocale.parseDate = function(dateString) {
           if(angular.isDefined(dateString)) {
             var m = moment(dateString, 'DD.MM.YYYY');
-            return m.isValid() ? m.toDate() : new Date(NaN);
-          } else {
-            return new Date(NaN);
+            if(m.isValid()) {
+              return m.toDate();
+            }
           }
+          return new Date(NaN);
         };
       } else {
         $mdDateLocale.months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];

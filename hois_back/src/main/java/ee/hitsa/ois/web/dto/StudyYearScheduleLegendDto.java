@@ -11,19 +11,23 @@ public class StudyYearScheduleLegendDto extends VersionedCommand {
 
     private Long id;
     @NotNull
-    @Size(max=2)
+    @Size(max = 2)
     private String code;
     @NotNull
-    @Size(max=50)
+    @Size(max = 50)
     private String nameEt;
-    @Size(max=50)
+    @Size(max = 50)
     private String nameEn;
     @NotNull
-    @Size(max=7)
+    @Size(max = 7)
     private String color;
+    private Boolean inUse;
 
     public static StudyYearScheduleLegendDto of(StudyYearScheduleLegend l) {
-        return EntityUtil.bindToDto(l, new StudyYearScheduleLegendDto());
+        StudyYearScheduleLegendDto dto = new StudyYearScheduleLegendDto();
+        EntityUtil.bindToDto(l, dto);
+        dto.setInUse(Boolean.valueOf(!l.getStudyYearSchedules().isEmpty()));
+        return dto;
     }
 
     public Long getId() {
@@ -65,4 +69,13 @@ public class StudyYearScheduleLegendDto extends VersionedCommand {
     public void setColor(String color) {
         this.color = color;
     }
+
+    public Boolean getInUse() {
+        return inUse;
+    }
+
+    public void setInUse(Boolean inUse) {
+        this.inUse = inUse;
+    }
+
 }

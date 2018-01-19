@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $sce, $rootScope) {
+  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $sce, $rootScope, $window) {
     var JWT_TOKEN_HEADER = 'Authorization';
     var authService = {};
     var roleMapper = Classifier.valuemapper({role: 'ROLL'});
@@ -39,12 +39,13 @@ angular.module('hitsaOis')
     };
 
     authService.loginIdCard = function () {
-      return $http.get($sce.trustAsUrl(config.idCardLoginUrl))
+      $window.location = config.idCardLoginUrl;
+      /*return $http.get($sce.trustAsUrl(config.idCardLoginUrl))
         .then(function (idLoginResult) {
           var headers = {headers: {}};
           headers[JWT_TOKEN_HEADER] = idLoginResult.headers(JWT_TOKEN_HEADER);
           return authService.login(headers);
-        });
+        });*/
     };
 
     authService.loginMobileId = function (mobileNumber) {

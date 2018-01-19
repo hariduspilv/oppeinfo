@@ -38,13 +38,14 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       if (angular.isArray(result.groups)) {
         for (var i = 0; result.groups.length > i; i++) {
           result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({
-            curriculumVersionId: result.groups[i].curriculumVersion
+            curriculumVersion: result.groups[i].curriculumVersion
           });
           result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({
             curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule
           });
         }
       }
+      checkCapacitiesForThemes();
     });
 
     $scope.lessonPlanModule = $route.current.params.lessonPlanModule;
@@ -69,7 +70,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
           message.updateSuccess();
           for (var i = 0; result.groups.length > i; i++) {
             result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({
-              curriculumVersionId: result.groups[i].curriculumVersion
+              curriculumVersion: result.groups[i].curriculumVersion
             });
             result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({
               curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule
@@ -201,7 +202,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
         return;
       }
       QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({
-        curriculumVersionId: group.curriculumVersion
+        curriculumVersion: group.curriculumVersion
       }).$promise.then(function (response) {
         group.modules = response;
         $scope.record.groups.push({

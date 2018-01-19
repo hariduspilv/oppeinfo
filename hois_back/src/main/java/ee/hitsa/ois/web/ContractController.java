@@ -59,7 +59,6 @@ public class ContractController {
     public ContractDto create(HoisUserDetails user, @Valid @RequestBody ContractForm contractForm) {
         UserUtil.assertIsSchoolAdmin(user);
         Contract savedContract = contractService.create(contractForm);
-        contractService.sendUniqueUrlEmailToEnterpriseSupervisor(user, savedContract);
         return get(user, savedContract);
     }
 

@@ -1,5 +1,7 @@
 package ee.hitsa.ois.service.sais;
 
+import static ee.hitsa.ois.service.sais.SaisClassifierService.ESTONIAN;
+
 import java.lang.invoke.MethodHandles;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -133,12 +135,7 @@ public class SaisAdmissionService {
 
         List<Admission> addmissions = response.getAdmissions() != null ? response.getAdmissions().getAdmission() : null;
         for(Admission admission : StreamUtil.nullSafeList(addmissions)) {
-            SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(admission.getCode());
             CurriculumVersion curriculumVersion = curriculumVersionRepository.findByCodeAndCurriculumSchoolId(admission.getCode(), schoolId);
-            if(saisAdmission == null) {
-                saisAdmission = new SaisAdmission();
-            }
-
             if(curriculumVersion == null || admission.getAdmissionPeriodStart() == null || admission.getAdmissionPeriodEnd() == null) {
                 SaisAdmissionSearchDto admissionSearch = new SaisAdmissionSearchDto();
                 admissionSearch.setFailed(Boolean.TRUE);
@@ -154,11 +151,15 @@ public class SaisAdmissionService {
                 continue;
             }
 
+            SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(admission.getCode());
+            if(saisAdmission == null) {
+                saisAdmission = new SaisAdmission();
+            }
             saisAdmission.setSaisId(admission.getId());
             saisAdmission.setCurriculumVersion(curriculumVersion);
             saisAdmission.setCode(admission.getCode());
             for(Kvp kvp : admission.getName().getKvp()) {
-                if("ESTONIAN".equalsIgnoreCase(kvp.getKey())) {
+                if(ESTONIAN.equalsIgnoreCase(kvp.getKey())) {
                     saisAdmission.setName(kvp.getValue());
                 }
             }

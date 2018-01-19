@@ -2,9 +2,6 @@ package ee.hitsa.ois.web.dto.directive;
 
 import java.time.LocalDate;
 
-import ee.hitsa.ois.domain.directive.Directive;
-import ee.hitsa.ois.util.EntityUtil;
-
 public class DirectiveSearchDto {
 
     private Long id;
@@ -69,9 +66,5 @@ public class DirectiveSearchDto {
 
     public void setConfirmDate(LocalDate confirmDate) {
         this.confirmDate = confirmDate;
-    }
-
-    public static DirectiveSearchDto of(Directive directive) {
-        return EntityUtil.bindToDto(directive, new DirectiveSearchDto());
     }
 }

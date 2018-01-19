@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
@@ -7,19 +8,12 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 import javax.validation.Validator;
 
@@ -42,6 +36,8 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
@@ -61,16 +57,16 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.ApplicationForm;
-import ee.hitsa.ois.web.commandobject.ApplicationRejectForm;
-import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
-import ee.hitsa.ois.web.dto.ApplicationApplicableDto;
-import ee.hitsa.ois.web.dto.ApplicationDto;
-import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
-import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectEquivalentDto;
-import ee.hitsa.ois.web.dto.ApplicationSearchDto;
+import ee.hitsa.ois.web.commandobject.application.ApplicationForm;
+import ee.hitsa.ois.web.commandobject.application.ApplicationRejectForm;
+import ee.hitsa.ois.web.commandobject.application.ApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.application.ApplicationApplicableDto;
+import ee.hitsa.ois.web.dto.application.ApplicationDto;
+import ee.hitsa.ois.web.dto.application.ApplicationPlannedSubjectDto;
+import ee.hitsa.ois.web.dto.application.ApplicationPlannedSubjectEquivalentDto;
+import ee.hitsa.ois.web.dto.application.ApplicationSearchDto;
 
 @Transactional
 @Service
@@ -249,10 +245,12 @@ public class ApplicationService {
     }
 
     private List<ApplicationType> existingApplicationsTypes(Long studentId) {
-        List<Application> existingApplications = applicationRepository.findDistinctTypeByStudentIdAndStatusCodeIn(studentId,
-                EnumUtil.toNameList(ApplicationStatus.AVALDUS_STAATUS_KOOST, ApplicationStatus.AVALDUS_STAATUS_ESIT,
-                        ApplicationStatus.AVALDUS_STAATUS_YLEVAAT, ApplicationStatus.AVALDUS_STAATUS_KINNITAM));
-        return StreamUtil.toMappedList(application -> ApplicationType.valueOf(EntityUtil.getCode(application.getType())), existingApplications);
+        List<?> data = em.createNativeQuery("select distinct a.type_code from application a where a.student_id = ?1 and a.status_code in (?2)")
+            .setParameter(1, studentId)
+            .setParameter(2, EnumUtil.toNameList(ApplicationStatus.AVALDUS_STAATUS_KOOST, ApplicationStatus.AVALDUS_STAATUS_ESIT,
+                        ApplicationStatus.AVALDUS_STAATUS_YLEVAAT, ApplicationStatus.AVALDUS_STAATUS_KINNITAM))
+            .getResultList();
+        return StreamUtil.toMappedList(r -> ApplicationType.valueOf(resultAsString(r, 0)), data);
     }
 
     public Application submit(HoisUserDetails user, Application application) {
@@ -289,30 +287,24 @@ public class ApplicationService {
     }
 
     public Application findLastValidAcademicLeaveWithoutRevocation(Long studentId) {
-      List<Application> validAcademicLeaves = applicationRepository.findAll((root, query, cb) -> {
-          List<Predicate> filters = new ArrayList<>();
-          filters.add(cb.equal(root.get("student").get("id"), studentId));
-          filters.add(cb.equal(root.get("type").get("code"), ApplicationType.AVALDUS_LIIK_AKAD.name()));
-          filters.add(cb.equal(root.get("status").get("code"), ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name()));
+      // find last confirmed akad directive and take application from it
+      List<?> data = em.createNativeQuery("select ds.application_id from directive_student ds join directive d on ds.directive_id = d.id "+
+              "left join study_period sp on ds.study_period_start_id = sp.id left join study_period ep on ds.study_period_end_id = ep.id "+
+              "where ds.student_id = ?1 and ds.canceled = false and d.type_code = ?2 and d.status_code = ?3 "+
+              "and case when ds.is_period then sp.start_date else ds.start_date end <= ?4 and case when ds.is_period then ep.end_date else ds.end_date end >= ?5 "+
+              "and not exists(select ds2.id from directive_student ds2 join directive d2 on ds2.directive_id = d2.id and ds2.canceled = false "+
+                  "and ds2.student_id = ds.student_id and d2.type_code = ?6 and d2.status_code = ?7 join application a on ds2.application_id = a.id and a.academic_application_id = ds.application_id) "+
+              "order by d.confirm_date desc")
+              .setParameter(1, studentId)
+              .setParameter(2, DirectiveType.KASKKIRI_AKAD.name())
+              .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+              .setParameter(4, parameterAsTimestamp(LocalDate.now()))
+              .setParameter(5, parameterAsTimestamp(LocalDate.now()))
+              .setParameter(6, DirectiveType.KASKKIRI_AKADK.name())
+              .setParameter(7, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+              .setMaxResults(1).getResultList();
 
-          Subquery<Long> revocationQuery = query.subquery(Long.class);
-          Root<Application> revocationRoot = revocationQuery.from(Application.class);
-          revocationQuery
-              .select(revocationRoot.get("id"))
-              .where(cb.and(
-                      cb.equal(revocationRoot.get("type").get("code"), ApplicationType.AVALDUS_LIIK_AKADK.name()),
-                      cb.equal(revocationRoot.get("academicApplication").get("id"), root.get("id"))));
-          filters.add(cb.not(cb.exists(revocationQuery)));
-
-          root.join("studyPeriodEnd", JoinType.LEFT);
-          filters.add(cb.or(
-              cb.and(cb.equal(root.get("isPeriod"), Boolean.FALSE), cb.greaterThanOrEqualTo(root.get("endDate"), LocalDate.now())),
-              cb.and(cb.equal(root.get("isPeriod"), Boolean.TRUE), cb.greaterThanOrEqualTo(root.get("studyPeriodEnd").get("endDate"), LocalDate.now()))
-          ));
-          return cb.and(filters.toArray(new Predicate[filters.size()]));
-      });
-
-      return validAcademicLeaves.stream().collect(Collectors.maxBy(Comparator.comparing(Application::getChanged))).orElse(null);
+      return data.isEmpty() ? null : em.getReference(Application.class, resultAsLong(data.get(0), 0));
     }
 
     public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(Student student) {
@@ -381,10 +373,10 @@ public class ApplicationService {
         Student student = application.getStudent();
         ConfirmationNeededMessage data = new ConfirmationNeededMessage(application);
         if (StudentUtil.hasRepresentatives(student)) {
-            log.info("rejection notification message sent to student {} representatives", EntityUtil.getId(application.getStudent()));
+            log.info("confirm needed message sent to student {} representatives", EntityUtil.getId(application.getStudent()));
             automaticMessageService.sendMessageToStudentRepresentatives(MessageType.TEATE_LIIK_AV_KINNIT, student, data);
         } else {
-            log.info("rejection notification message sent to student {} school", EntityUtil.getId(application.getStudent()));
+            log.info("confirm needed message sent to student {} school", EntityUtil.getId(application.getStudent()));
             automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT, student.getSchool(), data);
         }
     }

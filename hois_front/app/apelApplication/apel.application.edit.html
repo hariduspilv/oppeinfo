@@ -39,23 +39,25 @@
       <br>
 
       <div ng-hide="!application.student" layout="column" flex>
-        <fieldset>
+        <fieldset style="min-width: 0;">
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.addInfo.addInfos' | translate}}</legend>
           <md-button ng-if="editing" class="md-raised" ng-click="openEditCommentDialog()">{{'main.button.create' | translate}}</md-button>
           <md-table-container>
             <table md-table md-progress="tabledata.$promise" class="secondary-table">
               <thead md-head>
                 <tr md-row>
-                  <th md-column width="15%">{{'apel.addInfo.addedBy' | translate}}</th>
-                  <th md-column width="15%">{{'apel.addInfo.additionDate' | translate}}</th>
-                  <th md-column>{{'apel.addInfo.label' | translate}}</th>
+                  <th md-column width="55%">{{'apel.addInfo.label' | translate}}</th>
+                  <th md-column width="20%">{{'apel.addInfo.additionDate' | translate}}</th>
+                  <th md-column width="20%">{{'apel.addInfo.addedBy' | translate}}</th>
+                  <th md-column width="5%"></th>
                 </tr>
               </thead>
               <tbody md-body>
                 <tr md-row ng-repeat="comment in application.comments | orderBy: 'inserted'" ng-class-odd="'odd'" ng-class-even="'even'">
-                  <td md-cell>{{comment.insertedBy}}</td>
-                  <td md-cell>{{comment.inserted | hoisDateTime}}</td>
                   <td md-cell>{{comment.addInfo}}</td>
+                  <td md-cell>{{comment.inserted | hoisDateTime}}</td>
+                  <td md-cell>{{comment.insertedBy}}</td>
+                  <td md-cell></td>
                 </tr>
               </tbody>
             </table>
@@ -65,27 +67,27 @@
       <br>
 
       <div ng-hide="!application.student" layout="column" flex>
-        <fieldset>
+        <fieldset style="min-width: 0;">
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
           <md-button class="md-raised" ng-if="editing" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
           <table md-table class="secondary-table">
             <thead md-head>
               <tr md-row>
-                <th md-column>
+                <th md-column width="55%">
                   <span>{{'file.nameAndFile' | translate}}</span>
                 </th>
-                <th md-column>
+                <th md-column width="20%">
                   <span>{{'file.additionDate' | translate}}</span>
                 </th>
-                <th md-column>{{'file.addedBy' | translate}}</th>
-                <th md-column></th>
+                <th md-column width="20%">{{'file.addedBy' | translate}}</th>
+                <th md-column  width="5%"></th>
               </tr>
             </thead>
             <tbody md-body>
               <tr md-row ng-repeat="file in application.files | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>
                   <div layout="row" flex>
-                    <div flex="60">
+                    <div>
                       {{file.oisFile.fname}}
                     </div>
                     <div flex>

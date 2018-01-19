@@ -2,7 +2,6 @@ package ee.hitsa.ois.service.subjectstudyperiod;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -58,9 +57,7 @@ public class SubjectStudyPeriodCapacitiesService {
             AssertionFailedException.throwIf(!EntityUtil.getId(ssp.getSubject().getSchool()).equals(schoolId),
                     "User and subject have different schools!");
 
-            List<SubjectStudyPeriodCapacityDto> newCapacities = dto.getCapacities().stream()
-                    .filter(c -> c.getHours() != null).collect(Collectors.toList());
-
+            List<SubjectStudyPeriodCapacityDto> newCapacities = StreamUtil.toFilteredList(c -> c.getHours() != null, dto.getCapacities());
             EntityUtil.bindEntityCollection(ssp.getCapacities(), SubjectStudyPeriodCapacity::getId, newCapacities,
                     SubjectStudyPeriodCapacityDto::getId, dto3 -> {
                         SubjectStudyPeriodCapacity newCapacity = EntityUtil.bindToEntity(dto3,

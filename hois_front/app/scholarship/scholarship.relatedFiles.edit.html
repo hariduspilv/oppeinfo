@@ -16,7 +16,7 @@
       <td md-cell>
         <div layout="row" flex>
           <div flex="80">
-            {{file.fname}}
+            {{file.oisFile.fname ? file.oisFile.fname : file.fname}}
           </div>
           <div flex>
             <a ng-href="{{getUrl(file.oisFile, 'scholarshipapplication')}}" target="_blank" rel="noopener noreferrer">

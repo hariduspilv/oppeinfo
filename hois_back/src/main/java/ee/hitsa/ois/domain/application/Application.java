@@ -3,6 +3,7 @@ package ee.hitsa.ois.domain.application;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -116,7 +117,7 @@ public class Application extends BaseEntityWithId implements Period {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier country;
 
-    //Kasutatakse ainult välisõpilaseks vormistamise puhul, kui valitakse Eesti kool
+    // used in foreign study application, when selecting Estonian school
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(nullable = true)
     private Classifier ehisSchool;
@@ -138,10 +139,9 @@ public class Application extends BaseEntityWithId implements Period {
     @Required(groups = {Akadk.class})
     private Application academicApplication;
 
-    //can one application be referenced by multiple DirectiveStudent ???
     @OneToMany
     @JoinColumn(name = "application_id", nullable = false, updatable = false, insertable = false)
-    private Set<DirectiveStudent> directiveStudents = new HashSet<>();
+    private List<DirectiveStudent> directiveStudents;
 
 //    @OneToMany
 //    @JoinColumn(name = "academic_application_id", nullable = false, updatable = false, insertable = false)
@@ -386,6 +386,14 @@ public class Application extends BaseEntityWithId implements Period {
         this.academicApplication = academicApplication;
     }
 
+    public List<DirectiveStudent> getDirectiveStudents() {
+        return directiveStudents;
+    }
+
+    public void setDirectiveStudents(List<DirectiveStudent> directiveStudents) {
+        this.directiveStudents = directiveStudents;
+    }
+
     public Set<ApplicationFile> getFiles() {
         return files;
     }
@@ -400,13 +408,5 @@ public class Application extends BaseEntityWithId implements Period {
 
     public void setPlannedSubjects(Set<ApplicationPlannedSubject> plannedSubjects) {
         this.plannedSubjects = plannedSubjects;
-    }
-
-    public Set<DirectiveStudent> getDirectiveStudents() {
-        return directiveStudents;
-    }
-
-    public void setDirectiveStudents(Set<DirectiveStudent> directiveStudents) {
-        this.directiveStudents = directiveStudents;
     }
 }

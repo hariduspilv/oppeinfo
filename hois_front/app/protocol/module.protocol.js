@@ -211,20 +211,10 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
   }
   
   $scope.confirm = function () {
-    if ($scope.auth.isAdmin()) {
-      QueryUtils.endpoint(endpoint + $scope.protocol.id + '/confirm').save({
-        version: $scope.protocol.version,
-        protocolStudents: $scope.protocol.protocolStudents
-      }, function (result) {
-        message.info('moduleProtocol.messages.confirmed');
-        entityToDto(result);
-      });
-    } else {
-      if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-        signBeforeConfirm();
-      } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-        mobileSignBeforeConfirm();
-      }
+    if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
+      signBeforeConfirm();
+    } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
+      mobileSignBeforeConfirm();
     }
   };
 

@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -153,7 +154,7 @@ public class SchoolControllerTests {
         Set<String> studyLevelCodes = school.getStudyLevels().stream().map(SchoolStudyLevel::getStudyLevel)
                 .map(Classifier::getCode).collect(Collectors.toSet());
         // verify that values are changed
-        Assert.assertTrue(studyLevelCodes.equals(studyLevels.stream().collect(Collectors.toSet())));
+        Assert.assertTrue(studyLevelCodes.equals(new HashSet<>(studyLevels)));
     }
 
     private List<String> getStudyLevels() {

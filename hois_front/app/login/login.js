@@ -83,7 +83,12 @@ angular.module('hitsaOis')
     
     var authenticate = function() {
       $scope.hideDialog = false;
-      AuthService.login().then(successfulAuthentication, failedAuthentication);
+      if (window.location.hash.indexOf('_code') > -1) {
+        var token = window.location.hash.substring(window.location.hash.indexOf('_code') + 6);
+        AuthService.login({Authorization: 'Bearer ' + token}).then(successfulAuthentication, failedAuthentication);
+      } else {
+        AuthService.login().then(successfulAuthentication, failedAuthentication);
+      }
     };
 
     var authenticateUser = function(credentials) {
@@ -93,7 +98,7 @@ angular.module('hitsaOis')
 
     var authenticateIdCard = function() {
       $scope.hideDialog = true;
-      AuthService.loginIdCard().then(successfulAuthentication, failedAuthentication);
+      AuthService.loginIdCard()/*.then(successfulAuthentication, failedAuthentication)*/;
     };
 
     var authenticateMobileId = function(mobilenumber) {

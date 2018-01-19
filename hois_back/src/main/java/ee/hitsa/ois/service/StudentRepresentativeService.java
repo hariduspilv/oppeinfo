@@ -8,7 +8,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -178,7 +177,7 @@ public class StudentRepresentativeService {
                 .setParameter(2, person.getId())
                 .getResultList();
         Set<Long> existingReprs = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), reprs);
-        students = students.stream().filter(r -> !existingReprs.contains(r.getId())).collect(Collectors.toList());
+        students = StreamUtil.toFilteredList(r -> !existingReprs.contains(r.getId()), students);
         if(students.isEmpty()) {
             throw new ValidationFailedException("student.representative.alreadyrepresentative");
         }
@@ -197,7 +196,7 @@ public class StudentRepresentativeService {
                 .getResultList();
 
         Set<Long> existingApps = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), apps);
-        students = students.stream().filter(r -> !existingApps.contains(r.getId())).collect(Collectors.toList());
+        students = StreamUtil.toFilteredList(r -> !existingApps.contains(r.getId()), students);
         if(students.isEmpty()) {
             throw new ValidationFailedException("student.representative.alreadyapplication");
         }

@@ -685,8 +685,7 @@ public class TimetableService {
         if(timetableEvent.getTimetableEventTimes().isEmpty()) {
             timetableEventTime = new TimetableEventTime();
             timetableEventTime.setTimetableEvent(timetableEvent);
-            addRoomsToTimetableEventTime(timetableEventTime, journal.getJournalRooms().stream()
-                    .map(it -> EntityUtil.getId(it.getRoom())).collect(Collectors.toList()));
+            addRoomsToTimetableEventTime(timetableEventTime, StreamUtil.toMappedList(it -> EntityUtil.getId(it.getRoom()), journal.getJournalRooms()));
             addTeachersToTimetableEvent(timetableEventTime,
                     StreamUtil.toMappedList(it -> it.getTeacher(), journal.getJournalTeachers()));
             timetableEvent.getTimetableEventTimes().add(timetableEventTime);
@@ -804,7 +803,7 @@ public class TimetableService {
         for(StudyPeriod sp : timetable.getStudyPeriod().getStudyYear().getStudyPeriods()) {
             wrappedData = addMissingDatesToBlocked(sp, wrappedData);
         }
-        wrappedData = wrappedData.stream().filter(wrapped -> wrapped.getStart().isAfter(timetable.getStartDate())).collect(Collectors.toList());
+        wrappedData = StreamUtil.toFilteredList(wrapped -> wrapped.getStart().isAfter(timetable.getStartDate()), wrappedData);
         Collections.sort(wrappedData, (dto1, dto2) -> dto1.getStart().compareTo(dto2.getStart()));
         return wrappedData;
     }
@@ -1156,7 +1155,7 @@ public class TimetableService {
             qb = new JpaNativeQueryBuilder(
                     "from journal_teacher jt inner join teacher t on t.id = jt.teacher_id inner join person p on p.id = t.person_id");
             qb.requiredCriteria("jt.journal_id in (:journalIds)", "journalIds",
-                    journals.stream().map(TimetableJournalDto::getId).collect(Collectors.toList()));
+                    StreamUtil.toMappedList(TimetableJournalDto::getId, journals));
             select = "jt.journal_id, p.firstName, p.lastName, t.id as teacher_id";
             data = qb.select(select, em).getResultList();
             Map<Long, List<AutocompleteResult>> teachersByJournals = data.stream()
@@ -1262,25 +1261,25 @@ public class TimetableService {
     public List<GeneralTimetableDto> generalTimetables(HoisUserDetails user) {
         Long schoolId = user.getSchoolId();
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
-
-        if (studyYear != null) {
-            Query q = em.createNativeQuery("select tt.id, tt.start_date, tt.end_date, tt.study_period_id, sp.name_et, sp.name_en"
-                    + " from timetable tt" + " join study_period sp on tt.study_period_id=sp.id"
-                    + " where tt.school_id=?1 and sp.study_year_id=?2 and tt.status_code in (:shownStatusCodes)" 
-                    + " order by 2");
-            q.setParameter(1, schoolId);
-            q.setParameter(2, studyYear.getId());
-            
-            if (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher()) {
-                q.setParameter("shownStatusCodes", adminAndTeacherTimetables);
-            } else {
-                q.setParameter("shownStatusCodes", publicTimetables);
-            }
-
-            List<?> data = q.getResultList();
-            return StreamUtil.toMappedList(r -> new GeneralTimetableDto((Object[]) r), data);
+        if (studyYear == null) {
+            return null;
         }
-        return null;
+
+        Query q = em.createNativeQuery("select tt.id, tt.start_date, tt.end_date, tt.study_period_id, sp.name_et, sp.name_en"
+                + " from timetable tt" + " join study_period sp on tt.study_period_id=sp.id"
+                + " where tt.school_id=?1 and sp.study_year_id=?2 and tt.status_code in (:shownStatusCodes)"
+                + " order by 2");
+        q.setParameter(1, schoolId);
+        q.setParameter(2, studyYear.getId());
+
+        if (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher()) {
+            q.setParameter("shownStatusCodes", adminAndTeacherTimetables);
+        } else {
+            q.setParameter("shownStatusCodes", publicTimetables);
+        }
+
+        List<?> data = q.getResultList();
+        return StreamUtil.toMappedList(r -> new GeneralTimetableDto((Object[]) r), data);
     }
 
     public List<GroupTimetableDto> groupPeriodTimetables(Long schoolId, Long studyPeriodId, Long timetableId) {

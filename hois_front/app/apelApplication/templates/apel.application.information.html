@@ -6,7 +6,8 @@
         <hois-value value="application.person.firstname + ' ' + application.person.lastname"></hois-value>
       </md-input-container>
       <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-        <label>{{'apel.curriculumVersion' | translate}}</label>
+        <label ng-if="application.isVocational">{{'apel.curriculumVersionVocational' | translate}}</label>
+        <label ng-if="!application.isVocational">{{'apel.curriculumVersionHigher' | translate}}</label>
         <hois-value value="currentLanguageNameField(application.curriculumVersion)"></hois-value>
       </md-input-container>
     </div>

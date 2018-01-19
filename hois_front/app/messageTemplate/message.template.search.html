@@ -29,7 +29,7 @@
         <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="#/messageTemplate/new">{{'main.button.create' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AUTOTEADE')" ng-href="#/messageTemplate/new">{{'main.button.create' | translate}}</md-button>
         </div>
     </form>
 </div>
@@ -56,7 +56,7 @@
             <td md-cell>{{::row.validThru | hoisDate}}</td>
             <td md-cell>{{isValid(row) ? 'main.valid' : 'main.invalid' | translate}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/messageTemplate/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AUTOTEADE')" ng-href="#/messageTemplate/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

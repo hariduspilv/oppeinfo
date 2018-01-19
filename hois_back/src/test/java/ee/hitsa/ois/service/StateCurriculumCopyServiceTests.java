@@ -6,16 +6,16 @@ import org.junit.Test;
 import ee.hitsa.ois.service.curriculum.StateCurriculumCopyService;
 
 public class StateCurriculumCopyServiceTests {
-    
+
     @Test
     public void calculateStudyPeriod() {
-        Integer result = StateCurriculumCopyService.calculateStudyPeriod(Long.valueOf(100));
-        Assert.assertTrue(Integer.valueOf(20).equals(result));
+        int result = StateCurriculumCopyService.calculateStudyPeriod(Long.valueOf(100));
+        Assert.assertTrue(20 == result);
     }
-    
+
     @Test
     public void calculateStudyPeriodFraction() {
-        Integer result = StateCurriculumCopyService.calculateStudyPeriod(Long.valueOf(109));
-        Assert.assertTrue(Integer.valueOf(22).equals(result));
+        int result = StateCurriculumCopyService.calculateStudyPeriod(Long.valueOf(109));
+        Assert.assertTrue(22 == result);
     }
 }

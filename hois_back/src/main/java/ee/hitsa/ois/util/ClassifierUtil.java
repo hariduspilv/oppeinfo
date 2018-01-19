@@ -18,7 +18,7 @@ import ee.hitsa.ois.web.dto.ClassifierSelection;
 /**
  * Utility functions for working with classifiers
  */
-public class ClassifierUtil {
+public abstract class ClassifierUtil {
 
     public static final String COUNTRY_ESTONIA = "RIIK_EST";
 
@@ -40,6 +40,17 @@ public class ClassifierUtil {
      */
     public static boolean equals(Enum<?> value, Classifier classifier) {
         return value.name().equals(EntityUtil.getNullableCode(classifier));
+    }
+
+    /**
+     * Is mainClassCode equal to classifier mainClassCode?
+     * @param mainClassCode
+     * @param classifier can be null
+     * @return
+     * @throws NullPointerException if mainClassCode is null
+     */
+    public static boolean mainClassCodeEquals(MainClassCode mainClassCode, Classifier classifier) {
+        return classifier != null && mainClassCode.name().equals(classifier.getMainClassCode());
     }
 
     /**
@@ -109,7 +120,7 @@ public class ClassifierUtil {
             return Permission.valueOf(a.getCode()).ordinal() - Permission.valueOf(b.getCode()).ordinal();
         });
     }
-    
+
     public static String getNullableNameEt(Classifier classifier) {
         return classifier != null ? classifier.getNameEt() : null;
     }

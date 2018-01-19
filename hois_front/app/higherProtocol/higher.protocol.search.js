@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherProtocolSearchController', function ($scope, $route, QueryUtils, DataUtils, Classifier, message, $q, ArrayUtils, USER_ROLES) {
+angular.module('hitsaOis').controller('HigherProtocolSearchController', function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, ArrayUtils, USER_ROLES) {
   $scope.auth = $route.current.locals.auth;
   var baseUrl = "/higherProtocols";
 
@@ -8,8 +8,6 @@ angular.module('hitsaOis').controller('HigherProtocolSearchController', function
   QueryUtils.createQueryForm($scope, baseUrl, {order: 'id'}, clMapper.objectmapper);
   $q.all(clMapper.promises);
   DataUtils.convertStringToDates($scope.criteria, ['inserted', 'confirmDate']);
-
-  var Endpoint = QueryUtils.endpoint(baseUrl);
 
   function setCurrentStudyPeriod() {
     if($scope.criteria && !ArrayUtils.isEmpty($scope.studyPeriods) && !$scope.criteria.studyPeriod) {

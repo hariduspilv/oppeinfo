@@ -1142,6 +1142,10 @@ th.required::after {
   content: ' *';
 }
 
+label.required::after {
+  content: ' *';
+}
+
 .lessonplan
 {
 	font-size: 12px;
@@ -1497,4 +1501,23 @@ md-grid-tile {
 
 .elective-module-subject{
   max-width: 200px;
+}
+
+/* Scholarship and grant table border*/
+tr.scholarship-bottom-border td {
+  border-bottom:1pt solid red;
+}
+
+
+
+.substitutableModuleSelect {
+  width: 30%;
+  display: inline-block;
+  word-break: break-word;
+}
+
+@media (max-width: 800px) {
+  .substitutableModuleSelect {
+    width: 100%;
+  }
 }

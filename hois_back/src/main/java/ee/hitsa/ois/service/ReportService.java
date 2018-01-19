@@ -101,9 +101,9 @@ public class ReportService {
             Map<Long, List<Object>> certificates = data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0)));
             for(StudentSearchDto dto : result.getContent()) {
                 List<?> studentCertificates = certificates.getOrDefault(dto.getId(), Collections.emptyList());
-                dto.setOccupationCertificates(studentCertificates.stream().map(r -> {
+                dto.setOccupationCertificates(StreamUtil.toMappedList(r -> {
                     return new StudentOccupationCertificateDto(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4));
-                }).collect(Collectors.toList()));
+                }, studentCertificates));
             }
         }
         return result;

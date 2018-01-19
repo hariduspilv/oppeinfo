@@ -36,6 +36,7 @@ public class PracticeJournalDto extends VersionedCommand {
     private ContractDto contract;
     private List<PracticeJournalEntryDto> practiceJournalEntries;
     private List<PracticeJournalFileDto> practiceJournalFiles;
+    private Boolean canEdit;
     private Boolean canDelete;
     private AutocompleteResult subject;
     private Boolean isHigher;
@@ -236,6 +237,14 @@ public class PracticeJournalDto extends VersionedCommand {
 
     public void setPracticeJournalFiles(List<PracticeJournalFileDto> practiceJournalFiles) {
         this.practiceJournalFiles = practiceJournalFiles;
+    }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
     }
 
     public Boolean getCanDelete() {

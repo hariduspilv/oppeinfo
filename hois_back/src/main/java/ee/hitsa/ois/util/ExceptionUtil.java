@@ -3,7 +3,7 @@ package ee.hitsa.ois.util;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public class ExceptionUtil {
+public abstract class ExceptionUtil {
 
     public static String exceptionToStackTraceString(Exception e) {
         StringWriter sw = new StringWriter();

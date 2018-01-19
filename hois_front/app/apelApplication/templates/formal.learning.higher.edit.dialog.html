@@ -135,7 +135,7 @@
               <div ng-if="isMySchool" layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="45" flex-sm="100" flex-xs="100">
                   <label>{{'apel.formalLearnings.subjectCode' | translate}}</label>
-                  <input type="text" value="{{record.newTransferableSubjectOrModule.subjectCode}}" disabled required>
+                  <input type="text" value="{{record.newTransferableSubjectOrModule.subjectCode}}" disabled>
                 </md-input-container>
                 <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'apel.formalLearnings.subjectCredits' | translate}} ({{'apel.formalLearnings.EAP' | translate}})</label>
@@ -146,7 +146,7 @@
               <div ng-if="!isMySchool" layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="45" flex-sm="100" flex-xs="100">
                   <label>{{'apel.formalLearnings.subjectCode' | translate}}</label>
-                  <input type="text" ng-model="record.newTransferableSubjectOrModule.subjectCode" md-maxlength="20" required>
+                  <input type="text" ng-model="record.newTransferableSubjectOrModule.subjectCode" md-maxlength="20">
                 </md-input-container>
                 <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'apel.formalLearnings.subjectCredits' | translate}} ({{'apel.formalLearnings.EAP' | translate}})</label>
@@ -182,10 +182,14 @@
                   <md-datepicker ng-model="record.newTransferableSubjectOrModule.gradeDate" md-max-date="currentDate" md-open-on-focus></md-datepicker>
                 </md-input-container>
                 <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.resultDate' | translate}}</label>
+                  <label>{{'apel.formalLearnings.resultDate' | translate}}</label> 
                   <input value="{{record.newTransferableSubjectOrModule.gradeDate | hoisDate}}" disabled></input>
                 </md-input-container>
-                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'apel.formalLearnings.teachers' | translate}}</label>
+                  <input type="text" value="{{record.newTransferableSubjectOrModule.teachers}}" disabled>
+                </md-input-container>
+                <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'apel.formalLearnings.teachers' | translate}}</label>
                   <input type="text" ng-model="record.newTransferableSubjectOrModule.teachers" md-maxlength="255">
                 </md-input-container>
@@ -210,7 +214,8 @@
         </fieldset>
         <br>
         <fieldset>
-          <legend class="md-title-small">{{'apel.formalLearnings.substitutableSubjects' | translate}}</legend>
+          <legend ng-class="{invalid: dialogForm.$submitted && (!record.formalReplacedSubjectsOrModules || record.formalReplacedSubjectsOrModules.length === 0)}"
+            class="md-title-small">{{'apel.formalLearnings.substitutableSubjects' | translate}}</legend>
           <div flex="50">
             <md-input-container style="width: 100%">
               <label>{{'apel.formalLearnings.substitutableSubject' | translate}}</label>

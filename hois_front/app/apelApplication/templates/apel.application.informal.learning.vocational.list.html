@@ -44,11 +44,11 @@
           <md-checkbox ng-if="row.isModule === true || row.isModule === false" ng-model="row.isModule" 
             aria-label="{{'apel.informalLearnings.isModule' | translate}}" ng-disabled="true"></md-checkbox>
         </td>
-        <td ng-if="row.isModule" md-cell>{{row.schoolResultHours}}/{{row.ekap}}</td>
-        <td ng-if="!row.isModule" md-cell>{{row.schoolResultHours}}</td>
+        <td ng-if="row.ekap" md-cell>{{row.schoolResultHours}}/{{row.ekap}}</td>
+        <td ng-if="!row.ekap" md-cell>{{row.schoolResultHours}}</td>
         <td md-cell>{{row.grade.value}}</td>
         <td md-cell>
-          <ul ng-repeat="outcome in row.outcomes" style="padding-left: 15px">
+          <ul ng-repeat="outcome in row.outcomes | orderBy: 'curriculumModuleOutcomes.id'" style="padding-left: 15px">
             <li>{{currentLanguage() === 'en' ? outcome.curriculumModuleOutcomes.outcomeEn : outcome.curriculumModuleOutcomes.outcomeEt}}</li>
           </ul>
         </td>

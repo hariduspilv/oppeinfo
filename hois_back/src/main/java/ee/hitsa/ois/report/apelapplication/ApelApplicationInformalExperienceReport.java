@@ -2,9 +2,10 @@ package ee.hitsa.ois.report.apelapplication;
 
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationInformalExperience;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.TranslateUtil;
 
 public class ApelApplicationInformalExperienceReport {
-    
+
     private final String name;
     private final String placeTime;
     private final Short hours;
@@ -16,7 +17,7 @@ public class ApelApplicationInformalExperienceReport {
         placeTime = informalExperience.getPlaceTime();
         hours = informalExperience.getHours();
         documents = informalExperience.getDocuments();
-        type = Language.EN.equals(lang) ? informalExperience.getType().getNameEn() : informalExperience.getType().getNameEt();
+        type = TranslateUtil.name(informalExperience.getType(), lang);
     }
 
     public String getName() {
@@ -38,5 +39,4 @@ public class ApelApplicationInformalExperienceReport {
     public String getType() {
         return type;
     }
-    
 }

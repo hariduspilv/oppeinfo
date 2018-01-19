@@ -8,7 +8,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     $scope.formState = {state: (id || canceledDirective ? 'EDIT' : 'CHOOSETYPE'), students: undefined, changedStudents: [],
                         selectedStudents: [], excludedTypes: ['KASKKIRI_KYLALIS'], school: Session.school || {},
-                        higherStudyForms: Classifier.queryForDropdown({mainClassCode: 'OPPEVORM', higher: true})};
+                        higherStudyForms: Classifier.queryForDropdown({mainClassCode: 'OPPEVORM', higher: true}),
+                        scholarshipEditable: false};
 
     if(!canceledDirective) {
       $scope.formState.excludedTypes.push('KASKKIRI_TYHIST');
@@ -18,6 +19,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
       $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
       $scope.formState.excludedTypes.push('KASKKIRI_VALIS');
+    }
+
+    function setScholarshipEditable() {
+        $scope.formState.scholarshipEditable = ['STIPTOETUS_ERI', 'STIPTOETUS_SOIDU', 'STIPTOETUS_DOKTOR'].indexOf($scope.record.scholarshipType) !== -1;
     }
 
     function setTemplateUrl() {
@@ -48,6 +53,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         $scope.cancelTypeChanged();
       } else {
         setTemplateUrl();
+        setScholarshipEditable();
         $scope.record.students = studentConverter($scope.record.students);
         if(result && result.type === 'KASKKIRI_IMMAT') {
           for(var i = 0, cnt = $scope.record.students.length; i < cnt; i++) {
@@ -158,12 +164,12 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
       beforeSave();
       if($scope.record.id) {
-        $scope.record.$update().then(afterLoad).then(message.updateSuccess);
+        $scope.record.$update().then(afterLoad).then(message.updateSuccess).catch(angular.noop);
       }else{
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
           $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
-        });
+        }).catch(angular.noop);
       }
     };
 
@@ -172,7 +178,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
           $location.url(baseUrl + '?_noback');
-        });
+        }).catch(angular.noop);
       });
     };
 
@@ -205,6 +211,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     };
 
     $scope.scholarshipTypeChanged = function() {
+      setScholarshipEditable();
       if($scope.record.scholarshipType) {
         $scope.directiveTypeChanged();
       }
@@ -355,7 +362,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
             message.info('directive.sentToConfirm');
             $location.url(baseUrl + '/' + $scope.record.id + '/view?_noback');
           });
-        });
+        }).catch(angular.noop);
       });
     };
   }

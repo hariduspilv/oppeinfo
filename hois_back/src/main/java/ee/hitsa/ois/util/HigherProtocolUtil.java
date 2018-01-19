@@ -12,31 +12,27 @@ import ee.hitsa.ois.web.commandobject.HigherProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
 import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
 
-public final class HigherProtocolUtil {
-    
-    private HigherProtocolUtil() {
-    }
-    
+public abstract class HigherProtocolUtil {
+
     public static boolean hasPermissionToView(HoisUserDetails user) {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
             return false;
         }
         return user.isSchoolAdmin() || user.isTeacher();
     }
-    
+
     public static boolean canView(HoisUserDetails user, Protocol protocol) {
         return hasPermissionToView(user) && UserUtil.isSameSchool(user, protocol.getSchool());
     }
-    
+
     public static boolean canCreate(HoisUserDetails user) {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
             return false;
         }
         return user.isSchoolAdmin() || user.isTeacher();
     }
-    
+
     public static boolean canChange(HoisUserDetails user, Protocol protocol) {
-        
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
             return false;
         }
@@ -48,7 +44,7 @@ public final class HigherProtocolUtil {
         }
         return false;
     }
-    
+
     public static boolean canConfirm(HoisUserDetails user, Protocol protocol) {
         if(ProtocolUtil.confirmed(protocol)) {
             return false;
@@ -65,31 +61,31 @@ public final class HigherProtocolUtil {
         }
         return false;
     }
-    
+
     public static void assertCanSearch(HoisUserDetails user) {
         if(!hasPermissionToView(user)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
-    
+
     public static void assertCanView(HoisUserDetails user, Protocol protocol) {
         if(!canView(user, protocol)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
-    
+
     public static void assertCanCreate(HoisUserDetails user) {
         if(!canCreate(user)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
-    
+
     public static void assertCanChange(HoisUserDetails user, Protocol protocol) {
         if(!canChange(user, protocol)) {
             throw new ValidationFailedException("higherProtocol.error.noRightsToChange");
         }
     }
-    
+
     public static void assertCanConfirm(HoisUserDetails user, Protocol protocol) {
         if(!canConfirm(user, protocol)) {
             throw new ValidationFailedException("higherProtocol.error.noRightsToConfirm");
@@ -99,7 +95,7 @@ public final class HigherProtocolUtil {
     public static void validate(HigherProtocolSaveForm form, Protocol protocol) {
         assertProtocolStudentsNotAddedOrRemoved(protocol, form);
     }
-    
+
     private static void assertProtocolStudentsNotAddedOrRemoved(Protocol protocol, HigherProtocolSaveForm form) {
         String message = "Protocol students should not be added or removed";
         Set<Long> formProtocolStudents = StreamUtil.toMappedSet(ps -> ps.getId(), form.getProtocolStudents());
@@ -114,13 +110,13 @@ public final class HigherProtocolUtil {
             }
         }
     }
-    
+
     public static void assertHasAddInfoIfProtocolConfirmed(HigherProtocolStudentDto dto, Protocol protocol) {
         if(ProtocolUtil.confirmed(protocol) && addInfoMissing(dto)) {
             throw new ValidationFailedException("higherProtocol.error.addInfoRequired");
         }
     }
-    
+
     private static boolean addInfoMissing(HigherProtocolStudentDto dto) {
         return dto.getAddInfo() == null || dto.getAddInfo().isEmpty();
     }

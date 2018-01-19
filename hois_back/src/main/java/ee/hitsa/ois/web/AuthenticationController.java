@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -56,6 +57,8 @@ public class AuthenticationController {
     private LdapService ldapService;
     @Autowired
     private UserService userService;
+    @Value("${hois.frontend.baseUrl}")
+    private String frontendBaseUrl;
 
     @RequestMapping("/user")
     @ResponseBody
@@ -66,10 +69,11 @@ public class AuthenticationController {
     @CrossOrigin
     @RequestMapping("/idlogin")
     @ResponseBody
-    public void idlogin(Principal principal, HttpServletResponse response) {
+    public String idlogin(Principal principal, HttpServletResponse response) {
         //one minute token
+        String token = "";
         if (principal != null) {
-            String token = Jwts.builder()
+            token = Jwts.builder()
                     .setSubject(((EstonianIdCardAuthenticationToken)principal).getPrincipal().toString())
                     .claim(hoisJwtProperties.getClaimLoginMethod(), LoginMethod.LOGIN_TYPE_I.name())
                     .setExpiration(new Date(System.currentTimeMillis() + 60_000))
@@ -77,6 +81,9 @@ public class AuthenticationController {
                     .compact();
             addJwtHeader(response, token);
         }
+        return "<html><head></head><body>"
+                + "<form id='id_form' method='get' action='" + frontendBaseUrl + "?_code=" + token + "'></form>"
+                + "<script>document.getElementById('id_form').submit();</script></body></html>";
     }
 
     private void addJwtHeader(HttpServletResponse response, String token) {
@@ -125,7 +132,7 @@ public class AuthenticationController {
             userService.createPersonUserIfNecessary(idcode, lastname, firstname);
             String username = claims.getSubject();
             HoisUserDetails hoisUserDetails = userDetailsService.loadUserByUsername(username);
-            EstonianIdCardAuthenticationToken token = new EstonianIdCardAuthenticationToken(username); // TODO create and use mobile-id token ?
+            EstonianIdCardAuthenticationToken token = new EstonianIdCardAuthenticationToken(hoisUserDetails); // TODO create and use mobile-id token ?
             hoisUserDetails.setLoginMethod(LoginMethod.LOGIN_TYPE_M);
             hoisUserDetails.setMobileNumber(mobileNumber);
             token.setDetails(hoisUserDetails);

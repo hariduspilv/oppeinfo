@@ -101,12 +101,13 @@ public class ApelApplicationController {
     }
 
     @PutMapping("/{id:\\d+}/sendToConfirm")
-    public ApelApplicationDto sendToConfirm(HoisUserDetails user, @WithEntity ApelApplication application) {
+    public ApelApplicationDto sendToConfirm(HoisUserDetails user, @WithEntity ApelApplication application,
+            @Valid @RequestBody ApelApplicationForm applicationForm) {
         if (!UserUtil.canSendToConfirmApelApplication(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         ApelApplication sentToConfirmApplication = apelApplicationService.sendToConfirm(application);
-        return get(user, sentToConfirmApplication);
+        return get(user, apelApplicationService.save(user, sentToConfirmApplication,  applicationForm));
     }
 
     @PutMapping("/{id:\\d+}/sendBackToCreation")

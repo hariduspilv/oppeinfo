@@ -121,13 +121,14 @@
         <div ng-if="timetableSearch" layout="row" layout-align="center">{{'timetable.error.noSearchResults' | translate}}</div>
     </div>
 
-    <md-button class="md-icon-button timetableIconButton" ng-click="generateCalendar()">
-        <md-tooltip md-direction="bottom">{{'timetable.saveToCalendar' | translate}}</md-tooltip>
-        <md-icon md-font-set="material-icons md-primary md-48">event</md-icon>
-    </md-button>
-
-    <md-button ng-if="directRoute" ng-click="back('#/timetable/generalTimetableByGroup')" class="md-raised">{{'main.button.back' | translate}}</md-button>
-
+    <div>
+        <md-button class="md-icon-button timetableIconButton" ng-click="generateCalendar()">
+            <md-tooltip md-direction="bottom">{{'timetable.saveToCalendar' | translate}}</md-tooltip>
+            <md-icon md-font-set="material-icons md-primary md-48">event</md-icon>
+        </md-button>
+    
+        <md-button ng-if="directRoute" ng-click="back('#/timetable/generalTimetableByGroup')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    </div>
 </div>
 
 <style>

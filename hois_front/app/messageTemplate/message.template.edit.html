@@ -29,11 +29,11 @@
 			</div>
         </div>
         <div layout="row">
-            <md-button class="md-raised md-primary" ng-href="#/messageTemplate/{{::record.id}}/edit" ng-if="readOnly">{{'main.button.change' | translate}}</md-button>
+            <md-button class="md-raised md-primary" ng-href="#/messageTemplate/{{::record.id}}/edit" ng-if="readOnly && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AUTOTEADE')">{{'main.button.change' | translate}}</md-button>
             <md-button class="md-raised md-primary" ng-click="save()" ng-if="!readOnly">{{'main.button.save' | translate}}</md-button>
+            <md-button class="md-raised md-default" ng-click="delete()" ng-if="record.id && !readOnly">{{'main.button.delete' | translate}}</md-button>
             <md-button class="md-raised md-default" ng-if="!readOnly" ng-click="back('#/messageTemplate', messageTemplateForm)">{{'main.button.back' | translate}}</md-button>
             <md-button class="md-raised md-default" ng-if="readOnly" ng-click="back('#/messageTemplate')">{{'main.button.back' | translate}}</md-button>
-            <md-button class="md-raised md-default" ng-click="delete()" ng-if="record.id && !readOnly">{{'main.button.delete' | translate}}</md-button>
         </div>
     </form>
 </div>

@@ -257,7 +257,7 @@ public class JournalService {
     }
 
     public List<JournalStudentDto> suitedStudents(HoisUserDetails user, Long journalId) {
-        return studentRepository.findAll((root, query, cb) -> {
+        return StreamUtil.toMappedList(JournalStudentDto::of, studentRepository.findAll((root, query, cb) -> {
             root.join("person", JoinType.INNER);
             root.join("studentGroup", JoinType.LEFT);
             root.join("curriculumVersion", JoinType.INNER).join("curriculum", JoinType.INNER);
@@ -293,7 +293,7 @@ public class JournalService {
             filters.add(cb.not(cb.exists(protocolStudentsQuery)));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }).stream().map(JournalStudentDto::of).collect(Collectors.toList());
+        }));
     }
 
     public Journal saveEndDate(Journal journal, JournalEndDateCommand command) {
@@ -431,7 +431,7 @@ public class JournalService {
         qb.requiredCriteria("tob.journal_id = :journalId", "journalId", EntityUtil.getId(journal));
         List<?> result = qb.select("tet.start", em).getResultList();
         JournalEntryLessonInfoDto dto = new JournalEntryLessonInfoDto();
-        dto.setLessonPlanDates(result.stream().map(r -> resultAsLocalDateTime(r, 0)).collect(Collectors.toList()));
+        dto.setLessonPlanDates(StreamUtil.toMappedList(r -> resultAsLocalDateTime(r, 0), result));
         return dto;
     }
 
@@ -567,7 +567,7 @@ public class JournalService {
                 + " jes.grade_inserted, jes.add_info, je.homework, je.homework_duedate from journal j"
                 + " inner join journal_entry je on j.id = je.journal_id"
                 + " inner join journal_student js on j.id = js.journal_id"
-                + " inner join journal_entry_student jes on je.id = jes.journal_entry_id and jes.journal_student_id = js.id"
+                + " left join journal_entry_student jes on je.id = jes.journal_entry_id and jes.journal_student_id = js.id"
                 + " inner join student s on js.student_id = s.id"
                 + " where j.id = ?1 and s.id = ?2"
                 + " order by je.entry_date is null, je.entry_date desc");

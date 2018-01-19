@@ -126,6 +126,11 @@ public class StudyYearService {
         EntityUtil.deleteEntity(studyPeriodEvent, em);
     }
 
+    /**
+     * Get previous study period id
+     * @param schoolId
+     * @return null if there is no previous study period
+     */
     public Long getPreviousStudyPeriod(Long schoolId) {
         String from = "from study_period ss inner join study_year yy on ss.study_year_id = yy.id";
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
@@ -142,6 +147,11 @@ public class StudyYearService {
         return Long.valueOf(((Number) result.get(0)).longValue());
     }
 
+    /**
+     * Get current study period id
+     * @param schoolId
+     * @return null if there is no current study period
+     */
     public Long getCurrentStudyPeriod(Long schoolId) {
         String from = "from study_period ss inner join study_year yy on ss.study_year_id = yy.id";
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
@@ -158,8 +168,12 @@ public class StudyYearService {
         return Long.valueOf(((Number) result.get(0)).longValue());
     }
 
+    /**
+     * Returns current study year
+     * @param schoolId
+     * @return null if there is no current study year
+     */
     public StudyYear getCurrentStudyYear(Long schoolId) {
-        //TODO: what if study year is not found? Should we return previous study year or next study year instead of null?
         LocalDate now = LocalDate.now();
         List<StudyYear> data = em.createQuery("select sy from StudyYear sy where sy.school.id = ?1 and sy.startDate <= ?2 and sy.endDate >= ?2", StudyYear.class)
             .setParameter(1, schoolId)

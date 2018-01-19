@@ -17,24 +17,21 @@ import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 
-public class JournalUtil {
-    
-    protected JournalUtil(){
-    }
-    
+public abstract class JournalUtil {
+
     public static boolean confirmed(Journal journal) {
         return ClassifierUtil.equals(JournalStatus.PAEVIK_STAATUS_K, journal.getStatus());
     }
-    
+
     public static boolean hasPermissionToView(HoisUserDetails user) {
         return (user.isSchoolAdmin() || user.isTeacher()) &&
                 UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PAEVIK);
     }
-    
+
     public static boolean hasPermissionToView(HoisUserDetails user, School school) {
         return hasPermissionToView(user) && UserUtil.isSameSchool(user, school);
     }
-    
+
     public static boolean hasPermissionToChange(HoisUserDetails user, Journal journal) {
         return (UserUtil.isSchoolAdmin(user, journal.getSchool()) || 
                 UserUtil.isTeacher(user, journal.getSchool()) && !confirmed(journal)) &&
@@ -45,25 +42,25 @@ public class JournalUtil {
         return (UserUtil.isSchoolAdmin(user, school) || UserUtil.isTeacher(user, school)) &&
                 UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_PAEVIK);
     }
-    
+
     public static boolean hasFinalEntry(Journal journal) {
         return journal.getJournalEntries().stream()
                 .anyMatch(je -> ClassifierUtil
                         .equals(JournalEntryType.SISSEKANNE_L, je.getEntryType()));
     }
-    
+
     public static boolean canConfirm(HoisUserDetails user, Journal journal) {
         return hasPermissionToConfirm(user, journal.getSchool()) && !confirmed(journal);
     }
-    
-    /*
+
+    /**
      * Teacher cannot unconfirm, that is why check if user is admin repeated
      */
     public static boolean canUnconfirm(HoisUserDetails user, Journal journal) {
         return hasPermissionToConfirm(user, journal.getSchool()) && UserUtil.isSchoolAdmin(user, journal.getSchool())  && 
                 confirmed(journal);
     }
-    
+
     public static boolean filterJournalEntryStudentsByOccupationalModule(CurriculumVersionOccupationModule curriculumVersionOccupationModule, JournalEntryStudent jes) {
         Long omodule = EntityUtil.getId(curriculumVersionOccupationModule);
         return jes.getJournalEntry().getJournal().getJournalOccupationModuleThemes().stream()
@@ -83,7 +80,7 @@ public class JournalUtil {
                 .collect(Collectors.toList());
         return StreamUtil.toMappedList(JournalStudentDto::of, result);
     }
-    
+
     public static boolean canRemoveStudent(HoisUserDetails user, Journal journal) {
         if(!hasPermissionToChange(user, journal)) {
             return false;
@@ -93,16 +90,20 @@ public class JournalUtil {
         }
         return true;
     }
-    
+
     public static boolean teacherCanRemoveStudent(Journal journal) {
         return journal.getJournalEntries().isEmpty();
     }
 
     /**
      * Show "confirm all" button for school administrator 2 weeks before the end of study year
+     *
+     * @param user
+     * @param studyYear
+     * @return
      */
     public static boolean canConfirmAll(HoisUserDetails user, StudyYear studyYear) {
-        return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_PAEVIK) &&
+        return studyYear != null && user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_PAEVIK) &&
                 LocalDate.now().plusWeeks(2).isAfter(studyYear.getEndDate());
     }
 }

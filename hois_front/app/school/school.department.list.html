@@ -22,7 +22,7 @@
           <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="#/school/departments/new">{{'main.button.create' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_STRUKTUUR')" ng-href="#/school/departments/new">{{'main.button.create' | translate}}</md-button>
           </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
     </form>
@@ -50,7 +50,7 @@
             <td md-cell>{{::row.validFrom | hoisDate}}</td>
             <td md-cell>{{::row.validThru | hoisDate}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/school/departments/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_STRUKTUUR')" ng-href="#/school/departments/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

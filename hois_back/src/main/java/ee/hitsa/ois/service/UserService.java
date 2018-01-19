@@ -171,7 +171,7 @@ public class UserService {
         if(users.size() <= 1) {
             return users;
         }
-        return users.stream().filter(r -> !Role.ROLL_X.name().equals(r.getRole())).collect(Collectors.toList());
+        return StreamUtil.toFilteredList(r -> !Role.ROLL_X.name().equals(r.getRole()), users);
     }
 
     public UserRolesDto rolesDefaults() {

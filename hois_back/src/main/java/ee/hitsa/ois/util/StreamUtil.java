@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,6 +47,31 @@ public abstract class StreamUtil {
      */
     public static <K, V, T> Map<K, V> toMap(Function<T, K> keyMapper, Function<T, V> valueMapper, Collection<T> data) {
         return toMap(keyMapper, valueMapper, data != null ? data.stream() : null);
+    }
+
+    /**
+     * Shortcut for filtering stream. Guaranteed to return ArrayList.
+     *
+     * @param filter
+     * @param data can be null
+     * @return
+     */
+    public static <T> List<T> toFilteredList(Predicate<T> filter, Stream<T> data) {
+        if(data == null) {
+            return new ArrayList<>();
+        }
+        return data.filter(filter).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * Shortcut for filtering stream. Guaranteed to return ArrayList.
+     *
+     * @param filter
+     * @param data can be null
+     * @return
+     */
+    public static <T> List<T> toFilteredList(Predicate<T> filter, Collection<T> data) {
+        return toFilteredList(filter, data != null ? data.stream() : null);
     }
 
     /**

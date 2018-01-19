@@ -36,10 +36,10 @@ import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.commandobject.ApplicationForm;
-import ee.hitsa.ois.web.dto.ApplicationDto;
-import ee.hitsa.ois.web.dto.ApplicationSearchDto;
+import ee.hitsa.ois.web.commandobject.application.ApplicationForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.application.ApplicationDto;
+import ee.hitsa.ois.web.dto.application.ApplicationSearchDto;
 
 @Transactional
 @RunWith(SpringRunner.class)

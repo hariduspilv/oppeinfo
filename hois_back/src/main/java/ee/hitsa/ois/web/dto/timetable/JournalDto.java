@@ -34,6 +34,7 @@ public class JournalDto {
     
     private Boolean canBeConfirmed;
     private Boolean canBeUnconfirmed;
+    private Boolean canEdit;
 
     public static JournalDto of(Journal journal) {
         JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto(), "studyYear", "journalTeachers", "journalStudents", "journalEntries", "journalRooms");
@@ -186,6 +187,15 @@ public class JournalDto {
     public void setCanBeUnconfirmed(Boolean canBeUnconfirmed) {
         this.canBeUnconfirmed = canBeUnconfirmed;
     }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
+    
 }
 
 

@@ -231,9 +231,7 @@ public class LessonTimeService {
     private void deleteGroups(LessonTimeGroupsDto newLessonTimeGroupsDto, LocalDate validFrom, Long schoolId) {
         Set<LessonTimeBuildingGroup> storedLessonTimeGroupsDto = lessonTimeBuildingGroups(validFrom, schoolId);
         Set<Long> ids = StreamUtil.toMappedSet(LessonTimeBuildingGroupDto::getId, newLessonTimeGroupsDto.getLessonTimeBuildingGroups());
-        List<LessonTimeBuildingGroup> deleted = storedLessonTimeGroupsDto.stream().filter(it -> !ids.contains(it.getId()))
-                .collect(Collectors.toList());
-
+        List<LessonTimeBuildingGroup> deleted = StreamUtil.toFilteredList(it -> !ids.contains(it.getId()), storedLessonTimeGroupsDto);
         lessonTimeBuildingGroupRepository.delete(deleted);
     }
 

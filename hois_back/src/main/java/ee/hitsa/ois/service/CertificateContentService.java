@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
@@ -50,7 +49,7 @@ public class CertificateContentService {
     @Autowired
     private StudentResultHigherService studentResultHigherService;
     @Autowired 
-    private ProtocolService protocolService;
+    private StudentService studentService;
     @Autowired 
     private ClassifierService classifierService;
     @Autowired
@@ -114,7 +113,7 @@ public class CertificateContentService {
     }
 
     private List<CertificateStudentResult> getVocationalResults(Student student) {
-        Stream<StudentVocationalResultModuleThemeDto> data = protocolService.vocationalResults(student)
+        Stream<StudentVocationalResultModuleThemeDto> data = studentService.studentVocationalResults(student)
                 .stream().filter(r -> OccupationalGrade.isPositive(r.getGrade()));
         Map<String, Classifier> grades = getVocationalGrades();
         List<CertificateStudentResult> results = StreamUtil.toMappedList(r -> CertificateStudentResult.of(r, grades), data);
@@ -132,9 +131,8 @@ public class CertificateContentService {
     private static void setLastSession(CertificateReport report, StudyYear studyYear, CertificateType type) {
         if(CertificateType.TOEND_LIIK_KONTAKT.equals(type)) {
             List<StudyPeriodEvent> finishedSessions = 
-                    currentStudyYearsSessions(studyYear).stream()
-                    .filter(e -> hasFinished(e)).collect(Collectors.toList());
-            
+                    StreamUtil.toFilteredList(e -> hasFinished(e), currentStudyYearsSessions(studyYear));
+
             if(!finishedSessions.isEmpty()) {
                 StudyPeriodEvent lastSession = finishedSessions.get(finishedSessions.size() - 1);
                 report.setLastSession(CertificateReportSession.of(lastSession));
@@ -143,10 +141,7 @@ public class CertificateContentService {
     }
     
     private static List<StudyPeriodEvent> currentStudyYearsSessions(StudyYear studyYear) {
-        List<StudyPeriodEvent> sessions = studyYear.getStudyPeriodEvents()
-                .stream()
-                .filter(e -> isSession(e))
-                .collect(Collectors.toList());
+        List<StudyPeriodEvent> sessions = StreamUtil.toFilteredList(e -> isSession(e), studyYear.getStudyPeriodEvents());
         Collections.sort(sessions, Comparator.comparing(StudyPeriodEvent::getEnd));
         return sessions;
     }

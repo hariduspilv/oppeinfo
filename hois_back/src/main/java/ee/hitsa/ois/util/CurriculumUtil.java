@@ -19,9 +19,10 @@ import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
-public class CurriculumUtil {
+public abstract class CurriculumUtil {
+
     public static final BigDecimal HOURS_PER_EKAP = BigDecimal.valueOf(26);
-    
+
     public static Long id(Curriculum curriculum) {
         return curriculum.getId();
     }
@@ -45,11 +46,11 @@ public class CurriculumUtil {
     public static String versionName(String versionCode, String curriculumName) {
         return versionCode+" "+curriculumName;
     }
-    
+
     public static boolean basicDataCanBeEdited(Curriculum c) {
         return !ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, c.getStatus());
     }
-    
+
     public static boolean sameOrJointSchool(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
         if(UserUtil.isSameSchool(user, curriculum.getSchool())) {
             return true;
@@ -57,20 +58,20 @@ public class CurriculumUtil {
         return userEhisShool != null && Boolean.TRUE.equals(curriculum.getJoint()) && curriculum.getJointPartners().stream()
                 .anyMatch(p -> userEhisShool.equals(EntityUtil.getNullableCode(p.getEhisSchool())));
     }
-    
+
     public static boolean occupationCanBeChanged(Classifier draft) {
         return !ClassifierUtil.equals(CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_RIIKLIK, draft);
     }
-    
+
     public static boolean isFreeModule(CurriculumModule m) {
         return ClassifierUtil.equals(CurriculumModuleType.KUTSEMOODUL_V, m.getModule());
     }
-    
+
     public static boolean canHaveOccupations(Curriculum curriculum) {
         return isVocational(curriculum) && 
                 !ClassifierUtil.equals(CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_TOOANDJA, curriculum.getDraft());
     }
-    
+
     /**
      * Get part occupations of curriculum occupation
      * 
@@ -79,15 +80,15 @@ public class CurriculumUtil {
     public static Set<String> getPartOccupationsCodes(CurriculumOccupation occupation) {
         return StreamUtil.toMappedSet(EntityUtil::getCode, getPartOccupationClassifiers(occupation));
     }
-    
+
     public static Set<Classifier> getPartOccupationClassifiers(CurriculumOccupation occupation) {
         return StreamUtil.toMappedSet(c -> c.getClassifier(),  
                 occupation.getOccupation().getChildConnects().stream()
-                    .filter(c -> MainClassCode.OSAKUTSE.name().equals(c.getClassifier().getMainClassCode())));
+                    .filter(c -> ClassifierUtil.mainClassCodeEquals(MainClassCode.OSAKUTSE, c.getClassifier())));
     }
 
 //    User rights 
-    
+
     /**
      * Checks user rights on curriculum search form: 
      * presence of edit/new buttons and filtering by status/ehis status depends on this method. 
@@ -99,7 +100,7 @@ public class CurriculumUtil {
     public static boolean canView(HoisUserDetails user) {
         return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA);
     }
-    
+
     /**
      * Checks user rights when opening curriculum or curriculum module form
      */
@@ -108,17 +109,17 @@ public class CurriculumUtil {
                 user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA)
                 && sameOrJointSchool(user, userEhisShool, curriculum);
     }
-    
+
     public static boolean canView(HoisUserDetails user, String userEhisShool, CurriculumVersion version) {
         return isCurriculumVersionConfirmed(version) ||
                 user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA)
                 && sameOrJointSchool(user, userEhisShool, version.getCurriculum());
     }
-    
+
     public static boolean canCreate(HoisUserDetails user) {
         return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEKAVA);
     }
-    
+
     public static boolean canChange(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
         if(ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_C, curriculum.getStatus())) {
             return false;
@@ -130,20 +131,20 @@ public class CurriculumUtil {
         return user.isSchoolAdmin() && UserUtil.hasPermission(user, permission, PermissionObject.TEEMAOIGUS_OPPEKAVA)
                 && sameOrJointSchool(user, userEhisShool, curriculum);
     }
-    
+
     public static boolean canConfirm(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
         return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)
                 && sameOrJointSchool(user, userEhisShool, curriculum);
     }
-    
+
     public static boolean canClose(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
         return canConfirm(user, userEhisShool, curriculum);
     }
-    
+
     public static boolean canDelete(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
         return canChange(user, userEhisShool, curriculum);
     }
-    
+
     /**
      * Method is intended to be used on curriculum search form. 
      * No need to check whether user is from the same or partner school, 
@@ -157,21 +158,21 @@ public class CurriculumUtil {
                 !CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_A.name().equals(ehisStatus) &&
                 !CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_M.name().equals(ehisStatus);
     }
-    
+
 //  User rights validation
-    
+
     public static void assertCanView(HoisUserDetails user, String userEhisShool, CurriculumVersion version) {
         if(!canView(user, userEhisShool, version)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
-    
+
     public static void assertCanView(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
         if(!canView(user, userEhisShool, curriculum)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
-    
+
     public static void assertCanCreate(HoisUserDetails user) {
         if(!canCreate(user)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
@@ -183,31 +184,31 @@ public class CurriculumUtil {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
-    
+
     public static void assertCanConfirm(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
         if(!canConfirm(user, userEhisShool, curriculum)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
-    
+
     public static void assertCanClose(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
         if(!canClose(user, userEhisShool, curriculum)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
-    
+
     public static void assertCanDelete(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
         if(!canDelete(user, userEhisShool, curriculum)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
-    
+
     public static void assertBasicDataCanBeEdited(Curriculum curriculum) {
         if(!basicDataCanBeEdited(curriculum)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
-    
+
     public static void assertOccupationCanBeChanged(Classifier draft) {
         if(!occupationCanBeChanged(draft)) {
             throw new ValidationFailedException("main.messages.error.nopermission");

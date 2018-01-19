@@ -30,6 +30,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumModuleRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
@@ -103,9 +104,8 @@ public class CurriculumOccupationService {
          * 3) Reload page. Result: occupation is set to false
          */
         Curriculum curriculum = occupation.getCurriculum();
-        curriculum.setOccupation(Boolean.valueOf(MainClassCode.KUTSE.name()
-                    .equals(occupation.getOccupation().getMainClassCode())));
-        
+        curriculum.setOccupation(Boolean.valueOf(ClassifierUtil.mainClassCodeEquals(MainClassCode.KUTSE, occupation.getOccupation())));
+
         EntityUtil.save(curriculum, em);
         return EntityUtil.save(occupation, em);
     }

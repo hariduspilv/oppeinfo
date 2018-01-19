@@ -27,12 +27,12 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.ApplicationForm;
-import ee.hitsa.ois.web.commandobject.ApplicationRejectForm;
-import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
-import ee.hitsa.ois.web.dto.ApplicationApplicableDto;
-import ee.hitsa.ois.web.dto.ApplicationDto;
-import ee.hitsa.ois.web.dto.ApplicationSearchDto;
+import ee.hitsa.ois.web.commandobject.application.ApplicationForm;
+import ee.hitsa.ois.web.commandobject.application.ApplicationRejectForm;
+import ee.hitsa.ois.web.commandobject.application.ApplicationSearchCommand;
+import ee.hitsa.ois.web.dto.application.ApplicationApplicableDto;
+import ee.hitsa.ois.web.dto.application.ApplicationDto;
+import ee.hitsa.ois.web.dto.application.ApplicationSearchDto;
 
 @RestController
 @RequestMapping("/applications")

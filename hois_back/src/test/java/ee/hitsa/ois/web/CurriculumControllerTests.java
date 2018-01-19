@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -345,7 +346,7 @@ public class CurriculumControllerTests {
         versionModule = versionDto.getModules().stream().findFirst().get();
         electiveModule = versionModule.getElectiveModules().stream().findFirst().get();
         Long electiveModuleReferenceNumber = electiveModule.getReferenceNumber();
-        List<CurriculumVersionHigherModuleSubjectDto> subjects = versionModule.getSubjects().stream().collect(Collectors.toList());
+        List<CurriculumVersionHigherModuleSubjectDto> subjects = new ArrayList<>(versionModule.getSubjects());
 
         Assert.assertTrue(subjects.size() == 2);
         Assert.assertTrue(subjects.get(0).getElectiveModule().equals(electiveModuleReferenceNumber));

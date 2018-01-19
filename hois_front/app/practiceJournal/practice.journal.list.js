@@ -3,8 +3,13 @@
 angular.module('hitsaOis').controller('PracticeJournalListController', function ($scope, $route, $location, QueryUtils, dialogService, ArrayUtils, USER_ROLES) {
   $scope.auth = $route.current.locals.auth;
   QueryUtils.createQueryForm($scope, '/practiceJournals', {order: 'student_person.lastname,student_person.firstname'});
-  $scope.loadData();
-
+  
+  var unbindStudyYearWatch = $scope.$watch('criteria.studyYear', function(value) {
+    if (angular.isNumber(value)) {
+      unbindStudyYearWatch();
+      $scope.loadData();
+    }
+  });
 
   function canCreate() {
     return $scope.auth.isAdmin() && ArrayUtils.includes($scope.auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK);

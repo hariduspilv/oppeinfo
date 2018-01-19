@@ -76,7 +76,7 @@
         </tr>
       </thead>
       <tbody md-body>
-        <tr md-row ng-repeat="application in applications" ng-class-odd="'odd'" ng-class-even="'even'">
+        <tr md-row ng-repeat="application in applications" ng-class-odd="'odd'" ng-class-even="'even'" ng-class="{'scholarship-bottom-border': $index + 1 === allowedCount}">
           <td md-cell>
             <md-input-container>
               <md-checkbox ng-model="application._selected" aria-label="mySchool">
@@ -105,6 +105,9 @@
     <div layout="row" ng-if="applications.length > 0">
       <md-button ng-click="accept()" class="md-raised md-primary">{{'main.button.accept' | translate}}</md-button>
       <md-button class="md-raised" ng-click="annul()">{{'main.button.annul' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="reject()">{{'main.button.reject' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="refreshResults()">{{'main.button.refreshResults' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="checkComplies()">{{'main.button.checkComplies' | translate}}</md-button>
     </div>
   </div>
 </div>

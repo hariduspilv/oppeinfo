@@ -59,6 +59,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForField;
@@ -94,7 +95,7 @@ public class DirectiveConfirmService {
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
         List<Error> allErrors = new ArrayList<>();
         if(directive.getDirectiveCoordinator() == null) {
-            allErrors.add(new ErrorForField("NotNull", "directiveCoordinator"));
+            allErrors.add(new ErrorForField(Required.MESSAGE, "directiveCoordinator"));
         }
         if(directive.getStudents().isEmpty()) {
             allErrors.add(new Error("directive.missingstudents"));
@@ -118,17 +119,28 @@ public class DirectiveConfirmService {
                 // check that cancel date is inside academic leave period
                 DirectiveStudent academicLeave = academicLeaves.get(EntityUtil.getId(ds.getStudent()));
                 LocalDate leaveCancel = ds.getStartDate();
-                if(academicLeave == null || leaveCancel.isBefore(DateUtils.periodStart(academicLeave)) || leaveCancel.isAfter(DateUtils.periodEnd(academicLeave))) {
-                    allErrors.add(new ErrorForField("InvalidValue", propertyPath(rowNum, "startDate")));
+                // missing value is catched above, here we match only range from academic leave directive
+                if(leaveCancel != null) {
+                    String msg = null;
+                    if(academicLeave == null) {
+                        msg = "directive.academicLeaveApplicationNotfound";
+                    } else if(leaveCancel.isBefore(DateUtils.periodStart(academicLeave))) {
+                        msg = "directive.revocationStartDateBeforeAcademicLeaveStartDate";
+                    } else if(leaveCancel.isAfter(DateUtils.periodEnd(academicLeave))) {
+                        msg = "directive.revocationStartDateAfterAcademicLeaveEndDate";
+                    }
+                    if(msg != null) {
+                        allErrors.add(new ErrorForField(msg, propertyPath(rowNum, "startDate")));
+                    }
                 }
             } else if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType)) {
                 // check by hand because for immatv it's filled automatically after directive confirmation
                 if(ds.getNominalStudyEnd() == null) {
-                    allErrors.add(new ErrorForField("NotNull", propertyPath(rowNum, "nominalStudyEnd")));
+                    allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "nominalStudyEnd")));
                 }
                 // check by hand because it is required only in higher study
                 if(ds.getStudyLoad() == null && ds.getCurriculumVersion() != null && CurriculumUtil.isHigher(ds.getCurriculumVersion().getCurriculum())) {
-                    allErrors.add(new ErrorForField("NotNull", propertyPath(rowNum, "studyLoad")));
+                    allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "studyLoad")));
                 }
             } else if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
                 // check that it's last modification of student
@@ -138,7 +150,7 @@ public class DirectiveConfirmService {
             } else if(DirectiveType.KASKKIRI_VALIS.equals(directiveType)) {
                 boolean isAbroad = Boolean.TRUE.equals(ds.getIsAbroad());
                 if(isAbroad ? !StringUtils.hasText(ds.getAbroadSchool()) : ds.getEhisSchool() == null) {
-                    allErrors.add(new ErrorForField("NotNull", propertyPath(rowNum, isAbroad ? "abroadSchool" : "ehisSchool")));
+                    allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, isAbroad ? "abroadSchool" : "ehisSchool")));
                 }
             }
             rowNum++;
@@ -415,12 +427,13 @@ public class DirectiveConfirmService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "+
                 "inner join directive d on ds.directive_id = d.id and ds.canceled = false "+
                 "left outer join study_period sps on ds.study_period_start_id = sps.id "+
-                "left outer join study_period spe on ds.study_period_end_id = spe.id").sort(new Sort(Direction.DESC, "d.id"));
+                "left outer join study_period spe on ds.study_period_end_id = spe.id").sort(new Sort(Direction.DESC, "d.confirm_date"));
 
         List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
         qb.requiredCriteria("ds.student_id in (:studentIds)", "studentIds", studentIds);
         qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_AKAD);
+        qb.requiredCriteria("ds.application_id in (select a.academic_application_id from directive_student ds2 inner join application a on ds2.application_id = a.id where ds2.directive_id = :directiveId)", "directiveId", directive.getId());
 
         List<?> data = qb.select("ds.student_id, case when ds.is_period then sps.start_date else ds.start_date end, "+
                   "case when ds.is_period then spe.end_date else ds.end_date end", em).getResultList();

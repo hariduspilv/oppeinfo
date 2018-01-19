@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
-public class DateUtils {
+public abstract class DateUtils {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");

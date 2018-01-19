@@ -71,7 +71,7 @@ public class PracticeJournalController {
     @GetMapping("/{id:\\d+}")
     public PracticeJournalDto get(HoisUserDetails user, @WithEntity PracticeJournal practiceJournal) {
         UserUtil.assertSameSchool(user, practiceJournal.getStudent().getSchool());
-        return practiceJournalService.get(practiceJournal);
+        return practiceJournalService.get(user, practiceJournal);
     }
 
     @PostMapping

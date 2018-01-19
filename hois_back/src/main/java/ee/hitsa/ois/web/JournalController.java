@@ -77,6 +77,7 @@ public class JournalController {
         JournalDto dto = JournalDto.of(journal);
         dto.setCanBeConfirmed(Boolean.valueOf(JournalUtil.canConfirm(user, journal)));
         dto.setCanBeUnconfirmed(Boolean.valueOf(JournalUtil.canUnconfirm(user, journal)));
+        dto.setCanEdit(Boolean.valueOf(JournalUtil.hasPermissionToChange(user, journal)));
         return dto;
     }
 

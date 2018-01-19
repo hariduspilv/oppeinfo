@@ -39,7 +39,7 @@
         <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="#/certificate/new">{{'certificate.add' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TOEND')" ng-href="#/certificate/new">{{'certificate.add' | translate}}</md-button>
         </div>
     </form>
 </div>
@@ -70,7 +70,8 @@
             <td md-cell>{{::row.headline}}</td>
             <td md-cell>{{row.inserted | hoisDate}}</td>
             <td md-cell ng-if="!auth.isStudent() && !auth.isParent()">
-              <md-button ng-if="row.canBeChanged" md-no-ink class="md-primary change-button" ng-href="#/certificate/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button ng-if="row.canBeChanged && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TOEND')" md-no-ink class="md-primary change-button" 
+                ng-href="#/certificate/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

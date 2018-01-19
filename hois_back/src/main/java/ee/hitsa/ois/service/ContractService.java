@@ -269,7 +269,11 @@ public class ContractService {
     public Contract sendToEkis(HoisUserDetails user, Contract contract) {
         EntityUtil.save(createPracticeJournal(contract, user.getSchoolId()), em);
         contract = EntityUtil.save(contract, em);
+        boolean firstSend = contract.getWdId() == null;
         ekisService.registerPracticeContract(EntityUtil.getId(contract));
+        if(firstSend) {
+            sendUniqueUrlEmailToEnterpriseSupervisor(user, contract);
+        }
         return contract;
     }
 
@@ -289,7 +293,7 @@ public class ContractService {
         }
     }
 
-    public void sendUniqueUrlEmailToEnterpriseSupervisor(HoisUserDetails user, Contract contract) {
+    private void sendUniqueUrlEmailToEnterpriseSupervisor(HoisUserDetails user, Contract contract) {
         PracticeJournalUniqueUrlMessage data = new PracticeJournalUniqueUrlMessage();
         data.setUrl(getPracticeJournalSupervisorUrl(contract));
         automaticMessageService.sendMessageToEnterprise(contract.getEnterprise(), em.getReference(School.class, user.getSchoolId()), MessageType.TEATE_LIIK_PRAKTIKA_URL, data);

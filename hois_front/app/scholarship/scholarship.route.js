@@ -20,7 +20,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
       }
     })
     .when('/scholarships/scholarship/new', {
@@ -41,7 +41,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
       }
     })
     .when('/scholarships/drGrant/new', {
@@ -62,7 +62,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
       }
     })
     .when('/scholarships/:id/edit', {
@@ -78,7 +78,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
       }
     })
     .when('/scholarships/:id/view', {
@@ -241,7 +241,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         params: function () {
           return {
             allowedStipendTypes: ['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'],
-            mode: 'edit'
+            stipend: false
           };
         }
       },
@@ -262,12 +262,55 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         params: function () {
           return {
-            allowedStipendTypes: ['STIPTOETUS_TULEMUS', 'STIPTOETUS_ERIALA', 'STIPTOETUS_MUU']
+            allowedStipendTypes: ['STIPTOETUS_TULEMUS', 'STIPTOETUS_ERIALA', 'STIPTOETUS_MUU'],
+            stipend: true
           };
         }
       },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+      }
+    })
+    .when('/scholarships/applications/annul', {
+      templateUrl: 'scholarship/scholarship.application.annul.edit.html',
+      controller: 'ScholarshipRejectionController',
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        },
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
+        params: function () {
+          return {
+            type: 'annulApplications'
+          };
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
+      }
+    })
+    .when('/scholarships/applications/reject', {
+      templateUrl: 'scholarship/scholarship.application.reject.edit.html',
+      controller: 'ScholarshipRejectionController',
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        },
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
+        params: function () {
+          return {
+            type: 'rejectApplications'
+          };
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
       }
     })
     .when('/scholarships/applications/:id', {

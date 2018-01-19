@@ -1,4 +1,10 @@
 <!--FIXME: type color is not supported in IE 11-->
+
+<div class="ois-form-layout-padding" layout="row" flex="100" flex-sm="100" flex-xs="100" ng-if="defaultLegends">
+    <span class="common-label">{{'studyYearScheduleLegend.defaultLegend' | translate}}</span>
+  </div>
+
+
 <table md-table class="secondary-table">
     <thead md-head>
     <tr md-row>
@@ -40,4 +46,4 @@
 </table>
 <md-button class="md-primary" ng-click="addRow()">{{'main.button.addNewRow' | translate}}</md-button>
 <br><br>
-<md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+<md-button class="md-raised md-primary" ng-click="checkErrorsAndSave()">{{'main.button.save' | translate}}</md-button>

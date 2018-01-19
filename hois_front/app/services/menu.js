@@ -277,6 +277,20 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.graduation.documentsPrint',
             url: "/documentsPrint"
+          },
+          {
+            name: 'main.menu.graduation.finalExamProtocolsHigher',
+            url: "/finalExamHigherProtocols",
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.graduation.finalExamProtocolsVocational',
+            url: "/finalExamVocationalProtocols",
+            studyLevel: {
+              vocational: true
+            }
           }
         ]
       });
@@ -535,6 +549,20 @@ angular.module('hitsaOis')
             name: 'main.menu.practiceAndGraduation.thesisTopics',
             url: '/thesisTopics'
           },
+          {
+            name: 'main.menu.graduation.finalExamProtocolsHigher',
+            url: "/finalExamHigherProtocols",
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.graduation.finalExamProtocolsVocational',
+            url: "/finalExamVocationalProtocols",
+            studyLevel: {
+              vocational: true
+            }
+          }
         ]
       });
     }

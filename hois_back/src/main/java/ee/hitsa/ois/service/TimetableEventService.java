@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Room;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherAbsence;
 import ee.hitsa.ois.domain.timetable.TimetableEvent;
@@ -84,17 +86,32 @@ public class TimetableEventService {
         return data;
     }
 
-    public TimetableEvent createEvent(TimetableSingleEventForm form) {
+    public TimetableEvent createEvent(TimetableSingleEventForm form, Long schoolId) {
         TimetableEvent te = new TimetableEvent();
+        te = bindSingleEventFormToEvent(form, te, schoolId);
+        return EntityUtil.save(te, em);
+    }
+    
+
+    public TimetableEvent updateEvent(TimetableSingleEventForm form, Long schoolId) {
+        TimetableEventTime tet = em.getReference(TimetableEventTime.class, form.getId());
+        TimetableEvent te = tet.getTimetableEvent();
+        te = bindSingleEventFormToEvent(form, te, schoolId);
+        return EntityUtil.save(te, em);
+    }
+    
+    private TimetableEvent bindSingleEventFormToEvent(TimetableSingleEventForm form, TimetableEvent te, Long schoolId) {
         te.setStart(form.getDate().atTime(form.getStartTime()));
         te.setEnd(form.getDate().atTime(form.getEndTime()));
+        te.setSchool(em.getReference(School.class, schoolId));
         te.setName(form.getName());
         te.setConsiderBreak(Boolean.FALSE);
         te.setRepeatCode(Boolean.TRUE.equals(form.getRepeat()) ? em.getReference(Classifier.class, form.getRepeatCode())
                 : em.getReference(Classifier.class, TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI.name()));
         addTimetableEventTimes(te, form);
-        return EntityUtil.save(te, em);
+        return te;
     }
+
 
     public void createEvents(TeacherAbsence absence) {
         TimetableSingleEventForm form = new TimetableSingleEventForm();
@@ -106,7 +123,7 @@ public class TimetableEventService {
         
         for(LocalDate date = absence.getStartDate(); date.isBefore(absence.getEndDate()); date = date.plusDays(1)) {
             form.setDate(date);
-            createEvent(form);
+            createEvent(form, EntityUtil.getId(absence.getTeacher().getSchool()));
         }
     }
 
@@ -138,6 +155,7 @@ public class TimetableEventService {
         TimetableEventTime timetableEventTime = new TimetableEventTime();
         timetableEventTime.setStart(te.getStart());
         timetableEventTime.setEnd(te.getEnd());
+        timetableEventTime.setTimetableEvent(te);
         addRoomsToTimetableEvent(timetableEventTime, form);
         addTeachersToTimetableEvent(timetableEventTime, form);
         timetableEventTimes.add(timetableEventTime);
@@ -369,7 +387,6 @@ public class TimetableEventService {
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
-        qb.optionalCriteria("te.consider_break = :singleEvent", "singleEvent", criteria.getSingleEvent());
         qb.optionalCriteria("t.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
         qb.optionalCriteria("tog.student_group_id in (:studentGroup)", "studentGroup", criteria.getStudentGroups());
         qb.optionalCriteria("te.name = :name", "name", criteria.getName());
@@ -377,6 +394,10 @@ public class TimetableEventService {
         qb.optionalCriteria("tet.end <= :end", "end", criteria.getThru());
         qb.optionalCriteria("(t.id in (:timetable) or tobj.id is null)", "timetable", criteria.getTimetables());
         qb.optionalCriteria("s.id = :student", "student", criteria.getStudent());
+        
+        if(Boolean.TRUE.equals(criteria.getSingleEvent())) {
+            qb.filter("tobj.id is null");
+        }
 
         //TODO: param query
         if (criteria.getTeachers() != null && !criteria.getTeachers().isEmpty()) {
@@ -432,14 +453,15 @@ public class TimetableEventService {
         }
     }
 
-    public Page<TimetableEventSearchDto> search(TimetableEventSearchCommand criteria, Pageable pageable) {
+    public Page<TimetableEventSearchDto> search(TimetableEventSearchCommand criteria, Pageable pageable, HoisUserDetails user) {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria);
         qb.sort(pageable);
-        //qb.filter("1 = 0");
         String select;
         if (Boolean.TRUE.equals(criteria.getSingleEvent())) {
             select = "tet.id, te.name as name_et, te.name as name_en, tet.start, tet.end, te.consider_break,"
                     + " case when tobj.id is null then true else false end as closed_event";
+            //TODO: put into the getTimetableEventTimeQuery function
+            qb.requiredCriteria("te.school_id = :schoolId", "schoolId", user.getSchoolId());
         } else {
             select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(subj.name_en, te.name, j.name_et) as name_en,"
                     + " tet.start, tet.end, te.consider_break, (case when tobj.id is null then true else false end) as single_event";
@@ -622,6 +644,14 @@ public class TimetableEventService {
         public String getSecondValue() {
             return secondValue;
         }
+    }
+
+    public TimetableSingleEventForm get(TimetableEventTime eventTime) {
+        return TimetableSingleEventForm.of(eventTime);
+    }
+
+    public TimetableSingleEventForm getTimetableSingleEventForm(TimetableEvent createEvent) {
+        return TimetableSingleEventForm.of(createEvent.getTimetableEventTimes().stream().sorted(Comparator.comparing(TimetableEventTime::getStart)).findFirst());
     }
 
 }

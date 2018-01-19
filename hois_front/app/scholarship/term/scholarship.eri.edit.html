@@ -76,8 +76,8 @@
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.priority' | translate}}</label>
-      <hois-select ng-model="stipend.averageMarkPriority" values="formState.priorities | filter: averageMarkPriorityFilter"
-        show-property="value" value-property="code"></hois-select>
+      <hois-select ng-model="stipend.averageMarkPriority" values="formState.priorities | filter: averageMarkPriorityFilter" show-property="value"
+        value-property="code"></hois-select>
     </md-input-container>
   </div>
   <div layout="row" flex>
@@ -132,5 +132,6 @@
 <div layout="row">
   <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id" ng-click="publish()">{{'main.button.publishtoStudents' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="stipend.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
   <md-button class="md-raised" ng-click="back('#/scholarships/grants', stipendForm)">{{'main.button.back' | translate}}</md-button>
 </div>

@@ -288,9 +288,11 @@ public class EkisService {
             content.setGroup(studentGroup(ds));
             break;
         case KASKKIRI_STIPTOET:
-        case KASKKIRI_STIPTOETL:
             content.setStartDate(date(ds.getStartDate()));
             content.setEndDate(date(ds.getEndDate()));
+            break;
+        case KASKKIRI_STIPTOETL:
+            content.setReason(value(ds.getReason()));
             break;
         case KASKKIRI_VALIS:
             content.setStartDate(periodStart(ds));

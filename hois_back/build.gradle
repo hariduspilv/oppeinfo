@@ -7,7 +7,7 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-        classpath 'de.aaschmid:gradle-cpd-plugin:1.0'
+        classpath 'de.aaschmid:gradle-cpd-plugin:1.1'
     }
 }
 

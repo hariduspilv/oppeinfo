@@ -9,7 +9,16 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
   };
   $scope.formState = {};
 
+  function assertPermissionToEdit(entity) {
+    if ($route.current.locals.isEntryEdit === true && !entity.canEdit) {
+      message.error('main.messages.error.nopermission');
+      $location.path('');
+    }
+  }
+
   function entityToForm(entity) {
+    assertPermissionToEdit(entity);
+
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
     $scope.practiceJournal = entity;
   }

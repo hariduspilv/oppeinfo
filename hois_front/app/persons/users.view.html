@@ -48,7 +48,7 @@
         </md-table-container>
       </div>
     </div>
-    <md-button ng-if="user.role !== 'ROLL_T' && user.role !== 'ROLL_L'" ng-href="#/persons/{{user.person.id}}/users/{{user.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+    <md-button ng-if="user.role !== 'ROLL_T' && user.role !== 'ROLL_L' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA')" ng-href="#/persons/{{user.person.id}}/users/{{user.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
     <md-button ng-click="back('#/persons/' + user.person.id)" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </form>
 </div>

@@ -20,6 +20,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionSpeciality;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 
 public class CurriculumReport {
 
@@ -66,7 +67,7 @@ public class CurriculumReport {
         jointSchools.add(name(curriculum.getSchool(), lang));
         if(Boolean.TRUE.equals(curriculum.getJoint())) {
             // CurriculumJointPartner.name(Et|En) contains only name of abroad school, otherwise use CurriculumJointPartner.ehisSchool.name(Et|En)
-            jointSchools.addAll(curriculum.getJointPartners().stream().map(r -> r.isAbroad() ? name(r, lang) : name(r.getEhisSchool(), lang)).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList()));
+            jointSchools.addAll(curriculum.getJointPartners().stream().map(r -> name(r.isAbroad() ? r : r.getEhisSchool(), lang)).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList()));
         }
         school = String.join(", ", jointSchools);
         credits = curriculum.getCredits();
@@ -105,7 +106,7 @@ public class CurriculumReport {
         outcomes = curriculum.getOutcomesEt();
         grade = curriculum.getGrades().stream().map(r -> name(r, lang)).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.joining(", "));
         documents = "Diplom ja akadeemiline õiend";
-        List<CurriculumVersionHigherModule> modules = curriculumVersion.getModules().stream().filter(r -> !Boolean.TRUE.equals(r.getMinorSpeciality())).collect(Collectors.toList());
+        List<CurriculumVersionHigherModule> modules = StreamUtil.toFilteredList(r -> !Boolean.TRUE.equals(r.getMinorSpeciality()), curriculumVersion.getModules());
         Map<Long, List<CurriculumVersionHigherModule>> moduleMap = new HashMap<>();
         for(CurriculumVersionHigherModule m : modules) {
             for(CurriculumVersionHigherModuleSpeciality hs : m.getSpecialities()) {

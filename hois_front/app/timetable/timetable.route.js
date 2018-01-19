@@ -244,8 +244,27 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       }
     })
     .when('/timetable/timetableEvent/new', {
-      templateUrl: 'timetable/timetable.timetableEvent.html',
-      controller: 'TimetableEventController',
+      templateUrl: 'timetable/timetable.timetableEvent.edit.html',
+      controller: 'TimetableEventEditController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        },
+        isCreate: function () {
+          return true;
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
+      }
+    })
+    .when('/timetable/timetableEvent/:id/edit', {
+      templateUrl: 'timetable/timetable.timetableEvent.edit.html',
+      controller: 'TimetableEventEditController',
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function ($translate) {

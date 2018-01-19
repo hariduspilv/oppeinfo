@@ -2,7 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.HashSet;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -70,7 +70,7 @@ public class MidtermTaskControllerTests {
     public void updateMidtermTasks() {
         final String URL = ENDPOINT + "/" + SUBJECT_STUDY_PERIOD_ID;
         MidtermTaskUpdateForm form = new MidtermTaskUpdateForm();
-        form.setMidtermTasks(Arrays.asList(getMidtermTaskDto(), getMidtermTaskDto()).stream().collect(Collectors.toSet()));
+        form.setMidtermTasks(new HashSet<>(Arrays.asList(getMidtermTaskDto(), getMidtermTaskDto())));
 
         // create midtermTasks
         ResponseEntity<MidtermTaskUpdateForm> responseEntity = restTemplate.exchange
@@ -84,7 +84,7 @@ public class MidtermTaskControllerTests {
         final String NEW_NAME = TEXT + 2;
         dto.setNameEt(NEW_NAME);
 
-        form.setMidtermTasks(Arrays.asList(dto).stream().collect(Collectors.toSet()));
+        form.setMidtermTasks(new HashSet<>(Arrays.asList(dto)));
         responseEntity = restTemplate.exchange
                 (URL, HttpMethod.PUT, new HttpEntity<>(form), MidtermTaskUpdateForm.class);
         Assert.assertNotNull(responseEntity);

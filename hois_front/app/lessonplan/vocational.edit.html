@@ -79,7 +79,7 @@
           </div>
         </td>
         <td class="center">{{ct.value.toUpperCase()}}</td>
-        <td class="center" ng-style="{ color: formState.journalTotals[journal.id][ct.code] !== journal.requiredLessons[ct.code] ? 'red' : 'white' }"
+        <td class="center" ng-style="{ color: formState.journalTotals[journal.id][ct.code] !== journal.requiredLessons[ct.code] ? 'red' : 'black' }"
          title="{{'lessonplan.planned' | translate }} {{journal.requiredLessons[ct.code]}}">{{formState.journalTotals[journal.id][ct.code]}}</td>
         <td ng-if="formState.showWeeks" ng-repeat="h in journal.hours[ct.code] track by $index" class="center">
           <input type="text" ng-model="journal.hours[ct.code][$index]" ng-change="updateTotals(journal, ct.code, $index)">

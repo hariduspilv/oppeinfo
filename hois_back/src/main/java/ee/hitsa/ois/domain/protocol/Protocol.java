@@ -15,6 +15,7 @@ import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.school.School;
 
@@ -35,6 +36,10 @@ public class Protocol extends BaseEntityWithId {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "protocol_id", nullable = false, updatable = false)
     private List<ProtocolStudent> protocolStudents = new ArrayList<>();
+    
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "protocol_id", nullable = false, updatable = false)
+    private List<ProtocolCommitteeMember> protocolCommitteeMembers = new ArrayList<>();
 
     @OneToOne(mappedBy = "protocol", cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(nullable = false, updatable = false)
@@ -47,6 +52,13 @@ public class Protocol extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(nullable = false, updatable = true, insertable = true)
     private OisFile oisFile;
+    
+    @NotNull
+    private Boolean isFinal;
+    
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true)
+    private Committee committee;
 
     public ProtocolHdata getProtocolHdata() {
         return protocolHdata;
@@ -111,6 +123,15 @@ public class Protocol extends BaseEntityWithId {
     public void setProtocolStudents(List<ProtocolStudent> protocolStudents) {
         this.protocolStudents = protocolStudents;
     }
+    
+
+    public List<ProtocolCommitteeMember> getProtocolCommitteeMembers() {
+        return protocolCommitteeMembers;
+    }
+
+    public void setProtocolCommitteeMembers(List<ProtocolCommitteeMember> protocolCommitteeMembers) {
+        this.protocolCommitteeMembers = protocolCommitteeMembers;
+    }
 
     public ProtocolVdata getProtocolVdata() {
         return protocolVdata;
@@ -128,4 +149,19 @@ public class Protocol extends BaseEntityWithId {
         this.oisFile = oisFile;
     }
 
+    public Boolean getIsFinal() {
+        return isFinal;
+    }
+
+    public void setIsFinal(Boolean isFinal) {
+        this.isFinal = isFinal;
+    }
+
+    public Committee getCommittee() {
+        return committee;
+    }
+
+    public void setCommittee(Committee committee) {
+        this.committee = committee;
+    }
 }

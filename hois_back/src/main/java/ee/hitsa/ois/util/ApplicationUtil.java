@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -14,13 +15,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.enums.AcademicLeaveReason;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
-public class ApplicationUtil {
+public abstract class ApplicationUtil {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -44,22 +46,20 @@ public class ApplicationUtil {
         }
     }
 
-    public static LocalDate getEndDate(Application application) {
+    public static LocalDate getEndDate(Period application) {
         LocalDate date = DateUtils.periodEnd(application);
-        if (date == null && Boolean.TRUE.equals(application.getIsPeriod())) {
-            throw new ValidationFailedException("application.messages.endPeriodMissing");
-        } else if (date == null && Boolean.FALSE.equals(application.getIsPeriod())) {
-            throw new ValidationFailedException("application.messages.endDateMissing");
+        if (date == null) {
+            boolean isPeriod = Boolean.TRUE.equals(application.getIsPeriod());
+            throw new ValidationFailedException(isPeriod ? "application.messages.endPeriodMissing" : "application.messages.endDateMissing");
         }
         return date;
     }
 
-    public static LocalDate getStartDate(Application application) {
+    public static LocalDate getStartDate(Period application) {
         LocalDate date = DateUtils.periodStart(application);
-        if (date == null && Boolean.TRUE.equals(application.getIsPeriod())) {
-            throw new ValidationFailedException("application.messages.startPeriodMissing");
-        } else if (date == null && Boolean.FALSE.equals(application.getIsPeriod())) {
-            throw new ValidationFailedException("application.messages.startDateMissing");
+        if (date == null) {
+            boolean isPeriod = Boolean.TRUE.equals(application.getIsPeriod());
+            throw new ValidationFailedException(isPeriod ? "application.messages.startPeriodMissing" : "application.messages.startDateMissing");
         }
         return date;
     }
@@ -140,24 +140,28 @@ public class ApplicationUtil {
     }
 
     public static void assertAkadkConstraints(Application application) {
-
-        if (!ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_AKAD, application.getAcademicApplication().getType())) {
+        Application academicApplication = application.getAcademicApplication();
+        if (!ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_AKAD, academicApplication.getType())) {
             throw new ValidationFailedException("application.messages.wrongAcademicApplicationType");
         }
 
-        LocalDate academicLeaveStart = getStartDate(application.getAcademicApplication());
+        DirectiveStudent directiveStudent = getDirectiveStudent(academicApplication);
         LocalDate revocationStart = getStartDate(application);
 
-        if (revocationStart == null) {
-            throw new ValidationFailedException("application.messages.revocationStart.isNull");
-        } else if (revocationStart.isBefore(academicLeaveStart)) {
+        LocalDate academicLeaveStart = getStartDate(directiveStudent);
+        if (revocationStart.isBefore(academicLeaveStart)) {
             throw new ValidationFailedException("application.messages.revocationStartDateBeforeAcademicLeaveStartDate");
         }
 
-        LocalDate academicLeaveEnd = getEndDate(application.getAcademicApplication());
-
+        LocalDate academicLeaveEnd = getEndDate(directiveStudent);
         if (revocationStart.isAfter(academicLeaveEnd)) {
             throw new ValidationFailedException("application.messages.revocationStartDateAfterAcademicLeaveEndDate");
         }
+    }
+
+    public static DirectiveStudent getDirectiveStudent(Application application) {
+        return StreamUtil.nullSafeList(application.getDirectiveStudents()).stream()
+                .filter(r -> !Boolean.TRUE.equals(r.getCanceled()))
+                .max(Comparator.comparingLong(DirectiveStudent::getId)).orElse(null);
     }
 }

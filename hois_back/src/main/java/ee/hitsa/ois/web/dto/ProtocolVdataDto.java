@@ -2,10 +2,10 @@ package ee.hitsa.ois.web.dto;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.protocol.ProtocolVdata;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 
 public class ProtocolVdataDto {
 
@@ -30,9 +30,8 @@ public class ProtocolVdataDto {
         dto.setCurriculumVersion(AutocompleteResult.of(protocolVdata.getCurriculumVersion()));
         dto.setStudyYear(AutocompleteResult.of(protocolVdata.getStudyYear()));
         dto.setTeacher(AutocompleteResult.of(protocolVdata.getTeacher()));
-        dto.setOutcomes(protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule().getOutcomes()
-                .stream().map(AutocompleteResult::of).collect(Collectors.toList()));
-        
+        dto.setOutcomes(StreamUtil.toMappedList(AutocompleteResult::of, protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule().getOutcomes()));
+
         dto.setCurriculum(EntityUtil.getId(protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule().getCurriculum()));
         dto.setCurriculumModule(EntityUtil.getId(protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule()));
         return dto;

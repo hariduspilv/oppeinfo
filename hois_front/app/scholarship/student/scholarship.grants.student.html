@@ -65,8 +65,11 @@
           <td md-cell>{{currentLanguageNameField(stipend.status)}}</td>
           <td md-cell>{{stipend.decisionDate ? (stipend.decisionDate | hoisDate) : '-'}}</td>
           <td md-cell>
-            <span ng-if="stipend.status.code === 'STIPTOETUS_STAATUS_K'">
+            <span ng-if="stipend.status.code === 'STIPTOETUS_STAATUS_K' || stipend.status.code === 'STIPTOETUS_STAATUS_T'">
               <a href="#/scholarships/{{stipend.id}}/application">{{'stipend.student.edit' | translate}}</a>
+            </span>
+            <span ng-if="stipend.status.code !== 'STIPTOETUS_STAATUS_K' && stipend.status.code !== 'STIPTOETUS_STAATUS_T'">
+                <a href="#/scholarships/applications/{{stipend.applicationId}}">{{'stipend.student.view' | translate}}</a>
             </span>
           </td>
         </tr>

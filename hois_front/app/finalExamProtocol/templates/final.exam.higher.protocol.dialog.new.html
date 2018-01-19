@@ -1,0 +1,68 @@
+<md-dialog aria-label="add protocol dialog" flex="30" flex-xs="100">
+  <form ng-submit="finalExamProtocolNewForm.$valid && submit()" novalidate layout="column" name="finalExamProtocolNewForm">
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{'finalExamProtocol.addFinalExamProtocol' | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div class="ois-form-layout-padding" ng-cloak>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex flex-sm="100">
+            <label class="textInput">{{'finalExamProtocol.studyPeriod' | translate}}</label>
+            <hois-select ng-model="formState.studyPeriod" values="formState.studyPeriods" ng-change="studyPeriodChange()" required></hois-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex flex-sm="100">
+            <label class="textInput">{{'finalExamProtocol.subject' | translate}}</label>
+            <hois-select ng-model="formState.subject" values="formState.subject" ng-change="subjectChange()" required></hois-select>
+          </md-input-container>
+        </div>
+
+        <br/>
+
+        <input style="display:none" type="number" readonly name="selectedStudentsLength" ng-model="selectedStudentsLength" ng-model-options="{ getterSetter: true }" min="1" />
+        <div flex>
+          <md-table-container>
+            <table md-table md-progress="tabledata.$promise" md-row-select multiple ng-model="formState.selectedStudents">
+              <thead md-head>
+                <tr md-row flex>
+                  <th md-column>
+                    <span>{{'student.label' | translate}}</span>
+                  </th>
+                  <th md-column>
+                    <span>{{'student.idcode' | translate}}</span>
+                  </th>
+                  <th md-column>
+                    <span>{{'finalExamProtocol.curriculumCode' | translate}}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row md-select="row.studentId" ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>{{row.fullname}}</td>
+                  <td md-cell>{{row.idcode}}</td>
+                  <td md-cell>{{row.curriculumCode}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </div>
+
+        <br/>
+
+        <md-dialog-actions layout="row" layout-align="start center">
+          <md-button class="md-raised md-primary" ng-click="save()">{{'finalExamProtocol.createProtocol' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="back('#/finalExamHigherProtocol/')">{{'main.button.back' | translate}}</md-button>
+        </md-dialog-actions>
+      </div>
+    </md-dialog-content>
+  </form>
+</md-dialog>

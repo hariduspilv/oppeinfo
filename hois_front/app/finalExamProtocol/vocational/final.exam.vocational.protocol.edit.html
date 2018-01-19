@@ -1,0 +1,91 @@
+<div class="ois-form-layout-padding" ng-cloak>
+  <div flex>
+    <form ng-submit="finalExamProtocolForm.$valid && save()" novalidate layout="column" name="finalExamProtocolForm">
+      <div ng-include="'finalExamProtocol/templates/final.exam.vocational.protocol.header.tmpl.html'"></div>
+
+      <div ng-if="protocol.committeeChairman === null">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="10" flex-lg="20" flex-md="20" flex-sm="100" flex-xs="100">
+            <label>{{'finalExamProtocol.finalExamDate' | translate}}</label>
+            <md-datepicker ng-model="protocol.finalExamDate" ng-change="selectedFinalExamDateChanged()"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex="30" flex-offset-gt-lg="10" flex-sm="100" flex-xs="100">
+            <label>{{'finalExamProtocol.committee' | translate}}</label>
+            <md-select ng-model="protocol.committee" aria-label="committee" ng-change="selectedCommitteeChanged()">
+              <md-option ng-repeat="val in committees" ng-value="val">{{val.members}}</md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+
+        <div ng-if="committeeMembers">
+          <md-table-container>
+            <table md-table md-progress="protocol.$promise">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'finalExamProtocol.name' | translate}}</th>
+                  <th md-column>{{'finalExamProtocol.role' | translate}}</th>
+                  <th md-column>{{'finalExamProtocol.present' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in committeeMembers | orderBy: 'memberName'" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>{{row.memberName}}</td>
+                  <td md-cell ng-if="row.isChairman">{{'finalExamProtocol.chairman' | translate}}</td>
+                  <td md-cell ng-if="!row.isChairman">{{'finalExamProtocol.member' | translate}}</td>
+                  <td md-cell>
+                    <md-checkbox aria-label="module" ng-model="row.isPresent"></md-checkbox>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </div>
+      </div>
+
+      <br/>
+
+      <div>
+        <div flex>
+          <md-table-container>
+            <table md-table md-progress="protocol.$promise" multiple="true">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'finalExamProtocol.id' | translate}}</th>
+                  <th md-column>{{'student.label' | translate}}</th>
+                  <th md-column>{{'finalExamProtocol.grade' | translate}}</th>
+                  <th md-column></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname' track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>{{$index + 1}}</td>
+                  <td md-cell>{{row.fullname}}</td>
+                  <td md-cell>
+                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code"
+                      aria-label="grade" ng-change="gradeChanged()" ng-disabled="!protocol.canBeEdited"></hois-select>
+                  </td>
+                  <td md-cell>
+                    <a ng-if="row.canBeDeleted && protocol.canBeEdited" ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </div>
+      </div>
+
+      <br/>
+
+      <div layout="row">
+        <md-button class="md-raised md-primary" type="submit" ng-if="protocol.canBeEdited">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-if="formState.canConfirm===true" class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <md-button ng-if="protocol.canBeDeleted" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button class="md-raised" ng-href="#/finalExamVocationalProtocols">{{'main.button.back' | translate}}</md-button>
+
+        <a ng-show="formState.protocolPdfUrl" ng-href="{{formState.protocolPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
+        <a ng-show="protocol.oisFile" ng-href="{{getUrl(protocol.oisFile, 'protocol')}}" target="_blank" rel="noopener noreferrer"
+          class="md-button md-raised">{{'moduleProtocol.downloadSigned' | translate}}</a>
+      </div>
+    </form>
+  </div>
+</div>

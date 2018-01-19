@@ -35,16 +35,16 @@
           <table md-table md-progress="tabledata.$promise" class="secondary-table">
             <thead md-head>
               <tr md-row>
-                <th md-column width="15%">{{'apel.addInfo.addedBy' | translate}}</th>
-                <th md-column width="15%">{{'apel.addInfo.additionDate' | translate}}</th>
-                <th md-column>{{'apel.addInfo.label' | translate}}</th>
+                <th md-column width="60%">{{'apel.addInfo.label' | translate}}</th>
+                <th md-column width="20%">{{'apel.addInfo.additionDate' | translate}}</th>
+                <th md-column width="20%">{{'apel.addInfo.addedBy' | translate}}</th>
               </tr>
             </thead>
             <tbody md-body>
               <tr md-row ng-repeat="comment in application.comments | orderBy: 'inserted'" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>{{comment.insertedBy}}</td>
-                <td md-cell>{{comment.inserted | hoisDateTime}}</td>
                 <td md-cell>{{comment.addInfo}}</td>
+                <td md-cell>{{comment.inserted | hoisDateTime}}</td>
+                <td md-cell>{{comment.insertedBy}}</td>
               </tr>
             </tbody>
           </table>
@@ -59,21 +59,20 @@
         <table md-table class="secondary-table">
           <thead md-head>
             <tr md-row>
-              <th md-column>
+              <th md-column width="60%">
                 <span>{{'file.nameAndFile' | translate}}</span>
               </th>
-              <th md-column>
+              <th md-column width="20%">
                 <span>{{'file.additionDate' | translate}}</span>
               </th>
-              <th md-column>{{'file.addedBy' | translate}}</th>
-              <th md-column></th>
+              <th md-column width="20%">{{'file.addedBy' | translate}}</th>
             </tr>
           </thead>
           <tbody md-body>
             <tr md-row ng-repeat="file in application.files | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell>
                 <div layout="row" flex>
-                  <div flex="60">
+                  <div>
                     {{file.oisFile.fname}}
                   </div>
                   <div flex>
@@ -95,7 +94,7 @@
       </fieldset>
 
       <div layout="row">
-        <md-button ng-if="application.status !== 'VOTA_STAATUS_C'" class="md-raised md-primary" ng-href="#/apelApplication/{{::applicationId}}/edit">{{'main.button.edit' | translate}}</md-button>
+        <md-button ng-if="application.status !== 'VOTA_STAATUS_C' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_VOTA')" class="md-raised md-primary" ng-href="#/apelApplication/{{::applicationId}}/edit">{{'main.button.edit' | translate}}</md-button>
         <md-button ng-if="application.status === 'VOTA_STAATUS_C' && auth.isAdmin() && canConfirmAndRemoveConfirmation" class="md-raised md-default"
           ng-click="removeConfirmation()">{{'apel.removeConfirmation' | translate}}</md-button>
         <a href="{{applicationPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>

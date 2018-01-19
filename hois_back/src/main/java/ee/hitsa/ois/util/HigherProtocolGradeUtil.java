@@ -15,7 +15,7 @@ import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.SubjectAssessment;
 
 public abstract class HigherProtocolGradeUtil {
-    
+
     private static final int SCALE = 5;
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
 
@@ -65,9 +65,9 @@ public abstract class HigherProtocolGradeUtil {
     private static List<MidtermTaskStudentResult> filterThisStudentsResults(List<MidtermTaskStudentResult> results,
             ProtocolStudent ps) {
         Long studentId = EntityUtil.getId(ps.getStudent());
-        return results.stream().filter(
+        return StreamUtil.toFilteredList(
                 sr -> EntityUtil.getId(sr.getDeclarationSubject().getDeclaration().getStudent())
-                .equals(studentId)).collect(Collectors.toList());
+                .equals(studentId), results);
     }
 
     private static List<MidtermTaskStudentResult> getAllStudentResults(List<MidtermTask> tasks) {

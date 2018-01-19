@@ -1,13 +1,37 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalEditController', function ($scope, $route, QueryUtils, Classifier, message, $location, dialogService, DataUtils, $rootScope) {
+angular.module('hitsaOis').controller('PracticeJournalEditController', 
+function ($scope, $route, QueryUtils, Classifier, message, $location, dialogService, DataUtils, $rootScope, ArrayUtils, USER_ROLES) {
   var CREDITS_TO_HOURS_MULTIPLIER = 26;
 
   $scope.auth = $route.current.locals.auth;
   $scope.practiceJournal = {};
   $scope.formState = {};
 
+  function canCreate() {
+    return $scope.auth.isAdmin() && ArrayUtils.includes($scope.auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK);
+  }
+
+  function noPermission() {
+    message.error('main.messages.error.nopermission');
+    $location.path('');
+  }
+
+  function assertPermissionToCreate() {
+    if (!canCreate()) {
+      noPermission();
+    }
+  }
+
+  function assertPermissionToEdit(entity) {
+    if (!(entity.canEdit && ($scope.auth.isTeacher() || $scope.auth.isAdmin()))) {
+      noPermission();
+    }
+  }
+
   function entityToForm(entity) {
+    assertPermissionToEdit(entity);
+    
     $scope.formState.isHigher = angular.isObject(entity.subject);
     DataUtils.convertObjectToIdentifier(entity, ['module', 'theme', 'teacher', 'subject']);
     $scope.practiceJournal = entity;
@@ -20,6 +44,7 @@ angular.module('hitsaOis').controller('PracticeJournalEditController', function 
       return lastUrl && lastUrl.indexOf('/practiceJournals/new') !== -1;
     });
   } else {
+    assertPermissionToCreate();
     $scope.formState.isHigher = $scope.auth.school.higher === true && (($scope.auth.school.vocational === true && $route.current.params.higher === true) || $scope.auth.school.vocational === false);
   }
 

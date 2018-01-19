@@ -35,7 +35,6 @@
       "send": "Saada",
       "update": "Uuenda",
       "uploadFile": "Lae fail",
-      "selectFile": "Vali fail",
       "updateFromEhis": "Uuenda staatust EHISest",
       "submit": "Esita",
       "allowSubmit": "Luba esitada",
@@ -52,6 +51,8 @@
       "publishtoStudents": "Avalikusta õppuritele",
       "accept": "Aktsepteeri",
       "annul": "Tühista",
+      "refreshResults": "Uuenda tulemused",
+      "checkComplies": "Kontrolli andmeid",
       "status": {
         "approving": "Menetle",
         "close": "Sulge ÕK",
@@ -307,7 +308,9 @@
         "thesisProtocols": "Lõp. protokollid",
         "forms": "Blanketid",
         "documentsPreparation": "Dokumentide ettevalmistamine",
-        "documentsPrint": "Dokumentide trükk"
+        "documentsPrint": "Dokumentide trükk",
+        "finalExamProtocolsHigher": "Lõpueksami protokollid (kõrg)",
+        "finalExamProtocolsVocational": "Lõpueksami protokollid (kutse)"
       },
       "student": {
         "label": "Õppurid",
@@ -882,6 +885,7 @@
     "importFinished": "Import lõpetatud"
   },
   "directive": {
+    "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
     "addInfo": "Lisainfo",
     "addStudents": "Lisa õppurid",
     "addToDirective": "Lisa käskkirjale",
@@ -911,6 +915,8 @@
     "newperson": "Uus isik",
     "nostudentsfound": "Õppureid ei leitud",
     "preamble": "Preambula",
+    "revocationStartDateBeforeAcademicLeaveStartDate": "Katkestamise kuupäev on varasem, kui akadeemilise puhkuse avalduse alguse kuupäev",
+    "revocationStartDateAfterAcademicLeaveEndDate": "Katkestamise kuupäev on hilisem, kui akadeemilise puhkuse avalduse lõpu kuupäev",
     "scholarshipType": "Stipendiumi/õppetoetuse liik",
     "sendToConfirm": "Saada kinnitamisele",
     "sentToConfirm": "Käskkiri saadetud kinnitamisele",
@@ -971,6 +977,7 @@
       "reason": "Põhjus",
       "school": "Õppeasutus",
       "stipEndDate": "Maksmise periood kuni",
+      "stipEndReason": "Põhjus",
       "stipStartDate": "Maksmise periood alates",
       "studentGroup": "Õppegrupp/rühm",
       "studyForm": "Õppevorm",
@@ -1016,6 +1023,7 @@
     "isConfirmer": "olen kinnitaja",
     "isFiller": "olen täitja ",
     "room": "Ruumid",
+    "moduleName": "Mooduli nimi",
     "journal": {
       "assessment": "Hindamisviis",
       "deleteconfirm": "Kas oled kindel, et soovid päeviku kustutada?",
@@ -1156,6 +1164,8 @@
     "closeconfirm": "Kas oled kindel, et soovid riikliku õppekava salvestada ja sulgeda?",
     "occupationdeleteconfirm": "Kas oled kindel, et soovid kutse kustutada?",
     "occupationWithModuleDeleteConfirm": "Kas oled kindel, et soovid kutse kustutada? Selle kutsega seotud moodulid kustutatakse",
+    "occupationsCreditsConfirmConfirm": "Kutse moodulite maht ei ole vastavuses õppekava kogu mahuga! Kas oled kindel, et soovid riikliku õppekava kinnitada?",
+    "spetsOccupationsCredidsConfirm": "Spetsialiseerumise moodulite maht (koos kutse- ja valikmoodulite mahuga) ei ole vastavuses õppekava kogu mahuga! Kas oled kindel, et soovid riikliku õppekava kinnitada?",
     "name": "Riiklik õppekava",
     "EKR": "EKR tase",
     "credits": "Õppekava maht",
@@ -1232,8 +1242,6 @@
     "select": "Vali riiklik õppekava",
     "error": {
       "unique.name": "Kehtivate riiklike õppekavade nimetused peavad olema unikaalsed",
-      "occupationsCredids": "Kutse moodulite maht ei ole vastavuses õppekava kogu mahuga!",
-      "spetsOccupationsCredids": "Spetsialiseerumise moodulite maht (koos kutse- ja valikmoodulite mahuga) ei ole vastavuses õppekava kogu mahuga!",
       "decimalPresision": "Arv peab olema täpsusega üks koht peale koma",
       "specialtiesInvalid": "Moodul ei saa olla seotud nii kutse, kui ka selle kutse spetsialiseerumisega",
       "partAndSpecOccupationsInvalid": "Moodul ei saa olla seotud ühe kutse spetsialiseerumise ja osakutsega",
@@ -2125,11 +2133,13 @@
     "nameEt": "Nimetus eesti keeles",
     "nameEn": "Nimetus inglise keeles",
     "color": "Värv",
+    "defaultLegend": "Hetkel kuvatakse vaikimisi legendi, kui soovite seda kasutada siis vajutage salvesta nuppu",
     "error": {
       "codeRequired": "Kood on kohustuslik!",
       "codeLength": "Koodi maksimaalne pikkus on 2 sümbolit",
       "nameEtRequired": "Nimetus eesti keeles on kohustuslik!",
-      "nameLength": "Nimetuse maksimaalne pikkus on 50 sümbolit"
+      "nameLength": "Nimetuse maksimaalne pikkus on 50 sümbolit",
+      "inUseLegendRemove": "Oled kustutanud legendi, millega on seotud kirjeid õppetöögraafikus. Kas oled kindel, et soovid andmed salvestada? <br/>Kustutamisel eemaldatakse kõik legendiga seotud kirjed õppetöögraafikust. "
     }
   },
   "timetable": {
@@ -2623,10 +2633,11 @@
     "confirmedThru": "Kinnitamise kp kuni",
     "studentName": "Õppuri nimi",
     "curriculum": "Õppekava",
-    "curriculumVersion": "Õppekava versioon",
+    "curriculumVersionHigher": "Õppekava versioon",
+    "curriculumVersionVocational": "Rakenduskava",
     "insertedDate": "Koostamise kp",
     "confirmedDate": "Kinnitamise kp",
-    "inserter": "Sisestaja",
+    "inserter": "Koostaja",
     "confirmer": "Kinnitaja",
     "submitConfirm": "Kas oled kindel, et soovid VÕTA taotluse esitada?",
     "deleteConfirm": "Kas oled kindel, et soovid VÕTA taotluse kustutada?",
@@ -2669,7 +2680,7 @@
       "result": "Õppetulemus",
       "resultDate": "Soorituse kp",
       "teacher": "Õpetaja",
-      "teachers": "Õpetajad(d)",
+      "teachers": "Õpetaja(d)",
       "module": "Moodul",
       "moduleEn": "Moodul i.k.",
       "substitutableSubject": "Asendatav aine",
@@ -2749,6 +2760,7 @@
     "error": {
       "nopermission": "Vajalikud õigused puuduvad",
       "notAllowedWithStatus": "Avaldusel on tulenevalt staatusest antud käsk keelatud",
+      "atLeastOneFormalOrInformalLearning": "Vähemalt üks formaalne või informaalne õpe peab olema lisatud",
       "atLeastOneOtherInformalLearning": "Vähemalt üks töökogemus/täiendkoolitus/muu õppeaine peab olema lisatud",
       "atLeastOneSubstitutableSubject": "Vähemalt üks asendatav aine peab olema lisatud",
       "atLeastOneSubstitutableModule": "Vähemalt üks asendatav moodul peab olema lisatud",
@@ -2890,6 +2902,71 @@
     "validFromDate": "Kehtivuse kuupäev alates",
     "validThruDate": "Kehtivuse kuupäev kuni"
   },
+  "finalExamProtocol": {
+    "addFinalExamProtocol": "Lõpueksami protokolli koostamine",
+    "studyYear": "Õppeaasta",
+    "teacher": "Õpetaja",
+    "curriculumVersion": "Rakenduskava",
+    "curriculumVersionModule": "Rakenduskava, moodul",
+    "module": "Moodul",
+    "subject": "Õppeaine",
+    "subjectEt": "Õppeaine nimetus eesti keeles",
+    "subjectEn": "Õppeaine nimetus inglise keeles",
+    "curriculumCode": "Õppekava kood",
+    "protocolNumber": "Protokolli number",
+    "protocolNr": "Protokolli number",
+    "protocolStatus": "Protokolli staatus",
+    "status": "Staatus",
+    "insertedDate": "Loomise kp",
+    "insertedFrom": "Loodud alates",
+    "insertedThru": "Loodud kuni",
+    "confirmedDate": "Kinnitamise kp",
+    "confirmedFrom": "Kinnitatud alates",
+    "confirmedThru": "Kinnitatud kuni",
+    "confirmer": "Kinnitaja",
+    "implementationPlan": "Rakenduskava",
+    "studentGroup": "Õpperühm",
+    "create": "Loo protokoll",
+    "inserted": "Koostamise kuupäev",
+    "studyLevel": "Õppetase",
+    "studyPeriod": "Õppeperiood",
+    "assessment":"Hindamisviis",
+    "vocationalCreditsUnit": "EKAP",
+    "higherCreditsUnit": "EAP",
+    "credits": "Arvestuspunktide arv",
+    "finalExamDate": "Lõpueksami kuupäev",
+    "committee": "Kaitsmiskomisjon",
+    "committeeChairman": "Kaitsmiskomisjoni esimees",
+    "name": "Nimi",
+    "role": "Roll",
+    "present": "Kohal",
+    "chairman": "Esimees",
+    "member": "Liige",
+    "id": "Jrk. nr.",
+    "grade": "Hinne",
+    "finalGrade": "Lõpphinne",
+    "occupationAndCertificateNr": "Kutse ja kutsetunnistuse number",
+    "mobileSign": {
+      "instructions": "Toimige palun telefonile ilmuvate juhiste kohaselt. Enne PIN-koodi sisestamist veenduge, et telefoni ekraanil olev kontrollkood on sama, mis allpool näidatud."
+    },
+    "messages": {
+      "studentSuccesfullyAdded": "Õppurid edukalt lisatud",
+      "confirmed": "Lõpueksami protokoll edukalt kinnitatud",
+      "gradeNotSelectedForAllStudents": "Lõpueksami protokolli kinnitamine ebaõnnestus - vähemalt ühel õpilasel on hinne määramata",
+      "cantRemoveStudent": "Õppuri eemaldamine ei ole lubatud",
+      "deleted": "Protokoll on kustutatud"
+    },
+    "error": {
+      "noStudents": "Protokoll peab sisaldama õppureid",
+      "teacherMismatch": "Teistele õpetajatele ei saa protokolle koostada",
+      "noPermissionToEdit": "Õigused protokolli muutmiseks puuduvad",
+      "noPermissionToDelete": "Õigused protokolli kustutamiseks puuduvad"
+    },
+    "prompt": {
+      "delete": "Kas oled kindel, et soovid protokolli kustutada?",
+      "deleteStudent": "Kas oled kindel, et soovid õppuri protokollist kustutada?"
+    }
+  },
   "stipend": {
     "type": "Liik",
     "name": "Nimetus",
@@ -2926,11 +3003,16 @@
     "credits": "Sooritatud ainepunktide arv",
     "curriculum": "Õppekava",
     "applicant": "Õppur",
+    "fullName": "Õppuri nimi",
+    "rejectComment": "Põhjendus",
     "nr": "Nr",
     "confirmations": {
       "publish": "Kas oled kindel, et soovid stipendiumi avalikustada?",
+      "saveAndPublish": "Kas oled kindel, et soovid õppetoetuse salvestada ja avalikustada?",
       "scholarshipIsPublishedChange": "Stipendium on avalikustatud, kas oled kindel, et soovid seda muuta?",
-      "grantIsPublishedChange": "Õppetoetus on avalikustatud, kas oled kindel, et soovid seda muuta?"
+      "grantIsPublishedChange": "Õppetoetus on avalikustatud, kas oled kindel, et soovid seda muuta?",
+      "deleteGrant": "Kas oled kindel, et soovid õppetoetuse kustutada?",
+      "deleteStipend": "Kas oled kindel, et soovid stipendiumi kustutada?"
     },
     "student": {
       "grants": "Õppetoetused",
@@ -2944,6 +3026,7 @@
       "decisionDate": "Otsuse kuupäev",
       "applications": "Taotlused",
       "myData": "Minu andmed",
+      "studentData": "Õppuri andmed",
       "studentGroup": "Õpperühm",
       "address": "Elukoht",
       "bankAccount": "Arveldusarve number",
@@ -2959,7 +3042,9 @@
       "edit": "Muuda",
       "professionalAchievements": "Erialased saavutused",
       "idCode": "Isikukood",
-      "credits": "Ainepunktide arv"
+      "credits": "Ainepunktide arv",
+      "view": "Vaata",
+      "specificReason": "Täpsustus"
     },
     "family": {
       "name": "Pereliige",
@@ -2976,6 +3061,14 @@
       "error.curriculumsEmtpy": "Vähemalt üks õppekava peab olema lisatud",
       "error.duplicateCurriculum": "See õppekava on juba lisatud",
       "error.noStudentsSelected": "Ühtegi õppurit ei ole valitud, valida tuleb vähemalt üks õppur"
+    },
+    "reject": {
+      "grantStudentList": "Õppetoetuse tagasi lükkamine",
+      "stipendStudentList": "Stipendiumi tagasi lükkamine"
+    },
+    "annul": {
+      "grantStudentList": "Õppetoetuse tühistamine",
+      "stipendStudentList": "Stipendiumi tagasi lükkamine"
     }
   }
 }

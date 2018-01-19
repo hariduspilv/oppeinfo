@@ -98,7 +98,7 @@
       </table>
     </md-table-container>
 
-    <md-button ng-href="#/studentgroups/{{record.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+    <md-button ng-href="#/studentgroups/{{record.id}}/edit" class="md-raised md-primary" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPPERYHM')">{{'main.button.change' | translate}}</md-button>
     <md-button ng-click="back('#/studentgroups')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

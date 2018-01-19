@@ -117,7 +117,7 @@
             $scope.isTestButNotFinal = function (entryType) {
                 var boldResults = ['SISSEKANNE_E', "SISSEKANNE_I", "SISSEKANNE_H"];
                 return ArrayUtils.contains(boldResults, entryType);
-            }
+            };
 
             $scope.showJournal = function (journal) {
                 $mdDialog.show({

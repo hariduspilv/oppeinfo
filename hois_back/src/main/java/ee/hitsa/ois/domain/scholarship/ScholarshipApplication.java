@@ -60,6 +60,7 @@ public class ScholarshipApplication extends BaseEntityWithId {
     private String compensationAddInfo;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier compensationFrequency;
+    private String rejectComment;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "scholarshipApplication")
     private List<ScholarshipApplicationFile> scholarshipApplicationFiles = new ArrayList<>();
@@ -305,6 +306,14 @@ public class ScholarshipApplication extends BaseEntityWithId {
 
     public void setScholarshipApplicationFamilies(List<ScholarshipApplicationFamily> scholarshipApplicationFamilies) {
         this.scholarshipApplicationFamilies = scholarshipApplicationFamilies;
+    }
+
+    public String getRejectComment() {
+        return rejectComment;
+    }
+
+    public void setRejectComment(String rejectComment) {
+        this.rejectComment = rejectComment;
     }
 
 }

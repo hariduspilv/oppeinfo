@@ -66,6 +66,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); },
           entity: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/practiceJournals').get({id: $route.current.params.id}).$promise;
+          },
+          isEntryEdit: function (){
+            return true;
           }
         },
         data: {

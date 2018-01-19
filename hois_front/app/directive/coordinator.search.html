@@ -20,7 +20,7 @@
             <td md-cell>{{::row.isCertificate ? 'main.yes' : 'main.no' | translate}}</td>
             <td md-cell>{{::row.isCertificateDefault ? 'main.yes' : 'main.no' | translate}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/coordinators/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_DOKALLKIRI')" ng-href="#/directives/coordinators/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>
@@ -32,6 +32,6 @@
   </div>
 
   <div layout="row">
-    <md-button class="md-raised" ng-href="#/directives/coordinators/new">{{'main.button.create' | translate}}</md-button>
+    <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_DOKALLKIRI')" ng-href="#/directives/coordinators/new">{{'main.button.create' | translate}}</md-button>
   </div>
 </div>

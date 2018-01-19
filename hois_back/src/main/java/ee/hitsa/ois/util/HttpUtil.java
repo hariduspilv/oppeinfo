@@ -18,7 +18,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 /**
  * Utility functions for working with http responses
  */
-public class HttpUtil {
+public abstract class HttpUtil {
 
     private static final Pattern INVALID_FILENAME_SYMBOLS = Pattern.compile("[\\/:*?\"<>|]");
 
@@ -43,7 +43,7 @@ public class HttpUtil {
             bos.write(csvBytes);
         }
     }
-    
+
     public static void pdf(HttpServletResponse response, String filename, byte[] pdf) throws IOException {
         file(response, filename, APPLICATION_PDF, pdf);
     }
@@ -51,7 +51,7 @@ public class HttpUtil {
     public static void xls(HttpServletResponse response, String filename, byte[] xls) throws IOException {
         file(response, filename, APPLICATION_XLS, xls);
     }
-    
+
     public static void xml(HttpServletResponse response, String filename, byte[] xml) throws IOException {
         file(response, filename, APPLICATION_XML, xml);
     }

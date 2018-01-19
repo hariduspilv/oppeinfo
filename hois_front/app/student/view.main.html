@@ -212,7 +212,8 @@
     <div>
       <hois-collapsable label="('student.representatives' | translate)">
 
-        <md-button ng-if="student.userCanAddRepresentative" ng-click="editRepresentative()" class="md-raised">{{'student.representative.add' | translate}}</md-button>
+        <md-button ng-if="student.userCanAddRepresentative && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR')" 
+          ng-click="editRepresentative()" class="md-raised">{{'student.representative.add' | translate}}</md-button>
 
         <md-table-container>
           <table md-table md-progress="representatives.$promise" class="secondary-table">
@@ -236,7 +237,8 @@
                 <td md-cell>{{::row.person.email}}</td>
                 <td md-cell>{{row.isStudentVisible ? 'main.yes' : 'main.no' | translate}}</td>
                 <td md-cell>
-                  <md-button md-no-ink ng-if="row.userCanEdit" ng-click="editRepresentative(row.id)" class="md-primary change-button">{{'main.button.change' | translate}}</md-button>
+                  <md-button md-no-ink ng-if="row.userCanEdit && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR')" ng-click="editRepresentative(row.id)" 
+                    class="md-primary change-button">{{'main.button.change' | translate}}</md-button>
                 </td>
               </tr>
             </tbody>
@@ -275,7 +277,8 @@
       </hois-collapsable>
     </div>
 
-    <md-button ng-href="#/students/{{student.id}}/edit?_noback" ng-if="student.userCanEditStudent" class="md-primary md-raised">{{'main.button.change' | translate}}</md-button>
+    <md-button ng-href="#/students/{{student.id}}/edit?_noback" ng-if="student.userCanEditStudent && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR')" 
+      class="md-primary md-raised">{{'main.button.change' | translate}}</md-button>
     <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

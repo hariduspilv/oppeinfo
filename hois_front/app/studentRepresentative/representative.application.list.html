@@ -62,10 +62,12 @@
             <td md-cell><a md-no-ink class="md-primary" ng-href="#/students/{{::row.studentId}}/main">{{::row.studentFullname}}</a></td>
             <td md-cell>{{::row.studentIdcode}}</td>
             <td md-cell>
-              <md-button ng-if="row.status.code === 'AVALDUS_ESINDAJA_STAATUS_E'" md-no-ink class="md-primary change-button" ng-click="accept(row)">{{'main.button.confirm' | translate}}</md-button>
+              <md-button ng-if="row.status.code === 'AVALDUS_ESINDAJA_STAATUS_E' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ESINDAVALDUS')" 
+                md-no-ink class="md-primary change-button" ng-click="accept(row)">{{'main.button.confirm' | translate}}</md-button>
             </td>
             <td md-cell>
-              <md-button ng-if="row.status.code === 'AVALDUS_ESINDAJA_STAATUS_E'" md-no-ink class="md-primary change-button" ng-click="decline(row)">{{'main.button.decline' | translate}}</md-button>
+              <md-button ng-if="row.status.code === 'AVALDUS_ESINDAJA_STAATUS_E' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ESINDAVALDUS')" 
+                md-no-ink class="md-primary change-button" ng-click="decline(row)">{{'main.button.decline' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

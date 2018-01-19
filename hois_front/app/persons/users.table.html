@@ -12,7 +12,7 @@
     <td ng-if="auth.isMainAdmin()" md-cell>{{currentLanguageNameField(user.school)}}</td>
     <td md-cell><a ng-href="#/persons/{{::person.id}}/users/{{::user.id}}">{{currentLanguageNameField(user.role)}}</a></td>
     <td md-cell>{{user.valid ? 'main.valid' : 'main.invalid' | translate }}</td>
-    <td md-cell><md-button ng-if="user.role.code !== 'ROLL_T' && user.role.code !== 'ROLL_L'" class="md-primary change-button" ng-href="#/persons/{{::person.id}}/users/{{::user.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
+    <td md-cell><md-button ng-if="user.role.code !== 'ROLL_T' && user.role.code !== 'ROLL_L' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA')" class="md-primary change-button" ng-href="#/persons/{{::person.id}}/users/{{::user.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
   </tr>
   </tbody>
 </table>

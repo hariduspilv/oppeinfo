@@ -76,10 +76,10 @@
               <div layout="row" flex>
                 <md-input-container flex>
                   <label class="textInput">{{'stipend.compensationReason' | translate}}</label>
-                  <hois-classifier-select ng-model="studentSubmitData.compensationReason" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS_HYVITAMINE_POHJUS"></hois-classifier-select>
+                  <hois-classifier-select required ng-model="studentSubmitData.compensationReason" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS_HYVITAMINE_POHJUS"></hois-classifier-select>
                 </md-input-container>
               </div>
-              <div layout="row">
+              <div layout="row" ng-if="studentSubmitData.compensationReason === 'STIPTOETUS_HYVITAMINE_POHJUS_I'">
                 <md-input-container flex>
                   <label>{{'stipend.routeKm' | translate}}</label>
                   <input ng-model="studentSubmitData.routeKm" type="number" aria-label="routeKm" min="0">
@@ -98,6 +98,12 @@
                 </md-input-container>
               </fieldset>
             </div>
+          </div>
+          <div layout="row" flex ng-if="studentSubmitData.compensationReason === 'STIPTOETUS_HYVITAMINE_POHJUS_M'">
+            <md-input-container flex="100" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'stipend.student.specificReason' | translate}}</label>
+              <textarea required ng-model="studentSubmitData.addInfo" name="addInfo" md-maxlength="4000"></textarea>
+            </md-input-container>
           </div>
           <br/>
 

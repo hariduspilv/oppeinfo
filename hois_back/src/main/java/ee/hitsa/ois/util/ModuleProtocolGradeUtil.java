@@ -3,7 +3,6 @@ package ee.hitsa.ois.util;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.util.CollectionUtils;
@@ -50,11 +49,9 @@ public abstract class ModuleProtocolGradeUtil {
 
     private static List<JournalStudent> getJournalStudentsForThisModule(
             List<JournalStudent> journalStudents, Long occupationModule) {
-        return journalStudents.stream()
-                .filter(js -> js.getJournal().getJournalOccupationModuleThemes().stream()
-                        .anyMatch(jt -> 
+        return StreamUtil.toFilteredList(js -> js.getJournal().getJournalOccupationModuleThemes().stream().anyMatch(jt ->
                         EntityUtil.getId(jt.getCurriculumVersionOccupationModuleTheme().getModule())
-                                .equals(occupationModule))).collect(Collectors.toList());
+                                .equals(occupationModule)), journalStudents);
     }
 
     private static boolean isFinalResult(JournalEntryStudent jes) {
@@ -66,8 +63,7 @@ public abstract class ModuleProtocolGradeUtil {
         for(JournalStudent js : results) {
             finalResults.addAll(js.getJournalEntryStudents());
         }
-        return finalResults.stream().filter(jes -> isFinalResult(jes))
-                .filter(jes -> jes.getGrade() != null).collect(Collectors.toList());
+        return StreamUtil.toFilteredList(jes -> jes.getGrade() != null && isFinalResult(jes), finalResults);
     }
 
     private static BigDecimal calculateAverage(List<JournalEntryStudent> finalResults) {

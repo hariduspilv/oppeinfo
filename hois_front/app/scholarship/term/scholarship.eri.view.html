@@ -122,17 +122,24 @@
             </md-input-container>
           </div>
           <div layout="row">
-            <md-checkbox ng-model="stipend.isTeacherConfirm" ng-if="display.isTeacherConfirm" disabled aria-label="Is academic leave">
+            <md-checkbox ng-model="stipend.isTeacherConfirm" disabled aria-label="Is academic leave">
               {{'stipend.isTeacherConfirm' | translate}}
             </md-checkbox>
           </div>
           <div layout="row">
-            <md-checkbox ng-model="stipend.isStudyBacklog" ng-if="display.isStudyBacklog" disabled aria-label="Is academic leave">
+            <md-checkbox ng-model="stipend.isStudyBacklog" disabled aria-label="Is academic leave">
               {{'stipend.isStudyBacklog' | translate}}
             </md-checkbox>
           </div>
           <div layout="row">
+            <md-checkbox ng-model="stipend.isFamilyIncomes" disabled aria-label="Is family incomes">
+              {{'stipend.isFamilyIncomes' | translate}}
+            </md-checkbox>
+          </div>
+          <div layout="row">
             <div layout="row">
+              <md-button class="md-raised md-primary" href="#/scholarships/{{stipend.id}}/edit" ng-if="auth.isAdmin()">{{'main.button.edit' | translate}}</md-button>
+              <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id" ng-click="publish()" ng-if="auth.isAdmin()">{{'main.button.publishtoStudents' | translate}}</md-button>
               <md-button class="md-raised" ng-click="back('#/scholarships/', stipendForm)">{{'main.button.back' | translate}}</md-button>
             </div>
           </div>

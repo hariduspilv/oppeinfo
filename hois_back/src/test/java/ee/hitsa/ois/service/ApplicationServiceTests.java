@@ -1,11 +1,9 @@
 package ee.hitsa.ois.service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
-import javax.persistence.criteria.Predicate;
+import javax.persistence.EntityManager;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
@@ -28,12 +26,11 @@ import ee.hitsa.ois.enums.AcademicLeaveReason;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.ApplicationForm;
+import ee.hitsa.ois.web.commandobject.application.ApplicationForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 @RunWith(SpringRunner.class)
@@ -44,13 +41,13 @@ public class ApplicationServiceTests {
     @Autowired
     private ApplicationService service;
     @Autowired
+    private EntityManager em;
+    @Autowired
     private HoisUserDetailsService hoisUserDetailsService;
     @Autowired
     private TestConfigurationService testConfigurationService;
     @Autowired
     private Validator validator;
-    @Autowired
-    private StudentRepository studentRepository;
 
     private HoisUserDetails testUser;
     private Student student;
@@ -59,29 +56,25 @@ public class ApplicationServiceTests {
     @Before
     public void setUp() {
         if(student == null) {
-            student = studentRepository.findAll((root, query, cb) -> {
-                List<Predicate> filters = new ArrayList<>();
-                filters.add(cb.like(root.get("curriculumVersion").get("curriculum").get("origStudyLevel").get("value"), "5%"));
-                return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).get(0);
+            student = em.createQuery("select s from Student s where s.curriculumVersion.curriculum.origStudyLevel.value like ?1", Student.class)
+                    .setParameter(1, "5%")
+                    .setMaxResults(1).getResultList().get(0);
 
             User user = testConfigurationService.userWithRoleInSchool(TestConfiguration.USER_ID, Role.ROLL_A, EntityUtil.getId(student.getSchool()));
             testUser = hoisUserDetailsService.getHoisUserDetails(user);
         }
 
         if(occupationalStudent == null) {
-            occupationalStudent = studentRepository.findAll((root, query, cb) -> {
-                List<Predicate> filters = new ArrayList<>();
-                filters.add(cb.like(root.get("curriculumVersion").get("curriculum").get("origStudyLevel").get("value"), "4%"));
-                return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).get(0);
+            occupationalStudent = em.createQuery("select s from Student s where s.curriculumVersion.curriculum.origStudyLevel.value like ?1", Student.class)
+                    .setParameter(1, "4%")
+                    .setMaxResults(1).getResultList().get(0);
         }
     }
 
 
     @Test
     public void testAkadConstraintsMustBeHigher() {
-        Assert.assertFalse(studentRepository.findAll().isEmpty());
+        Assert.assertFalse(noStudents());
         ApplicationForm applicationForm = getAkadApplicationForm(occupationalStudent);
         applicationForm.setStartDate(LocalDate.now());
         applicationForm.setEndDate(LocalDate.now().plusYears(1));
@@ -102,7 +95,7 @@ public class ApplicationServiceTests {
 
     @Test
     public void testAkadConstraintsPeriodIsTooLong() {
-        Assert.assertFalse(studentRepository.findAll().isEmpty());
+        Assert.assertFalse(noStudents());
         ApplicationForm applicationForm = getAkadApplicationForm(student);
         applicationForm.setStartDate(LocalDate.now());
         applicationForm.setEndDate(LocalDate.now().plusYears(2));
@@ -131,4 +124,7 @@ public class ApplicationServiceTests {
         return applicationForm;
     }
 
+    private boolean noStudents() {
+        return em.createNativeQuery("select 1 from student").setMaxResults(1).getResultList().isEmpty();
+    }
 }

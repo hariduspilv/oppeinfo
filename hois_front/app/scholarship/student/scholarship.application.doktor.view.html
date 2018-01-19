@@ -38,7 +38,7 @@
     <br/>
   
     <fieldset tabindex="1">
-      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.student.myData' | translate}}</legend>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{auth.isStudent() ? 'stipend.student.myData' : 'stipend.student.studentData' | translate}}</legend>
       <div class="form-readonly ois-form-layout-padding">
         <div flex>
             <div layout="column" flex>
@@ -56,7 +56,7 @@
               </div>
               <br/>
               <div layout="row">
-                <md-button class="md-raised md-primary" ng-if="studentSubmitData.status !== 'STIPTOETUS_STAATUS_A'" ng-click="accept()">{{'main.button.accept' | translate}}</md-button>
+                <md-button class="md-raised md-primary" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS') && studentSubmitData.status !== 'STIPTOETUS_STAATUS_A'" ng-click="accept()">{{'main.button.accept' | translate}}</md-button>
                 <md-button class="md-raised" ng-click="back('#/scholarships/applications/grants')">{{'main.button.back' | translate}}</md-button>
               </div>
             </div>

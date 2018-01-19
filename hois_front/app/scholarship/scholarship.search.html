@@ -23,10 +23,17 @@
         </md-input-container>
       </div>
 
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'stipend.status' | translate}}</label>
+          <hois-select ng-model="criteria.isOpen" model-value-attr="code" values="statuses"></hois-select>
+        </md-input-container>
+      </div>
+
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-href="#/scholarships/{{scholarshipType}}/new">{{'main.button.create' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        <md-button class="md-raised" ng-href="#/scholarships/{{scholarshipType}}/new">{{'main.button.create' | translate}}</md-button>
       </div>
     </form>
 

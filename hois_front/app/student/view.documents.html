@@ -62,8 +62,8 @@
     </md-table-container>
     <br/>
 
-    <h2>{{'certificate.certificates' | translate}}</h2>
-    <md-table-container>
+    <h2 ng-if="!auth.isTeacher()">{{'certificate.certificates' | translate}}</h2>
+    <md-table-container ng-if="!auth.isTeacher()">
       <table md-table md-progress="certificates.$promise">
         <thead md-head md-order="certificatesCriteria.order" md-on-reorder="loadCertificates">
           <tr md-row>
@@ -89,7 +89,7 @@
     </md-table-container>
     <md-table-pagination md-limit="certificatesCriteria.size" md-limit-options="[5, 10, 15]" md-page="certificatesCriteria.page"
       md-total="{{certificatesCriteria.totalElements}}" md-on-paginate="loadCertificates" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
-      md-page-select></md-table-pagination>
+      md-page-select ng-if="!auth.isTeacher()"></md-table-pagination>
 
     <md-table-container>
       <table md-table ng-if="auth.isStudent()">

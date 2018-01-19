@@ -13,9 +13,10 @@ import javax.persistence.OneToMany;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.util.Translatable;
 
 @Entity
-public class ApelSchool extends BaseEntityWithId {
+public class ApelSchool extends BaseEntityWithId implements Translatable {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier country;
@@ -51,6 +52,7 @@ public class ApelSchool extends BaseEntityWithId {
         this.ehisSchool = ehisSchool;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -59,6 +61,7 @@ public class ApelSchool extends BaseEntityWithId {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }

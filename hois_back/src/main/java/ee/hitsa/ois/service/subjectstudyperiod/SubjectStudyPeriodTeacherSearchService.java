@@ -65,7 +65,7 @@ public class SubjectStudyPeriodTeacherSearchService {
         dto.setName(t.getPerson().getFullname());
         dto.setHours(getHours(t, studyPeriod));
         dto.setStudyPeriod(studyPeriod);
-        dto.setTimetable(getTimetable(t, studyPeriod));
+        dto.setTimetable(null);
         return dto;
     }
 
@@ -74,10 +74,5 @@ public class SubjectStudyPeriodTeacherSearchService {
                 (StreamUtil.toMappedList(sspt -> sspt.getSubjectStudyPeriod(), t.getSubjectStudyPeriods()), 
                         studyPeriod);
         return SubjectStudyPeriodUtil.getHours(ssps);
-    }
-
-    private static Long getTimetable(Teacher t, Long studyPeriod) {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

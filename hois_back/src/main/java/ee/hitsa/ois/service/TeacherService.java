@@ -223,7 +223,7 @@ public class TeacherService {
         person.setPhone(personForm.getPhone());
         person.setNativeLanguage(personForm.getNativeLanguage());
         Classifier citizenship = em.getReference(Classifier.class, personForm.getCitizenship());
-        if (citizenship == null || !MainClassCode.RIIK.name().equals(citizenship.getMainClassCode())) {
+        if (citizenship == null || !ClassifierUtil.mainClassCodeEquals(MainClassCode.RIIK, citizenship)) {
             throw new ValidationFailedException("person.citizenship", "null");
         }
         person.setCitizenship(citizenship);

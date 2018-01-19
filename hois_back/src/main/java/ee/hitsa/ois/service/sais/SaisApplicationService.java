@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service.sais;
 
+import static ee.hitsa.ois.service.sais.SaisClassifierService.ESTONIAN;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
@@ -110,7 +111,6 @@ import ee.hois.xroad.sais2.service.SaisClient;
 @Service
 public class SaisApplicationService {
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private static final String ESTONIAN = "ESTONIAN";
     private static final String CONTACT_ADDR_VALUE = "1";
 
     private static final List<String> REVOKED_APPLICATION_STATUSES = EnumUtil.toNameList(SaisApplicationStatus.SAIS_AVALDUSESTAATUS_AL,
@@ -293,12 +293,11 @@ public class SaisApplicationService {
         if (saisAdmission.getCurriculumVersion() == null) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther + "seotud õppekava versioonile/rakenduskavale ei leitud vastet."));
             return;
-        } else if (curriculumVersion == null){
+        } else if (curriculumVersion == null) {
             curriculumVersion = saisAdmission.getCurriculumVersion();
         }
 
         SaisApplication existingSaisApplication = saisApplicationRepository.findByApplicationNrAndSaisAdmissionCode(applicationNr, saisAdmission.getCode());
-
         if (existingSaisApplication != null && StringUtils.hasText(existingSaisApplication.getIdcode()) &&
                 StringUtils.hasText(row.getIdcode()) && !existingSaisApplication.getIdcode().equals(row.getIdcode())) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, String.format("%son süsteemis juba seotud teise isikuga (%s).", messageForOther, existingSaisApplication.getIdcode())));
@@ -312,7 +311,6 @@ public class SaisApplicationService {
 
         SaisApplication saisApplication = new SaisApplication();
         EntityUtil.bindToEntity(row, saisApplication, classifierRepository, "curriculumVersionCode", "submitted");
-
 
         if (!StringUtils.hasText(saisApplication.getFirstname())) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing + "kandideerija eesnimi."));
@@ -397,12 +395,10 @@ public class SaisApplicationService {
             existing.setStudyLevel(previousStudyLevel);
         }
 
-
         saisApplication.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(row.getIdcode()));
         if (saisApplication.getSubmitted() == null) {
             saisApplication.setSubmitted(row.getSaisChanged());
         }
-
 
         if (saisAdmission.getCode() == null) {
             saisAdmission.setCode(admissionCode);
@@ -541,7 +537,7 @@ public class SaisApplicationService {
                         Collections.emptyMap() : StreamUtil.toMap(SaisApplication::getApplicationNr,
                                 em.createQuery("select sa from SaisApplication sa where sa.applicationNr in ?1", SaisApplication.class)
                                     .setParameter(1, previousApplicationNrs).getResultList());
-                Map<Long, Long> prevDirectives = !previousApplications.isEmpty() ? directiveStudentsWithSaisApplication(previousApplications.values().stream().map(SaisApplication::getId).collect(Collectors.toList())) : null;
+                Map<Long, Long> prevDirectives = !previousApplications.isEmpty() ? directiveStudentsWithSaisApplication(StreamUtil.toMappedList(SaisApplication::getId, previousApplications.values())) : null;
 
                 List<SaisApplicationImportedRowDto> failed = new ArrayList<>();
                 List<SaisApplicationImportedRowDto> successful = new ArrayList<>();
@@ -603,7 +599,7 @@ public class SaisApplicationService {
             EstonianIdCodeValidator idCodeValidator) {
         SaisApplication saisApplication;
         SaisAdmission saisAdmission = null;
-        if(prevApp != null && Objects.equals(prevApp.getIdcode(), application.getIdCode()) && Objects.equals(prevApp.getForeignIdcode(), application.getOtherIdNumber())) {
+        if(prevApp != null && applicationForSamePerson(application, prevApp)) {
             saisApplication = prevApp;
         } else {
             saisApplication = new SaisApplication();
@@ -763,7 +759,7 @@ public class SaisApplicationService {
         if(!idCodeValidator.isValid(application.getIdcode(), null)) {
             return messageForOther + "seotud isiku isikukood ei ole korrektne";
         }
-        if(previousApplication != null && !application.getIdcode().equals(previousApplication.getIdcode())) {
+        if(previousApplication != null && !applicationForSamePerson(application, previousApplication)) {
             return String.format("Avaldus nr %s on süsteemis juba seotud teise isikuga (%s)", application.getApplicationNr(), previousApplication.getIdcode());
         }
 
@@ -857,5 +853,13 @@ public class SaisApplicationService {
         request.setInstitutionRegCodes(aoi);
         request.setPage(objectFactory.createAllAppsExportRequestPage(Integer.valueOf(0)));
         return request;
+    }
+
+    private static boolean applicationForSamePerson(Application application, SaisApplication prevApp) {
+        return Objects.equals(prevApp.getIdcode(), application.getIdCode()) && Objects.equals(prevApp.getForeignIdcode(), application.getOtherIdNumber());
+    }
+
+    private static boolean applicationForSamePerson(SaisApplication application, SaisApplication prevApp) {
+        return Objects.equals(prevApp.getIdcode(), application.getIdcode()) && Objects.equals(prevApp.getForeignIdcode(), application.getForeignIdcode());
     }
 }

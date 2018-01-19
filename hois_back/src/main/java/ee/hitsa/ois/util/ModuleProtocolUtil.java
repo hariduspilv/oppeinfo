@@ -7,11 +7,8 @@ import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
-public final class ModuleProtocolUtil {
-    
-    private ModuleProtocolUtil() {
-    }
-    
+public abstract class ModuleProtocolUtil {
+
     public static boolean canEdit(HoisUserDetails user, Protocol protocol) {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
             return false;
@@ -24,7 +21,7 @@ public final class ModuleProtocolUtil {
         }
         return false;
     }
-    
+
     public static boolean canEdit(HoisUserDetails user, ProtocolStatus status, Long teacherResponsible) {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
             return false;
@@ -37,7 +34,7 @@ public final class ModuleProtocolUtil {
         }
         return false;
     }
-    
+
     /**
      * Student cannot be deleted from the protocol, if he is exmatriculated and has some result
      */
@@ -47,11 +44,11 @@ public final class ModuleProtocolUtil {
         }
         return true;
     }
-    
+
     public static boolean hasGrade(ProtocolStudent ps) {
         return ps.getGrade() != null;
     }
-    
+
     public static boolean canDelete(HoisUserDetails user, Protocol protocol) {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
             return false;
@@ -59,12 +56,12 @@ public final class ModuleProtocolUtil {
         return !ProtocolUtil.confirmed(protocol) && allResultsEmpty(protocol) && 
                 (user.isSchoolAdmin() || isTeacherResponsible(user, protocol));
     }
-    
+
     private static boolean isTeacherResponsible(HoisUserDetails user, Protocol protocol) {
         return UserUtil.isTeacher(user, protocol.getSchool()) && 
                 EntityUtil.getId(protocol.getProtocolVdata().getTeacher()).equals(user.getTeacherId());
     }
-    
+
     private static boolean allResultsEmpty(Protocol protocol) {
         return protocol.getProtocolStudents().stream().allMatch(ps -> ps.getGrade() == null);
     }

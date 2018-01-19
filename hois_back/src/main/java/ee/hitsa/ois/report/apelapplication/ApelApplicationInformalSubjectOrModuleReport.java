@@ -1,13 +1,16 @@
 package ee.hitsa.ois.report.apelapplication;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationInformalSubjectOrModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.TranslateUtil;
 
 public class ApelApplicationInformalSubjectOrModuleReport {
     
@@ -23,29 +26,25 @@ public class ApelApplicationInformalSubjectOrModuleReport {
 
     public ApelApplicationInformalSubjectOrModuleReport(ApelApplicationInformalSubjectOrModule informalSubjectOrModule, Language lang) {
         if (informalSubjectOrModule.getSubject() != null) {
-            name = Language.EN.equals(lang) ? informalSubjectOrModule.getSubject().getNameEn() : informalSubjectOrModule.getSubject().getNameEt();
-            module = Language.EN.equals(lang) ? informalSubjectOrModule.getCurriculumVersionHmodule().getNameEn() : informalSubjectOrModule.getCurriculumVersionHmodule().getNameEt();
+            name = TranslateUtil.name(informalSubjectOrModule.getSubject(), lang);
+            module = TranslateUtil.name(informalSubjectOrModule.getCurriculumVersionHmodule(), lang);
             credits = informalSubjectOrModule.getSubject().getCredits();
             hours = null;
             outcomes = null;
         } else if (informalSubjectOrModule.getCurriculumVersionOmodule() != null && informalSubjectOrModule.getCurriculumVersionOmoduleTheme() == null) {
             CurriculumModule curriculumModule = informalSubjectOrModule.getCurriculumVersionOmodule().getCurriculumModule();
-            name = Language.EN.equals(lang) ? curriculumModule.getNameEn() : curriculumModule.getNameEt();
-            List<CurriculumVersionOccupationModuleTheme> themes = informalSubjectOrModule.getCurriculumVersionOmodule().getThemes().stream().collect(Collectors.toList());
-            credits = themes.stream().map(t -> t.getCredits()).reduce(BigDecimal.ZERO, BigDecimal::add);
-            hours = Short.valueOf((short) themes.stream().map(t -> t.getHours()).mapToInt(i -> i).sum());
-            outcomes = Language.EN.equals(lang) ? 
-                    informalSubjectOrModule.getOutcomes().stream().map(o -> o.getCurriculumModuleOutcomes().getOutcomeEn()).collect(Collectors.toList()) : 
-                    informalSubjectOrModule.getOutcomes().stream().map(o -> o.getCurriculumModuleOutcomes().getOutcomeEt()).collect(Collectors.toList());
+            name = TranslateUtil.name(curriculumModule, lang);
+            List<CurriculumVersionOccupationModuleTheme> themes = new ArrayList<>(informalSubjectOrModule.getCurriculumVersionOmodule().getThemes());
+            credits = informalSubjectOrModule.getCurriculumVersionOmodule().getCurriculumModule().getCredits();
+            hours = Short.valueOf((short) themes.stream().mapToInt(t -> t.getHours().intValue()).sum());
+            outcomes = StreamUtil.toMappedList(o -> outcomeName(o.getCurriculumModuleOutcomes(), lang), informalSubjectOrModule.getOutcomes());
             module = null;
         } else {
             CurriculumModule curriculumModule = informalSubjectOrModule.getCurriculumVersionOmodule().getCurriculumModule();
             name = curriculumModule.getNameEt() + "/" + informalSubjectOrModule.getCurriculumVersionOmoduleTheme().getNameEt();
             credits = informalSubjectOrModule.getCurriculumVersionOmoduleTheme().getCredits();
             hours = informalSubjectOrModule.getCurriculumVersionOmoduleTheme().getHours();
-            outcomes = Language.EN.equals(lang) ? 
-                    informalSubjectOrModule.getOutcomes().stream().map(o -> o.getCurriculumModuleOutcomes().getOutcomeEn()).collect(Collectors.toList()) : 
-                    informalSubjectOrModule.getOutcomes().stream().map(o -> o.getCurriculumModuleOutcomes().getOutcomeEt()).collect(Collectors.toList());
+            outcomes = StreamUtil.toMappedList(o -> outcomeName(o.getCurriculumModuleOutcomes(), lang), informalSubjectOrModule.getOutcomes());
             module = null;
         }
         isCompulsory = Boolean.valueOf(!informalSubjectOrModule.getIsOptional().booleanValue());
@@ -90,5 +89,8 @@ public class ApelApplicationInformalSubjectOrModuleReport {
     public Boolean getTransfer() {
         return transfer;
     }
-    
+
+    private static String outcomeName(CurriculumModuleOutcome outcome, Language lang) {
+        return  Language.EN.equals(lang) ? outcome.getOutcomeEn() : outcome.getOutcomeEt();
+    }
 }

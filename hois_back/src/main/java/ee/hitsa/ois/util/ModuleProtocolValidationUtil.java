@@ -4,10 +4,7 @@ import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
-public final class ModuleProtocolValidationUtil {
-    
-    private ModuleProtocolValidationUtil(){
-    }
+public abstract class ModuleProtocolValidationUtil {
 
     public static void assertIsSchoolAdminOrTeacherResponsible(HoisUserDetails user, Long teacherId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
