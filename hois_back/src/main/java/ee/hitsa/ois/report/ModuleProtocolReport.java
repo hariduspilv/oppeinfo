@@ -17,9 +17,8 @@ public class ModuleProtocolReport {
 
     public static final String TEMPLATE_NAME = "module.protocol.xhtml";
     
+    private final String school;
     private final String protocolNr;
-    private final LocalDate inserted;
-    private final String status;
     private final String confirmer;
     private final LocalDate confirmDate;
     private final String teacher;
@@ -36,11 +35,10 @@ public class ModuleProtocolReport {
 
     public ModuleProtocolReport(Protocol protocol, Language lang) {
         Objects.requireNonNull(protocol);
+        school = name(protocol.getSchool(), lang);
         protocolNr = protocol.getProtocolNr();
-        inserted = protocol.getInserted().toLocalDate();
-        status = name(protocol.getStatus(), lang);
         confirmDate = protocol.getConfirmDate();
-        confirmer = protocol.getConfirmer();
+        confirmer = PersonUtil.stripIdcodeFromFullnameAndIdcode(protocol.getConfirmer());
         
         ProtocolVdata vData = protocol.getProtocolVdata();
         teacher = vData.getTeacher().getPerson().getFullname();
@@ -52,24 +50,20 @@ public class ModuleProtocolReport {
 
         protocolStudents = protocol.getProtocolStudents().stream()
                 .sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getStudent().getPerson(), o2.getStudent().getPerson()))
-                .map(ps -> new ProtocolStudentReport(ps))
+                .map(ps -> new ProtocolStudentReport(ps, lang))
                 .collect(Collectors.toList());
     }
 
     public static String getTemplateName() {
         return TEMPLATE_NAME;
     }
+    
+    public String getSchool() {
+        return school;
+    }
 
     public String getProtocolNr() {
         return protocolNr;
-    }
-
-    public LocalDate getInserted() {
-        return inserted;
-    }
-
-    public String getStatus() {
-        return status;
     }
 
     public String getConfirmer() {

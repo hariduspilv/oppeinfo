@@ -101,9 +101,10 @@ public class StudentForm extends VersionedCommand {
         @Required
         @Size(max = 255)
         private String address;
-        @Required
         @Size(max = 20)
         private String postcode;
+        @Size(max = 50)
+        private String addressAds;
 
         public String getEmail() {
             return email;
@@ -144,5 +145,14 @@ public class StudentForm extends VersionedCommand {
         public void setPostcode(String postcode) {
             this.postcode = postcode;
         }
+
+        public String getAddressAds() {
+            return addressAds;
+        }
+
+        public void setAddressAds(String addressAds) {
+            this.addressAds = addressAds;
+        }
+        
     }
 }

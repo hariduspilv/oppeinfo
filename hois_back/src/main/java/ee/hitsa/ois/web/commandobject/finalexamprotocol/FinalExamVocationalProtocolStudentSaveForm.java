@@ -1,8 +1,8 @@
-package ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol;
+package ee.hitsa.ois.web.commandobject.finalexamprotocol;
 
 import ee.hitsa.ois.web.commandobject.ProtocolStudentForm;
 
-public class FinalExamVocationalProtocolStudentSaveForm extends FinalExamVocationalProtocolStudentCreateForm implements ProtocolStudentForm {
+public class FinalExamVocationalProtocolStudentSaveForm extends FinalExamProtocolStudentCreateForm implements ProtocolStudentForm {
 
     private String grade;
 

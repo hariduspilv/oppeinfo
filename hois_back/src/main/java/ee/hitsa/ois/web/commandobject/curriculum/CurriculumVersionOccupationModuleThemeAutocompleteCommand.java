@@ -1,10 +1,13 @@
 package ee.hitsa.ois.web.commandobject.curriculum;
 
+import ee.hitsa.ois.validation.Required;
+
 public class CurriculumVersionOccupationModuleThemeAutocompleteCommand {
 
+    @Required
     private Long curriculumVersionOmoduleId;
     private String curriculumVersionStatusCode;
-    
+
     public Long getCurriculumVersionOmoduleId() {
         return curriculumVersionOmoduleId;
     }
@@ -20,5 +23,4 @@ public class CurriculumVersionOccupationModuleThemeAutocompleteCommand {
     public void setCurriculumVersionStatusCode(String curriculumVersionStatusCode) {
         this.curriculumVersionStatusCode = curriculumVersionStatusCode;
     }
-    
 }

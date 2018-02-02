@@ -105,7 +105,7 @@
     </md-table-container>
 
     <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-    <md-button ng-click="delete()" ng-if="record.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-click="delete()" ng-if="record.id && !(formState.students && formState.students.length > 0)" class="md-raised">{{'main.button.delete' | translate}}</md-button>
     <md-button ng-href="#/studentgroups" class="md-raised">{{'main.button.back' | translate}}</md-button>
     <md-button ng-click="addStudents()" class="md-raised">{{'studentGroup.addStudents' | translate}}</md-button>
   </div>

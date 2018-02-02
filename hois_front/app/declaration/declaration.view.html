@@ -95,9 +95,36 @@
   </div>
 </div>
 
-<div ng-show="formState.noDeclaration" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-  <br>
-  <p class="md-headline" >{{'declaration.noCurrentDeclaration' | translate}}</p>
-  <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="formState.canCreateDeclaration" class="md-raised" 
-    ng-click="addDeclaration()">{{'main.button.add' | translate}}</md-button>
+<div layout-padding>
+  <div ng-show="formState.noDeclaration && formState.isDeclarationPeriod">
+    <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+      <div md-colors="{color: 'warn'}">
+        <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+        <span>{{'declaration.noCurrentDeclaration' | translate}}</span>
+      </div>
+    </md-whiteframe>
+    <div ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" layout="row">
+      <md-button ng-show="formState.canCreateDeclaration" class="md-raised" 
+      ng-click="addDeclaration()">{{'main.button.add' | translate}}</md-button>
+    </div>
+  </div>
+
+  <div ng-show="formState.noDeclaration && !formState.isDeclarationPeriod && !formState.declarationPeriodEnd">
+    <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+      <div md-colors="{color: 'accent'}">
+        <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+        <span>{{'declaration.notDeclarationPeriod' | translate}}</span>
+      </div>
+    </md-whiteframe>
+  </div>
+
+  <div ng-show="formState.noDeclaration && !formState.isDeclarationPeriod && formState.declarationPeriodEnd">
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'accent'}">
+          <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+          <span>{{'declaration.declarationPeriodHasEnded' | translate}} {{formState.declarationPeriodEnd | hoisDate}}</span>
+        </div>
+      </md-whiteframe>
+    </div>
 </div>
+

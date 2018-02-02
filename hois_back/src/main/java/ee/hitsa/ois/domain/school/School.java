@@ -55,6 +55,7 @@ public class School extends BaseEntityWithId implements Translatable {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier ehisSchool;
     private String address;
+    private String addressAds;
     private String phone;
     private String emailDomain;
     private Boolean generateUserEmail;
@@ -133,6 +134,14 @@ public class School extends BaseEntityWithId implements Translatable {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getAddressAds() {
+        return addressAds;
+    }
+
+    public void setAddressAds(String addressAds) {
+        this.addressAds = addressAds;
     }
 
     public String getPhone() {

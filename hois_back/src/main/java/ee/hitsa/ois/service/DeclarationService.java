@@ -9,6 +9,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,6 +33,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
@@ -58,6 +60,7 @@ import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.DeclarationDto;
 import ee.hitsa.ois.web.dto.DeclarationSubjectDto;
+import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
@@ -71,6 +74,8 @@ public class DeclarationService {
     private EntityManager em;
     @Autowired
     private ProtocolStudentRepository protocolStudentRepository;
+    
+    private static final String DECLARATION_PERIOD_EVENT_TYPE = "SYNDMUS_DEKP";
 
     private static final String DECLARATION_SELECT = " distinct d.id as d_id, s.id as sId, "
             + "p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code as cv_code, "
@@ -192,7 +197,7 @@ public class DeclarationService {
         dto.setCanBeSetConfirmed(Boolean.valueOf(DeclarationUtil.canConfirmDeclaration(user, declaration)));
         Long studentId = dto.getStudent().getId();
         for(DeclarationSubjectDto subject : dto.getSubjects()) {
-            subject.setIsAssessed(Boolean.valueOf(subjectAssessed(studentId, subject.getSubjectStudyPeriod(), subject.getId())));
+            subject.setIsAssessed(subjectAssessed(studentId, subject.getSubjectStudyPeriod(), subject.getId()));
         }
         return dto;
     }
@@ -223,7 +228,7 @@ public class DeclarationService {
     }
 
     public void deleteSubject(HoisUserDetails user, DeclarationSubject subject) {
-        if(subjectAssessed(subject)) {
+        if(Boolean.TRUE.equals(subjectAssessed(subject))) {
             throw new ValidationFailedException("declaration.error.subjectDelete");
         }
         EntityUtil.setUsername(user.getUsername(), em);
@@ -417,6 +422,46 @@ public class DeclarationService {
         Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
         return AutocompleteResult.of(em.getReference(StudyPeriod.class, studyPeriodId));
     }
+    
+    private StudyPeriodEventDto getCurrentStudyPeriodDeclarationPeriod(Long schoolId) {
+        Long currentStudyPeriod = studyYearService.getCurrentStudyPeriod(schoolId);
+        if (currentStudyPeriod == null) {
+            return null;
+        }
+        
+        String select = "from study_period_event spe inner join study_period sp on sp.id = spe.study_period_id";
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(select);
+        qb.requiredCriteria("sp.id = :studyPeriodId", "studyPeriodId", currentStudyPeriod);
+        qb.requiredCriteria("spe.event_type_code = :eventTypeCode", "eventTypeCode", DECLARATION_PERIOD_EVENT_TYPE);
+
+        List<?> result = qb.select("spe.id", em).getResultList();
+        if (result.isEmpty()) {
+            return null;
+        }
+        return StudyPeriodEventDto.of(em.getReference(StudyPeriodEvent.class,  resultAsLong(result.get(0), 1)));
+    }
+    
+    public boolean isDeclarationPeriod(Long schoolId) {
+        StudyPeriodEventDto declarationPeriod = getCurrentStudyPeriodDeclarationPeriod(schoolId);
+        if (declarationPeriod == null) {
+            return false;
+        }
+        
+        LocalDateTime currentTime = LocalDateTime.now();
+        if (currentTime.isAfter(declarationPeriod.getStart()) && currentTime.isBefore(declarationPeriod.getEnd())) {
+            return true;
+        }
+        return false;
+    }
+    
+    public LocalDateTime getDeclarationPeriodEndDate(Long schoolId) {
+        StudyPeriodEventDto declarationPeriod = getCurrentStudyPeriodDeclarationPeriod(schoolId);
+        if (declarationPeriod == null) {
+            return null;
+        }
+        return declarationPeriod.getEnd();
+    }
 
     private void setAreSubjectsDeclaredRepeatedy(Collection<DeclarationSubjectDto> subjects, Long declarationId) {
         if(!CollectionUtils.isEmpty(subjects)) {
@@ -452,7 +497,7 @@ public class DeclarationService {
         declaration.setStatus(em.getReference(Classifier.class, status.name()));
     }
 
-    private boolean subjectAssessed(DeclarationSubject subject) {
+    private Boolean subjectAssessed(DeclarationSubject subject) {
         Long studentId = EntityUtil.getId(subject.getDeclaration().getStudent());
         Long subjectStudyPeriodId = EntityUtil.getId(subject.getSubjectStudyPeriod());
         Long declarationSubjectId = EntityUtil.getId(subject);
@@ -462,17 +507,21 @@ public class DeclarationService {
     /**
      * Check if subject is graded in protocol or has graded midterm task
      */
-    public boolean subjectAssessed(Long studentId, Long subjectStudyPeriodId, Long declarationSubjectId) {
+    public Boolean subjectAssessed(Long studentId, Long subjectStudyPeriodId, Long declarationSubjectId) {
         Query q = em.createNativeQuery("select exists(select * from protocol_student ps "
                 + "join protocol p on p.id = ps.protocol_id "
                 + "join protocol_hdata phd on p.id = phd.protocol_id "
-                + "where ps.student_id = ?1 and phd.subject_study_period_id = ?2 "
-                + "and (ps.grade_code is not null or (ps.add_info is not null and ps.add_info <> ''))) "
+                + "where ps.student_id = ?1 and phd.subject_study_period_id = ?2) "
                 + "or exists(select * from midterm_task_student_result r where r.declaration_subject_id = ?3)");
         q.setParameter(1, studentId);
         q.setParameter(2, subjectStudyPeriodId);
         q.setParameter(3, declarationSubjectId);
-        return !q.setMaxResults(1).getResultList().isEmpty();
+        
+        List<?> result = q.getResultList();
+        if (result.isEmpty()) {
+            return Boolean.FALSE;
+        }
+        return resultAsBoolean(result.get(0), 0);
     }
     
     public Page<AutocompleteResult> getStudentsWithoutDeclaration(UsersSearchCommand command, Pageable pageable,

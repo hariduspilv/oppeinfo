@@ -1,6 +1,6 @@
 <hois-collapsable expanded="true" ng-if="tasks.todayTasks.length > 0 || tasks.tomorrowTasks.length > 0 || tasks.laterTasks.length > 0">
     <hois-collapsable-header>
-        <h2 class="md-title">{{'home.student.homeworkAndTests' | translate}}</h2>
+        <span>{{'home.student.homeworkAndTests' | translate}}</span>
     </hois-collapsable-header>
 
     <div style="margin:1%" layout="column">
@@ -45,7 +45,7 @@
 
 <hois-collapsable expanded="false" ng-if="studentAbsences.length > 0">
     <hois-collapsable-header>
-        <h2 class="md-title">{{'home.student.absences' | translate}}</h2>
+        <span>{{'home.student.absences' | translate}}</span>
     </hois-collapsable-header>
 
     <div style="margin:1%">
@@ -66,7 +66,7 @@
 
 <hois-collapsable expanded="true" ng-if="lastResults.length > 0">
     <hois-collapsable-header>
-        <h2 class="md-title">{{'home.student.lastResults' | translate}}</h2>
+        <span>{{'home.student.lastResults' | translate}}</span>
     </hois-collapsable-header>
 
     <div layout="column" ng-repeat="result in lastResults" style="margin-top:1%">

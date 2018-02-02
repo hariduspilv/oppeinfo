@@ -31,7 +31,6 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
-import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JournalEntryType;
@@ -250,18 +249,17 @@ public class StudentService {
      * @return
      */
     public Page<StudentApplicationDto> applications(Long studentId, Pageable pageable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from application a join classifier type on type.code = a.type_code").sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from application a join classifier type on type.code = a.type_code "+
+                "join classifier status on status.code = a.status_code").sort(pageable);
 
         qb.requiredCriteria("a.student_id = :studentId", "studentId", studentId);
-        return JpaQueryUtil.pagingResult(qb, "a.id, a.type_code, a.inserted, a.status_code, a.changed, a.submitted, a.reject_reason", em, pageable).map(r -> {
+        return JpaQueryUtil.pagingResult(qb, "a.id, a.type_code, a.inserted, a.status_code, case when a.status_code = 'AVALDUS_STAATUS_KINNITATUD' then a.changed else null end, a.submitted, a.reject_reason", em, pageable).map(r -> {
             StudentApplicationDto dto = new StudentApplicationDto();
             dto.setId(resultAsLong(r, 0));
             dto.setType(resultAsString(r, 1));
             dto.setInserted(resultAsLocalDateTime(r, 2));
             dto.setStatus(resultAsString(r, 3));
-            if(ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name().equals(dto.getStatus())) {
-                dto.setConfirmDate(resultAsLocalDateTime(r, 4));
-            }
+            dto.setConfirmDate(resultAsLocalDateTime(r, 4));
             dto.setSubmitted(resultAsLocalDateTime(r, 5));
             dto.setRejectReason(resultAsString(r, 6));
             return dto;
@@ -277,7 +275,7 @@ public class StudentService {
      * @return
      */
     public Page<StudentDirectiveDto> directives(HoisUserDetails user, Student student, Pageable pageable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive d").sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive d join classifier type on type.code = d.type_code").sort(pageable);
 
         String showCanceled = "";
         if(!UserUtil.isSchoolAdmin(user, student.getSchool())) {

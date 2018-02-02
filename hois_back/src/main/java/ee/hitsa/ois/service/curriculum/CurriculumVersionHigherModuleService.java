@@ -27,7 +27,6 @@ import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumVersionHigherModuleSubjectRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -51,8 +50,6 @@ public class CurriculumVersionHigherModuleService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private SubjectRepository subjectRepository;
-    @Autowired
-    private CurriculumVersionHigherModuleSubjectRepository curriculumVersionHigherModuleSubjectRepository;
 
     public CurriculumVersionHigherModule create(CurriculumVersionHigherModuleDto form) {
         CurriculumVersionHigherModule module = createCurriculumVersionHigherModule(form);
@@ -193,11 +190,11 @@ public class CurriculumVersionHigherModuleService {
         });
         return StreamUtil.toMappedList(CurriculumVersionHigherModuleSubjectDto::of, subjects);
     }
-    
+
     public Set<CurriculumVersionHigherModuleSubjectDto> getSubjectsForMinorSpeciality(HigherModuleSubjectCommand command) {
-        List<CurriculumVersionHigherModuleSubject> subjects = curriculumVersionHigherModuleSubjectRepository.findAll((root, query, cb) -> {
-            return cb.equal(root.get("module").get("curriculumVersion").get("id"), command.getCurriculumVersion());
-        });
+        List<CurriculumVersionHigherModuleSubject> subjects = em.createQuery("select s from CurriculumVersionHigherModuleSubject s where s.module.curriculumVersion.id =?1", CurriculumVersionHigherModuleSubject.class)
+                .setParameter(1, command.getCurriculumVersion())
+                .getResultList();
         return StreamUtil.toMappedSet(CurriculumVersionHigherModuleSubjectDto::forOptions, subjects);
     }
 

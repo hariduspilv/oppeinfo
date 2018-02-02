@@ -70,6 +70,14 @@ public class CertificateControllerTests {
         responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
+
+    @Test
+    public void signatories() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(BASE_URL + "/signatories", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
     /**
      * This test is vulnerable to database changes.
      * This was the reasons for failing last times.

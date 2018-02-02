@@ -19,7 +19,7 @@ import ee.hitsa.ois.util.StreamUtil;
 
 @XmlRootElement(name="curriculum")
 public class CurriculumXml {
-    
+
     private Long id;
     private Long version;
     private LocalDateTime inserted;

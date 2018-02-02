@@ -11,10 +11,9 @@
         <input ng-model="record.code" name="code" type="text" md-maxlength="20" required>
       </md-input-container>
 
-      <md-input-container class="md-block">
-        <label class="textInput">{{'building.address' | translate}}</label>
-        <input ng-model="record.address" name="address" type="text" md-maxlength="255">
-      </md-input-container>
+      <md-div class="md-block">
+        <hois-ads-adapter class="md-text" ng-model="record.addressAds" address-model="record.address"></hois-ads-adapter>
+      </md-div>
     </form>
 
     <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>

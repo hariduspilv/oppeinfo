@@ -11,4 +11,8 @@
       <div ng-include="templateName"></div>
     </form>
   </div>
+  <div layout="row" ng-if="!stipend.type">
+    <md-button class="md-raised" ng-click="back('#/scholarships/' + formState.typeIsScholarship ? 'scholarships' : 'grants', stipendForm)">{{'main.button.back' | translate}}</md-button>
+  </div>
 </div>
+

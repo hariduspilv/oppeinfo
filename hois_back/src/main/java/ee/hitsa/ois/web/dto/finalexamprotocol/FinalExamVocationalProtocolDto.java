@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.dto.finalExamVocationalProtocol;
+package ee.hitsa.ois.web.dto.finalexamprotocol;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,7 +16,6 @@ import ee.hitsa.ois.web.dto.ProtocolVdataDto;
 public class FinalExamVocationalProtocolDto extends VersionedCommand {
     
     private Long id;
-    private Boolean isVocational;
     private String status;
     private String studyLevel;
     private String protocolNr;
@@ -44,7 +43,7 @@ public class FinalExamVocationalProtocolDto extends VersionedCommand {
         }
         if (protocol.getProtocolVdata() != null) {
             dto.setProtocolVdata(ProtocolVdataDto.of(protocol.getProtocolVdata()));
-            dto.setStudyLevel(protocol.getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule().getCurriculum().getOrigStudyLevel().getCode());
+            dto.setStudyLevel(EntityUtil.getCode(protocol.getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule().getCurriculum().getOrigStudyLevel()));
         }
         if (protocol.getOisFile() != null) {
             dto.setOisFile(EntityUtil.bindToDto(protocol.getOisFile(), new OisFileViewDto()));
@@ -58,14 +57,6 @@ public class FinalExamVocationalProtocolDto extends VersionedCommand {
     
     public void setId(Long id) {
         this.id = id;
-    }
-    
-    public Boolean getIsVocational() {
-        return isVocational;
-    }
-    
-    public void setIsVocational(Boolean isVocational) {
-        this.isVocational = isVocational;
     }
     
     public String getStatus() {

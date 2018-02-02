@@ -123,6 +123,7 @@ public class ControllerErrorHandler {
     // TODO error format
     public static class ErrorInfo {
         private final List<Error> errors;
+        private Object data;
 
         public ErrorInfo(List<? extends Error> errors) {
             this.errors = new ArrayList<>(errors != null ? errors : Collections.emptyList());
@@ -131,6 +132,15 @@ public class ControllerErrorHandler {
         @JsonProperty("_errors")
         public List<Error> getErrors() {
             return errors;
+        }
+
+        @JsonInclude(Include.NON_ABSENT)
+        public Object getData() {
+            return data;
+        }
+
+        public void setData(Object data) {
+            this.data = data;
         }
 
         public static ErrorInfo of(Errors errors) {

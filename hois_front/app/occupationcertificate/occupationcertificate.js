@@ -3,27 +3,17 @@
 angular.module('hitsaOis').controller('OccupationCertificateImportController', ['$scope', 'message', 'QueryUtils',
   function ($scope, message, QueryUtils) {
 
-    $scope.criteria = {};
-    $scope.formState = {studentGroups: QueryUtils.endpoint('/autocomplete/studentgroups').query({higher: false, valid: true})};
-    $scope.formState.studentGroups.$promise.then(function(groups) {
-      $scope.formState.studentGroupMap = {};
-      for(var i = 0; i < groups.length; i++) {
-        var sg = groups[i];
-        var cv = sg.curriculumVersion;
-        if(cv) {
-          var cvgroups = $scope.formState.studentGroupMap[cv];
-          if(!cvgroups) {
-            cvgroups = [];
-            $scope.formState.studentGroupMap[cv] = cvgroups;
-          }
-          cvgroups.push(sg);
-        }
-      }
-    });
+    function curriculumVersionChanged(newValues) {
+      // calculate allowed student groups
+      $scope.formState.studentGroups = $scope.formState.allStudentGroups.filter(function(it) {
+        return !newValues || (it.curriculumVersion && newValues.indexOf(it.curriculumVersion) !== -1);
+      });
+    }
 
-    $scope.$watchCollection('criteria.curriculumVersion', function(newValues, oldValues) {
-      // TODO calculate allowed student groups
-    });
+    $scope.criteria = {};
+    $scope.formState = {allStudentGroups: QueryUtils.endpoint('/autocomplete/studentgroups').query({higher: false, valid: true})};
+    $scope.formState.allStudentGroups.$promise.then(function() { curriculumVersionChanged($scope.criteria.curriculumVersion); });
+    $scope.$watchCollection('criteria.curriculumVersion', curriculumVersionChanged);
 
     $scope.importFromKutseregister = function() {
       $scope.occupationCertificateForm.$setSubmitted();

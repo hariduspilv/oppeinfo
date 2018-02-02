@@ -54,19 +54,19 @@ import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ProtocolVdataForm;
-import ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol.FinalExamVocationProtocolSearchCommand;
-import ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol.FinalExamVocationalProtocolCommitteeMemberForm;
-import ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol.FinalExamVocationalProtocolCreateForm;
-import ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol.FinalExamVocationalProtocolSaveForm;
-import ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol.FinalExamVocationalProtocolSearchDto;
-import ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol.FinalExamVocationalProtocolStudentSaveForm;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamProtocolCommitteeMemberForm;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamVocationalProtocolCreateForm;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamVocationalProtocolSaveForm;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamVocationalProtocolSearchCommand;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamVocationalProtocolSearchDto;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamVocationalProtocolStudentSaveForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
-import ee.hitsa.ois.web.dto.finalExamVocationalProtocol.FinalExamVocationalProtocolCommitteeSelectDto;
-import ee.hitsa.ois.web.dto.finalExamVocationalProtocol.FinalExamVocationalProtocolDto;
-import ee.hitsa.ois.web.dto.finalExamVocationalProtocol.FinalExamVocationalProtocolOccupationDto;
-import ee.hitsa.ois.web.dto.finalExamVocationalProtocol.FinalExamVocationalProtocolOccupationalModuleDto;
-import ee.hitsa.ois.web.dto.finalExamVocationalProtocol.FinalExamVocationalProtocolStudentDto;
+import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolCommitteeSelectDto;
+import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolDto;
+import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolOccupationDto;
+import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolOccupationalModuleDto;
+import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolStudentDto;
 
 @Transactional
 @Service
@@ -79,7 +79,7 @@ public class FinalExamVocationalProtocolService {
     @Autowired
     private LessonPlanModuleRepository lessonPlanModuleRepository;
 
-    public Page<FinalExamVocationalProtocolSearchDto> search(HoisUserDetails user, FinalExamVocationProtocolSearchCommand cmd,
+    public Page<FinalExamVocationalProtocolSearchDto> search(HoisUserDetails user, FinalExamVocationalProtocolSearchCommand cmd,
             Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from protocol p "
                 + "inner join protocol_vdata pvd on pvd.protocol_id = p.id").sort(pageable);
@@ -221,7 +221,7 @@ public class FinalExamVocationalProtocolService {
     
     private void saveCommitteeMembers(Protocol protocol, FinalExamVocationalProtocolSaveForm form) {
         EntityUtil.bindEntityCollection(protocol.getProtocolCommitteeMembers(), ProtocolCommitteeMember::getId,
-                form.getProtocolCommitteeMembers(), FinalExamVocationalProtocolCommitteeMemberForm::getId, dto -> {
+                form.getProtocolCommitteeMembers(), FinalExamProtocolCommitteeMemberForm::getId, dto -> {
                     ProtocolCommitteeMember pcm = EntityUtil.bindToEntity(dto, new ProtocolCommitteeMember(), "committeeMember");
                     pcm.setCommitteeMember(em.getReference(CommitteeMember.class, dto.getCommitteeMemberId()));
                     return pcm;
@@ -407,6 +407,7 @@ public class FinalExamVocationalProtocolService {
         }));
     }
     
+    // TODO: will be used when new tables are created
     private Map<Long, FinalExamVocationalProtocolOccupationDto> curriculumOccupation(HoisUserDetails user, Long occupationalModuleId) {
        JpaNativeQueryBuilder occupationQb = new JpaNativeQueryBuilder("from curriculum_occupation co"
                + " inner join curriculum c on co.curriculum_id = c.id"

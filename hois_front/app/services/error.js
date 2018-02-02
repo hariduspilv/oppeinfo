@@ -2,14 +2,13 @@
 
 angular.module('hitsaOis').factory('resourceErrorHandler', function ($q, message) {
   return {
-    responseError: function (response) {
+    responseError: function (response, form) {
       if (response.status === 404) {
         message.error('not.found');
       } else if (response.status === 409) {
         message.error('main.messages.record.modified');
       } else if (response.data && response.data._errors) {
-        var form = response.config && response.config.data ? response.config.data.form : undefined;
-        form = form ? form() : undefined;
+        var popupshown = false;
         angular.forEach(response.data._errors, function (err) {
           if(err.field && form) {
             var ctrl = form[err.field];
@@ -38,8 +37,12 @@ angular.module('hitsaOis').factory('resourceErrorHandler', function ($q, message
               return;
             }
           }
+          popupshown = true;
           message.error(err.code + (err.field ? ' ' + err.field : ''), err.params);
         });
+        if(!popupshown) {
+          message.error('main.messages.form-has-errors');
+        }
       } else {
         message.error('main.messages.system.failure');
       }

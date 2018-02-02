@@ -17,25 +17,27 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.RoomsAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
-import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionModuleAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
+import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
+import ee.hitsa.ois.web.dto.SchoolWithLogo;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
@@ -61,7 +63,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/rooms")
-    public Page<AutocompleteResult> rooms(HoisUserDetails user, @Valid RoomsAutocompleteCommand lookup) {
+    public Page<AutocompleteResult> rooms(HoisUserDetails user, RoomsAutocompleteCommand lookup) {
         return asPage(autocompleteService.rooms(user.getSchoolId(), lookup));
     }
 
@@ -84,22 +86,27 @@ public class AutocompleteController {
     }
 
     @GetMapping("/curriculums")
-    public Page<AutocompleteResult> curriculums(HoisUserDetails user, AutocompleteCommand term) {
+    public Page<AutocompleteResult> curriculums(HoisUserDetails user, SearchCommand term) {
         return asPage(autocompleteService.curriculums(user.getSchoolId(), term));
+    }
+    
+    @GetMapping("/curriculumsDropdown")
+    public List<AutocompleteResult> curriculumsDropdown(HoisUserDetails user) {
+        return autocompleteService.curriculumsDropdown(user.getSchoolId());
     }
 
     @GetMapping("/curriculumversions")
-    public List<CurriculumVersionResult> curriculumVersions(HoisUserDetails user, @Valid CurriculumVersionAutocompleteCommand lookup) {
+    public List<CurriculumVersionResult> curriculumVersions(HoisUserDetails user, CurriculumVersionAutocompleteCommand lookup) {
         return autocompleteService.curriculumVersions(user.getSchoolId(), lookup);
     }
     
     @GetMapping("/curriculumversionhmodules")
-    public List<AutocompleteResult> curriculumVersionHigherModules(@Valid CurriculumVersionModuleAutocompleteCommand lookup) {
+    public List<AutocompleteResult> curriculumVersionHigherModules(@Valid CurriculumVersionHigherModuleAutocompleteCommand lookup) {
         return autocompleteService.curriculumVersionHigherModules(lookup);
     }
 
     @GetMapping("/curriculumversionomodules")
-    public List<CurriculumVersionOccupationModuleResult> curriculumVersionOccupationModules(@Valid CurriculumVersionModuleAutocompleteCommand lookup) {
+    public List<CurriculumVersionOccupationModuleResult> curriculumVersionOccupationModules(@Valid CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
         return autocompleteService.curriculumVersionOccupationModules(lookup);
     }
 
@@ -109,12 +116,12 @@ public class AutocompleteController {
     }
     
     @GetMapping("/curriculumversionomodulesandthemes")
-    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(@Valid CurriculumVersionModuleAutocompleteCommand lookup) {
+    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(@Valid CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
         return autocompleteService.curriculumVersionOccupationModulesAndThemes(lookup);
     }
 
     @GetMapping("/directivecoordinators")
-    public List<AutocompleteResult> directiveCoordinators(HoisUserDetails user, @Valid DirectiveCoordinatorAutocompleteCommand lookup) {
+    public List<AutocompleteResult> directiveCoordinators(HoisUserDetails user, DirectiveCoordinatorAutocompleteCommand lookup) {
         return autocompleteService.directiveCoordinators(user.getSchoolId(), lookup);
     }
 
@@ -125,8 +132,13 @@ public class AutocompleteController {
     }
 
     @GetMapping("/schools")
-    public List<SchoolWithoutLogo> schools(AutocompleteCommand lookup) {
+    public List<SchoolWithoutLogo> schools(SearchCommand lookup) {
         return autocompleteService.schools(lookup);
+    }
+    
+    @GetMapping("/schoolsWithLogo")
+    public List<SchoolWithLogo> schoolsWithLogo(SearchCommand lookup) {
+        return autocompleteService.schoolsWithLogo(lookup);
     }
 
     @GetMapping("/ldapschools")
@@ -145,32 +157,32 @@ public class AutocompleteController {
     }
 
     @GetMapping("/studentgroups")
-    public List<StudentGroupResult> studentGroups(HoisUserDetails user, @Valid StudentGroupAutocompleteCommand lookup) {
+    public List<StudentGroupResult> studentGroups(HoisUserDetails user, StudentGroupAutocompleteCommand lookup) {
         return autocompleteService.studentGroups(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/subjects")
-    public Page<SubjectResult> subjects(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
+    public Page<SubjectResult> subjects(HoisUserDetails user, SubjectAutocompleteCommand lookup) {
         return asPage(autocompleteService.subjects(user.getSchoolId(), lookup));
     }
 
     @GetMapping("/subjectsList")
-    public List<SubjectResult> subjectsAsList(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
+    public List<SubjectResult> subjectsAsList(HoisUserDetails user, SubjectAutocompleteCommand lookup) {
         return autocompleteService.subjects(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/teachers")
-    public Page<AutocompleteResult> teachers(HoisUserDetails user, @Valid TeacherAutocompleteCommand lookup) {
+    public Page<AutocompleteResult> teachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         return asPage(autocompleteService.teachers(user.getSchoolId(), lookup));
     }
 
     @GetMapping("/teachersList")
-    public List<AutocompleteResult> teachersAsList(HoisUserDetails user, @Valid TeacherAutocompleteCommand lookup) {
+    public List<AutocompleteResult> teachersAsList(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         return autocompleteService.teachers(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/students")
-    public Page<AutocompleteResult> students(HoisUserDetails user, @Valid StudentAutocompleteCommand lookup) {
+    public Page<AutocompleteResult> students(HoisUserDetails user, StudentAutocompleteCommand lookup) {
         if(user.isStudent()) {
             // student is allowed to lookup himself/herself
             lookup.setId(user.getStudentId());
@@ -199,17 +211,17 @@ public class AutocompleteController {
     }
 
     @GetMapping("/vocationalmodules")
-    public Page<AutocompleteResult> vocationalModules(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
+    public Page<AutocompleteResult> vocationalModules(HoisUserDetails user, SearchCommand lookup) {
         return autocompleteService.vocationalModules(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/journals")
-    public List<AutocompleteResult> journals(HoisUserDetails user, @Valid JournalAutocompleteCommand lookup) {
+    public List<AutocompleteResult> journals(HoisUserDetails user, JournalAutocompleteCommand lookup) {
         return autocompleteService.journals(user, lookup);
     }
 
     @GetMapping("/journalsAndSubjects")
-    public Page<AutocompleteResult> journalsAndSubjects(HoisUserDetails user, @Valid JournalAndSubjectAutocompleteCommand lookup) {
+    public Page<AutocompleteResult> journalsAndSubjects(HoisUserDetails user, JournalAndSubjectAutocompleteCommand lookup) {
         return asPage(autocompleteService.journalsAndSubjects(user, lookup));
     }
     

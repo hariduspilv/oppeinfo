@@ -1,34 +1,30 @@
-<md-dialog aria-label="add protocol dialog" flex="30" flex-xs="100">
-  <form ng-submit="finalExamProtocolNewForm.$valid && submit()" novalidate layout="column" name="finalExamProtocolNewForm">
-    <md-toolbar>
-      <div class="md-toolbar-tools">
-        <h2>{{'finalExamProtocol.addFinalExamProtocol' | translate}}</h2>
-        <span flex></span>
-        <md-button class="md-icon-button" ng-click="cancel()">
-          <md-icon md-font-set="material-icons">close</md-icon>
-        </md-button>
-      </div>
-    </md-toolbar>
-
-    <md-dialog-content>
-      <div class="ois-form-layout-padding" ng-cloak>
+<div class="ois-form-layout-padding" ng-cloak>
+  <div flex>
+    <form ng-submit="finalExamProtocolNewForm.$valid && submit()" novalidate layout="column" name="finalExamProtocolNewForm">
+      <div>
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex flex-sm="100">
+          <md-input-container flex="100" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'finalExamProtocol.studyPeriod' | translate}}</label>
-            <hois-select ng-model="formState.studyPeriod" values="formState.studyPeriods" ng-change="studyPeriodChange()" required></hois-select>
+            <hois-select ng-model="formState.studyPeriod" values="studyPeriods" ng-change="studyPeriodChange()" required autofocus></hois-select>
           </md-input-container>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex flex-sm="100">
             <label class="textInput">{{'finalExamProtocol.subject' | translate}}</label>
-            <hois-select ng-model="formState.subject" values="formState.subject" ng-change="subjectChange()" required></hois-select>
+            <hois-select ng-model="formState.subject" values="formState.subjects" ng-change="subjectChange()"
+              required></hois-select>
           </md-input-container>
+        </div>
+        <br>
+        <div layout="row">
+          <label flex="10" flex-sm="30" flex-xs="30" class="common-label">{{'finalExamProtocol.type' | translate}}</label>
+          <hois-classifier-radio layout="row" ng-model="formState.protocolType" model-value-attr="code" main-classifier-code="PROTOKOLLI_LIIK"
+            required ng-disabled="formState.readOnly" class="md-primary" required></hois-classifier-radio>
         </div>
 
         <br/>
 
-        <input style="display:none" type="number" readonly name="selectedStudentsLength" ng-model="selectedStudentsLength" ng-model-options="{ getterSetter: true }" min="1" />
         <div flex>
           <md-table-container>
             <table md-table md-progress="tabledata.$promise" md-row-select multiple ng-model="formState.selectedStudents">
@@ -58,11 +54,11 @@
 
         <br/>
 
-        <md-dialog-actions layout="row" layout-align="start center">
-          <md-button class="md-raised md-primary" ng-click="save()">{{'finalExamProtocol.createProtocol' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="back('#/finalExamHigherProtocol/')">{{'main.button.back' | translate}}</md-button>
-        </md-dialog-actions>
+        <div layout="row">
+          <md-button class="md-raised md-primary" type="submit">{{'finalExamProtocol.create' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="back('#/finalExamHigherProtocols/')">{{'main.button.back' | translate}}</md-button>
+        </div>
       </div>
-    </md-dialog-content>
-  </form>
-</md-dialog>
+    </form>
+  </div>
+</div>

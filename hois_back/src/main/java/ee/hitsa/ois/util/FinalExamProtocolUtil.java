@@ -17,6 +17,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public class FinalExamProtocolUtil {
     
+    //TODO: could lead to concurrency issues
     public static String generateProtocolNumber(HoisUserDetails user, EntityManager em) {
         Long generatedProtocolNr = null;
         
@@ -36,7 +37,7 @@ public class FinalExamProtocolUtil {
     }
 
     public static boolean canEdit(HoisUserDetails user, Protocol protocol) {
-        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
+        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LOPMOODULPROTOKOLL)) {
             return false;
         }
         if(UserUtil.isSchoolAdmin(user, protocol.getSchool())) {
@@ -49,7 +50,7 @@ public class FinalExamProtocolUtil {
     }
     
     public static boolean canEdit(HoisUserDetails user, ProtocolStatus status, Long teacherResponsible) {
-        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
+        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LOPMOODULPROTOKOLL)) {
             return false;
         }
         if(user.isSchoolAdmin()) {
@@ -87,5 +88,12 @@ public class FinalExamProtocolUtil {
     
     private static boolean allResultsEmpty(Protocol protocol) {
         return protocol.getProtocolStudents().stream().allMatch(ps -> ps.getGrade() == null);
+    }
+    
+    public static boolean canCreateHigherProtocol(HoisUserDetails user) {
+        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LOPMOODULPROTOKOLL)) {
+            return false;
+        }
+        return user.isSchoolAdmin() || user.isTeacher();
     }
 }

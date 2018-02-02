@@ -3,8 +3,8 @@
       <div layout="row">
         <div flex="30">{{currentLanguageNameField(module.curriculumModule) + ' (' + currentLanguageNameField(module.curriculumModule.module) + ')'}}</div>
         <div ng-if="moduleResultById[module.id] && moduleResultById[module.id].grade && positiveGrade(moduleResultById[module.id].grade.value)" flex-offset="10" class="bold" md-colors="{color: 'green-600'}">{{moduleResultById[module.id].grade.value}}</div>
-        <div ng-if="!moduleResultById[module.id] || !moduleResultById[module.id].grade" flex-offset="10" md-colors="{color: 'purple-300'}">{{(moduleResultById[module.id] ? moduleResultById[module.id].totalSubmitted : 0) - module.curriculumModule.credits}} {{'student.result.ekap' | translate}}</div>
-        <div ng-if="!moduleResultById[module.id] && allThemesHavePositiveGrade(module)" flex-offset="10" md-colors="{color: 'purple-300'}">{{'student.result.moduleNotGraded' | translate}}</div>
+        <div ng-if="!moduleResultById[module.id] || !moduleResultById[module.id].grade" flex-offset="10" md-colors="{color: 'accent'}">{{(moduleResultById[module.id] ? moduleResultById[module.id].totalSubmitted : 0) - module.curriculumModule.credits}} {{'student.result.ekap' | translate}}</div>
+        <div ng-if="!moduleResultById[module.id] && allThemesHavePositiveGrade(module)" flex-offset="10" md-colors="{color: 'accent'}">{{'student.result.moduleNotGraded' | translate}}</div>
       </div>
     </hois-collapsable-header>
     <md-table-container>

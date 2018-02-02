@@ -1,85 +1,88 @@
-<div flex-xs="100" flex-gt-xs="100" flex-gt-sm="75" class="ois-form-layout-padding ois-form-layout" ng-cloak>
+<div flex-xs="100" flex-gt-xs="100" flex-gt-sm="100" class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <!--<div class="ois-form-layout" layout="column" layout-margin ng-cloak>-->
-  <form ng-submit="loadData()" novalidate>
-    <div layout="column">
-      <div layout="row">
-        <md-input-container flex>
-          <label class="textInput">{{'subject.name' | translate}}</label>
-          <input ng-model="criteria.name" type="text" autofocus>
-        </md-input-container>
-      </div>
-      <div layout="row">
-        <md-input-container flex>
-          <label class="textInput">{{'subject.code' | translate}}</label>
-          <input ng-model="criteria.code" type="text">
-        </md-input-container>
-        <div flex-xs="0" flex-gt-sm="10"></div>
-        <md-input-container flex>
-          <label>{{'subject.assessment' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.assessments" model-value-attr="code" main-classifier-code="HINDAMISVIIS" multiple></hois-classifier-select>
-        </md-input-container>
-      </div>
-      <div layout="row">
-        <md-input-container flex>
-          <label>{{'subject.curriculum' | translate}}</label>
-          <md-select ng-model="criteria.curriculaVersion" multiple>
-            <md-option ng-repeat="it in curricula" value="{{it.id}}" style="font-size: medium;">
-              {{currentLanguageNameField(it)}}
-            </md-option>
-          </md-select>
-        </md-input-container>
-      </div>
+  <fieldset>
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+    <form ng-submit="loadData()" novalidate>
       <div layout="column">
-      <label class="common-label" style="padding-bottom:12px;"> {{'subject.credits' | translate}}</label>
-        <div layout="row" flex>
-          <div layout="column" flex>
-            <div layout-gt-xs="row" flex="45" flex-xs="100">
+        <div layout="row">
+          <md-input-container flex>
+            <label class="textInput">{{'subject.name' | translate}}</label>
+            <input ng-model="criteria.name" type="text" autofocus>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-input-container flex>
+            <label class="textInput">{{'subject.code' | translate}}</label>
+            <input ng-model="criteria.code" type="text">
+          </md-input-container>
+          <div flex-xs="0" flex-gt-sm="10"></div>
+          <md-input-container flex>
+            <label>{{'subject.assessment' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.assessments" model-value-attr="code" main-classifier-code="HINDAMISVIIS" multiple></hois-classifier-select>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-input-container flex>
+            <label>{{'subject.curriculum' | translate}}</label>
+            <md-select ng-model="criteria.curriculaVersion" multiple>
+              <md-option ng-repeat="it in curricula" value="{{it.id}}" style="font-size: medium;">
+                {{currentLanguageNameField(it)}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+        <div layout="column">
+        <label class="common-label" style="padding-bottom:12px;"> {{'subject.credits' | translate}}</label>
+          <div layout="row" flex>
+            <div layout="column" flex>
+              <div layout-gt-xs="row" flex="45" flex-xs="100">
+                <md-input-container flex>
+                  <label>{{'main.from' | translate}}</label>
+                  <input type="number" ng-model="criteria.from" min="0" step="0.1">
+                </md-input-container>
+                <md-input-container flex>
+                  <label>{{'main.thru' | translate}}</label>
+                  <input type="number" ng-model="criteria.thru" min="0" step="0.1">
+                </md-input-container>
+              </div>
+            </div>
+            <div flex-xs="0" flex-gt-sm="10"></div>
+            <div layout="column" flex>
               <md-input-container flex>
-                <label>{{'main.from' | translate}}</label>
-                <input type="number" ng-model="criteria.from" min="0" step="0.1">
-              </md-input-container>
-              <md-input-container flex>
-                <label>{{'main.thru' | translate}}</label>
-                <input type="number" ng-model="criteria.thru" min="0" step="0.1">
+                <label>{{'school.department.department' | translate}}</label>
+                <md-select ng-model="criteria.departments" multiple>
+                  <md-option ng-repeat="department in departments" ng-value="department.id">
+                    {{currentLanguageNameField(department)}}
+                  </md-option>
+                </md-select>
               </md-input-container>
             </div>
           </div>
-          <div flex-xs="0" flex-gt-sm="10"></div>
-          <div layout="column" flex>
-            <md-input-container flex>
-              <label>{{'school.department.department' | translate}}</label>
-              <md-select ng-model="criteria.departments" multiple>
-                <md-option ng-repeat="department in departments" ng-value="department.id">
-                  {{currentLanguageNameField(department)}}
-                </md-option>
-              </md-select>
-            </md-input-container>
+          <div layout="row" flex>
+            <div layout="column" flex>
+              <md-input-container ng-show="formState.canViewAll">
+                <label>{{'subject.status' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="AINESTAATUS" multiple></hois-classifier-select>
+              </md-input-container>
+            </div>
+            <div flex-xs="0" flex-gt-sm="10"></div>
+            <div layout="column" flex>
+              <md-input-container>
+                <label>{{'subject.language' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.languages" model-value-attr="code" main-classifier-code="OPPEKEEL" criteria="{higher: true}" multiple></hois-classifier-select>
+              </md-input-container>
+            </div>
           </div>
         </div>
-        <div layout="row" flex>
-          <div layout="column" flex>
-            <md-input-container ng-show="formState.canViewAll">
-              <label>{{'subject.status' | translate}}</label>
-              <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="AINESTAATUS" multiple></hois-classifier-select>
-            </md-input-container>
-          </div>
-          <div flex-xs="0" flex-gt-sm="10"></div>
-          <div layout="column" flex>
-            <md-input-container>
-              <label>{{'subject.language' | translate}}</label>
-              <hois-classifier-select ng-model="criteria.languages" model-value-attr="code" main-classifier-code="OPPEKEEL" criteria="{higher: true}" multiple></hois-classifier-select>
-            </md-input-container>
-          </div>
-        </div>
-      </div>
 
-      <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <md-button class="md-raised" ng-href="#/subject/new" ng-if="formState.canCreate">{{'main.button.create' | translate}}</md-button>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-href="#/subject/new" ng-if="formState.canCreate">{{'main.button.create' | translate}}</md-button>
+        </div>
       </div>
-    </div>
-  </form>
+    </form>
+  </fieldset>
 </div>
 
 

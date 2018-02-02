@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.commandobject;
 
-public class JournalAndSubjectAutocompleteCommand extends AutocompleteCommand {
+public class JournalAndSubjectAutocompleteCommand extends SearchCommand {
 
     private Long studyYear;
     private Boolean practice;

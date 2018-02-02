@@ -132,10 +132,10 @@ public class CurriculumVersionService {
         Curriculum curriculum = curriculumVersion.getCurriculum();
 
         String myEhisShool = schoolService.getEhisSchool(user.getSchoolId());
-        dto.setCanChange(CurriculumUtil.canChange(user, myEhisShool, curriculum));
-        dto.setCanConfirm(CurriculumUtil.canConfirm(user, myEhisShool, curriculum));
-        dto.setCanClose(CurriculumUtil.canClose(user, myEhisShool, curriculum));
-        dto.setCanDelete(CurriculumUtil.canDelete(user, myEhisShool, curriculum));
+        dto.setCanChange(Boolean.valueOf(CurriculumUtil.canChange(user, myEhisShool, curriculum)));
+        dto.setCanConfirm(Boolean.valueOf(CurriculumUtil.canConfirm(user, myEhisShool, curriculum)));
+        dto.setCanClose(Boolean.valueOf(CurriculumUtil.canClose(user, myEhisShool, curriculum)));
+        dto.setCanDelete(Boolean.valueOf(CurriculumUtil.canDelete(user, myEhisShool, curriculum)));
 
         return dto;
     }

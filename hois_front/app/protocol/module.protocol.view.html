@@ -35,6 +35,7 @@
       </div>
       <br>
       <div>
+        <md-button ng-if="formState.canEditConfirmedProtocol" class="md-primary md-raised" ng-href="#/moduleProtocols/{{::protocol.id}}/edit">{{'main.button.change' | translate}}</md-button>
         <md-button class="md-raised" ng-href="#/moduleProtocols">{{'main.button.back' | translate}}</md-button>
       </div>
     </div>

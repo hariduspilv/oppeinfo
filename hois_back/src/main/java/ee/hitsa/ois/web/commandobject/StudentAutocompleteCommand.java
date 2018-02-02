@@ -2,7 +2,7 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.List;
 
-public class StudentAutocompleteCommand extends AutocompleteCommand {
+public class StudentAutocompleteCommand extends SearchCommand {
 
     private Boolean active;
     private Boolean finished;
@@ -20,7 +20,7 @@ public class StudentAutocompleteCommand extends AutocompleteCommand {
     public void setActive(Boolean active) {
         this.active = active;
     }
-    
+
     public Boolean getFinished() {
         return finished;
     }

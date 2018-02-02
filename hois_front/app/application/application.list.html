@@ -1,77 +1,80 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form ng-submit="loadData()" layout="column">
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label>{{'application.type' | translate}}</label>
-            <hois-classifier-select multiple ng-model="criteria.type" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" model-value-attr="code" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
-          </md-input-container>
-      </div>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" layout="column">
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label>{{'application.type' | translate}}</label>
+              <hois-classifier-select multiple ng-model="criteria.type" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" model-value-attr="code" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
+            </md-input-container>
+        </div>
 
-      <div layout="row" layout-md="column" layout-sm="column" layout-xs="column">
-          <!--md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-            <label>{{'application.insertionDate' | translate}}</label>
-          </md-input-container-->
-          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-            <label>{{'application.insertionDateA' | translate}}</label>
-            <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
-          </md-input-container>
+        <div layout="row" layout-md="column" layout-sm="column" layout-xs="column">
+            <!--md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'application.insertionDate' | translate}}</label>
+            </md-input-container-->
+            <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'application.insertionDateA' | translate}}</label>
+              <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
+            </md-input-container>
+
+              <div layout="column" flex="20" flex-md="100" flex-sm="100" flex-xs="100" layout-align="start end" layout-align-md="start start" layout-align-xs="start start" layout-align-sm="start start">
+                  <md-input-container flex>
+                    <label>{{'application.insertionDateK' | translate}}</label>
+                    <md-datepicker ng-model="criteria.insertedThru"></md-datepicker>
+                  </md-input-container>
+              </div>
+
+        </div>
+
+        <div layout="row" layout-md="column" layout-sm="column" layout-xs="column">
+            <!--md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'application.submissionDate' | translate}}</label>
+            </md-input-container-->
+            <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'application.submissionDateA' | translate}}</label>
+              <md-datepicker ng-model="criteria.submittedFrom"></md-datepicker>
+            </md-input-container>
 
             <div layout="column" flex="20" flex-md="100" flex-sm="100" flex-xs="100" layout-align="start end" layout-align-md="start start" layout-align-xs="start start" layout-align-sm="start start">
-                <md-input-container flex>
-                  <label>{{'application.insertionDateK' | translate}}</label>
-                  <md-datepicker ng-model="criteria.insertedThru"></md-datepicker>
-                </md-input-container>
+              <md-input-container flex>
+                <label>{{'application.submissionDateK' | translate}}</label>
+                <md-datepicker ng-model="criteria.submittedThru"></md-datepicker>
+              </md-input-container>
             </div>
+        </div>
 
-      </div>
-
-      <div layout="row" layout-md="column" layout-sm="column" layout-xs="column">
-          <!--md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-            <label>{{'application.submissionDate' | translate}}</label>
-          </md-input-container-->
-          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-            <label>{{'application.submissionDateA' | translate}}</label>
-            <md-datepicker ng-model="criteria.submittedFrom"></md-datepicker>
-          </md-input-container>
-
-          <div layout="column" flex="20" flex-md="100" flex-sm="100" flex-xs="100" layout-align="start end" layout-align-md="start start" layout-align-xs="start start" layout-align-sm="start start">
-            <md-input-container flex>
-              <label>{{'application.submissionDateK' | translate}}</label>
-              <md-datepicker ng-model="criteria.submittedThru"></md-datepicker>
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label class="textInput">{{'main.status' | translate}}</label>
+              <hois-classifier-select multiple ng-model="criteria.status" model-value-attr="code" main-classifier-code="AVALDUS_STAATUS"></hois-classifier-select>
             </md-input-container>
-          </div>
-      </div>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'main.status' | translate}}</label>
-            <hois-classifier-select multiple ng-model="criteria.status" model-value-attr="code" main-classifier-code="AVALDUS_STAATUS"></hois-classifier-select>
-          </md-input-container>
-      </div>
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label class="textInput">{{'application.studentName' | translate}}</label>
+              <input ng-model="criteria.studentName" type="text">
+            </md-input-container>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'application.studentName' | translate}}</label>
-            <input ng-model="criteria.studentName" type="text">
-          </md-input-container>
-      </div>
-
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'application.studentIdCode' | translate}}</label>
-            <input ng-model="criteria.studentIdCode" type="text">
-          </md-input-container>
-      </div>
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label class="textInput">{{'application.studentIdCode' | translate}}</label>
+              <input ng-model="criteria.studentIdCode" type="text">
+            </md-input-container>
+        </div>
 
 
-      <div layout="row">
-          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <md-button ng-href="#/applications/new" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS')" class="md-raised">{{'application.makeApplication' | translate}}</md-button>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
+        <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <md-button ng-href="#/applications/new" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS')" class="md-raised">{{'application.makeApplication' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>

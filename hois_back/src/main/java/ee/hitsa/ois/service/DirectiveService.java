@@ -38,15 +38,11 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 import javax.validation.Validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -77,7 +73,6 @@ import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.EntityRemoveException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
-import ee.hitsa.ois.repository.SaisApplicationRepository;
 import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -86,6 +81,7 @@ import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -155,8 +151,6 @@ public class DirectiveService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private PersonRepository personRepository;
-    @Autowired
-    private SaisApplicationRepository saisApplicationRepository;
     @Autowired
     private Validator validator;
 
@@ -650,26 +644,14 @@ public class DirectiveService {
     }
 
     private List<DirectiveStudentDto> saisLoadStudents(Long schoolId, DirectiveDataCommand cmd) {
-        List<DirectiveStudentDto> students = saisApplicationRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
+        JpaQueryBuilder<SaisApplication> qb = new JpaQueryBuilder<>(SaisApplication.class, "sa").sort(new Sort("lastname", "firstname"));
+        qb.requiredCriteria("sa.saisAdmission.curriculumVersion.curriculum.school.id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("sa.status.code = :statusCode", "statusCode", SaisApplicationStatus.SAIS_AVALDUSESTAATUS_T);
+        qb.optionalCriteria("sa.saisAdmission.curriculumVersion.id in (:curriculumVersion)", "curriculumVersion", cmd.getCurriculumVersion());
+        qb.optionalCriteria("sa.saisAdmission.studyLevel.code in (:studyLevel)", "studyLevel", cmd.getStudyLevel());
+        qb.filter("not exists(select ds2 from DirectiveStudent ds2 where ds2.canceled = false and ds2.saisApplication.id = sa.id)");
 
-            filters.add(cb.equal(root.get("saisAdmission").get("curriculumVersion").get("curriculum").get("school").get("id"), schoolId));
-            filters.add(cb.equal(root.get("status").get("code"), SaisApplicationStatus.SAIS_AVALDUSESTAATUS_T.name()));
-            if(cmd.getCurriculumVersion() != null && !cmd.getCurriculumVersion().isEmpty()) {
-                filters.add(root.get("saisAdmission").get("curriculumVersion").get("id").in(cmd.getCurriculumVersion()));
-            }
-            if(cmd.getStudyLevel() != null && !cmd.getStudyLevel().isEmpty()) {
-                filters.add(root.get("saisAdmission").get("studyLevel").get("code").in(cmd.getStudyLevel()));
-            }
-
-            // not on directive
-            Subquery<Long> directiveQuery = query.subquery(Long.class);
-            Root<DirectiveStudent> directiveRoot = directiveQuery.from(DirectiveStudent.class);
-            directiveQuery = directiveQuery.select(directiveRoot.get("id")).where(cb.equal(directiveRoot.get("saisApplication").get("id"), root.get("id")));
-            filters.add(cb.not(cb.exists(directiveQuery)));
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, new PageRequest(0, STUDENTS_MAX, new Sort("lastname", "firstname"))).map(DirectiveStudentDto::of).getContent();
+        List<DirectiveStudentDto> students = StreamUtil.toMappedList(DirectiveStudentDto::of, qb.select(em).setMaxResults(STUDENTS_MAX).getResultList());
 
         // suggest valid studentGroup, if possible
         List<StudentGroup> groups = findValidStudentGroups(schoolId);

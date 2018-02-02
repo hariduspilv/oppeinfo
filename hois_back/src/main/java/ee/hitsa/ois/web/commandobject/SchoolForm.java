@@ -22,6 +22,8 @@ public class SchoolForm extends VersionedCommand {
     private String code;
     @Size(max = 1000)
     private String address;
+    @Size(max = 50)
+    private String addressAds;
     @Size(max = 100)
     private String phone;
     @Size(max = 255)
@@ -85,6 +87,14 @@ public class SchoolForm extends VersionedCommand {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getAddressAds() {
+        return addressAds;
+    }
+
+    public void setAddressAds(String addressAds) {
+        this.addressAds = addressAds;
     }
 
     public String getPhone() {

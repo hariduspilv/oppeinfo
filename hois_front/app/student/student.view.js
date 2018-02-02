@@ -40,19 +40,27 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     $q.all(representativesMapper.promises).then(loadRepresentatives);
 
     $scope.editRepresentative = function (representativeId) {
+      var student = $scope.student;
       var RepresentativeEndpoint = QueryUtils.endpoint('/studentrepresentatives/' + studentId);
       $mdDialog.show({
         controller: function ($scope) {
           $scope.isParent = $route.current.locals.auth.isParent();
-          $scope.formState = {};
+          $scope.formState = {student: student};
 
           if (representativeId) {
             $scope.record = RepresentativeEndpoint.get({ id: representativeId });
           } else {
             $scope.record = new RepresentativeEndpoint({ person: {} });
           }
+
+          function idcodevaliditycheck() {
+            var ctrl = $scope.studentRepresentativeEditForm.idcode;
+            ctrl.$setValidity('notUnique', $scope.record.person.idcode !== $scope.formState.student.person.idcode);
+          }
+
           $scope.cancel = $mdDialog.hide;
           $scope.update = function () {
+            idcodevaliditycheck();
             $scope.studentRepresentativeEditForm.$setSubmitted();
             if (!$scope.studentRepresentativeEditForm.$valid) {
               message.error('main.messages.form-has-errors');
@@ -64,9 +72,9 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
               loadRepresentatives();
             }
             if ($scope.record.id) {
-              $scope.record.$update().then(afterSave);
+              $scope.record.$update().then(afterSave).catch(angular.noop);
             } else {
-              $scope.record.$save().then(afterSave);
+              $scope.record.$save().then(afterSave).catch(angular.noop);
             }
           };
           $scope.delete = function () {
@@ -75,28 +83,38 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
                 message.info('main.messages.delete.success');
                 $mdDialog.hide();
                 loadRepresentatives();
-              });
+              }).catch(angular.noop);
             });
           };
-          $scope.lookupPerson = function (response) {
-            // fill first/lastname and make them readonly
-            $scope.record.person.firstname = response.firstname;
-            $scope.record.person.lastname = response.lastname;
-            // fill other empty fields
-            if (!$scope.record.person.phone && response.phone) {
-              $scope.record.person.phone = response.phone;
+          $scope.lookupPerson = function () {
+            function setresult(response) {
+              $scope.record.person.firstname = response.firstname;
+              $scope.record.person.lastname = response.lastname;
             }
-            if (!$scope.record.person.email && response.email) {
-              $scope.record.person.email = response.email;
+            var idcode = $scope.record.person.idcode;
+            if(idcode && idcode.length === 11 && idcode !== $scope.formState.idcode) {
+              QueryUtils.endpoint('/autocomplete/persons', {search: {method: 'GET'}}).search({idcode: idcode, role: 'forrepresentative'}).$promise.then(function(response) {
+                // fill first/lastname and make them readonly
+                setresult(response);
+                // fill other empty fields
+                if (!$scope.record.person.phone && response.phone) {
+                  $scope.record.person.phone = response.phone;
+                }
+                if (!$scope.record.person.email && response.email) {
+                  $scope.record.person.email = response.email;
+                }
+                $scope.formState.idcode = response.idcode;
+              }).catch(function() {
+                setresult({});
+              });
+            } else if(idcode !== $scope.formState.idcode) {
+              setresult({});
             }
-            $scope.formState.idcode = response.idcode;
-          };
-          $scope.lookupFailure = function () {
-            $scope.formState.idcode = undefined;
+            idcodevaliditycheck();
           };
         },
         templateUrl: 'studentRepresentative/representative.edit.dialog.html',
-        clickOutsideToClose: true
+        clickOutsideToClose: false
       });
     };
   }
@@ -320,8 +338,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     };
 
     if($scope.auth.isStudent()) {
-      var Endpoint = QueryUtils.endpoint('/applications/student/' + $scope.studentId + '/applicable');
-      $scope.applicationTypesApplicable = Endpoint.search();
+      $scope.applicationTypesApplicable = QueryUtils.endpoint('/applications/student/' + $scope.studentId + '/applicable').search();
       $scope.applicationTypes = Classifier.queryForDropdown({ mainClassCode: 'AVALDUS_LIIK' });
     }
 
@@ -392,18 +409,21 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     $scope.auth = $route.current.locals.auth;
 
     $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
+    $scope.schoolId =  $scope.auth.school.id;
 
-    QueryUtils.endpoint('/timetables/generalTimetables/').query().$promise.then(function (result) {
+    QueryUtils.endpoint('/timetables/generalTimetables/' + $scope.schoolId).query().$promise.then(function (result) {
       $scope.timetables = result;
       $scope.weeks = $scope.generalTimetableUtils.getTimetablesWeeks(result);
 
       $scope.shownWeekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-      if ($scope.shownWeekIndex) {
-        var timetableIndex = $scope.weeks[$scope.shownWeekIndex].timetableIndex;
-        $scope.shownTimetableId = result[timetableIndex].id;
-        $scope.shownStudyPeriodId = result[timetableIndex].studyPeriodId;
-        $scope.shownTimetableIndex = timetableIndex;
+
+      if (!$scope.shownWeekIndex && $scope.weeks) {
+        $scope.shownWeekIndex = $scope.weeks.length - 1;
       }
+      var timetableIndex = $scope.weeks[$scope.shownWeekIndex].timetableIndex;
+      $scope.shownTimetableId = result[timetableIndex].id;
+      $scope.shownStudyPeriodId = result[timetableIndex].studyPeriodId;
+      $scope.shownTimetableIndex = timetableIndex;
       $scope.shownTypeId = $scope.studentId;
     });
   }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'QueryUtils', function ($location, $route, $scope, message, QueryUtils) {
@@ -477,7 +497,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
             };
           },
           templateUrl: 'student/absence.edit.dialog.html',
-          clickOutsideToClose: true
+          clickOutsideToClose: false
         });
       };
 

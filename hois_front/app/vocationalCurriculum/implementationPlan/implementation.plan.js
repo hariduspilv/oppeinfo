@@ -32,7 +32,7 @@ angular.module('hitsaOis')
 
     if (id) {
       entity = $route.current.locals.curriculumVersion;
-
+      $scope.publicUrl = config.apiUrl + '/public/curriculum/' + curriculumEntity.id + '/' + id +'?format=json';
       $scope.implementationPlan = entity;
       DataUtils.convertStringToDates($scope.implementationPlan, ["validFrom", "validThru"]);
 

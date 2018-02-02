@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.auth.EstonianIdCardAuthenticationToken;
@@ -57,33 +56,27 @@ public class AuthenticationController {
     private LdapService ldapService;
     @Autowired
     private UserService userService;
-    @Value("${hois.frontend.baseUrl}")
-    private String frontendBaseUrl;
 
     @RequestMapping("/user")
-    @ResponseBody
     public AuthenticatedUser user(HttpServletRequest request, Principal principal) {
         return principal != null ? userDetailsService.authenticatedUser(request, principal) : null;
     }
 
     @CrossOrigin
     @RequestMapping("/idlogin")
-    @ResponseBody
-    public String idlogin(Principal principal, HttpServletResponse response) {
-        //one minute token
+    public String idlogin(HttpServletRequest request, HttpServletResponse response, Principal principal) {
         String token = "";
         if (principal != null) {
             token = Jwts.builder()
                     .setSubject(((EstonianIdCardAuthenticationToken)principal).getPrincipal().toString())
                     .claim(hoisJwtProperties.getClaimLoginMethod(), LoginMethod.LOGIN_TYPE_I.name())
-                    .setExpiration(new Date(System.currentTimeMillis() + 60_000))
+                    .setExpiration(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1)))
                     .signWith(SignatureAlgorithm.HS512, hoisJwtProperties.getSecret())
                     .compact();
             addJwtHeader(response, token);
         }
-        return "<html><head></head><body>"
-                + "<form id='id_form' method='get' action='" + frontendBaseUrl + "?_code=" + token + "'></form>"
-                + "<script>document.getElementById('id_form').submit();</script></body></html>";
+        return "<form id='id_form' method='get' action='" + request.getHeader(HttpHeaders.REFERER) + "#/?_code=" + token + "'></form>"
+                + "<script>document.getElementById('id_form').submit();</script>";
     }
 
     private void addJwtHeader(HttpServletResponse response, String token) {

@@ -18,7 +18,7 @@
         <td md-cell>{{rejection.fullName}}</td>
         <td md-cell>{{rejection.idCode}}</td>
         <td md-cell>
-          <div flex><input flex type="text" ng-model="rejection.rejectComment" style="width: 100%" autofocus></div>
+          <div flex><input flex type="text" ng-model="rejection.rejectComment" style="width: 100%" autofocus maxlength="100"></div>
         </td>
         <td md-cell>
           <md-button class="remove nomargin" ng-click="removeFromArray(rejections, rejection)">&times;</md-button>

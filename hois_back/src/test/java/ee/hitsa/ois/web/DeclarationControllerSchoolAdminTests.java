@@ -87,6 +87,11 @@ public class DeclarationControllerSchoolAdminTests {
     }
 
     @Test
+    public void searchStudentsWithoutDeclaration() {
+        basicTest(ENDPOINT + "/withoutDeclaration");
+    }
+
+    @Test
     public void getCurrentStudyPeriod() {
         basicTest(ENDPOINT + "/currentStudyPeriod");
     }

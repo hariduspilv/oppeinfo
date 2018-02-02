@@ -186,7 +186,7 @@ angular.module('hitsaOis')
           dialogScope.outcomes = $scope.curriculumModule.outcomes;
           dialogScope.setDefaultHours = function () {
             if (angular.isNumber(dialogScope.occupationModuleTheme.credits)) {
-              dialogScope.occupationModuleTheme.hours = HOURS_PER_EKAP * dialogScope.occupationModuleTheme.credits;
+              dialogScope.occupationModuleTheme.hours = Math.round(HOURS_PER_EKAP * dialogScope.occupationModuleTheme.credits);
               dialogScope.dialogForm.hours.$setDirty();
             }
           };
@@ -196,7 +196,7 @@ angular.module('hitsaOis')
           });
 
           dialogScope.setDefaultCredits = function () {
-            dialogScope.occupationModuleTheme.credits = dialogScope.occupationModuleTheme.hours / HOURS_PER_EKAP;
+            dialogScope.occupationModuleTheme.credits = Math.round((dialogScope.occupationModuleTheme.hours / HOURS_PER_EKAP) * 10) / 10;
             dialogScope.dialogForm.credits.$setDirty();
           };
 
@@ -229,8 +229,8 @@ angular.module('hitsaOis')
               message.error('main.messages.form-has-errors');
               return false;
             }
-            if (submittedDialogScope.occupationModuleTheme.hours !==
-              HOURS_PER_EKAP * submittedDialogScope.occupationModuleTheme.credits) {
+            if (submittedDialogScope.occupationModuleTheme.hours !== Math.round(HOURS_PER_EKAP * submittedDialogScope.occupationModuleTheme.credits) &&
+              submittedDialogScope.occupationModuleTheme.credits !== Math.round((submittedDialogScope.occupationModuleTheme.hours / HOURS_PER_EKAP) * 10) / 10) {
               message.error('curriculum.error.themeCreditsAndHoursMismatch');
               return false;
             }

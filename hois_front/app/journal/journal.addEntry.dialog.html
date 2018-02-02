@@ -88,7 +88,7 @@
                 <tbody md-body>
                   <tr md-row ng-repeat="row in journalStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>
-                      <span><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}</span>
+                      <span>{{::row.fullname}}, {{row.studentGroup}}</span>
                     </td>
                     <td md-cell>
                       <div layout="row" layout-sm="column" layout-xs="column">

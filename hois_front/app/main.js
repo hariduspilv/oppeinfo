@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav,  $mdMedia,
-    $mdUtil, $rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService, config, $httpParamSerializer, Session, $mdDialog, ArrayUtils, message) {
+    $mdUtil, $rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService, config, $httpParamSerializer, Session, $mdDialog, ArrayUtils) {
     $rootScope.state = {};
     var self = this;
 
@@ -385,35 +385,6 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
         }
       };
     }
-
-    /**
-     * Validate user rights to access a page
-     */
-    // $rootScope.$on('$routeChangeStart', function (event, next, current) {
-    //   var error = false;
-
-    //   console.log("next:", next);
-    //   console.log("current:", current);
-
-    //   if(!next.$$route.data) {
-    //     return;
-    //   }
-    //   // These variables may be empty on page reload
-    //   if(!Session.authorizedRoles || !Session.roleCode) {
-    //     return;
-    //   }
-    //   if(next.$$route.data.authorizedRoles && !ArrayUtils.intersect(next.$$route.data.authorizedRoles, Session.authorizedRoles)) {
-    //     error = true;
-    //   }
-    //   // next.$$route.data.userRoles is an array of allowed roles, like ["ROLL_A"]
-    //   if (next.$$route.data.userRoles && !ArrayUtils.includes(next.$$route.data.userRoles, Session.roleCode)) {
-    //     error = true;
-    //   }
-    //   if(error) {
-    //     message.error('main.messages.error.nopermission');
-    //     $location.path('');
-    //   }
-    // });
 
     $rootScope.restartTimeoutDialogCounter = function() {
       cancelOldTimeouts();

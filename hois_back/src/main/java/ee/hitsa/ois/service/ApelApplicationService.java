@@ -131,7 +131,8 @@ public class ApelApplicationService {
         });
     }
     
-    /**Get student APEL application
+    /**
+     * Get student APEL application
      * 
      * @param application
      * @return
@@ -141,7 +142,8 @@ public class ApelApplicationService {
     }
     
     
-    /**Create new student APEL application
+    /**
+     * Create new student APEL application
      * 
      * @param user
      * @param applicationForm
@@ -158,7 +160,8 @@ public class ApelApplicationService {
         return save(user, application, applicationForm);
     }
 
-    /**Store student APEL application
+    /**
+     * Store student APEL application
      * 
      * @param user
      * @param application
@@ -172,7 +175,8 @@ public class ApelApplicationService {
         return EntityUtil.save(application, em);
     }
 
-    /**Delete student APEL application
+    /**
+     * Delete student APEL application
      * 
      * @param user
      * @param application
@@ -182,7 +186,8 @@ public class ApelApplicationService {
         EntityUtil.deleteEntity(application, em);
     }
 
-    /**Create new APEL application's file
+    /**
+     * Create new APEL application's file
      * 
      * @param application
      * @param fileForm
@@ -196,7 +201,8 @@ public class ApelApplicationService {
         return EntityUtil.save(file, em);
     }
 
-    /**Delete APEL application's file
+    /**
+     * Delete APEL application's file
      * 
      * @param user
      * @param file
@@ -225,7 +231,8 @@ public class ApelApplicationService {
         });
     }
 
-    /**Create new APEL application's record
+    /**
+     * Create new APEL application's record
      * 
      * @param user
      * @param application
@@ -238,7 +245,8 @@ public class ApelApplicationService {
         return updateRecord(user, recordForm, record);
     }
 
-    /**Update APEL application's record's data
+    /**
+     * Update APEL application's record's data
      * 
      * @param user
      * @param recordForm
@@ -255,7 +263,8 @@ public class ApelApplicationService {
         return EntityUtil.save(updatedRecord, em);
     }
     
-    /**Delete APEL application's record
+    /**
+     * Delete APEL application's record
      * 
      * @param user
      * @param record
@@ -405,7 +414,8 @@ public class ApelApplicationService {
         application.setStatus(em.getReference(Classifier.class, status.name()));
     }
 
-    /**Create new APEL application's comment
+    /**
+     * Create new APEL application's comment
      * 
      * @param application
      * @param commentForm
@@ -418,7 +428,8 @@ public class ApelApplicationService {
     }
 
     /* TODO: not used right now an might never be */
-    /**Update APEL application's comment
+    /**
+     * Update APEL application's comment
      * 
      * @param commentForm
      * @param comment
@@ -429,7 +440,8 @@ public class ApelApplicationService {
         return EntityUtil.save(updatedComment, em);
     }
 
-    /**Delete APEL application's comment
+    /**
+     * Delete APEL application's comment
      * 
      * @param user
      * @param comment
@@ -440,7 +452,8 @@ public class ApelApplicationService {
         comment.getApelApplication().getComments().remove(comment);
     }
 
-    /**Set APEL application's status to 'Submitted'
+    /**
+     * Set APEL application's status to 'Submitted'
      * 
      * @param application
      * @return
@@ -453,7 +466,8 @@ public class ApelApplicationService {
         return EntityUtil.save(application, em);
     }
 
-    /**Set APEL application's status to 'Being confirmed'
+    /**
+     * Set APEL application's status to 'Being confirmed'
      * 
      * @param application
      * @return
@@ -463,7 +477,8 @@ public class ApelApplicationService {
         return EntityUtil.save(application, em);
     }
 
-    /**Set APEL application's status back to 'Drafting'
+    /**
+     * Set APEL application's status back to 'Drafting'
      * 
      * @param application
      * @return
@@ -473,7 +488,8 @@ public class ApelApplicationService {
         return EntityUtil.save(application, em);
     }
 
-    /**Set APEL application's status to 'Confirmed'
+    /**
+     * Set APEL application's status to 'Confirmed'
      * 
      * @param application
      * @return
@@ -532,10 +548,10 @@ public class ApelApplicationService {
             });
         }
         if (!transferredSubjectIds.isEmpty()) {
-            checkThatSubjectsAreNotAlreadyTransferred(application.getStudent().getId(), new ArrayList<>(transferredSubjectIds));
+            checkThatSubjectsAreNotAlreadyTransferred(EntityUtil.getId(application.getStudent()), new ArrayList<>(transferredSubjectIds));
         } else if (!transferredModuleAndThemeIdsMaps.isEmpty()) {
             List<Long> transferredModuleIds = StreamUtil.toMappedList(m -> m.keySet().toArray(new Long[0])[0], transferredModuleAndThemeIdsMaps);
-            checkThatModulesAreNotAlreadyTransferred(application.getStudent().getId(), transferredModuleIds);
+            checkThatModulesAreNotAlreadyTransferred(EntityUtil.getId(application.getStudent()), transferredModuleIds);
         }
     }
 
@@ -544,11 +560,11 @@ public class ApelApplicationService {
         if (Boolean.TRUE.equals(informalModule.getTransfer())) {
             if (Boolean.TRUE.equals(informalModule.getTransfer()) && informalModule.getCurriculumVersionOmodule() != null
                     && informalModule.getCurriculumVersionOmoduleTheme() == null) {
-                addTransferredModuleMap(transferredModuleAndThemeIdsMaps, informalModule.getCurriculumVersionOmodule().getId(), null);
+                addTransferredModuleMap(transferredModuleAndThemeIdsMaps, EntityUtil.getId(informalModule.getCurriculumVersionOmodule()), null);
             } else if (Boolean.TRUE.equals(informalModule.getTransfer()) && informalModule.getCurriculumVersionOmodule() != null
                     && informalModule.getCurriculumVersionOmoduleTheme() != null) {
-                addTransferredModuleMap(transferredModuleAndThemeIdsMaps, informalModule.getCurriculumVersionOmodule().getId(),
-                        informalModule.getCurriculumVersionOmoduleTheme().getId());
+                addTransferredModuleMap(transferredModuleAndThemeIdsMaps, EntityUtil.getId(informalModule.getCurriculumVersionOmodule()),
+                        EntityUtil.getId(informalModule.getCurriculumVersionOmoduleTheme()));
             }
         }
     }
@@ -569,7 +585,7 @@ public class ApelApplicationService {
     private static void addTransferredModuleAndThemeIdsMap(ApelApplicationFormalSubjectOrModule formalModule, Set<Map<Long, Long>> transferredModuleAndThemeIdsMaps) {
         if (formalModule.getCurriculumVersionOmodule() != null) {
             Map<Long, Long> transfer = new HashMap<>();
-            Long moduleId = formalModule.getCurriculumVersionOmodule().getId();
+            Long moduleId = EntityUtil.getId(formalModule.getCurriculumVersionOmodule());
             transfer.put(moduleId, null);
             
             if (Boolean.TRUE.equals(formalModule.getTransfer()) && (isModuleOrThemeFromModuleAlreadyTransferred(moduleId, transferredModuleAndThemeIdsMaps)
@@ -584,18 +600,19 @@ public class ApelApplicationService {
     }
 
     private static void addTransferredSubjectId(ApelApplicationInformalSubjectOrModule informalSubject, Set<Long> transferredSubjectIds) {
-        if (Boolean.TRUE.equals(informalSubject.getTransfer()) && informalSubject.getSubject() != null && !transferredSubjectIds.add(informalSubject.getSubject().getId())) {
+        if (Boolean.TRUE.equals(informalSubject.getTransfer()) && informalSubject.getSubject() != null && !transferredSubjectIds.add(EntityUtil.getId(informalSubject.getSubject()))) {
             throw new ValidationFailedException("apel.error.subjectTransferredMoreThanOnce");
         }
     }
 
     private static void addTransferredSubjectId(ApelApplicationFormalSubjectOrModule formalSubject, Set<Long> transferredSubjectIds) {
-        if (Boolean.TRUE.equals(formalSubject.getTransfer()) && formalSubject.getSubject() != null && !transferredSubjectIds.add(formalSubject.getSubject().getId())) {
+        if (Boolean.TRUE.equals(formalSubject.getTransfer()) && formalSubject.getSubject() != null && !transferredSubjectIds.add(EntityUtil.getId(formalSubject.getSubject()))) {
             throw new ValidationFailedException("apel.error.subjectTransferredMoreThanOnce");
         }
     }
 
-    /**Set APEL application's status back to 'Submitted'
+    /**
+     * Set APEL application's status back to 'Submitted'
      * 
      * @param application
      * @return
@@ -605,7 +622,8 @@ public class ApelApplicationService {
         return EntityUtil.save(application, em);
     }
 
-    /**Set APEL application's status back to 'Rejected' and add comment explaining the rejection
+    /**
+     * Set APEL application's status back to 'Rejected' and add comment explaining the rejection
      * 
      * @param application
      * @param commentForm
@@ -617,7 +635,8 @@ public class ApelApplicationService {
         return EntityUtil.save(application, em);
     }
 
-    /** Remove APEL application confirmation, set application's status back to 'Being confirmed'
+    /**
+     * Remove APEL application confirmation, set application's status back to 'Being confirmed'
      * 
      * @param application
      * @return
@@ -635,11 +654,11 @@ public class ApelApplicationService {
 
         versions.forEach(v -> v.getModules().forEach(m -> modules.add(m)));
 
-        for (int i = 0; i < modules.size(); i++) {
-            List<CurriculumVersionHigherModuleSubject> subjects = new ArrayList<>(modules.get(i).getSubjects());
-            for (int j = 0; j < subjects.size(); j++) {
-                if (subjects.get(j).getSubject().getId().equals(subject.getId())) {
-                    return CurriculumVersionHigherModuleDto.of(modules.get(i));
+        for (CurriculumVersionHigherModule module : modules) {
+            List<CurriculumVersionHigherModuleSubject> moduleSubjects = new ArrayList<>(module.getSubjects());
+            for (CurriculumVersionHigherModuleSubject moduleSubject : moduleSubjects) {
+                if (EntityUtil.getId(moduleSubject.getSubject()).equals(subject.getId())) {
+                    return CurriculumVersionHigherModuleDto.of(module);
                 }
             }
         }

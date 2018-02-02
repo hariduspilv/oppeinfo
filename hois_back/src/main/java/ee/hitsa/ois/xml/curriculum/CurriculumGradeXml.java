@@ -5,14 +5,14 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class CurriculumGradeXml {
-    
+
     private Long id;
     private Long version;
     private String nameEt;
     private String nameEn;
     private String nameGenitiveEt;
     private String ehisGrade;
-    
+
     public static CurriculumGradeXml of(CurriculumGrade grade) {
         CurriculumGradeXml xml = EntityUtil.bindToDto(grade, new CurriculumGradeXml(), "ehisGrade");
         xml.setEhisGrade(ClassifierUtil.getNullableNameEt(grade.getEhisGrade()));

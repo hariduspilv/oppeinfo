@@ -162,8 +162,15 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
       if(!response.id) {
         $scope.formState.noDeclaration = true;
 
-        QueryUtils.endpoint('/declarations/canCreate').search().$promise.then(function(response){
-          $scope.formState.canCreateDeclaration = response.canCreate;
+        QueryUtils.endpoint('/declarations/isDeclarationPeriod').search().$promise.then(function(response){
+          $scope.formState.isDeclarationPeriod = response.isDeclarationPeriod;
+          $scope.formState.declarationPeriodEnd = response.declarationPeriodEnd;
+
+          if ($scope.formState.isDeclarationPeriod) {
+            QueryUtils.endpoint('/declarations/canCreate').search().$promise.then(function(response){
+              $scope.formState.canCreateDeclaration = response.canCreate;
+            });
+          }
         });
 
       } else {

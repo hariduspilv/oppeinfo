@@ -7,20 +7,25 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+import javax.validation.constraints.Size;
+
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
-import ee.hitsa.ois.enums.TimetableEventRepeat;
-import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class TimetableSingleEventForm {
     // TODO: Validation is missing
     private Long id;
     private LocalDate date;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    @Required
+    private LocalDateTime startTime;
+    @Required
+    private LocalDateTime endTime;
+    @Required
+    @Size(max = 255)
     private String name;
     private Boolean repeat;
     private String repeatCode;
@@ -32,21 +37,18 @@ public class TimetableSingleEventForm {
         TimetableSingleEventForm form = new TimetableSingleEventForm();
         form.setId(EntityUtil.getId(event));
         form.setDate(event.getStart().toLocalDate());
-        form.setStartTime(event.getStart().toLocalTime());
-        form.setEndTime(event.getEnd().toLocalTime());
+        form.setStartTime(event.getStart());
+        form.setEndTime(event.getEnd());
         form.setName(event.getTimetableEvent().getName());
-        if (!ClassifierUtil.equals(TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI,
-                event.getTimetableEvent().getRepeatCode())) {
-            form.setRepeat(Boolean.TRUE);
-        }
-        form.setRepeatCode(EntityUtil.getCode(event.getTimetableEvent().getRepeatCode()));
+        form.setRepeat(Boolean.FALSE);
 
         form.setRooms(StreamUtil.toMappedList(r -> {
             Room room = r.getRoom();
             return new AutocompleteResult(EntityUtil.getId(room), room.getCode(), room.getCode());
         }, event.getTimetableEventRooms()));
 
-        form.setTeachers(StreamUtil.toMappedList(r -> AutocompleteResult.of(r.getTeacher()), event.getTimetableEventTeachers()));
+        form.setTeachers(
+                StreamUtil.toMappedList(r -> AutocompleteResult.of(r.getTeacher()), event.getTimetableEventTeachers()));
 
         LocalDateTime maxDate = event.getTimetableEvent().getTimetableEventTimes().stream()
                 .map(TimetableEventTime::getStart).max(LocalDateTime::compareTo).get();
@@ -70,19 +72,19 @@ public class TimetableSingleEventForm {
         this.date = date;
     }
 
-    public LocalTime getStartTime() {
+    public LocalDateTime getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(LocalTime startTime) {
+    public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
     }
 
-    public LocalTime getEndTime() {
+    public LocalDateTime getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(LocalTime endTime) {
+    public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
     }
 
@@ -135,7 +137,7 @@ public class TimetableSingleEventForm {
     }
 
     public static TimetableSingleEventForm of(Optional<TimetableEventTime> findFirst) {
-        if(findFirst.isPresent()) {
+        if (findFirst.isPresent()) {
             return of(findFirst.get());
         }
         return null;

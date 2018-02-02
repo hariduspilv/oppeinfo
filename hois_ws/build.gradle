@@ -44,6 +44,7 @@ dependencies {
     compile('log4j:log4j:1.2.17')
 
     testCompile('org.slf4j:slf4j-simple:1.7.25')
+    testCompile('org.apache.cxf:cxf-spring-boot-starter-jaxws:3.1.14')
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
@@ -64,14 +65,15 @@ wsdl2java {
                 ['-bareMethods', '-p', 'ee.hois.xroad.ehis.generated', 'src/main/resources/wsdl/ehis/ehis.wsdl'],
                 ['-bareMethods', '-p', 'ee.hois.soap.ekis.service.generated', 'src/main/resources/wsdl/ekis/ekis.wsdl'],
                 ['-bareMethods', '-p', 'ee.hois.soap.ekis.client.generated', 'src/main/resources/wsdl/ekis/ekis_toend.wsdl'],
+                ['-bareMethods', '-b', 'src/main/resources/wsdl/kutseregister/bindings.xml', '-p', 'ee.hois.xroad.kutseregister.generated', 'src/main/resources/wsdl/kutseregister/kutseregister.wsdl'],
                 ['-bareMethods', '-b', 'src/main/resources/wsdl/sais/sais3wsdlbindingfile.xml', '-p', 'ee.hois.xroad.sais2.generated', 'src/main/resources/wsdl/sais/sais3.wsdl'],
-                ['-bareMethods', '-p', 'ee.hois.xroad.rtip.generated', 'src/main/resources/wsdl/rtip/Z_EMPLOEES.wsdl'],
+                ['-bareMethods', '-b', 'src/main/resources/wsdl/rtip/bindings.xml', '-p', 'ee.hois.xroad.rtip.generated', 'src/main/resources/wsdl/rtip/rtip.wsdl'],
                 ['-bareMethods', '-p', 'ee.hois.soap.dds.generated', 'src/main/resources/wsdl/dds/dds_literal.wsdl']
    ]
 }
 
 wsdl2javaExt {
-    cxfVersion = "3.1.13"
+    cxfVersion = "3.1.14"
 }
 
 tasks.withType(FindBugs) {

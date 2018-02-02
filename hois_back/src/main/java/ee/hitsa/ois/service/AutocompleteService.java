@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +27,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
@@ -37,11 +39,11 @@ import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.PersonRepository;
-import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EnterpriseUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryBuilder;
@@ -49,25 +51,27 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
-import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.RoomsAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
-import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionModuleAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
+import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
+import ee.hitsa.ois.web.dto.SchoolWithLogo;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
@@ -98,8 +102,6 @@ public class AutocompleteService {
     private EmailGeneratorService emailGeneratorService;
     @Autowired
     private PersonRepository personRepository;
-    @Autowired
-    private SaisAdmissionRepository saisAdmissionRepository;
 
     public List<AutocompleteResult> buildings(Long schoolId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from building b");
@@ -180,14 +182,28 @@ public class AutocompleteService {
         return ClassifierUtil.sort(mainClassCodes, result);
     }
 
-    public List<AutocompleteResult> curriculums(Long schoolId, AutocompleteCommand term) {
+    public List<AutocompleteResult> curriculums(Long schoolId, SearchCommand term) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum c");
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains(Language.EN.equals(term.getLang()) ? "c.name_en" : "c.name_et", "name", term.getName());
 
-        List<?> data = qb.select("c.id, c.name_et, c.name_en", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
-        return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)), data);
+        List<?> data = qb.select("c.id, c.name_et, c.name_en, c.code", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
+        return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0),
+                CurriculumUtil.curriculumName(resultAsString(r, 3), resultAsString(r, 1)),
+                CurriculumUtil.curriculumName(resultAsString(r, 3), resultAsString(r, 2))), data);
+    }
+
+    public List<AutocompleteResult> curriculumsDropdown(Long schoolId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum c");
+
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+        qb.sort("c.name_et");
+
+        List<?> data = qb.select("c.id, c.name_et, c.name_en, c.code", em).getResultList();
+        return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0),
+                CurriculumUtil.curriculumName(resultAsString(r, 3), resultAsString(r, 1)),
+                CurriculumUtil.curriculumName(resultAsString(r, 3), resultAsString(r, 2))), data);
     }
 
     public List<CurriculumVersionResult> curriculumVersions(Long schoolId, CurriculumVersionAutocompleteCommand lookup) {
@@ -230,7 +246,7 @@ public class AutocompleteService {
         return result;
     }
     
-    public List<AutocompleteResult> curriculumVersionHigherModules(CurriculumVersionModuleAutocompleteCommand lookup) {
+    public List<AutocompleteResult> curriculumVersionHigherModules(CurriculumVersionHigherModuleAutocompleteCommand lookup) {
         String from = "from curriculum_version_hmodule cvh"
                 + " inner join curriculum_version cv on cvh.curriculum_version_id = cv.id";
 
@@ -246,7 +262,7 @@ public class AutocompleteService {
         }, data);
     }
   
-    public List<CurriculumVersionOccupationModuleResult> curriculumVersionOccupationModules(CurriculumVersionModuleAutocompleteCommand lookup) {
+    public List<CurriculumVersionOccupationModuleResult> curriculumVersionOccupationModules(CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
         String from = "from curriculum_version_omodule cvo"
                 + " inner join curriculum_module cm on cvo.curriculum_module_id = cm.id"
                 + " inner join curriculum_version cv on cvo.curriculum_version_id = cv.id"
@@ -323,7 +339,7 @@ public class AutocompleteService {
         }, data);
     }
     
-    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(CurriculumVersionModuleAutocompleteCommand lookup) {
+    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
         List<CurriculumVersionOModulesAndThemesResult> modulesAndThemes = new ArrayList<>();
         List<CurriculumVersionOccupationModuleResult> modules = curriculumVersionOccupationModules(lookup);
         
@@ -393,8 +409,8 @@ public class AutocompleteService {
         }
         return dto;
     }
-
-    public List<SchoolWithoutLogo> schools(AutocompleteCommand lookup) {
+    
+    public List<SchoolWithoutLogo> schools(SearchCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from school s");
 
         qb.optionalCriteria("s.id = :schoolId", "schoolId", lookup.getId());
@@ -408,6 +424,38 @@ public class AutocompleteService {
                     resultAsString(r, 3),
                     resultAsString(r, 4));
         }, data);
+    }
+    
+    public List<SchoolWithLogo> schoolsWithLogo(SearchCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from school s");
+
+        qb.optionalCriteria("s.id = :schoolId", "schoolId", lookup.getId());
+
+        List<?> data = qb.select("s.id, s.code, s.name_et, s.name_en, s.email, s.ois_file_id", em).getResultList();
+        List<SchoolWithLogo> schoolsWithLogo = StreamUtil.toMappedList(r -> {
+            return new SchoolWithLogo(
+                    resultAsLong(r, 0),
+                    resultAsString(r, 1),
+                    resultAsString(r, 2),
+                    resultAsString(r, 3),
+                    resultAsString(r, 4),
+                    resultAsLong(r, 5));
+        }, data);
+
+        List<Long> logoIds = schoolsWithLogo.stream().filter(r -> r.getOisFileId() != null).map(r -> r.getOisFileId()).collect(Collectors.toList());
+        Map<Long, OisFile> logos = new HashMap<>();
+        if (!logoIds.isEmpty()) {
+            logos = em.createQuery("select file from OisFile as file where file.id in (?1)", OisFile.class)
+                    .setParameter(1, logoIds)
+                    .getResultList()
+                    .stream().collect(Collectors.toMap(r -> EntityUtil.getId(r), r -> r, (o, n) -> o));
+        }
+
+        for (SchoolWithLogo school : schoolsWithLogo) {
+            OisFile logo = school.getOisFileId() != null ? logos.get(school.getOisFileId()) : null;
+            school.setLogo(logo != null ? logo.getFdata() : null);
+        }
+        return schoolsWithLogo;
     }
 
     public List<SchoolWithoutLogo> ldapSchools() {
@@ -625,8 +673,15 @@ public class AutocompleteService {
     }
 
     public List<AutocompleteResult> saisAdmissionCodes(Long schoolId) {
-        return StreamUtil.toMappedList(AutocompleteResult::of,
-                saisAdmissionRepository.findAllDistinctCodeByCurriculumVersionCurriculumSchoolId(schoolId));
+        List<?> data = em.createNativeQuery("select sa.id, sa.code from sais_admission sa "+
+                "where sa.curriculum_version_id in (select cv.id from curriculum_version cv "+
+                "join curriculum c on cv.curriculum_id = c.id where c.school_id = ?1)")
+                .setParameter(1, schoolId)
+                .getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String code = resultAsString(r, 1);
+            return new AutocompleteResult(resultAsLong(r, 0), code, code);
+        }, data);
     }
 
     public List<SaisClassifierSearchDto> saisClassifiers(String parentCode) {
@@ -643,7 +698,7 @@ public class AutocompleteService {
         }, data);
     }
 
-    public Page<AutocompleteResult> vocationalModules(Long schoolId, AutocompleteCommand lookup) {
+    public Page<AutocompleteResult> vocationalModules(Long schoolId, SearchCommand lookup) {
         String nameField = Language.EN.equals(lookup.getLang()) ? "nameEn" : "nameEt";
         PageRequest pageable = sortAndLimit(nameField);
         JpaQueryBuilder<CurriculumModule> qb = new JpaQueryBuilder<>(CurriculumModule.class, "cm").sort(pageable);

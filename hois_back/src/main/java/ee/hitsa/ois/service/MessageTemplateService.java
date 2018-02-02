@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
@@ -36,6 +37,7 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.MessageTemplateRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
@@ -140,21 +142,12 @@ public class MessageTemplateService {
     }
 
     public Set<String> getUsedTypeCodes(Long schoolId, String code) {
-        Set<String> set = StreamUtil.toMappedSet(mt -> EntityUtil.getCode(mt.getType()), messageTemplateRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            if(code != null) {
-                filters.add(cb.notEqual(root.get("type").get("code"), code));
-            }
-
-            LocalDate now = LocalDate.now();
-            filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), now), cb.isNull(root.get("validFrom"))));
-            filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }));
-        return set;
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from message_template mt");
+        qb.requiredCriteria("mt.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("mt.type_code <> :typeCode", "typeCode", code);
+        qb.validNowCriteria("mt.valid_from", "mt.valid_thru");
+        List<?> data = qb.select("mt.type_code", em).getResultList();
+        return StreamUtil.toMappedSet(r -> resultAsString(r, 0), data);
     }
 
     private static void validateTemplateContent(MessageTemplate messageTemplate) {

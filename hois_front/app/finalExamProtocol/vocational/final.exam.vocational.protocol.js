@@ -94,7 +94,7 @@ function ($scope, $route, QueryUtils, Classifier, $q, oisFileService, config, me
       }, function (result) {
         message.info('finalExamProtocol.messages.studentSuccesfullyAdded');
         entityToDto(result);
-      });
+      }).catch(angular.noop);
     });
   };
 
@@ -150,7 +150,7 @@ function ($scope, $route, QueryUtils, Classifier, $q, oisFileService, config, me
       } else {
         message.error('main.messages.error.mobileIdSignFailed');
       }
-    });
+    }).catch(angular.noop);
   }
 
   function pollMobileSignStatus() {
@@ -184,7 +184,7 @@ function ($scope, $route, QueryUtils, Classifier, $q, oisFileService, config, me
       }, function (result) {
         message.info('finalExamProtocol.messages.confirmed');
         entityToDto(result);
-      });
+      }).catch(angular.noop);;
     } else {
       if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
         signBeforeConfirm();
@@ -205,7 +205,7 @@ function ($scope, $route, QueryUtils, Classifier, $q, oisFileService, config, me
       .$update().then(function (result) {
         message.info('main.messages.create.success');
         entityToDto(result);
-      });
+      }).catch(angular.noop);
   };
 
   function getPresentCommitteeMembers(committeeMembers) {
@@ -225,7 +225,7 @@ function ($scope, $route, QueryUtils, Classifier, $q, oisFileService, config, me
       new FinalExamVocationlProtocolEndpoint($scope.protocol).$delete().then(function(){
         message.info('finalExamProtocol.messages.deleted');
         $location.path(endpoint);
-      });
+      }).catch(angular.noop);
     });
   };
 

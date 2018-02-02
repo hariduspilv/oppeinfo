@@ -1,41 +1,44 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
 
   <div layout="column">
-    <form ng-submit="loadData()" novalidate>
-      <div layout="row" flex>
-        <md-input-container flex>
-          <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipType' : 'stipend.grantType' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.type" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS" show-only-values="criteria.allowedStipendTypes"></hois-classifier-select>
-        </md-input-container>
-      </div>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate>
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipType' : 'stipend.grantType' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.type" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS" show-only-values="criteria.allowedStipendTypes"></hois-classifier-select>
+          </md-input-container>
+        </div>
 
-      <div layout="row" flex>
-        <md-input-container flex>
-          <label class="textInput">{{'stipend.studyPeriod' | translate}}</label>
-          <hois-select ng-model="criteria.studyPeriod" values="studyPeriods"></hois-select>
-        </md-input-container>
-      </div>
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label class="textInput">{{'stipend.studyPeriod' | translate}}</label>
+            <hois-select ng-model="criteria.studyPeriod" values="studyPeriods"></hois-select>
+          </md-input-container>
+        </div>
 
-      <div layout="row" flex>
-        <md-input-container flex>
-          <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipName' : 'stipend.grantName' | translate}}</label>
-          <input type="text" ng-model="criteria.nameEt" name="nameEt" md-maxlength="500">
-        </md-input-container>
-      </div>
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipName' : 'stipend.grantName' | translate}}</label>
+            <input type="text" ng-model="criteria.nameEt" name="nameEt" md-maxlength="500">
+          </md-input-container>
+        </div>
 
-      <div layout="row" flex>
-        <md-input-container flex>
-          <label class="textInput">{{'stipend.status' | translate}}</label>
-          <hois-select ng-model="criteria.isOpen" model-value-attr="code" values="statuses"></hois-select>
-        </md-input-container>
-      </div>
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label class="textInput">{{'stipend.status' | translate}}</label>
+            <hois-select ng-model="criteria.isOpen" model-value-attr="code" values="statuses"></hois-select>
+          </md-input-container>
+        </div>
 
-      <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <md-button class="md-raised" ng-href="#/scholarships/{{scholarshipType}}/new">{{'main.button.create' | translate}}</md-button>
-      </div>
-    </form>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="canEdit" ng-href="#/scholarships/{{scholarshipType}}/new">{{'main.button.create' | translate}}</md-button>
+        </div>
+      </form>
+    </fieldset>
 
     <br>
 
@@ -62,7 +65,7 @@
             <td md-cell>{{::row.places}}</td>
             <td md-cell>{{::row.isOpen ? 'stipend.published' : 'stipend.underRevision' | translate}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-click="changeStipend(row)">
+              <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-click="changeStipend(row)">
                 {{'main.button.change' | translate}}
               </md-button>
             </td>

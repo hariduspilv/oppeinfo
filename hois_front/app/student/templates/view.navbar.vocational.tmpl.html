@@ -1,7 +1,20 @@
-<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection">
+<md-nav-bar hide-xs md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection">
   <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
   <md-nav-item md-nav-href="#/students/{{::studentId}}/results?_noback" name="student.results">{{'student.results' | translate}}</md-nav-item>
   <md-nav-item md-nav-href="#/students/{{::studentId}}/absences?_noback" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
   <md-nav-item md-nav-href="#/students/{{::studentId}}/documents?_noback" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
   <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/students/{{::studentId}}/timetable?_noback" name="student.timetable">{{'student.studentTimetable' | translate}}</md-nav-item>
 </md-nav-bar>
+
+<div hide-gt-xs layout="column">
+  <md-button class="md-raised" flex ng-href="#/students/{{::studentId}}/main?_noback" ng-class="{'md-accent': currentNavItem === 'student.main'}"
+    name="student.main">{{'student.main' | translate}}</md-button>
+  <md-button class="md-raised" ng-href="#/students/{{::studentId}}/results?_noback" ng-class="{'md-accent': currentNavItem === 'student.results'}"
+    name="student.results">{{'student.results' | translate}}</md-button>
+  <md-button class="md-raised" ng-href="#/students/{{::studentId}}/absences?_noback" ng-class="{'md-accent': currentNavItem === 'student.absences'}"
+    name="student.absences">{{'student.absences' | translate}}</md-button>
+  <md-button class="md-raised" ng-href="#/students/{{::studentId}}/documents?_noback" ng-class="{'md-accent': currentNavItem === 'student.documents'}"
+    name="student.documents">{{'student.documents' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="auth.isAdmin()" ng-class="{'md-accent': currentNavItem === 'student.timetable'}" ng-href="#/students/{{::studentId}}/timetable?_noback"
+    name="student.timetable">{{'student.studentTimetable' | translate}}</md-button>
+</div>

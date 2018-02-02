@@ -7,7 +7,7 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class CurriculumSpecialityXml {
-    
+
     private Long id;
     private Long version;
     private String nameEt;
@@ -17,7 +17,7 @@ public class CurriculumSpecialityXml {
     private String occupationEt;
     private String occupationEn;
     private String occupation;
-    
+
     public static CurriculumSpecialityXml of(CurriculumSpeciality speciality) {
         CurriculumSpecialityXml xml = EntityUtil.bindToDto(speciality, new CurriculumSpecialityXml(), "occupation");
         xml.setOccupation(ClassifierUtil.getNullableNameEt(speciality.getOccupation()));

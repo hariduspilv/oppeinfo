@@ -212,7 +212,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
             findstudents($scope);
           },
           templateUrl: 'studentGroup/student.select.dialog.html',
-          clickOutsideToClose: true
+          clickOutsideToClose: false
         });
         return;
       }

@@ -13,44 +13,73 @@ import ee.hitsa.ois.util.StreamUtil;
 
 public class EhisStudentReport {
 
-    private List<Graduation> graduations;
-    private List<CurriculaFulfilment> fulfilments;
-    private List<ForeignStudy> foreignStudies;
-    private List<ApelApplication> apelApplications;
+    private Long studentId;
+    private String name;
+    private String idcode;
+    private String curriculum;
 
-    public List<Graduation> getGraduations() {
-        return graduations;
+    private Boolean error;
+    private String message;
+
+    protected void fill(Student student, WsEhisStudentLog log) {
+        setStudentId(student.getId());
+        setName(student.getPerson().getFullname());
+        setIdcode(student.getPerson().getIdcode());
+        setCurriculum(student.getCurriculumVersion().getCurriculum().getCode());
+
+        setError(Boolean.valueOf(Boolean.TRUE.equals(log.getHasOtherErrors()) || Boolean.TRUE.equals(log.getHasXteeErrors())));
+        setMessage(log.getLogTxt());
     }
 
-    public void setGraduations(List<Graduation> graduations) {
-        this.graduations = graduations;
+    public Long getStudentId() {
+        return studentId;
     }
 
-    public List<CurriculaFulfilment> getFulfilments() {
-        return fulfilments;
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
     }
 
-    public void setFulfilments(List<CurriculaFulfilment> fulfilments) {
-        this.fulfilments = fulfilments;
+    public String getName() {
+        return name;
     }
 
-    public List<ForeignStudy> getForeignStudies() {
-        return foreignStudies;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public void setForeignStudies(List<ForeignStudy> foreignStudies) {
-        this.foreignStudies = foreignStudies;
+    public String getIdcode() {
+        return idcode;
     }
 
-    public List<ApelApplication> getApelApplications() {
-        return apelApplications;
+    public void setIdcode(String idcode) {
+        this.idcode = idcode;
     }
 
-    public void setApelApplications(List<ApelApplication> apelApplications) {
-        this.apelApplications = apelApplications;
+    public String getCurriculum() {
+        return curriculum;
     }
 
-    public static class ApelApplication extends StudentReport {
+    public void setCurriculum(String curriculum) {
+        this.curriculum = curriculum;
+    }
+
+    public Boolean getError() {
+        return error;
+    }
+
+    public void setError(Boolean error) {
+        this.error = error;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public static class ApelApplication extends EhisStudentReport {
         private final List<StudyRecord> records;
 
         public List<StudyRecord> getRecords() {
@@ -82,7 +111,7 @@ public class EhisStudentReport {
         }
     }
 
-    public static class Graduation extends StudentReport {
+    public static class Graduation extends EhisStudentReport {
         private String docNr;
         private final Boolean cumLaude;
         private String academicNr;
@@ -115,7 +144,7 @@ public class EhisStudentReport {
         }
     }
 
-    public static class CurriculaFulfilment extends StudentReport {
+    public static class CurriculaFulfilment extends EhisStudentReport {
         private final BigDecimal percentage;
         private final BigDecimal points;
 
@@ -137,7 +166,7 @@ public class EhisStudentReport {
         }
     }
 
-    public static class ForeignStudy extends StudentReport {
+    public static class ForeignStudy extends EhisStudentReport {
         private final LocalDate fromDate;
         private final LocalDate toDate;
 
@@ -154,74 +183,6 @@ public class EhisStudentReport {
 
         public LocalDate getToDate() {
             return toDate;
-        }
-    }
-
-    protected static class StudentReport {
-        private Long studentId;
-        private String name;
-        private String idcode;
-        private String curriculum;
-
-        private Boolean error;
-        private String message;
-
-        protected void fill(Student student, WsEhisStudentLog log) {
-            setStudentId(student.getId());
-            setName(student.getPerson().getFullname());
-            setIdcode(student.getPerson().getIdcode());
-            setCurriculum(student.getCurriculumVersion().getCurriculum().getCode());
-
-            setError(Boolean.valueOf(Boolean.TRUE.equals(log.getHasOtherErrors()) || Boolean.TRUE.equals(log.getHasXteeErrors())));
-            setMessage(log.getLogTxt());
-        }
-
-        public Long getStudentId() {
-            return studentId;
-        }
-
-        public void setStudentId(Long studentId) {
-            this.studentId = studentId;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getIdcode() {
-            return idcode;
-        }
-
-        public void setIdcode(String idcode) {
-            this.idcode = idcode;
-        }
-
-        public String getCurriculum() {
-            return curriculum;
-        }
-
-        public void setCurriculum(String curriculum) {
-            this.curriculum = curriculum;
-        }
-
-        public Boolean getError() {
-            return error;
-        }
-
-        public void setError(Boolean error) {
-            this.error = error;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
         }
     }
 }

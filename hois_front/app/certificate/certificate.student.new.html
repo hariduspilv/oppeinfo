@@ -13,6 +13,10 @@
                 <label>{{'certificate.whom' | translate}}</label>
                 <input type="text" ng-model="record.whom" md-maxlength="255">
             </md-input-container>
+            <md-input-container>
+                <label class="common-label" ng-show="record.content">{{'certificate.content' | translate}}</label>
+                <div id="content" class="md-body-1"></div>
+            </md-input-container>
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'certificate.order' | translate}}</md-button>

@@ -10,10 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AcademicCalendarDto;
 import ee.hitsa.ois.web.dto.AcademicCalendarEventDto;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 @Transactional
 @Service
@@ -53,9 +55,11 @@ public class AcademicCalendarService {
         if (studyYear == null) {
             return null;
         }
-
+        
+        School school = em.getReference(School.class, schoolId);
+        AutocompleteResult schoolName = new AutocompleteResult(schoolId, school.getNameEt(), school.getNameEn());
         String yearCode = EntityUtil.getCode(studyYear.getYear());
         List<AcademicCalendarEventDto> events = getAcademicCalendarEvents(studyYear.getId(), schoolId);
-        return new AcademicCalendarDto(yearCode, events);
+        return new AcademicCalendarDto(schoolName, yearCode, events);
     }
 }

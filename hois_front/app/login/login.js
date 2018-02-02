@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('LoginController', function (message, $rootScope, $scope, AuthService, AUTH_EVENTS, $location, config, $mdDialog, $timeout) {
+  .controller('LoginController', function (message, $rootScope, $scope, AuthService, AUTH_EVENTS, $location, config, $mdDialog, $timeout, ArrayUtils, PUBLIC_ROUTES,$route ) {
 
     var NOT_MOBILE_ID_USER_ERROR = 301;
 
@@ -34,7 +34,10 @@ angular.module('hitsaOis')
       } else {
         $rootScope.setCurrentUser(null);
         setLoggedInVisuals(null);
-        $location.path("/");
+        //Do not redirect if public route
+        if (!$route.current || !ArrayUtils.contains(PUBLIC_ROUTES, $route.current.originalPath)) {
+          $location.path("/");
+        }
       }
     }
 
@@ -83,8 +86,8 @@ angular.module('hitsaOis')
     
     var authenticate = function() {
       $scope.hideDialog = false;
-      if (window.location.hash.indexOf('_code') > -1) {
-        var token = window.location.hash.substring(window.location.hash.indexOf('_code') + 6);
+      var token = $location.search()._code;
+      if (token) {
         AuthService.login({Authorization: 'Bearer ' + token}).then(successfulAuthentication, failedAuthentication);
       } else {
         AuthService.login().then(successfulAuthentication, failedAuthentication);
@@ -94,11 +97,6 @@ angular.module('hitsaOis')
     var authenticateUser = function(credentials) {
       $scope.hideDialog = false;
       AuthService.loginLdap(credentials).then(successfulAuthentication, failedAuthentication);
-    };
-
-    var authenticateIdCard = function() {
-      $scope.hideDialog = true;
-      AuthService.loginIdCard()/*.then(successfulAuthentication, failedAuthentication)*/;
     };
 
     var authenticateMobileId = function(mobilenumber) {
@@ -132,7 +130,7 @@ angular.module('hitsaOis')
 
     $scope.showLogin = function () {
       $mdDialog.show({
-        controller: function ($scope, School, $localStorage) {
+        controller: function ($scope, School, $localStorage, config) {
           School.getLdap().$promise.then(function (schools) {
             $scope.schools = schools;
             $scope.schools.sort(function (a, b) {
@@ -156,9 +154,7 @@ angular.module('hitsaOis')
               authenticateUser($scope.credentials);
             }
           };
-          $scope.idlogin = function () {
-            authenticateIdCard();
-          };
+          $scope.idCardLoginUrl = config.idCardLoginUrl;
           $scope.mIdLogin = function () {
             if ($scope.mobilenumber) {
               authenticateMobileId($scope.mobilenumber);

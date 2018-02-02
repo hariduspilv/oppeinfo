@@ -32,17 +32,17 @@ public class JournalXlsDto extends JournalDto {
 
             for (JournalEntryStudent journalEntryStudent : entry.getJournalEntryStudents()) {
                 if (journalEntryStudent.getGrade() != null) {
-                    journalEntryByDateDto.getJournalStudentGrade().put(journalEntryStudent.getJournalStudent().getId(),
+                    journalEntryByDateDto.getJournalStudentGrade().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
                             journalEntryStudent.getGrade().getValue());
                 }
 
                 if (journalEntryStudent.getAbsence() != null) {
-                    journalEntryByDateDto.getJournalStudentAbsence().put(journalEntryStudent.getJournalStudent().getId(),
+                    journalEntryByDateDto.getJournalStudentAbsence().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
                             journalEntryStudent.getAbsence().getValue());
                 }
                 
                 if(journalEntryStudent.getAddInfo() != null) {
-                    journalEntryByDateDto.getJournalStudentAddInfo().put(journalEntryStudent.getJournalStudent().getId(), 
+                    journalEntryByDateDto.getJournalStudentAddInfo().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
                             journalEntryStudent.getAddInfo());
                 }
             }

@@ -118,11 +118,11 @@
           <h2>{{'journal.entries' | translate}}</h2>
         </div>
         <div layout="row" layout-align="start end" layout-sm="column" layout-xs="column" flex="40">
-          <span style="padding: 5px; border: solid 1px lightgray" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_T')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_T'])}}</span>
-          <span style="padding: 5px; border: solid 1px lightgray" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_E')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_E'])}}</span>
-          <span style="padding: 5px; border: solid 1px lightgray" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_I')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_I'])}}</span>
-          <span style="padding: 5px; border: solid 1px lightgray" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_H')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_H'])}}</span>
-          <span style="padding: 5px; border: solid 1px lightgray" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_L')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}</span>
+          <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_T')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_T'])}}</span>
+          <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_E')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_E'])}}</span>
+          <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_I')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_I'])}}</span>
+          <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_H')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_H'])}}</span>
+          <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_L')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}</span>
         </div>
       </div>
       <md-table-container>
@@ -155,7 +155,7 @@
   <div layout-padding>
     <hois-collapsable label="('journal.curriculumVersionModuleOrThemeDescription' | translate)" expanded="false">
       <div ng-repeat="module in journal.moduleDescriptions">
-        <a href="" class="md-raised" ng-click="moduleDescriptionDialog(module)">{{currentLanguageNameField(module)}}</a>
+        <a href="" class="md-raised small-link" ng-click="moduleDescriptionDialog(module)">{{currentLanguageNameField(module)}}</a>
       </div>
     </hois-collapsable>
   </div>

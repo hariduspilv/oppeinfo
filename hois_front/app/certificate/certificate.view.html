@@ -5,14 +5,19 @@
           <hois-classifier-value ng-model="record.type" main-classifier-code="TOEND_LIIK"></hois-classifier-value>
       </md-input-container>
 
-      <div ng-show="!isOtherCertificate()" layout="column">
+      <md-input-container ng-if="record.status === 'TOEND_STAATUS_V'">
+          <label>{{'certificate.nr' | translate}}</label>
+          <hois-value value="record.certificateNr"></hois-value>
+      </md-input-container>
+
+      <div ng-show="!isOtherCertificate() && !auth.isStudent()" layout="column">
         <md-input-container>
             <label>{{'certificate.student' | translate}}</label>
             <hois-value value="student.nameEt" href-value="'#/students/' + student.id + '/main'"></hois-value>
         </md-input-container>
       </div>
 
-      <div ng-if="isOtherCertificate()">
+      <div ng-if="isOtherCertificate() && !auth.isStudent()">
           <md-input-container class="md-block">
               <label>{{'certificate.otherIdcode' | translate}}</label>
               <hois-value value="record.otherIdcode"></hois-value>
@@ -31,9 +36,17 @@
           <label>{{'certificate.whom' | translate}}</label>
           <hois-value value="record.whom"></hois-value>
       </md-input-container>
-      <md-input-container>
+      <md-input-container ng-if="!auth.isStudent()">
           <label>{{'certificate.signatory' | translate}}</label>
           <hois-value value="record.signatoryName"></hois-value>
+      </md-input-container>
+      <md-input-container>
+        <label>{{'certificate.status' | translate}}</label>
+        <hois-classifier-value ng-model="record.status" main-classifier-code="TOEND_STAATUS"></hois-classifier-value>
+      </md-input-container>
+      <md-input-container>
+        <label>{{'certificate.inserted' | translate}}</label>
+        <hois-value value="record.inserted | hoisDate"></hois-value>
       </md-input-container>
       <md-input-container ng-if="contentEditable()">
           <label>{{'certificate.content' | translate}}</label>
@@ -47,8 +60,10 @@
   <div layout="row">
       <md-button class="md-raised md-primary" ng-if="record.canBeChanged && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TOEND')" 
         ng-href="/#/certificate/{{::record.id}}/edit">{{'main.button.change' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-if="auth.isStudent() && record.status === 'TOEND_STAATUS_T'" ng-click="order()">{{'certificate.orderAgain' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-if="record.id && auth.isStudent() && record.status === 'TOEND_STAATUS_T'" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-click="back('#/certificate')">{{'main.button.back' | translate}}</md-button>
-      <md-button class="md-raised md-default" ng-if="record.canViewFromEkis"
+      <md-button class="md-raised md-default" ng-if="record.canViewFromEkis && !auth.isStudent()"
        ng-href="{{getCertificateUrl(record.wdId)}}" target="_blank">{{'certificate.viewFromEkis' | translate}}</md-button>
   </div>
 </div>

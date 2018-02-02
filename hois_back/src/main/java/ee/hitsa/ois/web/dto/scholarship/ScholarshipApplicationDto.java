@@ -13,7 +13,6 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.Required;
-import ee.hitsa.ois.web.dto.OisFileDto;
 
 public class ScholarshipApplicationDto {
 
@@ -33,7 +32,7 @@ public class ScholarshipApplicationDto {
     private String compensationFrequency;
     private String status;
     private BigDecimal routeKm;
-    private List<OisFileDto> files;
+    private List<ScholarshipFileDto> files;
     private List<ScholarshipApplicationFamilyDto> family;
     private Boolean canApply;
 
@@ -42,7 +41,7 @@ public class ScholarshipApplicationDto {
         if (application != null) {
             EntityUtil.bindToDto(application, dto, "files", "family");
             dto.setFiles(
-                    StreamUtil.toMappedList(file -> OisFileDto.of(file), application.getScholarshipApplicationFiles()));
+                    StreamUtil.toMappedList(file -> ScholarshipFileDto.of(file), application.getScholarshipApplicationFiles()));
             dto.setFamily(StreamUtil.toMappedList(fam -> ScholarshipApplicationFamilyDto.of(fam),
                     application.getScholarshipApplicationFamilies()));
             dto.setCanApply(Boolean
@@ -158,11 +157,11 @@ public class ScholarshipApplicationDto {
         this.routeKm = routeKm;
     }
 
-    public List<OisFileDto> getFiles() {
+    public List<ScholarshipFileDto> getFiles() {
         return files;
     }
 
-    public void setFiles(List<OisFileDto> files) {
+    public void setFiles(List<ScholarshipFileDto> files) {
         this.files = files;
     }
 

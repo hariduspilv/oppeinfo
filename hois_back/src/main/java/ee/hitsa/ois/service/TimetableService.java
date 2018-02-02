@@ -9,6 +9,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.security.Principal;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -35,6 +36,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
@@ -68,6 +71,7 @@ import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.TimetableCopyForm;
 import ee.hitsa.ois.web.commandobject.TimetableRoomAndTimeForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEditForm;
@@ -394,6 +398,7 @@ public class TimetableService {
             copyEvent.setLessonNr(event.getLessonNr());
             copyEvent.setCapacityType(event.getCapacityType());
             copyEvent.setRepeat(event.getRepeat());
+            copyEvent.setSchool(event.getSchool());
             TimetableObject to = copyObjectsByJournal.get(EntityUtil.getId(event.getTimetableObject().getJournal()));
             copyEvent.setTimetableObject(to);
             to.getTimetableEvents().add(copyEvent);
@@ -464,6 +469,7 @@ public class TimetableService {
             timetableEvent.setRepeatCode(em.getReference(Classifier.class, form.getRepeatCode()));
             timetableEvent.setCapacityType(em.getReference(Classifier.class, form.getCapacityType()));
             timetableEvent.setConsiderBreak(Boolean.FALSE);
+            timetableEvent.setSchool(object.getTimetable().getSchool());
             Subject sub = object.getSubjectStudyPeriod().getSubject();
             timetableEvent.setName(sub.getNameEt() + " (" + sub.getCode() + ")");
         } else {
@@ -610,6 +616,7 @@ public class TimetableService {
                 .setRepeatCode(em.getReference(Classifier.class, TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI.name()));
         timetableEvent.setLessonNr(lessonTime.getLessonNr());
         timetableEvent.setConsiderBreak(Boolean.FALSE);
+        timetableEvent.setSchool(timetableObject.getTimetable().getSchool());
         if (form.getCapacityType() != null && !form.getCapacityType().isEmpty()) {
             timetableEvent.setCapacityType(em.getReference(Classifier.class, form.getCapacityType()));
         }
@@ -1027,8 +1034,10 @@ public class TimetableService {
                                 resultAsString(r, 1), resultAsString(r, 3), resultAsString(r, 4), resultAsLong(r, 5)),
                         data);
 
-        Map<Long, List<AutocompleteResult>> teachersBySsps = getTeachersForSubjectStudyPeriods(capacities.stream().map(r -> r.getSubjectStudyPeriod())
-                .collect(Collectors.toSet()));
+        if(StreamUtil.toMappedSet(r -> r.getSubjectStudyPeriod(), capacities).isEmpty()) {
+            throw new ValidationFailedException("timetable.error.missingCapacities");
+        }
+        Map<Long, List<AutocompleteResult>> teachersBySsps = getTeachersForSubjectStudyPeriods(StreamUtil.toMappedSet(r -> r.getSubjectStudyPeriod(), capacities));
         // key = subject_study_period.id + _ + student_group.id + _ + capacity_type
         Map<String, Long> plannedLessonsBySspSgCt = getPlannedTotalsForHigherStudentGroups(EntityUtil.getId(timetable));
         
@@ -1258,8 +1267,7 @@ public class TimetableService {
         return result;
     }
 
-    public List<GeneralTimetableDto> generalTimetables(HoisUserDetails user) {
-        Long schoolId = user.getSchoolId();
+    public List<GeneralTimetableDto> generalTimetables(Long schoolId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
         if (studyYear == null) {
             return null;
@@ -1271,8 +1279,14 @@ public class TimetableService {
                 + " order by 2");
         q.setParameter(1, schoolId);
         q.setParameter(2, studyYear.getId());
+        
+        HoisUserDetails user = null;
+        Principal principal = SecurityContextHolder.getContext().getAuthentication();
+        if (!(principal instanceof AnonymousAuthenticationToken)) {
+            user = HoisUserDetails.fromPrincipal(SecurityContextHolder.getContext().getAuthentication());
+        }
 
-        if (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher()) {
+        if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher())) {
             q.setParameter("shownStatusCodes", adminAndTeacherTimetables);
         } else {
             q.setParameter("shownStatusCodes", publicTimetables);

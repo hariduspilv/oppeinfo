@@ -7,7 +7,7 @@ import java.util.List;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
-import ee.hitsa.ois.domain.protocol.ProtocolStudent;
+
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.SubjectAssessment;
@@ -26,7 +26,7 @@ public class StudentHigherSubjectResultDto {
     private Boolean isExtraCurriculum;
     private Boolean isOk;
 
-    public static StudentHigherSubjectResultDto ofFromHigherModuleSubject(CurriculumVersionHigherModuleSubject higherModuleSubject) {
+    public static StudentHigherSubjectResultDto ofHigherModuleSubject(CurriculumVersionHigherModuleSubject higherModuleSubject) {
         StudentHigherSubjectResultDto dto = new StudentHigherSubjectResultDto();
         dto.setSubject(getSubjectDto(higherModuleSubject.getSubject()));
         dto.setIsExtraCurriculum(Boolean.FALSE);

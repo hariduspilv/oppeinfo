@@ -1,41 +1,44 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form ng-submit="loadData()" novalidate>
-      <div layout="row">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'report.curriculumscompletion.name' | translate}}</label>
-          <input ng-model="criteria.name" name="name" type="text" autofocus>
-        </md-input-container>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate>
+        <div layout="row">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'report.curriculumscompletion.name' | translate}}</label>
+            <input ng-model="criteria.name" name="name" type="text" autofocus>
+          </md-input-container>
 
-        <div flex="50" flex-offset="5">
-          <hois-autocomplete ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.curriculumscompletion.curriculum"></hois-autocomplete>
+          <div flex="50" flex-offset="5">
+            <hois-autocomplete ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.curriculumscompletion.curriculum"></hois-autocomplete>
+          </div>
         </div>
-      </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45">
-          <label>{{'report.curriculumscompletion.studentgroup' | translate}}</label>
-          <hois-select ng-model="criteria.studentGroup" type="studentgroup"></hois-select>
-        </md-input-container>
-        <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
-          <label>{{'report.curriculumscompletion.studyForm' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
-        </md-input-container>
-      </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45">
+            <label>{{'report.curriculumscompletion.studentgroup' | translate}}</label>
+            <hois-select ng-model="criteria.studentGroup" type="studentgroup"></hois-select>
+          </md-input-container>
+          <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
+            <label>{{'report.curriculumscompletion.studyForm' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
+          </md-input-container>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45">
-          <label>{{'report.curriculumscompletion.status' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS"></hois-classifier-select>
-        </md-input-container>
-      </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45">
+            <label>{{'report.curriculumscompletion.status' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS"></hois-classifier-select>
+          </md-input-container>
+        </div>
 
-      <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>

@@ -13,10 +13,10 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'messa
 
   $scope.exportStudents = function() {
     if($scope.studentExportForm.$valid) {
-      QueryUtils.endpoint('/students/ehisStudentExport').save($scope.criteria).$promise.then(function(result) {
-        message.info('ehis.messages.exportFinished');
+      QueryUtils.endpoint('/students/ehisStudentExport').post($scope.criteria).$promise.then(function(result) {
+        message.info(result && result.length > 0 ? 'ehis.messages.exportFinished' : 'ehis.messages.nostudentsfound');
         $scope.result = result;
-      });
+      }).catch(angular.noop);
     } else {
       message.error('main.messages.form-has-errors');
     }

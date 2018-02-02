@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController', ['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', 'Classifier', '$q', '$translate',
-  function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier) {
+angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController', 
+  function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier, USER_ROLES, AuthService) {
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINE);
 
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriodPlans', {order: 'id'});
 
@@ -63,7 +64,7 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController', 
         }
     );
 
-}]).controller('subjectStudyPeriodPlanNewController', ['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', '$mdDialog', 'dialogService', '$route', 'Classifier', '$location',
+}).controller('subjectStudyPeriodPlanNewController', ['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', '$mdDialog', 'dialogService', '$route', 'Classifier', '$location',
   function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogService, $route, Classifier, $location) {
 
     var id = $route.current.params.id;

@@ -9,7 +9,7 @@
     "angular-resource": "1.6.8",
     "angular-route": "1.6.8",
     "angular-sanitize": "1.6.8",
-    "angular-material": "1.1.5",
+    "angular-material": "1.1.6",
     "angular-translate": "2.17.0",
     "angular-translate-loader-static-files": "2.17.0",
     "angular-material-data-table": "0.10.10",

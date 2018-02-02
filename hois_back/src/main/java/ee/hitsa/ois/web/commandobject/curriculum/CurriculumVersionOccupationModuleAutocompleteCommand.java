@@ -1,16 +1,16 @@
 package ee.hitsa.ois.web.commandobject.curriculum;
 
-import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 
-public class CurriculumVersionModuleAutocompleteCommand extends AutocompleteCommand{
-    
+public class CurriculumVersionOccupationModuleAutocompleteCommand extends SearchCommand {
+
     private Long curriculumVersion;
     private Boolean curriculumModules;
     private String curriculumVersionStatusCode;
     private Long school;
     private Long student;
     private Boolean otherStudents;
-    
+
     public Long getCurriculumVersion() {
         return curriculumVersion;
     }
@@ -18,7 +18,7 @@ public class CurriculumVersionModuleAutocompleteCommand extends AutocompleteComm
     public void setCurriculumVersion(Long curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
     }
-    
+
     public Boolean getCurriculumModules() {
         return curriculumModules;
     }
@@ -58,5 +58,4 @@ public class CurriculumVersionModuleAutocompleteCommand extends AutocompleteComm
     public void setOtherStudents(Boolean otherStudents) {
         this.otherStudents = otherStudents;
     }
-    
 }

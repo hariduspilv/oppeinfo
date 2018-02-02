@@ -38,6 +38,13 @@ public class AutocompleteControllerTests {
     }
 
     @Test
+    public void apelschools() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/autocomplete/apelschools", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void buildings() {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/autocomplete/buildings", Object.class);
         Assert.assertNotNull(responseEntity);
@@ -95,6 +102,38 @@ public class AutocompleteControllerTests {
     }
 
     @Test
+    public void curriculumversionhmodules() {
+        String uri = "/autocomplete/curriculumversionhmodules?curriculumVersion=0";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void curriculumversionomodules() {
+        String uri = "/autocomplete/curriculumversionomodules?curriculumVersion=0";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void curriculumversionomodulethemes() {
+        String uri = "/autocomplete/curriculumversionomodulethemes?curriculumVersionOmoduleId=0";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void curriculumversionomodulesandthemes() {
+        String uri = "/autocomplete/curriculumversionomodulesandthemes?curriculumVersion=0";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void curriculumVersions() {
         String uri = "/autocomplete/curriculumversions";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
@@ -121,6 +160,34 @@ public class AutocompleteControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
+    
+    @Test
+    public void curriculumVersionOccupationModules() {
+        String uri = "/autocomplete/curriculumversionomodules";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uri = "/autocomplete/curriculumversionomodules?otherStudents=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        uri = "/autocomplete/curriculumversionomodules?student=1";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uri = "/autocomplete/curriculumversionomodules?student=1&otherStudents=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        uri = "/autocomplete/curriculumversionomodules?curriculumVersion=1";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 
     @Test
     public void directiveCoordinators() {
@@ -141,8 +208,24 @@ public class AutocompleteControllerTests {
     }
 
     @Test
+    public void enterprises() {
+        String uri = "/autocomplete/enterprises";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void journals() {
         String uri = "/autocomplete/journals";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void ldapschools() {
+        String uri = "/autocomplete/ldapschools";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -243,6 +326,13 @@ public class AutocompleteControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
+    
+    @Test
+    public void schoolsWithLogo() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/autocomplete/schoolsWithLogo", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 
     @Test
     public void schoolDepartments() {
@@ -277,6 +367,17 @@ public class AutocompleteControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         
+        uri = "/autocomplete/subjects?student=1";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        uri = "/autocomplete/subjects?student=1&otherStudents=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        
         uri = "/autocomplete/subjects?withCredits=true";
         responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
@@ -284,6 +385,14 @@ public class AutocompleteControllerTests {
         
         uri = "/autocomplete/subjects?curriculumSubjects=true";
         responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void subjectsList() {
+        String uri = "/autocomplete/subjectsList";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
@@ -345,6 +454,14 @@ public class AutocompleteControllerTests {
     @Test
     public void teachers() {
         String uri = "/autocomplete/teachers?valid=true";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void teachersList() {
+        String uri = "/autocomplete/teachersList?valid=true";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

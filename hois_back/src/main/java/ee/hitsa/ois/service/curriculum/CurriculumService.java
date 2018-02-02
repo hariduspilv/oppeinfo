@@ -128,13 +128,12 @@ public class CurriculumService {
                 jointPartners, CurriculumJointPartnerDto::getId, dto -> {
             CurriculumJointPartner jointPartner = new CurriculumJointPartner();
             jointPartner.setCurriculum(curriculum);
-            updateJointPartner(dto, jointPartner);
-            return jointPartner;
+            return updateJointPartner(dto, jointPartner);
         }, this::updateJointPartner);
     }
 
-    private void updateJointPartner(CurriculumJointPartnerDto dto, CurriculumJointPartner partner) {
-        EntityUtil.bindToEntity(dto, partner, classifierRepository);
+    private CurriculumJointPartner updateJointPartner(CurriculumJointPartnerDto dto, CurriculumJointPartner partner) {
+        return EntityUtil.bindToEntity(dto, partner, classifierRepository);
     }
 
     /**
@@ -168,8 +167,7 @@ public class CurriculumService {
     private CurriculumSpeciality createSpeciality(Curriculum curriculum, CurriculumSpecialityDto dto) {
         CurriculumSpeciality speciality = new CurriculumSpeciality();
         speciality.setCurriculum(curriculum);
-        updateSpeciality(dto, speciality);
-        return speciality;  
+        return updateSpeciality(dto, speciality);
     }
 
     private CurriculumSpeciality updateSpeciality(CurriculumSpecialityDto dto, CurriculumSpeciality speciality) {
@@ -184,8 +182,7 @@ public class CurriculumService {
     private CurriculumGrade createGrade(Curriculum curriculum, CurriculumGradeDto dto) {
         CurriculumGrade grade = new CurriculumGrade();
         grade.setCurriculum(curriculum);
-        updateGrade(dto, grade);
-        return grade;
+        return updateGrade(dto, grade);
     }
 
     private CurriculumGrade updateGrade(CurriculumGradeDto dto, CurriculumGrade grade) {
@@ -210,13 +207,12 @@ public class CurriculumService {
             CurriculumFile file = new CurriculumFile();
             file.setCurriculum(curriculum);
             file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));
-            updateCurriculumFile(dto, file);
-            return file;
+            return updateCurriculumFile(dto, file);
         }, this::updateCurriculumFile);
     }
     
-    private void updateCurriculumFile(CurriculumFileDto dto, CurriculumFile file) {
-        EntityUtil.bindToEntity(dto, file, classifierRepository, "oisFile");
+    private CurriculumFile updateCurriculumFile(CurriculumFileDto dto, CurriculumFile file) {
+        return EntityUtil.bindToEntity(dto, file, classifierRepository, "oisFile");
     }
 
     void updateStudyForms(Curriculum curriculum, Set<String> studyForms) {
@@ -338,10 +334,10 @@ public class CurriculumService {
     public CurriculumDto get(HoisUserDetails user, Curriculum curriculum) {
         CurriculumDto dto = CurriculumDto.of(curriculum);
         String myEhisShool = schoolService.getEhisSchool(user.getSchoolId());
-        dto.setCanChange(CurriculumUtil.canChange(user, myEhisShool, curriculum));
-        dto.setCanConfirm(CurriculumUtil.canConfirm(user, myEhisShool, curriculum));
-        dto.setCanClose(CurriculumUtil.canClose(user, myEhisShool, curriculum));
-        dto.setCanDelete(CurriculumUtil.canDelete(user, myEhisShool, curriculum));
+        dto.setCanChange(Boolean.valueOf(CurriculumUtil.canChange(user, myEhisShool, curriculum)));
+        dto.setCanConfirm(Boolean.valueOf(CurriculumUtil.canConfirm(user, myEhisShool, curriculum)));
+        dto.setCanClose(Boolean.valueOf(CurriculumUtil.canClose(user, myEhisShool, curriculum)));
+        dto.setCanDelete(Boolean.valueOf(CurriculumUtil.canDelete(user, myEhisShool, curriculum)));
 
         dto.setVersions(StreamUtil.toMappedSet(CurriculumVersionDto::forCurriculumForm, curriculum.getVersions()
                 .stream().filter(v -> CurriculumUtil.canView(user, myEhisShool, v))));

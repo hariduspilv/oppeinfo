@@ -13,6 +13,7 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
     private Boolean isAcademicLeave;
     private StudyPeriodDto studyPeriod;
     private List<String> studyForms;
+    private List<String> studyLoads;
     private BigDecimal amountPaid;
     private String matriculationRange;
 
@@ -22,10 +23,12 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
         EntityUtil.bindToDto(term, dto, "studyPeriod");
         dto.setStudyForms(StreamUtil.toMappedList(t -> EntityUtil.getCode(t.getStudyForm()),
                 term.getScholarshipTermStudyForms()));
-        if(term.getStudyStartPeriodStart() != null) {
+        if (term.getStudyStartPeriodStart() != null) {
             dto.setMatriculationRange(term.getStudyStartPeriodStart().format(formatter) + "-"
                     + term.getStudyStartPeriodEnd().format(formatter));
         }
+        dto.setStudyLoads(StreamUtil.toMappedList(t -> EntityUtil.getCode(t.getStudyLoad()),
+                term.getScholarshipTermStudyLoads()));
         dto.setStudyPeriod(StudyPeriodDto.of(term.getStudyPeriod()));
         return dto;
     }
@@ -52,6 +55,14 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
 
     public void setStudyForms(List<String> studyForms) {
         this.studyForms = studyForms;
+    }
+
+    public List<String> getStudyLoads() {
+        return studyLoads;
+    }
+
+    public void setStudyLoads(List<String> studyLoads) {
+        this.studyLoads = studyLoads;
     }
 
     public BigDecimal getAmountPaid() {

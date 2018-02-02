@@ -2,7 +2,7 @@ package ee.hitsa.ois.web.commandobject;
 
 import ee.hitsa.ois.enums.Language;
 
-public abstract class SearchCommand {
+public class SearchCommand {
 
     private Language lang = Language.ET;
     private String code;

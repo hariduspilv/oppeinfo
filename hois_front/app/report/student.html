@@ -1,99 +1,102 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form ng-submit="loadData()" novalidate>
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'report.student.name' | translate}}</label>
-          <input ng-model="criteria.name" name="name" type="text" autofocus>
-        </md-input-container>
-
-        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label class="textInput">{{'report.student.idcode' | translate}}</label>
-          <input ng-model="criteria.idcode" name="idcode" type="text" md-minlength="11" md-maxlength="11">
-        </md-input-container>
-      </div>
-
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <div layout="row" flex="45">
-         <md-input-container>
-            <label>{{'report.student.birthdate_from' | translate}}</label>
-            <md-datepicker ng-model="criteria.birthdateFrom"></md-datepicker>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'report.student.name' | translate}}</label>
+            <input ng-model="criteria.name" name="name" type="text" autofocus>
           </md-input-container>
-          <md-input-container flex-offset="5">
-            <label>{{'report.student.birthdate_thru' | translate}}</label>
-            <md-datepicker ng-model="criteria.birthdateThru" md-min-date="criteria.birthdateFrom"></md-datepicker>
+
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'report.student.idcode' | translate}}</label>
+            <input ng-model="criteria.idcode" name="idcode" type="text" md-minlength="11" md-maxlength="11">
           </md-input-container>
         </div>
 
-        <div layout="row"  flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div layout="row" flex="45">
           <md-input-container>
-            <label>{{'report.student.studyStart_from' | translate}}</label>
-            <md-datepicker ng-model="criteria.studyStartFrom"></md-datepicker>
+              <label>{{'report.student.birthdate_from' | translate}}</label>
+              <md-datepicker ng-model="criteria.birthdateFrom"></md-datepicker>
+            </md-input-container>
+            <md-input-container flex-offset="5">
+              <label>{{'report.student.birthdate_thru' | translate}}</label>
+              <md-datepicker ng-model="criteria.birthdateThru" md-min-date="criteria.birthdateFrom"></md-datepicker>
+            </md-input-container>
+          </div>
+
+          <div layout="row"  flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container>
+              <label>{{'report.student.studyStart_from' | translate}}</label>
+              <md-datepicker ng-model="criteria.studyStartFrom"></md-datepicker>
+            </md-input-container>
+            <md-input-container flex-offset="5">
+              <label>{{'report.student.studyStart_thru' | translate}}</label>
+              <md-datepicker ng-model="criteria.studyStartThru" md-min-date="criteria.studyStartFrom"></md-datepicker>
+            </md-input-container>
+          </div>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'report.student.studyLevel' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.studyLevel" model-value-attr="code" main-classifier-code="OPPEASTE"></hois-classifier-select>
           </md-input-container>
-          <md-input-container flex-offset="5">
-            <label>{{'report.student.studyStart_thru' | translate}}</label>
-            <md-datepicker ng-model="criteria.studyStartThru" md-min-date="criteria.studyStartFrom"></md-datepicker>
+          <div flex="45" flex-offset="5">
+            <hois-autocomplete ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.student.curriculum"></hois-autocomplete>
+          </div>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45">
+            <label class="textInput">{{'report.student.studentGroup' | translate}}</label>
+            <input ng-model="criteria.studentGroup" type="text">
+          </md-input-container>
+          <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
+            <label>{{'report.student.studyLoad' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS"></hois-classifier-select>
           </md-input-container>
         </div>
-      </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
-          <label>{{'report.student.studyLevel' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.studyLevel" model-value-attr="code" main-classifier-code="OPPEASTE"></hois-classifier-select>
-        </md-input-container>
-        <div flex="45" flex-offset="5">
-          <hois-autocomplete ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.student.curriculum"></hois-autocomplete>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45">
+            <label class="textInput">{{'report.student.studyForm' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
+          </md-input-container>
+          <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
+            <label>{{'report.student.status' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="OPPURSTAATUS"></hois-classifier-select>
+          </md-input-container>
         </div>
-      </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45">
-          <label class="textInput">{{'report.student.studentGroup' | translate}}</label>
-          <input ng-model="criteria.studentGroup" type="text">
-        </md-input-container>
-        <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
-          <label>{{'report.student.studyLoad' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS"></hois-classifier-select>
-        </md-input-container>
-      </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45">
+            <label class="textInput">{{'report.student.fin' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.fin" model-value-attr="code" main-classifier-code="FINALLIKAS"></hois-classifier-select>
+          </md-input-container>
+          <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
+            <label>{{'report.student.language' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.language" model-value-attr="code" main-classifier-code="OPPEKEEL"></hois-classifier-select>
+          </md-input-container>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45">
-          <label class="textInput">{{'report.student.studyForm' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
-        </md-input-container>
-        <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
-          <label>{{'report.student.status' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="OPPURSTAATUS"></hois-classifier-select>
-        </md-input-container>
-      </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45">
+            <label class="textInput">{{'report.student.finSpecific' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.finSpecific" model-value-attr="code" main-classifier-code="FINTAPSUSTUS"></hois-classifier-select>
+          </md-input-container>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45">
-          <label class="textInput">{{'report.student.fin' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.fin" model-value-attr="code" main-classifier-code="FINALLIKAS"></hois-classifier-select>
-        </md-input-container>
-        <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
-          <label>{{'report.student.language' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.language" model-value-attr="code" main-classifier-code="OPPEKEEL"></hois-classifier-select>
-        </md-input-container>
-      </div>
-
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45">
-          <label class="textInput">{{'report.student.finSpecific' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.finSpecific" model-value-attr="code" main-classifier-code="FINTAPSUSTUS"></hois-classifier-select>
-        </md-input-container>
-      </div>
-
-      <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>

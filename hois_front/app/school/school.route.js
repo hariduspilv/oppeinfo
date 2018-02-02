@@ -69,6 +69,15 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STRUKTUUR]
       }
     })
+    .when('/school/departments/:id/view', {
+      templateUrl: 'school/school.department.view.html',
+      controller: 'SchoolDepartmentEditController',
+      controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STRUKTUUR]
+      }
+    })
     .when('/school/teacheroccupations', {
       templateUrl: 'teacher/teacher.occupation.list.html',
       controller: 'SimpleListController',

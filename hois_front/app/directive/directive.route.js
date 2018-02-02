@@ -54,7 +54,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KASKKIRI]
+        authorizedRoles: function(Session, authorizedRoles) {
+          return Session.roleCode === 'ROLL_T' || Session.roleCode === 'ROLL_L' || ((Session.roleCode === 'ROLL_A' || Session.roleCode === 'ROLL_O') && (authorizedRoles || []).indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KASKKIRI) !== -1);
+        }
       }
     })
     .when('/directives/coordinators/new', {

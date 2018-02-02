@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableManagementController', ['$scope', 'message', 'QueryUtils', 'DataUtils', 'Classifier', '$location', 'dialogService',
-  function ($scope, message, QueryUtils, DataUtils, Classifier, $location, dialogService) {
+angular.module('hitsaOis').controller('TimetableManagementController', 
+  function ($scope, message, QueryUtils, DataUtils, Classifier, $location, dialogService, USER_ROLES, AuthService) {
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIPLAAN);
     var baseUrl = '/timetables';
     $scope.formState = {xlsDiffUrl: 'timetables/timetableDifference.xls', xlsPlanUrl: 'timetables/timetablePlan.xlsx'};
 
@@ -71,5 +72,4 @@ angular.module('hitsaOis').controller('TimetableManagementController', ['$scope'
 
     var clMapper = Classifier.valuemapper({status: 'TUNNIPLAAN_STAATUS'});
     QueryUtils.createQueryForm($scope, baseUrl + "/searchTimetableForManagement", {order: 'start_date'}, clMapper.objectmapper);
-  }
-]);
+  });

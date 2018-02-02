@@ -75,6 +75,7 @@ public class StudentRepresentativeService {
     public StudentRepresentative create(Student student, StudentRepresentativeForm form) {
         StudentRepresentative representative = new StudentRepresentative();
         representative.setStudent(student);
+        form.setIsStudentVisible(Boolean.TRUE);
         representative = save(representative, form);
 
         representativeCreatedMessage(representative);

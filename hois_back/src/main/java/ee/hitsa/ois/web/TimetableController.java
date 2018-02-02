@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -179,27 +180,27 @@ public class TimetableController {
         return get(timetableService.publicize(timetable));
     }
     
-    @GetMapping("/generalTimetables")
-    public List<GeneralTimetableDto> generalTimetables(HoisUserDetails user) {
-        return timetableService.generalTimetables(user);
+    @GetMapping("/generalTimetables/{school:\\d+}")
+    public List<GeneralTimetableDto> generalTimetables(@PathVariable("school") Long schoolId) {
+        return timetableService.generalTimetables(schoolId);
     }
     
-    @GetMapping("/groupPeriodTimetables")
-    public List<GroupTimetableDto> groupPeriodTimetables(HoisUserDetails user, @RequestParam("studyPeriodId") Long studyPeriodId,  
+    @GetMapping("/groupPeriodTimetables/{school:\\d+}")
+    public List<GroupTimetableDto> groupPeriodTimetables(@PathVariable("school") Long schoolId, @RequestParam("studyPeriodId") Long studyPeriodId,  
             @RequestParam("timetableId") Long timetableId) {
-        return timetableService.groupPeriodTimetables(user.getSchoolId(), studyPeriodId, timetableId);
+        return timetableService.groupPeriodTimetables(schoolId, studyPeriodId, timetableId);
     }
     
-    @GetMapping("/teacherPeriodTimetables")
-    public List<TeacherTimetableDto> teacherPeriodTimetables(HoisUserDetails user, @RequestParam("studyPeriodId") Long studyPeriodId, 
+    @GetMapping("/teacherPeriodTimetables/{school:\\d+}")
+    public List<TeacherTimetableDto> teacherPeriodTimetables(@PathVariable("school") Long schoolId, @RequestParam("studyPeriodId") Long studyPeriodId, 
             @RequestParam("timetableId") Long timetableId) {
-        return timetableService.teacherPeriodTimetables(user.getSchoolId(), studyPeriodId, timetableId);
+        return timetableService.teacherPeriodTimetables(schoolId, studyPeriodId, timetableId);
     }
     
-    @GetMapping("/roomPeriodTimetables")
-    public List<RoomTimetableDto> roomPeriodTimetables(HoisUserDetails user, @RequestParam("studyPeriodId") Long studyPeriodId, 
+    @GetMapping("/roomPeriodTimetables/{school:\\d+}")
+    public List<RoomTimetableDto> roomPeriodTimetables(@PathVariable("school") Long schoolId, @RequestParam("studyPeriodId") Long studyPeriodId, 
             @RequestParam("timetableId") Long timetableId) {
-        return timetableService.roomPeriodTimetables(user.getSchoolId(), studyPeriodId, timetableId);
+        return timetableService.roomPeriodTimetables(schoolId, studyPeriodId, timetableId);
     }
     
     @GetMapping("/timetableDifference.xls")

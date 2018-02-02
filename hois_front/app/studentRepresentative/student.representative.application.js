@@ -39,7 +39,7 @@ angular.module('hitsaOis').controller('StudentRepresentativeApplicationSearchCon
           $scope.cancel = $mdDialog.hide;
         },
         templateUrl: 'studentRepresentative/representative.application.decline.dialog.html',
-        clickOutsideToClose: true
+        clickOutsideToClose: false
       });
     };
 

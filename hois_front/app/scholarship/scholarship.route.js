@@ -15,7 +15,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         params: function () {
           return {
-            allowedStipendTypes: ['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU']
+            allowedStipendTypes: ['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'],
+            typeIsScholarship: false
           };
         }
       },
@@ -36,7 +37,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         params: function () {
           return {
-            allowedStipendTypes: ['STIPTOETUS_TULEMUS', 'STIPTOETUS_ERIALA', 'STIPTOETUS_MUU']
+            allowedStipendTypes: ['STIPTOETUS_TULEMUS', 'STIPTOETUS_ERIALA', 'STIPTOETUS_MUU'],
+            typeIsScholarship: true
           };
         }
       },
@@ -57,7 +59,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         params: function () {
           return {
-            allowedStipendTypes: ['STIPTOETUS_DOKTOR']
+            allowedStipendTypes: ['STIPTOETUS_DOKTOR'],
+            typeIsScholarship: true
           };
         }
       },
@@ -133,7 +136,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         params: function () {
           return {
             allowedStipendTypes : ['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'],
-            scholarshipType: "grant"
+            grant : true
           };
         }
       },
@@ -155,7 +158,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         params: function () {
           return {
             allowedStipendTypes: ['STIPTOETUS_ERIALA', 'STIPTOETUS_TULEMUS', 'STIPTOETUS_MUU'],
-            scholarshipType: "scholarship"
+            scholarship : true
           };
         }
       },
@@ -326,7 +329,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR]
       }
     });
 }]);

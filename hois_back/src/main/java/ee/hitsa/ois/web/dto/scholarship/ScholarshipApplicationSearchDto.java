@@ -27,10 +27,10 @@ public class ScholarshipApplicationSearchDto {
     private BigDecimal credits;
     private Boolean isTeacherConfirm;
     private String status;
+    private String rejectComment;
 
     private String compensationReason;
     private String compensationFrequency;
-
 
     public ScholarshipApplicationSearchDto(Object r) {
         this.id = resultAsLong(r, 0);
@@ -51,6 +51,7 @@ public class ScholarshipApplicationSearchDto {
         this.compensationReason = resultAsString(r, 14);
         this.compensationFrequency = resultAsString(r, 15);
         this.credits = resultAsDecimal(r, 16);
+        this.rejectComment = resultAsString(r, 17);
     }
 
     public Long getId() {
@@ -203,6 +204,14 @@ public class ScholarshipApplicationSearchDto {
 
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
+    }
+
+    public String getRejectComment() {
+        return rejectComment;
+    }
+
+    public void setRejectComment(String rejectComment) {
+        this.rejectComment = rejectComment;
     }
 
 }

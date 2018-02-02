@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.dto.finalExamVocationalProtocol;
+package ee.hitsa.ois.web.dto.finalexamprotocol;
 
 import ee.hitsa.ois.web.dto.curriculum.CurriculumOccupationDto;
 

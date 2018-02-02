@@ -14,8 +14,8 @@ import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
+import ee.hitsa.ois.service.SubjectService;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -26,28 +26,27 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodDtoContainer;
 @Transactional
 @Service
 public class SubjectStudyPeriodCapacitiesService {
-    
-    
+
     @Autowired
-    private SubjectRepository subjectRepository;
+    private SubjectService subjectService;
     @Autowired
     private EntityManager em;
     @Autowired
     private SubjectStudyPeriodRepository subjectStudyPeriodRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
-    
+
     /**
      * TODO: method and class does not match each other (by name at least by name),
      * but still both of them are used in subject study period controller
      */
     public void setSubjects(SubjectStudyPeriodDtoContainer container) {
         List<Long> subjectIds = StreamUtil.toMappedList(s -> s.getSubject(), container.getSubjectStudyPeriodDtos());
-        List<Subject> subjects = subjectRepository.findAll(subjectIds);
+        List<Subject> subjects = subjectService.findAllById(subjectIds);
         List<AutocompleteResult> dtos = StreamUtil.toMappedList(AutocompleteResult::of, subjects);
         container.setSubjects(dtos);
     }
-    
+
     public void updateSspCapacities(Long schoolId, SubjectStudyPeriodDtoContainer container) {
         List<SubjectStudyPeriod> ssps = new ArrayList<>();
 
@@ -71,5 +70,4 @@ public class SubjectStudyPeriodCapacitiesService {
         }
         subjectStudyPeriodRepository.save(ssps);
     }
-
 }

@@ -16,6 +16,7 @@ public class Building extends BaseEntityWithId {
     private String code;
     private String name;
     private String address;
+    private String addressAds;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private School school;
@@ -44,6 +45,14 @@ public class Building extends BaseEntityWithId {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getAddressAds() {
+        return addressAds;
+    }
+
+    public void setAddressAds(String addressAds) {
+        this.addressAds = addressAds;
     }
 
     public School getSchool() {

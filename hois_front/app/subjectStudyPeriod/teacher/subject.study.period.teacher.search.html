@@ -5,6 +5,8 @@
 </md-nav-bar>
 
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <fieldset>
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
     <form ng-submit="loadData()" layout="column" novalidate >
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="50" flex-sm="100" flex-xs="100">
@@ -18,9 +20,10 @@
         <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" href="#/subjectStudyPeriods/teachers/new">{{'main.button.create' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="canEdit" href="#/subjectStudyPeriods/teachers/new">{{'main.button.create' | translate}}</md-button>
         </div>
     </form>
+  </fieldset>
 </div>
 
 <div layout-padding>
@@ -43,7 +46,7 @@
                 <a ng-if="row.timetable" href="#/timetable/teacher/{{row.studyPeriod}}/{{row.id}}/{{row.timetable}}">{{'subjectStudyPeriod.timetable' | translate}}</a>
               </td>
             <td md-cell>
-                <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}
+                <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}
                     </md-button></td>
           </tr>
         </tbody>

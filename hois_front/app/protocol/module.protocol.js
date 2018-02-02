@@ -68,8 +68,14 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     return allGraded;
   }
 
+  function canEditConfirmedProtocol() {
+    return ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M') &&
+      ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_K_TEEMAOIGUS_MOODULPROTOKOLL");
+  }
+
   function canConfirm() {
-    return allProtocolStudentsGraded() && ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M');
+    return allProtocolStudentsGraded() && ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M') &&
+      ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_K_TEEMAOIGUS_MOODULPROTOKOLL");
   }
 
   function entityToDto(entity) {
@@ -78,6 +84,8 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
       $scope.getUrl = oisFileService.getUrl;
       loadJournals();
       loadGradesSelect();
+      $scope.formState.canEditConfirmedProtocol = canEditConfirmedProtocol();
+      $scope.formState.canAddDeleteStudents = $scope.protocol.status.code !== 'PROTOKOLL_STAATUS_K' && $scope.protocol.canBeEdited;
       $scope.formState.canConfirm = $scope.protocol.status.code !== 'PROTOKOLL_STAATUS_K' && canConfirm();
       $scope.formState.protocolPdfUrl = config.apiUrl + endpoint + entity.id + '/print/protocol.pdf';
     });

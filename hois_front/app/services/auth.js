@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $sce, $rootScope, $window) {
+  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $rootScope, $localStorage) {
     var JWT_TOKEN_HEADER = 'Authorization';
     var authService = {};
     var roleMapper = Classifier.valuemapper({role: 'ROLL'});
@@ -36,16 +36,6 @@ angular.module('hitsaOis')
         .then(function (res) {
           return authenticatedUser(res);
         });
-    };
-
-    authService.loginIdCard = function () {
-      $window.location = config.idCardLoginUrl;
-      /*return $http.get($sce.trustAsUrl(config.idCardLoginUrl))
-        .then(function (idLoginResult) {
-          var headers = {headers: {}};
-          headers[JWT_TOKEN_HEADER] = idLoginResult.headers(JWT_TOKEN_HEADER);
-          return authService.login(headers);
-        });*/
     };
 
     authService.loginMobileId = function (mobileNumber) {
@@ -91,16 +81,21 @@ angular.module('hitsaOis')
     };
 
     authService.isAuthenticated = function () {
-      return !!Session.userId;
+      return !!$localStorage.userId;
     };
 
+    var $injector = angular.injector();
     authService.isAuthorized = function (authorizedRoles) {
-      if (!angular.isArray(authorizedRoles)) {
-        authorizedRoles = [authorizedRoles];
-      }
       if (authService.isAuthenticated()) {
+        if(angular.isFunction(authorizedRoles)) {
+          return authorizedRoles(Session, $localStorage.authorizedRoles);
+          //return $injector.invoke(authorizedRoles, null, {Session: Session, authorizedRoles: $localStorage.authorizedRoles});
+        }
+        if (!angular.isArray(authorizedRoles)) {
+          authorizedRoles = [authorizedRoles];
+        }
         for (var index = (authorizedRoles.length - 1); index > -1; index--) {
-          if (Session.authorizedRoles.indexOf(authorizedRoles[index]) !== -1) {
+          if ($localStorage.authorizedRoles.indexOf(authorizedRoles[index]) !== -1) {
             return true;
           }
         }
@@ -109,10 +104,10 @@ angular.module('hitsaOis')
     };
 
     authService.matchesRole = function (roles) {
-      if (!angular.isArray(roles)) {
-        roles = [roles];
-      }
       if (authService.isAuthenticated()) {
+        if (!angular.isArray(roles)) {
+          roles = [roles];
+        }
         for (var index = (roles.length - 1); index > -1; index--) {
           if (Session.roleCode === roles[index]) {
             return true;
@@ -138,7 +133,7 @@ angular.module('hitsaOis')
     };
   })
 
-  .factory('AuthResolver', function ($q, $rootScope) {
+  .factory('AuthResolver', function ($q, $rootScope, $route, PUBLIC_ROUTES, ArrayUtils) {
     function isUserInRole(currentUser, roleIn) {
       return function() {
         return angular.isString(currentUser.roleCode) && angular.isString(roleIn) && currentUser.roleCode === roleIn;
@@ -159,7 +154,12 @@ angular.module('hitsaOis')
               authObject.isExternalExpert = isUserInRole(currentUser, 'ROLL_V');
               deferred.resolve(authObject);
             } else {
-              deferred.reject();
+              //If not public route, do not grant access to route
+              if (!ArrayUtils.contains(PUBLIC_ROUTES, $route.current.originalPath)) {
+                deferred.reject();
+              } else {
+                deferred.resolve();
+              }
             }
             unwatch();
           }
@@ -168,23 +168,28 @@ angular.module('hitsaOis')
       }
     };
   })
-  .run(function ($rootScope, AUTH_EVENTS, AuthService) {
-    // TODO refresh and authresolver
-    //$rootScope.$on('$routeChangeStart', function (event, next) {
-    $rootScope.$on('$locationChangeStart', function (event, next) {
-      if (angular.isDefined(next.data)) {
-        var authorizedRoles = next.data.authorizedRoles;
-        if (!AuthService.isAuthorized(authorizedRoles)) {
-          event.preventDefault();
-          if (AuthService.isAuthenticated()) {
+  .run(function ($rootScope, AUTH_EVENTS, AuthService, message, PUBLIC_ROUTES, ArrayUtils) {
+    $rootScope.$on('$routeChangeStart', function (event, next) {
+      if (AuthService.isAuthenticated()) {
+        if (angular.isDefined(next.data)) {
+          var authorizedRoles = next.data.authorizedRoles;
+          if (!AuthService.isAuthorized(authorizedRoles)) {
+            event.preventDefault();
             // user is not allowed
             $rootScope.$broadcast(AUTH_EVENTS.notAuthorized);
-          } else {
-            // user is not logged in
-            $rootScope.$broadcast(AUTH_EVENTS.notAuthenticated);
           }
         }
+      } else {
+        if (!ArrayUtils.contains(PUBLIC_ROUTES, next.originalPath) && next.originalPath !== '/') {
+          // user is not logged in and not public route
+          console.log(next.originalPath);
+          event.preventDefault();
+          $rootScope.$broadcast(AUTH_EVENTS.notAuthenticated);
+        } 
       }
+    });
+    $rootScope.$on(AUTH_EVENTS.notAuthorized, function() {
+      message.error('main.messages.error.nopermission');
     });
   })
   .constant('AUTH_EVENTS', {
@@ -197,14 +202,28 @@ angular.module('hitsaOis')
     userChanged: 'auth-user-changed',
     reAuthenticate: 'auth-re'
   })
-  .service('Session', function () {
+  .constant('PUBLIC_ROUTES', [
+    '/academicCalendars', 
+    '/academicCalendar/:schoolId?',
+    '/curriculums',
+    '/curriculums/:id',
+    '/timetables',
+    '/timetable/generalTimetableByGroup/:schoolId?',
+    '/timetable/generalTimetableByTeacher/:schoolId?',
+    '/timetable/generalTimetableByRoom/:schoolId?',
+    '/timetable/group/:schoolId/:periodId/:groupId/:timetableId/:weekIndex?',
+    '/timetable/teacher/:schoolId/:periodId/:teacherId/:timetableId/:weekIndex?',
+    '/timetable/room/:schoolId/:periodId/:roomId/:timetableId/:weekIndex?',
+    '/timetable/student/:schoolId/:periodId/:studentId/:timetableId'
+  ])
+  .service('Session', function ($localStorage) {
     this.school = {};
 
     this.create = function (user) {
-      this.userId = user.user;
+      $localStorage.userId = user.user;
       this.studentId = user.student;
       this.teacherId = user.teacher;
-      this.authorizedRoles = user.authorizedRoles;
+      $localStorage.authorizedRoles = user.authorizedRoles;
       this.school = angular.extend(this.school || {}, user.school);
       this.roleCode = user.roleCode;
       this.vocational = user.vocational;
@@ -212,10 +231,10 @@ angular.module('hitsaOis')
       this.timeoutInSeconds = user.sessionTimeoutInSeconds;
     };
     this.destroy = function () {
-      this.userId = null;
+      $localStorage.userId = null;
       this.studentId = null;
       this.teacherId = null;
-      this.authorizedRoles = [];
+      $localStorage.authorizedRoles = [];
       this.school = {};
       this.roleCode = null;
       this.vocational = undefined;
@@ -289,6 +308,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_M_TEEMAOIGUS_AKADKALENDER: 'ROLE_OIGUS_M_TEEMAOIGUS_AKADKALENDER',	//Akadeemiline kalender
     ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_EHIS: 'ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_EHIS',	//EHIS andmevahetus
     ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_EKIS: 'ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_EKIS',	//EKIS andmevahetus
+    ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER: 'ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER',
     ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_RTIP: 'ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_RTIP',	//RTIP andmevahetus
     ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_SAIS: 'ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_SAIS',	//SAIS andmevahetus
     ROLE_OIGUS_M_TEEMAOIGUS_AUTOTEADE: 'ROLE_OIGUS_M_TEEMAOIGUS_AUTOTEADE',	//Automaatsete teadete mallid

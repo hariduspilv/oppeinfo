@@ -1,16 +1,20 @@
 package ee.hitsa.ois.report;
 
+import static ee.hitsa.ois.util.TranslateUtil.name;
+
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
-import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.PersonUtil;
 
 public class ProtocolStudentReport {
     private final String fullname;
     private final String grade;
+    private final String gradeName;
     
-    ProtocolStudentReport(ProtocolStudent protocolStudent) {
+    ProtocolStudentReport(ProtocolStudent protocolStudent, Language lang) {
         fullname = PersonUtil.fullname(protocolStudent.getStudent().getPerson());
-        grade = ClassifierUtil.getNullableNameEt(protocolStudent.getGrade());
+        grade = protocolStudent.getGrade() != null ? protocolStudent.getGrade().getValue() : null;
+        gradeName = protocolStudent.getGrade() != null ? name(protocolStudent.getGrade(), lang) : null;
     }
 
     public String getFullname() {
@@ -19,5 +23,9 @@ public class ProtocolStudentReport {
 
     public String getGrade() {
         return grade;
+    }
+    
+    public String getGradeName() {
+        return gradeName;
     }
 }

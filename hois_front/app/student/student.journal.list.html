@@ -8,10 +8,10 @@
     <div flex>
         <hois-collapsable ng-repeat="year in journalsByYears track by $index" expanded="year.collapsableOpen">
             <hois-collapsable-header>
-                <h2 class="md-title">
-                    <hois-classifier-value ng-model="year.yearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+                <span>
+                    <hois-classifier-value style="display: inline-block" ng-model="year.yearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
                     <span>{{'student.journal.studyYear' | translate}}</span>
-                </h2>
+                </span>
             </hois-collapsable-header>
             <md-table-container>
                 <table md-table>

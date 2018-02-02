@@ -46,11 +46,14 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
         }
       }
       checkCapacitiesForThemes();
+      $scope.record.lessonPlan = result.lessonPlan;
     });
 
     $scope.lessonPlanModule = $route.current.params.lessonPlanModule;
 
     function formIsValid() {
+      var themes = $scope.record.journalOccupationModuleThemes;
+      $scope.journalForm.theme.$setValidity('required', themes && themes.length > 0);
       $scope.journalForm.$setSubmitted();
       if (!$scope.journalForm.$valid) {
         message.error('main.messages.form-has-errors');
@@ -76,12 +79,12 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
               curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule
             });
           }
-        });
+        }).catch(angular.noop);
       } else {
         $scope.record.$save().then(function () {
           message.info('main.messages.create.success');
           $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback&lessonPlanModule=' + lessonPlanModule);
-        });
+        }).catch(angular.noop);
       }
     };
 
@@ -93,26 +96,28 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
 
     $scope.delete = function () {
       dialogService.confirmDialog({
-        prompt: 'journal.deleteconfirm'
+        prompt: 'lessonplan.journal.deleteconfirm'
       }, function () {
         $scope.record.$delete().then(function () {
           message.info('main.messages.delete.success');
           $location.url('/lessonplans/vocational/' + $scope.record.lessonPlan + '/edit');
-        });
+        }).catch(angular.noop);
       });
     };
 
     $scope.addTheme = function () {
       var themeId = $scope.formState.theme;
-      if ($scope.record.journalOccupationModuleThemes === null) {
-        $scope.record.journalOccupationModuleThemes = [];
+      if(themeId) {
+        if ($scope.record.journalOccupationModuleThemes === null) {
+          $scope.record.journalOccupationModuleThemes = [];
+        }
+        if ($scope.record.journalOccupationModuleThemes.indexOf(themeId) !== -1) {
+         message.error('lessonplan.journal.duplicatetheme');
+          return;
+        }
+        $scope.record.journalOccupationModuleThemes.push(themeId);
+        checkCapacitiesForThemes();
       }
-      if ($scope.record.journalOccupationModuleThemes.indexOf(themeId) !== -1) {
-        message.error('lessonplan.journal.duplicatetheme');
-        return;
-      }
-      $scope.record.journalOccupationModuleThemes.push(themeId);
-      checkCapacitiesForThemes();
       $scope.formState.theme = null;
     };
 

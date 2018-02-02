@@ -1,0 +1,23 @@
+<md-nav-bar ng-if="auth != null" md-selected-nav-item="currentNavItem" aria-label="{{'timetable.options' | translate}}">
+  <md-nav-item ng-if="auth.isStudent() || auth.isTeacher()" md-nav-href="#/timetable/personalGeneralTimetable?_menu" name="personal">
+    {{'timetable.myTimetable' | translate}}</md-nav-item>
+  <md-nav-item ng-if="auth.isParent()" md-nav-href="#/timetable/personalGeneralTimetable?_menu" name="personal">
+    {{'timetable.parentTimetable' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/timetable/generalTimetableByGroup?_menu" name="studentGroup">{{'timetable.studentGroups' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/timetable/generalTimetableByTeacher?_menu" name="teacher">{{'timetable.teachers' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/timetable/generalTimetableByRoom?_menu" name="room">{{'timetable.rooms' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<md-nav-bar ng-if="auth == null" md-selected-nav-item="currentNavItem" aria-label="{{'timetable.options' | translate}}">
+  <md-nav-item md-nav-href="#/timetable/generalTimetableByGroup/{{::schoolId}}" name="studentGroup">{{'timetable.studentGroups' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/timetable/generalTimetableByTeacher/{{::schoolId}}" name="teacher">{{'timetable.teachers' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/timetable/generalTimetableByRoom/{{::schoolId}}" name="room">{{'timetable.rooms' | translate}}</md-nav-item>
+</md-nav-bar>
+
+
+<div ng-if="false" layout-padding ng-if="timetables.length > 0">
+  <md-button ng-if="!timetableSearch" class="md-icon-button timetableIconButton" ng-click="showSearch()">
+    <md-tooltip md-direction="bottom">{{'timetable.search.label' | translate}}</md-tooltip>
+    <md-icon md-font-set="material-icons" class="material-icons md-primary md-48">search</md-icon>
+  </md-button>
+</div>

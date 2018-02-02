@@ -8,7 +8,9 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.timetable.TimetableEvent;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.service.TimetableEventService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -50,7 +51,8 @@ public class TimetableEventController {
      */
     @GetMapping("/{id:\\d+}")
     public TimetableSingleEventForm get(HoisUserDetails user, @WithEntity TimetableEventTime eventTime) {
-        //UserUtil.assertIsSchoolAdmin(user, eventTime.getTimetableEvent().getTimetableObject().getTimetable().getSchool());
+        UserUtil.assertIsSchoolAdmin(user);
+        //UserUtil.assertIsSchoolAdmin(user, eventTime.getTimetableEvent().getSchool());
         return timetableEventService.get(eventTime);
     }
 
@@ -58,7 +60,7 @@ public class TimetableEventController {
     public Page<TimetableEventSearchDto> search(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria,
             Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return timetableEventService.search(criteria, pageable, user);
+        return timetableEventService.search(criteria, pageable, user.getSchoolId());
     }
     
     @PostMapping
@@ -70,63 +72,69 @@ public class TimetableEventController {
     @PutMapping("/{id:\\d+}")
     public TimetableSingleEventForm update(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return timetableEventService.getTimetableSingleEventForm(timetableEventService.updateEvent(form, user.getSchoolId()));
+        return timetableEventService.getTimetableSingleEventForm(timetableEventService.updateEvent(form));
     }
-    
+
     @GetMapping("/timetableSearch")
-    public List<TimetableEventSearchDto> searchTimetable(@Valid TimetableEventSearchCommand criteria) {
-        return timetableEventService.searchTimetable(criteria);
+    public List<TimetableEventSearchDto> searchTimetable(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria) {
+        return timetableEventService.searchTimetable(criteria, user.getSchoolId());
     }
     
     @GetMapping("/timetableSearch/calendar")
-    public TimetableCalendarDto searchTimetableIcs(@Valid TimetableEventSearchCommand criteria,
+    public TimetableCalendarDto searchTimetableIcs(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
-        return timetableEventService.getSearchCalendar(criteria, language);
-    }
-
-    @GetMapping("/timetableByGroup")
-    public TimetableByGroupDto groupTimetableForWeek(@Valid TimetableEventSearchCommand criteria) {
-        return timetableEventService.groupTimetable(criteria);
-    }
-   
-    @GetMapping("/timetableByGroup/calendar")
-    public TimetableCalendarDto groupTimetableIcs(@Valid TimetableEventSearchCommand criteria,
-            @RequestParam("lang") String language) {
-        return timetableEventService.getGroupCalendar(criteria, language);
-    }
-
-    @GetMapping("/timetableByTeacher")
-    public TimetableByTeacherDto teacherTimetableForWeek(@Valid TimetableEventSearchCommand criteria) {
-        return timetableEventService.teacherTimetable(criteria);
+        return timetableEventService.getSearchCalendar(criteria, language, user.getSchoolId());
     }
     
-    @GetMapping("/timetableByTeacher/calendar")
-    public TimetableCalendarDto teacherTimetableIcs(@Valid TimetableEventSearchCommand criteria,
+    @GetMapping("/timetableByGroup/{school:\\d+}")
+    public TimetableByGroupDto groupTimetableForWeek(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria) {
+        return timetableEventService.groupTimetable(criteria, school);
+    }
+   
+    @GetMapping("/timetableByGroup/calendar/{school:\\d+}")
+    public TimetableCalendarDto groupTimetableIcs(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
-        return timetableEventService.getTeacherCalendar(criteria, language);
+        return timetableEventService.getGroupCalendar(criteria, language, school);
+    }
+
+    @GetMapping("/timetableByTeacher/{school:\\d+}")
+    public TimetableByTeacherDto teacherTimetableForWeek(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria) {
+        return timetableEventService.teacherTimetable(criteria, school);
+    }
+    
+    @GetMapping("/timetableByTeacher/calendar/{school:\\d+}")
+    public TimetableCalendarDto teacherTimetableIcs(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria,
+            @RequestParam("lang") String language) {
+        return timetableEventService.getTeacherCalendar(criteria, language, school);
     }
     
     @GetMapping("/timetableByStudent")
     public TimetableByStudentDto studentTimetableForWeek(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
-        return timetableEventService.studentTimetable(criteria);
+        return timetableEventService.studentTimetable(criteria, user.getSchoolId());
+    }
+    
+    @DeleteMapping("/{id:\\d+}")
+    public void deleteEvent(HoisUserDetails user, @WithEntity TimetableEventTime timetableEventTime) {
+        UserUtil.assertIsSchoolAdmin(user);
+        timetableEventService.delete(user, timetableEventTime);
     }
     
     @GetMapping("/timetableByStudent/calendar")
     public TimetableCalendarDto studentTimetableIcs(HoisUserDetails user,
             @Valid TimetableEventSearchCommand criteria, @RequestParam("lang") String language) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
-        return timetableEventService.getStudentCalendar(criteria, language);
+        return timetableEventService.getStudentCalendar(criteria, language, user.getSchoolId());
     }
     
-    @GetMapping("/timetableByRoom")
-    public TimetableByRoomDto roomTimetableForWeek(@Valid TimetableEventSearchCommand criteria) {
-        return timetableEventService.roomTimetable(criteria);
+    @GetMapping("/timetableByRoom/{school:\\d+}")
+    public TimetableByRoomDto roomTimetableForWeek(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria) {
+        return timetableEventService.roomTimetable(criteria, school);
     }
     
-    @GetMapping("/timetableByRoom/calendar")
-    public TimetableCalendarDto roomTimetableIcs(@Valid TimetableEventSearchCommand criteria,
+    @GetMapping("/timetableByRoom/calendar/{school:\\d+}")
+    public TimetableCalendarDto roomTimetableIcs(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
-        return timetableEventService.getRoomCalendar(criteria, language);
+        return timetableEventService.getRoomCalendar(criteria, language, school);
     }
 }

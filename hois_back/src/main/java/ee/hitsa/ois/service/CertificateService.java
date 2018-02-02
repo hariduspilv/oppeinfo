@@ -118,8 +118,6 @@ public class CertificateService {
         }
         if(!certificateValidationService.canEditContent(user, EntityUtil.getCode(certificate.getType()))) {
             certificate.setContent(certificateContentService.generate(certificate.getStudent(), CertificateType.valueOf(form.getType())));
-        } else {
-            certificate.setContent(form.getContent());
         }
         return save(user, certificate, form);
     }
@@ -128,8 +126,7 @@ public class CertificateService {
         certificate.setHeadline(form.getHeadline());
         certificate.setSignatoryName(form.getSignatoryName());
         certificate.setSignatoryIdcode(form.getSignatoryIdcode());
-        
-        if(certificate.getId() != null && certificateValidationService.canEditContent(user, EntityUtil.getCode(certificate.getType()))) {            
+        if(certificateValidationService.canEditContent(user, EntityUtil.getCode(certificate.getType()))) {
             certificate.setContent(form.getContent());
         } 
         return EntityUtil.save(certificate, em);

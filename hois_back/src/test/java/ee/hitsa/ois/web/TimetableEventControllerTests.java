@@ -21,12 +21,13 @@ import ee.hitsa.ois.enums.Role;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class TimetableEventControllerTests {
 
-    private static final Long timetableId = Long.valueOf(80L);
-    private static final Long studentGroups = Long.valueOf(140L);
-    private static final Long teachers = Long.valueOf(198L);
-    private static final Long studentId = Long.valueOf(189L);
-    private static final Long roomId = Long.valueOf(1480L);
-    private static final String lang = "et";
+    private static final Long SCHOOL_ID = Long.valueOf(970L);
+    private static final Long TIMETABLE_ID = Long.valueOf(80L);
+    private static final Long STUDENT_GROUPS = Long.valueOf(140L);
+    private static final Long TEACHERS = Long.valueOf(198L);
+    private static final Long STUDENT_ID = Long.valueOf(189L);
+    private static final Long ROOM_ID = Long.valueOf(1480L);
+    private static final String LANG = "et";
     
     @Autowired
     private TestRestTemplate restTemplate;
@@ -71,9 +72,10 @@ public class TimetableEventControllerTests {
     @Test
     public void searchTimetableIcs() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/timetableevents/timetableByGroup/calendar");
-        uriBuilder.queryParam("timetable", timetableId);
-        uriBuilder.queryParam("studentGroups", studentGroups);
-        uriBuilder.queryParam("lang", lang);
+        uriBuilder.pathSegment(SCHOOL_ID.toString());
+        uriBuilder.queryParam("timetable", TIMETABLE_ID);
+        uriBuilder.queryParam("studentGroups", STUDENT_GROUPS);
+        uriBuilder.queryParam("lang", LANG);
         
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         System.out.println(uriBuilder.toUriString());
@@ -83,8 +85,9 @@ public class TimetableEventControllerTests {
     @Test
     public void groupTimetableForWeek() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/timetableevents/timetableByGroup");
-        uriBuilder.queryParam("timetable", timetableId);
-        uriBuilder.queryParam("studentGroups", studentGroups);
+        uriBuilder.pathSegment(SCHOOL_ID.toString());
+        uriBuilder.queryParam("timetable", TIMETABLE_ID);
+        uriBuilder.queryParam("studentGroups", STUDENT_GROUPS);
         
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         System.out.println(uriBuilder.toUriString());
@@ -94,9 +97,10 @@ public class TimetableEventControllerTests {
     @Test
     public void groupTimetableIcs() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/timetableevents/timetableByGroup/calendar");
-        uriBuilder.queryParam("timetable", timetableId);
-        uriBuilder.queryParam("studentGroups", studentGroups);
-        uriBuilder.queryParam("lang", lang);
+        uriBuilder.pathSegment(SCHOOL_ID.toString());
+        uriBuilder.queryParam("timetable", TIMETABLE_ID);
+        uriBuilder.queryParam("studentGroups", STUDENT_GROUPS);
+        uriBuilder.queryParam("lang", LANG);
         
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         System.out.println(uriBuilder.toUriString());
@@ -106,8 +110,9 @@ public class TimetableEventControllerTests {
     @Test
     public void teacherTimetableForWeek() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/timetableevents/timetableByTeacher");
-        uriBuilder.queryParam("timetable", timetableId);
-        uriBuilder.queryParam("teachers", teachers);
+        uriBuilder.pathSegment(SCHOOL_ID.toString());
+        uriBuilder.queryParam("timetable", TIMETABLE_ID);
+        uriBuilder.queryParam("teachers", TEACHERS);
         
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -116,9 +121,10 @@ public class TimetableEventControllerTests {
     @Test
     public void teacherTimetableIcs() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/timetableevents/timetableByTeacher/calendar");
-        uriBuilder.queryParam("timetable", timetableId);
-        uriBuilder.queryParam("teachers", teachers);
-        uriBuilder.queryParam("lang", lang);
+        uriBuilder.pathSegment(SCHOOL_ID.toString());
+        uriBuilder.queryParam("timetable", TIMETABLE_ID);
+        uriBuilder.queryParam("teachers", TEACHERS);
+        uriBuilder.queryParam("lang", LANG);
         
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -127,8 +133,8 @@ public class TimetableEventControllerTests {
     @Test
     public void studentTimetableForWeek() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/timetableevents/timetableByStudent");
-        uriBuilder.queryParam("timetable", timetableId);
-        uriBuilder.queryParam("student", studentId);
+        uriBuilder.queryParam("timetable", TIMETABLE_ID);
+        uriBuilder.queryParam("student", STUDENT_ID);
         uriBuilder.queryParam("vocational", Boolean.TRUE);
         
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
@@ -138,10 +144,10 @@ public class TimetableEventControllerTests {
     @Test
     public void studentTimetableIcs() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/timetableevents/timetableByStudent/calendar");
-        uriBuilder.queryParam("timetable", timetableId);
-        uriBuilder.queryParam("student", studentId);
+        uriBuilder.queryParam("timetable", TIMETABLE_ID);
+        uriBuilder.queryParam("student", STUDENT_ID);
         uriBuilder.queryParam("vocational", Boolean.TRUE);
-        uriBuilder.queryParam("lang", lang);
+        uriBuilder.queryParam("lang", LANG);
         
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -150,8 +156,9 @@ public class TimetableEventControllerTests {
     @Test
     public void roomTimetableForWeek() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/timetableevents/timetableByRoom");
-        uriBuilder.queryParam("timetable", timetableId);
-        uriBuilder.queryParam("room", roomId);
+        uriBuilder.pathSegment(SCHOOL_ID.toString());
+        uriBuilder.queryParam("timetable", TIMETABLE_ID);
+        uriBuilder.queryParam("room", ROOM_ID);
         
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -160,9 +167,10 @@ public class TimetableEventControllerTests {
     @Test
     public void roomTimetableIcs() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/timetableevents/timetableByRoom/calendar");
-        uriBuilder.queryParam("timetable", timetableId);
-        uriBuilder.queryParam("room", roomId);
-        uriBuilder.queryParam("lang", lang);
+        uriBuilder.pathSegment(SCHOOL_ID.toString());
+        uriBuilder.queryParam("timetable", TIMETABLE_ID);
+        uriBuilder.queryParam("room", ROOM_ID);
+        uriBuilder.queryParam("lang", LANG);
         
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

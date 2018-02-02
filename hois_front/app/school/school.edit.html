@@ -44,10 +44,9 @@
       <input ng-model="school.phone" name="phone" type="text" md-maxlength="100">
     </md-input-container>
 
-    <md-input-container class="md-block">
-      <label class="textInput">{{'school.address' | translate}}</label>
-      <input ng-model="school.address" name="address" type="text" md-maxlength="1000">
-    </md-input-container>
+    <div class="md-block">
+      <hois-ads-adapter class="md-text" ng-model="school.addressAds" address-model="school.address"></hois-ads-adapter>
+    </div>
 
     <md-input-container class="md-block">
       <md-checkbox ng-model="school.generateUserEmail" name="generateUserEmail">

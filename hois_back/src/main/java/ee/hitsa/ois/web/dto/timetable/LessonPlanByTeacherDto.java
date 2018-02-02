@@ -10,6 +10,7 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
 import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalDto;
@@ -27,7 +28,7 @@ public class LessonPlanByTeacherDto {
     private final List<LocalDate> weekBeginningDates;
 
     public LessonPlanByTeacherDto(StudyYear studyYear, List<Journal> journals, List<LessonPlanByTeacherSubjectDto> subjects, Teacher teacher) {
-        studyYearCode = studyYear.getYear().getCode();
+        studyYearCode = EntityUtil.getCode(studyYear.getYear());
         teacherName = teacher.getPerson().getFullname();
         studyPeriods = studyYear.getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList());
         weekNrs = studyPeriods.stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList());

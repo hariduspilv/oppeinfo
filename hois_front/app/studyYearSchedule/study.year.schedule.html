@@ -83,7 +83,7 @@
         </table>
       </md-table-container>
       <div layout="row">
-        <md-button class="md-raised md-primary" ng-click="save()" ng-show="!isPastStudyYear">{{'main.button.save' | translate}}</md-button>
+        <md-button class="md-raised md-primary" ng-if="canEdit" ng-click="save()" ng-show="!isPastStudyYear">{{'main.button.save' | translate}}</md-button>
       </div>
     </div>
   </form>

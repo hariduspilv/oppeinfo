@@ -121,7 +121,7 @@ public class JsonBindingTests {
 
     @Test
     public void deserializeUtcDate() throws IOException {
-        String content = "{\"validFrom\":\"2016-12-31T22:00:00.000Z\"}";
+        String content = "{\"validFrom\":\"2017-01-01T00:00:00.000Z\"}";
         SchoolDepartment parsedSchoolDepartment = schoolDepartmentJson.parseObject(content);
         assertThat(parsedSchoolDepartment.getValidFrom().getDayOfMonth()).isEqualTo(1);
     }

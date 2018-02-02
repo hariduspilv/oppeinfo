@@ -1,6 +1,6 @@
-<legend ng-if="studentSubmitData.canApply || studentSubmitData.files.length > 0" md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
+<legend ng-if="editable || studentSubmitData.files.length > 0" md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
 
-<md-button ng-if="studentSubmitData.canApply" class="md-raised" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
+<md-button ng-if="editable" class="md-raised" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
 <br/>
 <table md-table class="secondary-table" ng-if="studentSubmitData.files.length > 0">
   <thead md-head>
@@ -8,7 +8,7 @@
       <th md-column>
         <span>{{'file.nameAndFile' | translate}}</span>
       </th>
-      <th md-column></th>
+      <th md-column ng-if="editable"></th>
     </tr>
   </thead>
   <tbody md-body>
@@ -25,8 +25,8 @@
           </div>
         </div>
       </td>
-      <td md-cell>
-        <md-button class="remove nomargin" ng-click="removeFromArray(studentSubmitData.files, file)">&times;</md-button>
+      <td md-cell ng-if="editable">
+        <md-button class="remove nomargin" ng-click="removeFile(studentSubmitData.files, file)">&times;</md-button>
       </td>
     </tr>
   </tbody>

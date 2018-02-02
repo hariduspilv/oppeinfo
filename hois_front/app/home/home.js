@@ -2,8 +2,8 @@
 // todo this to main controller? and use this data on auth?
 angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
   function ($scope, School) {
-    $scope.schools = School.getAll();
-
+    $scope.schools = School.getSchoolsWithLogo();
+    
   }
 ]).controller('AuthenticatedHomeController', ['$scope', 'AUTH_EVENTS', 'AuthService', 'QueryUtils', '$resource', 'config', 'Session',
   function ($scope, AUTH_EVENTS, AuthService, QueryUtils, $resource, config, Session) {

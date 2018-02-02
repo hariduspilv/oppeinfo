@@ -1,78 +1,81 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="50" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'finalExamProtocol.studyYear' | translate}}</label>
-          <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
-        </md-input-container>
-      </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="50" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'finalExamProtocol.studyPeriod' | translate}}</label>
+            <hois-select ng-model="criteria.studyPeriod" type="studyperiod" required autofocus></hois-select>
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"></md-input-container>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="50" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'finalExamProtocol.subject' | translate}}</label>
-          <hois-select ng-model="criteria.subject" type="subject"></hois-select>
-        </md-input-container>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="50" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'finalExamProtocol.subject' | translate}}</label>
+            <hois-select ng-model="criteria.subject" type="subject"></hois-select>
+          </md-input-container>
 
-        <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label class="textInput">{{'finalExamProtocol.teacher' | translate}}</label>
-          <hois-select ng-model="criteria.teacher" type="teacher"></hois-select>
-        </md-input-container>
-      </div>
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'finalExamProtocol.teacher' | translate}}</label>
+            <hois-select ng-model="criteria.teacher" type="teacher"></hois-select>
+          </md-input-container>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="50" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'finalExamProtocol.status' | translate}}</label>
-          <!-- TODO: LOPPROTOKOLL_STAATUS ja LOPMOODULPROTOKOLL_STAATUS asendus? -->
-          <hois-classifier-select ng-model="criteria.status" main-classifier-code="PROTOKOLL_STAATUS" model-value-attr="code"></hois-classifier-select>
-        </md-input-container>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="50" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'finalExamProtocol.status' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" main-classifier-code="PROTOKOLL_STAATUS" model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
 
-        <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label class="textInput">{{'finalExamProtocol.protocolNr' | translate}}</label>
-          <input type="text" ng-model="criteria.protocolNr">
-        </md-input-container>
-      </div>
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'finalExamProtocol.protocolNr' | translate}}</label>
+            <input type="text" ng-model="criteria.protocolNr">
+          </md-input-container>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <div flex="50" flex-sm="100" flex-xs="100">
-          <div layout="column" flex>
-            <div layout="row" flex>
-              <md-input-container>
-                <label>{{'finalExamProtocol.insertedFrom' | translate}}</label>
-                <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
-              </md-input-container>
-              <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                <label>{{'finalExamProtocol.insertedThru' | translate}}</label>
-                <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
-              </md-input-container>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="50" flex-sm="100" flex-xs="100">
+            <div layout="column" flex>
+              <div layout="row" flex>
+                <md-input-container>
+                  <label>{{'finalExamProtocol.insertedFrom' | translate}}</label>
+                  <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
+                </md-input-container>
+                <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'finalExamProtocol.insertedThru' | translate}}</label>
+                  <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
+                </md-input-container>
+              </div>
+            </div>
+          </div>
+
+          <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <div layout="column" flex>
+              <div layout="row" flex>
+                <md-input-container>
+                  <label>{{'finalExamProtocol.confirmedFrom' | translate}}</label>
+                  <md-datepicker ng-model="criteria.confirmDateFrom"></md-datepicker>
+                </md-input-container>
+                <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'finalExamProtocol.confirmedThru' | translate}}</label>
+                  <md-datepicker ng-model="criteria.confirmDateThru" md-min-date="criteria.confirmDateFrom"></md-datepicker>
+                </md-input-container>
+              </div>
             </div>
           </div>
         </div>
 
-        <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <div layout="column" flex>
-            <div layout="row" flex>
-              <md-input-container>
-                <label>{{'finalExamProtocol.confirmedFrom' | translate}}</label>
-                <md-datepicker ng-model="criteria.confirmDateFrom"></md-datepicker>
-              </md-input-container>
-              <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                <label>{{'finalExamProtocol.confirmedThru' | translate}}</label>
-                <md-datepicker ng-model="criteria.confirmDateThru" md-min-date="criteria.confirmDateFrom"></md-datepicker>
-              </md-input-container>
-            </div>
-          </div>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearSearch()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-href="#/finalExamHigherProtocols/new" ng-if="formState.canCreateProtocol">{{'main.button.create' | translate}}</md-button>
         </div>
-      </div>
-
-      <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="openCreateProtocolDialog()" ng-if="formState.canCreateProtocol">{{'main.button.create' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearSearch()">{{'main.button.clear' | translate}}</md-button>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>
@@ -82,6 +85,7 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column>{{'finalExamProtocol.protocolNr' | translate}}</th>
+            <th md-column>{{'finalExamProtocol.protocolType' | translate}}</th>
             <th md-column>{{'finalExamProtocol.subject' | translate}}</th>
             <th md-column>{{'finalExamProtocol.teacher' | translate}}</th>
             <th md-column>{{'finalExamProtocol.status' | translate}}</th>
@@ -96,6 +100,7 @@
             <td md-cell>
               <a ng-href="#/finalExamHigherProtocol/{{::row.id}}/view">{{::row.protocolNr}}</a>
             </td>
+            <td md-cell>{{currentLanguageNameField(row.protocolType)}}</td>
             <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
             <td md-cell>{{row.teachers.join(', ')}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>

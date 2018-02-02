@@ -1,6 +1,19 @@
+<md-nav-bar ng-if="rtipPage" md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+  <md-nav-item md-nav-href="#/teachers/{{::teacher.id}}/edit" name="teacher.data">
+      {{'teacher.data' | translate}}</md-nav-item>
+  <md-nav-item ng-if="teacher.id && teacher.isVocational" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation" name="teacher.continuingEducation">
+      {{'teacher.continuingEducation.label' | translate}}</md-nav-item>
+  <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/qualification" name="teacher.qualification">
+      {{'teacher.qualification.qualification' | translate}}</md-nav-item>
+  <md-nav-item ng-if="teacher.id && teacher.isHigher && isHigher" md-nav-href="#/teachers/{{::teacher.id}}/mobility" name="teacher.mobility">
+      {{'teacher.mobility.mobility' | translate}}</md-nav-item>
+  <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence" name="teacher.rtipAbsence">
+      {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
+</md-nav-bar>
+
 <div layout-padding>
   <md-table-container>
-    <table md-table md-progress="tabledata.$promise">
+    <table md-table md-progress="tabledata.$promise" class="secondary-table">
       <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
           <th md-column md-order-by="startDate">{{'teacher.rtipAbsence.absenceFrom' | translate}}</th>
@@ -23,3 +36,10 @@
   md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
   md-page-select></md-table-pagination>
 </div>
+
+<div layout="row" layout-margin ng-if="!auth.isTeacher() && rtipPage">
+  <md-button ng-if="teacher.canEdit" ng-click="updateData()" class="md-raised md-primary">{{'teacher.rtipAbsence.updateData' | translate}}</md-button>
+  <md-button ng-href="#/teachers" class="md-raised">{{'main.button.back' | translate}}</md-button>
+</div>
+
+  

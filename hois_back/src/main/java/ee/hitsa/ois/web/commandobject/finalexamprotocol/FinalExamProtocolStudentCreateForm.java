@@ -1,6 +1,6 @@
-package ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol;
+package ee.hitsa.ois.web.commandobject.finalexamprotocol;
 
-public class FinalExamVocationalProtocolStudentCreateForm {
+public class FinalExamProtocolStudentCreateForm {
 
     private Long id;
     private Long studentId;

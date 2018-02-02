@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol;
+package ee.hitsa.ois.web.commandobject.finalexamprotocol;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 
-public class FinalExamVocationProtocolSearchCommand {
+public class FinalExamVocationalProtocolSearchCommand {
 
     private Long studyYear;
     private Long teacher;

@@ -25,13 +25,17 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
         $scope.fromStorage = function (key) {
           return JSON.parse($sessionStorage[key] || '{}');
         };
-        var storedCriteria = $scope.fromStorage(baseUrl + '/applications');
+        var storedCriteria = $scope.fromStorage($route.current.originalPath);
         if (angular.isNumber(storedCriteria.page)) {
           storedCriteria.page = storedCriteria.page + 1;
         }
         angular.extend($scope.criteria, storedCriteria);
       }
     });
+
+    $scope.toStorage = function(key, criteria) {
+      $sessionStorage[key] = JSON.stringify(criteria);
+    };
 
     $scope.reloadTable = function () {
       $scope.applicationSearchForm.$setSubmitted();
@@ -55,6 +59,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
           $scope.allowedCount = 0;
         }
         $scope.submittedType = $scope.criteria.type;
+        $scope.toStorage($route.current.originalPath, $scope.criteria);
       });
     };
 
@@ -125,7 +130,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
   function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, ArrayUtils) {
     var baseUrl = '/scholarships';
     //if this form is currently being used for stipend or grant
-    var stipend = $route.current.params.stipend;
+    $scope.stipend = $route.current.params.stipend;
     QueryUtils.endpoint(baseUrl + '/studentProfilesRejection').query({
       id: $route.current.params.ids
     }, function (result) {

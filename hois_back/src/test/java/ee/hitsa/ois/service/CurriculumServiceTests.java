@@ -79,7 +79,7 @@ public class CurriculumServiceTests {
         Iterator<CurriculumStudyLanguage> i = c.getStudyLanguages().iterator();
         while(i.hasNext()) {
             CurriculumStudyLanguage lang = i.next();
-            if(lang.getStudyLang().getCode().equals(removedLangCode)) {
+            if(EntityUtil.getCode(lang.getStudyLang()).equals(removedLangCode)) {
                 i.remove();
             }
         }
@@ -98,7 +98,7 @@ public class CurriculumServiceTests {
         i = c.getStudyLanguages().iterator();
         while(i.hasNext()) {
             CurriculumStudyLanguage lang = i.next();
-            String langCode = lang.getStudyLang().getCode();
+            String langCode = EntityUtil.getCode(lang.getStudyLang());
             Assert.assertTrue(langCode.equals(LANGUAGES.get(1)) || langCode.equals(LANGUAGES.get(2)));
             Assert.assertFalse(langCode.equals(removedLangCode));
         }

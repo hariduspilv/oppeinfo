@@ -6,7 +6,7 @@
         <span ng-if="module.type !== 'KORGMOODUL_M'">(<hois-classifier-value class="inline" ng-model="module.type" main-classifier-code="KORGMOODUL"></hois-classifier-value>)</span>
         <span ng-if="module.type === 'KORGMOODUL_M'">({{currentLanguage()=='et' ? module.typeNameEt : module.typeNameEn}})</span>
       </div>
-      <b ng-if="!module.isOk" flex-offset="10" md-colors="{color: 'purple-300'}">&nbsp;{{ module.totalDifference }}</b>
+      <b ng-if="!module.isOk" flex-offset="10" md-colors="{color: 'accent'}">&nbsp;{{ module.totalDifference }}</b>
       <i class="material-icons" flex-offset="10" md-colors="{color: 'green-600'}" ng-if="module.isOk">done</i>
     </div>
   </hois-collapsable-header>

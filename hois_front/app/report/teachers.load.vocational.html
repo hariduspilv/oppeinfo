@@ -1,34 +1,37 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form ng-submit="loadData()" novalidate>
-      <div layout="row">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'report.teachersload.studyYear' | translate}}</label>
-          <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required autofocus></hois-select>
-        </md-input-container>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate>
+        <div layout="row">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'report.teachersload.studyYear' | translate}}</label>
+            <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required autofocus></hois-select>
+          </md-input-container>
 
-        <md-input-container flex="50" flex-offset="5" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
-          <label class="textInput">{{'report.teachersload.studyPeriod' | translate}}</label>
-          <hois-select ng-model="criteria.studyPeriod" values="criteria.studyYear ? formState.studyPeriods[criteria.studyYear] : formState.allStudyPeriods"></hois-select>
-        </md-input-container>
-      </div>
-
-      <div layout="row">
-        <div flex="45">
-          <hois-autocomplete ng-model="criteria.module" method="vocationalmodules" label="{{'report.teachersload.module' | translate}}"></hois-autocomplete>
+          <md-input-container flex="50" flex-offset="5" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'report.teachersload.studyPeriod' | translate}}</label>
+            <hois-select ng-model="criteria.studyPeriod" values="criteria.studyYear ? formState.studyPeriods[criteria.studyYear] : formState.allStudyPeriods"></hois-select>
+          </md-input-container>
         </div>
 
-        <div flex="50" flex-offset="5" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
-          <hois-autocomplete ng-model="criteria.teacher" method="teachers" label="{{'report.teachersload.teacher' | translate}}"></hois-autocomplete>
-        </div>
-      </div>
+        <div layout="row">
+          <div flex="45">
+            <hois-autocomplete ng-model="criteria.module" method="vocationalmodules" label="{{'report.teachersload.module' | translate}}"></hois-autocomplete>
+          </div>
 
-      <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
+          <div flex="50" flex-offset="5" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+            <hois-autocomplete ng-model="criteria.teacher" method="teachers" label="{{'report.teachersload.teacher' | translate}}"></hois-autocomplete>
+          </div>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>

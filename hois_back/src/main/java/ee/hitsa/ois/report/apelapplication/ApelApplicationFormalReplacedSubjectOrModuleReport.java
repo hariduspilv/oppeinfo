@@ -1,7 +1,6 @@
 package ee.hitsa.ois.report.apelapplication;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,7 +8,6 @@ import ee.hitsa.ois.domain.apelapplication.ApelApplicationFormalReplacedSubjectO
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.TranslateUtil;

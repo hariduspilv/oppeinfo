@@ -1,5 +1,9 @@
 package ee.hitsa.ois.util;
 
+import java.util.EnumMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
@@ -22,8 +26,8 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 public abstract class UserUtil {
 
     public static boolean hasPermission(HoisUserDetails user, Permission permission, PermissionObject object) {
-        String s = "ROLE_" + permission.name() + "_" + object.name();
-        return user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(s));
+        String s = roleName(permission, object);
+        return user.getAuthorities().stream().anyMatch(a -> s.equals(a.getAuthority()));
     }
 
     public static boolean canSubmitApplication(HoisUserDetails user, Application application) {
@@ -38,7 +42,7 @@ public abstract class UserUtil {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
         if (ApplicationStatus.AVALDUS_STAATUS_KOOST.name().equals(status)) {
-            return Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm()) && isStudentRepresentative(user, student);
+            return Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm()) && (isStudentRepresentative(user, student) || isSchoolAdmin(user, student.getSchool()));
         }
         if (ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name().equals(status)) {
             return isSchoolAdmin(user, student.getSchool());
@@ -161,7 +165,7 @@ public abstract class UserUtil {
      * @return
      */
     public static boolean canAddStudentRepresentative(HoisUserDetails user, Student student) {
-        return isSchoolAdmin(user, student.getSchool()) || isAdultStudent(user, student);
+        return (isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) || isAdultStudent(user, student);
     }
 
     /**
@@ -173,11 +177,26 @@ public abstract class UserUtil {
      */
     public static boolean canEditStudentRepresentative(HoisUserDetails user, StudentRepresentative representative) {
         Student student = representative.getStudent();
-        if(isSchoolAdmin(user, student.getSchool()) || isAdultStudent(user, student)) {
+        if((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) || isAdultStudent(user, student)) {
             return true;
         }
         // representative can edit it's own record even if student's data is not visible to him/her
         return user.isRepresentative() && EntityUtil.getId(representative.getPerson()).equals(user.getPersonId());
+    }
+
+    /**
+     * Can given user delete given student representative record?
+     *
+     * @param user
+     * @param representative
+     * @return
+     */
+    public static boolean canDeleteStudentRepresentative(HoisUserDetails user, StudentRepresentative representative) {
+        Student student = representative.getStudent();
+        if((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) || isAdultStudent(user, student)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -307,5 +326,16 @@ public abstract class UserUtil {
     public static void assertCanViewStudent(HoisUserDetails user, Student student) {
         AssertionFailedException.throwIf(!canViewStudent(user, student),
                 "User is not allowed to see student's information");
+    }
+
+    private static String roleName(Permission permission, PermissionObject object) {
+        return ROLE_NAME_CACHE.get(permission).computeIfAbsent(object, o ->  "ROLE_" + permission.name() + "_" + o.name());
+    }
+
+    private static final EnumMap<Permission, ConcurrentMap<PermissionObject, String>> ROLE_NAME_CACHE = new EnumMap<>(Permission.class);
+    static {
+        for(Permission p : Permission.values()) {
+            ROLE_NAME_CACHE.put(p, new ConcurrentHashMap<>());
+        }
     }
 }

@@ -695,11 +695,14 @@
     };
 
     $scope.editFormalLearning = function (recordId) {
+      var clMapper;
       var dialogTemplate = "";
       if ($scope.application.curriculumVersion.isVocational) {
         dialogTemplate = 'apelApplication/templates/formal.learning.vocational.edit.dialog.html';
+        clMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE'});
       } else {
         dialogTemplate = 'apelApplication/templates/formal.learning.higher.edit.dialog.html';
+        clMapper = Classifier.valuemapper({ grade: 'KORGHINDAMINE'});
       }
 
       dialogService.showDialog(dialogTemplate, function (dialogScope) {
@@ -927,6 +930,11 @@
             dialogScope.record.subject = null;
           }
         }
+
+        dialogScope.gradeValue = function (code) {
+          var grade = clMapper.objectmapper({ grade: code }).grade;
+          return grade ? grade.value : undefined;
+        };
 
         dialogScope.newSchoolCountryChanged = function (countryCode) {
           if (countryCode === 'RIIK_EST') {
@@ -1158,7 +1166,9 @@
 
         
         dialogScope.submitVocationalFormalLearning = function () {
-          if (dialogScope.record.formalReplacedSubjectsOrModules.length <= 0) {
+          if (dialogScope.record.formalSubjectsOrModules.length <= 0) {
+            message.error('apel.error.atLeastOneTransferableModule');
+          } else if (dialogScope.record.formalReplacedSubjectsOrModules.length <= 0) {
             message.error('apel.error.atLeastOneSubstitutableModule');
           } else if (!areThereMoreTransferableCreditsThanReplacedCredits()) {
             message.error('apel.error.thereMustBeMoreTransferableCreditsThanSubstitutableCredits');
@@ -1199,14 +1209,18 @@
         }
         
         dialogScope.submitHigherFormalLearning = function () {
-          dialogScope.record.formalSubjectsOrModules[0] = dialogScope.record.newTransferableSubjectOrModule;
-          dialogScope.record.formalSubjectsOrModules[0].isMySchool = dialogScope.isMySchool;
-          if (!dialogScope.record.formalSubjectsOrModules[0].isMySchool) {
-            dialogScope.record.formalSubjectsOrModules[0].type = 'VOTA_AINE_LIIK_M';
+          if (dialogScope.record.formalReplacedSubjectsOrModules.length <= 0) {
+            message.error('apel.error.atLeastOneSubstitutableSubject');
+          } else {
+            dialogScope.record.formalSubjectsOrModules[0] = dialogScope.record.newTransferableSubjectOrModule;
+            dialogScope.record.formalSubjectsOrModules[0].isMySchool = dialogScope.isMySchool;
+            if (!dialogScope.record.formalSubjectsOrModules[0].isMySchool) {
+              dialogScope.record.formalSubjectsOrModules[0].type = 'VOTA_AINE_LIIK_M';
+            }
+            formalSubjectsOrModulesToArray();
+            formalSubjectOrModulesObjectsToIdentifiers(DataUtils, dialogScope.record);
+            dialogScope.submit();
           }
-          formalSubjectsOrModulesToArray();
-          formalSubjectOrModulesObjectsToIdentifiers(DataUtils, dialogScope.record);
-          dialogScope.submit();
         };
         
         function formalSubjectsOrModulesToArray() {

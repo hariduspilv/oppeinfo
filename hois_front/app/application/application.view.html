@@ -54,10 +54,10 @@
 
 
       <div layout="row">
-        <md-button ng-if="(application.status === 'AVALDUS_STAATUS_KOOST' && (auth.isAdmin() || auth.isStudent())) || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())"
+        <md-button ng-if="(application.status === 'AVALDUS_STAATUS_KOOST' && (auth.isAdmin() || (auth.isStudent() && !application.needsRepresentativeConfirm))) || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())"
           ng-href="#/applications/{{application.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
         <div ng-include="'application/templates/action.buttons.html'"></div>
-        <md-button ng-if="auth.isStudent()" ng-href="#/applications/student" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="auth.isStudent()" ng-click="back('#/applications/student')" class="md-raised">{{'main.button.back' | translate}}</md-button>
         <md-button ng-if="!auth.isStudent()" ng-click="back('#/applications/', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>

@@ -25,6 +25,7 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
     };
 
     query.$promise.then(function (result) {
+      $scope.formState.selectedStudents = [];
       $scope.tabledata.content = clMapper.objectmapper(result.occupationModuleStudents);
       result.occupationModuleStudents.forEach(function (it) {
         if (it.status.code === 'OPPURSTAATUS_O') {

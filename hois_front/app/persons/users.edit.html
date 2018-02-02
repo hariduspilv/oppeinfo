@@ -37,7 +37,9 @@
             <thead md-head>
               <tr md-row>
                 <th md-column>{{'user.rights.right' | translate}}</th>
-                <th md-column ng-repeat="perm in permissions">{{currentLanguageNameField(perm)}}</th>
+                <th md-column ng-repeat="perm in permissions">
+                  <md-checkbox ng-model="multiSelects[perm.code]" ng-change="multiSelectPermission(perm.code, multiSelects[perm.code])" aria-label="{{currentLanguageNameField(perm)}}" flex>{{currentLanguageNameField(perm)}}</md-checkbox>
+                </th>
               </tr>
             </thead>
             <tbody md-body>

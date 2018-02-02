@@ -6,6 +6,15 @@ angular.module('hitsaOis').controller('ContractListController', function ($scope
   QueryUtils.createQueryForm($scope, '/contracts', {order: 'student_person.lastname,student_person.firstname'}, clMapper.objectmapper);
   $q.all(clMapper.promises).then($scope.loadData);
 
+  // Do not show 'notFound' message
+  if ($scope.auth.isStudent()) {
+    $scope.afterLoadData = function (resultData) {
+      $scope.tabledata.content = resultData.content;
+      $scope.tabledata.totalElements = resultData.totalElements;
+      clMapper.objectmapper(resultData.content);
+    };
+  }
+
   $scope.newContract = function () {
     if ($scope.auth.school.higher && $scope.auth.school.vocational) {
       dialogService.showDialog('contract/vocational.higher.select.dialog.html', function () {

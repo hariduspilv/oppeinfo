@@ -1,12 +1,14 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier',
-  function ($scope, message, QueryUtils, DataUtils, $route, $location) {
+angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService',
+  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService) {
     var baseUrl = '/timetableevents';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
 
     function afterLoad(result) {
+      result.startTime = new Date(result.startTime);
+      result.endTime = new Date(result.endTime);
       $scope.timetableEvent = result;
     }
 
@@ -20,6 +22,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
     }
 
     $scope.save = function () {
+      $scope.eventForm.$setSubmitted();
       if (!$scope.eventForm.$valid) {
         message.error('main.messages.form-has-errors');
         return;
@@ -27,13 +30,24 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       if (id) {
         $scope.timetableEvent.$update().then(afterLoad).then(message.updateSuccess);
       } else {
-        $scope.eventForm.$setSubmitted();
         $scope.timetableEvent.$save().then(function () {
           message.info('timetable.timetableEvent.created');
           $location.url('/lessonplans/events?_menu');
         });
       }
-
+    };
+    
+    $scope.delete = function () {
+      dialogService.confirmDialog({
+        prompt: 'timetable.deleteConfirm',
+        accept: 'main.yes',
+        cancel: 'main.no'
+      }, function () {
+        $scope.timetableEvent.$delete().then(function () {
+          message.info('main.messages.delete.success');
+          $location.url('/lessonplans/events?_noback');
+        }).catch(angular.noop);
+      });
     };
 
     $scope.$watch('timetableEvent.teacher', function () {

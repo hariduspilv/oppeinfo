@@ -9,6 +9,15 @@ angular.module('hitsaOis')
     DataUtils.convertStringToDates($scope.criteria, ['insertedFrom', 'insertedThru']);
     $q.all(clMapper.promises).then($scope.loadData);
 
+    // Do not show 'notFound' message
+    if ($scope.auth.isStudent()) {
+      $scope.afterLoadData = function (resultData) {
+        $scope.tabledata.content = resultData.content;
+        $scope.tabledata.totalElements = resultData.totalElements;
+        clMapper.objectmapper(resultData.content);
+      };
+    }
+
     if($scope.auth.isStudent()) {
       $scope.certificateTypes = Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK', filterValues: [CertificateType.TOEND_LIIK_MUU]}, function() {
         QueryUtils.endpoint('/certificate/student/status').get({id: $scope.auth.student}).$promise.then(function(response) {
@@ -38,6 +47,20 @@ angular.module('hitsaOis')
       $scope.record.headline = response.nameEt;
     });
 
+    function setReadonlyContent(content) {
+      var el = document.getElementById('content');
+      if(el) {
+        el.innerHTML = content;
+      }
+    }
+
+    if($scope.record.type) {
+      QueryUtils.endpoint(baseUrl + "/content").search({type: $scope.record.type}).$promise.then(function(response) {
+        $scope.record.content = response.content;
+        setReadonlyContent($scope.record.content);
+      });
+    }
+
     $scope.save = function() {
       $scope.certificateEditForm.$setSubmitted();
       if(!$scope.certificateEditForm.$valid && !$scope.record.signatoryIdcode) {
@@ -48,7 +71,11 @@ angular.module('hitsaOis')
       dialogService.confirmDialog({prompt: 'certificate.ekisconfirm'}, function() {
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.path(baseUrl +'/' + $scope.record.id + '/view');
+          $location.url(baseUrl +'/' + $scope.record.id + '/view?_noback');
+        }).catch(function(response) {
+          if(response && response.data && response.data.data && response.data.data.id) {
+            $location.url(baseUrl +'/' + response.data.data.id + '/view?_noback');
+          }
         });
       });
     };
@@ -224,9 +251,9 @@ angular.module('hitsaOis')
       }
       setSignatoryName();
       if($scope.record.id) {
-        $scope.record.$update(afterLoad).then(message.updateSuccess);
+        $scope.record.$update(afterLoad).then(message.updateSuccess).catch(angular.noop);
       } else {
-        $scope.record.$save().then(afterCreation);
+        $scope.record.$save().then(afterCreation).catch(angular.noop);
       }
     };
 
@@ -237,14 +264,18 @@ angular.module('hitsaOis')
       dialogService.confirmDialog({prompt: 'certificate.ekisconfirm'}, function() {
         setSignatoryName();
         function toViewForm(record) {
-          $location.path(baseUrl +'/' + record.id + '/view');
+          $location.url(baseUrl +'/' + record.id + '/view?_noback');
         }
         var record = new OrderEndpoint($scope.record);
         if($scope.record.id) {
-          record.$update(toViewForm).then(message.updateSuccess);
+          record.$update(toViewForm).then(message.updateSuccess).catch(angular.noop);
         } else {
           record.$save(toViewForm).then(function() {
             message.info('main.messages.create.success');
+          }).catch(function(response) {
+            if(response && response.data && response.data.data && response.data.data.id) {
+              $location.url(baseUrl +'/' + response.data.data.id + '/edit?_noback');
+            }
           });
         }
       });
@@ -254,8 +285,8 @@ angular.module('hitsaOis')
       dialogService.confirmDialog({prompt: 'certificate.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path(baseUrl);
-        });
+          $location.url(baseUrl + '?_noback');
+        }).catch(angular.noop);
       });
     };
 
@@ -304,8 +335,8 @@ angular.module('hitsaOis')
       });
     };
   }
-]).controller('CertificateViewController', ['$scope', 'QueryUtils', '$route', 'ekisService', 'CertificateUtil',
-  function ($scope, QueryUtils, $route, ekisService, CertificateUtil) {
+]).controller('CertificateViewController', ['$location', '$route', '$scope', 'dialogService', 'ekisService', 'message', 'CertificateUtil', 'QueryUtils',
+  function ($location, $route, $scope, dialogService, ekisService, message, CertificateUtil, QueryUtils) {
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
@@ -342,6 +373,23 @@ angular.module('hitsaOis')
          return response;
       });
     }
+
+    $scope.order = function() {
+      dialogService.confirmDialog({prompt: 'certificate.ekisconfirm'}, function() {
+        QueryUtils.endpoint(baseUrl + '/orderFromEkis').update({id: id}).$promise.then(function() {
+          $route.reload();
+        }).catch(angular.noop);
+      });
+    };
+
+    $scope.delete = function() {
+      dialogService.confirmDialog({prompt: 'certificate.deleteconfirm'}, function() {
+        $scope.record.$delete().then(function() {
+          message.info('main.messages.delete.success');
+          $location.url(baseUrl + '?_noback');
+        });
+      });
+    };
 
     $scope.contentEditable = function() {
       return CertificateUtil.contentEditable($scope.record);

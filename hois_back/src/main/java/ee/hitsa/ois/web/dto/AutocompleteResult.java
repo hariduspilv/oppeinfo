@@ -33,6 +33,7 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 
 public class AutocompleteResult extends EntityConnectionCommand implements Translatable {
@@ -86,7 +87,9 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     }
 
     public static AutocompleteResult of(Curriculum curriculum) {
-        return new AutocompleteResult(curriculum.getId(), curriculum);
+        return new AutocompleteResult(curriculum.getId(),
+                CurriculumUtil.curriculumName(curriculum.getCode(), curriculum.getNameEt()),
+                CurriculumUtil.curriculumName(curriculum.getCode(), curriculum.getNameEn()));
     }
 
     public static AutocompleteResult of(CurriculumModule curriculumModule) {
@@ -95,8 +98,8 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
                 CurriculumUtil.moduleName(curriculumModule.getNameEn(), curriculumModule.getModule().getNameEn(), curriculumModule.getCurriculum().getCode()));
     }
 
-    public static AutocompleteResult of(CurriculumModuleOutcome outcome) {
-        return new AutocompleteResult(outcome.getId(), outcome.getOutcomeEt(), outcome.getOutcomeEt());
+    public static CurriculumModuleOutcomeResult of(CurriculumModuleOutcome outcome) {
+        return new CurriculumModuleOutcomeResult(outcome.getId(), outcome.getOutcomeEt(), outcome.getOutcomeEt(), outcome.getOrderNr());
     }
 
     public static AutocompleteResult of(CurriculumSpeciality curriculumSpeciality) {
@@ -108,7 +111,7 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
         return new CurriculumVersionResult(curriculumVersion.getId(),
                 CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEt()),
                 CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEn()),
-                CurriculumUtil.id(curriculum), null, null, Boolean.valueOf(CurriculumUtil.isVocational(curriculum)));
+                curriculum.getId(), null, null, Boolean.valueOf(CurriculumUtil.isVocational(curriculum)));
     }
 
     public static AutocompleteResult of(CurriculumVersionHigherModule module) {

@@ -1,6 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', '$mdDialog', 'dialogService', function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogService) {
+angular.module('hitsaOis').controller('studyYearScheduleController', 
+function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogService, USER_ROLES, AuthService) {
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPETOOGRAAFIK);
 
     $scope.criteria = {
         schoolDepartments: [],
@@ -135,7 +137,7 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
     };
 
     $scope.openAddScheduleDialog = function (studentGroup, week, schedule) {
-        if(!week.studyPeriodId) {
+        if(!week.studyPeriodId || !$scope.canEdit) {
             return;
         }
         var DialogController = function (scope) {
@@ -222,4 +224,4 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
         $scope.isPastStudyYear = DataUtils.isPastStudyYearOrPeriod($scope.criteria.studyYear);
       }
     });
-}]);
+});

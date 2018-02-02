@@ -37,7 +37,13 @@
       <tr>
         <td>{{ loop.index + 1 }}.</td>
         <td>{{ student.name }}</td>
-        <td>{{ student.grade }}</td>
+        <td>
+          {{ student.grade }}
+        
+          {% if student.gradeName != null %}
+            ({{ student.gradeName }})
+          {% endif %}
+        </td>
         <td></td>
         <td></td>
       </tr>
@@ -48,7 +54,7 @@
 
     <table width="100%">
       <tr>
-        <td align="left">{{ content.confirmDate }}</td>
+        <td align="left">{{ content.confirmDate | hoisDate }}</td>
         <td align="center">{{ content.confirmedBy }}</td>
       </tr>
     </table>

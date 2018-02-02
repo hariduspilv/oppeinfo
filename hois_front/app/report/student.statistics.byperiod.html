@@ -1,42 +1,45 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form ng-submit="loadData()" novalidate>
-      <div layout="row">
-        <div layout="row" flex="45">
-          <md-input-container>
-            <label>{{'main.from' | translate}}</label>
-            <md-datepicker ng-model="criteria.from"></md-datepicker>
-          </md-input-container>
-          <md-input-container flex-offset="5">
-            <label>{{'main.thru' | translate}}</label>
-            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
-          </md-input-container>
-        </div>
-      </div>
-
-      <div layout="row">
-        <div flex="45">
-          <hois-autocomplete ng-model="criteria.curriculum" method="curriculums" label="report.studentstatisticsbyperiod.curriculum" multiple></hois-autocomplete>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate>
+        <div layout="row">
+          <div layout="row" flex="45">
+            <md-input-container>
+              <label>{{'main.from' | translate}}</label>
+              <md-datepicker ng-model="criteria.from"></md-datepicker>
+            </md-input-container>
+            <md-input-container flex-offset="5">
+              <label>{{'main.thru' | translate}}</label>
+              <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+            </md-input-container>
+          </div>
         </div>
 
-        <md-input-container flex="50" flex-offset="5">
-          <label>{{'report.studentstatisticsbyperiod.result' | translate}}</label>
-          <md-select ng-model="criteria.result">
-            <md-option md-option-empty></md-option>
-            <md-option value="OPPURSTAATUS_A">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_A' | translate}}</md-option>
-            <md-option value="OPPURSTAATUS_K">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_K' | translate}}</md-option>
-            <md-option value="OPPURSTAATUS_L">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_L' | translate}}</md-option>
-          </md-select>
-        </md-input-container>
-      </div>
+        <div layout="row">
+          <div flex="45">
+            <hois-autocomplete ng-model="criteria.curriculum" method="curriculums" label="report.studentstatisticsbyperiod.curriculum" multiple></hois-autocomplete>
+          </div>
 
-      <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
+          <md-input-container flex="50" flex-offset="5">
+            <label>{{'report.studentstatisticsbyperiod.result' | translate}}</label>
+            <md-select ng-model="criteria.result">
+              <md-option md-option-empty></md-option>
+              <md-option value="OPPURSTAATUS_A">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_A' | translate}}</md-option>
+              <md-option value="OPPURSTAATUS_K">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_K' | translate}}</md-option>
+              <md-option value="OPPURSTAATUS_L">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_L' | translate}}</md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>

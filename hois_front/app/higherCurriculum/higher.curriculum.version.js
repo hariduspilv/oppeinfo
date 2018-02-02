@@ -35,6 +35,7 @@ angular.module('hitsaOis')
           return lastUrl && lastUrl.indexOf('#/higherCurriculum/' + $scope.version.curriculum + '/version/') !== -1;
         });
       });
+      $scope.publicUrl = config.apiUrl + '/public/curriculum/' + $scope.curriculum.id + '/' + id +'?format=json';
     } else {
       $scope.version = angular.extend(initialVersion);
     }

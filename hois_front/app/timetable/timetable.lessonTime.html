@@ -47,7 +47,7 @@
                 <tr md-row ng-repeat="lessonTime in block.lessonTimes | orderBy: 'lessonNr'" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>
                     <md-input-container>
-                      <input style="width:2em;" ng-model="lessonTime.lessonNr" ng-pattern="/^[1-9]\d*$/" aria-label="{{'main.nr' | translate}}" type="text" ng-required="isLessonTimeRowFilled(lessonTime)">
+                      <input style="width:4em;" ng-model="lessonTime.lessonNr" ng-model-options="{ updateOn: 'mousedown blur' }" aria-label="{{'main.nr' | translate}}" type="number" ng-required="isLessonTimeRowFilled(lessonTime)">
                     </md-input-container>
                   </td>
                   <td md-cell>

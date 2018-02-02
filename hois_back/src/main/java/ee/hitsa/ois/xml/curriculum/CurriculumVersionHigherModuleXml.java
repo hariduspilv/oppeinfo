@@ -12,7 +12,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 
 public class CurriculumVersionHigherModuleXml {
-    
+
     private Long id;
     private Long version;
     private String nameEt;
@@ -32,7 +32,7 @@ public class CurriculumVersionHigherModuleXml {
     private Set<CurriculumVersionHigherModuleSubjectXml> subjects;
     private Set<CurriculumVersionElectiveModuleXml> electiveModules;
     private Set<Long> specialities;
-    
+
     public static CurriculumVersionHigherModuleXml of(CurriculumVersionHigherModule module) {
         CurriculumVersionHigherModuleXml xml = EntityUtil.bindToDto(module, new CurriculumVersionHigherModuleXml(),
                 "electiveModules", "specialities", "subjects", "type");

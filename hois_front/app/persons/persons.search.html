@@ -1,30 +1,33 @@
 <div class="ois-form-layout-padding">
   <div flex>
-    <form ng-submit="loadData()" class="ois-form-layout nomargin" layout="column">
-      <div layout="column" flex>
-        <md-input-container  ng-if="auth.isMainAdmin()" flex>
-          <label>{{'school.label' | translate}}</label>
-          <hois-select ng-if="auth.isMainAdmin()" ng-model="criteria.school" type="school"></hois-select>
-        </md-input-container>
-        <md-input-container flex>
-          <label>{{'person.name' | translate}}</label>
-          <input ng-model="criteria.name" type="text">
-        </md-input-container>
-        <md-input-container flex>
-          <label>{{'person.idcode' | translate}}</label>
-          <input ng-model="criteria.idcode" type="text">
-        </md-input-container>
-        <md-input-container flex>
-          <label>{{'user.role' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.role" main-classifier-code="ROLL" model-value-attr="code"></hois-classifier-select>
-        </md-input-container>
-      </div>
-      <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA')" ng-href="#/persons/new?_noback">{{'main.button.create' | translate}}</md-button>
-      </div>
-    </form>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" class="ois-form-layout nomargin" layout="column">
+        <div layout="column" flex>
+          <md-input-container  ng-if="auth.isMainAdmin()" flex>
+            <label>{{'school.label' | translate}}</label>
+            <hois-select ng-if="auth.isMainAdmin()" ng-model="criteria.school" type="school"></hois-select>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'person.name' | translate}}</label>
+            <input ng-model="criteria.name" type="text">
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'person.idcode' | translate}}</label>
+            <input ng-model="criteria.idcode" type="text">
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'user.role' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.role" main-classifier-code="ROLL" model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA')" ng-href="#/persons/new?_noback">{{'main.button.create' | translate}}</md-button>
+        </div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>

@@ -1,6 +1,7 @@
 <div layout-padding>
     <div flex ng-if="data.events.length > 0">
         <h2 class="md-title">
+            <span ng-if="schoolId">{{currentLanguageNameField(data.school)}}</span>
             <hois-classifier-value ng-model="data.yearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
             {{'academicCalendar.studyYear' | translate}}
         </h2>
@@ -38,6 +39,11 @@
         </md-table-container>
     </div>
     <div flex ng-if="!data.events || data.events.length == 0">
-        <p>{{'academicCalendar.notFound' | translate}}</p>
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+            <div md-colors="{color: 'warn'}">
+                <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+                <span>{{'academicCalendar.notFound' | translate}}</span>
+            </div>
+        </md-whiteframe>
     </div>
 </div>

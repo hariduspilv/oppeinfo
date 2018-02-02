@@ -1,7 +1,6 @@
 package ee.hitsa.ois.service.curriculum;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -10,7 +9,6 @@ import javax.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
@@ -65,8 +63,7 @@ public class CurriculumCopyService {
     }
 
     private static void copyJointPartners(Curriculum newCurriculum, Set<CurriculumJointPartner> jointPartners) {
-        if(!CollectionUtils.isEmpty(jointPartners)) {
-            newCurriculum.setJointPartners(new HashSet<>());
+        if(jointPartners != null) {
             for(CurriculumJointPartner copied : jointPartners) {
                 CurriculumJointPartner newJointPartner = new CurriculumJointPartner(); 
                 BeanUtils.copyProperties(copied, newJointPartner, "id", "changed", "changedBy", "inserted", "insertedBy", "curriculum", "version");
@@ -77,12 +74,11 @@ public class CurriculumCopyService {
     }
 
     private static void copyOccupations(Curriculum newCurriculum, Set<CurriculumOccupation> occupations) {
-        if(!CollectionUtils.isEmpty(occupations)) {
-            newCurriculum.setOccupations(new HashSet<>());
-            
+        if(occupations != null) {
             for(CurriculumOccupation copied : occupations) {
                 CurriculumOccupation newOccupation = new CurriculumOccupation();
-                BeanUtils.copyProperties(copied, newOccupation, "id", "changed", "changedBy", "inserted", "insertedBy", "version", "specialities");
+                BeanUtils.copyProperties(copied, newOccupation, "id", "changed", "changedBy", "inserted", "insertedBy", "curriculum", "version", "specialities");
+                newOccupation.setCurriculum(newCurriculum);
                 copySpecialities(newOccupation, copied.getSpecialities());
                 newCurriculum.getOccupations().add(newOccupation);
             }
@@ -91,8 +87,7 @@ public class CurriculumCopyService {
 
     private static void copySpecialities(CurriculumOccupation newOccupation,
             Set<CurriculumOccupationSpeciality> specialities) {
-        if(!CollectionUtils.isEmpty(specialities)) {
-            newOccupation.setSpecialities(new HashSet<>());
+        if(specialities != null) {
             for(CurriculumOccupationSpeciality copied : specialities) {
                 CurriculumOccupationSpeciality newSpec = new CurriculumOccupationSpeciality();
                 newSpec.setSpeciality(copied.getSpeciality());
@@ -103,10 +98,7 @@ public class CurriculumCopyService {
     
 
     private static void copyModules(Curriculum newCurriculum, Set<CurriculumModule> modules) {
-
-        if(!CollectionUtils.isEmpty(modules)) {
-            newCurriculum.setModules(new HashSet<>());
-            
+        if(modules != null) {
             for(CurriculumModule copied : modules) {
                 
                 CurriculumModule newModule = new CurriculumModule();
@@ -125,9 +117,7 @@ public class CurriculumCopyService {
     }
 
     private static void copyOccupations(CurriculumModule newModule, Set<CurriculumModuleOccupation> occupations) {
-        if(!CollectionUtils.isEmpty(occupations)) {
-            newModule.setOccupations(new HashSet<>());
-            
+        if(occupations != null) {
             for(CurriculumModuleOccupation copied : occupations) {
                 CurriculumModuleOccupation newOccupation = new CurriculumModuleOccupation();
                 newOccupation.setOccupation(copied.getOccupation());
@@ -135,11 +125,9 @@ public class CurriculumCopyService {
             }
         }
     }
-    
+
     private static void copyOutcomes(CurriculumModule newModule, Set<CurriculumModuleOutcome> outcomes) {
-        if(!CollectionUtils.isEmpty(outcomes)) {
-            newModule.setOutcomes(new HashSet<>());
-            
+        if(outcomes != null) {
             for(CurriculumModuleOutcome copied : outcomes) {
                 CurriculumModuleOutcome newOutcome = new CurriculumModuleOutcome();
                 newOutcome.setOutcomeEt(copied.getOutcomeEt());
@@ -149,10 +137,9 @@ public class CurriculumCopyService {
             }
         }
     }
-    
+
     private static void copyCompetences(CurriculumModule newModule, Set<CurriculumModuleCompetence> competences) {
-        if(!CollectionUtils.isEmpty(competences)) {
-            newModule.setCompetences(new HashSet<>());
+        if(competences != null) {
             for(CurriculumModuleCompetence copied : competences) {
                 CurriculumModuleCompetence newCompetence = new CurriculumModuleCompetence();
                 newCompetence.setCompetence(copied.getCompetence());

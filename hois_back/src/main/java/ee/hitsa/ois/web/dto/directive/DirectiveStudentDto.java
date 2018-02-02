@@ -4,7 +4,6 @@ import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
@@ -258,10 +257,9 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
     public static DirectiveStudentDto of(SaisApplication application) {
         DirectiveStudentDto dto = EntityUtil.bindToDto(application, new DirectiveStudentDto());
-        CurriculumVersion cv = application.getSaisAdmission().getCurriculumVersion();
-        dto.setCurriculumVersion(cv.getId());
+        dto.setCurriculumVersion(EntityUtil.getId(application.getSaisAdmission().getCurriculumVersion()));
         if(!application.getGraduatedSchools().isEmpty()) {
-            dto.setPreviousStudyLevel(EntityUtil.getCode(application.getGraduatedSchools().stream().findFirst().get().getStudyLevel()));
+            dto.setPreviousStudyLevel(EntityUtil.getCode(application.getGraduatedSchools().stream().findAny().get().getStudyLevel()));
         }
         dto.setSaisApplication(application.getId());
 

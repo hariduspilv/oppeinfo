@@ -7,6 +7,8 @@
         {{'teacher.qualification.qualification' | translate}}</md-nav-item>
     <md-nav-item ng-if="teacher.id && teacher.isHigher && isHigher" md-nav-href="#/teachers/{{::teacher.id}}/mobility" name="teacher.mobility">
         {{'teacher.mobility.mobility' | translate}}</md-nav-item>
+    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence" name="teacher.rtipAbsence">
+        {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
 </md-nav-bar>
 
 <md-content class="md-padding">

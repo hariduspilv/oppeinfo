@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewController', ['$scope', 'QueryUtils', 'Classifier', '$route', 'SspCapacities',
-  function ($scope, QueryUtils, Classifier, $route, SspCapacities) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewController', 
+  function ($scope, QueryUtils, Classifier, $route, SspCapacities, USER_ROLES, AuthService) {
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN);
 
     var studyPeriodId = parseInt($route.current.params.studyPeriodId, 10);
     var studentGroup = parseInt($route.current.params.studentGroupId, 10);
@@ -33,5 +34,4 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewControl
 
     $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT'});
     $scope.studyPeriod = QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId});
-  }
-]);
+  });

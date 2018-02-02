@@ -1,13 +1,14 @@
 'use strict';
 
-angular.module('hitsaOis').controller('FinalExamVocationalProtocolListController', function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, ArrayUtils, dialogService, message, $location) {
+angular.module('hitsaOis').controller('FinalExamVocationalProtocolListController', 
+function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, ArrayUtils, dialogService, message, $location, USER_ROLES) {
   $scope.auth = $route.current.locals.auth;
   $scope.search = {};
   $scope.criteria = {};
   var endpoint = '/finalExamVocationalProtocols';
 
   function canCreateProtocol() {
-    return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) &&  ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_M_TEEMAOIGUS_LOPPROTOKOLL");
+    return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) &&  ArrayUtils.contains($scope.auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LOPPROTOKOLL);
   }
 
   $scope.formState = {

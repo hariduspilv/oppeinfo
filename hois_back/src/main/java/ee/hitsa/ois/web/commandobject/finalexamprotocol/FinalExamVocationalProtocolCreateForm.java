@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol;
+package ee.hitsa.ois.web.commandobject.finalexamprotocol;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import ee.hitsa.ois.web.commandobject.ProtocolVdataForm;
 public class FinalExamVocationalProtocolCreateForm {
     
     private ProtocolVdataForm protocolVdata;
-    private List<FinalExamVocationalProtocolStudentCreateForm> protocolStudents;
+    private List<FinalExamProtocolStudentCreateForm> protocolStudents;
 
     public ProtocolVdataForm getProtocolVdata() {
         return protocolVdata;
@@ -17,11 +17,11 @@ public class FinalExamVocationalProtocolCreateForm {
         this.protocolVdata = protocolVdata;
     }
 
-    public List<FinalExamVocationalProtocolStudentCreateForm> getProtocolStudents() {
+    public List<FinalExamProtocolStudentCreateForm> getProtocolStudents() {
         return protocolStudents;
     }
 
-    public void setProtocolStudents(List<FinalExamVocationalProtocolStudentCreateForm> protocolStudents) {
+    public void setProtocolStudents(List<FinalExamProtocolStudentCreateForm> protocolStudents) {
         this.protocolStudents = protocolStudents;
     }
 

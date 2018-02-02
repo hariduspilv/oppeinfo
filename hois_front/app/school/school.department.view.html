@@ -1,0 +1,41 @@
+<div class="form-readonly" layout="column" layout-padding>
+  <div>
+    <form name="schoolDepartmentForm">
+
+      <md-input-container class="md-block">
+        <label>{{'school.department.code' | translate}}</label>
+        <hois-value value="schoolDepartment.code"></hois-value>
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'school.department.nameEt' | translate}}</label>
+        <hois-value value="schoolDepartment.nameEt"></hois-value>
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'school.department.nameEn' | translate}}</label>
+        <hois-value value="schoolDepartment.nameEn"></hois-value>
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label>{{'school.department.parent' | translate}}</label>
+        <hois-value value="schoolDepartment.parentSchoolDepartment"></hois-value>
+      </md-input-container>
+
+      <div layout="row" flex="100">
+        <md-input-container flex="20">
+          <label>{{'school.department.validFrom' | translate}}</label>
+          <hois-value value="schoolDepartment.validFrom | hoisDate"></hois-value>
+        </md-input-container>
+        <md-input-container flex="20" flex-offset="5">
+          <label>{{'school.department.validThru' | translate}}</label>
+          <hois-value value="schoolDepartment.validThru | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
+      
+      <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_STRUKTUUR')" ng-href="#/school/departments/{{::schoolDepartment.id}}/edit" class="md-raised md-primary">{{'main.button.edit' | translate}}</md-button>
+      <md-button ng-href="#/school/departments" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    </form>
+  </div>
+
+</div>

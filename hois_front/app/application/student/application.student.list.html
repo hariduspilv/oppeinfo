@@ -1,6 +1,5 @@
 <div layout-padding>
   <div flex>
-    <h2>{{'student.application.label' | translate}}</h2>
     <md-table-container>
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
@@ -8,7 +7,7 @@
           <th md-column md-order-by="{{currentLanguage()==='en' ? 'type.nameEn' : 'type.nameEt'}}">{{'application.type' | translate}}</th>
           <th md-column md-order-by="submitted">{{'application.submissionDate' | translate}}</th>
           <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'main.status' | translate}}</th>
-          <th md-column md-order-by="confirmDate">{{'student.application.confirmDate' | translate}}</th>
+          <th md-column md-order-by="5">{{'student.application.confirmDate' | translate}}</th>
         </tr>
         </thead>
         <tbody md-body>
@@ -33,7 +32,7 @@
 <div layout-padding ng-if="!auth.isParent()">
   <div flex>
     <md-table-container>
-      <table md-table md-progress="applicationTypes.$promise">
+      <table md-table class="secondary-table" md-progress="applicationTypes.$promise">
         <thead md-head>
         <tr md-row>
           <th md-column>{{'application.type' | translate}}</th>
@@ -44,9 +43,10 @@
         <tr md-row ng-repeat="row in applicationTypes" ng-class-odd="'odd'" ng-class-even="'even'" ng-if="applicationTypesApplicable[row.code]">
           <td md-cell>{{currentLanguageNameField(row)}}</td>
           <td md-cell>
-            <div ng-if="applicationTypesApplicable[row.code].isAllowed === true && auth.isStudent()" layout="row" layout-align="end end">
-              <a class="md-button md-primary" ng-href="#/applications/student/new/{{row.code}}">{{'main.button.apply' | translate}}</a>
-            </div>
+            <md-button md-no-ink ng-if="applicationTypesApplicable[row.code].isAllowed === true && auth.isStudent()" class="md-primary change-button"
+              ng-href="#/applications/student/new/{{row.code}}">
+              {{'main.button.apply' | translate}}
+            </md-button>
           </td>
         </tr>
         </tbody>

@@ -623,7 +623,10 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.subjects.label',
         url: "/subject?_menu",
-        type: 'link'
+        type: 'link',
+        studyLevel: {
+          higher: true
+        }
       });
 
       sections.push({
@@ -808,6 +811,28 @@ angular.module('hitsaOis')
       });
     }
 
+    function getPublicUserSections() {
+      sections.push({
+        name: 'main.menu.academicCalendar.label',
+        type: 'link',
+        url: "/academicCalendars"
+      });
+
+      /*
+      sections.push({
+        name: 'main.menu.timetableLink.label',
+        type: 'link',
+        url: "/timetables"
+      });
+
+      sections.push({
+        name: 'main.menu.curriculums.label',
+        url: "/",
+        type: 'link',
+      });
+      */
+    }
+
     var self;
     var menu = [];
 
@@ -820,23 +845,23 @@ angular.module('hitsaOis')
           pages: [
             {
               name: 'main.menu.scholarships.grants',
-              url: "/scholarships/grants"
+              url: "/scholarships/grants?_menu"
             },
             {
               name: 'main.menu.scholarships.grantApplications',
-              url: "/scholarships/applications/grants"
+              url: "/scholarships/applications/grants?_menu"
             },
             {
               name: 'main.menu.scholarships.scholarships',
-              url: "/scholarships/scholarships"
+              url: "/scholarships/scholarships?_menu"
             },
             {
               name: 'main.menu.scholarships.scholarshipApplications',
-              url: "/scholarships/applications/scholarships"
+              url: "/scholarships/applications/scholarships?_menu"
             },
             {
               name: 'main.menu.scholarships.drGrants',
-              url: "/scholarships"
+              url: "/scholarships?_menu"
             }
           ]
         });
@@ -844,33 +869,33 @@ angular.module('hitsaOis')
         result.push({
           name: 'main.menu.scholarships.scholarships',
           type: 'link',
-          url: "/scholarships/scholarships"
+          url: "/scholarships/scholarships?_menu"
         });
         result.push({
           name: 'main.menu.scholarships.scholarshipApplications',
           type: 'link',
-          url: "/scholarships/applications/scholarships"
+          url: "/scholarships/applications/scholarships?_menu"
         });
         result.push({
           name: 'main.menu.scholarships.drGrants',
           type: 'link',
-          url: "/scholarships"
+          url: "/scholarships?_menu"
         });
         result.push({
           name: 'main.menu.scholarships.grantApplications',
           type: 'link',
-          url: "/scholarships/applications/grants"
+          url: "/scholarships/applications/grants?_menu"
         });
       } else {
         result.push({
           name: 'main.menu.scholarships.grants',
           type: 'link',
-          url: "/scholarships/grants"
+          url: "/scholarships/grants?_menu"
         });
         result.push({
           name: 'main.menu.scholarships.grantApplications',
           type: 'link',
-          url: "/scholarships/applications/grants"
+          url: "/scholarships/applications/grants?_menu"
         });
       }
       return result;
@@ -882,18 +907,18 @@ angular.module('hitsaOis')
         result.push({
           name: 'main.menu.scholarships.scholarships',
           type: 'link',
-          url: "/scholarships/myData/scholarships"
+          url: "/scholarships/myData/scholarships?_menu"
         });
         result.push({
           name: 'main.menu.scholarships.drGrants',
           type: 'link',
-          url: "/scholarships/myData/drGrants"
+          url: "/scholarships/myData/drGrants?_menu"
         });
       } else {
         result.push({
           name: 'main.menu.scholarships.grants',
           type: 'link',
-          url: "/scholarships/myData/grants"
+          url: "/scholarships/myData/grants?_menu"
         });
       }
       return result;
@@ -1082,6 +1107,9 @@ angular.module('hitsaOis')
           break;
         case "ROLL_V":
           getExternalExpertSections();
+          break;
+        default:
+          getPublicUserSections();
           break;
       }
     }

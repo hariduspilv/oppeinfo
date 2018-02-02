@@ -24,6 +24,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 import ee.hitsa.ois.web.dto.EhisStudentReport;
@@ -43,8 +44,7 @@ public class EhisStudentService extends EhisService {
     @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
 
-    public EhisStudentReport exportStudents(Long schoolId, EhisStudentForm ehisStudentForm) {
-        EhisStudentReport ehisStudentReport = new EhisStudentReport();
+    public List<? extends EhisStudentReport> exportStudents(Long schoolId, EhisStudentForm ehisStudentForm) {
         switch (ehisStudentForm.getDataType()) {
         case CURRICULA_FULFILMENT:
             List<EhisStudentReport.CurriculaFulfilment> fulfilment = new ArrayList<>();
@@ -52,16 +52,14 @@ public class EhisStudentService extends EhisService {
                 WsEhisStudentLog log = curriculumFulfillment(student);
                 fulfilment.add(new EhisStudentReport.CurriculaFulfilment(student, log));
             }
-            ehisStudentReport.setFulfilments(fulfilment);
-            break;
+            return fulfilment;
         case FOREIGN_STUDY:
             List<EhisStudentReport.ForeignStudy> foreignStudies = new ArrayList<>();
             for (DirectiveStudent directiveStudent : findForeignStudents(schoolId, ehisStudentForm)) {
                 WsEhisStudentLog log = ehisDirectiveStudentService.foreignStudy(directiveStudent);
                 foreignStudies.add(new EhisStudentReport.ForeignStudy(directiveStudent, log));
             }
-            ehisStudentReport.setForeignStudies(foreignStudies);
-            break;
+            return foreignStudies;
         case GRADUATION:
             List<EhisStudentReport.Graduation> graduations = new ArrayList<>();
             for (Directive directive : findDirectives(schoolId, ehisStudentForm)) {
@@ -71,20 +69,17 @@ public class EhisStudentService extends EhisService {
                     graduations.add(new EhisStudentReport.Graduation(directiveStudent, log));
                 }
             }
-            ehisStudentReport.setGraduations(graduations);
-            break;
+            return graduations;
         case VOTA:
             List<EhisStudentReport.ApelApplication> apelApplications = new ArrayList<>();
             for(ApelApplication app : findApelApplications(schoolId, ehisStudentForm)) {
                 WsEhisStudentLog log = vota(app);
                 apelApplications.add(new EhisStudentReport.ApelApplication(app, log));
             }
-            ehisStudentReport.setApelApplications(apelApplications);
-            break;
+            return apelApplications;
         default:
-            break;
+            throw new IllegalArgumentException("Unknown datatype");
         }
-        return ehisStudentReport;
     }
 
     private WsEhisStudentLog curriculumFulfillment(Student student) {
@@ -202,8 +197,8 @@ public class EhisStudentService extends EhisService {
     private List<ApelApplication> findApelApplications(Long schoolId, EhisStudentForm criteria) {
         return em.createQuery("select a from ApelApplication a where a.school.id = ?1 and a.confirmed >= ?2 and a.confirmed <= ?3", ApelApplication.class)
                 .setParameter(1, schoolId)
-                .setParameter(2, criteria.getFrom())
-                .setParameter(3, criteria.getThru())
+                .setParameter(2, DateUtils.firstMomentOfDay(criteria.getFrom()))
+                .setParameter(3, DateUtils.lastMomentOfDay(criteria.getThru()))
                 .getResultList();
     }
 

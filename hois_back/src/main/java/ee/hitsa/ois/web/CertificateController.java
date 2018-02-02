@@ -29,6 +29,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.CertificateContentCommand;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.commandobject.CertificateSearchCommand;
@@ -114,8 +115,7 @@ public class CertificateController {
         certificateValidationService.assertCanCreate(user, form);
         certificateValidationService.validate(user, form);
         Certificate certificate = certificateService.create(user, form);
-        // send to EKIS
-        return get(user, ekisService.registerCertificate(EntityUtil.getId(certificate)));
+        return orderFromEkis(user, certificate);
     }
 
     @PutMapping("/order/{id:\\d+}")
@@ -125,13 +125,26 @@ public class CertificateController {
         certificateValidationService.assertCanChange(user, certificate);
         certificateValidationService.validate(user, form);
         certificate = certificateService.save(user, certificate, form);
+        return orderFromEkis(user, certificate);
+    }
+
+    @PutMapping("/orderFromEkis/{id:\\d+}")
+    public CertificateDto orderFromEkis(HoisUserDetails user, @WithEntity Certificate certificate) {
+        certificateValidationService.assertCanSendToEkis(user, certificate);
         // send to EKIS
-        return get(user, ekisService.registerCertificate(EntityUtil.getId(certificate)));
+        Long certificateId = EntityUtil.getId(certificate);
+        try {
+            return get(user, ekisService.registerCertificate(certificateId));
+        } catch(ValidationFailedException e) {
+            // return certificate id to frontend
+            e.getErrorInfo().setData(Collections.singletonMap("id", certificateId));
+            throw e;
+        }
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Certificate certificate, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        certificateValidationService.assertCanChange(user, certificate);
+        certificateValidationService.assertCanDelete(user, certificate);
         certificateService.delete(user, certificate);
     }
 

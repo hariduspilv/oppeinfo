@@ -159,6 +159,10 @@
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.timetableSearch = false;
 
+      $scope.schoolId = $scope.auth == null ? $route.current.params.schoolId : $scope.auth.school.id;
+      var generalTimetablesEndpoint = '/timetables/generalTimetables/' + $scope.schoolId;
+      var groupPeriodTimetablesEndpoint = '/timetables/groupPeriodTimetables/' + $scope.schoolId;
+
       $scope.$watch('timetableId', function() {
         if ($scope.timetables) {
           $scope.shownTimetableIndex = getShownTimetableIndex($scope.timetables, $scope.timetableId);
@@ -167,7 +171,7 @@
         }
       });
 
-      QueryUtils.endpoint('/timetables/generalTimetables/').query().$promise.then(function (result) {
+      QueryUtils.endpoint(generalTimetablesEndpoint).query().$promise.then(function (result) {
         $scope.timetables = result;
         $scope.weeks = $scope.generalTimetableUtils.getTimetablesWeeks(result);
         getCurrentWeekTimetables($scope, result, $scope.weeks);
@@ -190,8 +194,8 @@
       };
 
       $scope.showTimetablesByCurriculums = function (timetableId, studyPeriodId) {
-        $scope.timetablesByCurriculums = QueryUtils.endpoint('/timetables/groupPeriodTimetables/').query(
-          {studyPeriodId: studyPeriodId, timetableId: timetableId });
+        $scope.timetablesByCurriculums = QueryUtils.endpoint(groupPeriodTimetablesEndpoint).query(
+          {studyPeriodId: studyPeriodId, timetableId: timetableId});
       };
 
       $scope.showGroupWeek = function (studyPeriodId, groupId, timetableId) {
@@ -207,6 +211,10 @@
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.timetableSearch = false;
 
+      $scope.schoolId = $scope.auth == null ? $route.current.params.schoolId : $scope.auth.school.id;
+      var generalTimetablesEndpoint = '/timetables/generalTimetables/' + $scope.schoolId;
+      var teacherPeriodTimetablesEndpoint = '/timetables/teacherPeriodTimetables/' + $scope.schoolId;
+
       $scope.$watch('timetableId', function() {
         if ($scope.timetables) {
           $scope.shownTimetableIndex = getShownTimetableIndex($scope.timetables, $scope.timetableId);
@@ -215,7 +223,7 @@
         }
       });
 
-      QueryUtils.endpoint('/timetables/generalTimetables/').query().$promise.then(function (result) {
+      QueryUtils.endpoint(generalTimetablesEndpoint).query().$promise.then(function (result) {
         $scope.timetables = result;
         $scope.weeks = $scope.generalTimetableUtils.getTimetablesWeeks(result);
         getCurrentWeekTimetables($scope, result, $scope.weeks);
@@ -238,7 +246,7 @@
       };
 
       $scope.showTimetablesByCurriculums = function (timetableId, studyPeriodId) {
-        $scope.timetablesByTeachers = QueryUtils.endpoint('/timetables/teacherPeriodTimetables/').query(
+        $scope.timetablesByTeachers = QueryUtils.endpoint(teacherPeriodTimetablesEndpoint).query(
           {studyPeriodId: studyPeriodId, timetableId: timetableId});
       };
 
@@ -255,6 +263,10 @@
         $scope.generalTimetableUtils = new GeneralTimetableUtils();
         $scope.timetableSearch = false;
 
+        $scope.schoolId = $scope.auth == null ? $route.current.params.schoolId : $scope.auth.school.id;
+        var generalTimetablesEndpoint = '/timetables/generalTimetables/' + $scope.schoolId;
+        var roomPeriodTimetablesEndpoint = '/timetables/roomPeriodTimetables/' + $scope.schoolId;
+
         $scope.$watch('timetableId', function() {
           if ($scope.timetables) {
             $scope.shownTimetableIndex = getShownTimetableIndex($scope.timetables, $scope.timetableId);
@@ -263,7 +275,7 @@
           }
         });
 
-        QueryUtils.endpoint('/timetables/generalTimetables/').query().$promise.then(function (result) {
+        QueryUtils.endpoint(generalTimetablesEndpoint).query().$promise.then(function (result) {
           $scope.timetables = result;
           $scope.weeks = $scope.generalTimetableUtils.getTimetablesWeeks(result);
           getCurrentWeekTimetables($scope, result, $scope.weeks);
@@ -286,7 +298,7 @@
         };
 
         $scope.showTimetablesByCurriculums = function (timetableId, studyPeriodId) {
-          $scope.timetablesByRooms = QueryUtils.endpoint('/timetables/roomPeriodTimetables/').query(
+          $scope.timetablesByRooms = QueryUtils.endpoint(roomPeriodTimetablesEndpoint).query(
             {studyPeriodId: studyPeriodId, timetableId: timetableId});
         };
 
@@ -334,6 +346,14 @@
           $scope.shownStudyPeriodId = studyPeriodId;
           setIndexes($scope, timetableId);
         };
+      }
+    ]).controller('GeneralTimetableSchoolListController', ['$scope', 'School', '$location',
+      function ($scope, School, $location) {
+        $scope.schools = School.getSchoolsWithLogo();
+
+        $scope.openSchoolGeneralTimetable = function (schoolId) {
+          $location.path('timetable/generalTimetableByGroup/' + schoolId);
+        }
       }
     ]);
 }());

@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,6 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.HigherModuleType;
-import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -41,15 +41,13 @@ import ee.hitsa.ois.web.dto.student.StudentHigherStudyPeriodResultDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultGradeDto;
 
+@Transactional
 @Service
 public class StudentResultHigherService {
 
     @Autowired
     private EntityManager em;
 
-    @Autowired
-    private StudyPeriodRepository studyPeriodRepository;
-    
     public List<StudentHigherSubjectResultDto> positiveHigherResults(Student student) {
         List<CurriculumVersionHigherModule> modules = StreamUtil.toFilteredList(
                 m -> Boolean.FALSE.equals(m.getMinorSpeciality()), student.getCurriculumVersion().getModules());
@@ -59,21 +57,21 @@ public class StudentResultHigherService {
         List<StudentHigherSubjectResultDto> mergedList = mergeModuleSubjectsAndResults(moduleSubjects, studentResults);
         return filterNegativeResults(mergedList);
     }
-    
+
     public List<StudentHigherSubjectResultDto> filterNegativeResults(List<StudentHigherSubjectResultDto> list) {
         calculateIsOk(list);
         return StreamUtil.toFilteredList(r -> Boolean.TRUE.equals(r.getIsOk()), list);
     }
-    
-    public StudentHigherResultDto higherResults(Student student) {
-        StudentHigherResultDto dto = new StudentHigherResultDto();
 
+    public StudentHigherResultDto higherResults(Student student) {
         List<CurriculumVersionHigherModule> modules = StreamUtil.toFilteredList(
                 m -> Boolean.FALSE.equals(m.getMinorSpeciality()), student.getCurriculumVersion().getModules());
         List<StudentHigherSubjectResultDto> moduleSubjects = getModuleSubjects(modules);
         List<StudentHigherSubjectResultDto> studentResults = getStudentResults(student);
         List<StudentHigherSubjectResultDto> mergedList = mergeModuleSubjectsAndResults(moduleSubjects, studentResults);
         calculateIsOk(mergedList);
+
+        StudentHigherResultDto dto = new StudentHigherResultDto();
         dto.setModules(StreamUtil.toMappedList(StudentHigherModuleResultDto::of, modules));
         dto.setSubjectResults(mergedList);
         setExtraCurriculumSubjects(dto);
@@ -106,31 +104,29 @@ public class StudentResultHigherService {
         }
     }
 
-    private static List<StudentHigherSubjectResultDto> getModuleSubjects(List<CurriculumVersionHigherModule> modules) {
-        List<CurriculumVersionHigherModuleSubject> moduleSubjects = new ArrayList<>();
-        for(CurriculumVersionHigherModule module : modules) {
-            moduleSubjects.addAll(module.getSubjects());
-        }
+    private List<StudentHigherSubjectResultDto> getModuleSubjects(List<CurriculumVersionHigherModule> modules) {
+        List<CurriculumVersionHigherModuleSubject> moduleSubjects = modules.isEmpty() ? null :
+                em.createQuery("select cvhms from CurriculumVersionHigherModuleSubject cvhms where cvhms.module in (?1)", CurriculumVersionHigherModuleSubject.class)
+                .setParameter(1, modules)
+                .getResultList();
         List<StudentHigherSubjectResultDto> results = StreamUtil
-                .toMappedList(StudentHigherSubjectResultDto::ofFromHigherModuleSubject, moduleSubjects);
+                .toMappedList(StudentHigherSubjectResultDto::ofHigherModuleSubject, moduleSubjects);
         return results;
     }
 
     private List<StudentHigherSubjectResultDto> getStudentResults(Student student) {
-        List<StudentHigherSubjectResultDto> studentResults = new ArrayList<>();
-        
-        String from = "from student_higher_result shr";
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_higher_result shr").sort("shr.grade_date");
         qb.requiredCriteria("shr.student_id = :studentId", "studentId", EntityUtil.getId(student));
-        qb.sort("shr.grade_date");
-        
+
         List<?> rows = qb.select(
                 "distinct shr.subject_id, shr.grade_code, shr.grade, shr.grade_date, shr.teachers, shr.study_period_id, shr.grade_mark",
                 em).getResultList();
 
+        List<StudentHigherSubjectResultDto> studentResults = new ArrayList<>();
         for (Object r : rows) {
             StudentHigherSubjectResultDto dto = new StudentHigherSubjectResultDto();
-            dto.setSubject(SubjectSearchDto.of(EntityUtil.getOptionalOne(Subject.class, resultAsLong(r, 0), em)));
+            Long subjectId = resultAsLong(r, 0);
+            dto.setSubject(subjectId != null ? SubjectSearchDto.of(em.getReference(Subject.class, subjectId)) : null);
             dto.setIsExtraCurriculum(Boolean.TRUE);
             dto.setIsOk(Boolean.FALSE);
             dto.setIsOptional(Boolean.TRUE);
@@ -287,7 +283,7 @@ public class StudentResultHigherService {
         boolean isOk = modules != null && !modules.isEmpty() && modules.stream().allMatch(m -> Boolean.TRUE.equals(m.getIsOk()));
         dto.setIsCurriculumFulfilled(Boolean.valueOf(isOk));
     }
-    
+
     private void setStudyPeriodResults(StudentHigherResultDto dto) {
         Set<Long> studyPeriodIds = StreamUtil.toMappedSet(r -> r.getLastGrade().getStudyPeriod(), 
                 dto.getSubjectResults().stream()
@@ -295,7 +291,9 @@ public class StudentResultHigherService {
                 r.getLastGrade().getGradeValue() != null)
                 .collect(Collectors.toSet()));
         if(!studyPeriodIds.isEmpty()) {
-            List<StudyPeriod> studyPeriods = studyPeriodRepository.findAll(studyPeriodIds);
+            List<StudyPeriod> studyPeriods = em.createQuery("select sp from StudyPeriod sp where sp.id in (?1)", StudyPeriod.class)
+                    .setParameter(1, studyPeriodIds)
+                    .getResultList();
             List<StudentHigherStudyPeriodResultDto> results = StreamUtil.toMappedList(StudentHigherStudyPeriodResultDto::of, studyPeriods);
             for(StudentHigherStudyPeriodResultDto result : results) {
                 List<StudentHigherSubjectResultDto> subjects = filterSubjectsByStudyPeriod(result, dto.getSubjectResults());

@@ -236,6 +236,27 @@ public class SchoolControllerTests {
     }
 
     @Test
+    public void getCurrentStudyPeriod() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/studyPeriod/current", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void getCurrentStudyYear() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/studyYear/current", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void getLogo() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/0/logo", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void generateEmail() {
         UriComponentsBuilder uri = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("generateEmail");
         ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uri.toUriString(), Collections.singletonMap("lastname", "PEREKONNANIMI"), Object.class);

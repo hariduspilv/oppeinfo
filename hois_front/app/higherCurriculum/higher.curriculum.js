@@ -10,6 +10,7 @@ angular.module('hitsaOis')
     var CurriculumFileEndpoint;
     var baseUrl = '/curriculum';
     var id = $route.current.params.id;
+    $scope.publicUrl = config.apiUrl + '/public/curriculum/' + id + '?format=json';
 
     $scope.formState = {
         readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
@@ -79,27 +80,35 @@ angular.module('hitsaOis')
         $scope.curriculum.fieldOfStudy = undefined;
     };
 
-    function getCurriculum() {
-      if (id) {
-        Endpoint.get({ id: id }).$promise.then(function (response) {
-          CurriculumFileEndpoint = QueryUtils.endpoint(baseUrl + '/' + id + '/file');
-          $scope.curriculum = response;
-          setVariablesForExistingCurriculum();
-
-          $rootScope.removeLastUrlFromHistory(function(lastUrl){
-          return lastUrl === '#/higherCurriculum/' + $scope.curriculum.id + '/view' ||
-                 lastUrl === '#/higherCurriculum/' + $scope.curriculum.id + '/edit' ||
-                 lastUrl === '#/higherCurriculum/new';
-          });
+    function getEhisSchoolsSelection() {
+        $scope.jointPartnersEhisSchools = [];
+        $scope.myEhisSchool = $scope.curriculum.id ? $scope.curriculum.ehisSchool : Session.school.ehisSchool;
+        $scope.jointPartnersEhisSchools.push($scope.myEhisSchool);
+        $scope.curriculum.jointPartners.forEach(function(e){
+            if(e.ehisSchool) {
+                $scope.jointPartnersEhisSchools.push(e.ehisSchool);
+            }
         });
-      } else {
-        $scope.curriculum = new Endpoint(initialCurriculumScope);
-         getEhisSchoolsSelection();
-        //  $scope.currentStatus = Curriculum.STATUS.ENTERING;
-         $scope.formState.curriculum = {status: $scope.curriculum.status};
-      }
     }
-    getCurriculum();
+
+    if (id) {
+      Endpoint.get({ id: id }).$promise.then(function (response) {
+        CurriculumFileEndpoint = QueryUtils.endpoint(baseUrl + '/' + id + '/file');
+        $scope.curriculum = response;
+        setVariablesForExistingCurriculum();
+
+        $rootScope.removeLastUrlFromHistory(function(lastUrl){
+        return lastUrl === '#/higherCurriculum/' + $scope.curriculum.id + '/view' ||
+               lastUrl === '#/higherCurriculum/' + $scope.curriculum.id + '/edit' ||
+               lastUrl === '#/higherCurriculum/new';
+        });
+      });
+    } else {
+      $scope.curriculum = new Endpoint(initialCurriculumScope);
+      getEhisSchoolsSelection();
+      // $scope.currentStatus = Curriculum.STATUS.ENTERING;
+      $scope.formState.curriculum = {status: $scope.curriculum.status};
+    }
 
     function setVariablesForExistingCurriculum() {
         DataUtils.convertStringToDates($scope.curriculum, ["validFrom", "validThru", "approval", "ehisChanged", "accreditationDate", "accreditationValidDate", "merRegDate"]);
@@ -295,17 +304,6 @@ angular.module('hitsaOis')
             });
         });
     };
-
-    function getEhisSchoolsSelection() {
-        $scope.jointPartnersEhisSchools = [];
-        $scope.myEhisSchool = $scope.curriculum.id ? $scope.curriculum.ehisSchool : Session.school.ehisSchool;
-        $scope.jointPartnersEhisSchools.push($scope.myEhisSchool);
-        $scope.curriculum.jointPartners.forEach(function(e){
-            if(e.ehisSchool) {
-                $scope.jointPartnersEhisSchools.push(e.ehisSchool);
-            }
-        });
-    }
 
     $scope.$watch('curriculum.joint', function(newVal, oldVal){
       if(oldVal && !newVal) {

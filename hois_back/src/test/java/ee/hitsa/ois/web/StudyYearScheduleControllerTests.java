@@ -2,7 +2,9 @@ package ee.hitsa.ois.web;
 
 import javax.transaction.Transactional;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
 
 @RunWith(SpringRunner.class)
@@ -24,7 +28,19 @@ public class StudyYearScheduleControllerTests {
     private static final String BASE_URL = "/studyYearSchedule";
 
     @Autowired
+    private TestConfigurationService testConfigurationService;
+    @Autowired
     private TestRestTemplate restTemplate;
+
+    @Before
+    public void setUp() {
+        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
+    }
+
+    @After
+    public void cleanUp() {
+        testConfigurationService.setSessionCookie(null);
+    }
 
     @Test
     public void getStudyYearSchedules() {

@@ -69,7 +69,7 @@ public class Saml2Tests {
         URI uri = uriBuilder.build(true).toUri();
         ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, HttpEntity.EMPTY, String.class);
         Assert.assertNotNull(response);
-        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assert.assertEquals(HttpStatus.FOUND, response.getStatusCode());
     }
 
     //@Test

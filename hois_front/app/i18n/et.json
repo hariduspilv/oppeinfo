@@ -460,7 +460,6 @@
       "title": "Aeguvad kutsestandardid"
     },
     "generalmessages": "Üldteated",
-    "greeting": "Tere tulemast ÕISi",
     "joinedSchools": "ÕISi liitunud õppeasutused:",
     "represantiveApplication": "Esita avaldus õppuri andmete nägemiseks",
     "student": {
@@ -494,7 +493,7 @@
     "certificateNr": "Tunnistuse registrinumber",
     "curriculum": "Õppekava",
     "dateRange": "Tunnistus väljastatud",
-    "firstname": "eesnimi",
+    "firstname": "Eesnimi",
     "idcode": "Isikukood",
     "import": "Saada päring",
     "importDone": "Importimine lõpetatud",
@@ -639,6 +638,7 @@
       "alreadyapplication": "Te olete juba esitanud avalduse õppuri andmete nägemiseks",
       "alreadyexist": "Isik on juba õppuri esindaja",
       "alreadyrepresentative": "Te olete juba õppuri esindaja",
+      "data": "Esindaja andmed",
       "deleteconfirm": "Kas oled kindel, et soovid esindaja kustutada?",
       "email": "E-posti aadress",
       "firstname": "Eesnimi",
@@ -647,6 +647,8 @@
       "name": "Nimi",
       "relation": "Seos õppuriga",
       "phone": "Kontakttelefon",
+      "samewithstudent": "Õppur ja esindaja on sama isik",
+      "student": "Esindatava õppuri andmed",
       "studentIdcode": "Õppuri isikukood",
       "studentnotfound": "Õppurit ei leitud",
       "studentVisible": "Õppuri andmed on esindajale nähtavad",
@@ -906,6 +908,7 @@
     "directiveNr": "Dokumendi number",
     "duplicatecancel": "Tühistamise käskkiri on juba olemas",
     "ekisconfirm": "Kas oled kindel, et soovid käskkirja kinnitamisele saata?",
+    "ekisdeleteconfirm": "Kas kustutada õppurid käskkirjalt ja saata käskkiri kinnitamisele?",
     "headline": "Pealkiri",
     "inserted": "Koostamise kuupäev",
     "insertedBy": "Koostaja",
@@ -918,6 +921,9 @@
     "revocationStartDateBeforeAcademicLeaveStartDate": "Katkestamise kuupäev on varasem, kui akadeemilise puhkuse avalduse alguse kuupäev",
     "revocationStartDateAfterAcademicLeaveEndDate": "Katkestamise kuupäev on hilisem, kui akadeemilise puhkuse avalduse lõpu kuupäev",
     "scholarshipType": "Stipendiumi/õppetoetuse liik",
+    "scholarshipOverlapsAcademicLeave": "Akadeemilise puhkuse periood kattub maksmise perioodiga",
+    "scholarshipStudentNotActive": "Õppur pole aktiivne",
+    "studentsNotValid": "Õppurid ei vasta käskkirja tingimustele. Kas kustutada õppurid ja saata käskkiri uuesti kinnitamisele?",
     "sendToConfirm": "Saada kinnitamisele",
     "sentToConfirm": "Käskkiri saadetud kinnitamisele",
     "status": "Staatus",
@@ -1112,6 +1118,7 @@
     "nr": "Tõendi number",
     "add": "Koosta tõend",
     "order": "Telli tõend",
+    "orderAgain": "Telli uuesti",
     "whom": "Kellele",
     "content": "Tõendi sisu",
     "student": "Õppur",
@@ -2067,7 +2074,7 @@
       "code": "Konkursi kood",
       "language": "Konkursi keel",
       "places": "Kohtade arv",
-      "saisImportRange": "Konkursi sisestamise/muutmise kuupäevade vahemik *",
+      "saisImportRange": "Konkursi sisestamise/muutmise kuupäevade vahemik",
       "saisImportAdmissions": "IMPORDI SAISist",
       "failedImport": "Ebaõnnestunud",
       "error": "Teade",
@@ -2101,7 +2108,7 @@
       "grades": "Hinded",
       "gradesResults": "Hinded/Tulemused",
       "otherData": "Täiendav informatsioon",
-      "saisImportRange": "Konkursi siestamise/muutmise kuupäevade vahemik",
+      "saisImportRange": "Avalduse sisestamise/muutmise kuupäevade vahemik",
       "saisImportApplications": "Impordi SAISist",
       "date": "Avalduse kuupäev",
       "message": "Teade",
@@ -2153,6 +2160,7 @@
     "studentGroups": "Õpperühmad",
     "teachers": "Õpetajad",
     "rooms": "Ruumid",
+    "deleteConfirm": "Kas oled kindel et soovid sündmust kustutada?",
     "lessonTime": {
       "validFrom": "Kehtivuse algus",
       "addNewBlock": "Lisa uus tundide aegade plokk",
@@ -2224,7 +2232,9 @@
     "saveToCalendar": "Salvesta kalendrisse",
     "error": {
       "noPeriodTimetable": "Valitud perioodi kohta tunniplaan puudub",
-      "noSearchResults": "Otsingutingimustele vastavaid kirjeid ei leitud"
+      "noSearchResults": "Otsingutingimustele vastavaid kirjeid ei leitud",
+      "missingCapacities": "Mitte ühelegi õppeainele ei ole lisatud planeeritud mahtu",
+      "isBeforeNow": "Mineviku sündmust ei saa muuta"
     }
   },
   "journal": {
@@ -2249,7 +2259,7 @@
     "entries": "Sissekanded",
     "curriculumVersionModuleOrThemeDescription": "Rakenduskava mooduli/teema kirjeldus",
     "studentDeleteconfirm": "Õppuri kustutamisel kustutatakse ka kõik temaga seotud sissekanded. Olete kindel, et soovite õppuri kustutada?",
-    "moduleDescription": "Mooduli kirjeldus",
+    "moduleDescription": "Teema kirjeldus",
     "finalResult": "Lõpptulemus",
     "showAll": "Näita kõiki",
     "unconfirmedCount": "Teil on {{count}} kinnitamata päevikut!",
@@ -2405,7 +2415,9 @@
       "time": "Saatmise aeg"
     },
     "messages": {
-      "exportFinished": "Eksportimine lõpetatud"
+      "exportFinished": "Eksportimine lõpetatud",
+      "nostudentsfound": "Tingimustele ei vastanud ükski õppur",
+      "noteachersfound": "Tingimustele ei vastanud ükski õpetaja"
     },
     "student": {
       "academicNr": "Akadeemilise õiendi nr",
@@ -2499,6 +2511,8 @@
     "isRequired": "Kohustuslik",
     "addSubject": "Lisa aine õpingukavasse",
     "noCurrentDeclaration": "Käesoleva õppeperioodi õpingukava pole veel lisatud",
+    "notDeclarationPeriod": "Õpingukava koostamise periood ei ole veel kätte jõudnud",
+    "declarationPeriodHasEnded": "Õpingukava koostamine lõppes",
     "repeatingDeclaration": "Korduvkuulamine",
     "confirmAll": "Kinnita kõik jooksval perioodil koostatud õpingukavad",
     "showUncomposed": "Näita kõik jooksval perioodil koostamata õpingukavad",
@@ -2764,6 +2778,7 @@
       "atLeastOneOtherInformalLearning": "Vähemalt üks töökogemus/täiendkoolitus/muu õppeaine peab olema lisatud",
       "atLeastOneSubstitutableSubject": "Vähemalt üks asendatav aine peab olema lisatud",
       "atLeastOneSubstitutableModule": "Vähemalt üks asendatav moodul peab olema lisatud",
+      "atLeastOneTransferableModule": "Vähemalt üks ülekantav moodul peab olema lisatud",
       "thereMustBeMoreTransferableCreditsThanSubstitutableCredits":"Ülekantavate moodulite mahtude summa peab olema suurem kui asendatavate moodulite mahtude summa",
       "atLeastOneLearningMustBeTransferred": "Vähemalt üks formaalne/informaalne õpe peab olema ülekantud",
       "schoolIsNull": "Kool on kohustuslik",
@@ -2916,6 +2931,7 @@
     "protocolNumber": "Protokolli number",
     "protocolNr": "Protokolli number",
     "protocolStatus": "Protokolli staatus",
+    "protocolType": "Protokolli liik",
     "status": "Staatus",
     "insertedDate": "Loomise kp",
     "insertedFrom": "Loodud alates",
@@ -2946,6 +2962,7 @@
     "grade": "Hinne",
     "finalGrade": "Lõpphinne",
     "occupationAndCertificateNr": "Kutse ja kutsetunnistuse number",
+    "type": "Protokolli liik",
     "mobileSign": {
       "instructions": "Toimige palun telefonile ilmuvate juhiste kohaselt. Enne PIN-koodi sisestamist veenduge, et telefoni ekraanil olev kontrollkood on sama, mis allpool näidatud."
     },
@@ -2959,6 +2976,7 @@
     "error": {
       "noStudents": "Protokoll peab sisaldama õppureid",
       "teacherMismatch": "Teistele õpetajatele ei saa protokolle koostada",
+      "noPermissionToCreate": "Õigused protokolli loomiseks puuduvad",
       "noPermissionToEdit": "Õigused protokolli muutmiseks puuduvad",
       "noPermissionToDelete": "Õigused protokolli kustutamiseks puuduvad"
     },
@@ -2997,7 +3015,7 @@
     "published": "Avalik",
     "underRevision": "Sisestamisel",
     "status": "Staatus",
-    "compensationFrequency": "Soovin sõidukulu hüvitamist:",
+    "compensationFrequency": "Soovin sõidukulu hüvitamist",
     "compensationReason": "Hüvitamise põhjus",
     "routeKm": "Marsruut (km)",
     "credits": "Sooritatud ainepunktide arv",
@@ -3012,7 +3030,8 @@
       "scholarshipIsPublishedChange": "Stipendium on avalikustatud, kas oled kindel, et soovid seda muuta?",
       "grantIsPublishedChange": "Õppetoetus on avalikustatud, kas oled kindel, et soovid seda muuta?",
       "deleteGrant": "Kas oled kindel, et soovid õppetoetuse kustutada?",
-      "deleteStipend": "Kas oled kindel, et soovid stipendiumi kustutada?"
+      "deleteStipend": "Kas oled kindel, et soovid stipendiumi kustutada?",
+      "apply": "Kas oled kindel, et soovid taotluse esitada?"
     },
     "student": {
       "grants": "Õppetoetused",
@@ -3058,9 +3077,13 @@
     },
     "messages": {
       "applicationSuccessful": "Teie taotlus on esitatud",
-      "error.curriculumsEmtpy": "Vähemalt üks õppekava peab olema lisatud",
-      "error.duplicateCurriculum": "See õppekava on juba lisatud",
-      "error.noStudentsSelected": "Ühtegi õppurit ei ole valitud, valida tuleb vähemalt üks õppur"
+      "filesWillBeAddedOnSubmit": "Failidega seotud muudatused salvestatakse avalduse salvestamisel",
+      "error" : {
+        "curriculumsEmtpy": "Vähemalt üks õppekava peab olema lisatud",
+        "duplicateCurriculum": "See õppekava on juba lisatud",
+        "noStudentsSelected": "Ühtegi õppurit ei ole valitud, valida tuleb vähemalt üks õppur",
+        "studentDoesntComply": "Ei vasta toetuse tingimustele"
+      }
     },
     "reject": {
       "grantStudentList": "Õppetoetuse tagasi lükkamine",
@@ -3070,5 +3093,8 @@
       "grantStudentList": "Õppetoetuse tühistamine",
       "stipendStudentList": "Stipendiumi tagasi lükkamine"
     }
+  },
+  "public": {
+    "url": "Avaandmete aadress"
   }
 }

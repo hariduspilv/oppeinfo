@@ -1,12 +1,13 @@
 'use strict';
 
-angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q', '$rootScope', '$route', '$scope', 'dialogService', 'Classifier', 'message', 'QueryUtils',
-  function ($location, $q, $rootScope, $route, $scope, dialogService, Classifier, message, QueryUtils) {
+angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q', '$rootScope', '$route', '$scope', 'dialogService', 'Classifier', 'message', 'QueryUtils', 'ArrayUtils',
+  function ($location, $q, $rootScope, $route, $scope, dialogService, Classifier, message, QueryUtils, ArrayUtils) {
     var personId = $route.current.params.person;
     var userId = $route.current.params.user;
     var Endpoint = QueryUtils.endpoint('/persons/'+personId+'/users');
 
     $scope.auth = $route.current.locals.auth;
+    $scope.multiSelects = {"OIGUS_V": false, "OIGUS_M": false, "OIGUS_K": false};
     $scope.noSchool = ['ROLL_P', 'ROLL_V'];
     $scope.filterValues = ['ROLL_L', 'ROLL_O', 'ROLL_T', 'ROLL_X'];
     if (!$scope.auth.isMainAdmin()) {
@@ -36,6 +37,39 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
       }, {});
     }
 
+    function getRightsForRole() {
+      var rightsForRole = [];
+
+      for (var key in $scope.objectsForRole) {
+        rightsForRole.push($scope.objectsForRole[key].code);
+      }
+      return rightsForRole;
+    }
+
+    $scope.multiSelectPermission = function (code, permissionValue) {
+      var rightsForRole = getRightsForRole();
+
+      for (var right in $scope.rights) {
+        if (ArrayUtils.contains(rightsForRole, right)) {
+          $scope.rights[right][code] = permissionValue;
+        }
+      }
+    };
+
+    function setMultiSelects() {
+      var rightsForRole = getRightsForRole();
+
+      for (var code in $scope.multiSelects) {
+        $scope.multiSelects[code] = true;
+        for (var right in $scope.rights) {
+          if (ArrayUtils.contains(rightsForRole, right) && !$scope.rights[right][code]) {
+            $scope.multiSelects[code] = false;
+            break;
+          }
+        }
+      }
+    } 
+
     $scope.roleChanged = function () {
       var role = $scope.user.role;
       if ($scope.noSchool.indexOf(role) !== -1) {
@@ -47,6 +81,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
         afterLoad(objects);
       }
       $scope.rights = rightsForEditing[role];
+      setMultiSelects();
     };
 
     $scope.delete = function () {

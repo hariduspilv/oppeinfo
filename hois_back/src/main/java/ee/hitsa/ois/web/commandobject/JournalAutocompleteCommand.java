@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.commandobject;
 
-public class JournalAutocompleteCommand extends AutocompleteCommand {
+public class JournalAutocompleteCommand extends SearchCommand {
 
     private Long studyYear;
 
@@ -11,5 +11,4 @@ public class JournalAutocompleteCommand extends AutocompleteCommand {
     public void setStudyYear(Long studyYear) {
         this.studyYear = studyYear;
     }
-    
 }

@@ -4,12 +4,12 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionElectiveModule;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class CurriculumVersionElectiveModuleXml {
-    
+
     private Long id;
     private Long version;
     private String nameEt;
     private String nameEn;
-    
+
     public static CurriculumVersionElectiveModuleXml of(CurriculumVersionElectiveModule electiveModule) {
         return EntityUtil.bindToDto(electiveModule, new CurriculumVersionElectiveModuleXml());
     }

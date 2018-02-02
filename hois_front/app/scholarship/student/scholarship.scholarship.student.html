@@ -1,70 +1,73 @@
 <div class="ois-form-layout-padding" ng-cloak>
 
-        <fieldset tabindex="1">
-          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.student.grants' | translate}}</legend>
-          <table md-table class="secondary-table">
-            <thead md-head>
-              <tr md-row>
-                <th md-column>{{'stipend.type' | translate}}</th>
-                <th md-column>{{'stipend.applicationPeriod' | translate}}</th>
-                <th md-column>{{'stipend.places' | translate}}</th>
-                <th md-column>{{'stipend.student.averageMark' | translate}}</th>
-                <th md-column>{{'stipend.student.lastPeriodMark' | translate}}</th>
-                <th md-column>{{'stipend.student.curriculumCompletion' | translate}}</th>
-                <th md-column>&nbsp;</th>
-              </tr>
-            </thead>
-            <tbody md-body>
-              <tr md-row ng-repeat="stipend in possibleStipends" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>{{currentLanguageNameField(stipend.type)}}</td>
-                <td md-cell>{{stipend.applicationStart | hoisDate}}-{{stipend.applicationEnd | hoisDate}}</td>
-                <td md-cell>{{stipend.places ? stipend.places : '-'}}</td>
-                <td md-cell>{{stipend.averageMark ? stipend.averageMark : '-'}}</td>
-                <td md-cell>{{stipend.lastPeriodMark ? stipend.lastPeriodMark : '-'}}</td>
-                <td md-cell>{{stipend.curriculumCompletion ? stipend.curriculumCompletion : '-'}}</td>
-                <td md-cell>
-                  <span ng-if="stipend.canApply">
-                    <a href="#/scholarships/{{stipend.id}}/application">{{'stipend.student.apply' | translate}}</a>
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </fieldset>
-      
-        <br/>
-      
-        <fieldset tabindex="1">
-          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.student.applications' | translate}}</legend>
-          <table md-table class="secondary-table">
-            <thead md-head>
-              <tr md-row>
-                <th md-column>{{'stipend.type' | translate}}</th>
-                <th md-column>{{'stipend.student.averageMark' | translate}}</th>
-                <th md-column>{{'stipend.student.lastPeriodMark' | translate}}</th>
-                <th md-column>{{'stipend.student.curriculumCompletion' | translate}}</th>
-                <th md-column>{{'stipend.student.status' | translate}}</th>
-                <th md-column>{{'stipend.student.decisionDate' | translate}}</th>
-                <th md-column>&nbsp;</th>
-              </tr>
-            </thead>
-            <tbody md-body>
-              <tr md-row ng-repeat="stipend in studentStipends" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>{{currentLanguageNameField(stipend.type)}}</td>
-                <td md-cell>{{stipend.averageMark ? stipend.averageMark : '-'}}</td>
-                <td md-cell>{{stipend.lastPeriodMark ? stipend.lastPeriodMark : '-'}}</td>
-                <td md-cell>{{stipend.curriculumCompletion ? stipend.curriculumCompletion : '-'}}</td>
-                <td md-cell>{{currentLanguageNameField(stipend.status)}}</td>
-                <td md-cell>{{stipend.decisionDate ? (stipend.decisionDate | hoisDate) : '-'}}</td>
-                <td md-cell>
-                  <span ng-if="stipend.status.code === 'STIPTOETUS_STAATUS_K'">
-                    <a href="#/scholarships/{{stipend.id}}/application">{{'stipend.student.edit' | translate}}</a>
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </fieldset>
-      
-      </div>
-      
+  <fieldset tabindex="1">
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.student.scholarships' | translate}}</legend>
+    <table md-table class="secondary-table">
+      <thead md-head>
+        <tr md-row>
+          <th md-column>{{'stipend.type' | translate}}</th>
+          <th md-column>{{'stipend.applicationPeriod' | translate}}</th>
+          <th md-column>{{'stipend.places' | translate}}</th>
+          <th md-column>{{'stipend.student.averageMark' | translate}}</th>
+          <th md-column>{{'stipend.student.lastPeriodMark' | translate}}</th>
+          <th md-column>{{'stipend.student.curriculumCompletion' | translate}}</th>
+          <th md-column>&nbsp;</th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="stipend in possibleStipends" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>{{currentLanguageNameField(stipend.type)}}</td>
+          <td md-cell>{{stipend.applicationStart | hoisDate}}-{{stipend.applicationEnd | hoisDate}}</td>
+          <td md-cell>{{stipend.places ? stipend.places : '-'}}</td>
+          <td md-cell>{{stipend.averageMark ? stipend.averageMark : '-'}}</td>
+          <td md-cell>{{stipend.lastPeriodMark ? stipend.lastPeriodMark : '-'}}</td>
+          <td md-cell>{{stipend.curriculumCompletion ? stipend.curriculumCompletion : '-'}}</td>
+          <td md-cell>
+            <span ng-if="stipend.canApply">
+              <a href="#/scholarships/{{stipend.id}}/application">{{'stipend.student.apply' | translate}}</a>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </fieldset>
+
+  <br/>
+
+  <fieldset tabindex="1">
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.student.applications' | translate}}</legend>
+    <table md-table class="secondary-table">
+      <thead md-head>
+        <tr md-row>
+          <th md-column>{{'stipend.type' | translate}}</th>
+          <th md-column>{{'stipend.student.averageMark' | translate}}</th>
+          <th md-column>{{'stipend.student.lastPeriodMark' | translate}}</th>
+          <th md-column>{{'stipend.student.curriculumCompletion' | translate}}</th>
+          <th md-column>{{'stipend.student.status' | translate}}</th>
+          <th md-column>{{'stipend.student.decisionDate' | translate}}</th>
+          <th md-column>&nbsp;</th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="stipend in studentStipends" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>
+            <a href="#/scholarships/applications/{{stipend.applicationId}}">{{currentLanguageNameField(stipend.type)}}</a>
+          </td>
+          <td md-cell>{{stipend.averageMark ? stipend.averageMark : '-'}}</td>
+          <td md-cell>{{stipend.lastPeriodMark ? stipend.lastPeriodMark : '-'}}</td>
+          <td md-cell>{{stipend.curriculumCompletion ? stipend.curriculumCompletion : '-'}}</td>
+          <td md-cell>{{currentLanguageNameField(stipend.status)}}
+            <md-tooltip ng-if="['STIPTOETUS_STAATUS_L', 'STIPTOETUS_STAATUS_T'].indexOf(stipend.status.code) !== -1  && stipend.rejectComment">{{stipend.rejectComment}}</md-tooltip>
+          </td>
+          <td md-cell>{{stipend.decisionDate ? (stipend.decisionDate | hoisDate) : '-'}}</td>
+          <td md-cell>
+            <span ng-if="stipend.status.code === 'STIPTOETUS_STAATUS_K' || stipend.status.code === 'STIPTOETUS_STAATUS_T'">
+              <a href="#/scholarships/{{stipend.id}}/application">{{'stipend.student.edit' | translate}}</a>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </fieldset>
+
+</div>

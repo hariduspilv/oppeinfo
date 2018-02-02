@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol;
+package ee.hitsa.ois.web.commandobject.finalexamprotocol;
 
 public class FinalExamVocationalProtocolSignForm extends FinalExamVocationalProtocolSaveForm {
 

@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController', ['$scope', 'QueryUtils', 'DataUtils', 'ArrayUtils',
-  function ($scope, QueryUtils, DataUtils, ArrayUtils) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController', 
+  function ($scope, QueryUtils, DataUtils, ArrayUtils, USER_ROLES, AuthService) {
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN);
     $scope.currentNavItem = 'teachers';
 
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods/teachers', {order: 'id'});
@@ -26,5 +27,4 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController
             $scope.criteria.teacher = $scope.criteria.teacherObject ? $scope.criteria.teacherObject.id : null;
         }
     );
-  }
-]);
+  });

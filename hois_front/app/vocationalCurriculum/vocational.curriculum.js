@@ -8,7 +8,7 @@ angular.module('hitsaOis')
       var id = $route.current.params.id;
       var OccupationEndpoint = QueryUtils.endpoint('/curriculumOccupation');
 
-
+      $scope.publicUrl = config.apiUrl + '/public/curriculum/' + id + '?format=json';
       $scope.maxStydyYears = {max: 100};
 
       $scope.STATUS = Curriculum.STATUS;
@@ -331,8 +331,11 @@ angular.module('hitsaOis')
         function(dialogScope) {
           dialogScope.curriculumSelected = [];
 
-          QueryUtils.createQueryForm(dialogScope, '/curriculum', {order: $scope.currentLanguageNameField()});
-          dialogScope.clearCriteria();
+          QueryUtils.createQueryForm(dialogScope, '/curriculum');
+          var oldGetCriteria = dialogScope.getCriteria;
+          dialogScope.getCriteria = function() {
+            return angular.extend(oldGetCriteria(), {isVocational: true});
+          };
           dialogScope.loadData();
         },
         function(submittedDialogScope) {

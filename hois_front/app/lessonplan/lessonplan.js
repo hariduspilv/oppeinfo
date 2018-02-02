@@ -89,9 +89,11 @@
     totals.__ = rowSum(totals._._);
   }
 
-  angular.module('hitsaOis').controller('LessonplanSearchController', ['$location', '$mdDialog', '$route', '$scope', 'DataUtils', 'QueryUtils', 'Session',
+  angular.module('hitsaOis').controller('LessonplanSearchController', 
+    function ($location, $mdDialog, $route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService) {
+      $scope.canEdit = AuthService.isAuthorized([USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
+        USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA]);
 
-    function ($location, $mdDialog, $route, $scope, DataUtils, QueryUtils, Session) {
       var school = Session.school || {};
       $scope.formState = {
         higher: school.higher,
@@ -157,9 +159,11 @@
 
       QueryUtils.createQueryForm($scope, baseUrl, {});
     }
-  ]).controller('LessonplanTeacherSearchController', ['$route', '$scope', 'DataUtils', 'QueryUtils', 'Session',
+  ).controller('LessonplanTeacherSearchController', 
+    function ($route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService) {
+      $scope.canEdit = AuthService.isAuthorized([USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
+        USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA]);
 
-    function ($route, $scope, DataUtils, QueryUtils, Session) {
       var school = Session.school || {};
       $scope.formState = {
         higher: school.higher,
@@ -184,7 +188,7 @@
 
       QueryUtils.createQueryForm($scope, baseUrl, {});
     }
-  ]).controller('LessonplanEditController', ['$location', '$mdDialog', '$route', '$scope', 'message', 'Classifier', 'QueryUtils', 'dialogService',
+  ).controller('LessonplanEditController', ['$location', '$mdDialog', '$route', '$scope', 'message', 'Classifier', 'QueryUtils', 'dialogService',
 
     function ($location, $mdDialog, $route, $scope, message, Classifier, QueryUtils, dialogService) {
       var id = $route.current.params.id;

@@ -12,7 +12,7 @@
   </md-input-container>
 </div>
 
-<md-button class="md-raised" ng-click="addFamilyMember()">{{'stipend.student.addFamilyMember' | translate}}</md-button>
+<md-button class="md-raised" ng-click="addFamilyMember()" ng-if="editable">{{'stipend.student.addFamilyMember' | translate}}</md-button>
 
 <table md-table class="secondary-table">
   <thead md-head>
@@ -24,7 +24,7 @@
       <th md-column>{{'stipend.family.otherIncome' | translate}}</th>
       <th md-column>{{'stipend.family.unemployedBenefit' | translate}}</th>
       <th md-column>{{'main.sum' | translate}}</th>
-      <th md-column></th>
+      <th md-column ng-if="editable"></th>
     </tr>
   </thead>
   <tbody md-body>
@@ -36,7 +36,7 @@
       <td md-cell>{{member.otherIncome ? member.otherIncome : '-'}}</td>
       <td md-cell>{{member.unemployedBenefit ? member.unemployedBenefit : '-'}}</td>
       <td md-cell>{{member.sum ? member.sum : '-'}}</td>
-      <td md-cell>
+      <td md-cell ng-if="editable">
         <md-button class="remove nomargin" ng-click="removeFromArray(studentSubmitData.family, member)">&times;</md-button>
       </td>
     </tr>

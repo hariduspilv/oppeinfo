@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.commandobject.timetable;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 public class TimetableEventSearchCommand {
@@ -11,8 +11,8 @@ public class TimetableEventSearchCommand {
     private Long studyPeriod;
     private List<Long> teachers;
     private Long room;
-    private LocalDateTime from;
-    private LocalDateTime thru;
+    private LocalDate from;
+    private LocalDate thru;
     private String otherTeacher;
     private String otherRoom;
     private List<Long> timetables;
@@ -69,19 +69,19 @@ public class TimetableEventSearchCommand {
         this.room = room;
     }
 
-    public LocalDateTime getFrom() {
+    public LocalDate getFrom() {
         return from;
     }
 
-    public void setFrom(LocalDateTime from) {
+    public void setFrom(LocalDate from) {
         this.from = from;
     }
 
-    public LocalDateTime getThru() {
+    public LocalDate getThru() {
         return thru;
     }
 
-    public void setThru(LocalDateTime thru) {
+    public void setThru(LocalDate thru) {
         this.thru = thru;
     }
 

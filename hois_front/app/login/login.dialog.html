@@ -32,9 +32,7 @@
       </md-tab>
       <md-tab label="{{ 'main.login.idcard.title' | translate }}">
         <md-content class="md-padding">
-          <form name="idCardLoginForm">
-            <md-button class="md-raised md-primary" ng-click="idlogin()">{{ 'main.logIn' | translate }}</md-button>
-          </form>
+          <md-button class="md-raised md-primary" ng-href="{{idCardLoginUrl}}">{{ 'main.logIn' | translate }}</md-button>
         </md-content>
       </md-tab>
       <md-tab label="{{ 'main.login.mobileid.title' | translate }}">

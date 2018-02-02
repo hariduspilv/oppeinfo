@@ -294,11 +294,17 @@
     function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
       $scope.timetableType = "group";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
+      $scope.auth = $route.current.locals.auth;
+    
+      $scope.schoolId = $scope.auth === undefined ? $route.current.params.schoolId : $scope.auth.school.id;
+      var generalTimetablesEndpoint = '/timetables/generalTimetables/' + $scope.schoolId;
+      var timetableEventsEndpoint = '/timetableevents/timetableByGroup/' + $scope.schoolId;
+      var timetableEventsCalendarEndpoint = '/timetableevents/timetableByGroup/calendar/' + $scope.schoolId;
 
       $scope.$watchGroup(['shownTypeId', 'shownTimetableId', 'shownStudyPeriodId'], function () {
         getTimetablePeriodParameters($scope, $route, $route.current.params.groupId);
         if (!$scope.timetables) {
-          QueryUtils.endpoint('/timetables/generalTimetables/').query().$promise.then(function (result) {
+          QueryUtils.endpoint(generalTimetablesEndpoint).query().$promise.then(function (result) {
             $scope.timetables = result;
             $scope.weeks = $scope.generalTimetableUtils.getTimetablesWeeks($scope.timetables);
             getPreviousAndNextWeek($scope, $route);
@@ -325,7 +331,7 @@
       $scope.generateCalendar = function () {
         if ($scope.timetables) {
           var parameters = getTimetableGenerationParameters($scope);
-          QueryUtils.endpoint('/timetableevents/timetableByGroup/calendar').search({
+          QueryUtils.endpoint(timetableEventsCalendarEndpoint).search({
             studentGroups: [$scope.typeId],
             timetables: parameters.timetableIds,
             from: parameters.startDate,
@@ -339,7 +345,7 @@
 
       function showWeekTimetable() {
         if ($scope.typeId && $scope.timetableId) {
-          QueryUtils.endpoint('/timetableevents/timetableByGroup').search({
+          QueryUtils.endpoint(timetableEventsEndpoint).search({
               studentGroups: [$scope.typeId],
               timetables: [$scope.timetableId],
               from: $scope.shownWeek.start,
@@ -358,10 +364,15 @@
       $scope.timetableType = "teacher";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
 
+      $scope.schoolId = $scope.auth === undefined ? $route.current.params.schoolId : $scope.auth.school.id;
+      var generalTimetablesEndpoint = '/timetables/generalTimetables/' + $scope.schoolId;
+      var timetableEventsEndpoint = '/timetableevents/timetableByTeacher/' + $scope.schoolId;
+      var timetableEventsCalendarEndpoint = '/timetableevents/timetableByTeacher/calendar/' + $scope.schoolId;
+
       $scope.$watchGroup(['shownTypeId', 'shownTimetableId', 'shownStudyPeriodId'], function () {
         getTimetablePeriodParameters($scope, $route, $route.current.params.teacherId);
         if (!$scope.timetables) {
-          QueryUtils.endpoint('/timetables/generalTimetables/').query().$promise.then(function (result) {
+          QueryUtils.endpoint(generalTimetablesEndpoint).query().$promise.then(function (result) {
             $scope.timetables = result;
             $scope.weeks = $scope.generalTimetableUtils.getTimetablesWeeks($scope.timetables);
             getPreviousAndNextWeek($scope, $route);
@@ -388,7 +399,7 @@
       $scope.generateCalendar = function () {
         if ($scope.timetables) {
           var parameters = getTimetableGenerationParameters($scope);
-          QueryUtils.endpoint('/timetableevents/timetableByTeacher/calendar').search({
+          QueryUtils.endpoint(timetableEventsCalendarEndpoint).search({
             teachers: [$scope.typeId],
             timetables: parameters.timetableIds,
             from: parameters.startDate,
@@ -402,7 +413,7 @@
 
       function showWeekTimetable() {
         if ($scope.typeId && $scope.timetableId) {
-          QueryUtils.endpoint('/timetableevents/timetableByTeacher').search({
+          QueryUtils.endpoint(timetableEventsEndpoint).search({
               teachers: [$scope.typeId],
               timetables: [$scope.timetableId],
               from: $scope.shownWeek.start,
@@ -424,10 +435,15 @@
       $scope.timetableType = "room";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
 
+      $scope.schoolId = $scope.auth === undefined ? $route.current.params.schoolId : $scope.auth.school.id;
+      var generalTimetablesEndpoint = '/timetables/generalTimetables/' + $scope.schoolId;
+      var timetableEventsEndpoint = '/timetableevents/timetableByRoom/' + $scope.schoolId;
+      var timetableEventsCalendarEndpoint = '/timetableevents/timetableByRoom/calendar/' + $scope.schoolId;
+
       $scope.$watchGroup(['shownTypeId', 'shownTimetableId', 'shownStudyPeriodId'], function () {
         getTimetablePeriodParameters($scope, $route, $route.current.params.roomId);
         if (!$scope.timetables) {
-          QueryUtils.endpoint('/timetables/generalTimetables/').query().$promise.then(function (result) {
+          QueryUtils.endpoint(generalTimetablesEndpoint).query().$promise.then(function (result) {
             $scope.timetables = result;
             $scope.weeks = $scope.generalTimetableUtils.getTimetablesWeeks($scope.timetables);
             getPreviousAndNextWeek($scope, $route);
@@ -454,7 +470,7 @@
       $scope.generateCalendar = function () {
         if ($scope.timetables) {
           var parameters = getTimetableGenerationParameters($scope);
-          QueryUtils.endpoint('/timetableevents/timetableByRoom/calendar').search({
+          QueryUtils.endpoint(timetableEventsCalendarEndpoint).search({
             room: $scope.typeId,
             timetables: parameters.timetableIds,
             from: parameters.startDate,
@@ -468,7 +484,7 @@
 
       function showWeekTimetable() {
         if ($scope.typeId && $scope.timetableId) {
-          QueryUtils.endpoint('/timetableevents/timetableByRoom').search({
+          QueryUtils.endpoint(timetableEventsEndpoint).search({
               room: $scope.typeId,
               timetables: [$scope.timetableId],
               from: $scope.shownWeek.start,
@@ -491,11 +507,14 @@
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
 
+      $scope.schoolId = $scope.auth.school.id;
+      var generalTimetablesEndpoint = '/timetables/generalTimetables/' + $scope.schoolId;
+
       $scope.$watchGroup(['shownTypeId', 'shownTimetableId', 'studyPeriodId'], function () {
         if ($scope.auth.isStudent() || $scope.auth.isParent() || $scope.auth.isAdmin()) {
           getTimetablePeriodParameters($scope, $route, $route.current.params.studentId);
           if (!$scope.timetables) {
-            QueryUtils.endpoint('/timetables/generalTimetables/').query().$promise.then(function (result) {
+            QueryUtils.endpoint(generalTimetablesEndpoint).query().$promise.then(function (result) {
               $scope.timetables = result;
               $scope.weeks = $scope.generalTimetableUtils.getTimetablesWeeks($scope.timetables);
               getPreviousAndNextWeek($scope, $route);

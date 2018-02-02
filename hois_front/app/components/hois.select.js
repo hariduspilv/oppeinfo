@@ -61,7 +61,7 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
           if (attrs.type === 'building') {
             scope.options = QueryUtils.endpoint('/autocomplete/buildings').query();
           } else if (attrs.type === 'curriculum') {
-            QueryUtils.endpoint('/autocomplete/curriculums').search(afterLoad);
+            scope.options = QueryUtils.endpoint('/autocomplete/curriculumsDropdown').query();
           } else if (attrs.type === 'curriculumversion') {
             scope.options = Curriculum.queryVersions(scope.criteria);
           } else if (attrs.type === 'directivecoordinator') {

@@ -83,8 +83,7 @@ public class ScholarshipController {
     @PutMapping("/apply/{id:\\d+}")
     public ScholarshipApplicationDto apply(HoisUserDetails user, @WithEntity ScholarshipApplication application) {
         UserUtil.assertIsSchoolAdminOrStudent(user, application.getScholarshipTerm().getSchool());
-        //TODO: remove comment
-        //assertCanEditApplication(user, application);
+        assertCanEditApplication(user, application);
         return scholarshipService.getStudentApplicationDto(scholarshipService.apply(user, application));
     }
 
@@ -135,8 +134,7 @@ public class ScholarshipController {
             @Valid @RequestBody ScholarshipStudentApplicationForm form,
             @WithEntity("appId") ScholarshipApplication application) {
         UserUtil.assertIsSchoolAdminOrStudent(user, term.getSchool());
-        //TODO: remove comment
-        //assertCanEditApplication(user, application);
+        assertCanEditApplication(user, application);
         return scholarshipService
                 .getStudentApplicationDto(scholarshipService.updateApplication(user, form, application));
     }
@@ -186,7 +184,6 @@ public class ScholarshipController {
         }
     }
     
-    @SuppressWarnings("unused")
     private static void assertCanEditApplication(HoisUserDetails user, ScholarshipApplication application) {
         AssertionFailedException.throwIf(
                 user.getStudentId().longValue() != EntityUtil.getId(application.getStudent()).longValue(),

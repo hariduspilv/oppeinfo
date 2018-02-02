@@ -12,7 +12,7 @@
 </div>
 <div layout="row">
   <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-    <label>{{'stipend.applicationPeriod' | translate}}</label>
+    <label class="required">{{'stipend.applicationPeriod' | translate}}</label>
     <input type="hidden">
   </md-input-container>
   <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
@@ -24,7 +24,7 @@
 </div>
 <div layout="row">
   <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-    <label>{{'stipend.paymentPeriod' | translate}}</label>
+    <label class="required">{{'stipend.paymentPeriod' | translate}}</label>
     <input type="hidden">
   </md-input-container>
   <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
@@ -61,7 +61,7 @@
     <md-input-container flex="45">
       <label class="textInput">{{'stipend.studyLoad' | translate}}</label>
       <hois-classifier-select required ng-model="stipend.studyLoads" name="type" model-value-attr="code" main-classifier-code="OPPEKOORMUS"
-        multiple></hois-classifier-select>
+        criteria="{higher: true}" multiple></hois-classifier-select>
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.courses' | translate}}</label>
@@ -115,8 +115,7 @@
     </md-input-container>
   </div>
   <div layout="row" flex>
-    <md-checkbox ng-model="stipend.isAcademicLeave" aria-label="Is academic leave" ng-disabled="display.isAcademicLeaveRead"
-      flex="50">
+    <md-checkbox ng-model="stipend.isAcademicLeave" aria-label="Is academic leave" flex="50">
       {{'stipend.isAcademicLeave' | translate}}
     </md-checkbox>
   </div>
@@ -124,6 +123,6 @@
 <div layout="row">
   <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id" ng-click="publish()">{{'main.button.publishtoStudents' | translate}}</md-button>
-  <md-button class="md-raised" ng-if="stipend.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="stipend.id && !stipend.isOpen" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
   <md-button class="md-raised" ng-click="back('#/scholarships/scholarships', stipendForm)">{{'main.button.back' | translate}}</md-button>
 </div>

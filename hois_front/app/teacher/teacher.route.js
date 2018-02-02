@@ -52,6 +52,14 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         auth: function (AuthResolver) { return AuthResolver.resolve(); }},
       data: authorizedRoles
     })
+    .when('/teachers/:id/rtipAbsence', {
+      templateUrl: 'teacher/teacher.rtip.absence.view.html',
+      controller: 'TeacherRtipAbsenceEditController',
+      controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }},
+      data: authorizedRoles
+    })
     .when('/teachers/myData', {
       templateUrl: 'teacher/teacher.view.html',
       controller: 'TeacherViewController',

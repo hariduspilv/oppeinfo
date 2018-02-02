@@ -6,7 +6,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class CurriculumVersionHigherModuleSubjectXml {
-    
+
     private Long id;
     private Long version;
     private Long electiveModule;
@@ -16,7 +16,7 @@ public class CurriculumVersionHigherModuleSubjectXml {
     private String nameEn;
     private BigDecimal credits;
     private String code;
-    
+
     public static CurriculumVersionHigherModuleSubjectXml of(CurriculumVersionHigherModuleSubject subject) {
         CurriculumVersionHigherModuleSubjectXml xml = 
                 EntityUtil.bindToDto(subject, new CurriculumVersionHigherModuleSubjectXml(), "subject", "electiveModule");

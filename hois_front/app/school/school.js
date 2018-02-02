@@ -21,6 +21,10 @@ angular.module('hitsaOis').factory('School', ['QueryUtils',
       return QueryUtils.endpoint('/autocomplete/ldapschools').query();
     };
 
+    School.getSchoolsWithLogo = function () {
+      return QueryUtils.endpoint('/autocomplete/schoolsWithLogo').query();
+    };
+
     return School;
   }
 ]);

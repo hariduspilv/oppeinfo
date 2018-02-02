@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUserRights;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -98,7 +100,7 @@ public class SubjectService {
         subjectIds.addAll(mandatory);
         subjectIds.addAll(recommended);
         subjectIds.addAll(substitute);
-        List<Subject> subjects = subjectRepository.findAll(subjectIds);
+        List<Subject> subjects = findAllById(subjectIds);
 
         Set<SubjectConnect> connections = target.getSubjectConnections();
         Set<SubjectConnect> newConnections = new HashSet<>();
@@ -217,10 +219,16 @@ public class SubjectService {
     }
 
     public boolean isCodeUnique(Long schoolId, UniqueCommand command) {
-        if(command.getId() == null) {
-            return !subjectRepository.existsBySchoolIdAndCode(schoolId, command.getParamValue());
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject s");
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        String code = command.getParamValue();
+        if(code != null) {
+            qb.requiredCriteria("s.code = :code", "code", code);
+        } else {
+            qb.filter("s.code is null");
         }
-        return !subjectRepository.existsBySchoolIdAndCodeAndIdNot(schoolId, command.getParamValue(), command.getId());
+        qb.optionalCriteria("s.id <> :id", "id", command.getId());
+        return qb.select("s.id", em).setMaxResults(1).getResultList().isEmpty();
     }
 
     public Subject saveAndConfirm(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
@@ -240,5 +248,15 @@ public class SubjectService {
         dto.setCanSetActive(Boolean.valueOf(SubjectUserRights.canSetActive(user, subject)));
         dto.setCanSetPassive(Boolean.valueOf(SubjectUserRights.canSetPassive(user, subject)));
         return dto;
+    }
+
+    public List<Subject> findAllById(Collection<Long> subjectIds) {
+        if(subjectIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return em.createQuery("select s from Subject s where s.id in (?1)", Subject.class)
+                .setParameter(1, subjectIds)
+                .getResultList();
     }
 }

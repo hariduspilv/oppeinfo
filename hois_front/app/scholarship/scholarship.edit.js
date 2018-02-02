@@ -14,7 +14,6 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
 
     $scope.filteredStudyForm = ['OPPEVORM_P', 'OPPEVORM_Q', 'OPPEVORM_S', 'OPPEVORM_MS', 'OPPEVORM_K', 'OPPEVORM_M'];
 
-    $scope.auth = $route.current.locals.auth;
     $scope.formState = {};
     $scope.formState.priorities = Classifier.queryForDropdown({
       mainClassCode: 'PRIORITEET'
@@ -27,9 +26,16 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       $scope.templateName = templateMap[$scope.stipend.type];
       $scope.stipend.nameEt = Classifier.queryForDropdown({
         mainClassCode: 'STIPTOETUS'
-      }).find(function(it) {
+      }).find(function (it) {
         return it.code === $scope.stipend.type;
       }).nameEt;
+      if (angular.isArray($scope.formState.allowedStipendTypes) && $scope.formState.allowedStipendTypes.length === 1) {
+        if (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf($scope.formState.allowedStipendTypes[0]) !== -1) {
+          $scope.formState.typeIsScholarship = true;
+        } else {
+          $scope.formState.typeIsScholarship = false;
+        }
+      }
     };
 
     function afterLoad(result) {
@@ -51,6 +57,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
     } else {
       $scope.stipend = new Endpoint({});
       $scope.formState.allowedStipendTypes = $route.current.locals.params.allowedStipendTypes;
+      $scope.formState.typeIsScholarship = $route.current.locals.params.typeIsScholarship;
       if ($scope.formState.allowedStipendTypes.length === 1) {
         $scope.stipend.type = $scope.formState.allowedStipendTypes[0];
         $scope.stipendTypeChanged();
@@ -90,6 +97,10 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
           return;
         }
         $scope.stipend.curriculums.push($scope.formState.curriculum);
+        if($scope.stipend.curriculums.length > 0) {
+          $scope.missingCurriculums = false;
+          $scope.stipend.nameEt = $scope.missingCurriculums;
+        }
         $scope.formState.curriculum = undefined;
       }
     });
@@ -98,6 +109,10 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       var index = $scope.stipend.curriculums.indexOf(curriculum);
       if (index !== -1) {
         $scope.stipend.curriculums.splice(index, 1);
+      }
+      if($scope.stipend.curriculums.length === 0) {
+        $scope.missingCurriculums = true;
+        $scope.stipend.nameEt = $scope.missingCurriculums;
       }
     };
 
@@ -111,9 +126,9 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
           if (!formIsValid()) {
             return;
           }
-          $scope.stipend.$update({}, function() {
+          $scope.stipend.$update({}, function () {
             QueryUtils.endpoint(baseUrl + '/' + $scope.stipend.id + '/publish').put({}, function (result) {
-              afterLoad(result);
+              $route.reload();
             });
           });
         });
@@ -121,7 +136,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
 
     $scope.delete = function () {
       var deleteType;
-      if(['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'].indexOf($scope.stipend.type) !== -1) {
+      if (['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'].indexOf($scope.stipend.type) !== -1) {
         deleteType = 'stipend.confirmations.deleteGrant';
       } else {
         deleteType = 'stipend.confirmations.deleteStipend';
@@ -133,7 +148,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
         },
         function () {
           QueryUtils.endpoint(baseUrl + '/' + $scope.stipend.id + '/deleteTerm').delete({}, function () {
-            if(['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'].indexOf($scope.stipend.type) !== -1) {
+            if (['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'].indexOf($scope.stipend.type) !== -1) {
               $location.path('/scholarships/grants');
             } else {
               $location.path('/scholarships/scholarships');
@@ -174,8 +189,8 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       return otherValues.indexOf(value.code) === -1;
     };
   }
-]).controller('ScholarshipViewController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route',
-  function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route) {
+]).controller('ScholarshipViewController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'AuthService', 'USER_ROLES',
+  function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, AuthService, USER_ROLES) {
     var templateMap = {
       STIPTOETUS_POHI: 'scholarship/term/scholarship.pohi.view.html',
       STIPTOETUS_ERI: 'scholarship/term/scholarship.eri.view.html',
@@ -185,7 +200,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       STIPTOETUS_MUU: 'scholarship/term/scholarship.scho.view.html',
       STIPTOETUS_TULEMUS: 'scholarship/term/scholarship.scho.view.html'
     };
-    $scope.auth = $route.current.locals.auth;
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS);
     $scope.formState = {};
     var id = $route.current.params.id;
     var baseUrl = '/scholarships';
@@ -194,6 +209,11 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
     function afterLoad(result) {
       $scope.stipend = result;
       $scope.templateName = templateMap[result.type];
+      if (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf(result.type) !== -1) {
+        $scope.formState.typeIsScholarship = true;
+      } else {
+        $scope.formState.typeIsScholarship = false;
+      }
       $scope.curriculumsDisplay = result.curriculums.map(function (it) {
         return $scope.currentLanguageNameField(it);
       });

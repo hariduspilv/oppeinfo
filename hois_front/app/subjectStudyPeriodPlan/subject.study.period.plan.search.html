@@ -8,23 +8,26 @@
     </p>
     <br>
 
-    <form ng-submit="loadData()" layout="column" novalidate >
-        <md-input-container>
-            <label class="textInput">{{'subjectStudyPeriodPlan.studyPeriod' | translate}}</label>
-            <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required></hois-select>
-        </md-input-container>
-        <md-input-container>
-            <label class="textInput">{{'subjectStudyPeriodPlan.curriculum' | translate}}</label>
-            <hois-select ng-model="criteria.curriculum" values="curriculums"></hois-select>
-        </md-input-container>
-        <hois-autocomplete ng-model="criteria.subjectObject" url="/subjectStudyPeriodPlans/subjects" name="subject"
-                label="subjectStudyPeriodPlan.subject"
-                additional-query-params="subjectQueryParams"></hois-autocomplete>
-        <div layout="row">
-            <md-button type="submit" class="md-raised md-primary" ng-click="checkIfStudyPeriodIsPast()">{{'main.button.search' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        </div>
-    </form>
+    <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form ng-submit="loadData()" layout="column" novalidate >
+            <md-input-container>
+                <label class="textInput">{{'subjectStudyPeriodPlan.studyPeriod' | translate}}</label>
+                <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required></hois-select>
+            </md-input-container>
+            <md-input-container>
+                <label class="textInput">{{'subjectStudyPeriodPlan.curriculum' | translate}}</label>
+                <hois-select ng-model="criteria.curriculum" values="curriculums"></hois-select>
+            </md-input-container>
+            <hois-autocomplete ng-model="criteria.subjectObject" url="/subjectStudyPeriodPlans/subjects" name="subject"
+                    label="subjectStudyPeriodPlan.subject"
+                    additional-query-params="subjectQueryParams"></hois-autocomplete>
+            <div layout="row">
+                <md-button type="submit" class="md-raised md-primary" ng-click="checkIfStudyPeriodIsPast()">{{'main.button.search' | translate}}</md-button>
+                <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            </div>
+        </form>
+    </fieldset>
 </div>
 <div layout-padding>
   <div flex>
@@ -45,7 +48,7 @@
                 <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
                 <td md-cell colspan="{{capacityTypes.length + 1}}"></td>
                 <td md-cell>
-                    <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriodPlans/{{::row.subject.id}}/{{criteria.studyPeriod}}/new" ng-disabled="pastStudyPeriodSelected">{{'subjectStudyPeriodPlan.add' | translate}}
+                    <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriodPlans/{{::row.subject.id}}/{{criteria.studyPeriod}}/new" ng-disabled="pastStudyPeriodSelected">{{'subjectStudyPeriodPlan.add' | translate}}
                     </md-button>
                 </td>
             </tr>
@@ -66,7 +69,7 @@
                     {{getCapacitiesHours(capacityType.code, plan)}}
                 </td>
                 <td md-cell class="cell">
-                    <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriodPlans/{{::plan.id}}/edit" ng-disabled="pastStudyPeriodSelected">{{'main.button.change' | translate}}
+                    <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriodPlans/{{::plan.id}}/edit" ng-disabled="pastStudyPeriodSelected">{{'main.button.change' | translate}}
                     </md-button>
                 </td>
             </tr>

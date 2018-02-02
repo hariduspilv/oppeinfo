@@ -49,6 +49,7 @@ import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.HoisException;
+import ee.hitsa.ois.exception.SingleMessageWithParamsException;
 import ee.hitsa.ois.message.AcademicLeaveEnding;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.service.ekis.EkisService;
@@ -59,16 +60,18 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForField;
+import ee.hitsa.ois.web.dto.directive.DirectiveViewStudentDto;
 
 @Transactional
 @Service
 public class DirectiveConfirmService {
 
-    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Autowired
     private AutomaticMessageService automaticMessageService;
@@ -102,6 +105,7 @@ public class DirectiveConfirmService {
         }
         Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
         Set<Long> changedStudents = DirectiveType.KASKKIRI_TYHIST.equals(directiveType) ? new HashSet<>(directiveService.changedStudentsForCancel(directive.getCanceledDirective())) : Collections.emptySet();
+        List<DirectiveViewStudentDto> invalidStudents = new ArrayList<>();
         // validate each student's data for given directive
         long rowNum = 0;
         for(DirectiveStudent ds : directive.getStudents()) {
@@ -142,6 +146,23 @@ public class DirectiveConfirmService {
                 if(ds.getStudyLoad() == null && ds.getCurriculumVersion() != null && CurriculumUtil.isHigher(ds.getCurriculumVersion().getCurriculum())) {
                     allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "studyLoad")));
                 }
+            } else if(DirectiveType.KASKKIRI_STIPTOET.equals(directiveType)) {
+                // check students which do not qualify for directive
+                // status should be active and no overlapping academic leave
+                String reason = null;
+                if(academicLeaves.containsKey(EntityUtil.getId(ds.getStudent()))) {
+                    reason = "directive.scholarshipOverlapsAcademicLeave";
+                } else if(!StudentUtil.isActive(ds.getStudent())) {
+                    reason = "directive.scholarshipStudentNotActive";
+                }
+                if(reason != null) {
+                    DirectiveViewStudentDto dto = new DirectiveViewStudentDto();
+                    Person p = ds.getPerson();
+                    dto.setFullname(p.getFullname());
+                    dto.setIdcode(p.getIdcode());
+                    dto.setReason(reason);
+                    invalidStudents.add(dto);
+                }
             } else if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
                 // check that it's last modification of student
                 if(changedStudents.contains(EntityUtil.getId(ds.getStudent()))) {
@@ -162,6 +183,11 @@ public class DirectiveConfirmService {
             throw new ValidationFailedException(allErrors);
         }
 
+        if(!invalidStudents.isEmpty()) {
+            // show students which are not permitted for directive
+            throw new SingleMessageWithParamsException(null, Collections.singletonMap("invalidStudents", invalidStudents));
+        }
+
         directive = EntityUtil.save(directive, em);
         ekisService.registerDirective(EntityUtil.getId(directive));
         return directive;
@@ -173,7 +199,7 @@ public class DirectiveConfirmService {
         // • Vale staatus – tagasi lükata saab ainult „kinnitamisel“ staatusega käskkirja. „Koostamisel“ ja „Kinnitatud“ käskkirju tagasi lükata ei saa.
         // • Üldine veateade – üldine viga salvestamisel, nt liiga lühike andmeväli, vale andmetüüp vms.
         Directive directive = findDirective(directiveId, wdId);
-        log.info("directive {} rejected by ekis with reason {}", EntityUtil.getId(directive), rejectComment);
+        LOG.info("directive {} rejected by ekis with reason {}", EntityUtil.getId(directive), rejectComment);
         setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL);
         directive.setPreamble(preamble);
         directive.setAddInfo(directive.getAddInfo() != null ? (directive.getAddInfo() + " " + rejectComment) : rejectComment);
@@ -400,7 +426,7 @@ public class DirectiveConfirmService {
                         break;
                     }
                 }
-                cancelds.setCanceled(Boolean.TRUE);
+                ds.setCanceled(Boolean.TRUE);
                 cancelds.setStudentHistory(student.getStudentHistory());
                 studentService.saveWithHistory(student);
             }
@@ -420,20 +446,25 @@ public class DirectiveConfirmService {
     }
 
     private Map<Long, DirectiveStudent> findAcademicLeaves(Directive directive) {
-        if(!ClassifierUtil.equals(DirectiveType.KASKKIRI_AKADK, directive.getType())) {
+        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_AKADK, DirectiveType.KASKKIRI_STIPTOET) || directive.getStudents().isEmpty()) {
             return Collections.emptyMap();
         }
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "+
                 "inner join directive d on ds.directive_id = d.id and ds.canceled = false "+
-                "left outer join study_period sps on ds.study_period_start_id = sps.id "+
-                "left outer join study_period spe on ds.study_period_end_id = spe.id").sort(new Sort(Direction.DESC, "d.confirm_date"));
+                "left join study_period sps on ds.study_period_start_id = sps.id "+
+                "left join study_period spe on ds.study_period_end_id = spe.id").sort(new Sort(Direction.DESC, "d.confirm_date"));
 
         List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
         qb.requiredCriteria("ds.student_id in (:studentIds)", "studentIds", studentIds);
         qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_AKAD);
-        qb.requiredCriteria("ds.application_id in (select a.academic_application_id from directive_student ds2 inner join application a on ds2.application_id = a.id where ds2.directive_id = :directiveId)", "directiveId", directive.getId());
+        if(ClassifierUtil.equals(DirectiveType.KASKKIRI_AKADK, directive.getType())) {
+            qb.requiredCriteria("ds.application_id in (select a.academic_application_id from directive_student ds2 inner join application a on ds2.application_id = a.id where ds2.directive_id = :directiveId)", "directiveId", directive.getId());
+        } else {
+            // match academic leave period
+            qb.requiredCriteria("exists(select 1 from directive_student ds2 where ds2.directive_id = :directiveId and ds2.start_date <= case when ds.is_period then spe.end_date else ds.end_date end and ds2.end_date >= case when ds.is_period then sps.start_date else ds.start_date end)", "directiveId", directive.getId());
+        }
 
         List<?> data = qb.select("ds.student_id, case when ds.is_period then sps.start_date else ds.start_date end, "+
                   "case when ds.is_period then spe.end_date else ds.end_date end", em).getResultList();

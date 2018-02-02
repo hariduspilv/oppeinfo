@@ -61,7 +61,7 @@ public class StudentRepresentativeController {
         }
         // verify it's not the same person as student
         if(Objects.equals(student.getPerson().getIdcode(), form.getPerson().getIdcode())) {
-            throw new ValidationFailedException("person.idcode", "representative-and-student-are-same");
+            throw new ValidationFailedException("student.representative.samewithstudent");
         }
         studentRepresentativeService.create(student, form);
     }
@@ -76,7 +76,7 @@ public class StudentRepresentativeController {
 
     @DeleteMapping("/{studentId:\\d+}/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") StudentRepresentative representative, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        if(!UserUtil.canEditStudentRepresentative(user, representative)) {
+        if(!UserUtil.canDeleteStudentRepresentative(user, representative)) {
             throw new AssertionFailedException("User cannot delete student representative");
         }
         studentRepresentativeService.delete(user, representative);

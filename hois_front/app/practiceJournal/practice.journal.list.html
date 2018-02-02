@@ -1,83 +1,86 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form ng-if="auth.isStudent() || auth.isParent()" name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate
-      class="nomargin">
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <div flex="100" flex-sm="100" flex-xs="100">
-          <div layout="column" flex>
-            <md-input-container>
-              <label class="textInput">{{'studyYear.label' | translate}}</label>
-              <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
-            </md-input-container>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-if="auth.isStudent() || auth.isParent()" name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate
+        class="nomargin">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="100" flex-sm="100" flex-xs="100">
+            <div layout="column" flex>
+              <md-input-container>
+                <label class="textInput">{{'studyYear.label' | translate}}</label>
+                <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
+              </md-input-container>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div layout="row">
+        <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+
+      <form ng-if="!auth.isStudent() && !auth.isParent()" name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="45" flex-sm="100" flex-xs="100">
+            <div layout="column" flex>
+              <md-input-container>
+                <label class="textInput">{{'studyYear.label' | translate}}</label>
+                <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
+              </md-input-container>
+            </div>
+          </div>
+
+          <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <div layout="column" flex>
+              <md-input-container>
+                <label class="textInput">{{'studentGroup.label' | translate}}</label>
+                <hois-select ng-model="criteria.studentGroup" type="studentgroup" criteria="{valid: true}"></hois-select>
+              </md-input-container>
+            </div>
+          </div>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="!auth.isStudent()">
+          <div layout="column" flex="95" flex-sm="100">
+            <div layout="column" flex>
+              <md-input-container>
+                <label class="textInput">{{'student.label' | translate}}</label>
+                <input ng-model="criteria.studentName" type="text">
+              </md-input-container>
+            </div>
+          </div>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="45" flex-sm="100" flex-xs="100">
+            <div layout="column" flex>
+              <md-input-container>
+                <label class="textInput">{{'contract.curriculumVersion' | translate}}</label>
+                <hois-select ng-model="criteria.curriculumVersion" type="curriculumversion"></hois-select>
+              </md-input-container>
+            </div>
+          </div>
+
+          <div ng-if="!auth.isTeacher()" flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <div layout="column" flex>
+              <md-input-container>
+                <label class="textInput">{{'contract.schoolSupervisor' | translate}}</label>
+                <hois-select ng-model="criteria.teacher" type="teacher"></hois-select>
+              </md-input-container>
+            </div>
+          </div>
+        </div>
+
+        <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
-
-    <form ng-if="!auth.isStudent() && !auth.isParent()" name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <div flex="45" flex-sm="100" flex-xs="100">
-          <div layout="column" flex>
-            <md-input-container>
-              <label class="textInput">{{'studyYear.label' | translate}}</label>
-              <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
-            </md-input-container>
-          </div>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button ng-if="formState.canCreate && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK')" class="md-raised" ng-click="newPracticeJournal()">{{'practiceJournal.button.createWithoutContract' | translate}}</md-button>
         </div>
-
-        <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <div layout="column" flex>
-            <md-input-container>
-              <label class="textInput">{{'studentGroup.label' | translate}}</label>
-              <hois-select ng-model="criteria.studentGroup" type="studentgroup" criteria="{valid: true}"></hois-select>
-            </md-input-container>
-          </div>
-        </div>
-      </div>
-
-      <div layout="row" layout-sm="column" layout-xs="column" ng-if="!auth.isStudent()">
-        <div layout="column" flex="95" flex-sm="100">
-          <div layout="column" flex>
-            <md-input-container>
-              <label class="textInput">{{'student.label' | translate}}</label>
-              <input ng-model="criteria.studentName" type="text">
-            </md-input-container>
-          </div>
-        </div>
-      </div>
-
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <div flex="45" flex-sm="100" flex-xs="100">
-          <div layout="column" flex>
-            <md-input-container>
-              <label class="textInput">{{'contract.curriculumVersion' | translate}}</label>
-              <hois-select ng-model="criteria.curriculumVersion" type="curriculumversion"></hois-select>
-            </md-input-container>
-          </div>
-        </div>
-
-        <div ng-if="!auth.isTeacher()" flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <div layout="column" flex>
-            <md-input-container>
-              <label class="textInput">{{'contract.schoolSupervisor' | translate}}</label>
-              <hois-select ng-model="criteria.teacher" type="teacher"></hois-select>
-            </md-input-container>
-          </div>
-        </div>
-      </div>
-
-      <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <md-button ng-if="formState.canCreate && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK')" class="md-raised" ng-click="newPracticeJournal()">{{'practiceJournal.button.createWithoutContract' | translate}}</md-button>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>

@@ -292,6 +292,7 @@ public class StudentViewDto extends StudentForm {
     public static class StudentViewPersonDto extends StudentPersonForm {
         private String firstname;
         private String lastname;
+        private String fullname;
         private String idcode;
         private String sex;
         private String citizenship;
@@ -312,6 +313,14 @@ public class StudentViewDto extends StudentForm {
 
         public void setLastname(String lastname) {
             this.lastname = lastname;
+        }
+
+        public String getFullname() {
+            return fullname;
+        }
+
+        public void setFullname(String fullname) {
+            this.fullname = fullname;
         }
 
         public String getIdcode() {

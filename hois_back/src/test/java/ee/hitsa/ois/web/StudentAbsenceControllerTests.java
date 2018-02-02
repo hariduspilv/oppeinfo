@@ -43,7 +43,7 @@ public class StudentAbsenceControllerTests {
     @Test
     public void search() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
-        uriBuilder.queryParam("showAll", Boolean.TRUE);
+        uriBuilder.queryParam("studyYear", Long.valueOf(1));
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

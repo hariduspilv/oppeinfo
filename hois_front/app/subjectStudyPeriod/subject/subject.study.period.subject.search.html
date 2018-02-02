@@ -5,28 +5,31 @@
 </md-nav-bar>
 
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-    <form ng-submit="loadData()" layout="column" novalidate >
-            <div layout="row" layout-sm="column" layout-xs="column">
+    <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form ng-submit="loadData()" layout="column" novalidate >
+                <div layout="row" layout-sm="column" layout-xs="column">
 
-                <md-input-container flex="25" flex-sm="100" flex-xs="100">
-                    <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-                    <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required></hois-select>
-                </md-input-container>
+                    <md-input-container flex="25" flex-sm="100" flex-xs="100">
+                        <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
+                        <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required></hois-select>
+                    </md-input-container>
 
-                <hois-autocomplete flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"
-                ng-model="criteria.teacherObject" url="/subjectStudyPeriods/teachers/page" name="teacher"
-                label="subjectStudyPeriod.teacher"></hois-autocomplete>
+                    <hois-autocomplete flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"
+                    ng-model="criteria.teacherObject" url="/subjectStudyPeriods/teachers/page" name="teacher"
+                    label="subjectStudyPeriod.teacher"></hois-autocomplete>
 
-                <hois-autocomplete flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"
-                ng-model="criteria.subjectObject" url="/autocomplete/subjects" name="subject"
-                label="subjectStudyPeriod.subject"></hois-autocomplete>
+                    <hois-autocomplete flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"
+                    ng-model="criteria.subjectObject" url="/autocomplete/subjects" name="subject"
+                    label="subjectStudyPeriod.subject"></hois-autocomplete>
+                </div>
+            <div layout="row">
+                <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+                <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+                <md-button class="md-raised" ng-if="canEdit" href="#/subjectStudyPeriods/subjects/new">{{'main.button.create' | translate}}</md-button>
             </div>
-        <div layout="row">
-            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" href="#/subjectStudyPeriods/subjects/new">{{'main.button.create' | translate}}</md-button>
-        </div>
-    </form>
+        </form>
+    </fieldset>
 </div>
 
 <div layout-padding>
@@ -55,7 +58,7 @@
             </td>
             <td md-cell><a href=""></a></td>
             <td md-cell>
-                <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriods/subjects/{{row.subject.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}
+                <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/subjects/{{row.subject.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}
                 </md-button>
             </td>
           </tr>

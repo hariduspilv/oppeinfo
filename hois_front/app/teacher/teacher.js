@@ -399,6 +399,7 @@
 
     $scope.loadData();
   }]).controller('TeacherViewController', ['$scope', '$route', '$translate', 'QueryUtils', function ($scope, $route, $translate, QueryUtils) {
+    $scope.isShowingRtipTab = false;
     $scope.auth = $route.current.locals.auth;
     var auth = $route.current.locals.auth;
 
@@ -464,5 +465,37 @@
       QueryUtils.endpoint('/teachers/' + id + '/rtip').save();
       $scope.loadData();
     };
+    
+  }]).controller('TeacherRtipAbsenceEditController', ['$scope', '$route', '$translate', 'QueryUtils', function ($scope, $route, $translate, QueryUtils) {
+    var id = $route.current.params.id;
+    var Endpoint = QueryUtils.endpoint('/teachers');
+    $scope.rtipPage = true;
+
+    function afterLoad() {
+      setIsVocationalOrIsHigher($scope, $translate);
+      $scope.currentNavItem = 'teacher.rtipAbsence';
+
+      $scope.isHigher = $scope.teacher.isHigher;
+      $scope.loadData();
+    }
+
+    if (id) {
+      $scope.teacher = Endpoint.get({id: id}, afterLoad);
+    } else {
+      $scope.teacher = new Endpoint({isActive: true, isStudyPeriodScheduleLoad: true, person: {citizenship: 'RIIK_EST'}});
+    }
+
+    QueryUtils.createQueryForm($scope, '/teachers/' + id + '/absences');
+    $scope.criteria.order = '-startDate';
+    $scope.afterLoadData = function (resultData) {
+      $scope.tabledata.content = resultData.content;
+      $scope.tabledata.totalElements = resultData.totalElements;
+    };
+
+    $scope.updateData = function () {
+      QueryUtils.endpoint('/teachers/' + id + '/rtip').save();
+      $scope.loadData();
+    };
+
   }]);
 }());

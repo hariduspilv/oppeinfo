@@ -1,22 +1,25 @@
 <div layout-padding>
   <div flex>
-    <form ng-submit="loadData()" novalidate>
-      <div layout="row">
-        <div flex-xs="100" flex-gt-xs="100" flex-gt-sm="50" layout="column">
-          <!--div class="indentForToast"></div-->
-          <md-input-container>
-            <label class="textInput">{{'school.name' | translate}}</label>
-            <input ng-model="criteria.name" name="name" type="text" autofocus>
-          </md-input-container>
-          <div layout="row">
-            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="#/school/new">{{'main.button.create' | translate}}</md-button>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate>
+        <div layout="row">
+          <div flex-xs="100" flex-gt-xs="100" flex-gt-sm="50" layout="column">
+            <!--div class="indentForToast"></div-->
+            <md-input-container>
+              <label class="textInput">{{'school.name' | translate}}</label>
+              <input ng-model="criteria.name" name="name" type="text" autofocus>
+            </md-input-container>
+            <div layout="row">
+              <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+              <md-button class="md-raised" ng-href="#/school/new">{{'main.button.create' | translate}}</md-button>
+            </div>
           </div>
+          <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
         </div>
-        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-      </div>
-    </form>
+      </form>
+    </fieldset>
   </div>
 </div>
 

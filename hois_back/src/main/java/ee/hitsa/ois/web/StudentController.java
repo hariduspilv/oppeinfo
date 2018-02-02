@@ -140,7 +140,7 @@ public class StudentController {
     }
 
     @PostMapping("/ehisStudentExport")
-    public EhisStudentReport ehisExportStudents(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
+    public List<? extends EhisStudentReport> ehisStudentExport(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
         assertIsSchoolAdmin(user);
         return ehisStudentService.exportStudents(user.getSchoolId(), ehisStudentForm);
     }

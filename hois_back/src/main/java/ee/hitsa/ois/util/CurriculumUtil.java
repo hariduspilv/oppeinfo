@@ -23,10 +23,6 @@ public abstract class CurriculumUtil {
 
     public static final BigDecimal HOURS_PER_EKAP = BigDecimal.valueOf(26);
 
-    public static Long id(Curriculum curriculum) {
-        return curriculum.getId();
-    }
-
     public static boolean isHigher(Curriculum curriculum) {
         return Boolean.TRUE.equals(curriculum.getHigher());
     }
@@ -37,6 +33,10 @@ public abstract class CurriculumUtil {
 
     public static boolean isCurriculumVersionConfirmed(CurriculumVersion version) {
         return ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K, version.getStatus());
+    }
+    
+    public static String curriculumName(String curriculumCode, String curriculumName) {
+        return curriculumCode+" - "+curriculumName;
     }
 
     public static String moduleName(String moduleName, String moduleClassifierName, String curriculumCode) {

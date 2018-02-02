@@ -1,29 +1,32 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-    <div flex>
-        <form ng-submit="loadData()" novalidate class="nomargin">
-            <div layout="row" layout-sm="column" layout-xs="column">
-                <div flex="50" flex-sm="100" flex-xs="100">
-                    <hois-autocomplete flex ng-model="criteria.teacher" method="teachers" name="teacher" label="timetable.search.teacher"></hois-autocomplete>
-                </div>
-                <div flex="50" flex-sm="100" flex-xs="100">
-                    <hois-autocomplete flex ng-model="criteria.studentGroup" method="studentgroups" name="studentGroups" label="timetable.search.studentGroup"></hois-autocomplete>
-                </div>
-            </div>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate class="nomargin">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="50" flex-sm="100" flex-xs="100">
+            <hois-autocomplete flex ng-model="criteria.teacher" method="teachers" name="teacher" label="timetable.search.teacher"></hois-autocomplete>
+          </div>
+          <div flex="50" flex-sm="100" flex-xs="100">
+            <hois-autocomplete flex ng-model="criteria.studentGroup" method="studentgroups" name="studentGroups" label="timetable.search.studentGroup"></hois-autocomplete>
+          </div>
+        </div>
 
-            <div layout="row" layout-sm="column" layout-xs="column">
-                <div flex="50" flex-sm="100" flex-xs="100">
-                    <hois-autocomplete flex ng-model="criteria.roomObject" method="rooms" name="rooms" label="timetable.search.room"></hois-autocomplete>
-                </div>
-                <div flex="50" flex-sm="100" flex-xs="100">
-                    <hois-autocomplete flex ng-model="criteria.subjectObject" method="journalsAndSubjects" name="subject" label="timetable.search.subject"></hois-autocomplete>
-                </div>
-            </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="50" flex-sm="100" flex-xs="100">
+            <hois-autocomplete flex ng-model="criteria.roomObject" method="rooms" name="rooms" label="timetable.search.room"></hois-autocomplete>
+          </div>
+          <div flex="50" flex-sm="100" flex-xs="100">
+            <hois-autocomplete flex ng-model="criteria.subjectObject" method="journalsAndSubjects" name="subject" label="timetable.search.subject"></hois-autocomplete>
+          </div>
+        </div>
 
-            <div layout="row">
-                <md-button ng-click="search()" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-                <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            </div>
-            <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>  
-        </form>
-    </div>
+        <div layout="row">
+          <md-button ng-click="search()" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
 </div>

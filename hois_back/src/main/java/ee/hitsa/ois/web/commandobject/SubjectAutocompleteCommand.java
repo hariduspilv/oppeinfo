@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.commandobject;
 
-public class SubjectAutocompleteCommand extends AutocompleteCommand {
+public class SubjectAutocompleteCommand extends SearchCommand {
 
     private Boolean practice;
     private Boolean withCredits = Boolean.TRUE;
@@ -56,5 +56,4 @@ public class SubjectAutocompleteCommand extends AutocompleteCommand {
     public void setOtherStudents(Boolean otherStudents) {
         this.otherStudents = otherStudents;
     }
-    
 }

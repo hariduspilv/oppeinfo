@@ -29,6 +29,7 @@ import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.enums.ScholarshipType;
 import ee.hitsa.ois.service.DirectiveService;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
@@ -126,6 +127,9 @@ public class DirectiveControllerTests {
             // student has application
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/directives/findstudents");
             uriBuilder.queryParam("type", directiveType.name());
+            if(DirectiveType.KASKKIRI_STIPTOET.equals(directiveType)) {
+                uriBuilder.queryParam("scholarshipType", ScholarshipType.STIPTOETUS_POHI.name());
+            }
             uriBuilder.queryParam("application", "true");
             responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
             Assert.assertNotNull(responseEntity);
@@ -134,6 +138,9 @@ public class DirectiveControllerTests {
             // student does not have application
             uriBuilder = UriComponentsBuilder.fromUriString("/directives/findstudents");
             uriBuilder.queryParam("type", directiveType.name());
+            if(DirectiveType.KASKKIRI_STIPTOET.equals(directiveType)) {
+                uriBuilder.queryParam("scholarshipType", ScholarshipType.STIPTOETUS_POHI.name());
+            }
             responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
             Assert.assertNotNull(responseEntity);
             Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol;
+package ee.hitsa.ois.web.commandobject.finalexamprotocol;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import ee.hitsa.ois.web.commandobject.VersionedCommand;
 public class FinalExamVocationalProtocolSaveForm extends VersionedCommand {
 
     private Long committeeId;
-    private List<FinalExamVocationalProtocolCommitteeMemberForm> protocolCommitteeMembers;
+    private List<FinalExamProtocolCommitteeMemberForm> protocolCommitteeMembers;
     private List<FinalExamVocationalProtocolStudentSaveForm> protocolStudents;
     
     public Long getCommitteeId() {
@@ -18,11 +18,11 @@ public class FinalExamVocationalProtocolSaveForm extends VersionedCommand {
         this.committeeId = committeeId;
     }
 
-    public List<FinalExamVocationalProtocolCommitteeMemberForm> getProtocolCommitteeMembers() {
+    public List<FinalExamProtocolCommitteeMemberForm> getProtocolCommitteeMembers() {
         return protocolCommitteeMembers;
     }
 
-    public void setProtocolCommitteeMembers(List<FinalExamVocationalProtocolCommitteeMemberForm> protocolCommitteeMembers) {
+    public void setProtocolCommitteeMembers(List<FinalExamProtocolCommitteeMemberForm> protocolCommitteeMembers) {
         this.protocolCommitteeMembers = protocolCommitteeMembers;
     }
 

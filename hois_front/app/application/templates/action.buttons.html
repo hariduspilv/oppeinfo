@@ -5,6 +5,6 @@
 
 <div ng-if="!isStudentRepresentative()">
   <md-button ng-if="application.id > 0 && application.status === 'AVALDUS_STAATUS_KOOST' && (application.needsRepresentativeConfirm === false || auth.isAdmin())" ng-click="submit()" class="md-raised md-primary">{{'main.button.submit' | translate}}</md-button>
-  <md-button ng-if="application.id > 0 && application.status === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin()" class="md-raised" ng-click="reject()">{{'main.button.reject' | translate}}</md-button>
+  <md-button ng-if="application.id > 0 && (application.status === 'AVALDUS_STAATUS_YLEVAAT' || (application.status === 'AVALDUS_STAATUS_KOOST' && application.needsRepresentativeConfirm)) && auth.isAdmin()" class="md-raised" ng-click="reject()">{{'main.button.reject' | translate}}</md-button>
   <md-button ng-if="application.id > 0 && application.status === 'AVALDUS_STAATUS_KOOST' && application.needsRepresentativeConfirm === false" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
 </div>

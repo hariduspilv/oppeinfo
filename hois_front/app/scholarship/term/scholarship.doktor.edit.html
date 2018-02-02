@@ -46,7 +46,7 @@
 </div>
 <div>
   <div layout="row" flex="100">
-    <hois-autocomplete flex ng-model="formState.curriculum" method="curriculums" label="stipend.curriculums"></hois-autocomplete>
+    <hois-autocomplete flex ng-model="formState.curriculum" method="curriculums" label="stipend.curriculums" ng-required="missingCurriculums"></hois-autocomplete>
   </div>
   <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in stipend.curriculums">
     <div layout="row" flex layout-align="start center">
@@ -60,7 +60,7 @@
   <div layout="row" flex>
     <md-input-container flex="45">
       <label class="textInput">{{'stipend.studyLoad' | translate}}</label>
-      <hois-classifier-select required ng-model="stipend.studyLoads" name="type" model-value-attr="code" main-classifier-code="OPPEKOORMUS"
+      <hois-classifier-select required ng-model="stipend.studyLoads" name="type" model-value-attr="code" main-classifier-code="OPPEKOORMUS" criteria="{higher: true}"
         multiple></hois-classifier-select>
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
@@ -85,6 +85,6 @@
 <div layout="row">
   <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id" ng-click="publish()">{{'main.button.publishtoStudents' | translate}}</md-button>
-  <md-button class="md-raised" ng-if="stipend.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="stipend.id && !stipend.isOpen" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
   <md-button class="md-raised" ng-click="back('#/scholarships/grants', stipendForm)">{{'main.button.back' | translate}}</md-button>
 </div>

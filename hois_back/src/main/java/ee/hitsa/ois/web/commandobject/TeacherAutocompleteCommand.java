@@ -1,7 +1,7 @@
 package ee.hitsa.ois.web.commandobject;
 
 
-public class TeacherAutocompleteCommand extends AutocompleteCommand {
+public class TeacherAutocompleteCommand extends SearchCommand {
 
     private Boolean valid;
 

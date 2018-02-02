@@ -1,43 +1,46 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form ng-submit="loadData()" layout="column">
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label>{{'reception.admission.code' | translate}}</label>
-            <hois-select ng-model="criteria.code" type="saisadmissioncode" value-property="nameEt"></hois-select>
-          </md-input-container>
-      </div>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" layout="column">
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label>{{'reception.admission.code' | translate}}</label>
+              <hois-select ng-model="criteria.code" type="saisadmissioncode" value-property="nameEt"></hois-select>
+            </md-input-container>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label>{{'student.curriculum' | translate}}</label>
-            <hois-select ng-model="criteria.curriculumVersion" type="curriculumversion" criteria="{sais: true}"></hois-select>
-          </md-input-container>
-      </div>
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label>{{'student.curriculum' | translate}}</label>
+              <hois-select ng-model="criteria.curriculumVersion" type="curriculumversion" criteria="{sais: true}"></hois-select>
+            </md-input-container>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label>{{'student.studyForm' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code"
-                main-classifier-code="OPPEVORM"></hois-classifier-select>
-          </md-input-container>
-      </div>
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label>{{'student.studyForm' | translate}}</label>
+              <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code"
+                  main-classifier-code="OPPEVORM"></hois-classifier-select>
+            </md-input-container>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label>{{'student.fin' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.fin" model-value-attr="code"
-                main-classifier-code="FINALLIKAS"></hois-classifier-select>
-          </md-input-container>
-      </div>
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label>{{'student.fin' | translate}}</label>
+              <hois-classifier-select ng-model="criteria.fin" model-value-attr="code"
+                  main-classifier-code="FINALLIKAS"></hois-classifier-select>
+            </md-input-container>
+        </div>
 
 
-      <div layout="row">
-          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
+        <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>

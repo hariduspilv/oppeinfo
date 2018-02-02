@@ -154,7 +154,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
         result.height = '100%';
       }
       return result;
-    }
+    };
 
     $scope.getEventForLessonTime = function (lessonTime, groupEvents) {
       var event;
@@ -494,7 +494,12 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
               var currEvent = initialLessons[ilCount];
               var currEndTime;
               var colspan = 0;
+              //dont draw the lesson if the current even is out of bounds
+              if(currEvent.start.getHours() < 7 || currEvent.end.getHours() < 7 || currEvent.start.getHours() === 23) {
+                continue;
+              }
               //while the dates of current event starting and the block to draw are different
+              //draw blocks until the start time is the same as 
               while (startTime.toDateString() !== currEvent.start.toDateString()) {
                 currEndTime = new Date(startTime.getTime());
                 currEndTime.setHours(23);

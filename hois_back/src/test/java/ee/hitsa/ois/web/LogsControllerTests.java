@@ -108,6 +108,14 @@ public class LogsControllerTests {
     }
 
     @Test
+    public void ehisGet() {
+        String url = "/logs/ehis/0?messageType=laeKorgharidus";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void ekisLog() {
         String url = "/logs/ekis";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
@@ -118,6 +126,14 @@ public class LogsControllerTests {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void ekisGet() {
+        String url = "/logs/ekis/0?messageType=registerDirective";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
     }
 
     @Test
@@ -134,6 +150,14 @@ public class LogsControllerTests {
     }
 
     @Test
+    public void kutseregisterGet() {
+        String url = "/logs/kutseregister/0?messageType=kutseregister.kutsetunnistus";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void rtipLog() {
         String url = "/logs/rtip";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
@@ -147,6 +171,14 @@ public class LogsControllerTests {
     }
 
     @Test
+    public void rtipGet() {
+        String url = "/logs/rtip/0?messageType=sap.tootajaPohiandmed";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void saisLog() {
         String url = "/logs/sais";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
@@ -157,5 +189,13 @@ public class LogsControllerTests {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void saisGet() {
+        String url = "/logs/sais/0?messageType=sais2.AllAdmissionsExport";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
     }
 }

@@ -1,59 +1,62 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form ng-submit="loadData()" layout="column">
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label>{{'reception.admission.code' | translate}}</label>
-            <hois-select ng-model="criteria.code" type="saisadmissioncode" value-property="nameEt" multiple></hois-select>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" layout="column">
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label>{{'reception.admission.code' | translate}}</label>
+              <hois-select ng-model="criteria.code" type="saisadmissioncode" value-property="nameEt" multiple></hois-select>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label>{{'reception.application.status' | translate}}</label>
+              <hois-classifier-select ng-model="criteria.status" model-value-attr="code"
+                  main-classifier-code="SAIS_AVALDUSESTAATUS" multiple></hois-classifier-select>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label class="textInput">{{'reception.application.candidateName' | translate}}</label>
+              <input ng-model="criteria.name" type="text">
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="100">
+              <label class="textInput">{{'reception.application.candidateIdCode' | translate}}</label>
+              <input ng-model="criteria.idcode" type="text">
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="criteria.showRevoked" aria-label="show revoked">
+              {{'reception.application.showRevoked' | translate}}
+            </md-checkbox>
           </md-input-container>
-      </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label>{{'reception.application.status' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.status" model-value-attr="code"
-                main-classifier-code="SAIS_AVALDUSESTAATUS" multiple></hois-classifier-select>
+          <md-input-container flex="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="criteria.addedToDirective" aria-label="added to directive">
+              {{'reception.application.showAddedToDirective' | translate}}
+            </md-checkbox>
           </md-input-container>
-      </div>
-
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'reception.application.candidateName' | translate}}</label>
-            <input ng-model="criteria.name" type="text">
-          </md-input-container>
-      </div>
-
-      <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'reception.application.candidateIdCode' | translate}}</label>
-            <input ng-model="criteria.idcode" type="text">
-          </md-input-container>
-      </div>
-
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="30" flex-sm="100" flex-xs="100">
-          <md-checkbox ng-model="criteria.showRevoked" aria-label="show revoked">
-            {{'reception.application.showRevoked' | translate}}
-          </md-checkbox>
-        </md-input-container>
-
-        <md-input-container flex="30" flex-sm="100" flex-xs="100">
-          <md-checkbox ng-model="criteria.addedToDirective" aria-label="added to directive">
-            {{'reception.application.showAddedToDirective' | translate}}
-          </md-checkbox>
-        </md-input-container>
-      </div>
+        </div>
 
 
-      <div layout="row">
-          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="importFromCsvFile()">{{'main.button.importFromCsvFile' | translate}}</md-button>
-          <a ng-href="{{classifiersFileUrl}}" class="md-button md-raised">{{'main.button.classifiersFile' | translate}}</a>
-          <a ng-href="{{csvSampleFileUrl}}" class="md-button md-raised">{{'main.button.csvSampleFile' | translate}}</a>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
+        <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="canEdit" ng-click="importFromCsvFile()">{{'main.button.importFromCsvFile' | translate}}</md-button>
+            <a ng-href="{{classifiersFileUrl}}" class="md-button md-raised">{{'main.button.classifiersFile' | translate}}</a>
+            <a ng-href="{{csvSampleFileUrl}}" class="md-button md-raised">{{'main.button.csvSampleFile' | translate}}</a>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>

@@ -1,0 +1,80 @@
+<!--FIXME: IE does not show this form correctly-->
+<div class="ois-form-layout form-readonly" layout="column" layout-margin ng-cloak>
+  <form name="schoolYearForm" layout="column">
+    <div layout="column" flex>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex>
+          <label class="label">{{'studyYear.year' | translate}}</label>
+          <hois-classifier-value ng-model="studyYear.year" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex="20">
+          <label>{{'studyYear.startDate' | translate}}</label>
+          <hois-value value="studyYear.startDate | hoisDate"></hois-value>
+        </md-input-container>
+        <md-input-container flex="20" flex-offset="5">
+          <label>{{'studyYear.endDate' | translate}}</label>
+          <hois-value value="studyYear.endDate | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
+    </div>
+    <div ng-if="studyYear.id" layout="column" flex>
+      <div>&nbsp;</div>
+      <fieldset tabindex="1">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'studyYear.studyPeriods' | translate}}</legend>
+
+        <div layout="row">
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'studyYear.studyPeriod.type' | translate}}</th>
+                <th md-column>{{'studyYear.studyPeriod.name' | translate}}</th>
+                <th md-column>{{'studyYear.studyPeriod.startDate' | translate}}</th>
+                <th md-column>{{'studyYear.studyPeriod.endDate' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="item in studyPeriods | orderBy: ['startDate', 'endDate', 'id']" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{currentLanguageNameField(item.type)}}</td>
+                <td md-cell>{{currentLanguageNameField(item)}}</td>
+                <td md-cell>{{item.startDate | hoisDate}}</td>
+                <td md-cell>{{item.endDate | hoisDate}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </fieldset>
+      <div>&nbsp;</div>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'studyYear.studyPeriodEvents' | translate}}</legend>
+        <div layout="row">
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'studyYear.studyPeriodEvent.period' | translate}}</th>
+                <th md-column>{{'studyYear.studyPeriodEvent.eventType' | translate}}</th>
+                <th md-column>{{'studyYear.studyPeriodEvent.description' | translate}}</th>
+                <th md-column>{{'studyYear.studyPeriodEvent.start' | translate}}</th>
+                <th md-column>{{'studyYear.studyPeriodEvent.end' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="item in studyPeriodEvents | orderBy: ['start', 'end', 'id']" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{currentLanguageNameField(item.studyPeriod)}}</td>
+                <td md-cell>{{currentLanguageNameField(eventTypes[item.eventType])}}</td>
+                <td md-cell>{{currentLanguage()==='en' ?(item.descriptionEn || item.descriptionEt) : item.descriptionEt}}</td>
+                <td md-cell>{{item.start | hoisDateTimeMin}}</td>
+                <td md-cell>{{item.end | hoisDateTimeMin}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </fieldset>
+    </div>
+    <div layout="row">
+      <md-button ng-if="canEdit" ng-href="#/school/studyYears/{{::studyYear.id}}/edit" class="md-raised md-primary">{{'main.button.edit' | translate}}</md-button>
+      <md-button ng-href="#/school/studyYears" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    </div>
+  </form>
+</div>

@@ -44,18 +44,25 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
       }
     });
 
+    $scope.targetChanged = function() {
+      if ($scope.generalMessageForm.$submitted) {
+        $scope.generalMessageForm.$setPristine();
+      }
+    };
+
     $scope.isFormValid = function() {
       return $scope.generalMessageForm.$valid;
     };
 
     $scope.update = function() {
       $scope.generalMessageForm.$setSubmitted();
-      if(!$scope.isFormValid()) {
+
+      $scope.record.targets = Classifier.getSelectedCodes($scope.roleDefs);
+
+      if (!$scope.isFormValid() || $scope.record.targets.length === 0) {
         message.error('main.messages.form-has-errors');
         return;
       }
-
-      $scope.record.targets = Classifier.getSelectedCodes($scope.roleDefs);
 
       if($scope.record.id) {
         $scope.record.$update(afterLoad).then(message.updateSuccess);

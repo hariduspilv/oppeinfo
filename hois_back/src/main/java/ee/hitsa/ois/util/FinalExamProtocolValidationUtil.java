@@ -5,6 +5,12 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
 public class FinalExamProtocolValidationUtil {
+    
+    public static void assertCanCreateHigherProtocol(HoisUserDetails user) {
+        if(FinalExamProtocolUtil.canCreateHigherProtocol(user)) {
+            throw new ValidationFailedException("finalExamProtocol.error.noPermissionToCreate");
+        }
+    }
 
     public static void assertIsSchoolAdminOrTeacherResponsible(HoisUserDetails user, Long teacherId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
@@ -14,13 +20,13 @@ public class FinalExamProtocolValidationUtil {
     }
 
     public static void assertCanEdit(HoisUserDetails user, Protocol protocol) {
-        if(!ModuleProtocolUtil.canEdit(user, protocol)) {
+        if(!FinalExamProtocolUtil.canEdit(user, protocol)) {
             throw new ValidationFailedException("finalExamProtocol.error.noPermissionToEdit");
         }
     }
 
     public static void assertCanDelete(HoisUserDetails user, Protocol protocol) {
-        if(!ModuleProtocolUtil.canDelete(user, protocol)) {
+        if(!FinalExamProtocolUtil.canDelete(user, protocol)) {
             throw new ValidationFailedException("finalExamProtocol.error.noPermissionToDelete");
         }
     }

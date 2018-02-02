@@ -1,47 +1,62 @@
 <div layout-padding>
   <div ng-if="state.currentUser" ng-controller="AuthenticatedHomeController as ctrl">
-    <span>{{ 'home.greeting' | translate }}</span>
-    <br>
-    <br>
-    <a href="https://kratt.edu.ee" target="_blank" rel="noopener">Kratt</a>
-    <br>
-    <br>
-    <a ng-href="/#/studentrepresentatives/applications/new?_menu">{{'home.represantiveApplication' | translate}}</a>
-    <br>
-    <br>
+    <!--div style="margin-bottom: 8px;" layout="row" >
+      <a style="font-size: 13px; font-weight: normal; min-height: inherit; line-height: inherit; padding: 0;" class="md-primary md-hue-2 md-button md-ink-ripple" ng-href="/#/studentrepresentatives/applications/new?_menu">{{'home.represantiveApplication' | translate}}</a>
+    </div-->
     <div ng-if="hasUnacceptedAbsences">
-      <span>{{'absence.youHaveUnacceptedAbsences' | translate}}</span>
-      <a ng-href="/#/absences?_menu">{{'main.button.view' | translate}}</a>
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'warn'}">
+          <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+          <span>{{'absence.youHaveUnacceptedAbsences' | translate}} <a ng-href="/#/absences?_menu">{{'main.button.view' | translate}}</a></span>
+        </div>
+      </md-whiteframe>
     </div>
-    <br>
-    <div ng-class="{unconfirmedFinishedJournals: unconfirmedJournals.anyFinished}" ng-if="unconfirmedJournals && unconfirmedJournals.count > 0">
-        <span>{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
+    <div ng-if="unconfirmedJournals && unconfirmedJournals.count > 0">
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'accent'}">
+          <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+          <span>{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
+        </div>
+      </md-whiteframe>
+      <br>
     </div>
-    <br>
 
-    <h3 ng-if="expiringOccupationStandards && expiringOccupationStandards.length > 0">{{'home.expiringOccupationStandards.title' | translate}}
-      <span ng-if="expiringOccupationStandards && expiringOccupationStandards.length > 3">
+    <hois-collapsable  ng-if="expiringOccupationStandards && expiringOccupationStandards.length > 0" label="('home.expiringOccupationStandards.title' | translate)" link="(numberOfOccupationStandards? 'main.button.view' : 'main.button.hide')|translate" action="toggleNumberOfOccupationStandards()" ngif="expiringOccupationStandards && expiringOccupationStandards.length > 3">
+      <!--span ng-if="expiringOccupationStandards && expiringOccupationStandards.length > 3">
         <md-button class="md-primary" ng-click="toggleNumberOfOccupationStandards()">{{(numberOfOccupationStandards? 'main.button.view' : 'main.button.hide')|translate}}</md-button>
-      </span>
-    </h3>
-    <md-table-container>
-      <table md-table>
-        <tbody md-body>
-          <tr md-row ng-repeat="row in expiringOccupationStandards | limitTo:numberOfOccupationStandards" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell width="40%">{{::currentLanguageNameField(row)}}</td>
-            <td md-cell width="10%">{{::row.validThru | hoisDate}}</td>
-            <td md-cell>{{'home.expiringOccupationStandards.curriculum' | translate}}&nbsp;{{::row.curriculums.join(', ')}}</td>
-          </tr>
-        </tbody>
-      </table>
-    </md-table-container>
+      </span-->
+      <!--md-content>
+        <md-list>
+          <md-list-item class="md-3-line" ng-repeat="row in expiringOccupationStandards | limitTo:numberOfOccupationStandards">
+            <div class="md-list-item-text" layout="row" flex>
+              <div flex="40">{{::currentLanguageNameField(row)}}</div>
+              <div flex="20">{{::row.validThru | hoisDate}}</div>
+              <div flex="40">{{'home.expiringOccupationStandards.curriculum' | translate}}&nbsp;{{::row.curriculums.join(', ')}}</div>
+            </div>
+            <md-divider></md-divider>
+          </md-list-item>
+        </md-list>
+      </md-content-->
+      <md-table-container>
+        <table md-table>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in expiringOccupationStandards | limitTo:numberOfOccupationStandards">
+              <td md-cell width="40%">{{::currentLanguageNameField(row)}}</td>
+              <td md-cell width="10%">{{::row.validThru | hoisDate}}</td>
+              <td md-cell>{{'home.expiringOccupationStandards.curriculum' | translate}}&nbsp;{{::row.curriculums.join(', ')}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+  </hois-collapsable>
 
-    <br>
-    <h3>{{'home.generalmessages' | translate}}</h3>
+
+
+  <hois-collapsable label="('home.generalmessages' | translate)">
     <md-table-container>
       <table md-table md-progress="generalmessages.$promise">
         <tbody md-body>
-          <tr md-row ng-repeat="row in generalmessages.content" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-repeat="row in generalmessages.content">
             <td md-cell width="10%">{{::row.inserted | hoisDate}}</td>
             <td md-cell width="40%">
               <h4>{{::row.title}}</h4>
@@ -57,15 +72,17 @@
       </table>
     </md-table-container>
     <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]" ng-if="generalmessages.totalElements > criteria.size"
-                         md-page="criteria.page" md-total="{{generalmessages.totalElements}}" md-on-paginate="loadGeneralMessages"
-                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+      md-page="criteria.page" md-total="{{generalmessages.totalElements}}" md-on-paginate="loadGeneralMessages"
+      md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </hois-collapsable>
 
-    <h3 ng-show="showUnreadMessages">{{'message.messages' | translate}}</h3>
-    <h5 ng-show="showUnreadMessages" ng-if="unreadMessages.content.length === 0">{{'message.noNewMessages' | translate}}</h5>
+
+    <hois-collapsable ng-show="showUnreadMessages && unreadMessages.content.length > 0" label="('message.messages' | translate)" expanded="false">
+    <!--h5 ng-show="showUnreadMessages" ng-if="unreadMessages.content.length === 0">{{'message.noNewMessages' | translate}}</h5-->
     <md-table-container ng-show="showUnreadMessages">
       <table md-table md-progress="unreadMessages.$promise">
         <tbody md-body>
-          <tr md-row ng-repeat="row in unreadMessages.content" ng-class-odd="'odd'" ng-class-even="'even'" ng-click="readMessage(row)">
+          <tr md-row ng-repeat="row in unreadMessages.content" ng-click="readMessage(row)">
             <td md-cell width="10%">{{::row.dateSent | hoisDateTime}}</td>
             <td md-cell width="40%"><h4>{{::row.subject}}</h4>
                 <div ng-show="row.clicked">
@@ -82,6 +99,8 @@
         </tbody>
       </table>
     </md-table-container>
+    </hois-collapsable>
+
 
     <div ng-controller="StudentHomeController">
       <div ng-if="sessionStudentId" ng-include="'home/home.student.html'"></div>
@@ -89,12 +108,24 @@
 
   </div>
   <div ng-if="!state.currentUser">
-    <span>{{ 'home.joinedSchools' | translate }}</span>
+    <md-grid-list md-cols="1" md-cols-sm="2" md-cols-md="3" md-cols-gt-md="6" md-row-height-gt-md="1:1" md-row-height="4:3"
+      md-gutter="8px" md-gutter-gt-sm="4px">
+      <md-grid-tile ng-repeat="school in schools" md-colspan="1">
+        <img class="schoolTileImage" ng-src="data:image/JPEG;base64,{{school.logo}}" on-error-src="images/HITSA_innov_logo_03.png">
+        <md-grid-tile-footer class="schoolTileFooter">
+          <span>{{currentLanguageNameField(school)}}</span>
+        </md-grid-tile-footer>
+      </md-grid-tile>
+    </md-grid-list>
+
+    <!--
     <md-list>
       <md-list-item ng-repeat="school in schools">
         <span>{{currentLanguageNameField(school)}}</span>
+        <img style="height:50px;width:50px" ng-src="data:image/JPEG;base64,{{school.logo}}">
       </md-list-item>
     </md-list>
+  -->
   </div>
 </div>
 

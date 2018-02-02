@@ -120,7 +120,7 @@ public class SaisApplicationService {
             MainClassCode.SAIS_AVALDUSESTAATUS, MainClassCode.OPPEASTE, MainClassCode.OPPEKEEL, MainClassCode.OPPEKOORMUS, MainClassCode.OPPEVORM);
 
     private static final String SAIS_APPLICATION_FROM = "from (select a.id, a.application_nr, a.idcode, a.firstname, a.lastname, a.status_code,"+
-            "sais_admission.code as sais_admission_code, (exists (select id from directive_student where directive_student.sais_application_id = a.id)) as added_to_directive, curriculum.school_id as school_id from sais_application a "+
+            "sais_admission.code as sais_admission_code, (exists (select id from directive_student where directive_student.sais_application_id = a.id and canceled = false)) as added_to_directive, curriculum.school_id as school_id from sais_application a "+
             "inner join sais_admission on sais_admission.id = a.sais_admission_id "+
             "inner join classifier status on a.status_code = status.code "+
             "left join curriculum_version on curriculum_version.id = sais_admission.curriculum_version_id "+
@@ -728,10 +728,10 @@ public class SaisApplicationService {
     }
 
     private Map<Long, Long> directiveStudentsWithSaisApplication(List<Long> saisApplicationIds) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds");
-        qb.requiredCriteria("ds.sais_application_id in (:saisApplicationIds)", "saisApplicationIds", saisApplicationIds);
-
-        List<?> data = qb.select("ds.sais_application_id, ds.id", em).getResultList();
+        List<?> data = em.createNativeQuery("select ds.sais_application_id, ds.id from directive_student ds where "+
+                "ds.sais_application_id in (?1) and ds.canceled = false")
+            .setParameter(1, saisApplicationIds)
+            .getResultList();
         return data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsLong(r, 1), (o, n) -> o));
     }
 

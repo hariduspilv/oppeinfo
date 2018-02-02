@@ -1,6 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ReceptionSaisApplicationListController', function ($scope, QueryUtils, Classifier, dialogService, oisFileService, config) {
+angular.module('hitsaOis').controller('ReceptionSaisApplicationListController', 
+function ($scope, QueryUtils, Classifier, dialogService, oisFileService, config, USER_ROLES, AuthService) {
+  $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_VASTUVOTT);
   var clMapper = Classifier.valuemapper({ status: 'SAIS_AVALDUSESTAATUS' });
   QueryUtils.createQueryForm($scope, '/saisApplications', { order: 'applicationNr' }, clMapper.objectmapper);
   $scope.loadData();

@@ -1,0 +1,13 @@
+<div layout-padding>
+  <md-grid-list md-cols="1" md-cols-sm="2" md-cols-md="3" md-cols-gt-md="6" md-row-height-gt-md="1:1" md-row-height="4:3" md-gutter="8px"
+    md-gutter-gt-sm="4px">
+      <md-grid-tile ng-repeat="school in schools" md-colspan="1">
+        <button class="schoolTileButton" ng-click="openSchoolAcademicCalendar(school.id)">
+          <img class="schoolTileImage" ng-src="data:image/JPEG;base64,{{school.logo}}" on-error-src="images/HITSA_innov_logo_03.png">
+          <md-grid-tile-footer class="schoolTileFooter">
+            <span>{{currentLanguageNameField(school)}}</span>
+          </md-grid-tile-footer>
+        </button>
+      </md-grid-tile>
+  </md-grid-list>
+</div>

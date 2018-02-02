@@ -1,8 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('studyYearScheduleLegendController', ['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'dialogService',
-  function ($scope, QueryUtils, ArrayUtils, message, dialogService) {
+angular.module('hitsaOis').controller('studyYearScheduleLegendController', 
+  function ($scope, QueryUtils, ArrayUtils, message, dialogService, USER_ROLES, AuthService) {
     $scope.removedInUseLegend = false;
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPETOOGRAAFIK);
 
     var DEFAULT_VALUES = [{
         code: "E",
@@ -106,7 +107,7 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController', ['$sc
       } else {
         $scope.save();
       }
-    }
+    };
 
     // function formIsValid() {
     //     var invalidElements = $scope.legends.filter(function(el){
@@ -152,10 +153,12 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController', ['$sc
     };
 
     $scope.changeEditable = function (legend) {
-      $scope.legends.forEach(function (l) {
-        l.edited = false;
-      });
-      legend.edited = true;
+      if ($scope.canEdit) {
+        $scope.legends.forEach(function (l) {
+          l.edited = false;
+        });
+        legend.edited = true;
+      }
     };
 
     $scope.addRow = function () {
@@ -168,5 +171,4 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController', ['$sc
       });
       newLegend.edited = true;
     };
-  }
-]);
+  });

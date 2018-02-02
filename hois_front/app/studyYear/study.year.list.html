@@ -13,14 +13,17 @@
         </thead>
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell>{{currentLanguageNameField(row)}}</td>
+          <td md-cell>
+            <span ng-if="!row.id">{{currentLanguageNameField(row)}}</span>
+            <a md-no-ink ng-if="row.id" class="md-primary change-button" ng-href="#/school/studyYears/{{::row.id}}/view">{{currentLanguageNameField(row)}}</a>
+          </td>
           <td md-cell>{{row.startDate | hoisDate}}</td>
           <td md-cell>{{row.endDate | hoisDate}}</td>
           <td md-cell>{{::row.count}}</td>
           <td md-cell>
             <md-button md-no-ink class="md-primary change-button" ng-if="!row.id && canEdit" ng-href="#/school/studyYears/{{::row.code}}/new">{{'main.button.change' | translate}}</md-button>
             <md-button md-no-ink class="md-primary change-button" ng-if="row.id && canEdit" ng-href="#/school/studyYears/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
-            <md-button md-no-ink class="md-primary change-button" ng-if="row.id && !canEdit" ng-href="#/school/studyYears/{{::row.id}}/edit">{{'main.button.view' | translate}}</md-button>
+            <md-button md-no-ink class="md-primary change-button" ng-if="row.id && !canEdit" ng-href="#/school/studyYears/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
           </td>
         </tr>
         </tbody>

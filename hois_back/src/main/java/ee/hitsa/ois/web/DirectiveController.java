@@ -1,6 +1,8 @@
 package ee.hitsa.ois.web;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.exception.SingleMessageWithParamsException;
 import ee.hitsa.ois.service.DirectiveConfirmService;
 import ee.hitsa.ois.service.DirectiveService;
 import ee.hitsa.ois.service.JobService;
@@ -88,9 +91,14 @@ public class DirectiveController {
     }
 
     @PutMapping("/sendtoconfirm/{id:\\d+}")
-    public void sendToConfirm(HoisUserDetails user, @WithEntity Directive directive) {
+    public Map<Object, Object> sendToConfirm(HoisUserDetails user, @WithEntity Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
-        directiveConfirmService.sendToConfirm(directive);
+        try {
+            directiveConfirmService.sendToConfirm(directive);
+        } catch(SingleMessageWithParamsException e) {
+            return e.getParams();
+        }
+        return Collections.emptyMap();
     }
 
     // TODO for testing only, remove later

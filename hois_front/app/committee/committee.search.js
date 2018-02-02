@@ -1,6 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('CommitteeSearchController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
+angular.module('hitsaOis').controller('CommitteeSearchController', 
+function ($scope, QueryUtils, USER_ROLES, AuthService) {
+  $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOMISJON);
 
   var baseUrl = "/committees";
   QueryUtils.createQueryForm($scope, baseUrl, {order: 'c.id'});
@@ -33,5 +35,4 @@ angular.module('hitsaOis').controller('CommitteeSearchController', ['$scope', 'Q
       $scope.criteria.memberName = null;
     }
   });
-
-}]);
+});

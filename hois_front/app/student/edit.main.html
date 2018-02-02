@@ -1,7 +1,6 @@
 <div layout="column" layout-padding>
   <div>
-    <div class="indentForToast"></div>
-
+    
     <form name="studentEditForm" novalidate>
       <hois-collapsable label="('student.contact' | translate)">
 
@@ -20,12 +19,16 @@
           <hois-classifier-select ng-model="student.person.residenceCountry" name="residenceCountry" main-classifier-code="RIIK" required model-value-attr="code"></hois-classifier-select>
         </md-input-container>
 
-        <md-input-container class="md-block">
+        <div class="md-block" ng-if="student.person.residenceCountry === 'RIIK_EST'">
+          <hois-ads-adapter class="md-text" ng-model="student.person.addressAds" address-model="student.person.address" required></hois-ads-adapter>
+        </div>
+
+        <md-input-container class="md-block" ng-if="student.person.residenceCountry !== 'RIIK_EST'">
           <label class="textInput">{{'student.address' | translate}}</label>
           <input ng-model="student.person.address" name="address" type="text" required md-maxlength="255">
         </md-input-container>
 
-        <md-input-container class="md-block">
+        <md-input-container class="md-block" ng-if="student.person.residenceCountry !== 'RIIK_EST'">
           <label class="textInput">{{'student.postcode' | translate}}</label>
           <input ng-model="student.person.postcode" name="postcode" type="text" required md-maxlength="10">
         </md-input-container>

@@ -1,47 +1,50 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-    <form ng-submit="loadData()" layout="column" novalidate ng-if="!auth.isStudent() && !auth.isParent()">
-        <md-input-container>
-            <label>{{'certificate.type' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" multiple></hois-classifier-select>
-        </md-input-container>
-        <md-input-container>
-            <label class="textInput">{{'certificate.headline' | translate}}</label>
-            <input ng-model="criteria.headline" type="text">
-        </md-input-container>
-        <md-input-container>
-            <label class="textInput">{{'certificate.studentName' | translate}}</label>
-            <input ng-model="criteria.name" type="text">
-        </md-input-container>
-        <md-input-container>
-            <label class="textInput">{{'certificate.idcode' | translate}}</label>
-            <input ng-model="criteria.idcode" type="text" md-minlength="11" md-maxlength="11">
-        </md-input-container>
-        <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container flex="20" flex-sm="100" flex-xs="100">
-                <label>{{'certificate.inserted' | translate}}</label>
-                <input type="hidden">
+    <fieldset ng-if="!auth.isStudent() && !auth.isParent()">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form ng-submit="loadData()" layout="column" novalidate>
+            <md-input-container>
+                <label>{{'certificate.type' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" multiple></hois-classifier-select>
             </md-input-container>
-            <div flex="33">
-                <md-input-container flex>
-                    <label>{{'main.from' | translate}}</label>
-                    <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
+            <md-input-container>
+                <label class="textInput">{{'certificate.headline' | translate}}</label>
+                <input ng-model="criteria.headline" type="text">
+            </md-input-container>
+            <md-input-container>
+                <label class="textInput">{{'certificate.studentName' | translate}}</label>
+                <input ng-model="criteria.name" type="text">
+            </md-input-container>
+            <md-input-container>
+                <label class="textInput">{{'certificate.idcode' | translate}}</label>
+                <input ng-model="criteria.idcode" type="text" md-minlength="11" md-maxlength="11">
+            </md-input-container>
+            <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="20" flex-sm="100" flex-xs="100">
+                    <label>{{'certificate.inserted' | translate}}</label>
+                    <input type="hidden">
                 </md-input-container>
-                <md-input-container flex>
-                    <label>{{'main.thru' | translate}}</label>
-                    <md-datepicker ng-model="criteria.insertedThru"></md-datepicker>
-                </md-input-container>
+                <div flex="33">
+                    <md-input-container flex>
+                        <label>{{'main.from' | translate}}</label>
+                        <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
+                    </md-input-container>
+                    <md-input-container flex>
+                        <label>{{'main.thru' | translate}}</label>
+                        <md-datepicker ng-model="criteria.insertedThru"></md-datepicker>
+                    </md-input-container>
+                </div>
             </div>
-        </div>
-        <md-input-container>
-            <label class="textInput">{{'certificate.nr' | translate}}</label>
-            <input ng-model="criteria.certificateNr" type="text">
-        </md-input-container>
-        <div layout="row">
-            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TOEND')" ng-href="#/certificate/new">{{'certificate.add' | translate}}</md-button>
-        </div>
-    </form>
+            <md-input-container>
+                <label class="textInput">{{'certificate.nr' | translate}}</label>
+                <input ng-model="criteria.certificateNr" type="text">
+            </md-input-container>
+            <div layout="row">
+                <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+                <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+                <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TOEND')" ng-href="#/certificate/new">{{'certificate.add' | translate}}</md-button>
+            </div>
+        </form>
+    </fieldset>
 </div>
 
 <div layout-padding>

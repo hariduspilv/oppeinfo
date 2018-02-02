@@ -1,6 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchController', ['$scope', 'QueryUtils', 'ArrayUtils', 'DataUtils', function ($scope, QueryUtils, ArrayUtils, DataUtils) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchController', 
+function ($scope, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthService) {
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN);
 
     $scope.currentNavItem = 'studentGroups';
 
@@ -40,4 +42,4 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchContr
     $scope.filterStudentGroups = function(studentGroup) {
         return $scope.criteria.curriculum ? studentGroup.curriculum.id === $scope.criteria.curriculum : true;
     };
-}]);
+});

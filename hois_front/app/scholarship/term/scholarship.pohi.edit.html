@@ -60,13 +60,13 @@
   <div layout="row" flex>
     <md-input-container flex="45">
       <label class="textInput">{{'stipend.studyForm' | translate}}</label>
-      <hois-classifier-select ng-required="required.studyForms" ng-model="stipend.studyForms" name="type" model-value-attr="code"
-        main-classifier-code="OPPEVORM" multiple filter-values="filteredStudyForm"></hois-classifier-select>
+      <hois-classifier-select required ng-model="stipend.studyForms" name="type" model-value-attr="code" main-classifier-code="OPPEVORM"
+        multiple filter-values="filteredStudyForm" criteria="{vocational: true}"></hois-classifier-select>
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.courses' | translate}}</label>
-      <hois-classifier-select ng-required="required.studyCourses" ng-model="stipend.courses" name="type" model-value-attr="code"
-        main-classifier-code="KURSUS" multiple></hois-classifier-select>
+      <hois-classifier-select required ng-model="stipend.courses" name="type" model-value-attr="code" main-classifier-code="KURSUS"
+        multiple></hois-classifier-select>
     </md-input-container>
   </div>
   <div layout="row" flex>
@@ -138,6 +138,6 @@
 <div layout="row">
   <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id" ng-click="publish()">{{'main.button.publishtoStudents' | translate}}</md-button>
-  <md-button class="md-raised" ng-if="stipend.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="stipend.id && !stipend.isOpen" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
   <md-button class="md-raised" ng-click="back('#/scholarships/grants', stipendForm)">{{'main.button.back' | translate}}</md-button>
 </div>

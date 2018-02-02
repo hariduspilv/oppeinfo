@@ -1,53 +1,55 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
 
   <div layout="column">
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="absencesSearchForm" ng-submit="loadData()" novalidate class="nomargin">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'absence.studyYear' | translate}}</label>
+            <hois-select ng-model="criteria.studyYear" type="studyyear" required></hois-select>
+          </md-input-container>
+          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'absence.studyPeriod' | translate}}</label>
+            <md-select ng-model="criteria.studyPeriod">
+              <md-option ng-value="null"></md-option>
+              <md-option ng-repeat="studyPeriod in studyPeriods | filter: filterByStudyYear(criteria.studyYear)" ng-value="studyPeriod.id">
+                {{ currentLanguageNameField(studyPeriod) }}
+              </md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'absence.curriculumVersion' | translate}}</label>
+            <hois-select ng-model="criteria.curriculumVersions" type="curriculumversion" multiple></hois-select>
+          </md-input-container>
+          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'absence.studentGroup' | translate}}</label>
+            <input ng-model="criteria.studentGroupCode" type="text" md-maxlength="255">
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'absence.student' | translate}}</label>
+            <input ng-model="criteria.studentName" type="text" md-maxlength="255">
+          </md-input-container>
+          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'absence.status' | translate}}</label>
+            <md-select ng-model="criteria.isAccepted">
+              <md-option ng-value="null"></md-option>
+              <md-option ng-value="true">{{ 'absence.isAccepted' | translate }}</md-option>
+              <md-option ng-value="false">{{ 'absence.isNotAccepted' | translate }}</md-option>
+            </md-select>
+          </md-input-container>
+        </div>
 
-    <form name="absencesSearchForm" ng-submit="loadData()" novalidate class="nomargin">
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
-          <label>{{'absence.studyYear' | translate}}</label>
-          <hois-select ng-model="criteria.studyYear" type="studyyear" required></hois-select>
-        </md-input-container>
-        <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label>{{'absence.studyPeriod' | translate}}</label>
-          <md-select ng-model="criteria.studyPeriod">
-            <md-option ng-value="null"></md-option>
-            <md-option ng-repeat="studyPeriod in studyPeriods | filter: filterByStudyYear(criteria.studyYear)" ng-value="studyPeriod.id">
-              {{ currentLanguageNameField(studyPeriod) }}
-            </md-option>
-          </md-select>
-        </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
-          <label>{{'absence.curriculumVersion' | translate}}</label>
-          <hois-select ng-model="criteria.curriculumVersions" type="curriculumversion" multiple></hois-select>
-        </md-input-container>
-        <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label>{{'absence.studentGroup' | translate}}</label>
-          <input ng-model="criteria.studentGroupCode" type="text" md-maxlength="255">
-        </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
-          <label>{{'absence.student' | translate}}</label>
-          <input ng-model="criteria.studentName" type="text" md-maxlength="255">
-        </md-input-container>
-        <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label>{{'absence.status' | translate}}</label>
-          <md-select ng-model="criteria.isAccepted">
-            <md-option ng-value="null"></md-option>
-            <md-option ng-value="true">{{ 'absence.isAccepted' | translate }}</md-option>
-            <md-option ng-value="false">{{ 'absence.isNotAccepted' | translate }}</md-option>
-          </md-select>
-        </md-input-container>
-      </div>
-
-      <div layout="row" layout-sm="row" layout-xs="column">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-      </div>
-    </form>
+        <div layout="row" layout-sm="row" layout-xs="column">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+      </form>
+    </fieldset>
 
     <md-table-container ng-cloak layout-padding>
       <table md-table md-progress="tabledata.$promise">

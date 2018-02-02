@@ -1,46 +1,49 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
-      <div layout="row" layout-sm="column" layout-xs="column" flex>
-        <div layout="row" layout-sm="column" layout-xs="column" flex="25" flex-sm="100" flex-xs="100">
-            <md-input-container>
-              <label>{{'main.from' | translate}}</label>
-              <md-datepicker ng-model="criteria.from"></md-datepicker>
-            </md-input-container>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+        <div layout="row" layout-sm="column" layout-xs="column" flex>
+          <div layout="row" layout-sm="column" layout-xs="column" flex="25" flex-sm="100" flex-xs="100">
+              <md-input-container>
+                <label>{{'main.from' | translate}}</label>
+                <md-datepicker ng-model="criteria.from"></md-datepicker>
+              </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" flex="25" flex-sm="100" flex-xs="100">
+              <md-input-container>
+                <label>{{'main.thru' | translate}}</label>
+                <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+              </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" flex="20" flex-sm="100" flex-xs="100">
+              <md-input-container flex>
+                <label>{{'timetable.weekday' | translate}}</label>
+                <md-select ng-model="criteria.day" multiple>
+                  <md-option ng-repeat="option in days" ng-value="option.code"
+                    aria-label="{{currentLanguageNameField(option)}}">{{currentLanguageNameField(option)}}</md-option>
+                </md-select>
+              </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" flex="20" flex-offset="5" flex-sm="100" flex-offset-sm="0" flex-xs="100" flex-offset-xs="0">
+              <md-input-container flex>
+                <label>{{'building.label' | translate}}</label>
+                <hois-select ng-model="criteria.building" type="building" multiple></hois-select>
+              </md-input-container>
+          </div>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column" flex="25" flex-sm="100" flex-xs="100">
-            <md-input-container>
-              <label>{{'main.thru' | translate}}</label>
-              <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
-            </md-input-container>
+        <div layout="row" flex>
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <a class="md-button md-raised" ng-if="canEdit" ng-href="#/timetable/lessonTime">{{'main.button.create' | translate}}</a>
         </div>
-
-        <div layout="row" layout-sm="column" layout-xs="column" flex="20" flex-sm="100" flex-xs="100">
-            <md-input-container flex>
-              <label>{{'timetable.weekday' | translate}}</label>
-              <md-select ng-model="criteria.day" multiple>
-                <md-option ng-repeat="option in days" ng-value="option.code"
-                  aria-label="{{currentLanguageNameField(option)}}">{{currentLanguageNameField(option)}}</md-option>
-              </md-select>
-            </md-input-container>
-        </div>
-
-        <div layout="row" layout-sm="column" layout-xs="column" flex="20" flex-offset="5" flex-sm="100" flex-offset-sm="0" flex-xs="100" flex-offset-xs="0">
-            <md-input-container flex>
-              <label>{{'building.label' | translate}}</label>
-              <hois-select ng-model="criteria.building" type="building" multiple></hois-select>
-            </md-input-container>
-        </div>
-      </div>
-
-      <div layout="row" flex>
-          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <a class="md-button md-raised" ng-href="#/timetable/lessonTime">{{'main.button.create' | translate}}</a>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>
@@ -69,7 +72,8 @@
           <td md-cell>{{row.validFrom | hoisDate}}</td>
           <td md-cell>{{row.validThru | hoisDate}}</td>
           <td md-cell>
-            <a class="md-button md-primary" ng-href="/#/timetable/lessonTime/{{::row.id}}/{{hasPassed(row) ? 'view' : 'edit'}}">{{'main.button.' + (hasPassed(row) ? 'view' : 'edit') | translate}}</a>
+            <a class="md-button md-primary" ng-href="/#/timetable/lessonTime/{{::row.id}}/{{!canEditLessonTime(row) ? 'view' : 'edit'}}">
+              {{'main.button.' + (!canEditLessonTime(row) ? 'view' : 'edit') | translate}}</a>
           </td>
         </tr>
         </tbody>

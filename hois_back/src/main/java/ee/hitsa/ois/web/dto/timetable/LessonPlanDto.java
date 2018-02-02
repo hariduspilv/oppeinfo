@@ -36,7 +36,7 @@ public class LessonPlanDto extends LessonPlanForm {
 
     public static LessonPlanDto of(LessonPlan lessonPlan, Map<Long, Long> weekNrsLegends) {
         LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto());
-        dto.setStudyYearCode(lessonPlan.getStudyYear().getYear().getCode());
+        dto.setStudyYearCode(EntityUtil.getCode(lessonPlan.getStudyYear().getYear()));
         dto.setStudentGroupCode(lessonPlan.getStudentGroup().getCode());
         dto.setStudyPeriods(lessonPlan.getStudyYear().getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList()));
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(lessonPlan.getStudyYear());

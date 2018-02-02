@@ -5,45 +5,48 @@
 </md-nav-bar>
 
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-    <form ng-submit="loadData()" layout="column" novalidate >
-            <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="50" flex-sm="100" flex-xs="100">
-                    <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-                    <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required></hois-select>
-                </md-input-container>
-                <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-                    <label>{{'subjectStudyPeriod.department' | translate}}</label>
-                    <hois-school-department-select ng-model="criteria.department"></hois-school-department-select>
-                </md-input-container>
-            </div>
-            <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="50" flex-sm="100" flex-xs="100">
-                    <label>{{'subjectStudyPeriod.curriculum' | translate}}</label>
-                    <md-select ng-model="criteria.curriculum">
-                     <md-option ng-value="null">
-                     </md-option>
-                      <md-option ng-value="option.id" ng-repeat="option in curricula | filter: filterCurriculums | orderBy: currentLanguageNameField()">
-                        {{option.code}} - {{currentLanguageNameField(option)}}
-                     </md-option>
-                    </md-select>
-                </md-input-container>
-                <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-                    <label>{{'subjectStudyPeriod.studentGroup' | translate}}</label>
-                    <md-select ng-model="criteria.studentGroup">
-                     <md-option ng-value="null">
-                     </md-option>
-                      <md-option ng-value="option.id" ng-repeat="option in studentGroups | filter: filterStudentGroups | orderBy: currentLanguageNameField()">
-                        {{currentLanguageNameField(option)}}
-                     </md-option>
-                    </md-select>
-                </md-input-container>
-            </div>
-        <div layout="row">
-            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" href="#/subjectStudyPeriods/studentGroups/new">{{'main.button.create' | translate}}</md-button>
-        </div>
-    </form>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" layout="column" novalidate >
+              <div layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                      <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
+                      <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required></hois-select>
+                  </md-input-container>
+                  <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+                      <label>{{'subjectStudyPeriod.department' | translate}}</label>
+                      <hois-school-department-select ng-model="criteria.department"></hois-school-department-select>
+                  </md-input-container>
+              </div>
+              <div layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                      <label>{{'subjectStudyPeriod.curriculum' | translate}}</label>
+                      <md-select ng-model="criteria.curriculum">
+                      <md-option ng-value="null">
+                      </md-option>
+                        <md-option ng-value="option.id" ng-repeat="option in curricula | filter: filterCurriculums | orderBy: currentLanguageNameField()">
+                          {{option.code}} - {{currentLanguageNameField(option)}}
+                      </md-option>
+                      </md-select>
+                  </md-input-container>
+                  <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+                      <label>{{'subjectStudyPeriod.studentGroup' | translate}}</label>
+                      <md-select ng-model="criteria.studentGroup">
+                      <md-option ng-value="null">
+                      </md-option>
+                        <md-option ng-value="option.id" ng-repeat="option in studentGroups | filter: filterStudentGroups | orderBy: currentLanguageNameField()">
+                          {{currentLanguageNameField(option)}}
+                      </md-option>
+                      </md-select>
+                  </md-input-container>
+              </div>
+          <div layout="row">
+              <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+              <md-button class="md-raised" ng-if="canEdit" href="#/subjectStudyPeriods/studentGroups/new">{{'main.button.create' | translate}}</md-button>
+          </div>
+      </form>
+    </fieldset>
 </div>
 
 <div layout-padding>
@@ -68,7 +71,7 @@
               <a ng-if="row.timetable" href="#/timetable/group/{{row.studyPeriod}}/{{row.id}}/{{row.timetable}}">{{'subjectStudyPeriod.timetable' | translate}}</a>
             </td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriods/studentGroups/{{row.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}
+              <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/studentGroups/{{row.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}
                   </md-button>
             </td>
           </tr>

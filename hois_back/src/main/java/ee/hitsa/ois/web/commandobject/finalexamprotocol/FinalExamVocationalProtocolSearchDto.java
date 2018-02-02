@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol;
+package ee.hitsa.ois.web.commandobject.finalexamprotocol;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

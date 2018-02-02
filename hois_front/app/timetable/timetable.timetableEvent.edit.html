@@ -1,77 +1,77 @@
 <div class="ois-form-layout-padding" ng-cloak>
-    <div flex>
-      <form name="eventForm" ng-submit="eventForm.$valid && loadData()" novalidate>
-        <div layout="row" flex="100">
-          <md-input-container flex="30" flex-md="100" flex-sm="100" flex-xs="100">
-            <label>{{'main.date' | translate}}</label>
-            <md-datepicker required ng-model="timetableEvent.date"></md-datepicker>
+  <div flex>
+    <form name="eventForm" ng-submit="eventForm.$valid && loadData()" novalidate>
+      <div layout="row" flex="100">
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+          <label>{{'main.date' | translate}}</label>
+          <md-datepicker required ng-model="timetableEvent.date"></md-datepicker>
+        </md-input-container>
+        <md-input-container flex="20" flex-sm="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'main.start' | translate}}</label>
+          <hois-time required ng-model="timetableEvent.startTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+        </md-input-container>
+        <md-input-container flex="20" flex-sm="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'main.end' | translate}}</label>
+          <hois-time required ng-model="timetableEvent.endTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+        </md-input-container>
+      </div>
+      <div layout="row" flex="100">
+        <md-input-container flex="60" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'timetable.timetableEvent.name' | translate}}</label>
+          <input type="text" ng-model="timetableEvent.name" required md-maxlength="255">
+        </md-input-container>
+      </div>
+      <div layout="row" flex="100">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100">
+          <md-checkbox ng-model="timetableEvent.repeat" aria-label="Is repeat event">
+            {{'timetable.timetableEvent.isRepeat' | translate}}
+          </md-checkbox>
+        </md-input-container>
+        <div ng-if="timetableEvent.repeat" flex="80">
+          <md-input-container flex="50">
+            <label>{{'timetable.timetableEvent.weekAmount' | translate}}</label>
+            <input flex="100" ng-model="timetableEvent.weekAmount" type="number" autofocus aria-label="weekamount">
+          </md-input-container>
+
+          <md-input-container flex="50" flex-offset="5">
+            <label>{{'timetable.timetableEvent.repetition' | translate}}</label>
+            <hois-classifier-select flex="100" ng-model="timetableEvent.repeatCode" model-value-attr="code" aria-label="repeatcode" main-classifier-code="TUNNIPLAAN_SYNDMUS_KORDUS">
+            </hois-classifier-select>
           </md-input-container>
         </div>
-        <div layout="row" flex="100">
-          <md-input-container flex="30" flex-sm="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
-            <label>{{'main.start' | translate}}</label>
-            <hois-time ng-model="timetableEvent.startTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
-          </md-input-container>
-          <md-input-container flex="30" flex-sm="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
-            <label>{{'main.end' | translate}}</label>
-            <hois-time ng-model="timetableEvent.endTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
-          </md-input-container>
-        </div>
-        <div layout="row" flex="100">
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'timetable.timetableEvent.name' | translate}}</label>
-            <input type="text" ng-model="timetableEvent.name" required>
-          </md-input-container>
-        </div>
-        <div layout="row" flex="100">
-          <md-input-container flex="20" flex-sm="100" flex-xs="100">
-            <md-checkbox ng-model="timetableEvent.repeat" aria-label="Is repeat event">
-              {{'timetable.timetableEvent.isRepeat' | translate}}
-            </md-checkbox>
-          </md-input-container>
-          <div ng-if="timetableEvent.repeat" flex="80">
-            <md-input-container flex="50">
-              <label>{{'timetable.timetableEvent.weekAmount' | translate}}</label>
-              <input flex="100" ng-model="timetableEvent.weekAmount" type="number" autofocus aria-label="weekamount">
-            </md-input-container>
-        
-            <md-input-container flex="50" flex-offset="5">
-              <label>{{'timetable.timetableEvent.repetition' | translate}}</label>
-              <hois-classifier-select flex="100" ng-model="timetableEvent.repeatCode" 
-                model-value-attr="code" aria-label="repeatcode" 
-                main-classifier-code="TUNNIPLAAN_SYNDMUS_KORDUS">
-              </hois-classifier-select>
-            </md-input-container>
+      </div>
+
+      <div layout="row" flex="60" flex-sm="100" flex-xs="100">
+        <hois-autocomplete label="timetable.timetableEvent.teacher" ng-model="timetableEvent.teacher" method="teachers" flex></hois-autocomplete>
+      </div>
+      <div layout="column" class="common-label" flex="55" ng-repeat="teacher in timetableEvent.teachers">
+        <div layout="row" flex layout-align="start center">
+          <div flex="5">&nbsp;</div>
+          <div flex="50">{{teacher.nameEt}}</div>
+          <div>
+            <a ng-click="deleteTeacher(teacher)" class="remove">&times;</a>
           </div>
         </div>
+      </div>
 
-        <div layout="row" flex="70" flex-sm="100" flex-xs="100">
-          <hois-autocomplete label="timetable.timetableEvent.teacher" ng-model="timetableEvent.teacher" method="teachers" flex></hois-autocomplete>
-        </div>
-        <div layout="column" class="common-label" flex="65" ng-repeat="teacher in timetableEvent.teachers">
-          <div layout="row" flex layout-align="start center">
-            <div flex="5">&nbsp;</div>
-            <div flex="50">{{teacher.nameEt}}</div>
-            <div><a ng-click="deleteTeacher(teacher)" class="remove">&times;</a></div>
+      <div layout="row" flex="60" flex-sm="100" flex-xs="100">
+        <hois-autocomplete label="timetable.timetableEvent.room" ng-model="timetableEvent.room" method="rooms" flex></hois-autocomplete>
+      </div>
+      <div layout="column" class="common-label" flex="55" ng-repeat="room in timetableEvent.rooms">
+        <div layout="row" flex layout-align="start center">
+          <div flex="5">&nbsp;</div>
+          <div flex="50">{{room.nameEt}}</div>
+          <div>
+            <a ng-click="deleteRoom(room)" class="remove">&times;</a>
           </div>
         </div>
+      </div>
 
-        <div layout="row" flex="70" flex-sm="100" flex-xs="100">
-          <hois-autocomplete label="timetable.timetableEvent.room" ng-model="timetableEvent.room" method="rooms" flex></hois-autocomplete>
-        </div>
-        <div layout="column" class="common-label" flex="65" ng-repeat="room in timetableEvent.rooms">
-          <div layout="row" flex layout-align="start center">
-            <div flex="5">&nbsp;</div>
-            <div flex="50">{{room.nameEt}}</div>
-            <div><a ng-click="deleteRoom(room)" class="remove">&times;</a></div>
-          </div>
-        </div>
-
-        <div layout="row" flex="100">
-          <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-          <md-button ng-href="#/lessonplans/events?_menu" class="md-raised">{{'main.button.back' | translate}}</md-button>
-        </div>
-      </form>
-    </div>
+      <div layout="row" flex="100">
+        <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-if="timetableEvent.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+        <md-button ng-href="#/lessonplans/events" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
   </div>
-  
+</div>

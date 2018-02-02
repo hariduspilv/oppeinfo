@@ -15,6 +15,7 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
     private Boolean isTeacherConfirm;
     private String status;
     private LocalDate decisionDate;
+    private String rejectComment;
 
     public ScholarshipTermStudentDto() {
 
@@ -93,6 +94,14 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
 
     public void setDecisionDate(LocalDate decisionDate) {
         this.decisionDate = decisionDate;
+    }
+
+    public String getRejectComment() {
+        return rejectComment;
+    }
+
+    public void setRejectComment(String rejectComment) {
+        this.rejectComment = rejectComment;
     }
 
 }

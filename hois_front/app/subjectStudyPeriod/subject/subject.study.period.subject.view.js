@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectViewController', ['$scope', 'QueryUtils', '$route', 'Classifier', 'SspCapacities',
-  function ($scope, QueryUtils, $route, Classifier, SspCapacities) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectViewController', 
+  function ($scope, QueryUtils, $route, Classifier, SspCapacities, USER_ROLES, AuthService) {
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN);
 
     var studyPeriodId = parseInt($route.current.params.studyPeriodId, 10);
     var subject = parseInt($route.current.params.subjectId, 10);
@@ -15,5 +16,4 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectViewController',
         $scope.capacitiesUtil = new SspCapacities(response);
     });
     $scope.subject = QueryUtils.endpoint('/subjectStudyPeriods/subject/' + subject).get();
-  }
-]);
+  });

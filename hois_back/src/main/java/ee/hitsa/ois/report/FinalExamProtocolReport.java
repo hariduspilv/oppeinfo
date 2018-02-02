@@ -50,9 +50,9 @@ public class FinalExamProtocolReport {
                 .collect(Collectors.joining(", "));
         protocolStudents = protocol.getProtocolStudents().stream()
                 .sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getStudent().getPerson(), o2.getStudent().getPerson()))
-                .map(ps -> new FinalExamProtocolStudentReport(ps))
+                .map(ps -> new FinalExamProtocolStudentReport(ps, lang))
                 .collect(Collectors.toList());
-        confirmedBy = protocol.getConfirmer();
+        confirmedBy = PersonUtil.stripIdcodeFromFullnameAndIdcode(protocol.getConfirmer());
         confirmDate = protocol.getConfirmDate();
     }
 

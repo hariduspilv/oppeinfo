@@ -2,7 +2,7 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.List;
 
-public class RoomsAutocompleteCommand extends AutocompleteCommand {
+public class RoomsAutocompleteCommand extends SearchCommand {
 
     private List<Long> buildingIds;
 
@@ -13,5 +13,4 @@ public class RoomsAutocompleteCommand extends AutocompleteCommand {
     public void setBuildingIds(List<Long> buildingIds) {
         this.buildingIds = buildingIds;
     }
-
 }

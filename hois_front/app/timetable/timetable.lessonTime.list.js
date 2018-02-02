@@ -1,6 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableLessonTimeListController', function ($scope, $q, QueryUtils, Classifier, DataUtils, $filter) {
+angular.module('hitsaOis').controller('TimetableLessonTimeListController', function ($scope, $q, QueryUtils, Classifier, DataUtils, $filter, USER_ROLES, AuthService) {
+  $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNDAEG);
+
   var clMapper = Classifier.valuemapper({day: 'NADALAPAEV'});
   var promises = clMapper.promises;
   $scope.days = [];
@@ -63,5 +65,9 @@ angular.module('hitsaOis').controller('TimetableLessonTimeListController', funct
   $scope.hasPassed = function(lessonTime) {
     DataUtils.convertStringToDates(lessonTime, ["validThru"]);
     return lessonTime.validThru !== null && lessonTime.validThru < new Date();
+  };
+
+  $scope.canEditLessonTime = function(lessonTime) {
+    return !$scope.hasPassed(lessonTime) && $scope.canEdit;
   };
 });

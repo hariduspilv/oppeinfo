@@ -53,6 +53,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshiApplicationRejectionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationListSubmitForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCommand;
@@ -119,7 +120,6 @@ public class ScholarshipService {
 
     public ScholarshipTerm save(ScholarshipTerm scholarshipTerm, ScholarshipTermForm form) {
         EntityUtil.bindToEntity(form, scholarshipTerm, classifierRepository, "curriculums", "studyLoads", "courses");
-        // TODO: find out why this property isnt binding
         scholarshipTerm.setStudyPeriod(em.getReference(StudyPeriod.class, form.getStudyPeriod()));
         bindFormArraysToEntity(form, scholarshipTerm);
         return EntityUtil.save(scholarshipTerm, em);
@@ -208,6 +208,7 @@ public class ScholarshipService {
             dto.setStatus(EntityUtil.getCode(sa.getStatus()));
             dto.setDecisionDate(sa.getDecisionDate());
             dto.setApplicationId(EntityUtil.getId(sa));
+            dto.setRejectComment(sa.getRejectComment());
             return dto;
         }, stipends);
     }
@@ -260,23 +261,42 @@ public class ScholarshipService {
         application.setStatus(em.getReference(Classifier.class, ScholarshipStatus.STIPTOETUS_STAATUS_K.name()));
         application.setStudent(student);
         application.setStudentGroup(student.getStudentGroup());
-        //TODO: replace the default value with an error
-        StudentCurriculumCompletion completion = getStudentCurriculumCompletion(student);
-        if(completion != null) {
-            application.setCredits(completion.getCredits());
-            //application.setCurriculumCompletion(completion.);
-            application.setAverageMark(completion.getAverageMark());
-            application.setLastPeriodMark(completion.getAverageMarkLastStudyPeriod());
-        } else {
-            application.setCredits(BigDecimal.ZERO);
-            application.setCurriculumCompletion(BigDecimal.ZERO);
-            application.setAverageMark(BigDecimal.ZERO);
-            application.setLastPeriodMark(BigDecimal.ZERO);
-        }
-
+        refreshCompletionWithApplication(application);
         application.setCurriculumVersion(student.getCurriculumVersion());
         application = bindApplicationFormToApplication(application, form);
         return EntityUtil.save(application, em);
+    }
+
+    private void refreshCompletionWithApplication(ScholarshipApplication application) {
+        StudentCurriculumCompletion completion = getStudentCurriculumCompletion(application.getStudent());
+        ScholarshipTerm term = application.getScholarshipTerm();
+        if(completion != null) {
+            application.setCredits(completion.getCredits());
+        } else {
+            application.setCredits(BigDecimal.ZERO);
+        }
+
+        if (term.getCurriculumCompletion() != null && completion != null) {
+            application.setCurriculumCompletion(BigDecimal.ONE);
+        } else if (term.getCurriculumCompletion() != null) {
+            application.setCurriculumCompletion(BigDecimal.ZERO);
+        }
+        if (term.getAverageMark() != null && completion != null) {
+            application.setAverageMark(completion.getAverageMark());
+        } else if (term.getAverageMark() != null) {
+            application.setAverageMark(BigDecimal.ZERO);
+        }
+        if (term.getMaxAbsences() != null && completion != null) {
+            // TODO: replace with real absences
+            application.setAbsences(Long.valueOf(0L));
+        } else if (term.getMaxAbsences() != null) {
+            application.setAbsences(Long.valueOf(0L));
+        }
+        if (term.getLastPeriodMark() != null && completion != null) {
+            application.setLastPeriodMark(completion.getAverageMarkLastStudyPeriod());
+        } else if (term.getLastPeriodMark() != null) {
+            application.setLastPeriodMark(BigDecimal.ZERO);
+        }
     }
 
     public ScholarshipApplication updateApplication(HoisUserDetails user, ScholarshipStudentApplicationForm form,
@@ -287,6 +307,7 @@ public class ScholarshipService {
         if (!ClassifierUtil.oneOf(application.getStatus(), ScholarshipStatus.STIPTOETUS_STAATUS_K, ScholarshipStatus.STIPTOETUS_STAATUS_T)) {
             return application;
         }
+        refreshCompletionWithApplication(application);
         bindApplicationFormToApplication(application, form);
         return EntityUtil.save(application, em);
     }
@@ -336,7 +357,7 @@ public class ScholarshipService {
             application.setStatus(em.getReference(Classifier.class, ScholarshipStatus.STIPTOETUS_STAATUS_E.name()));
             return EntityUtil.save(application, em);
         }
-        return application;
+        throw new ValidationFailedException("stipend.messages.error.studentDoesntComply");
     }
 
     public ScholarshipTermApplicationSearchDto applications(ScholarshipApplicationSearchCommand command,
@@ -378,7 +399,7 @@ public class ScholarshipService {
 
         String select = "distinct sa.id as application_id, st.type_code, st.id as term_id, st.name_et, c.code, s.id as student_id"
                 + ", p.firstname, p.lastname, p.idcode, sa.average_mark, sa.last_period_mark , sa.curriculum_completion"
-                + ", st.is_teacher_confirm, sa.status_code, sa.compensation_reason_code, sa.compensation_frequency_code, sa.credits";
+                + ", st.is_teacher_confirm, sa.status_code, sa.compensation_reason_code, sa.compensation_frequency_code, sa.credits, sa.reject_comment";
         List<?> data = qb.select(select, em).getResultList();
         return StreamUtil.toMappedList(r -> new ScholarshipApplicationSearchDto(r), data);
     }
@@ -448,7 +469,7 @@ public class ScholarshipService {
 
     private boolean studentCompliesTerm(Student student, ScholarshipTerm term) {
         StudentCurriculumCompletion completion = getStudentCurriculumCompletion(student);
-        if (ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_A, student.getStatus())) {
+        if (Boolean.FALSE.equals(term.getIsAcademicLeave()) && ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_A, student.getStatus())) {
             return false;
         }
         if (!term.getScholarshipTermCourses().isEmpty() && !StreamUtil
@@ -522,6 +543,7 @@ public class ScholarshipService {
     }
 
     private static Comparator<ScholarshipApplicationSearchDto> comparatorForTerm(ScholarshipTerm term) {
+        //TODO: missing for absences
         List<Function<ScholarshipApplicationSearchDto, BigDecimal>> comparators = new ArrayList<>(Collections.nCopies(Priority.values().length, null));
         for(Map.Entry<Function<ScholarshipTerm, Classifier>, Function<ScholarshipApplicationSearchDto, BigDecimal>> me : COMPARATOR.entrySet()) {
             Classifier priority = me.getKey().apply(term);

@@ -1,11 +1,13 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ScholarshipSearchController', ['dialogService', '$scope', 'Classifier', '$location', 'message', 'QueryUtils', '$route', 'DataUtils', 'ArrayUtils', '$q',
-  function (dialogService, $scope, Classifier, $location, message, QueryUtils, $route, DataUtils, ArrayUtils, $q) {
+angular.module('hitsaOis').controller('ScholarshipSearchController', 
+  function (dialogService, $scope, Classifier, $location, message, QueryUtils, $route, DataUtils, ArrayUtils, $q, USER_ROLES, AuthService) {
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS);
     var baseUrl = '/scholarships';
     var clMapper = Classifier.valuemapper({
       type: 'STIPTOETUS'
     });
+    $scope.formState = {};
 
     //TODO: hardcoded
     $scope.statuses = [{
@@ -18,7 +20,7 @@ angular.module('hitsaOis').controller('ScholarshipSearchController', ['dialogSer
 
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
     QueryUtils.createQueryForm($scope, baseUrl, {
-      order: 'dId'
+      order: 'id'
     }, clMapper.objectmapper);
 
     var promises = clMapper.promises;
@@ -30,7 +32,12 @@ angular.module('hitsaOis').controller('ScholarshipSearchController', ['dialogSer
     });
 
     $scope.criteria.allowedStipendTypes = $route.current.locals.params.allowedStipendTypes;
-    $scope.scholarshipType = $route.current.locals.params.scholarshipType;
+    if($route.current.locals.params.scholarship) {
+      $scope.formState.typeIsScholarship = true;
+      $scope.scholarshipType = "scholarship";
+    } else if ($route.current.locals.params.grant) {
+      $scope.scholarshipType = "grant";
+    }
 
     $scope.changeStipend = function (row) {
       var messageText;
@@ -53,5 +60,4 @@ angular.module('hitsaOis').controller('ScholarshipSearchController', ['dialogSer
       }
     };
 
-  }
-]);
+  });

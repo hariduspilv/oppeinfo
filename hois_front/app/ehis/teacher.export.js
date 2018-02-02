@@ -11,9 +11,9 @@ angular.module('hitsaOis').controller('TeacherExportController', ['$route', '$sc
     $scope.exportTeachers = function() {
       if($scope.teacherExportForm.$valid) {
         QueryUtils.endpoint(exportUrl).post($scope.teacher).$promise.then(function(result) {
-          message.info('ehis.messages.exportFinished');
+          message.info(result && result.length > 0 ? 'ehis.messages.exportFinished' : 'ehis.messages.noteachersfound');
           $scope.result = result;
-        });
+        }).catch(angular.noop);
       } else {
         message.error('main.messages.form-has-errors');
       }

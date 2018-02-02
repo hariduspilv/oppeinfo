@@ -38,18 +38,18 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
-import ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol.FinalExamVocationProtocolSearchCommand;
-import ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol.FinalExamVocationalProtocolCreateForm;
-import ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol.FinalExamVocationalProtocolSaveForm;
-import ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol.FinalExamVocationalProtocolSearchDto;
-import ee.hitsa.ois.web.commandobject.finalExamVocationalProtocol.FinalExamVocationalProtocolSignForm;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamVocationalProtocolCreateForm;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamVocationalProtocolSaveForm;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamVocationalProtocolSearchCommand;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamVocationalProtocolSearchDto;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamVocationalProtocolSignForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EntityMobileSignDto;
 import ee.hitsa.ois.web.dto.EntitySignDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
-import ee.hitsa.ois.web.dto.finalExamVocationalProtocol.FinalExamVocationalProtocolCommitteeSelectDto;
-import ee.hitsa.ois.web.dto.finalExamVocationalProtocol.FinalExamVocationalProtocolDto;
-import ee.hitsa.ois.web.dto.finalExamVocationalProtocol.FinalExamVocationalProtocolOccupationalModuleDto;
+import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolCommitteeSelectDto;
+import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolDto;
+import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolOccupationalModuleDto;
 
 @RestController
 @RequestMapping("/finalExamVocationalProtocols")
@@ -66,7 +66,7 @@ public class FinalExamVocationalProtocolController {
     private PdfService pdfService;
     
     @GetMapping
-    public Page<FinalExamVocationalProtocolSearchDto> search(HoisUserDetails user, @Valid FinalExamVocationProtocolSearchCommand command,
+    public Page<FinalExamVocationalProtocolSearchDto> search(HoisUserDetails user, @Valid FinalExamVocationalProtocolSearchCommand command,
             Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return finalExamProtocolService.search(user, command, pageable);

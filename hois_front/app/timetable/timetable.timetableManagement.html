@@ -1,33 +1,36 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form name="timetableSearchForm" ng-submit="loadData()" novalidate class="nomargin">
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="25" flex-sm="100" flex-xs="100">
-          <label>{{'timetable.management.studyYear' | translate}}</label>
-          <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required></hois-select>
-        </md-input-container>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="timetableSearchForm" ng-submit="loadData()" novalidate class="nomargin">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="25" flex-sm="100" flex-xs="100">
+            <label>{{'timetable.management.studyYear' | translate}}</label>
+            <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required></hois-select>
+          </md-input-container>
 
-        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5">
-          <label>{{'timetable.management.studyPeriod' | translate}}</label>
-          <hois-select ng-model="criteria.studyPeriod" values="formState.studyPeriods" required></hois-select>
-        </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5">
+            <label>{{'timetable.management.studyPeriod' | translate}}</label>
+            <hois-select ng-model="criteria.studyPeriod" values="formState.studyPeriods" required></hois-select>
+          </md-input-container>
 
-        <md-input-container required ng-show="higher && vocational" flex="45" flex-sm="100" flex-xs="100" flex-offset="5">
-          <label>{{'timetable.management.type' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.type" model-value-attr="code" default-value="TUNNIPLAAN_LIIK_V"
-                                  filter-values show-only-values="true"
-                                  watch-model connect-main-classifier-code="TUNNIPLAAN_LIIK"
-                                  main-classifier-code="TUNNIPLAAN_LIIK"></hois-classifier-select>
-        </md-input-container>
-      </div>
-      <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button ng-if="criteria.type === 'TUNNIPLAAN_LIIK_H'" class="md-raised"
-                       ng-href="#/timetable/new?type={{criteria.type}}">{{'main.button.create' | translate}}
-            </md-button>
-      </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-    </form>
+          <md-input-container required ng-show="higher && vocational" flex="45" flex-sm="100" flex-xs="100" flex-offset="5">
+            <label>{{'timetable.management.type' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.type" model-value-attr="code" default-value="TUNNIPLAAN_LIIK_V"
+                                    filter-values show-only-values="true"
+                                    watch-model connect-main-classifier-code="TUNNIPLAAN_LIIK"
+                                    main-classifier-code="TUNNIPLAAN_LIIK"></hois-classifier-select>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button ng-if="criteria.type === 'TUNNIPLAAN_LIIK_H'" class="md-raised"
+                        ng-href="#/timetable/new?type={{criteria.type}}">{{'main.button.create' | translate}}
+              </md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>
@@ -48,7 +51,7 @@
           <td md-cell ng-if="!row.id">{{row.start | hoisDate}} - {{row.end | hoisDate}}</td>
           <td md-cell>{{currentLanguageNameField(row.status)}}</td>
           <td md-cell>
-            <md-button ng-if="!row.id" md-no-ink class="md-primary change-button" ng-click="createEvent(row)">
+            <md-button ng-if="!row.id && canEdit" md-no-ink class="md-primary change-button" ng-click="createEvent(row)">
               {{'main.button.create' | translate}}
             </md-button>
             <!--md-button ng-if="row.id && row.isHigher" md-no-ink class="md-primary change-button"

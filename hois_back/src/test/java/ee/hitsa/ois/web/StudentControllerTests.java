@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.After;
@@ -166,7 +167,24 @@ public class StudentControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
+        LocalDate now = LocalDate.now();
+        form.setDataType(EhisStudentDataType.FOREIGN_STUDY);
+        form.setFrom(now);
+        form.setThru(now);
+        responseEntity = restTemplate.postForEntity(uri.build().toUriString(), form, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
         form.setDataType(EhisStudentDataType.GRADUATION);
+        form.setFrom(now);
+        form.setThru(now);
+        responseEntity = restTemplate.postForEntity(uri.build().toUriString(), form, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        form.setDataType(EhisStudentDataType.VOTA);
+        form.setFrom(now.plusDays(1));
+        form.setThru(now.plusDays(1));
         responseEntity = restTemplate.postForEntity(uri.build().toUriString(), form, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

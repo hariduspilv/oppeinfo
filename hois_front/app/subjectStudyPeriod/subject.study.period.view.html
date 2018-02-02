@@ -44,11 +44,11 @@
             <md-input-container>
                 <label>{{'subjectStudyPeriod.declaration' | translate}}</label>
                 <hois-classifier-value ng-model="record.declarationType" main-classifier-code="DEKLARATSIOON"></hois-classifier-value>
-
             </md-input-container>
         </div>
         <div layout="row">
-            <md-button class="md-primary md-raised" ng-href="#/subjectStudyPeriod/{{::record.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            <md-button class="md-primary md-raised" ng-if="isAuthorized(['ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA', 'ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK'])"
+                ng-href="#/subjectStudyPeriod/{{::record.id}}/edit">{{'main.button.change' | translate}}</md-button>
             <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods')">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>

@@ -1,52 +1,55 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form name="searchForm" ng-submit="loadData()" novalidate class="nomargin">
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="loadData()" novalidate class="nomargin">
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex>
-          <label>{{'committee.member' | translate}}</label>
-          <!-- <hois-select ng-model="criteria.memberName" values="members" value-property="name" show-property="name"></hois-select> -->
-          <md-select ng-model="criteria.member">
-            <md-option ng-value="">
-           </md-option>
-            <md-option ng-value="member" ng-repeat="member in members | orderBy: 'nameEt'">
-              {{ member.nameEt }}
-           </md-option>
-          </md-select>
-        </md-input-container>
-      </div>
-      <br>
-      <div layout="row">
-        <div layout="column" flex="45">
-          <label class="common-label">{{'committee.validDate' | translate}}</label>
-          <div layout="row" layout-sm="column" layout-xs="column" >
-            <md-input-container flex flex-sm="100" flex-xs="100">
-              <label>{{'main.from' | translate}}</label>
-              <md-datepicker ng-model="criteria.validFrom"></md-datepicker>
-            </md-input-container>
-            <md-input-container flex flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-              <label>{{'main.thru' | translate}}</label>
-              <md-datepicker ng-model="criteria.validThru"></md-datepicker>
-            </md-input-container>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex>
+            <label>{{'committee.member' | translate}}</label>
+            <!-- <hois-select ng-model="criteria.memberName" values="members" value-property="name" show-property="name"></hois-select> -->
+            <md-select ng-model="criteria.member">
+              <md-option ng-value="">
+            </md-option>
+              <md-option ng-value="member" ng-repeat="member in members | orderBy: 'nameEt'">
+                {{ member.nameEt }}
+            </md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+        <br>
+        <div layout="row">
+          <div layout="column" flex="45">
+            <label class="common-label">{{'committee.validDate' | translate}}</label>
+            <div layout="row" layout-sm="column" layout-xs="column" >
+              <md-input-container flex flex-sm="100" flex-xs="100">
+                <label>{{'main.from' | translate}}</label>
+                <md-datepicker ng-model="criteria.validFrom"></md-datepicker>
+              </md-input-container>
+              <md-input-container flex flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+                <label>{{'main.thru' | translate}}</label>
+                <md-datepicker ng-model="criteria.validThru"></md-datepicker>
+              </md-input-container>
+            </div>
           </div>
         </div>
-      </div>
 
-      <md-input-container flex="45" flex-sm="100" flex-xs="100">
-        <md-checkbox
-            ng-model="criteria.showInvalid"
-            aria-label="{{'committee.showInvalid' | translate}}">
-            {{'committee.showInvalid' | translate}}
-        </md-checkbox>
-      </md-input-container>
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <md-checkbox
+              ng-model="criteria.showInvalid"
+              aria-label="{{'committee.showInvalid' | translate}}">
+              {{'committee.showInvalid' | translate}}
+          </md-checkbox>
+        </md-input-container>
 
-      <br><br><br>
-      <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <md-button class="md-raised" ng-href="#/committees/new">{{'main.button.create' | translate}}</md-button>
-      </div>
-    </form>
+        <br><br><br>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="canEdit" ng-href="#/committees/new">{{'main.button.create' | translate}}</md-button>
+        </div>
+      </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>
@@ -75,7 +78,7 @@
               </table>
             </td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/committees/{{row.id}}/edit">
+              <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/committees/{{row.id}}/edit">
                 {{'main.button.change' | translate}}
               </md-button>
             </td>
