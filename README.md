@@ -1,4 +1,4 @@
-VERSIOON: 0.6.2/20180118
+VERSIOON: 0.6.3/20180202
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -249,7 +249,7 @@ MUU:	ID-kaardiga sisselogimine
 NB! Automaatteadete saatmiseks ÕISi on tekitatud kasutaja Hõis Automaatteade, palume seda mitte kustutada
 	   
 
-EELDUS: ver. 0.6.1/20171220
+EELDUS: ver. 0.6.2/20180118
 ------------------------------------------------------
 1. Serveris on installeeritud (opsüsteem Linux, nt CentOS Linux 7.2.x):
 	   1. PostgreSQL v 9.5.x
@@ -283,14 +283,14 @@ KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skriptid asuvad
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku. Nginx serveris on seadistatud SSL
 
 Andmebaasi installeerimiseks:
-1. käivitada install20180118.sql skript, nt
+1. käivitada install20180202.sql skript, nt
    
-   psql -h devhois -f install20180118.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20180202.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20180118.sql - install faili nimi
+   -f install20180202.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
