@@ -21,12 +21,8 @@ angular.module('hitsaOis')
         return name;
     };
 
-    function canSend() {
-      return $scope.auth.isAdmin() || $scope.auth.isTeacher() || $scope.auth.isStudent() || $scope.auth.isParent();
-    }
-
     $scope.formState = {
-      canSend: canSend()
+      canSend: $scope.auth.isAdmin() || $scope.auth.isTeacher() || $scope.auth.isStudent() || $scope.auth.isParent()
     };
 
 }]).controller('messageAutomaticSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route',function ($scope, QueryUtils, DataUtils, $route) {
@@ -50,22 +46,22 @@ angular.module('hitsaOis')
         return name;
     };
 
-}]).controller('messageReceivedController', ['$scope', 'QueryUtils', 'DataUtils', '$route', function ($scope, QueryUtils, DataUtils, $route) {
+}]).controller('messageReceivedController', ['$scope', 'QueryUtils', 'DataUtils', '$route', '$rootScope', function ($scope, QueryUtils, DataUtils, $route, $rootScope) {
     $scope.currentNavItem = 'message.received';
     QueryUtils.createQueryForm($scope, '/message/received', {order: "-inserted"});
     $scope.loadData();
     DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
     $scope.auth = $route.current.locals.auth;
 
-    function canSend() {
-      return $scope.auth.isAdmin() || $scope.auth.isTeacher() || $scope.auth.isStudent() || $scope.auth.isParent();
-    }
+    QueryUtils.endpoint('/message/received/new').get().$promise.then(function (result) {
+        $rootScope.unreadMessages = result.unread;
+    });
 
     $scope.formState = {
-      canSend: canSend()
+      canSend: $scope.auth.isAdmin() || $scope.auth.isTeacher() || $scope.auth.isStudent() || $scope.auth.isParent()
     };
 
-}]).controller('messageViewController', ['$scope', 'QueryUtils', '$route', 'DataUtils', '$resource', 'config', function ($scope, QueryUtils, $route, DataUtils, $resource, config) {
+}]).controller('messageViewController', ['$scope', '$route', 'QueryUtils', 'DataUtils', '$resource', 'config', '$rootScope', function ($scope, $route, QueryUtils, DataUtils, $resource, config, $rootScope) {
     var baseUrl = '/message';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
@@ -95,12 +91,21 @@ angular.module('hitsaOis')
 
     $scope.record = Endpoint.get({id: id}, afterLoad);
 
-    function setRead() {
-        if(!$scope.isSent && !$scope.record.isRead) {
-            $resource(config.apiUrl + '/message/' + $scope.record.id).update(null);
+    function setRead() { 
+        if (!$scope.isSent && !$scope.record.isRead) {
+            QueryUtils.endpoint('/message/' + $scope.record.id).update().$promise.then(function () {
+                updateNewMessagesCount();
+            });
+        } else {
+            updateNewMessagesCount();
         }
     }
 
+    function updateNewMessagesCount() {
+        QueryUtils.endpoint('/message/received/new').get().$promise.then(function (result) {
+            $rootScope.unreadMessages = result.unread;
+        });
+    }
 
 }]).controller('messageRespondController', ['$scope', 'QueryUtils', '$route', 'message', '$location', function ($scope, QueryUtils, $route, message, $location) {
     var baseUrl = '/message';

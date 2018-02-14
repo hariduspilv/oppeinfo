@@ -1161,6 +1161,19 @@ td.bordered[md-cell] {
   border-right: 1px rgba(0,0,0,.12) solid;
 }
 
+th.bordered[md-column] {
+  border: 1px rgba(0,0,0,.12) solid;
+}
+
+.journalFinalResult {
+  font-weight: bold;
+}
+
+.journalFinalResultBad {
+  font-weight: bold;
+  color: red;
+}
+
 th.required::after {
   content: ' *';
 }
@@ -1908,4 +1921,41 @@ label.ui-btn {
   width:100%;
   text-align: center;
   font-size: 14px;
+}
+
+.textarea-readonly {
+  background: none !important;
+}
+
+.unreadMessages {
+  position: absolute;
+  top: 20px;
+  left: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  background-color: rgb(255,64,129);
+  color: white;
+  font-size: 12px;
+}
+
+.timetableVocationalPlan tr td {
+  border-style: solid;
+  border-width: 1px 1px 0px 0px;
+  border-color: #eee;
+}
+
+.timetableVocationalPlan thead th:nth-child(even) {
+  background: #1E88E5;
+}
+
+.timetableVocationalPlan thead th {
+  padding-left: 5px !important;
+}
+
+.noLessonTime {
+  background: #eee;
 }

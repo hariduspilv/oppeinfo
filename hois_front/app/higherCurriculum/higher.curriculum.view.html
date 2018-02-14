@@ -162,6 +162,10 @@
           <label>{{'curriculum.otherLanguages' | translate}}</label>
           <textarea ng-model="curriculum.otherLanguages" max-rows="10" readonly></textarea>
         </md-input-container>
+        <md-input-container flex ng-if="curriculum.status === STATUS.VERIFIED">
+          <label>{{'public.url' | translate}}</label>
+          <input ng-model="publicUrl" type="text" readonly>
+        </md-input-container>
       </div>
     </fieldset>
     <div>&nbsp;</div>

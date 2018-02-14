@@ -22,6 +22,7 @@ import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.studymaterial.StudyMaterial;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
@@ -178,6 +179,11 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     public static AutocompleteResult of(StudentGroup studentGroup) {
         String code = studentGroup.getCode();
         return new AutocompleteResult(studentGroup.getId(), code, code);
+    }
+
+    public static AutocompleteResult of(StudyMaterial studyMaterial) {
+        String name = studyMaterial.getNameEt();
+        return new AutocompleteResult(studyMaterial.getId(), name, name);
     }
 
     public static AutocompleteResult of(StudyPeriod studyPeriod) {

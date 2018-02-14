@@ -1,9 +1,12 @@
 package ee.hitsa.ois.web.dto.directive;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.directive.Directive;
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
@@ -50,7 +53,8 @@ public class DirectiveDto extends DirectiveForm {
 
     public static DirectiveDto of(Directive directive) {
         DirectiveDto dto = EntityUtil.bindToDto(directive, new DirectiveDto(), "students");
-        dto.setStudents(StreamUtil.toMappedList(DirectiveStudentDto::of, directive.getStudents()));
+        dto.setStudents(StreamUtil.nullSafeList(directive.getStudents()).stream().sorted(Comparator.comparing(DirectiveStudent::getId))
+                .map(DirectiveStudentDto::of).collect(Collectors.toList()));
         return dto;
     }
 

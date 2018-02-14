@@ -1,4 +1,4 @@
-VERSIOON: 0.6.3/20180202
+VERSIOON: 0.6.4/20180214
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -7,8 +7,14 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_back - rakenduse backendi kood
 /hois_front - rakenduse frontendi kood
 /hois_ws - rakenduse veebiteenuste kood
+/hois_versions - versioonid
 
 
+NB!!! Versioonid 0.6.4/20180214 ja kõrgemad on eraldi kaustas koos vastava installeerimise kirjeldusega
+
+
+-----------------------------------------------------
+VERSIOON: 0.6.3/20180202
 
 KIRJELDUS: 
 ----------------------------------------------------- 

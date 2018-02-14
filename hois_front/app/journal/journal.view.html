@@ -54,18 +54,26 @@
     <div flex>
       <div layout="row" flex>
         <h2 flex>{{'journal.entryTabelLegend' | translate}}</h2>
+        <div flex="50" layout="row" layout-align="end">
+          <md-input-container>
+            <md-checkbox ng-model="showAllStudentsModel" aria-label="show all students" ng-change="showAllStudents(showAllStudentsModel)">
+              {{'journal.showAll' | translate}}
+            </md-checkbox>
+          </md-input-container>
+        </div>
       </div>
       <md-table-container>
         <table md-table md-progress="entries.$promise">
           <thead md-head md-on-reorder="loadEntries">
             <tr md-row flex>
               <th md-column style="padding-right:11em;"><span>{{'student.label' | translate}}, {{'journal.studentGroup' | translate}}</span></th>
-              <th md-column style="padding-left:1em;" ng-repeat="journalEntry in journal.journalEntriesByDate">
+              <th md-column class="bordered" style="padding-left:1em;"
+                md-colors="{background: getEntryColor(journalEntry.entryType.code)}" 
+                ng-repeat="journalEntry in journal.journalEntriesByDate">
                 <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}}</span>
                 <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L'">{{journalEntry.entryDate  ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
                 <md-tooltip>
-                  {{journalEntry.startLessonNr}}
-                  <span ng-if="journalEntry.startLessonNr">,&nbsp;</span> {{journalEntry.nameEt}}
+                  <span ng-if="journalEntry.startLessonNr">{{journalEntry.startLessonNr}}. {{'journal.lesson' | translate}},&nbsp;</span> {{journalEntry.nameEt}}
                   <span>,&nbsp;</span> {{currentLanguageNameField(journalEntry.entryType)}}
                   <span>,&nbsp;</span> {{journalEntry.teacher}}
                 </md-tooltip>
@@ -75,22 +83,30 @@
           <tbody md-body>
             <tr md-row ng-repeat="row in journal.journalStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}</td>
-              <td md-cell class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate" md-colors="{background: getEntryColor(journalEntry.entryType.code)}">
+              <td md-cell class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate">
                 <div layout="row" style="padding-left:1em;">
                   <span ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
                     <span>
                       {{result.absence.value}}
                       <md-tooltip ng-if="result.absence.value">
-                        {{result.entryDate  ? (result.entryDate | hoisDate) : '-'}}
+                        {{journalEntry.entryDate  ? (journalEntry.entryDate | hoisDate) : '-'}}
+                        <span ng-if="result.addInfo">,&nbsp;
+                          {{result.addInfo}}
+                        </span>
+                        <span ng-if="journalEntry.lessons && result.absence.value === 'P'">
+                          ,&nbsp; 
+                          {{journalEntry.lessons ? (('journal.entry.lessons' | translate) + ' ' + journalEntry.lessons) : ''}}
+                        </span>
                       </md-tooltip>
                     </span>
                   <span ng-if="result.absence.value">/</span>
                   <span>
-                      {{result.grade.value}}
-                      <md-tooltip ng-if="result.grade.value">
-                        {{result.gradeInserted | hoisDate}}
-                        <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
-                  </md-tooltip>
+                    <span ng-class="{journalFinalResult: journalEntry.entryType.code === 'SISSEKANNE_L', 
+                    journalFinalResultBad: journalEntry.entryType.code === 'SISSEKANNE_L' && !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
+                    <md-tooltip ng-if="result.grade.value">
+                      {{result.gradeInserted | hoisDate}}
+                      <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
+                    </md-tooltip>
                   </span>
                   </span>
                 </div>
@@ -149,6 +165,12 @@
       <md-table-pagination md-limit="journalEntriesCriteria.size" md-limit-options="[10, 20, 50]" md-page="journalEntriesCriteria.page"
         md-total="{{journalEntries.totalElements}}" md-on-paginate="loadJournalEntries" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
         md-page-select></md-table-pagination>
+    </div>
+  </div>
+
+  <div layout-padding>
+    <div flex>
+      <div ng-include="'studyMaterial/templates/journal.material.view.tmpl.html'"></div>
     </div>
   </div>
 

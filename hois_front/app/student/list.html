@@ -33,7 +33,10 @@
 
           <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.status' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.status" name="status" model-value-attr="code" main-classifier-code="OPPURSTAATUS" multiple></hois-classifier-select>
+            <hois-classifier-select ng-if="auth.isAdmin() || auth.isTeacher()" ng-model="criteria.status" name="status" model-value-attr="code"
+              main-classifier-code="OPPURSTAATUS" multiple></hois-classifier-select>
+              <hois-classifier-select ng-if="auth.isStudent()" ng-model="criteria.status" name="status" model-value-attr="code"
+              main-classifier-code="OPPURSTAATUS" filter-values="['OPPURSTAATUS_K', 'OPPURSTAATUS_L']" multiple></hois-classifier-select>
           </md-input-container>
       </div>
         <div layout="row">
@@ -52,7 +55,7 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="person.lastname,person.firstname">{{'student.name' | translate}}</th>
-            <th md-column md-order-by="person.idcode">{{'student.idcode' | translate}}</th>
+            <th ng-if="auth.isAdmin() || auth.isTeacher()" md-column md-order-by="person.idcode">{{'student.idcode' | translate}}</th>
             <th md-column md-order-by="curriculumVersion.code">{{'student.curriculum' | translate}}</th>
             <th md-column md-order-by="studentGroup.code">{{'student.studentGroup' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'studyForm.nameEn' : 'studyForm.nameEt'}}">{{'student.studyForm' | translate}}</th>
@@ -65,7 +68,7 @@
               <a ng-if="auth.isAdmin() || auth.isTeacher()" md-no-ink class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
               <span ng-if="auth.isStudent()">{{::row.fullname}}</span>
             </td>
-            <td md-cell>{{::row.idcode}}</td>
+            <td ng-if="auth.isAdmin() || auth.isTeacher()" md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>

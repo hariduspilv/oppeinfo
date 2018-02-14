@@ -9,6 +9,7 @@ import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationAccepted;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationCreated;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationRejectedMessage;
+import ee.hitsa.ois.message.StudentResultMessage;
 
 public enum MessageType {
 
@@ -21,7 +22,7 @@ public enum MessageType {
     TEATE_LIIK_OP_TL(StudentRepresentativeApplicationRejectedMessage.class),
     TEATE_LIIK_OP_AVALDUS_TL(StudentApplicationRejectedMessage.class),
     TEATE_LIIK_OP_PT(StudentAbsenceCreated.class),
-    TEATE_LIIK_OA_TULEMUS(null),
+    TEATE_LIIK_OA_TULEMUS(StudentResultMessage.class),
     TEATE_LIIK_PRAKTIKA_URL(PracticeJournalUniqueUrlMessage.class);
 
     private final Class<?> dataBean;

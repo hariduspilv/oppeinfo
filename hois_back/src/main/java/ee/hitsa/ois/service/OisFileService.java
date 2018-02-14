@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.util.HttpUtil;
 
 @Service
@@ -30,6 +31,7 @@ public class OisFileService {
         QUERIES.put("scholarshipapplication", "select saf.oisFile from ScholarshipApplicationFile saf where saf.oisFile.id = ?1");
         QUERIES.put("school", "select s.logo from School s where s.logo.id = ?1");
         QUERIES.put("student", "select s.photo from Student s where s.photo.id = ?1");
+        QUERIES.put("studymaterial", "select m.oisFile from StudyMaterial m where m.oisFile.id = ?1");
     }
 
     @Autowired
@@ -39,7 +41,7 @@ public class OisFileService {
         String sql = QUERIES.get(type);
         if(sql == null || id == null) {
             // wrong type or missing id
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("Bad parameters for file get operation");
         }
 
         // TODO additional checks based on user role

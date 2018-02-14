@@ -63,7 +63,7 @@
       <md-button class="md-raised md-default" ng-if="auth.isStudent() && record.status === 'TOEND_STAATUS_T'" ng-click="order()">{{'certificate.orderAgain' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-if="record.id && auth.isStudent() && record.status === 'TOEND_STAATUS_T'" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-click="back('#/certificate')">{{'main.button.back' | translate}}</md-button>
-      <md-button class="md-raised md-default" ng-if="record.canViewFromEkis && !auth.isStudent()"
+      <md-button class="md-raised md-default" ng-if="record.canViewFromEkis"
        ng-href="{{getCertificateUrl(record.wdId)}}" target="_blank">{{'certificate.viewFromEkis' | translate}}</md-button>
   </div>
 </div>

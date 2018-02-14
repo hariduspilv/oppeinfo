@@ -10,6 +10,7 @@
     "searchlabel": "Otsinguparameetrid",
     "button": {
       "add": "Lisa",
+      "addExisting": "Lisa olemasolev",
       "addRow": "Lisa rida",
       "back": "Tagasi",
       "cancel": "Katkesta",
@@ -94,11 +95,14 @@
           "missingAutomaticMessageTemplate": "Süsteemis on puudu automaatse teate mall {{template}}"
         },
         "nopermission": "Vajalikud õigused puuduvad",
-        "mobileIdSignFailed": "Allkirjastamine ebaõnnestus"
+        "mobileIdSignFailed": "Allkirjastamine ebaõnnestus",
+        "maxlength": "Tekst liiga pikk",
+        "InvalidEstonianIdCode": "Isikukood ei vasta standardile"
       },
       "form-has-errors": "Vormil on vigu",
       "record": {
         "modified": "Kirjet on muudetud",
+        "notFound": "Kirjet ei leitud",
         "referenced": "Kirjega on seotud teisi kirjeid"
       },
       "system": {
@@ -349,6 +353,10 @@
           "student": {
             "list": "Minu praktika päevikud"
           }
+        },
+        "material": {
+          "higher": "Õppematerjalid (kõrg)",
+          "vocational": "Õppematerjalid (kutse)"
         },
         "examTimes": "Eksamite ajad",
         "exams": "Eksamid",
@@ -925,6 +933,7 @@
     "scholarshipStudentNotActive": "Õppur pole aktiivne",
     "studentsNotValid": "Õppurid ei vasta käskkirja tingimustele. Kas kustutada õppurid ja saata käskkiri uuesti kinnitamisele?",
     "sendToConfirm": "Saada kinnitamisele",
+    "sendToConfirmWithoutEkis": "Saada kinnitamisele ilma EKISeta",
     "sentToConfirm": "Käskkiri saadetud kinnitamisele",
     "status": "Staatus",
     "studentList": "Õppurite nimekiri",
@@ -952,6 +961,8 @@
       "applicationAkadEndDate": "Lõpp avaldusel",
       "applicationAkadStartDate": "Algus avaldusel",
       "bankAccount": "Arveldusarve number",
+      "birthdate": "Sünniaeg",
+      "citizenship": "Kodakondsus",
       "country": "Riik",
       "curriculum": "Õppekava",
       "curriculumGrade": "Omistatav kraad",
@@ -961,6 +972,7 @@
       "fin": "Finantseerimise allikas",
       "firstname": "Õppuri eesnimi",
       "finSpecific": "Finantseerimise allika täpsustus",
+      "foreign": "Välismaa IK",
       "fullname": "Õppuri nimi",
       "idcode": "Isikukood",
       "isAbroad": "Välisõpingud",
@@ -982,6 +994,7 @@
       "previousStudyLevel": "Eelnev haridus",
       "reason": "Põhjus",
       "school": "Õppeasutus",
+      "sex": "Sugu",
       "stipEndDate": "Maksmise periood kuni",
       "stipEndReason": "Põhjus",
       "stipStartDate": "Maksmise periood alates",
@@ -1128,9 +1141,10 @@
     "signatoryIdcode": "Allkirjastaja isikukood",
     "clearOther": "Tühista õppuri nimi ja isikukood",
     "invalidIdcode": "Vale isikukood!",
+    "orderFailure": "Tõendi tellimine ebaõnnestus, palun pöördu õppeasutuse administraatori poole",
     "otherName": "Õppuri nimi",
     "otherIdcode": "Õppuri isikukood",
-    "signatoriesMissing": "Tõendi allkirjastajad puuduvad, palun pöördu õppespetsialisti poole",
+    "signatoriesMissing": "Tõendi allkirjastajad puuduvad, palun pöördu õppeasutuse administraatori poole",
     "saveAndOrder": "Salvesta ja telli tõend",
     "status": "Tõendi staatus",
     "viewFromEkis": "Vaata tõendit siit (EKIS)",
@@ -1294,12 +1308,15 @@
     "areaOfStudy": "Õppevaldkond",
     "fieldOfStudy": "Õppesuund",
     "group": "Õppekavarühm",
+    "studyOutcomes": "Õpiväljundid",
     "studyOutcomesEt": "Õpiväljundid eesti keeles",
     "studyOutcomesEn": "Õpiväljundid inglise keeles",
     "structure": "Õppekava struktuur",
+    "admissionRequirements": "Nõuded õpingute alustamiseks",
     "admissionRequirementsEt": "Nõuded õpingute alustamiseks eesti keeles",
     "admissionRequirementsEn": "Nõuded õpingute alustamiseks inglise keeles",
     "graduationRequirementsEt": "Nõuded õpingute lõpetamiseks eesti keeles",
+    "graduationRequirements": "Nõuded õpingute lõpetamiseks",
     "graduationRequirementsEn": "Nõuded õpingute lõpetamiseks inglise keeles",
     "higherAdmissionRequirementsEt": "Juurdepääsu tingimused eesti keeles",
     "higherAdmissionRequirementsEn": "Juurdepääsu tingimused inglise  keeles",
@@ -1367,12 +1384,33 @@
     "versionStatus": "Õppekava versiooni kehtivus ja staatus",
     "yearCapacitiesTable": "Moodulite mahtude jaotus õppeaastate lõikes (EKAP)",
     "implementationPlanStatus": "Rakenduskava kehtivus ja staatus",
+    "public": {
+      "curriculumData": "Õppekava andmed",
+      "curriculumVersionsHigher": "Õppekava versioonid",
+      "curriculumVersionsVocational": "Rakenduskavad",
+      "code": "Kood",
+      "vocationalCreditsUnit": "EKAP",
+      "higherCreditsUnit": "EAP",
+      "versionTitle": "Põhiandmed",
+      "codeOrName": "Kood või nimetus",
+      "admissionYear": "Vastuvõtu aasta",
+      "studyForm": "Õppevorm",
+      "targetGroup": "Sihtgrupp",
+      "assessment": "Hindamisviis",
+      "themes": "Teemad",
+      "name": "Nimi",
+      "higherStudyLoad": "Maht EAP",
+      "vocationalStudyLoad": "Maht tundides/EKAP",
+      "mandatorySubjects": "Kohustuslikud ained",
+      "optionalSubjects": "Valikained"
+    },
     "search": {
       "creditsEap": "Maht EAP",
       "creditsEkap": "Maht EKAP",
       "creditsEapEkap": "Maht EAP/EKAP"
     },
     "consecution": {
+      "label": "Järgnevus",
       "primary": "Esmaõppe õppekava",
       "secondary": "Jätkuõppe õppekava"
     },
@@ -1825,6 +1863,20 @@
       }
     }
   },
+  "studyMaterial": {
+    "label": "Õppematerjalid",
+    "openfolder": "Ava kaust",
+    "count": "Materjalide arv",
+    "type": "Tüüp",
+    "name": "Nimetus",
+    "description": "Kirjeldus",
+    "fileorlink": "Fail/Link",
+    "link": "Link",
+    "journalCount": "Seotud päevikud",
+    "isVisibleToStudents": "Nähtav õppuritele",
+    "isPublic": "Avalik",
+    "deleteconfirm": "Kas oled kindel, et soovid materjali eemaldada?"
+  },
   "studyOutcome": {
     "add": "Lisa õpiväljund",
     "nameEt": "Õpiväljund eesti keeles",
@@ -1835,6 +1887,7 @@
     "year": "Õppeaasta",
     "startDate": "Alguskuupäev",
     "endDate": "Lõppkuupäev",
+    "missingCurrent": "Õppeasutusel puudub jooksev õppeaasta",
     "periods": "Perioodide arv",
     "studyPeriods": "Õppeperiood",
     "studyPeriodEvents": "Kalendri-sündmus",
@@ -1842,6 +1895,8 @@
       "deleteconfirm": "Kas oled kindel, et soovid õppeperioodi kustutada?",
       "heading": "Õppeperioodi andmed",
       "year": "Õppeaasta",
+      "missing": "Õppeasutusel puuduvad õppeperioodid",
+      "missingCurrent": "Õppeasutusel puudub jooksev õppeperiood",
       "nameEt": "Õppeperioodi nimetus",
       "nameEn": "Õppeperioodi nimetus inglise keeles",
       "type": "Õppeperioodi tüüp",
@@ -1869,7 +1924,7 @@
       "startTime": "Alguse kellaaeg",
       "endTime": "Lõpu kellaaeg",
       "error": {
-        "uniqueInPeriod": "Sellist tüüpi sündmus juba eksisteerib käesolevas õppeaastas või õppeperioodis"
+        "uniqueInPeriod": "Sellist tüüpi sündmus juba eksisteerib käesolevas õppeperioodis"
       }
     }
   },
@@ -2231,7 +2286,7 @@
     },
     "saveToCalendar": "Salvesta kalendrisse",
     "error": {
-      "noPeriodTimetable": "Valitud perioodi kohta tunniplaan puudub",
+      "noWeekTimetable": "Valitud nädala kohta tunniplaan puudub",
       "noSearchResults": "Otsingutingimustele vastavaid kirjeid ei leitud",
       "missingCapacities": "Mitte ühelegi õppeainele ei ole lisatud planeeritud mahtu",
       "isBeforeNow": "Mineviku sündmust ei saa muuta"
@@ -2262,7 +2317,9 @@
     "moduleDescription": "Teema kirjeldus",
     "finalResult": "Lõpptulemus",
     "showAll": "Näita kõiki",
+    "unconfirmedCountOne": "Teil on 1 kinnitamata päevik!",
     "unconfirmedCount": "Teil on {{count}} kinnitamata päevikut!",
+    "lesson": "tund",
     "entry": {
       "date": "Sissekande kp",
       "new": "Sissekanne (uus)",
@@ -2326,6 +2383,7 @@
     "journalResults": "Päevikute tulemused",
     "addStudents": "Lisa õppurid",
     "moduleGrade": "Mooduli hinne",
+    "changeReason": "Muutmise põhjus",
     "insertedFrom": "Loodud alates",
     "insertedThru": "Loodud kuni",
     "confirmedFrom": "Kinnitatud alates",

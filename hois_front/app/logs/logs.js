@@ -49,9 +49,5 @@ angular.module('hitsaOis').controller('LogsController', ['$mdDialog', '$route', 
         clickOutsideToClose: true
       });
     };
-
-    $scope.clearCriteria = function() {
-      QueryUtils.clearQueryParams($scope.criteria);
-    };
   }
 ]);

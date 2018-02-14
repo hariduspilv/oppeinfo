@@ -18,9 +18,13 @@ public class DirectiveViewStudentDto {
 
     private Long student;
     private String idcode;
+    private String foreignIdcode;
     private String firstname;
     private String lastname;
     private String fullname;
+    private LocalDate birthdate;
+    private String sex;
+    private String citizenship;
     private Boolean isPeriod;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -73,6 +77,14 @@ public class DirectiveViewStudentDto {
         this.idcode = idcode;
     }
 
+    public String getForeignIdcode() {
+        return foreignIdcode;
+    }
+
+    public void setForeignIdcode(String foreignIdcode) {
+        this.foreignIdcode = foreignIdcode;
+    }
+
     public String getFirstname() {
         return firstname;
     }
@@ -95,6 +107,30 @@ public class DirectiveViewStudentDto {
 
     public void setFullname(String fullname) {
         this.fullname = fullname;
+    }
+
+    public LocalDate getBirthdate() {
+        return birthdate;
+    }
+
+    public void setBirthdate(LocalDate birthdate) {
+        this.birthdate = birthdate;
+    }
+
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
+    public String getCitizenship() {
+        return citizenship;
+    }
+
+    public void setCitizenship(String citizenship) {
+        this.citizenship = citizenship;
     }
 
     public Boolean getIsPeriod() {
@@ -390,9 +426,13 @@ public class DirectiveViewStudentDto {
         }
         if(person != null) {
             dto.setIdcode(person.getIdcode());
+            dto.setForeignIdcode(person.getForeignIdcode());
             dto.setFirstname(person.getFirstname());
             dto.setLastname(person.getLastname());
             dto.setFullname(person.getFullname());
+            dto.setBirthdate(person.getBirthdate());
+            dto.setSex(EntityUtil.getNullableCode(person.getSex()));
+            dto.setCitizenship(EntityUtil.getNullableCode(person.getCitizenship()));
         }
 
         if(ClassifierUtil.oneOf(directiveStudent.getDirective().getStatus(), DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, DirectiveStatus.KASKKIRI_STAATUS_TYHISTATUD)) {

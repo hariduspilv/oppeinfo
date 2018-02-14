@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q', '$rootScope', '$route', '$scope', 'dialogService', 'Classifier', 'message', 'QueryUtils', 'ArrayUtils',
-  function ($location, $q, $rootScope, $route, $scope, dialogService, Classifier, message, QueryUtils, ArrayUtils) {
+angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q', '$rootScope', '$route', '$scope', 'dialogService', 'Classifier', 'message', 'QueryUtils', 'ArrayUtils', 'USER_CONFIRM_RIGHTS',
+  function ($location, $q, $rootScope, $route, $scope, dialogService, Classifier, message, QueryUtils, ArrayUtils, USER_CONFIRM_RIGHTS) {
     var personId = $route.current.params.person;
     var userId = $route.current.params.user;
     var Endpoint = QueryUtils.endpoint('/persons/'+personId+'/users');
@@ -70,6 +70,10 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
       }
     } 
 
+    $scope.showPermission = function(objectCode, permCode) {
+      return permCode !== 'OIGUS_K' || USER_CONFIRM_RIGHTS.indexOf(objectCode) !== -1;
+    };
+
     $scope.roleChanged = function () {
       var role = $scope.user.role;
       if ($scope.noSchool.indexOf(role) !== -1) {
@@ -130,8 +134,8 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
       $scope.roleChanged();
     });
   }
-]).controller('UsersViewController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils',
-  function ($q, $route, $scope, Classifier, QueryUtils) {
+]).controller('UsersViewController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', 'USER_CONFIRM_RIGHTS',
+  function ($q, $route, $scope, Classifier, QueryUtils, USER_CONFIRM_RIGHTS) {
     var personId = $route.current.params.person;
     var userId = $route.current.params.user;
     var Endpoint = QueryUtils.endpoint('/persons/'+personId+'/users');
@@ -140,6 +144,10 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
     $scope.permissions = Classifier.queryForDropdown({mainClassCode: 'OIGUS'});
     $scope.userRoleDefaults = QueryUtils.endpoint('/users/rolesDefaults').search();
     $scope.user = Endpoint.get({id: userId});
+
+    $scope.showPermission = function(objectCode, permCode) {
+      return permCode !== 'OIGUS_K' || USER_CONFIRM_RIGHTS.indexOf(objectCode) !== -1;
+    };
 
     $q.all([$scope.objects.$promise, $scope.permissions.$promise, $scope.userRoleDefaults.$promise, $scope.user.$promise]).then(function() {
       var objects = $scope.userRoleDefaults.defaultRights[$scope.user.role] || {};

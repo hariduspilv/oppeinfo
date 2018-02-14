@@ -141,12 +141,12 @@ public abstract class UserUtil {
     public static boolean canCancelDirective(HoisUserDetails user, Directive directive) {
         return !ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())
             && ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, directive.getStatus())
-            && isSchoolAdmin(user, directive.getSchool());
+            && isSchoolAdmin(user, directive.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KASKKIRI);
     }
 
     public static boolean canEditDirective(HoisUserDetails user, Directive directive) {
         return ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus())
-            && isSchoolAdmin(user, directive.getSchool());
+            && isSchoolAdmin(user, directive.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KASKKIRI);
     }
 
     public static boolean canViewStudent(HoisUserDetails user, Student student) {
@@ -154,7 +154,7 @@ public abstract class UserUtil {
     }
 
     public static boolean canEditStudent(HoisUserDetails user, Student student) {
-        return isSchoolAdmin(user, student.getSchool()) || isAdultStudent(user, student)|| isStudentRepresentative(user, student);
+        return (isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) || isAdultStudent(user, student)|| isStudentRepresentative(user, student);
     }
 
     /**
@@ -278,12 +278,20 @@ public abstract class UserUtil {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(), "User is not school admin");
     }
 
+    public static void assertIsSchoolAdmin(HoisUserDetails user, Permission permission, PermissionObject object) {
+        AssertionFailedException.throwIf(!user.isSchoolAdmin() || !hasPermission(user, permission, object), "User is not school admin or has no rights");
+    }
+
     public static void assertIsMainAdmin(HoisUserDetails user) {
         AssertionFailedException.throwIf(!user.isMainAdmin(), "User is not main admin");
     }
 
     public static void assertIsSchoolAdmin(HoisUserDetails user, School school) {
         AssertionFailedException.throwIf(!isSchoolAdmin(user, school), "User is not school admin in given school");
+    }
+
+    public static void assertIsSchoolAdmin(HoisUserDetails user, School school, Permission permission, PermissionObject object) {
+        AssertionFailedException.throwIf(!isSchoolAdmin(user, school) || !hasPermission(user, permission, object), "User is not school admin in given school or has no rights");
     }
 
     public static void assertIsSchoolAdminOrTeacher(HoisUserDetails user) {

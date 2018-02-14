@@ -41,7 +41,7 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleSubjectDto;
 @RestController
 @RequestMapping("higherModule")
 public class CurriculumVersionHigherModuleController {
-        
+
     @Autowired
     private CurriculumVersionHigherModuleService curriculumVersionHigherModuleService;
     @Autowired
@@ -52,13 +52,13 @@ public class CurriculumVersionHigherModuleController {
     private EntityManager em;
     @Autowired
     private SchoolService schoolService;
-    
+
     @GetMapping("{id:\\d+}")
     public CurriculumVersionHigherModuleDto get(HoisUserDetails user, @WithEntity CurriculumVersionHigherModule module) {
         CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), module.getCurriculumVersion());
         return CurriculumVersionHigherModuleDto.of(module);
     }
-    
+
     @PostMapping
     public CurriculumVersionHigherModuleDto create(HoisUserDetails user,
             @NotNull @Valid @RequestBody CurriculumVersionHigherModuleDto form) {
@@ -78,7 +78,7 @@ public class CurriculumVersionHigherModuleController {
     public void delete(HoisUserDetails user,
             @WithVersionedEntity(versionRequestParam = "version") CurriculumVersionHigherModule module,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        validateUserRights(user, module.getCurriculumVersion().getId());
+        validateUserRights(user, EntityUtil.getId(module.getCurriculumVersion()));
         curriculumValidationService.assertCurriculumVersionCanBeEdited(module.getCurriculumVersion());
         curriculumVersionHigherModuleService.delete(user, module);
     }
@@ -87,7 +87,7 @@ public class CurriculumVersionHigherModuleController {
     public void deleteSubject(HoisUserDetails user,
             @WithVersionedEntity(versionRequestParam = "version") CurriculumVersionHigherModuleSubject subject,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        validateUserRights(user, subject.getModule().getCurriculumVersion().getId());
+        validateUserRights(user, EntityUtil.getId(subject.getModule().getCurriculumVersion()));
         curriculumValidationService.assertCurriculumVersionCanBeEdited(subject.getModule().getCurriculumVersion());
         curriculumVersionHigherModuleService.deleteSubject(user, subject);
     }
@@ -100,12 +100,12 @@ public class CurriculumVersionHigherModuleController {
     public CurriculumVersionHigherModuleDto getCredits(@WithEntity CurriculumVersionHigherModule module) {
         return CurriculumVersionHigherModuleDto.credits(module);
     }
-    
+
     @GetMapping("/possibleSubjects")
     public List<CurriculumVersionHigherModuleSubjectDto> getSubjects(HigherModuleSubjectCommand command) {
         return curriculumVersionHigherModuleService.getSubjectsForHigherModule(command);
     }
-    
+
     @GetMapping("/minorSpeciality/possibleSubjects")
     public Set<CurriculumVersionHigherModuleSubjectDto> getSubjectsForMinorSpeciality(HigherModuleSubjectCommand command) {
         return curriculumVersionHigherModuleService.getSubjectsForMinorSpeciality(command);
@@ -124,17 +124,16 @@ public class CurriculumVersionHigherModuleController {
         classifiers.addAll(otherTypes);
         return classifiers;
     }
-    
+
     @GetMapping("/version/{id:\\d+}/specialities")
     public List<AutocompleteResult> getSpecialities(@WithEntity CurriculumVersion version) {
         return curriculumVersionHigherModuleService.getSpecialities(version);
     }
-    
-    public void validateUserRights(HoisUserDetails user, Long curriculumVersionId) {
+
+    private void validateUserRights(HoisUserDetails user, Long curriculumVersionId) {
         CurriculumVersion version = em.getReference(CurriculumVersion.class, curriculumVersionId);
         Curriculum curriculum = version.getCurriculum();
         String myEhisShool = schoolService.getEhisSchool(user.getSchoolId());
         CurriculumUtil.assertCanChange(user, myEhisShool, curriculum);
     }
-
 }

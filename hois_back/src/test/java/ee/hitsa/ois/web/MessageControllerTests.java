@@ -100,6 +100,14 @@ public class MessageControllerTests {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
+    
+    @Test
+    public void unreadReceivedCount() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/received/new");
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 
     @Test
     public void crud() {

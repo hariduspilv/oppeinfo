@@ -1,0 +1,101 @@
+<div layout-padding ng-cloak class="form-readonly">
+  <fieldset>
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.public.curriculumData' | translate}}</legend>
+    <div>&nbsp;</div>
+    <div layout="row" layout-sm="column" layout-xs="column" flex>
+      <md-input-container flex-gt-sm="50">
+        <label>{{'curriculum.nameEt' | translate}}</label>
+        <hois-value value="curriculum.nameEt"></hois-value>
+      </md-input-container>
+      <md-input-container flex-gt-sm="45" flex-offset-gt-xs="5">
+        <label>{{'curriculum.nameEn' | translate}}</label>
+        <hois-value value="curriculum.nameEn"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div layout="row" layout-sm="column" layout-xs="column" flex>
+      <md-input-container flex-gt-sm="50">
+        <label>{{'curriculum.code' | translate}}</label>
+        <hois-value value="curriculum.code"></hois-value>
+      </md-input-container>
+      <md-input-container flex-gt-sm="45" flex-offset-gt-xs="5">
+        <label>{{'curriculum.merCode' | translate}}</label>
+        <hois-value value="curriculum.merCode"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div layout="row" layout-sm="column" layout-xs="column" flex>
+      <md-input-container flex-gt-sm="25">
+        <label>{{'curriculum.credits' | translate}}</label>
+        <hois-value value="curriculum.credits"></hois-value>
+      </md-input-container>
+      <md-input-container flex-gt-sm="25">
+        <label>{{'student.studyLevel' | translate}}</label>
+        <hois-value value="curriculum.origStudyLevel"></hois-value>
+      </md-input-container>
+      <md-input-container ng-if="curriculum.higher" flex-gt-sm="45" flex-offset-gt-xs="5">
+        <label>{{'curriculum.studyPeriod' | translate}} {{'main.years' | translate}}/{{'main.months' | translate}}</label>
+        <hois-value value="curriculum.studyPeriodYears + '/' + curriculum.studyPeriodMonths"></hois-value>
+      </md-input-container>
+      <md-input-container ng-if="!curriculum.higher" flex-gt-sm="20" flex-offset-gt-xs="5">
+        <label>{{'curriculum.studyPeriod' | translate}} {{'main.years' | translate}}/{{'main.months' | translate}}</label>
+        <hois-value value="curriculum.studyPeriodYears + '/' + curriculum.studyPeriodMonths"></hois-value>
+      </md-input-container>
+      <md-input-container ng-if="!curriculum.higher" flex-gt-sm="25">
+        <label>{{'curriculum.consecution.label' | translate}}</label>
+        <hois-value value="curriculum.consecution"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div>&nbsp;</div>
+    <div layout="column">
+      <md-input-container flex>
+        <label>{{'curriculum.studyOutcomes' | translate}}</label>
+        <textarea ng-if="currentLanguage() === 'en'" ng-model="curriculum.outcomesEn" class="textarea-readonly" max-rows="10" md-select-on-focus readonly></textarea>
+        <textarea ng-if="currentLanguage() !== 'en'" ng-model="curriculum.outcomesEt" class="textarea-readonly" max-rows="10" md-select-on-focus readonly></textarea>
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{'curriculum.admissionRequirements' | translate}}</label>
+        <textarea ng-if="currentLanguage() === 'en'" ng-model="curriculum.admissionRequirementsEn" class="textarea-readonly" max-rows="10" md-select-on-focus
+          readonly></textarea>
+        <textarea ng-if="currentLanguage() !== 'en'" ng-model="curriculum.admissionRequirementsEt" class="textarea-readonly" max-rows="10" md-select-on-focus
+          readonly></textarea>
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{'curriculum.graduationRequirements' | translate}}</label>
+        <textarea ng-if="currentLanguage() === 'en'" ng-model="curriculum.graduationRequirementsEn" class="textarea-readonly" max-rows="10" md-select-on-focus
+          readonly></textarea>
+        <textarea ng-if="currentLanguage() !== 'en'" ng-model="curriculum.graduationRequirementsEt" class="textarea-readonly" max-rows="10" md-select-on-focus
+          readonly></textarea>
+      </md-input-container>
+    </div>
+  </fieldset>
+
+  <span ng-if="curriculum.versions.length > 0">
+    <div>&nbsp;</div>
+    <fieldset>
+      <legend ng-if="curriculum.higher" md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.public.curriculumVersionsHigher' | translate}}</legend>
+      <legend ng-if="!curriculum.higher" md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.public.curriculumVersionsVocational' | translate}}</legend>
+      <md-table-container>
+        <table md-table md-progress="promise" class="secondary-table">
+          <thead md-head md-order="query.order">
+            <tr md-row>
+              <th md-column>{{'curriculum.public.code' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="version in curriculum.versions | orderBy: 'code'">
+              <td md-cell>
+                <a href="/#/curriculum/{{::curriculum.id}}/version/{{::version.id}}" class="md-primary">{{version.code}}</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </fieldset>
+  </span>
+
+  <div layout="row">
+    <md-button ng-click="back('#/curriculums/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

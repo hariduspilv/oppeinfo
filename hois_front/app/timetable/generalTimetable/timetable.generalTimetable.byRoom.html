@@ -1,38 +1,18 @@
 <div ng-include="'timetable/generalTimetable/timetable.generalTimetable.navbar.html'"></div>
 
 <div>
-    <div ng-if="timetableSearch" ng-controller="GeneralTimetableSearchController">
-        <div ng-include="'timetable/generalTimetable/timetable.generalTimetable.search.html'"></div>
-    
-        <div ng-controller="SearchTimetableViewController">
-            <div ng-include="'timetable/timetable.week.view.html'"></div>
-        </div>
-    
-        <md-button ng-click="backToTimetableByRoom()" class="md-raised">{{'main.button.back' | translate}}</md-button>
-    </div>
-    
-    <span ng-show="!timetableSearch">
-        <div ng-if="timetablesByRooms">
-            <br>
-            <md-grid-list ng-app="app" md-cols="5" md-gutter="1em" md-row-height="36px" flex>
-                <md-grid-tile ng-repeat="row in timetablesByRooms" style="text-align: left;">
-                    <md-button class="md-raised md-primary" ng-click="showRoomWeek(shownStudyPeriodId, row.roomId, shownTimetableId)">
-                        {{row.roomCode}}
-                    </md-button>
-                </md-grid-tile>
-            </md-grid-list>
-        </div>
-    
-        <div ng-controller="RoomTimetableViewController">
-            <div ng-include="'timetable/timetable.week.view.html'"></div>
-        </div>
-    
-        <div layout-padding>
-            <div ng-repeat="row in timetables track by $index" style="padding:0;">
-                <a class="small-link" ng-class="{shownTimetable: $index === shownTimetableIndex}" ng-click="showTimetable(row.id, row.studyPeriodId)">
-                    {{currentLanguageNameField(row)}} {{row.startDate | hoisDate}}-{{row.endDate | hoisDate}}
-                </a>
-            </div>
-        </div>
-    </span>
+  <div ng-if="timetablesByRooms">
+    <md-grid-list ng-app="app" md-cols-xs="1" md-cols-sm="2" md-cols-md="4" md-cols-lg="8" md-cols-gt-lg="8" md-gutter="1em"
+      md-row-height="40px" flex>
+      <md-grid-tile ng-repeat="row in timetablesByRooms" style="text-align: left;">
+        <md-button class="md-button" md-colors="{background: 'background-200'}" ng-click="showRoomWeek(row.roomId)">
+          {{row.roomCode}}
+        </md-button>
+      </md-grid-tile>
+    </md-grid-list>
+  </div>
+
+  <div ng-controller="RoomTimetableViewController">
+    <div ng-include="'timetable/timetable.week.view.html'"></div>
+  </div>
 </div>

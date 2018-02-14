@@ -4,6 +4,9 @@
       <tr md-row>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.birthdate' | translate}}</th>
+        <th md-column>{{'directive.student.sex' | translate}}</th>
+        <th md-column>{{'directive.student.citizenship' | translate}}</th>
         <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
         <th md-column ng-if="formState.school.higher">{{'directive.student.studyLoad' | translate}}</th>
         <th md-column>{{'directive.student.studyForm' | translate}}</th>
@@ -21,7 +24,16 @@
           <a class="md-primary" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a>
         </td>
         <td ng-if="!row.student" md-cell>{{::row.fullname}}</td>
-        <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{::(row.idcode || row.foreignIdcode)}}</td>
+        <td md-cell>
+          <hois-value value="row.birthdate | hoisDate"></hois-value>
+        </td>
+        <td md-cell>
+          <hois-classifier-value ng-model="row.sex" main-classifier-code="SUGU"></hois-classifier-value>
+        </td>
+        <td md-cell>
+          <hois-classifier-value ng-model="row.citizenship" main-classifier-code="RIIK"></hois-classifier-value>
+        </td>
         <td md-cell>{{currentLanguageNameField(row.newCurriculumVersion)}}</td>
         <td md-cell ng-if="formState.school.higher">
           <hois-classifier-value ng-model="row.studyLoad" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>

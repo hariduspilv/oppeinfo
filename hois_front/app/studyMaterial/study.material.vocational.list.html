@@ -1,0 +1,62 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="loadData()" novalidate>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'studyYear.label' | translate}}</label>
+            <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year></hois-select>
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'journal.label' | translate}}</label>
+            <hois-select ng-model="criteria.journal" type="journal"></hois-select>
+          </md-input-container>
+        </div>
+
+        <div ng-if="auth.isAdmin()" layout="row" layout-sm="column" layout-xs="column">
+          <div flex="45" flex-sm="100" flex-xs="100">
+            <hois-autocomplete flex ng-model="$parent.teacher" method="teachers" name="teacher" label="teacher.label"></hois-autocomplete>
+          </div>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column>{{'journal.label' | translate}}</th>
+            <th md-column>{{'studyYear.label' | translate}}</th>
+            <th md-column>{{'studyMaterial.count' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(row)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.studyYear)}}</td>
+            <td md-cell>{{row.materialCount}}</td>
+            <td md-cell>
+              <div ng-if="canEdit">
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/studyMaterial/vocational/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+      md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>

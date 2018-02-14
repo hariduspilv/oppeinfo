@@ -32,7 +32,6 @@ import ee.hitsa.ois.web.commandobject.timetable.TimetableEditForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventHigherForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventVocationalForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand;
-import ee.hitsa.ois.web.dto.timetable.GeneralTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.GroupTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetablePlanDto;
 import ee.hitsa.ois.web.dto.timetable.RoomTimetableDto;
@@ -41,6 +40,7 @@ import ee.hitsa.ois.web.dto.timetable.TimetableDatesDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetablePlanDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
 
 @RestController
@@ -180,27 +180,24 @@ public class TimetableController {
         return get(timetableService.publicize(timetable));
     }
     
-    @GetMapping("/generalTimetables/{school:\\d+}")
-    public List<GeneralTimetableDto> generalTimetables(@PathVariable("school") Long schoolId) {
-        return timetableService.generalTimetables(schoolId);
+    @GetMapping("/timetableStudyYearWeeks/{school:\\d+}")
+    public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(@PathVariable("school") Long schoolId) {
+        return timetableService.timetableStudyYearWeeks(schoolId);
     }
     
-    @GetMapping("/groupPeriodTimetables/{school:\\d+}")
-    public List<GroupTimetableDto> groupPeriodTimetables(@PathVariable("school") Long schoolId, @RequestParam("studyPeriodId") Long studyPeriodId,  
-            @RequestParam("timetableId") Long timetableId) {
-        return timetableService.groupPeriodTimetables(schoolId, studyPeriodId, timetableId);
+    @GetMapping("/group/{school:\\d+}")
+    public List<GroupTimetableDto> groupTimetables(@PathVariable("school") Long schoolId) {
+        return timetableService.groupTimetables(schoolId);
+    }
+
+    @GetMapping("/teacher/{school:\\d+}")
+    public List<TeacherTimetableDto> teacherTimetables(@PathVariable("school") Long schoolId) {
+        return timetableService.teacherTimetables(schoolId);
     }
     
-    @GetMapping("/teacherPeriodTimetables/{school:\\d+}")
-    public List<TeacherTimetableDto> teacherPeriodTimetables(@PathVariable("school") Long schoolId, @RequestParam("studyPeriodId") Long studyPeriodId, 
-            @RequestParam("timetableId") Long timetableId) {
-        return timetableService.teacherPeriodTimetables(schoolId, studyPeriodId, timetableId);
-    }
-    
-    @GetMapping("/roomPeriodTimetables/{school:\\d+}")
-    public List<RoomTimetableDto> roomPeriodTimetables(@PathVariable("school") Long schoolId, @RequestParam("studyPeriodId") Long studyPeriodId, 
-            @RequestParam("timetableId") Long timetableId) {
-        return timetableService.roomPeriodTimetables(schoolId, studyPeriodId, timetableId);
+    @GetMapping("/room/{school:\\d+}")
+    public List<RoomTimetableDto> roomTimetables(@PathVariable("school") Long schoolId) {
+        return timetableService.roomTimetables(schoolId);
     }
     
     @GetMapping("/timetableDifference.xls")

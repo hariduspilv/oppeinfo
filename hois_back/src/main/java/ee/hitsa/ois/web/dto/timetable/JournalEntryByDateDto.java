@@ -11,7 +11,7 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 public class JournalEntryByDateDto {
 
     private LocalDate entryDate;
-    private Integer startLessonNr;
+    private Long startLessonNr;
     private Integer lessons;
     private String nameEt;
     @ClassifierRestriction(MainClassCode.SISSEKANNE)
@@ -28,11 +28,11 @@ public class JournalEntryByDateDto {
         this.entryDate = entryDate;
     }
 
-    public Integer getStartLessonNr() {
+    public Long getStartLessonNr() {
         return startLessonNr;
     }
 
-    public void setStartLessonNr(Integer startLessonNr) {
+    public void setStartLessonNr(Long startLessonNr) {
         this.startLessonNr = startLessonNr;
     }
 

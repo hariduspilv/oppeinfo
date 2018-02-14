@@ -87,6 +87,22 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
     })
+    .when('/timetable/generalTimetableByRoom/:schoolId?', {
+      templateUrl: 'timetable/generalTimetable/timetable.generalTimetable.byRoom.html',
+      controller: 'GeneralTimetableByRoomController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
+      }
+    })
     .when('/timetable/personalGeneralTimetable', {
       templateUrl: 'timetable/generalTimetable/timetable.generalTimetable.personal.html',
       controller: 'PersonalGeneralTimetableController',
@@ -103,9 +119,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
     })
-    .when('/timetable/generalTimetableByRoom/:schoolId?', {
-      templateUrl: 'timetable/generalTimetable/timetable.generalTimetable.byRoom.html',
-      controller: 'GeneralTimetableByRoomController',
+    .when('/timetable/searchGeneralTimetable', {
+      templateUrl: 'timetable/generalTimetable/timetable.generalTimetable.search.html',
+      controller: 'GeneralTimetableSearchController',
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function ($translate) {
@@ -208,25 +224,45 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
     })
-    .when('/timetable/group/:schoolId/:periodId/:groupId/:timetableId/:weekIndex?', {
+    .when('/timetable/group/:schoolId/:groupId/:weekIndex?', {
       templateUrl: 'timetable/timetable.week.view.html',
       controller: 'GroupTimetableViewController',
-      controllerAs: 'controller'
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        }
+      },
     })
-    .when('/timetable/teacher/:schoolId/:periodId/:teacherId/:timetableId/:weekIndex?', {
+    .when('/timetable/teacher/:schoolId/:teacherId/:weekIndex?', {
       templateUrl: 'timetable/timetable.week.view.html',
       controller: 'TeacherTimetableViewController',
-      controllerAs: 'controller'
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        }
+      },
     })
-    .when('/timetable/room/:schoolId/:periodId/:roomId/:timetableId/:weekIndex?', {
+    .when('/timetable/room/:schoolId/:roomId/:weekIndex?', {
       templateUrl: 'timetable/timetable.week.view.html',
       controller: 'RoomTimetableViewController',
-      controllerAs: 'controller'
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        }
+      }
     })
-    .when('/timetable/student/:schoolId/:periodId/:studentId/:timetableId', {
+    .when('/timetable/student/:schoolId/:studentId', {
       templateUrl: 'timetable/timetable.week.view.html',
       controller: 'StudentTimetableViewController',
       controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }

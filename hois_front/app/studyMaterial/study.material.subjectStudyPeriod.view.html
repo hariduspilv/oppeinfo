@@ -1,0 +1,29 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex class="form-readonly">
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label class="textInput">{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
+        <hois-value value="currentLanguageNameField(subjectStudyPeriod.studyPeriod)"></hois-value>
+      </md-input-container>
+      <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <label class="textInput">{{'subjectStudyPeriod.subject' | translate}}</label>
+        <hois-value value="currentLanguageNameField(subjectStudyPeriod.subject)"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label class="textInput">{{'subjectStudyPeriod.teachers' | translate}}</label>
+        <hois-value value="teachers"></hois-value>
+      </md-input-container>
+    </div>
+  </div>
+  <div flex>
+    <br/>
+    <div ng-include="'studyMaterial/templates/subjectStudyPeriod.material.view.tmpl.html'"></div>
+    <br/>
+
+    <div layout="row">
+      <md-button class="md-raised md-default" ng-click="back()">{{'main.button.back' | translate}}</md-button>
+    </div>
+  </div>
+</div>

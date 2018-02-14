@@ -8,6 +8,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +30,7 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MessageStatus;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
@@ -158,6 +160,18 @@ public class MessageService {
         qb.optionalCriteria("m.inserted <= :sentThru", "sentThru", criteria.getSentThru(), DateUtils::lastMomentOfDay);
         Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, RECEIVED_MESSAGES_SELECT, em, pageable);
         return messages.map(d -> new MessageSearchDto(resultAsLong(d, 0), resultAsString(d, 1), null, resultAsLocalDateTime(d, 3), PersonUtil.fullname(resultAsString(d, 5), resultAsString(d, 6)), resultAsBoolean(d, 4), resultAsLong(d, 7)));
+    }
+
+    public Map<String, Long> unreadReceivedCount(HoisUserDetails user) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from message m join message_receiver mr on m.id = mr.message_id");
+        qb.requiredCriteria("mr.person_id = :personId", "personId", user.getPersonId());
+        if(!user.isMainAdmin()) {
+            qb.requiredCriteria("(m.school_id is null OR m.school_id = :schoolId)", "schoolId", user.getSchoolId());
+        }
+        qb.filter("mr.read is null");
+
+        Object unreadCount = qb.select("count(*)", em).getSingleResult();
+        return Collections.singletonMap("unread", resultAsLong(unreadCount, 0));
     }
 
     public Message create(HoisUserDetails user, MessageForm form) {
@@ -335,6 +349,7 @@ public class MessageService {
                 + "left join curriculum c on sg.curriculum_id = c.id ");
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
+        qb.requiredCriteria("s.status_code in (:activeStudents)", "activeStudents", StudentStatus.STUDENT_STATUS_ACTIVE);
 
         qb.requiredCriteria(" (sg.teacher_id = :teacherId "
                 
@@ -418,8 +433,8 @@ public class MessageService {
         }, result);
     }
 
-    public List<MessageReceiverDto> getStudents(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
-        List<MessageReceiverDto> students = studentService.search(schoolId, criteria, pageable)
+    public List<MessageReceiverDto> getStudents(HoisUserDetails user, StudentSearchCommand criteria, Pageable pageable) {
+        List<MessageReceiverDto> students = studentService.search(user, criteria, pageable)
                 .map(MessageReceiverDto::of).getContent();
         List<Long> studentIds = StreamUtil.toMappedList(MessageReceiverDto::getId, students);
         if(!studentIds.isEmpty()) {

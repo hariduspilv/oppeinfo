@@ -17,7 +17,7 @@
 
         <div layout="row" layout-sm="column" layout-xs="column" ng-if="auth.isAdmin()">
           <div flex="45" flex-sm="100" flex-xs="100">
-            <hois-autocomplete label="teacher.label" ng-model="search.teacher" method="teachers"></hois-autocomplete>
+            <hois-autocomplete label="teacher.label" ng-model="criteria.teacherObject" method="teachers"></hois-autocomplete>
           </div>
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <hois-autocomplete label="module.label" ng-model="criteria.moduleObject" method="vocationalmodules"></hois-autocomplete>
@@ -59,11 +59,11 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column>{{'journal.studentGroups' | translate}}</th>
-            <th md-column>{{'journal.label' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguageNameField()}}">{{'journal.label' | translate}}</th>
             <th md-column>{{'journal.teachers' | translate}}</th>
             <th md-column>{{'journal.modules' | translate}}</th>
             <th md-column>{{'journal.plannedAndEnteredCapacities' | translate}}</th>
-            <th md-column>{{'main.status' | translate}}</th>
+            <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'main.status' | translate}}</th>
             <th md-column>{{'curriculum.code' | translate}}</th>
             <th md-column></th>
           </tr>

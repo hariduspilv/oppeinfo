@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.enums.CertificateStatus;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
@@ -83,10 +84,13 @@ public class CertificateDto extends CertificateForm {
         this.canViewFromEkis = canViewFromEkis;
     }
 
-    public static CertificateDto of(Certificate certificate) {
+    public static CertificateDto of(HoisUserDetails user, Certificate certificate) {
         CertificateDto dto = EntityUtil.bindToDto(certificate, new CertificateDto(), "student", "school");
         dto.setStudent(EntityUtil.getNullableId(certificate.getStudent()));
-        dto.setCanViewFromEkis(ClassifierUtil.equals(CertificateStatus.TOEND_STAATUS_V, certificate.getStatus()) && certificate.getWdId() != null);
+        dto.setCanViewFromEkis(!user.isStudent() && ClassifierUtil.equals(CertificateStatus.TOEND_STAATUS_V, certificate.getStatus()) && certificate.getWdId() != null);
+        if(user.isStudent()) {
+            dto.setSignatoryIdcode(null);
+        }
         return dto;
     }
 }

@@ -61,6 +61,7 @@ import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
@@ -92,7 +93,7 @@ public class DirectiveConfirmService {
     @Autowired
     private Validator validator;
 
-    public Directive sendToConfirm(Directive directive) {
+    public Directive sendToConfirm(Directive directive, boolean ekis) {
         AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus()), "Invalid directive status");
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
@@ -113,7 +114,24 @@ public class DirectiveConfirmService {
                 Set<ConstraintViolation<DirectiveStudent>> errors = validator.validate(ds, directiveType.validationGroup());
                 if(!errors.isEmpty()) {
                     for(ConstraintViolation<DirectiveStudent> e : errors) {
-                        allErrors.add(new ErrorForField(e.getMessage(), propertyPath(rowNum, e.getPropertyPath().toString())));
+                        String message = e.getMessage();
+                        String propertyPath = e.getPropertyPath().toString();
+                        // map MissingPeriodRange to startDate/studyPeriodStart/endDate/studyPeriodEnd
+                        if(PeriodRange.MESSAGE.equals(message)) {
+                            message = "required";
+                            boolean startMissing = DateUtils.periodStart(ds) == null, endMissing = DateUtils.periodEnd(ds) == null;
+                            propertyPath = Boolean.TRUE.equals(ds.getIsPeriod()) ? "studyPeriodEnd" : "endDate";
+                            if(startMissing) {
+                                if(endMissing) {
+                                    // both missing, add one more error for start field
+                                    allErrors.add(new ErrorForField(message, propertyPath(rowNum, Boolean.TRUE.equals(ds.getIsPeriod()) ? "studyPeriodStart" : "startDate")));
+                                } else {
+                                    // just start missing, change property path
+                                    propertyPath = Boolean.TRUE.equals(ds.getIsPeriod()) ? "studyPeriodStart" : "startDate";
+                                }
+                            }
+                        }
+                        allErrors.add(new ErrorForField(message, propertyPath(rowNum, propertyPath)));
                     }
                 }
             }
@@ -188,8 +206,13 @@ public class DirectiveConfirmService {
             throw new SingleMessageWithParamsException(null, Collections.singletonMap("invalidStudents", invalidStudents));
         }
 
+        if(!ekis) {
+            setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL);
+        }
         directive = EntityUtil.save(directive, em);
-        ekisService.registerDirective(EntityUtil.getId(directive));
+        if(ekis) {
+            ekisService.registerDirective(EntityUtil.getId(directive));
+        }
         return directive;
     }
 
@@ -543,7 +566,7 @@ public class DirectiveConfirmService {
         }
     }
 
-    private static String propertyPath(long rowNum, String property) {
+    static String propertyPath(long rowNum, String property) {
         String pathPrefix = String.format("students[%s]", Long.valueOf(rowNum));
         return property.isEmpty() ? pathPrefix : pathPrefix + "." + property;
     }

@@ -28,6 +28,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.PracticeJournal;
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
@@ -307,7 +308,11 @@ public class ContractService {
         PracticeJournal practiceJournal = EntityUtil.bindToEntity(contract, new PracticeJournal(), "contract", "school", "studyYear", "status");
         practiceJournal.setContract(contract);
         practiceJournal.setSchool(em.getReference(School.class, schoolId));
-        practiceJournal.setStudyYear(studyYearService.getCurrentStudyYear(schoolId));
+        StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        if(studyYear == null) {
+            throw new ValidationFailedException("studyYear.missingCurrent");
+        }
+        practiceJournal.setStudyYear(studyYear);
         practiceJournal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
         return practiceJournal;
     }

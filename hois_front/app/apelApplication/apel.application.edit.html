@@ -3,7 +3,8 @@
     <form name="apelApplicationForm" ng-submit="save()" novalidate>
       <div ng-hide="application.student" layout="row" layout-sm="column" layout-xs="column">
         <div flex="45" flex-sm="100" flex-xs="100">
-          <hois-autocomplete flex ng-model="application.student" method="students" name="student" label="apel.student"></hois-autocomplete>
+          <hois-autocomplete flex ng-model="application.student" method="students" name="student" label="apel.student"
+          additional-query-params="{active: true}"></hois-autocomplete>
         </div>
       </div>
       <div ng-hide="!application.student">

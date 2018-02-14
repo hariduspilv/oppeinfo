@@ -6,11 +6,11 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -40,7 +40,6 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.FinalExamProtocolUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
-import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
@@ -54,7 +53,7 @@ import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamHigherProtocolSubjectResu
 
 @Transactional
 @Service
-public class FinalExamHigherProtocolService {
+public class FinalExamHigherProtocolService extends AbstractProtocolService {
 
     private static final String STUDENT_FROM =
               "from student s "
@@ -65,8 +64,6 @@ public class FinalExamHigherProtocolService {
             + "left join declaration d on d.student_id = s.id "
             + "left join declaration_subject ds on d.id = ds.declaration_id";
 
-    @Autowired
-    private EntityManager em;
     @Autowired
     private ProtocolRepository protocolRepository;
     @Autowired
@@ -136,20 +133,20 @@ public class FinalExamHigherProtocolService {
 
         return protocols.map(p -> HigherProtocolSearchDto.ofWithUserRithts(p, user));
     }
-    
+
     public FinalExamHigherProtocolDto finalExamVocationalProtocol(HoisUserDetails user, Protocol protocol) {
         FinalExamHigherProtocolDto dto = FinalExamHigherProtocolDto.of(protocol);
         dto.setCanBeEdited(Boolean.valueOf(FinalExamProtocolUtil.canEdit(user, protocol)));
         dto.setCanBeDeleted(Boolean.valueOf(FinalExamProtocolUtil.canDelete(user, protocol)));
         return dto;
     }
-    
+
     public Protocol create(HoisUserDetails user, FinalExamHigherProtocolCreateForm form) {
         Protocol protocol = new Protocol();
         protocol.setIsFinal(Boolean.TRUE);
         protocol.setIsVocational(Boolean.FALSE);
         //TODO: protocolNr
-        protocol.setProtocolNr(ProtocolUtil.generateProtocolNumber(em));
+        protocol.setProtocolNr(generateProtocolNumber());
         protocol.setSchool(em.getReference(School.class, user.getSchoolId()));
         protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
 
@@ -168,12 +165,15 @@ public class FinalExamHigherProtocolService {
 
         return EntityUtil.save(protocol, em);
     }
-    
+
     public List<AutocompleteResult> subjectStudyPeriodsForSelection(Long schoolId) {
-        Long studyPeriod = studyYearService.getCurrentStudyPeriod(schoolId);
+        Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
+        if(studyPeriodId == null) {
+            return Collections.emptyList();
+        }
 
         List<SubjectStudyPeriod> ssps = em.createQuery("select ssp from SubjectStudyPeriod ssp where ssp.studyPeriod.id = ?1", SubjectStudyPeriod.class)
-                .setParameter(1, studyPeriod).getResultList();
+                .setParameter(1, studyPeriodId).getResultList();
         return StreamUtil.toMappedList(ssp -> {
             Subject s = ssp.getSubject();
             String nameEt = SubjectUtil.subjectName(s.getCode(), s.getNameEt(), s.getCredits());
@@ -205,20 +205,20 @@ public class FinalExamHigherProtocolService {
         }
         return results;
     }
-    
+
     public FinalExamHigherProtocolSubjectDto subject(HoisUserDetails user, Long subjectId) {
         FinalExamHigherProtocolSubjectDto dto = new FinalExamHigherProtocolSubjectDto();
         dto.setSubjectStudents(subjectStudents(user, subjectId));
 
         return dto;
     }
-    
+
     public Collection<FinalExamHigherProtocolStudentDto> subjectStudents(HoisUserDetails user,
             Long subjectStudyPeriod) {
         Map<Long, FinalExamHigherProtocolStudentDto> result = studentsForSelection(user.getSchoolId(), subjectStudyPeriod);
         return result.values();
     }
-    
+
     public Map<Long, FinalExamHigherProtocolStudentDto> studentsForSelection(Long schoolId, Long subjectStudyPeriod) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_FROM);
 

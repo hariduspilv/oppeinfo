@@ -1,18 +1,15 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.slf4j.Logger;
@@ -34,10 +31,11 @@ import ee.hitsa.ois.domain.MessageTemplate;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.MessageTemplateRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
@@ -53,8 +51,6 @@ public class MessageTemplateService {
 
     @Autowired
     private EntityManager em;
-    @Autowired
-    private MessageTemplateRepository messageTemplateRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
 
@@ -76,31 +72,18 @@ public class MessageTemplateService {
     }
 
     public Page<MessageTemplateDto> search(Long schoolId, MessageTemplateSearchCommand criteria, Pageable pageable) {
-        return messageTemplateRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
+        JpaQueryBuilder<MessageTemplate> qb = new JpaQueryBuilder<>(MessageTemplate.class, "mt").sort(pageable);
 
-            if (schoolId != null) {
-                filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            }
-            LocalDate validFrom = criteria.getValidFrom();
-            if(validFrom != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("validFrom"), validFrom));
-            }
-            LocalDate validThru = criteria.getValidThru();
-            if(validThru != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("validThru"), validThru));
-            }
-            if(Boolean.TRUE.equals(criteria.getValid())) {
-                LocalDate now = LocalDate.now();
-                filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), now), cb.isNull(root.get("validFrom"))));
-                filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
-            }
-            if(criteria.getType() != null && !criteria.getType().isEmpty()) {
-                filters.add(root.get("type").get("code").in(criteria.getType()));
-            }
-            propertyContains(() -> root.get("headline"), cb, criteria.getHeadline(), filters::add);
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(MessageTemplateDto::of);
+        qb.requiredCriteria("mt.school.id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("mt.validFrom >= :validFrom", "validFrom", criteria.getValidFrom());
+        qb.optionalCriteria("mt.validThru <= :validThru", "validThru", criteria.getValidThru());
+        if(Boolean.TRUE.equals(criteria.getValid())) {
+            qb.validNowCriteria("mt.validFrom", "mt.validThru");
+        }
+        qb.optionalCriteria("mt.type.code in (:types)", "types", criteria.getType());
+        qb.optionalContains("mt.headline", "headline", criteria.getHeadline());
+
+        return JpaQueryUtil.pagingResult(qb, em, pageable).map(MessageTemplateDto::of);
     }
 
     /**

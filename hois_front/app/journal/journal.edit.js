@@ -1,12 +1,14 @@
 'use strict';
 
-angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, $filter, QueryUtils, ArrayUtils, DataUtils, Classifier, message, dialogService) {
+angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, $filter, QueryUtils, ArrayUtils, DataUtils, Classifier, message, dialogService, VocationalGradeUtil, $q, oisFileService) {
+  $scope.gradeUtil = VocationalGradeUtil;
   var classifierMapper = Classifier.valuemapper({ entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE', absence: 'PUUDUMINE' });
 
   var LESSON_NRS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   var LESSONS = [1, 2, 3, 4, 5];
 
   $scope.formState = {};
+  $scope.showAllStudentsModel = true;
 
   function loadJournalStudents(showNonStudying) {
     var journalStudentsQueryPromise = QueryUtils.endpoint('/journals/' + entity.id + '/journalStudents').query({ allStudents: !!showNonStudying }).$promise;
@@ -32,7 +34,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   function entityToForm(entity) {
     $scope.journal = entity;
     loadJournalEntries();
-    loadJournalStudents();
+    loadJournalStudents($scope.showAllStudentsModel);
   }
 
   var entity = $route.current.locals.entity;
@@ -70,7 +72,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     }, function (submittedDialogScope) {
       QueryUtils.endpoint('/journals/' + entity.id + '/addStudentsToJournal').save({ students: submittedDialogScope.selectedStudents }, function () {
         message.info('journal.messages.studentSuccesfullyAdded');
-        loadJournalStudents();
+        loadJournalStudents($scope.showAllStudentsModel);
       });
     });
   };
@@ -79,7 +81,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     dialogService.confirmDialog({ prompt: 'journal.studentDeleteconfirm' }, function () {
       QueryUtils.endpoint('/journals/' + entity.id + '/removeStudentsFromJournal').save({ students: [studentId] }, function () {
         message.info('journal.messages.studentSuccesfullyRemoved');
-        loadJournalStudents();
+        loadJournalStudents($scope.showAllStudentsModel);
       });
     });
   };
@@ -261,13 +263,13 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         journalEntry.$update().then(function () {
           message.info('main.messages.create.success');
           loadJournalEntries();
-          loadJournalStudents();
+          loadJournalStudents($scope.showAllStudentsModel);
         });
       } else {
         journalEntry.$save().then(function () {
           message.info('main.messages.create.success');
           loadJournalEntries();
-          loadJournalStudents();
+          loadJournalStudents($scope.showAllStudentsModel);
         });
       }
     });
@@ -330,4 +332,18 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       });
     });
   };
+
+  $scope.getFileUrl = oisFileService.getUrl;
+  var clMapper = Classifier.valuemapper({
+    typeCode: 'OPPEMATERJAL'
+  });
+  function loadMaterials() {
+    $scope.materials = QueryUtils.endpoint('/studyMaterial/journal/' + $scope.journal.id + '/materials').query();
+    $scope.materials.$promise.then(function (materials) {
+      $q.all(clMapper.promises).then(function () {
+        clMapper.objectmapper(materials);
+      });
+    });
+  }
+  loadMaterials();
 });

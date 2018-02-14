@@ -1,13 +1,9 @@
 package ee.hitsa.ois.web.dto;
 
-import java.time.LocalDate;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import ee.hitsa.ois.domain.teacher.Teacher;
-import ee.hitsa.ois.util.StreamUtil;
+import java.util.List;
 
 public class TeacherSearchDto {
+
     private Long id;
     private AutocompleteResult school;
     private String name;
@@ -16,32 +12,8 @@ public class TeacherSearchDto {
     private String phone;
     private Boolean isActive;
     private AutocompleteResult teacherOccupation;
-    private Set<AutocompleteResult> schoolDepartments;
-    /**
-     * Planned number of hours in studyPeriod
-     */
-    private Long hours;
+    private List<AutocompleteResult> schoolDepartments;
     private Boolean canEdit;
-
-    public static TeacherSearchDto of(Teacher teacher) {
-        TeacherSearchDto dto = new TeacherSearchDto();
-        dto.id = teacher.getId();
-        dto.school = AutocompleteResult.of(teacher.getSchool());
-        dto.name = teacher.getPerson().getFullname();
-        dto.idcode = teacher.getPerson().getIdcode();
-        dto.email = teacher.getEmail();
-        dto.phone = teacher.getPhone();
-        dto.isActive = teacher.getIsActive();
-        dto.teacherOccupation = AutocompleteResult.of(teacher.getTeacherOccupation());
-        dto.schoolDepartments = StreamUtil.toMappedSet(o -> {
-
-            return AutocompleteResult.of(o.getSchoolDepartment());
-        }, teacher.getTeacherPositionEhis().stream().filter(o -> o.getSchoolDepartment() != null)
-                .filter(o -> !Boolean.TRUE.equals(o.getIsContractEnded()))
-                .filter(o -> o.getContractEnd() == null || !LocalDate.now().isAfter(o.getContractEnd()))
-                .collect(Collectors.toSet()));
-        return dto;
-    }
 
     public Long getId() {
         return id;
@@ -107,20 +79,12 @@ public class TeacherSearchDto {
         this.teacherOccupation = teacherOccupation;
     }
 
-    public Set<AutocompleteResult> getSchoolDepartments() {
+    public List<AutocompleteResult> getSchoolDepartments() {
         return schoolDepartments;
     }
 
-    public void setSchoolDepartments(Set<AutocompleteResult> schoolDepartments) {
+    public void setSchoolDepartments(List<AutocompleteResult> schoolDepartments) {
         this.schoolDepartments = schoolDepartments;
-    }
-
-    public Long getHours() {
-        return hours;
-    }
-
-    public void setHours(Long hours) {
-        this.hours = hours;
     }
 
     public Boolean getCanEdit() {
@@ -130,5 +94,4 @@ public class TeacherSearchDto {
     public void setCanEdit(Boolean canEdit) {
         this.canEdit = canEdit;
     }
-
 }

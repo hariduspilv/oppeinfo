@@ -1,27 +1,27 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
@@ -36,13 +36,14 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.TeacherOccupationRepository;
-import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.ehis.EhisTeacherExportService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.TeacherUserRights;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherContinuingEducationForm;
@@ -50,6 +51,7 @@ import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.TeacherAbsenceDto;
 import ee.hitsa.ois.web.dto.TeacherDto;
 import ee.hitsa.ois.web.dto.TeacherSearchDto;
@@ -69,14 +71,27 @@ public class TeacherService {
     @Autowired
     private TeacherOccupationRepository teacherOccupationRepository;
     @Autowired
-    private TeacherRepository teacherRepository;
-    @Autowired
     private UserService userService;
 
+    /**
+     * Create new teacher
+     *
+     * @param user
+     * @param teacherForm
+     * @return
+     */
     public TeacherDto create(HoisUserDetails user, TeacherForm teacherForm) {
         return save(user, new Teacher(), teacherForm);
     }
 
+    /**
+     * Update teacher
+     *
+     * @param user
+     * @param teacher
+     * @param teacherForm
+     * @return
+     */
     public TeacherDto save(HoisUserDetails user, Teacher teacher, TeacherForm teacherForm) {
         return TeacherDto.of(saveInternal(user, teacher, teacherForm));
     }
@@ -87,58 +102,69 @@ public class TeacherService {
         return TeacherDto.of(teacher);
     }
 
+    /**
+     * Search teachers
+     *
+     * @param user
+     * @param criteria
+     * @param pageable
+     * @return
+     */
     public Page<TeacherSearchDto> search(HoisUserDetails user, TeacherSearchCommand criteria, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher t join person p on t.person_id = p.id join school s on t.school_id = s.id "+
+                "join teacher_occupation tot on t.teacher_occupation_id = tot.id").sort(pageable);
+        qb.optionalCriteria("t.school_id = :schoolId", "schoolId", criteria.getSchool());
+        qb.optionalCriteria("p.idcode = :idcode", "idcode", criteria.getIdcode());
+        qb.optionalCriteria("t.is_higher = :isHigher", "isHigher", criteria.getIsHigher());
+        if(Boolean.TRUE.equals(criteria.getIsActive())) {
+            qb.filter("t.is_active = true");
+        }
+        qb.optionalCriteria("t.id in (select tpe.teacher_id from teacher_position_ehis tpe where tpe.school_department_id = :schoolDepartment)", "schoolDepartment", criteria.getSchoolDepartment());
+        qb.optionalCriteria("t.teacher_occupation_id = :teacherOccupation", "teacherOccupation", criteria.getTeacherOccupation());
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
+
         Boolean canEdit = Boolean.valueOf(TeacherUserRights.hasPermissionToEdit(user));
-        return teacherRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-
-            if (criteria.getSchool() != null) {
-                filters.add(cb.equal(root.get("school").get("id"), criteria.getSchool()));
-            }
-
-            if(!StringUtils.isEmpty(criteria.getIdcode())) {
-                filters.add(cb.equal(root.get("person").get("idcode"), criteria.getIdcode()));
-            }
-
-            if(criteria.getIsHigher() != null) {
-                filters.add(cb.equal(root.get("isHigher"), criteria.getIsHigher()));
-            }
-
-            if(Boolean.TRUE.equals(criteria.getIsActive())) {
-                filters.add(cb.equal(root.get("isActive"), Boolean.TRUE));
-            }
-
-            if(criteria.getSchoolDepartment() != null) {
-                Subquery<Long> teacherPositionSubquery = query.subquery(Long.class);
-                Root<TeacherPositionEhis> teacherPositionEhisRoot = teacherPositionSubquery.from(TeacherPositionEhis.class);
-                teacherPositionSubquery = teacherPositionSubquery
-                        .select(teacherPositionEhisRoot.get("teacher").get("id"))
-                        .where(cb.equal(teacherPositionEhisRoot.get("schoolDepartment").get("id"), criteria.getSchoolDepartment()));
-                filters.add(root.get("id").in(teacherPositionSubquery));
-            }
-
-            if(criteria.getTeacherOccupation() != null) {
-                filters.add(cb.equal(root.get("teacherOccupation").get("id"), criteria.getTeacherOccupation()));
-            }
-
-            if(!StringUtils.isEmpty(criteria.getName())) {
-                List<Predicate> name = new ArrayList<>();
-                propertyContains(() -> root.get("person").get("firstname"), cb, criteria.getName(), name::add);
-                propertyContains(() -> root.get("person").get("lastname"), cb, criteria.getName(), name::add);
-                name.add(cb.like(cb.concat(cb.upper(root.get("person").get("firstname")), cb.concat(" ", cb.upper(root.get("person").get("lastname")))), JpaQueryUtil.toContains(criteria.getName())));
-                if(!name.isEmpty()) {
-                    filters.add(cb.or(name.toArray(new Predicate[name.size()])));
-                }
-            }
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(teacher -> {
-            TeacherSearchDto dto = TeacherSearchDto.of(teacher);
+        Page<TeacherSearchDto> result = JpaQueryUtil.pagingResult(qb, "t.id, s.id as school_id, s.name_et, s.name_en, p.firstname, p.lastname, p.idcode, "+
+                "t.email, t.phone, t.is_active, t.teacher_occupation_id, tot.occupation_et, tot.occupation_en", em, pageable).map(r -> {
+            TeacherSearchDto dto = new TeacherSearchDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setSchool(new AutocompleteResult(resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 3)));
+            dto.setName(PersonUtil.fullname(resultAsString(r, 4), resultAsString(r, 5)));
+            dto.setIdcode(resultAsString(r, 6));
+            dto.setEmail(resultAsString(r, 7));
+            dto.setPhone(resultAsString(r, 8));
+            dto.setIsActive(resultAsBoolean(r, 9));
+            dto.setTeacherOccupation(new AutocompleteResult(resultAsLong(r, 10), resultAsString(r, 11), resultAsString(r, 12)));
             dto.setCanEdit(canEdit);
             return dto;
         });
+
+        List<TeacherSearchDto> teachers = result.getContent();
+        if(!teachers.isEmpty()) {
+            // set school departments
+            List<?> data = em.createNativeQuery("select distinct tpe.teacher_id, sd.id, sd.name_et, sd.name_en from teacher_position_ehis tpe "+
+                    "join school_department sd on tpe.school_department_id = sd.id " +
+                    "where tpe.teacher_id in (?1) and tpe.is_contract_ended = false and (tpe.contract_end is null or tpe.contract_end >= ?2)")
+                .setParameter(1, StreamUtil.toMappedList(TeacherSearchDto::getId, teachers))
+                .setParameter(2, parameterAsTimestamp(LocalDate.now()))
+                .getResultList();
+            Map<Long, List<AutocompleteResult>> schoolDepartments = data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
+                return new AutocompleteResult(resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 3));
+            }, Collectors.toList())));
+
+            for(TeacherSearchDto dto : teachers) {
+                dto.setSchoolDepartments(schoolDepartments.get(dto.getId()));
+            }
+        }
+        return result;
     }
 
+    /**
+     * Delete teacher
+     *
+     * @param user
+     * @param teacher
+     */
     public void delete(HoisUserDetails user, Teacher teacher) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(teacher, em);
@@ -329,9 +355,8 @@ public class TeacherService {
     }
 
     public Page<TeacherAbsenceDto> teacherAbsences(Teacher teacher, Pageable pageable) {
-        Long teacherId = EntityUtil.getId(teacher);
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher_absence ta").sort(pageable);
-        qb.requiredCriteria("ta.teacher_id = :teacherId", "teacherId", teacherId);
+        qb.requiredCriteria("ta.teacher_id = :teacherId", "teacherId", EntityUtil.getId(teacher));
 
         return JpaQueryUtil.pagingResult(qb, "ta.start_date, ta.end_date, ta.reason, ta.changed", em, pageable).map(r -> {
             TeacherAbsenceDto dto = new TeacherAbsenceDto();

@@ -59,6 +59,11 @@ public class TimetableEventControllerTests {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        uri = UriComponentsBuilder.fromUriString("/timetableevents?singleEvent=true").build().toUriString();
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test

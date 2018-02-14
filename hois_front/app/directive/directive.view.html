@@ -101,12 +101,12 @@
       </fieldset>
     </md-table-container>
 
-    <md-button ng-if="record.id && record.userCanEdit && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASKKIRI')" class="md-primary md-raised" 
+    <md-button ng-if="record.id && record.userCanEdit" class="md-primary md-raised"
       ng-href="#/directives/{{record.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
     <md-button ng-click="back('#/directives')" class="md-raised">{{'main.button.back' | translate}}</md-button>
-    <md-button ng-click="confirmDirective()" ng-if="record.status === 'KASKKIRI_STAATUS_KINNITAMISEL' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASKKIRI')" 
+    <md-button ng-click="confirmDirective()" ng-if="record.status === 'KASKKIRI_STAATUS_KINNITAMISEL' && record.userCanConfirm"
       class="md-raised">{{'directive.confirmDuringTest' | translate}}</md-button>
-    <md-button ng-click="cancelDirective()" ng-if="record.userCanCancel && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASKKIRI')" 
+    <md-button ng-click="cancelDirective()" ng-if="record.userCanCancel"
       class="md-raised">{{'directive.cancel' | translate}}</md-button>
   </div>
 </div>

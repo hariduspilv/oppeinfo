@@ -4,7 +4,7 @@ angular.module('hitsaOis').factory('resourceErrorHandler', function ($q, message
   return {
     responseError: function (response, form) {
       if (response.status === 404) {
-        message.error('not.found');
+        message.error('main.messages.record.notFound');
       } else if (response.status === 409) {
         message.error('main.messages.record.modified');
       } else if (response.data && response.data._errors) {
@@ -23,13 +23,6 @@ angular.module('hitsaOis').factory('resourceErrorHandler', function ($q, message
                 }
                 ctrl.$setValidity(err.code, false);
               } else {
-                if(!ctrl.$validators.serverside) {
-                  // add validator
-                  ctrl.$validators.serverside = function() {
-                    return true;
-                  };
-                }
-
                 ctrl.$serverError = ctrl.$serverError || [];
                 ctrl.$serverError.push(err);
                 ctrl.$setValidity('serverside', false);

@@ -128,6 +128,12 @@ public class CurriculumControllerTests {
         responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        uriBuilder.queryParam("isPartnerSchool", Boolean.FALSE);
+        uri = uriBuilder.build().toUriString();
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test

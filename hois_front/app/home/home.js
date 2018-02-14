@@ -1,12 +1,16 @@
 'use strict';
 // todo this to main controller? and use this data on auth?
-angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
-  function ($scope, School) {
+angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$location',
+  function ($scope, School, $location) {
     $scope.schools = School.getSchoolsWithLogo();
     
+    $scope.openSchoolCurriculumSearch = function (schoolId) {
+      $location.path('curriculums/' + schoolId);
+    };
+
   }
-]).controller('AuthenticatedHomeController', ['$scope', 'AUTH_EVENTS', 'AuthService', 'QueryUtils', '$resource', 'config', 'Session',
-  function ($scope, AUTH_EVENTS, AuthService, QueryUtils, $resource, config, Session) {
+]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', 'AUTH_EVENTS', 'AuthService', 'QueryUtils', '$resource', 'config', 'Session',
+  function ($rootScope, $scope, AUTH_EVENTS, AuthService, QueryUtils, $resource, config, Session) {
 
     $scope.criteria = {size: 5, page: 1, order: 'inserted, title, id'};
     $scope.generalmessages = {};
@@ -38,6 +42,9 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
         if(!message.isRead) {
             $resource(config.apiUrl + '/message/' + message.id).update(null).$promise.then(function(){
                 message.isRead = true;
+                QueryUtils.endpoint('/message/received/new').get().$promise.then(function (result) {
+                  $rootScope.unreadMessages = result.unread;
+                });
             });
         }
     };

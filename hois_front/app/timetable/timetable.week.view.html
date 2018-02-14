@@ -1,21 +1,24 @@
-<div layout-padding ng-if="(timetableId && studyPeriodId && typeId) || searchResultEvents">   
-    <div layout="row" layout-align="center">
-        <span ng-if="shownTimetableCurriculum">{{shownTimetableCurriculum.studentGroupCode}}, {{currentLanguageNameField(shownTimetableCurriculum)}}</span>
-        <span ng-if="shownTeacher">{{shownTeacher.lastname}}, {{shownTeacher.firstname}}</span>
-        <span ng-if="shownRoom">{{shownRoom.buildingCode}}, {{shownRoom.roomCode}}</span>
+<div layout-padding ng-if="typeId || searchResultEvents">   
+    <div layout="row" layout-align="center" style="padding: 0px">
+        <a ng-if="shownTimetableCurriculum || shownTeacher || shownRoom" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{::typeId}}/{{weekIndex}}">
+            <span ng-if="shownTimetableCurriculum">{{shownTimetableCurriculum.studentGroupCode}}, {{currentLanguageNameField(shownTimetableCurriculum)}}</span>
+            <span ng-if="shownTeacher">{{shownTeacher.lastname}}, {{shownTeacher.firstname}}</span>
+            <span ng-if="shownRoom">{{shownRoom.buildingCode}}, {{shownRoom.roomCode}}</span>
+        </a>
     </div>
-    <div layout="row" layout-align="center">
-        <md-button ng-if="previousWeekTimetableId && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{::studyPeriodId}}/{{::typeId}}/{{::previousWeekTimetableId}}/{{::previousWeekIndex}}">
+    <div layout="row" layout-align="center" style="padding: 0px">
+        <md-button ng-if="previousWeekIndex && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{::typeId}}/{{::previousWeekIndex}}">
             <md-icon>arrow_back</md-icon>
         </md-button>
-        <md-button ng-if="previousWeekTimetableId && !directRoute" class="md-icon-button md-primary" ng-click="previousWeek(typeId, previousWeekTimetableId, previousWeekIndex)">
+        <md-button ng-if="previousWeekIndex && !directRoute" class="md-icon-button md-primary" ng-click="previousWeek(typeId, previousWeekIndex)">
             <md-icon>arrow_back</md-icon>
         </md-button>
-        <h2 style="display:inline-block">{{currentLanguageNameField(shownTimetable)}}. {{shownWeek.start | hoisDate}} - {{shownWeek.end | hoisDate}}</h2>
-        <md-button ng-if="nextWeekTimetableId && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{::studyPeriodId}}/{{::typeId}}/{{::nextWeekTimetableId}}/{{::nextWeekIndex}}">
+        <h2 ng-if="shownTimetable" style="display:inline-block">{{currentLanguageNameField(shownTimetable)}}. {{shownWeek.start | hoisDate}} - {{shownWeek.end | hoisDate}}</h2>
+        <h2 ng-if="!shownTimetable" style="display:inline-block">{{shownWeek.start | hoisDate}} - {{shownWeek.end | hoisDate}}</h2>
+        <md-button ng-if="nextWeekIndex && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{::typeId}}/{{::nextWeekIndex}}">
             <md-icon>arrow_forward</md-icon>
         </md-button>
-        <md-button ng-if="nextWeekTimetableId && !directRoute" class="md-icon-button md-primary" ng-click="nextWeek(typeId, nextWeekTimetableId, nextWeekIndex)">
+        <md-button ng-if="nextWeekIndex && !directRoute" class="md-icon-button md-primary" ng-click="nextWeek(typeId, nextWeekIndex)">
             <md-icon>arrow_forward</md-icon>
         </md-button>
     </div>
@@ -55,19 +58,19 @@
                         </div>
                         <div>
                             <span ng-repeat="teacher in event.teachers track by $index">
-                                <a ng-href="/#/timetable/teacher/{{::schoolId}}/{{::studyPeriodId}}/{{::teacher.id}}/{{::timetableId}}/{{::weekIndex}}">{{teacher.name}}</a>
+                                <a ng-href="/#/timetable/teacher/{{::schoolId}}/{{::teacher.id}}/{{::weekIndex}}">{{teacher.name}}</a>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
                         <div>
                             <span ng-repeat="room in event.rooms track by $index">
-                                <a ng-href="/#/timetable/room/{{::schoolId}}/{{::studyPeriodId}}/{{::room.id}}/{{::timetableId}}/{{::weekIndex}}">{{room.buildingCode}}-{{room.roomCode}}</a>
+                                <a ng-href="/#/timetable/room/{{::schoolId}}/{{::room.id}}/{{::weekIndex}}">{{room.buildingCode}}-{{room.roomCode}}</a>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
                         <div>
                             <span ng-repeat="studentGroup in event.studentGroups track by $index">
-                                <a ng-href="/#/timetable/group/{{::schoolId}}/{{::studyPeriodId}}/{{::studentGroup.id}}/{{::timetableId}}/{{::weekIndex}}">{{studentGroup.code}}</a>
+                                <a ng-href="/#/timetable/group/{{::schoolId}}/{{::studentGroup.id}}/{{::weekIndex}}">{{studentGroup.code}}</a>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
@@ -93,19 +96,19 @@
                         </div>
                         <div>
                             <span ng-repeat="teacher in event.teachers track by $index">
-                                <a ng-href="/#/timetable/teacher/{{::schoolId}}/{{::studyPeriodId}}/{{::teacher.id}}/{{::timetableId}}">{{teacher.name}}</a>
+                                <a ng-href="/#/timetable/teacher/{{::schoolId}}/{{::teacher.id}}">{{teacher.name}}</a>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
                         <div>
                             <span ng-repeat="room in event.rooms track by $index">
-                                <a ng-href="/#/timetable/room/{{::schoolId}}/{{::studyPeriodId}}/{{::room.id}}/{{::timetableId}}">{{room.buildingCode}}-{{room.roomCode}}</a>
+                                <a ng-href="/#/timetable/room/{{::schoolId}}/{{::room.id}}">{{room.buildingCode}}-{{room.roomCode}}</a>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
                         <div>
                             <span ng-repeat="studentGroup in event.studentGroups track by $index">
-                                <a ng-href="/#/timetable/group/{{::schoolId}}/{{::studyPeriodId}}/{{::studentGroup.id}}/{{::timetableId}}">{{studentGroup.code}}</a>
+                                <a ng-href="/#/timetable/group/{{::schoolId}}/{{::studentGroup.id}}">{{studentGroup.code}}</a>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
@@ -117,7 +120,7 @@
     </div>
     
     <div ng-if="!(timetableEvents.length > 0)">
-        <div ng-if="!timetableSearch" layout="row" layout-align="center">{{'timetable.error.noPeriodTimetable' | translate}}</div>
+        <div ng-if="!timetableSearch" layout="row" layout-align="center">{{'timetable.error.noWeekTimetable' | translate}}</div>
         <div ng-if="timetableSearch" layout="row" layout-align="center">{{'timetable.error.noSearchResults' | translate}}</div>
     </div>
 
@@ -127,7 +130,7 @@
             <md-icon md-font-set="material-icons md-primary md-48">event</md-icon>
         </md-button>
     
-        <md-button ng-if="directRoute && auth != null" ng-click="back('#/timetable/generalTimetableByGroup')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="directRoute && auth != null" ng-click="back('#/timetable/generalTimetableByGroup'); emptyParentVariable()" class="md-raised">{{'main.button.back' | translate}}</md-button>
         <md-button ng-if="directRoute && auth == null" ng-click="back('#/timetable/generalTimetableByGroup/' + schoolId)" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
 </div>

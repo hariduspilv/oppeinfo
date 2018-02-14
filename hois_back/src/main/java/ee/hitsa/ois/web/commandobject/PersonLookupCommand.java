@@ -1,13 +1,12 @@
 package ee.hitsa.ois.web.commandobject;
 
 import ee.hitsa.ois.validation.EstonianIdCode;
-import ee.hitsa.ois.validation.Required;
 
 public class PersonLookupCommand {
 
-    @Required
     @EstonianIdCode
     private String idcode;
+    private String foreignIdcode;
     private String role;
 
     public String getIdcode() {
@@ -16,6 +15,14 @@ public class PersonLookupCommand {
 
     public void setIdcode(String idcode) {
         this.idcode = idcode;
+    }
+
+    public String getForeignIdcode() {
+        return foreignIdcode;
+    }
+
+    public void setForeignIdcode(String foreignIdcode) {
+        this.foreignIdcode = foreignIdcode;
     }
 
     public String getRole() {

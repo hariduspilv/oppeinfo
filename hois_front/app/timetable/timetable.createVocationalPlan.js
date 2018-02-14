@@ -70,9 +70,15 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       $scope.currentLessonTimes = [];
       for (var k = 0; $scope.dayOrder.length > k; k++) {
         var currDay = $scope.lessonsInDay[$scope.dayOrder[k]].slice();
-        while (angular.isDefined(currDay) && currDay.length > 0) {
-          $scope.currentLessonTimes.push(currDay.shift());
-        }
+
+          var hasLessons = false;
+          while (angular.isDefined(currDay) && currDay.length > 0) {
+            hasLessons = true;
+            $scope.currentLessonTimes.push(currDay.shift());
+          }
+          if (!hasLessons) {
+            $scope.currentLessonTimes.push({noLessons: true});
+          }
       }
 
       //creating object for each group to hold all planed lessons

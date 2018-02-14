@@ -25,6 +25,7 @@ angular.module('hitsaOis')
         mdSelectedItemChange: '&?',
         readonly: '=',
         additionalQueryParams: '=',
+        noPaging: '@',
         url: '@'    // this allows to search from different controllers, not only AutocompleteController
       },
       link: {
@@ -76,6 +77,10 @@ angular.module('hitsaOis')
                 deferred.resolve(data);
               });
             } else if(url === '/autocomplete/curriculumversionomodulesandthemes') {
+              lookup.query(query, function (data) {
+                deferred.resolve(data);
+              });
+            } else if(scope.noPaging === 'true') {
               lookup.query(query, function (data) {
                 deferred.resolve(data);
               });

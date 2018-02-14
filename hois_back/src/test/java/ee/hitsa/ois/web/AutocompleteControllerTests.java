@@ -262,6 +262,16 @@ public class AutocompleteControllerTests {
     }
 
     @Test
+    public void personAsForeignidcode() {
+        String uri = "/autocomplete/persons";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(uri);
+        uriBuilder.queryParam("foreignIdcode", "1234");
+        uriBuilder.queryParam("role", "foreignidcode");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertTrue(HttpStatus.NOT_FOUND.equals(responseEntity.getStatusCode()) || HttpStatus.OK.equals(responseEntity.getStatusCode()));
+    }
+
+    @Test
     public void personAsStudent() {
         String uri = "/autocomplete/persons";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(uri);
@@ -431,6 +441,14 @@ public class AutocompleteControllerTests {
 
         uri = "/autocomplete/students?curriculumVersion=1&studentGroup=1";
         responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void studyMaterials() {
+        String uri = "/autocomplete/studyMaterials";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }

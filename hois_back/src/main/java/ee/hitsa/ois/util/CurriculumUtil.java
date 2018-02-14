@@ -151,10 +151,11 @@ public abstract class CurriculumUtil {
      * as only correspondent curricula appear in search results.
      */
     public static boolean canBeEdited(HoisUserDetails user, String status, String ehisStatus) {
-        return user.isSchoolAdmin() && 
-                UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEKAVA) && 
-                (CurriculumStatus.OPPEKAVA_STAATUS_S.name().equals(status) || 
-                CurriculumStatus.OPPEKAVA_STAATUS_M.name().equals(status)) &&
+        return user.isSchoolAdmin() &&
+                (CurriculumStatus.OPPEKAVA_STAATUS_S.name().equals(status) &&
+                  UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEKAVA)) || 
+                (CurriculumStatus.OPPEKAVA_STAATUS_M.name().equals(status) &&
+                  UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)) &&
                 !CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_A.name().equals(ehisStatus) &&
                 !CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_M.name().equals(ehisStatus);
     }

@@ -98,7 +98,9 @@
 
       $scope.lookupPerson = function (response) {
         $scope.oldFoundPerson = response;
-        $scope.teacher.person.citizenship = response.citizenship;
+        if(response.citizenship) {
+          $scope.teacher.person.citizenship = response.citizenship;
+        }
         $scope.teacher.person.firstname = response.firstname;
         $scope.teacher.person.lastname = response.lastname;
         $scope.teacher.person.nativeLanguage = response.nativeLanguage;
@@ -359,42 +361,20 @@
           }
         });
       };
-  }]).controller('TeacherListController', ['$scope', '$route', 'QueryUtils', 'ArrayUtils', 'USER_ROLES',
-  function ($scope, $route, QueryUtils, ArrayUtils, USER_ROLES) {
-    QueryUtils.createQueryForm($scope, '/teachers', {order: 'person.lastname,person.firstname'});
+  }]).controller('TeacherListController', ['$scope', '$route', 'QueryUtils', 'USER_ROLES',
+  function ($scope, $route, QueryUtils, USER_ROLES) {
+    QueryUtils.createQueryForm($scope, '/teachers', {order: 'p.lastname,p.firstname'});
 
     $scope.auth = $route.current.locals.auth;
-    $scope.showSchool = $route.current.locals.auth.isExternalExpert();
-    $scope.schoolHigher = $route.current.locals.auth.school  && $route.current.locals.auth.school.higher;
+    $scope.showSchool = $scope.auth.isExternalExpert();
+    $scope.schoolHigher = $scope.auth.school  && $scope.auth.school.higher;
 
     if(!$scope.auth.isExternalExpert()) {
       $scope.teacherOccupations = QueryUtils.endpoint('/teachers/teacheroccupations').query();
     }
 
-    function canCreate() {
-      return $scope.auth.isAdmin() && ArrayUtils.includes($scope.auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA);
-    }
-
     $scope.formState = {
-      canCreate: canCreate()
-    };
-
-
-    function setContains(set, item) {
-      var ids = set.map(function(el){
-        return el.id;
-      });
-      return ArrayUtils.includes(ids, item.id);
-    }
-
-    $scope.removeDuplicateDepartments = function(departments) {
-      var set = [];
-      departments.forEach(function(el){
-        if(!setContains(set, el)) {
-          set.push(el);
-        }
-      });
-      return set;
+      canCreate: $scope.auth.isAdmin() && $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA) !== -1
     };
 
     $scope.loadData();
@@ -442,7 +422,7 @@
       $scope.schoolDepartmentsById = result.reduce(function(map, it) {
         map[it.id] = it;
         return map;
-      });
+      }, {});
     });
 
     $scope.teacher = Endpoint.get({id: id}, afterLoad);

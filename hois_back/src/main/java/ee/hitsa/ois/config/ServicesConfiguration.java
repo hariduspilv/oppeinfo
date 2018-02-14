@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import ee.hitsa.ois.services.EkisSoapService;
+import ee.hois.moodle.MoodleClient;
 import ee.hois.soap.dds.service.DigiDocServiceClient;
 import ee.hois.soap.ekis.client.EkisClient;
 import ee.hois.xroad.ehis.service.EhisClient;
@@ -103,5 +104,13 @@ public class ServicesConfiguration {
     @Bean
     public DigiDocServiceClient ddsClient() {
         return new DigiDocServiceClient();
+    }
+
+    /**
+     * Moodle client
+     */
+    @Bean
+    public MoodleClient moodleClient() {
+        return new MoodleClient();
     }
 }

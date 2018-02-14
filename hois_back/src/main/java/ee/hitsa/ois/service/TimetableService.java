@@ -81,7 +81,6 @@ import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.RoomDto;
 import ee.hitsa.ois.web.dto.timetable.DateRangeDto;
-import ee.hitsa.ois.web.dto.timetable.GeneralTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.GroupTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetablePlanDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetableStudentGroupCapacityDto;
@@ -98,6 +97,7 @@ import ee.hitsa.ois.web.dto.timetable.TimetableJournalDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupCapacityDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
 
 @Transactional
@@ -115,8 +115,8 @@ public class TimetableService {
     @Autowired
     private TimetableObjectRepository timetableObjectRepository;
 
-    private static final List<String> publicTimetables = EnumUtil.toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P);
-    private static final List<String> adminAndTeacherTimetables = EnumUtil
+    private static final List<String> PUBLIC_TIMETABLES = EnumUtil.toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P);
+    private static final List<String> ADMIN_AND_TEACHER_TIMETABLES = EnumUtil
             .toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P, TimetableStatus.TUNNIPLAAN_STAATUS_K);
 
     public TimetableDto get(HoisUserDetails user, Timetable timetable) {
@@ -1071,8 +1071,9 @@ public class TimetableService {
     private List<TimetableStudentGroupCapacityDto> getCapacitiesForVocationalPlanning(List<Long> studentGroupIds,
             Timetable timetable) {
         Integer currentWeekNr = timetable.getStudyPeriod().getWeekNrForDate(timetable.getStartDate());
+        //TODO: query might be too slow
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j" + " inner join journal_capacity jc on jc.journal_id = j.id"
-                + " inner join journal_omodule_theme jot on jot.journal_id = j.id"
+                + " inner join (select distinct ot.lesson_plan_module_id, journal_id from journal_omodule_theme ot) jot on jot.journal_id = j.id"
                 + " inner join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id"
                 + " inner join lesson_plan lp on lp.id = lpm.lesson_plan_id"
                 + " inner join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id");
@@ -1113,6 +1114,8 @@ public class TimetableService {
                         dto.setTotalLessonsLeft(Long.valueOf(
                                 dto.getTotalPlannedLessons().longValue() - dto.getTotalAllocatedLessons().longValue()));
                     }
+                } else {
+                    dto.setTotalLessonsLeft(dto.getTotalPlannedLessons());
                 }
             }
         }
@@ -1267,6 +1270,7 @@ public class TimetableService {
         return result;
     }
 
+    /*
     public List<GeneralTimetableDto> generalTimetables(Long schoolId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
         if (studyYear == null) {
@@ -1287,38 +1291,61 @@ public class TimetableService {
         }
 
         if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher())) {
-            q.setParameter("shownStatusCodes", adminAndTeacherTimetables);
+            q.setParameter("shownStatusCodes", ADMIN_AND_TEACHER_TIMETABLES);
         } else {
-            q.setParameter("shownStatusCodes", publicTimetables);
+            q.setParameter("shownStatusCodes", PUBLIC_TIMETABLES);
         }
 
         List<?> data = q.getResultList();
         return StreamUtil.toMappedList(r -> new GeneralTimetableDto((Object[]) r), data);
     }
+    */
 
-    public List<GroupTimetableDto> groupPeriodTimetables(Long schoolId, Long studyPeriodId, Long timetableId) {
+    public List<GroupTimetableDto> groupTimetables(Long schoolId) {
+        StudyYear current = studyYearService.getCurrentStudyYear(schoolId);
+        if (current == null) {
+            return null;
+        }
+        
         Query q = em.createNativeQuery("select distinct sg.id, sg.code from student_group sg"
                 + " inner join timetable_object_student_group tosg on sg.id=tosg.student_group_id"
                 + " inner join timetable_object tobj on tosg.timetable_object_id=tobj.id"
                 + " inner join timetable tt on tobj.timetable_id=tt.id"
                 + " inner join study_period sp on tt.study_period_id=sp.id"
-                + " where tt.school_id=?1 and sp.id=?2 and tt.id=?3 order by 2");
+                + " inner join study_year sy on sp.study_year_id = sy.id"
+                + " where tt.school_id=?1 and sy.id=?2 and tt.status_code in (:shownStatusCodes) order by 2");
         q.setParameter(1, schoolId);
-        q.setParameter(2, studyPeriodId);
-        q.setParameter(3, timetableId);
+        q.setParameter(2, current);
+        
+        HoisUserDetails user = null;
+        Principal principal = SecurityContextHolder.getContext().getAuthentication();
+        if (!(principal instanceof AnonymousAuthenticationToken)) {
+            user = HoisUserDetails.fromPrincipal(SecurityContextHolder.getContext().getAuthentication());
+        }
+
+        if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher())) {
+            q.setParameter("shownStatusCodes", ADMIN_AND_TEACHER_TIMETABLES);
+        } else {
+            q.setParameter("shownStatusCodes", PUBLIC_TIMETABLES);
+        }
         
         List<?> data = q.getResultList();
         return StreamUtil.toMappedList(r -> new GroupTimetableDto((Object[]) r), data);
     }
 
-    public List<TeacherTimetableDto> teacherPeriodTimetables(Long schoolId, Long studyPeriodId, Long timetableId) {
+    public List<TeacherTimetableDto> teacherTimetables(Long schoolId) {
+        StudyYear current = studyYearService.getCurrentStudyYear(schoolId);
+        if (current == null) {
+            return null;
+        }
+        
         Query q = em.createNativeQuery("select distinct t.id, p.firstname, p.lastname from teacher t"
                 + " inner join person p on t.person_id = p.id"
                 + " inner join journal_teacher jt on t.id = jt.teacher_id"
                 + " inner join journal j on jt.journal_id = j.id"
                 + " inner join timetable_object tobj on j.id = tobj.journal_id"
                 + " inner join timetable tt on tt.id = tobj.timetable_id"
-                + " where tt.school_id=?1 and tt.study_period_id=?2 and tt.id=?3 "
+                + " where tt.school_id=?1 and tt.status_code in (:shownStatusCodes)"
                 + " union"
                 + " select distinct t.id, p.firstname, p.lastname from teacher t"
                 + " inner join person p on t.person_id = p.id"
@@ -1326,31 +1353,78 @@ public class TimetableService {
                 + " inner join subject_study_period ssp on ssp.id=sspp.subject_study_period_id"
                 + " inner join timetable_object tobj on tobj.subject_study_period_id=ssp.id"
                 + " inner join timetable tt on tt.id=tobj.timetable_id"
-                + " where tt.school_id=?1 and tt.study_period_id=?2 and tt.id=?3"
+                + " where tt.school_id=?1 and tt.status_code in (:shownStatusCodes)"
                 + " order by lastname");
         q.setParameter(1, schoolId);
-        q.setParameter(2, studyPeriodId);
-        q.setParameter(3, timetableId);
+        
+        HoisUserDetails user = null;
+        Principal principal = SecurityContextHolder.getContext().getAuthentication();
+        if (!(principal instanceof AnonymousAuthenticationToken)) {
+            user = HoisUserDetails.fromPrincipal(SecurityContextHolder.getContext().getAuthentication());
+        }
+
+        if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher())) {
+            q.setParameter("shownStatusCodes", ADMIN_AND_TEACHER_TIMETABLES);
+        } else {
+            q.setParameter("shownStatusCodes", PUBLIC_TIMETABLES);
+        }
         
         List<?> data = q.getResultList();
         return StreamUtil.toMappedList(r -> new TeacherTimetableDto((Object[])r), data);
     }
 
-    public List<RoomTimetableDto> roomPeriodTimetables(Long schoolId, Long studyPeriodId, Long timetableId) {
+    public List<RoomTimetableDto> roomTimetables(Long schoolId) {
+        StudyYear current = studyYearService.getCurrentStudyYear(schoolId);
+        if (current == null) {
+            return null;
+        }
+        
         Query q = em.createNativeQuery("select distinct r.id, r.code from room r"
                 + " inner join timetable_event_room ter on r.id=ter.room_id"
                 + " inner join timetable_event_time tet on ter.timetable_event_time_id=tet.id"
                 + " inner join timetable_event te on tet.timetable_event_id=te.id"
                 + " inner join timetable_object tobj on te.timetable_object_id=tobj.id"
                 + " inner join timetable tt on tobj.timetable_id=tt.id"
-                + " where tt.school_id=?1 and tt.study_period_id=?2 and tt.id=?3"
+                + " where tt.school_id=?1 and tt.status_code in (:shownStatusCodes)"
                 + " order by r.code");
         q.setParameter(1, schoolId);
-        q.setParameter(2, studyPeriodId);
-        q.setParameter(3, timetableId);
+        
+        HoisUserDetails user = null;
+        Principal principal = SecurityContextHolder.getContext().getAuthentication();
+        if (!(principal instanceof AnonymousAuthenticationToken)) {
+            user = HoisUserDetails.fromPrincipal(SecurityContextHolder.getContext().getAuthentication());
+        }
+
+        if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher())) {
+            q.setParameter("shownStatusCodes", ADMIN_AND_TEACHER_TIMETABLES);
+        } else {
+            q.setParameter("shownStatusCodes", PUBLIC_TIMETABLES);
+        }
         
         List<?> data = q.getResultList();
         return StreamUtil.toMappedList(r -> new RoomTimetableDto((Object[])r), data);
+    }
+    
+    public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(Long schoolId) {
+        StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        if (studyYear == null) {
+            return null;
+        }
+        LocalDate start = studyYear.getStartDate();
+        LocalDate end = studyYear.getEndDate();
+        
+        List<TimetableStudyYearWeekDto> weeks = new ArrayList<>();
+        int weekNr = 0;
+        while (start.isBefore(end)) {
+            LocalDate weekStart = start.with(DayOfWeek.MONDAY);
+            LocalDate weekEnd = start.with(DayOfWeek.SUNDAY);
+            
+            weeks.add(new TimetableStudyYearWeekDto(Long.valueOf(weekNr), weekStart,  weekEnd));
+            
+            weekNr++;
+            start = weekEnd.plusDays(1);
+        }
+        return weeks;
     }
 
     private static class AllocatedLessons {

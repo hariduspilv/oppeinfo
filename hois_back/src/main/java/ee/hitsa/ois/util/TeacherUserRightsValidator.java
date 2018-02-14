@@ -30,15 +30,4 @@ public abstract class TeacherUserRightsValidator {
         }
     }
 
-    public static void assertCanConfirm(HoisUserDetails user, Teacher teacher) {
-        if(!TeacherUserRights.canConfirm(user, teacher)) {
-            throw new ValidationFailedException("main.messages.error.nopermission");
-        }
-    }
-
-    public static void assertCanConfirm(HoisUserDetails user) {
-        if(!TeacherUserRights.canConfirm(user)) {
-            throw new ValidationFailedException("main.messages.error.nopermission");
-        }
-    }
 }

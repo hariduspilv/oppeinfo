@@ -46,4 +46,8 @@
             </div>
         </md-whiteframe>
     </div>
+
+    <div ng-if="schoolId" layout="row">
+        <md-button ng-click="back('#/academicCalendars/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    </div>
 </div>

@@ -1,16 +1,12 @@
 'use strict';
 
 angular.module('hitsaOis').controller('PracticeJournalEditController', 
-function ($scope, $route, QueryUtils, Classifier, message, $location, dialogService, DataUtils, $rootScope, ArrayUtils, USER_ROLES) {
+function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message, dialogService, DataUtils, USER_ROLES) {
   var CREDITS_TO_HOURS_MULTIPLIER = 26;
 
   $scope.auth = $route.current.locals.auth;
   $scope.practiceJournal = {};
   $scope.formState = {};
-
-  function canCreate() {
-    return $scope.auth.isAdmin() && ArrayUtils.includes($scope.auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK);
-  }
 
   function noPermission() {
     message.error('main.messages.error.nopermission');
@@ -18,7 +14,7 @@ function ($scope, $route, QueryUtils, Classifier, message, $location, dialogServ
   }
 
   function assertPermissionToCreate() {
-    if (!canCreate()) {
+    if (!$scope.auth.isAdmin() || $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK) === -1) {
       noPermission();
     }
   }
@@ -31,7 +27,7 @@ function ($scope, $route, QueryUtils, Classifier, message, $location, dialogServ
 
   function entityToForm(entity) {
     assertPermissionToEdit(entity);
-    
+
     $scope.formState.isHigher = angular.isObject(entity.subject);
     DataUtils.convertObjectToIdentifier(entity, ['module', 'theme', 'teacher', 'subject']);
     $scope.practiceJournal = entity;

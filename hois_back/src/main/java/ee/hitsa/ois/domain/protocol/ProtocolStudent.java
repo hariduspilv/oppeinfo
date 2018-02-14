@@ -49,13 +49,6 @@ public class ProtocolStudent extends BaseEntityWithId {
     @JoinColumn(name = "protocol_student_id", nullable = false, updatable = false)
     private List<ProtocolStudentHistory> protocolStudentHistories;
 
-    public ProtocolStudent() {
-    }
-
-    public ProtocolStudent(Student student) {
-        this.student = student;
-    }
-
     public Protocol getProtocol() {
         return protocol;
     }

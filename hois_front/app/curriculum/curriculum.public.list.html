@@ -1,0 +1,58 @@
+<div layout-padding>
+  <form layout="column" ng-cloak ng-submit="loadData()" class="nomargin">
+    <fieldset tabindex="1">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <div layout="column" flex>
+        <md-input-container>
+          <label>{{'school.label' | translate}}</label>
+          <hois-select ng-model="criteria.school" type="school"></hois-select>
+        </md-input-container>
+        <md-input-container>
+          <label>{{'curriculum.studyLevel' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+        <md-input-container>
+          <label>{{'curriculum.name' | translate}}</label>
+          <input ng-model="criteria.name" type="text">
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+      </div>
+    </fieldset>
+  </form>
+</div>
+
+<md-table-container flex ng-cloak layout-padding>
+  <table md-table md-progress="tabledata.$promise">
+    <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+      <tr md-row>
+        <th md-column md-order-by="school.{{currentLanguageNameField()}}">{{'school.label' | translate}}</th>
+        <th md-column md-order-by="{{currentLanguageNameField()}}">{{'curriculum.name' | translate}}</th>
+        <th md-column md-order-by="origStudyLevel.{{currentLanguageNameField()}}">{{'curriculum.studyLevel' | translate}}</th>
+        <th md-column md-order-by="credits">
+          <span>{{'curriculum.search.creditsEapEkap' | translate}}</span>
+        </th>
+        <th md-column md-order-by="validFrom">{{'stateCurriculum.validFrom' | translate}}</th>
+        <th md-column md-order-by="validThru">{{'stateCurriculum.validThru' | translate}}</th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{row.school.nameEt}}</td>
+        <td md-cell>
+          <a href="/#/curriculum/{{::row.id}}">{{currentLanguageNameField(row)}}</a>
+        </td>
+        <td md-cell>{{currentLanguageNameField(row.origStudyLevel)}}</td>
+        <td md-cell>{{::row.credits}}</td>
+        <td md-cell>{{row.validFrom | hoisDate}}</td>
+        <td md-cell>{{row.validThru | hoisDate}}</td>
+      </tr>
+    </tbody>
+  </table>
+</md-table-container>
+<md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+  md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }"
+  md-page-select></md-table-pagination>

@@ -2,8 +2,10 @@ package ee.hitsa.ois.web.dto.directive;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import ee.hitsa.ois.domain.directive.Directive;
@@ -30,6 +32,7 @@ public class DirectiveViewDto {
     private List<DirectiveViewStudentDto> students;
     private List<DirectiveSearchDto> cancelingDirectives;
     private Boolean userCanCancel;
+    private Boolean userCanConfirm;
     private Boolean userCanEdit;
 
     public Long getId() {
@@ -160,6 +163,14 @@ public class DirectiveViewDto {
         this.userCanCancel = userCanCancel;
     }
 
+    public Boolean getUserCanConfirm() {
+        return userCanConfirm;
+    }
+
+    public void setUserCanConfirm(Boolean userCanConfirm) {
+        this.userCanConfirm = userCanConfirm;
+    }
+
     public Boolean getUserCanEdit() {
         return userCanEdit;
     }
@@ -189,7 +200,7 @@ public class DirectiveViewDto {
             // do not show canceled rows of directive
             students = students.filter(ds -> !Boolean.TRUE.equals(ds.getCanceled()));
         }
-        dto.setStudents(StreamUtil.toMappedList(DirectiveViewStudentDto::of, students));
+        dto.setStudents(students.sorted(Comparator.comparing(DirectiveStudent::getId)).map(DirectiveViewStudentDto::of).collect(Collectors.toList()));
         return dto;
     }
 }

@@ -65,12 +65,27 @@ public class SubjectService {
     @Autowired
     private CurriculumVersionRepository curriculumVersionRepository;
 
+    /**
+     * Create new subject
+     *
+     * @param user
+     * @param newSubject
+     * @return
+     */
     public Subject create(HoisUserDetails user, SubjectForm newSubject) {
         Subject subject = new Subject();
-        subject.setStatus(em.getReference(Classifier.class, SubjectStatus.AINESTAATUS_S.name()));
+        setSubjectStatus(subject, SubjectStatus.AINESTAATUS_S);
         return save(user, subject, newSubject);
     }
 
+    /**
+     * Update subject
+     *
+     * @param user
+     * @param subject
+     * @param newSubject
+     * @return
+     */
     public Subject save(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(newSubject, subject, classifierRepository, "status");
@@ -91,56 +106,13 @@ public class SubjectService {
         return EntityUtil.save(subject, em);
     }
 
-    private void bindConnections(Subject target, SubjectForm source) {
-        Set<Long> subjectIds = new HashSet<>();
-        Collection<Long> mandatory = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getMandatoryPrerequisiteSubjects());
-        Collection<Long> recommended = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getRecommendedPrerequisiteSubjects());
-        Collection<Long> substitute = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getSubstituteSubjects());
-
-        subjectIds.addAll(mandatory);
-        subjectIds.addAll(recommended);
-        subjectIds.addAll(substitute);
-        List<Subject> subjects = findAllById(subjectIds);
-
-        Set<SubjectConnect> connections = target.getSubjectConnections();
-        Set<SubjectConnect> newConnections = new HashSet<>();
-
-        bindSubjectConnect(target, SubjectConnection.AINESEOS_EK, connections, newConnections, subjects.stream().filter(it -> mandatory.contains(it.getId())).collect(Collectors.toSet()));
-        bindSubjectConnect(target, SubjectConnection.AINESEOS_EV, connections, newConnections, subjects.stream().filter(it -> recommended.contains(it.getId())).collect(Collectors.toSet()));
-        bindSubjectConnect(target, SubjectConnection.AINESEOS_A, connections, newConnections, subjects.stream().filter(it -> substitute.contains(it.getId())).collect(Collectors.toSet()));
-
-        List<Long> ids = new ArrayList<>();
-        ids.add(target.getId());
-        for (SubjectConnect subjectConnect : newConnections) {
-            Long id = EntityUtil.getId(subjectConnect.getConnectSubject());
-            if (ids.contains(id)) {
-                throw new ValidationFailedException(EntityUtil.getCode(subjectConnect.getConnection()), "same-subject-multipile");
-            }
-            ids.add(id);
-        }
-
-        target.setSubjectConnections(newConnections);
-    }
-
-    private void bindSubjectConnect(Subject primarySubject, SubjectConnection subjectConnection, Set<SubjectConnect> connections, Set<SubjectConnect> newConnections, Collection<Subject> connectSubjects) {
-        Classifier connectionType = em.getReference(Classifier.class, subjectConnection.name());
-
-        // TODO use EntityUtil.bindEntityCollection
-        Map<Long, SubjectConnect> m = connections.stream()
-                .filter(it -> Objects.equals(EntityUtil.getCode(it.getConnection()), EntityUtil.getCode(connectionType)))
-                .collect(Collectors.toMap(k -> EntityUtil.getId(k.getConnectSubject()), v -> v));
-        for (Subject connected : connectSubjects) {
-            SubjectConnect sc = m.get(connected.getId());
-            if (sc != null) {
-                newConnections.add(sc);
-            } else {
-                newConnections.add(new SubjectConnect(primarySubject, connected, connectionType));
-            }
-        }
-    }
-
     /**
-     *  Curricula OR CurriculaVersion
+     * Search subjects
+     *
+     * @param user
+     * @param subjectSearchCommand
+     * @param pageable
+     * @return
      */
     public Page<SubjectSearchDto> search(HoisUserDetails user, SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
         Boolean canEdit = Boolean.valueOf(SubjectUserRights.hasPermissionToEdit(user));
@@ -213,11 +185,24 @@ public class SubjectService {
         });
     }
 
+    /**
+     * Delete subject
+     *
+     * @param user
+     * @param subject
+     */
     public void delete(HoisUserDetails user, Subject subject) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(subject, em);
     }
 
+    /**
+     * Uniqueness check for subject
+     *
+     * @param schoolId
+     * @param command
+     * @return
+     */
     public boolean isCodeUnique(Long schoolId, UniqueCommand command) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject s");
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
@@ -231,16 +216,39 @@ public class SubjectService {
         return qb.select("s.id", em).setMaxResults(1).getResultList().isEmpty();
     }
 
+    /**
+     * Update subjct and set status to active
+     *
+     * @param user
+     * @param subject
+     * @param newSubject
+     * @return
+     */
     public Subject saveAndConfirm(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
-        subject.setStatus(em.getReference(Classifier.class, SubjectStatus.AINESTAATUS_K.name()));
+        setSubjectStatus(subject, SubjectStatus.AINESTAATUS_K);
         return save(user, subject, newSubject);
     }
 
+    /**
+     * Update subject and set status to passive
+     *
+     * @param user
+     * @param subject
+     * @param newSubject
+     * @return
+     */
     public Subject saveAndUnconfirm(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
-        subject.setStatus(em.getReference(Classifier.class, SubjectStatus.AINESTAATUS_P.name()));
+        setSubjectStatus(subject, SubjectStatus.AINESTAATUS_P);
         return save(user, subject, newSubject);
     }
 
+    /**
+     * Get subject data
+     *
+     * @param user
+     * @param subject
+     * @return
+     */
     public SubjectDto get(HoisUserDetails user, Subject subject) {
         SubjectDto dto = SubjectDto.of(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
         dto.setCanEdit(Boolean.valueOf(SubjectUserRights.canEdit(user, subject)));
@@ -250,6 +258,12 @@ public class SubjectService {
         return dto;
     }
 
+    /**
+     * Find all subject by given ids
+     *
+     * @param subjectIds may be empty
+     * @return
+     */
     public List<Subject> findAllById(Collection<Long> subjectIds) {
         if(subjectIds.isEmpty()) {
             return Collections.emptyList();
@@ -258,5 +272,57 @@ public class SubjectService {
         return em.createQuery("select s from Subject s where s.id in (?1)", Subject.class)
                 .setParameter(1, subjectIds)
                 .getResultList();
+    }
+
+    private void bindConnections(Subject target, SubjectForm source) {
+        Set<Long> subjectIds = new HashSet<>();
+        Collection<Long> mandatory = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getMandatoryPrerequisiteSubjects());
+        Collection<Long> recommended = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getRecommendedPrerequisiteSubjects());
+        Collection<Long> substitute = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getSubstituteSubjects());
+
+        subjectIds.addAll(mandatory);
+        subjectIds.addAll(recommended);
+        subjectIds.addAll(substitute);
+        List<Subject> subjects = findAllById(subjectIds);
+
+        Set<SubjectConnect> connections = target.getSubjectConnections();
+        Set<SubjectConnect> newConnections = new HashSet<>();
+
+        bindSubjectConnect(target, SubjectConnection.AINESEOS_EK, connections, newConnections, subjects.stream().filter(it -> mandatory.contains(it.getId())).collect(Collectors.toSet()));
+        bindSubjectConnect(target, SubjectConnection.AINESEOS_EV, connections, newConnections, subjects.stream().filter(it -> recommended.contains(it.getId())).collect(Collectors.toSet()));
+        bindSubjectConnect(target, SubjectConnection.AINESEOS_A, connections, newConnections, subjects.stream().filter(it -> substitute.contains(it.getId())).collect(Collectors.toSet()));
+
+        List<Long> ids = new ArrayList<>();
+        ids.add(target.getId());
+        for (SubjectConnect subjectConnect : newConnections) {
+            Long id = EntityUtil.getId(subjectConnect.getConnectSubject());
+            if (ids.contains(id)) {
+                throw new ValidationFailedException(EntityUtil.getCode(subjectConnect.getConnection()), "same-subject-multipile");
+            }
+            ids.add(id);
+        }
+
+        target.setSubjectConnections(newConnections);
+    }
+
+    private void bindSubjectConnect(Subject primarySubject, SubjectConnection subjectConnection, Set<SubjectConnect> connections, Set<SubjectConnect> newConnections, Collection<Subject> connectSubjects) {
+        Classifier connectionType = em.getReference(Classifier.class, subjectConnection.name());
+
+        // TODO use EntityUtil.bindEntityCollection
+        Map<Long, SubjectConnect> m = connections.stream()
+                .filter(it -> Objects.equals(EntityUtil.getCode(it.getConnection()), EntityUtil.getCode(connectionType)))
+                .collect(Collectors.toMap(k -> EntityUtil.getId(k.getConnectSubject()), v -> v));
+        for (Subject connected : connectSubjects) {
+            SubjectConnect sc = m.get(connected.getId());
+            if (sc != null) {
+                newConnections.add(sc);
+            } else {
+                newConnections.add(new SubjectConnect(primarySubject, connected, connectionType));
+            }
+        }
+    }
+
+    private void setSubjectStatus(Subject subject, SubjectStatus status) {
+        subject.setStatus(em.getReference(Classifier.class, status.name()));
     }
 }

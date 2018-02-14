@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.service.CertificateContentService;
 import ee.hitsa.ois.service.CertificateService;
 import ee.hitsa.ois.service.CertificateValidationService;
@@ -59,15 +60,21 @@ public class CertificateController {
 
     @GetMapping("/{id:\\d+}")
     public CertificateDto get(HoisUserDetails user, @WithEntity Certificate certificate) {
-        certificateValidationService.assertCanView(user, certificate);
-        CertificateDto dto = CertificateDto.of(certificate);
+        if(certificate.getStudent() != null) {
+            if(!UserUtil.canViewStudent(user, certificate.getStudent())) {
+                throw new ValidationFailedException("no.permission");
+            }
+        } else {
+            UserUtil.assertIsSchoolAdmin(user, certificate.getSchool());
+        }
+        CertificateDto dto = CertificateDto.of(user, certificate);
         dto.setCanBeChanged(certificateValidationService.canBeChanged(user, certificate));
         return dto;
     }
-    
+
     @GetMapping("/student/status/{id:\\d+}")
     public Map<String, String> getStudentStatus(HoisUserDetails user, @WithEntity Student student) {
-        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        UserUtil.assertIsSchoolAdminOrStudent(user);
         return Collections.singletonMap("status", EntityUtil.getCode(student.getStatus()));
     }
 
@@ -77,9 +84,8 @@ public class CertificateController {
       if(user.isStudent()) {
         command.setStudent(user.getStudentId());
       }
-      command.setSchool(user.getSchoolId());
       return Collections.singletonMap("content", 
-                certificateContentService.generate(command));
+                certificateContentService.generate(user.getSchoolId(), command));
     }
 
     @GetMapping("/signatories")
@@ -88,10 +94,16 @@ public class CertificateController {
         return certificateService.signatories(user.getSchoolId());
     }
 
+    /**
+     * Create certificate endpoint for admin
+     *
+     * @param user
+     * @param form
+     * @return
+     */
     @PostMapping
     public CertificateDto create(HoisUserDetails user, @Valid @RequestBody CertificateForm form) {
         UserUtil.assertIsSchoolAdmin(user);
-        certificateValidationService.validate(user, form);
         return get(user, certificateService.create(user, form));
     }
 
@@ -104,20 +116,32 @@ public class CertificateController {
         return get(user, certificateService.save(user, certificate, form));
     }
 
+    /**
+     * Create certificate and send it to EKIS
+     *
+     * @param user
+     * @param form
+     * @return
+     */
     @PostMapping("/order")
     public CertificateDto createAndOrder(HoisUserDetails user, @Valid @RequestBody CertificateForm form) {
-        if(user.isStudent()) {
-            form.setStudent(user.getStudentId());
-            certificateService.setSignatory(form, user.getSchoolId());
+        if(!CertificateType.isOther(form.getType())) {
+            UserUtil.assertIsSchoolAdminOrStudent(user);
         } else {
             UserUtil.assertIsSchoolAdmin(user);
         }
-        certificateValidationService.assertCanCreate(user, form);
-        certificateValidationService.validate(user, form);
         Certificate certificate = certificateService.create(user, form);
         return orderFromEkis(user, certificate);
     }
 
+    /**
+     * Update certificate and send it to EKIS
+     *
+     * @param user
+     * @param certificate
+     * @param form
+     * @return
+     */
     @PutMapping("/order/{id:\\d+}")
     public CertificateDto saveAndOrder(HoisUserDetails user, 
             @WithVersionedEntity(versionRequestBody = true) Certificate certificate,
@@ -137,6 +161,10 @@ public class CertificateController {
             return get(user, ekisService.registerCertificate(certificateId));
         } catch(ValidationFailedException e) {
             // return certificate id to frontend
+            if(user.isStudent()) {
+                // student gets different message
+                e = new ValidationFailedException("certificate.orderFailure");
+            }
             e.getErrorInfo().setData(Collections.singletonMap("id", certificateId));
             throw e;
         }
@@ -149,8 +177,30 @@ public class CertificateController {
     }
 
     @GetMapping("/otherStudent")
-    public StudentSearchDto otherStudent(HoisUserDetails user, String idcode) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return certificateService.otherStudent(user.getSchoolId(), idcode);
+    public StudentSearchDto otherStudent(HoisUserDetails user, OtherStudentCommand command) {
+        UserUtil.assertIsSchoolAdminOrStudent(user);
+        return certificateService.otherStudent(user.getSchoolId(), user.isStudent() ? user.getStudentId() : command.getId(), command.getIdcode());
+    }
+
+    public static class OtherStudentCommand {
+
+        private String idcode;
+        private Long id;
+
+        public String getIdcode() {
+            return idcode;
+        }
+
+        public void setIdcode(String idcode) {
+            this.idcode = idcode;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
     }
 }

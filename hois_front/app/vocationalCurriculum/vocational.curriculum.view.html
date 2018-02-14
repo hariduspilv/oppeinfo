@@ -338,6 +338,10 @@
            <label>{{'main.notes' | translate}}</label>
            <textarea ng-model="curriculum.description" max-rows="2" md-select-on-focus readonly></textarea>
          </md-input-container>
+         <md-input-container flex ng-if="curriculum.status === STATUS.VERIFIED">
+           <label>{{'public.url' | translate}}</label>
+           <input ng-model="publicUrl" type="text" readonly>
+         </md-input-container>
        </div>
      </fieldset>
 

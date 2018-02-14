@@ -517,6 +517,16 @@ public abstract class EntityUtil {
     }
 
     /**
+     * Return reference to entity of given classifier or null
+     * @param code
+     * @param em
+     * @return null if code is null
+     */
+    public static Classifier getOptionalOne(String code, EntityManager em) {
+        return code != null ? em.getReference(Classifier.class, code) : null;
+    }
+
+    /**
      * Verify entity version.
      *
      * @param e

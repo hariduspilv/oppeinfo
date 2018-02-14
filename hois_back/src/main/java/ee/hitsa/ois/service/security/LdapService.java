@@ -10,6 +10,7 @@ import javax.naming.AuthenticationException;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
@@ -59,9 +60,14 @@ public class LdapService {
             ctls.setReturningAttributes(attrIDs);
 
             answer = ctx.search(params.getBase(), "sAMAccountName=" + username, ctls);
-            while (answer.hasMore()) {
+            if (answer.hasMore()) {
                 SearchResult result = answer.next();
-                idcode = (String) result.getAttributes().get(params.getIdcodeAttribute()).get();
+                Attribute attribute = result.getAttributes().get(params.getIdcodeAttribute());
+                if (attribute != null) {
+                    idcode = (String) attribute.get();
+                } else {
+                    log.error("Cannot get user ID-code from LDAP server (missing attribute: {})", params.getIdcodeAttribute());
+                }
             }
         } catch (NamingException e) {
             log.error("Cannot get user ID-code from LDAP server", e);

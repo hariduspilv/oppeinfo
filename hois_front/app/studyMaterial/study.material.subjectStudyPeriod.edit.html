@@ -1,0 +1,88 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex class="form-readonly">
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label class="textInput">{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
+        <hois-value value="currentLanguageNameField(subjectStudyPeriod.studyPeriod)"></hois-value>
+      </md-input-container>
+      <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <label class="textInput">{{'subjectStudyPeriod.subject' | translate}}</label>
+        <hois-value value="currentLanguageNameField(subjectStudyPeriod.subject)"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label class="textInput">{{'subjectStudyPeriod.teachers' | translate}}</label>
+        <hois-value value="teachers"></hois-value>
+      </md-input-container>
+    </div>
+  </div>
+  <div flex>
+    <form name="studyMaterialsForm" ng-submit="save()" novalidate>
+      <div layout="column" flex>
+        <div layout="row">
+          <md-button class="md-button md-raised" ng-href="/#/studyMaterial/higher/{{subjectStudyPeriod.id}}/new">{{'main.button.create' | translate}}</md-button>
+        </div>
+        <fieldset style="min-width: 0;">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.button.addExisting' | translate}}</legend>
+          <hois-autocomplete flex ng-model="existingMaterial" method="studyMaterials" name="existingMaterial" label="studyMaterial.name"
+            additional-query-params="{teacher: auth.teacher, subjectStudyPeriod: subjectStudyPeriod.id}" no-paging="true"></hois-autocomplete>
+          <md-button class="md-button md-raised" ng-click="addExisting()">{{'main.button.add' | translate}}</md-button>
+        </fieldset>
+        <br/>
+        <fieldset>
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'studyMaterial.label' | translate}}</legend>
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'studyMaterial.type' | translate}}</th>
+                <th md-column>{{'studyMaterial.name' | translate}}</th>
+                <th md-column>{{'studyMaterial.fileorlink' | translate}}</th>
+                <th md-column>{{'studyMaterial.isVisibleToStudents' | translate}}</th>
+                <th md-column>{{'studyMaterial.isPublic' | translate}}</th>
+                <th md-column>{{'studyMaterial.journalCount' | translate}}</th>
+                <th md-column></th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="material in materials | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{currentLanguageNameField(material.typeCode)}}</td>
+                <td md-cell>
+                  <a ng-href="/#/studyMaterial/higher/{{subjectStudyPeriod.id}}/edit/{{material.id}}">{{currentLanguageNameField(material)}}</a>
+                </td>
+                <td md-cell ng-if="material.typeCode.code === 'OPPEMATERJAL_F'">
+                  <div layout="row" flex>
+                    <div>{{material.oisFile.fname}}</div>
+                    <div flex>
+                      <a ng-href="{{getFileUrl(material.oisFile, 'studymaterial')}}" target="_blank" rel="noopener noreferrer">
+                        <md-icon md-font-set="material-icons">file_download</md-icon>
+                      </a>
+                    </div>
+                  </div>
+                </td>
+                <td md-cell ng-if="material.typeCode.code === 'OPPEMATERJAL_L'">
+                  <a ng-href="{{material.url}}" target="_blank" rel="noopener noreferrer">{{material.url}}</a>
+                </td>
+                <td md-cell>
+                  <md-checkbox ng-model="material.isVisibleToStudents" aria-label="isVisibleToStudents" disabled></md-checkbox>
+                </td>
+                <td md-cell>
+                  <md-checkbox ng-model="material.isPublic" aria-label="isVisibleToStudents" disabled></md-checkbox>
+                </td>
+                <td md-cell>{{material.journalCount}}</td>
+                <td md-cell>
+                  <a class="remove nomargin" ng-click="deleteConnection(material.connect)">&times;</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </fieldset>
+        <br/>
+      </div>
+
+      <div layout="row">
+        <md-button class="md-raised md-default" href="/#/studyMaterial/higher/">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

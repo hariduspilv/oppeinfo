@@ -27,12 +27,4 @@ public abstract class TeacherUserRights {
         return hasPermissionToEdit(user) && UserUtil.isSameSchool(user, teacher.getSchool());
     }
 
-    public static boolean canConfirm(HoisUserDetails user, Teacher teacher) {
-        return canConfirm(user) && UserUtil.isSameSchool(user, teacher.getSchool());
-    }
-
-    public static boolean canConfirm(HoisUserDetails user) {
-        return user.isSchoolAdmin() && 
-                UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPETAJA);
-    }
 }

@@ -1,7 +1,9 @@
 'use strict';
 
 angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController', 
-  function ($scope, QueryUtils, DataUtils, ArrayUtils, USER_ROLES, AuthService) {
+  function ($scope, $route, QueryUtils, DataUtils, ArrayUtils, USER_ROLES, AuthService) {
+    $scope.schoolId = $route.current.locals.auth.school.id;
+
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN);
     $scope.currentNavItem = 'teachers';
 

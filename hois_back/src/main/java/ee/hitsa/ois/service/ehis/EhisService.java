@@ -138,38 +138,32 @@ public abstract class EhisService {
 
     protected KhlOppur getKhlOppurLisamine(Student student) {
         Person person = student.getPerson();
-        KhlOppur khlOppur = new KhlOppur();
-        KhlLisamine lisamine = new KhlLisamine();
         KhlIsikuandmedLisa isikuandmedLisa = new KhlIsikuandmedLisa();
-
         isikuandmedLisa.setIsikukood(getPersonId(person));
 
         if (person.getIdcode() == null) {
-            isikuandmedLisa.setKlIsikukoodRiik(BIRTH_DATE_ENTERED);
-        }
-        if (isikuandmedLisa.getIsikukood() == null) {
             isikuandmedLisa.setSynniKp(date(person.getBirthdate()));
-        }
-        if (person.getSex() != null) {
-            isikuandmedLisa.setKlSugu(ehisValue(person.getSex()));
-        }
-        if ((person.getFirstname() != null) && !person.getFirstname().isEmpty()) {
-            isikuandmedLisa.setEesnimi(person.getFirstname());
-        }
-        if ((person.getLastname() != null) && !person.getLastname().isEmpty()) {
-            isikuandmedLisa.setPerenimi(person.getLastname());
+            isikuandmedLisa.setKlIsikukoodRiik(BIRTH_DATE_ENTERED);
+            if (person.getSex() != null) {
+                isikuandmedLisa.setKlSugu(ehisValue(person.getSex()));
+            }
+            if ((person.getFirstname() != null) && !person.getFirstname().isEmpty()) {
+                isikuandmedLisa.setEesnimi(person.getFirstname());
+            }
+            if ((person.getLastname() != null) && !person.getLastname().isEmpty()) {
+                isikuandmedLisa.setPerenimi(person.getLastname());
+            }
+            if (person.getCitizenship() != null) {
+                isikuandmedLisa.setKlKodakondsus(EntityUtil.getCode(person.getCitizenship()));
+            }
+            if (person.getResidenceCountry() != null) {
+                isikuandmedLisa.setKlElukohamaa(value2(person.getCitizenship()));
+            }
         }
 
-        if (person.getCitizenship() != null) {
-            isikuandmedLisa.setKlKodakondsus(EntityUtil.getCode(person.getCitizenship()));
-        }
-
-        if (person.getResidenceCountry() != null) {
-            isikuandmedLisa.setKlElukohamaa(value2(person.getCitizenship()));
-        }
-
+        KhlLisamine lisamine = new KhlLisamine();
         lisamine.setIsikuandmed(isikuandmedLisa);
-
+        KhlOppur khlOppur = new KhlOppur();
         khlOppur.setLisamine(lisamine);
         return khlOppur;
     }

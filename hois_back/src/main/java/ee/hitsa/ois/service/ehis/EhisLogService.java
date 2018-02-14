@@ -26,6 +26,7 @@ import ee.hitsa.ois.domain.WsEhisCurriculumLog;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.WsEhisTeacherLog;
 import ee.hitsa.ois.domain.directive.Directive;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -56,7 +57,7 @@ public class EhisLogService {
      * @param id
      * @param messageType
      * @return
-     * @throws IllegalArgumentException if log type is unknown
+     * @throws AssertionFailedException if log type is unknown
      */
     public EhisLogDto get(HoisUserDetails user, Long id, String messageType) {
         Class<? extends BaseLog> logentryClass;
@@ -73,7 +74,7 @@ public class EhisLogService {
             logentryClass = WsEhisTeacherLog.class;
             break;
         default:
-            throw new IllegalArgumentException("Unknown message type");
+            throw new AssertionFailedException("Unknown message type");
         }
 
         BaseLog logentry = em.getReference(logentryClass, id);

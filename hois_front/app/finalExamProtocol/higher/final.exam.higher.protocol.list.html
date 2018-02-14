@@ -2,12 +2,12 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+      <form name="searchForm" ng-submit="loadData()" novalidate class="nomargin">
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="50" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'finalExamProtocol.studyPeriod' | translate}}</label>
-            <hois-select ng-model="criteria.studyPeriod" type="studyperiod" required autofocus></hois-select>
+            <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required autofocus></hois-select>
           </md-input-container>
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"></md-input-container>
         </div>

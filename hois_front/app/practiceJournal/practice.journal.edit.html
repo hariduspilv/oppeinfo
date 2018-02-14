@@ -113,7 +113,7 @@
 
       <div layout="row">
         <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
-        <md-button ng-show="((auth.isTeacher() || auth.isAdmin()) && practiceJournal.id && practiceJournal.canDelete" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button ng-if="practiceJournal.id && practiceJournal.canDelete" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="back('#/practiceJournals/', practiceJournalForm)">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>

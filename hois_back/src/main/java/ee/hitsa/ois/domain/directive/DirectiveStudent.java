@@ -33,6 +33,7 @@ import ee.hitsa.ois.validation.DirectiveValidation.Okava;
 import ee.hitsa.ois.validation.DirectiveValidation.Okoorm;
 import ee.hitsa.ois.validation.DirectiveValidation.Ovorm;
 import ee.hitsa.ois.validation.DirectiveValidation.Stiptoet;
+import ee.hitsa.ois.validation.DirectiveValidation.Stiptoetl;
 import ee.hitsa.ois.validation.DirectiveValidation.Valis;
 import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.Required;
@@ -52,7 +53,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private LocalDate startDate;
     @Required(groups = Stiptoet.class)
     private LocalDate endDate;
-    @Required(groups = {Akad.class, Eksmat.class})
+    @Required(groups = {Akad.class, Eksmat.class, Stiptoetl.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier reason;
     @Required(groups = {Okoorm.class}) // Immat is checked by hand (only higher)

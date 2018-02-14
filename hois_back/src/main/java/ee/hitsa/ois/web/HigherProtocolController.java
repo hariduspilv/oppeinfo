@@ -41,6 +41,7 @@ import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 @RestController
 @RequestMapping("/higherProtocols")
 public class HigherProtocolController {
+
     @Autowired
     private HigherProtocolService higherProtocolService;
     @Autowired
@@ -56,9 +57,7 @@ public class HigherProtocolController {
     @GetMapping("/{id:\\d+}")
     public HigherProtocolDto get(HoisUserDetails user, @WithEntity Protocol protocol) {
         HigherProtocolUtil.assertCanView(user, protocol);
-        HigherProtocolDto dto = HigherProtocolDto.ofWithUserRights(user, protocol);
-        higherProtocolService.setStudentsPracticeResults(dto);
-        return dto;
+        return higherProtocolService.get(user, protocol);
     }
 
     @GetMapping("/print/{id:\\d+}/protocol.pdf")
@@ -73,7 +72,7 @@ public class HigherProtocolController {
     public HigherProtocolDto create(HoisUserDetails user, @NotNull @Valid @RequestBody HigherProtocolCreateForm form) {
         HigherProtocolUtil.assertCanCreate(user);
         HigherProtocolUtil.assertStudentsAdded(form);
-        return HigherProtocolDto.ofWithIdOnly(higherProtocolService.create(user, form));
+        return higherProtocolService.create(user, form);
     }
 
     @PutMapping("/{id:\\d+}")
@@ -93,7 +92,7 @@ public class HigherProtocolController {
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @SuppressWarnings("unused") @NotNull @RequestBody HigherProtocolSaveForm form) {
         HigherProtocolUtil.assertCanConfirm(user, protocol);
-        return get(user, higherProtocolService.confirm(protocol, user));
+        return get(user, higherProtocolService.confirm(user, protocol));
     }
 
     @PutMapping("/saveAndConfirm/{id:\\d+}")

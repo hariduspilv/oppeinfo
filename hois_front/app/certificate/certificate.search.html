@@ -65,7 +65,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell ng-if="!auth.isStudent() && !auth.isParent()">
-                <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{row.studentId}}/main" ng-disabled="!row.studentId">{{::row.studentFullname}}</md-button>
+                <a ng-disabled="!row.studentId" ng-href="#/students/{{row.studentId}}/main" class="md-primary change-button">{{::row.studentFullname}}</a>
             </td>
             <td md-cell>{{::row.certificateNr}}</td>
             <td md-cell><a ng-href="#/certificate/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
@@ -73,7 +73,7 @@
             <td md-cell>{{::row.headline}}</td>
             <td md-cell>{{row.inserted | hoisDate}}</td>
             <td md-cell ng-if="!auth.isStudent() && !auth.isParent()">
-              <md-button ng-if="row.canBeChanged && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TOEND')" md-no-ink class="md-primary change-button" 
+              <md-button ng-if="row.canBeChanged && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TOEND')" class="md-primary change-button"
                 ng-href="#/certificate/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>

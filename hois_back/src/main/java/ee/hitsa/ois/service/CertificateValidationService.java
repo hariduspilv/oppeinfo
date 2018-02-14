@@ -66,24 +66,6 @@ public class CertificateValidationService {
         }
     }
 
-    public void assertCanView(HoisUserDetails user, Certificate certificate) {
-        if(certificate.getStudent() != null) {
-            if(!UserUtil.canViewStudent(user, certificate.getStudent())) {
-                throw new ValidationFailedException("no.permission");
-            }
-        } else {
-            UserUtil.assertIsSchoolAdmin(user, certificate.getSchool());
-        }
-    }
-
-    public void assertCanCreate(HoisUserDetails user, CertificateForm form) {
-        if(!CertificateType.isOther(form.getType()) || form.getStudent() != null) {
-            UserUtil.assertIsSchoolAdminOrStudent(user, em.getReference(Student.class, form.getStudent()).getSchool());
-        } else {
-            UserUtil.assertIsSchoolAdmin(user);
-        }
-    }
-
     public void assertCanChange(HoisUserDetails user, Certificate certificate) {
         if(!canBeChanged(user, certificate)) {
             throw new ValidationFailedException("no.rights");

@@ -1,3 +1,5 @@
+<div ng-include="'timetable/generalTimetable/timetable.generalTimetable.navbar.html'"></div>
+
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
     <fieldset>
@@ -28,5 +30,9 @@
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
     </fieldset>
+  </div>
+
+  <div ng-controller="SearchTimetableViewController">
+    <div ng-include="'timetable/timetable.week.view.html'"></div>
   </div>
 </div>

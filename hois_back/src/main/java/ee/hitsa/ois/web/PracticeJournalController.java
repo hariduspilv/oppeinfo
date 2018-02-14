@@ -28,10 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.enums.JournalStatus;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.ContractService;
 import ee.hitsa.ois.service.PracticeJournalService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.PracticeJournalUserRights;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -94,6 +96,9 @@ public class PracticeJournalController {
             @WithVersionedEntity(versionRequestParam = "version") PracticeJournal practiceJournal,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
+        if (!PracticeJournalUserRights.canDelete(user, practiceJournal.getEndDate())) {
+            throw new AssertionFailedException("User cannot delete practice journal");
+        }
         practiceJournalService.delete(user, practiceJournal);
     }
 

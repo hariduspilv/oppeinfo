@@ -17,7 +17,7 @@
     </thead>
     <tbody md-body>
       <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{::(row.idcode || row.foreignIdcode)}}</td>
         <td md-cell>{{::row.firstname}}</td>
         <td md-cell>{{::row.lastname}}</td>
         <td md-cell>{{currentLanguageNameField(formState.curriculumVersionMap[row.curriculumVersion])}}</td>
@@ -37,10 +37,16 @@
           <hois-classifier-value ng-model="row.fin" main-classifier-code="FINALLIKAS"></hois-classifier-value>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.finSpecific" model-value-attr="code" main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.finSpecific" name="students[{{$index}}].finSpecific" model-value-attr="code" main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].finSpecific'].$error">
+            <p ng-message="required">{{'main.required' | translate}}</p>
+          </div>
         </td>
         <td md-cell>
-          <hois-select ng-model="row.studentGroup" values="formState.studentGroupMap[row.curriculumVersion]" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+          <hois-select ng-model="row.studentGroup" name="students[{{$index}}].studentGroup" values="formState.studentGroupMap[row.curriculumVersion]" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].studentGroup'].$error">
+            <p ng-message="required">{{'main.required' | translate}}</p>
+          </div>
         </td>
       </tr>
     </tbody>

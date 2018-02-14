@@ -110,14 +110,18 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       var basePath = config.apiUrl + baseUrl;
       var idPath = basePath + '/:id';
       return $resource(basePath, {}, settings || {
-          // crud
+          // crud, methods ending with 2 are without interceptor
           save:   {method: 'POST', interceptor: resourceErrorHandler},
+          save2:  {method: 'POST'},
           post:   {method: 'POST', isArray: true, interceptor: resourceErrorHandler},
+          post2:  {method: 'POST', isArray: true},
           get:    {method: 'GET', url: idPath , interceptor: resourceErrorHandler},
           update: {method: 'PUT', url: idPath, params: {id: '@id'}, interceptor: resourceErrorHandler},
+          update2:{method: 'PUT', url: idPath, params: {id: '@id'}},
           delete: {method: 'DELETE', url: idPath, params: {id: '@id', version: '@version'}, interceptor: resourceErrorHandler},
           // update without id
           put:    {method: 'PUT', interceptor: resourceErrorHandler},
+          put2:   {method: 'PUT'},
           // search functions
           search: {method: 'GET', interceptor: resourceErrorHandler},
           query:  {method: 'GET', isArray:true, interceptor: resourceErrorHandler},

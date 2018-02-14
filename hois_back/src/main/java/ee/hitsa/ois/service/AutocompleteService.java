@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
@@ -51,6 +52,8 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
+import ee.hitsa.ois.validation.Required;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
@@ -65,6 +68,7 @@ import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.studymaterial.StudyMaterialAutocompleteCommand;
 import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
@@ -376,22 +380,35 @@ public class AutocompleteService {
 
     public PersonDto person(HoisUserDetails user, PersonLookupCommand lookup) {
         Person person;
-        String idcode = lookup.getIdcode().trim();
-        if("student".equals(lookup.getRole())) {
-            // FIXME multiple students with same idcode?
-            // FIXME should filter by school?
-            List<Person> data = em.createQuery("select s.person from Student s where s.person.idcode = ?1", Person.class)
-                    .setParameter(1, idcode)
-                    .setMaxResults(1).getResultList();
-            person = data.isEmpty() ? null : data.get(0);
-        } else if("activestudent".equals(lookup.getRole())) {
-            List<Person> data = em.createQuery("select s.person from Student s where s.person.idcode = ?1 and s.status.code in ?2", Person.class)
-                    .setParameter(1, idcode)
-                    .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
+        if("foreignidcode".equals(lookup.getRole())) {
+            if(!StringUtils.hasText(lookup.getForeignIdcode())) {
+                throw new ValidationFailedException("foreignIdcode", Required.MESSAGE);
+            }
+            List<Person> data = em.createQuery("select p from Person p where p.foreignIdcode = ?1", Person.class)
+                    .setParameter(1, lookup.getForeignIdcode())
                     .setMaxResults(1).getResultList();
             person = data.isEmpty() ? null : data.get(0);
         } else {
-           person = personRepository.findByIdcode(idcode);
+            if(!StringUtils.hasText(lookup.getIdcode())) {
+                throw new ValidationFailedException("idcode", Required.MESSAGE);
+            }
+            String idcode = lookup.getIdcode().trim();
+            if("student".equals(lookup.getRole())) {
+                // FIXME multiple students with same idcode?
+                // FIXME should filter by school?
+                List<Person> data = em.createQuery("select s.person from Student s where s.person.idcode = ?1", Person.class)
+                        .setParameter(1, idcode)
+                        .setMaxResults(1).getResultList();
+                person = data.isEmpty() ? null : data.get(0);
+            } else if("activestudent".equals(lookup.getRole())) {
+                List<Person> data = em.createQuery("select s.person from Student s where s.person.idcode = ?1 and s.status.code in ?2", Person.class)
+                        .setParameter(1, idcode)
+                        .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
+                        .setMaxResults(1).getResultList();
+                person = data.isEmpty() ? null : data.get(0);
+            } else {
+               person = personRepository.findByIdcode(idcode);
+            }
         }
         PersonDto dto = null;
         if(person != null) {
@@ -654,7 +671,26 @@ public class AutocompleteService {
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
     }
-
+    
+    public List<AutocompleteResult> studyMaterials(Long schoolId, StudyMaterialAutocompleteCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from study_material m").sort("m.name_et");
+        
+        qb.requiredCriteria("m.school_id = :school_id", "school_id", schoolId);
+        
+        qb.optionalCriteria("m.teacher_id = :teacher_id", "teacher_id", lookup.getTeacher());
+        qb.optionalCriteria("m.id not in (select study_material_id from study_material_connect where subject_study_period_id = :subject_study_period_id)", 
+                "subject_study_period_id", lookup.getSubjectStudyPeriod());
+        qb.optionalCriteria("m.id not in (select study_material_id from study_material_connect where journal_id = :journal_id)", 
+                "journal_id", lookup.getJournal());
+        qb.optionalContains("m.name_et", "name", lookup.getName());
+        
+        List<?> data = qb.select("m.id as material_id, m.name_et as material_name", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String name = resultAsString(r, 1);
+            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+        }, data);
+    }
+    
     /**
      * startDate and endDate required to get current studyPeriod in front end
      */

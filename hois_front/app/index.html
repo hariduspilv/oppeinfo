@@ -55,9 +55,10 @@
         <div layout-align="end" flex>
           <div layout="row" layout-align="end center" flex>
             <div ng-show="state.currentUser && state.currentUser.roleCode !== 'ROLL_X'">
-                <md-button class="md-icon-button" ng-href="#/messages/received?_menu">
-                  <md-icon md-colors="{color: 'primary-800'}">email</md-icon>
-                </md-button>
+              <md-button class="md-icon-button" ng-href="#/messages/received?_menu">
+                <md-icon md-colors="{color: 'primary-800'}">email</md-icon>
+                <span ng-if="unreadMessages > 0" class="unreadMessages">{{unreadMessages}}</span>
+              </md-button>
             </div>
             <div id="lang-button" md-colors="{color: 'background-500'}">
               <md-button ng-class="{'md-accent': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="language et">{{ 'main.language.et' | translate }}</md-button>
@@ -105,7 +106,7 @@
             </li>
           </ul>
 
-          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="md-caption">Versioon 0.6.3/20180202</span></div>
+          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="md-caption">Versioon 0.6.4/20180214</span></div>
           <div style="margin-bottom: 8px;" flex layout="row"  ng-show="state.currentUser">
             <a style="font-size: 13px; margin: 10px;"  href="https://kratt.edu.ee" target="_blank" rel="noopener">Kratt</a>
           </div>
@@ -213,6 +214,7 @@
 
   <script src="curriculum/curriculum.js"></script>
   <script src="curriculum/curriculum.list.js"></script>
+  <script src="curriculum/curriculum.public.js"></script>
   <script src="curriculum/curriculum.route.js"></script>
 
   <script src="declaration/declaration.js"></script>
@@ -339,6 +341,11 @@
 
   <script src="studentRepresentative/student.representative.application.js"></script>
   <script src="studentRepresentative/student.representative.route.js"></script>
+
+  <script src="studyMaterial/study.material.js"></script>
+  <script src="studyMaterial/study.material.list.js"></script>
+  <script src="studyMaterial/study.material.edit.js"></script>
+  <script src="studyMaterial/study.material.route.js"></script>
 
   <script src="studyYearSchedule/study.year.schedule.js"></script>
   <script src="studyYearSchedule/study.year.schedule.route.js"></script>

@@ -334,7 +334,7 @@ angular.module('hitsaOis')
           QueryUtils.createQueryForm(dialogScope, '/curriculum');
           var oldGetCriteria = dialogScope.getCriteria;
           dialogScope.getCriteria = function() {
-            return angular.extend(oldGetCriteria(), {isVocational: true});
+            return angular.extend(oldGetCriteria(), {isVocational: true, isPartnerSchool: false});
           };
           dialogScope.loadData();
         },

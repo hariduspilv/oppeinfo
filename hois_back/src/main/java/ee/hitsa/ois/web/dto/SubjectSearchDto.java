@@ -6,7 +6,6 @@ import java.util.Set;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.util.SubjectUtil;
 
 public class SubjectSearchDto {
     private Long id;
@@ -30,7 +29,7 @@ public class SubjectSearchDto {
 
     public static SubjectSearchDto of(Subject subject) {
         SubjectSearchDto dto = EntityUtil.bindToDto(subject, new SubjectSearchDto(), "languages");
-        dto.setLanguages(StreamUtil.toMappedSet(EntityUtil::getCode, SubjectUtil.getLanguages(subject)));
+        dto.setLanguages(StreamUtil.toMappedSet(r -> EntityUtil.getCode(r.getLanguage()), subject.getSubjectLanguages()));
         return dto;
     }
 

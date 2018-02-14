@@ -59,6 +59,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
           for(var i = 0, cnt = $scope.record.students.length; i < cnt; i++) {
             $scope.record.students[i]._found = true;
             $scope.record.students[i]._idcode = $scope.record.students[i].idcode;
+            $scope.record.students[i]._foreign = !$scope.record.students[i].idcode;
           }
         }
       }
@@ -142,6 +143,11 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       }
     }
 
+    function displayFormErrors(response) {
+      // failure, required fields are not filled
+      resourceErrorHandler.responseError(response, $scope.directiveForm).catch(angular.noop);
+    }
+
     function formIsValid() {
       $scope.directiveForm.$setSubmitted();
       if(!$scope.directiveForm.$valid) {
@@ -157,29 +163,35 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       }
     }
 
-    $scope.update = function() {
+    function clearErrors() {
       function clear(ctrl, name) {
+        ctrl.$serverError = undefined;
         ctrl.$setValidity(name, null);
       }
 
       var invalidCtrls = $scope.directiveForm.$error;
       if(invalidCtrls) {
         Object.keys(invalidCtrls).forEach(function(name) {
-          invalidCtrls[name].forEach(function(ctrl) { clear(ctrl, name); });
+          var ctrls = invalidCtrls[name].slice();
+            ctrls.forEach(function(ctrl) { clear(ctrl, name); });
         });
       }
+    }
+
+    $scope.update = function() {
+      clearErrors();
       if(!formIsValid()) {
         return;
       }
 
       beforeSave();
       if($scope.record.id) {
-        $scope.record.$update().then(afterLoad).then(message.updateSuccess).catch(angular.noop);
+        $scope.record.$update2().then(afterLoad).then(message.updateSuccess).catch(displayFormErrors);
       }else{
-        $scope.record.$save().then(function() {
+        $scope.record.$save2().then(function() {
           message.info('main.messages.create.success');
           $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
-        }).catch(angular.noop);
+        }).catch(displayFormErrors);
       }
     };
 
@@ -244,10 +256,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       });
     }
 
-    $scope.deleteStudent = function(idcode) {
+    $scope.deleteStudent = function(row) {
       var rows = $scope.record.students;
       for(var i = 0, cnt = rows.length; i < cnt; i++) {
-        if(rows[i].idcode === idcode) {
+        if(rows[i] === row) {
           rows.splice(i, 1);
           break;
         }
@@ -295,20 +307,53 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       });
     };
 
+    $scope.foreignChanged = function(row) {
+      if(row._foreign) {
+        row.foreignIdcode = row.idcode;
+        row.idcode = undefined;
+      } else {
+        row.idcode = row.foreignIdcode;
+        row.foreignIdcode = undefined;
+      }
+      row._idcode = undefined;
+      $scope.lookupStudent(row);
+    };
+
     $scope.lookupStudent = function(row) {
-      var idcode = row.idcode;
-      if(idcode && idcode.length === 11 && idcode !== row._idcode) {
+      var idcode = row._foreign ? row.foreignIdcode : row.idcode;
+      if(idcode && (idcode.length === 11 || row._foreign) && idcode !== row._idcode) {
         row._idcode = idcode;
-        QueryUtils.endpoint('/autocomplete/persons', {search: {method: 'GET'}}).search({idcode: idcode, role: 'person'}).$promise.then(function(response) {
+        QueryUtils.endpoint('/autocomplete/persons', {search: {method: 'GET'}}).search(row._foreign ? {foreignIdcode: idcode, role: 'foreignidcode'} : {idcode: idcode, role: 'person'}).$promise.then(function(response) {
           row._found = true;
           row.firstname = response.firstname;
           row.lastname = response.lastname;
+          row.birthdate = response.birthdate;
+          row.sex = response.sex;
+          row.citizenship = response.citizenship;
         }).catch(function(response) {
-          message.info('directive.newperson');
+          if(response.status === 404) {
+            message.info('directive.newperson');
+          } else if(response.status === 412) {
+            $scope.record.students.forEach(function(it, i) {
+              if(it === row) {
+                displayFormErrors({data: {_errors: [{code: 'InvalidEstonianIdCode', field: 'students[' + i +'].idcode'}]}});
+              }
+            });
+          } else {
+            displayFormErrors(response);
+          }
           row._found = false;
           row.firstname = undefined;
           row.lastname = undefined;
-          return $q.reject(response);
+          if(!row._foreign && response.status === 404) {
+            row.birthdate = DataUtils.birthdayFromIdcode(idcode);
+            row.sex = DataUtils.sexFromIdcode(idcode);
+            row.citizenship = 'RIIK_EST';
+          } else {
+            row.birthdate = undefined;
+            row.sex = undefined;
+            row.citizenship = undefined;
+          }
         });
       } else if(idcode !== row._idcode) {
         row._found = false;
@@ -358,7 +403,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       }
     };
 
-    $scope.sendToConfirm = function() {
+    $scope.sendToConfirm = function(ekis) {
+      clearErrors();
       $scope.directiveForm.directiveCoordinator.$setValidity('required', !!$scope.record.directiveCoordinator);
       if(!formIsValid()) {
         return;
@@ -368,8 +414,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       function sendToConfirm() {
         // save first
         beforeSave();
-        $scope.record.$update().then(afterLoad).then(function() {
-          QueryUtils.endpoint(baseUrl + '/sendtoconfirm/' + $scope.record.id, {put: {method: 'PUT'}}).put().$promise.then(function(response) {
+        $scope.record.$update2().then(afterLoad).then(function() {
+          QueryUtils.endpoint(baseUrl + '/sendtoconfirm/' + $scope.record.id + '?ekis=' + ekis, {put: {method: 'PUT'}}).put().$promise.then(function(response) {
             var invalidStudents = response ? response.invalidStudents : undefined;
             if(invalidStudents && invalidStudents.length > 0) {
               if(!deletedInvalid) {
@@ -389,11 +435,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
               message.info('directive.sentToConfirm');
               $location.url(baseUrl + '/' + $scope.record.id + '/view?_noback');
             }
-          }).catch(function(response) {
-            // failure, required fields are not filled
-            resourceErrorHandler.responseError(response, $scope.directiveForm);
-          });
-        }).catch(angular.noop);
+          }).catch(displayFormErrors);
+        }).catch(displayFormErrors);
       }
       dialogService.confirmDialog({prompt: 'directive.ekisconfirm'}, sendToConfirm);
     };

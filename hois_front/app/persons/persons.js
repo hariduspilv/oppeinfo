@@ -60,12 +60,7 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
 
     $scope.personBack = function () {
       if (($scope.users && $scope.users.length > 0) || $scope.auth.isMainAdmin() || !$scope.person.id) {
-        if (!$scope.person.id) {
-          $location.search('_noback', null);
-          $location.path(baseUrl);
-        } else {
-          $rootScope.back('#' + baseUrl);
-        }
+        $rootScope.back('#' + baseUrl);
       } else {
         dialogService.confirmDialog({prompt: 'person.back'}, function () {
           $rootScope.back('#' + baseUrl);
@@ -80,7 +75,7 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
           $scope.person.$update().then(message.updateSuccess);
         } else {
           $scope.person.$save().then(function (response) {
-            $location.path(baseUrl + '/' + response.id + '/edit');
+            $location.url(baseUrl + '/' + response.id + '/edit?_noback');
             message.info('main.messages.create.success');
           });
         }
@@ -116,7 +111,7 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
       dialogService.confirmDialog({prompt: 'person.deleteconfirm'}, function () {
         person.$delete().then(function () {
           message.info('main.messages.delete.success');
-          $location.path(baseUrl);
+          $location.url(baseUrl + '?_noback');
         });
       });
     };

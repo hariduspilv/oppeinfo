@@ -5,7 +5,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.lang.invoke.MethodHandles;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,7 +13,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.slf4j.Logger;
@@ -52,7 +50,6 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.ModuleProtocolGradeUtil;
 import ee.hitsa.ois.util.ModuleProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
-import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
@@ -69,13 +66,11 @@ import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 
 @Transactional
 @Service
-public class ModuleProtocolService {
+public class ModuleProtocolService extends AbstractProtocolService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String FINAL_EXAM_CODE = "KUTSEMOODUL_L";
 
-    @Autowired
-    private EntityManager em;
     @Autowired
     private LessonPlanModuleRepository lessonPlanModuleRepository;
 
@@ -288,7 +283,7 @@ public class ModuleProtocolService {
         protocol.setIsVocational(Boolean.TRUE);
         protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
         protocol.setSchool(em.getReference(School.class, user.getSchoolId()));
-        protocol.setProtocolNr(ProtocolUtil.generateProtocolNumber(em));
+        protocol.setProtocolNr(generateProtocolNumber());
         protocol.setProtocolStudents(StreamUtil.toMappedList(dto -> {
             ProtocolStudent protocolStudent = EntityUtil.bindToEntity(dto, new ProtocolStudent());
             protocolStudent.setStudent(em.getReference(Student.class, dto.getStudentId()));
@@ -318,14 +313,15 @@ public class ModuleProtocolService {
                     ps.setStudent(em.getReference(Student.class, dto.getStudentId()));
                     return ps;
                 }, (dto, ps) -> {
-                    if (ProtocolUtil.gradeChangedButNotRemoved(dto, ps)) {
-                        ProtocolUtil.addHistory(ps);
+                    if (gradeChangedButNotRemoved(dto, ps)) {
+                        addHistory(ps);
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
                         Short mark = getMark(EntityUtil.getCode(grade));
-                        ProtocolUtil.gradeStudent(ps, grade, mark);
-                    } else if (ProtocolUtil.gradeRemoved(dto, ps)) {
-                        ProtocolUtil.addHistory(ps);
-                        ProtocolUtil.removeGrade(ps);
+                        gradeStudent(ps, grade, mark);
+                        ps.setAddInfo(dto.getAddInfo());
+                    } else if (gradeRemoved(dto, ps)) {
+                        addHistory(ps);
+                        removeGrade(ps);
                     }
                 });
         assertRemovedStudents(storedStudents, protocol.getProtocolStudents());
@@ -375,24 +371,17 @@ public class ModuleProtocolService {
                 log.warn("student {} is already added to protocol {}", moduleProtocolStudentForm.getStudentId(),
                         protocol.getId());
             } else {
-                ProtocolStudent ps = new ProtocolStudent(em.getReference(Student.class, moduleProtocolStudentForm.getStudentId()));
+                ProtocolStudent ps = new ProtocolStudent();
+                ps.setStudent(em.getReference(Student.class, moduleProtocolStudentForm.getStudentId()));
                 ps.setProtocol(protocol);
-              protocol.getProtocolStudents().add(ps);
-                
-              /*
-               * Code below caused a system error in method ModuleProtocolStudentDto.of() (protocolStudent.protocol was null) 
-               */
-//                protocol.getProtocolStudents()
-//                        .add(new ProtocolStudent(em.getReference(Student.class, moduleProtocolStudentForm.getStudentId())));
+                protocol.getProtocolStudents().add(ps);
             }
         }
         return EntityUtil.save(protocol, em);
     }
 
     public Protocol confirm(HoisUserDetails user, Protocol protocol, ModuleProtocolSaveForm moduleProtocolSaveForm) {
-        protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_K.name()));
-        protocol.setConfirmDate(LocalDate.now());
-        protocol.setConfirmer(user.getUsername());
+        setConfirmation(user, protocol);
         Protocol confirmedProtocol = null;
         if (moduleProtocolSaveForm != null) {
             confirmedProtocol = save(protocol, moduleProtocolSaveForm);
@@ -406,11 +395,6 @@ public class ModuleProtocolService {
             }
         }
         return confirmedProtocol;
-    }
-
-    public void delete(HoisUserDetails user, Protocol protocol) {
-        EntityUtil.setUsername(user.getUsername(), em);
-        EntityUtil.deleteEntity(protocol, em);
     }
 
     public boolean hasStudentPositiveGradeInModule(Student student, CurriculumVersionOccupationModule module) {

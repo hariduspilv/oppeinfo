@@ -36,6 +36,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.message.StudentAbsenceCreated;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
@@ -95,11 +96,19 @@ public class StudentService {
      * @param pageable
      * @return
      */
-    public Page<StudentSearchDto> search(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
+    public Page<StudentSearchDto> search(HoisUserDetails user, StudentSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_LIST_FROM).sort(pageable);
 
-        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
-        qb.optionalCriteria("person.idcode = :idcode", "idcode", criteria.getIdcode());
+        if (user.isStudent()) {
+            // student can search active students only
+            qb.requiredCriteria("s.status_code in (:activeStudents)", "activeStudents", StudentStatus.STUDENT_STATUS_ACTIVE);
+        }
+
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        // student cannot search by idcode
+        if(!user.isStudent()) {
+            qb.optionalCriteria("person.idcode = :idcode", "idcode", criteria.getIdcode());
+        }
         qb.optionalContains(Arrays.asList("person.firstname", "person.lastname", "person.firstname || ' ' || person.lastname"), "name", criteria.getName());
 
         qb.optionalCriteria("curriculum.id in (:curriculum)", "curriculum", criteria.getCurriculum());
@@ -113,7 +122,7 @@ public class StudentService {
             StudentSearchDto dto = new StudentSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
-            dto.setIdcode(resultAsString(r, 3));
+            dto.setIdcode(user.isStudent() ? null : resultAsString(r, 3));
             String curriculumVersionCode = resultAsString(r, 5);
             dto.setCurriculumVersion(new AutocompleteResult(resultAsLong(r, 4),
                     CurriculumUtil.versionName(curriculumVersionCode, resultAsString(r, 7)),
@@ -122,7 +131,7 @@ public class StudentService {
             dto.setStudentGroup(new AutocompleteResult(resultAsLong(r, 9), resultAsString(r, 10), resultAsString(r, 10)));
             dto.setStudyForm(resultAsString(r, 11));
             dto.setStatus(resultAsString(r, 12));
-            dto.setPersonId(resultAsLong(r, 13));
+            dto.setPersonId(user.isStudent() ? null : resultAsLong(r, 13));
             return dto;
         });
     }

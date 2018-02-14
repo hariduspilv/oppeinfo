@@ -29,6 +29,7 @@ public class CurriculumSearchCommand extends SearchCommand {
 	private List<Long> department;
 	private Boolean isVocational;
 	private List<Long> subjects;
+	private Boolean isPartnerSchool;
 		
 	public List<Long> getSubjects() {
         return subjects;
@@ -181,6 +182,14 @@ public class CurriculumSearchCommand extends SearchCommand {
 
     public void setIsVocational(Boolean isVocational) {
         this.isVocational = isVocational;
+    }
+
+    public Boolean getIsPartnerSchool() {
+        return isPartnerSchool;
+    }
+
+    public void setIsPartnerSchool(Boolean isPartnerSchool) {
+        this.isPartnerSchool = isPartnerSchool;
     }
 
 

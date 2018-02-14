@@ -1,10 +1,10 @@
 <div ng-include="'timetable/generalTimetable/timetable.generalTimetable.navbar.html'"></div>
 
-<div ng-show="auth.isStudent() || auth.isParent()" ng-controller="StudentTimetableViewController">
+<div ng-if="auth.isStudent() || auth.isParent()" ng-controller="StudentTimetableViewController">
   <div ng-include="'timetable/timetable.week.view.html'"></div>
 </div>
 
-<div ng-show="auth.isTeacher()" ng-controller="TeacherTimetableViewController">
+<div ng-if="auth.isTeacher()" ng-controller="TeacherTimetableViewController">
   <div ng-include="'timetable/timetable.week.view.html'"></div>
 </div>
 

@@ -22,6 +22,7 @@ import ee.hitsa.ois.domain.CommitteeMember;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.CommitteeUserRights;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -100,22 +101,24 @@ public class CommitteeService {
         });
     }
 
-    public CommitteeDto get(Committee committee) {
-        return CommitteeDto.of(committee);
+    public CommitteeDto get(HoisUserDetails user, Committee committee) {
+        CommitteeDto dto = CommitteeDto.of(committee);
+        dto.setCanEdit(CommitteeUserRights.canEdit(user, committee));
+        return dto;
     }
 
-    public CommitteeDto create(Long schoolId, CommitteeDto dto) {
+    public Committee create(Long schoolId, CommitteeDto dto) {
         Committee committee = new Committee();
         committee.setSchool(em.getReference(School.class, schoolId));
         return save(committee, dto);
     }
 
-    public CommitteeDto save(Committee committee, CommitteeDto dto) {
+    public Committee save(Committee committee, CommitteeDto dto) {
         committeeValidationService.validate(dto);
 
         EntityUtil.bindToEntity(dto, committee, "members");
         updateMembers(committee, dto.getMembers());
-        return get(EntityUtil.save(committee, em));
+        return EntityUtil.save(committee, em);
     }
 
     public void updateMembers(Committee committee, List<CommitteeMemberDto> memberDtos) {

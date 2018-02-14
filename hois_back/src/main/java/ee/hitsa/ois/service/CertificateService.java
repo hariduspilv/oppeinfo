@@ -7,12 +7,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.domain.Classifier;
@@ -27,8 +29,8 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
-import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
@@ -41,17 +43,6 @@ import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 @Service
 public class CertificateService {
 
-    @Autowired
-    private ClassifierRepository classifierRepository;
-    @Autowired
-    private EntityManager em;
-    @Autowired
-    private PersonRepository personRepository;
-    @Autowired
-    private CertificateValidationService certificateValidationService;
-    @Autowired
-    private CertificateContentService certificateContentService;
-    
     private static final String CERTIFICATE_FROM = "from certificate c "
             + "left outer join student s on s.id = c.student_id "
             + "left outer join person p on p.id = s.person_id "
@@ -65,6 +56,25 @@ public class CertificateService {
             + "else split_part(c.other_name, ' ', 2) || ' ' || split_part(c.other_name, ' ', 1) "
             + "end as sortablename, c.status_code ";
 
+    @Autowired
+    private ClassifierRepository classifierRepository;
+    @Autowired
+    private EntityManager em;
+    @Autowired
+    private PersonRepository personRepository;
+    @Autowired
+    private CertificateValidationService certificateValidationService;
+    @Autowired
+    private CertificateContentService certificateContentService;
+
+    /**
+     * Search certificates
+     *
+     * @param user
+     * @param criteria
+     * @param pageable
+     * @return
+     */
     public Page<CertificateSearchDto> search(HoisUserDetails user, CertificateSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(CERTIFICATE_FROM).sort(pageable);
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
@@ -77,7 +87,7 @@ public class CertificateService {
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname", "c.other_name"), "name", criteria.getName());
         qb.optionalCriteria("c.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("c.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
-        
+
         if(user.isRepresentative()) {
             qb.requiredCriteria(" exists("
                     + "select * from student_representative sr "
@@ -85,9 +95,8 @@ public class CertificateService {
                     + "and sr.is_student_visible = true "
                     + "and sr.person_id = :representtivePersonId)", "representtivePersonId", user.getPersonId());
         }
-        
-        Page<Object[]> result = JpaQueryUtil.pagingResult(qb, CERTIFICATE_SELECT, em, pageable);
 
+        Page<Object[]> result = JpaQueryUtil.pagingResult(qb, CERTIFICATE_SELECT, em, pageable);
         return result.map(r -> {
             CertificateSearchDto dto = new CertificateSearchDto();
             dto.setId(resultAsLong(r, 0));
@@ -104,9 +113,21 @@ public class CertificateService {
         });
     }
 
+    /**
+     * Create new certificate
+     *
+     * @param user
+     * @param form
+     * @return
+     */
     public Certificate create(HoisUserDetails user, CertificateForm form) {
-        Certificate certificate = new Certificate();
-        EntityUtil.bindToEntity(form, certificate, classifierRepository, 
+        if(user.isStudent()) {
+            form.setStudent(user.getStudentId());
+            setSignatory(form, user.getSchoolId());
+        }
+        certificateValidationService.validate(user, form);
+
+        Certificate certificate = EntityUtil.bindToEntity(form, new Certificate(), classifierRepository,
                 "student", "otherName", "otherIdcode");
         certificate.setSchool(em.getReference(School.class, user.getSchoolId()));
         setCertificateStatus(certificate, CertificateStatus.TOEND_STAATUS_T);
@@ -122,6 +143,14 @@ public class CertificateService {
         return save(user, certificate, form);
     }
 
+    /**
+     * Update certificate
+     *
+     * @param user
+     * @param certificate
+     * @param form
+     * @return
+     */
     public Certificate save(HoisUserDetails user, Certificate certificate, CertificateForm form) {
         certificate.setHeadline(form.getHeadline());
         certificate.setSignatoryName(form.getSignatoryName());
@@ -132,24 +161,55 @@ public class CertificateService {
         return EntityUtil.save(certificate, em);
     }
 
+    /**
+     * Delete certificate
+     *
+     * @param user
+     * @param certificate
+     */
     public void delete(HoisUserDetails user, Certificate certificate) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(certificate, em);
     }
 
-    public StudentSearchDto otherStudent(Long schoolId, String idcode) {
+    /**
+     * Lookup student for certificate
+     *
+     * @param schoolId
+     * @param id
+     * @param idcode
+     * @return null if idcode is null or person with given idcode is not found
+     * @throws EntityNotFoundException when id is not null and student is not found
+     */
+    public StudentSearchDto otherStudent(Long schoolId, Long id, String idcode) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s join person p on s.person_id = p.id");
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        if(id != null) {
+            qb.requiredCriteria("s.id = :id", "id", id);
+        } else {
+            if(!StringUtils.hasText(idcode)) {
+                return null;
+            }
+
+            qb.requiredCriteria("p.idcode = :idcode", "idcode", idcode);
+        }
+
+        List<?> students = qb.select("s.id, p.idcode, p.firstname, p.lastname, s.status_code", em).setMaxResults(1).getResultList();
+        if(!students.isEmpty()) {
+            Object student = students.get(0);
+            StudentSearchDto dto = new StudentSearchDto();
+            dto.setId(resultAsLong(student, 0));
+            dto.setIdcode(resultAsString(student, 1));
+            dto.setFullname(PersonUtil.fullname(resultAsString(student, 2), resultAsString(student, 3)));
+            dto.setStatus(resultAsString(student, 4));
+            return dto;
+        } else if(id != null) {
+            throw new EntityNotFoundException();
+        }
+
         Person person = personRepository.findByIdcode(idcode);
         if(person == null) {
             return null;
-        }
-
-        JpaQueryBuilder<Student> qb = new JpaQueryBuilder<>(Student.class, "s");
-        qb.optionalCriteria("s.school.id = :schoolId", "schoolId", schoolId);
-        qb.requiredCriteria("s.person.id = :personId", "personId", person.getId());
-
-        List<Student> students = qb.select(em).setMaxResults(1).getResultList();
-        if(!students.isEmpty()) {
-            return StudentSearchDto.of(students.get(0));
         }
 
         StudentSearchDto dto = new StudentSearchDto();
@@ -158,7 +218,7 @@ public class CertificateService {
         return dto;
     }
 
-    public void setSignatory(CertificateForm form, Long schoolId) {
+    private void setSignatory(CertificateForm form, Long schoolId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_coordinator").sort("id");
         qb.requiredCriteria("school_id = :schoolId", "schoolId", schoolId);
         qb.filter("is_certificate_default = true");
@@ -169,11 +229,6 @@ public class CertificateService {
         }
         form.setSignatoryName(resultAsString(data.get(0), 0));
         form.setSignatoryIdcode(resultAsString(data.get(0), 1));
-    }
-
-    public Certificate prepare(Certificate certificate) {
-        setCertificateStatus(certificate, CertificateStatus.TOEND_STAATUS_V);
-        return EntityUtil.save(certificate, em);
     }
 
     public List<DirectiveCoordinatorDto> signatories(Long schoolId) {

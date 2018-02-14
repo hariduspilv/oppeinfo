@@ -19,7 +19,8 @@
                     </div>
                   </th>
                   <th md-column>{{'moduleProtocol.moduleGrade' | translate}}</th>
-                  <th md-column></th>
+                  <th md-column ng-if="formState.canChangeConfirmedProtocolGrade">{{'moduleProtocol.changeReason' | translate}}</th>
+                  <th md-column ng-if="row.canBeDeleted && formState.canAddDeleteStudents"></th>
                 </tr>
               </thead>
               <tbody md-body>
@@ -31,10 +32,18 @@
                     {{journalResultsView(journal.id, row)}}
                   </td>
                   <td md-cell>
-                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code" aria-label="grade" ng-change="gradeChanged()" ng-disabled="!protocol.canBeEdited"></hois-select>
+                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code" aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!protocol.canBeEdited"></hois-select>
                   </td>
-                  <td md-cell>
-                    <a ng-if="row.canBeDeleted && formState.canAddDeleteStudents" ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
+                  <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
+                    <md-input-container ng-if="row.gradeHasChanged">
+                      <input ng-model="row.addInfo" aria-label="addInfo" type="text" md-maxlength="255" ng-change="addInfoChanged(row);" required>
+                    </md-input-container>
+                    <span ng-if="row.addInfo && !row.gradeHasChanged">
+                      {{row.addInfo}}
+                    </span>
+                  </td>
+                  <td md-cell ng-if="row.canBeDeleted && formState.canAddDeleteStudents">
+                    <a ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
                   </td>
                 </tr>
               </tbody>
@@ -50,7 +59,7 @@
       <div>
         <md-button class="md-raised md-primary" type="submit" ng-if="formState.canAddDeleteStudents">{{'main.button.save' | translate}}</md-button>
         <md-button class="md-raised" ng-click="addProtocolStudents()" ng-if="formState.canAddDeleteStudents">{{'moduleProtocol.addStudents' | translate}}</md-button>
-        <md-button ng-if="formState.canConfirm===true" class="md-primary" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <md-button ng-if="formState.canConfirm===true" class="md-primary md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
         <md-button ng-if="protocol.canBeDeleted" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         <md-button class="md-raised" ng-href="#/moduleProtocols">{{'main.button.back' | translate}}</md-button>
 

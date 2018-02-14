@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.SingleMessageWithParamsException;
 import ee.hitsa.ois.service.DirectiveConfirmService;
@@ -56,7 +58,7 @@ public class DirectiveController {
 
     @GetMapping
     public Page<DirectiveSearchDto> search(HoisUserDetails user, @Valid DirectiveSearchCommand criteria, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KASKKIRI);
         return directiveService.search(user.getSchoolId(), criteria, pageable);
     }
 
@@ -68,13 +70,13 @@ public class DirectiveController {
 
     @GetMapping("/{id:\\d+}")
     public DirectiveDto get(HoisUserDetails user, @WithEntity Directive directive) {
-        UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, directive.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KASKKIRI);
         return directiveService.get(directive);
     }
 
     @PostMapping
     public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody DirectiveForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KASKKIRI);
         return HttpUtil.created(directiveService.create(user, form));
     }
 
@@ -91,10 +93,10 @@ public class DirectiveController {
     }
 
     @PutMapping("/sendtoconfirm/{id:\\d+}")
-    public Map<Object, Object> sendToConfirm(HoisUserDetails user, @WithEntity Directive directive) {
-        UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
+    public Map<Object, Object> sendToConfirm(HoisUserDetails user, @WithEntity Directive directive, @RequestParam(value = "ekis", required = false) String ekis) {
+        assertCanEditDirective(user, directive);
         try {
-            directiveConfirmService.sendToConfirm(directive);
+            directiveConfirmService.sendToConfirm(directive, "true".equals(ekis));
         } catch(SingleMessageWithParamsException e) {
             return e.getParams();
         }
@@ -104,7 +106,7 @@ public class DirectiveController {
     // TODO for testing only, remove later
     @PutMapping("/confirm/{id:\\d+}")
     public DirectiveDto confirm(HoisUserDetails user, @WithEntity Directive directive) {
-        UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, directive.getSchool(), Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_KASKKIRI);
         // start requests after save has been successful
         jobService.directiveConfirmed(EntityUtil.getId(directiveConfirmService.confirm(user.getUsername(), directive, LocalDate.now())));
         return get(user, directive);
@@ -112,43 +114,43 @@ public class DirectiveController {
 
     @PostMapping("/directivedata")
     public DirectiveDto directivedata(HoisUserDetails user, @Valid @RequestBody DirectiveDataCommand cmd) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KASKKIRI);
         return directiveService.directivedata(user, cmd);
     }
 
     @GetMapping("/findstudents")
     public Page<DirectiveStudentSearchDto> searchStudents(HoisUserDetails user, @Valid DirectiveStudentSearchCommand criteria) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KASKKIRI);
         return new PageImpl<>(directiveService.searchStudents(user.getSchoolId(), criteria));
     }
 
     @GetMapping("/coordinators")
     public Page<DirectiveCoordinatorDto> searchCoordinators(HoisUserDetails user, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_DOKALLKIRI);
         return directiveService.searchCoordinators(user.getSchoolId(), pageable);
     }
 
     @GetMapping("/coordinators/{id:\\d+}")
     public DirectiveCoordinatorDto getCoordinator(HoisUserDetails user, @WithEntity DirectiveCoordinator coordinator) {
-        UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_DOKALLKIRI);
         return DirectiveCoordinatorDto.of(coordinator);
     }
 
     @PostMapping("/coordinators")
     public HttpUtil.CreatedResponse createCoordinator(HoisUserDetails user, @Valid @RequestBody DirectiveCoordinatorForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_DOKALLKIRI);
         return HttpUtil.created(directiveService.create(user, form));
     }
 
     @PutMapping("/coordinators/{id:\\d+}")
     public DirectiveCoordinatorDto saveCoordinator(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) DirectiveCoordinator coordinator, @Valid @RequestBody DirectiveCoordinatorForm form) {
-        UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_DOKALLKIRI);
         return getCoordinator(user, directiveService.save(coordinator, form));
     }
 
     @DeleteMapping("/coordinators/{id:\\d+}")
     public void deleteCoordinator(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") DirectiveCoordinator coordinator, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_DOKALLKIRI);
         directiveService.delete(user, coordinator);
     }
 

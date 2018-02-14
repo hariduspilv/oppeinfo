@@ -18,9 +18,10 @@ public class TimetableEventSearchDto {
     private Boolean considerBreak;
     private Boolean singleEvent;
     private Boolean publicEvent;
+    private Long timetableId;
 
     public TimetableEventSearchDto(Long id, String nameEt, String nameEn, LocalDate date, LocalTime timeStart,
-            LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent) {
+            LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent, Long timetableId) {
         this.id = id;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
@@ -30,6 +31,7 @@ public class TimetableEventSearchDto {
         this.considerBreak = considerBreak;
         this.singleEvent = singleEvent;
         this.publicEvent = Boolean.TRUE;
+        this.timetableId = timetableId;
     }
 
     public Long getId() {
@@ -126,6 +128,14 @@ public class TimetableEventSearchDto {
 
     public void setPublicEvent(Boolean publicEvent) {
         this.publicEvent = publicEvent;
+    }
+
+    public Long getTimetableId() {
+        return timetableId;
+    }
+
+    public void setTimetableId(Long timetableId) {
+        this.timetableId = timetableId;
     }
     
 }

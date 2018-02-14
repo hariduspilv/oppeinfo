@@ -6,6 +6,7 @@ import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -184,8 +185,10 @@ public class StudentRepresentativeService {
         }
 
         // is it allowed to be representative?
-        Student student = students.get(0);
-        assertRepresentativeApplicationAllowed(student);
+        students = StreamUtil.toFilteredList(r -> !StudentUtil.isAdultAndDoNotNeedRepresentative(r), students);
+        if(students.isEmpty()) {
+            throw new ValidationFailedException("student.representative.application.adult");
+        }
 
         // check for duplicate applications
         List<?> apps = em.createNativeQuery("select sra.student_id from student_representative_application sra"
@@ -208,20 +211,8 @@ public class StudentRepresentativeService {
         person = EntityUtil.save(person, em);
 
         // create application for each student
-        applications(person, students, form);
-
-        // send message to school administrative workers about new application
-        Set<School> schools = StreamUtil.toMappedSet(Student::getSchool, students);
-        StudentRepresentativeApplicationCreated data = new StudentRepresentativeApplicationCreated(student);
-        for(School school : schools) {
-            automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_OPPURI_ANDMED, school, data);
-        }
-    }
-
-    private void applications(Person person, List<Student> students, StudentRepresentativeApplicationForm form) {
         Classifier status = em.getReference(Classifier.class, AVALDUS_ESINDAJA_STAATUS_E.name());
         Classifier relation = em.getReference(Classifier.class, form.getRelation());
-
         for(Student student : students) {
             StudentRepresentativeApplication application = new StudentRepresentativeApplication();
             application.setStudent(student);
@@ -229,6 +220,17 @@ public class StudentRepresentativeService {
             application.setStatus(status);
             application.setRelation(relation);
             EntityUtil.save(application, em);
+        }
+
+        // send message to school administrative workers about new application
+        // for each school message is sent only once
+        Set<Long> schoolIds = new HashSet<>();
+        for(Student student : students) {
+            School school = student.getSchool();
+            if(schoolIds.add(EntityUtil.getId(school))) {
+                StudentRepresentativeApplicationCreated data = new StudentRepresentativeApplicationCreated(student);
+                automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_OPPURI_ANDMED, school, data);
+            }
         }
     }
 

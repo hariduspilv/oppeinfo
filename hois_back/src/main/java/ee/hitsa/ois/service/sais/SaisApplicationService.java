@@ -96,6 +96,7 @@ import ee.hois.xroad.sais2.generated.Application;
 import ee.hois.xroad.sais2.generated.ApplicationFormData;
 import ee.hois.xroad.sais2.generated.ArrayOfCandidateAddress;
 import ee.hois.xroad.sais2.generated.ArrayOfInt;
+import ee.hois.xroad.sais2.generated.ArrayOfKvp;
 import ee.hois.xroad.sais2.generated.ArrayOfString;
 import ee.hois.xroad.sais2.generated.CandidateAddress;
 import ee.hois.xroad.sais2.generated.CandidateEducation;
@@ -319,6 +320,11 @@ public class SaisApplicationService {
 
         if (!StringUtils.hasText(saisApplication.getLastname())) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing + "kandideerija perekonnanimi."));
+            return;
+        }
+
+        if (!StringUtils.hasText(saisApplication.getIdcode())) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing + "kandideerija isikukood."));
             return;
         }
 
@@ -788,34 +794,48 @@ public class SaisApplicationService {
     }
 
     private static void processGrade(CandidateGrade grade, SaisApplication application) {
-        SaisApplicationGrade applicationGrade = new SaisApplicationGrade();
-        applicationGrade.setSubjectName(kvpHandler(grade.getCurriculumClassification().getTranslations().getKvp(), ESTONIAN));
-        applicationGrade.setSubjectName(grade.getCurriculumClassification().getClassificationTypeName());
-        applicationGrade.setGrade(grade.getGrade() != null ? grade.getGrade().toString() : "");
-        application.getGrades().add(applicationGrade);
+        if(grade.getGrade() != null) {
+            SaisApplicationGrade applicationGrade = new SaisApplicationGrade();
+            applicationGrade.setSubjectName(kvpHandler(grade.getCurriculumClassification().getTranslations(), ESTONIAN));
+            applicationGrade.setSubjectName(grade.getCurriculumClassification().getClassificationTypeName());
+            applicationGrade.setGrade(grade.getGrade().toString());
+            application.getGrades().add(applicationGrade);
+        }
     }
 
     private static void processExam(CandidateStateExam exam, SaisApplication application) {
         SaisApplicationGrade applicationGrade = new SaisApplicationGrade();
-        applicationGrade.setSubjectName(kvpHandler(exam.getStateExamClassification().getTranslations().getKvp(), ESTONIAN));
+        applicationGrade.setSubjectName(kvpHandler(exam.getStateExamClassification().getTranslations(), ESTONIAN));
         applicationGrade.setSubjectName(exam.getStateExamClassification().getClassificationTypeName());
         applicationGrade.setGrade(Integer.toString(exam.getResult()));
         application.getGrades().add(applicationGrade);
     }
 
     private static void processData(ApplicationFormData data, SaisApplication application) {
-        SaisApplicationOtherData otherData = new SaisApplicationOtherData();
-        otherData.setOtherDataName(kvpHandler(data.getFieldName().getKvp(), ESTONIAN));
-        for(FormFieldOption ffo : data.getSelectedOptions().getFormFieldOption()) {
-            otherData.setOtherDataValue(kvpHandler(ffo.getName().getKvp(), ESTONIAN));
+        String name = kvpHandler(data.getFieldName(), ESTONIAN);
+        if(name != null && (data.getSelectedOptions() != null || data.getValue() != null)) {
+            // both otherDataName and otherDataValue are required fields
+            SaisApplicationOtherData otherData = new SaisApplicationOtherData();
+            otherData.setOtherDataName(name);
+            if(data.getSelectedOptions() != null) {
+                for(FormFieldOption ffo : data.getSelectedOptions().getFormFieldOption()) {
+                    otherData.setOtherDataValue(kvpHandler(ffo.getName(), ESTONIAN));
+                }
+            } else {
+                otherData.setOtherDataValue(data.getValue());
+            }
+            if(otherData.getOtherDataValue() != null) {
+                application.getOtherData().add(otherData);
+            }
         }
-        application.getOtherData().add(otherData);
     }
 
-    private static String kvpHandler(List<Kvp> kvpList, String targetLanguage) {
-        for(Kvp kvp : kvpList) {
-            if(kvp.getKey().equalsIgnoreCase(targetLanguage)) {
-                return kvp.getValue();
+    private static String kvpHandler(ArrayOfKvp kvpArray, String targetLanguage) {
+        if(kvpArray != null) {
+            for(Kvp kvp : kvpArray.getKvp()) {
+                if(targetLanguage.equalsIgnoreCase(kvp.getKey())) {
+                    return kvp.getValue();
+                }
             }
         }
         return null;

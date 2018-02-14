@@ -278,7 +278,7 @@
       </hois-collapsable>
     </div>
 
-    <md-button ng-href="#/students/{{student.id}}/edit?_noback" ng-if="student.userCanEditStudent && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR')" 
+    <md-button ng-href="#/students/{{student.id}}/edit?_noback" ng-if="student.userCanEditStudent"
       class="md-primary md-raised">{{'main.button.change' | translate}}</md-button>
     <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>

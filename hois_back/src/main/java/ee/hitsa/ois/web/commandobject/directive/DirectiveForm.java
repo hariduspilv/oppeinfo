@@ -113,15 +113,21 @@ public class DirectiveForm extends VersionedCommand {
     @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
     public static class DirectiveFormStudent {
         private Long id;
-        @Required(groups = Immat.class)
-        @EstonianIdCode
+        @EstonianIdCode(groups = Immat.class)
         private String idcode;
+        private String foreignIdcode;
         @Required(groups = Immat.class)
-        @Size(max = 255)
+        @Size(max = 100, groups = Immat.class, message = "maxlength")
         private String firstname;
         @Required(groups = Immat.class)
-        @Size(max = 255)
+        @Size(max = 100, groups = Immat.class, message = "maxlength")
         private String lastname;
+        @Required(groups = Immat.class)
+        private LocalDate birthdate;
+        @ClassifierRestriction(MainClassCode.SUGU)
+        private String sex;
+        @ClassifierRestriction(MainClassCode.RIIK)
+        private String citizenship;
         private LocalDate startDate;
         private LocalDate endDate;
         @ClassifierRestriction({MainClassCode.AKADPUHKUS_POHJUS, MainClassCode.EKSMAT_POHJUS, MainClassCode.KASKKIRI_STIPTOETL_POHJUS})
@@ -178,6 +184,14 @@ public class DirectiveForm extends VersionedCommand {
             this.idcode = idcode;
         }
 
+        public String getForeignIdcode() {
+            return foreignIdcode;
+        }
+
+        public void setForeignIdcode(String foreignIdcode) {
+            this.foreignIdcode = foreignIdcode;
+        }
+
         public String getFirstname() {
             return firstname;
         }
@@ -192,6 +206,30 @@ public class DirectiveForm extends VersionedCommand {
 
         public void setLastname(String lastname) {
             this.lastname = lastname;
+        }
+
+        public LocalDate getBirthdate() {
+            return birthdate;
+        }
+
+        public void setBirthdate(LocalDate birthdate) {
+            this.birthdate = birthdate;
+        }
+
+        public String getSex() {
+            return sex;
+        }
+
+        public void setSex(String sex) {
+            this.sex = sex;
+        }
+
+        public String getCitizenship() {
+            return citizenship;
+        }
+
+        public void setCitizenship(String citizenship) {
+            this.citizenship = citizenship;
         }
 
         public LocalDate getStartDate() {

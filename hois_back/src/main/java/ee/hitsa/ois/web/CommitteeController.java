@@ -18,8 +18,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Committee;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.CommitteeService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.CommitteeUserRights;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -45,27 +47,31 @@ public class CommitteeController {
     @GetMapping("/{id:\\d+}")
     public CommitteeDto get(HoisUserDetails user, @WithEntity Committee committee) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, committee.getSchool());
-        return committeeService.get(committee);
+        return committeeService.get(user, committee);
     }
 
     @PostMapping
     public CommitteeDto create(HoisUserDetails user, @NotNull @Valid @RequestBody CommitteeDto dto) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return committeeService.create(user.getSchoolId(), dto);
+        return get(user, committeeService.create(user.getSchoolId(), dto));
     }
 
     @PutMapping("/{id:\\d+}")
     public CommitteeDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Committee committee,
             @NotNull @Valid @RequestBody CommitteeDto dto) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, committee.getSchool());
-        return committeeService.save(committee, dto);
+        if (!CommitteeUserRights.canEdit(user, committee)) {
+            throw new AssertionFailedException("User cannot edit committee");
+        }
+        return get(user, committeeService.save(committee, dto));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Committee committee,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, committee.getSchool());
+        if (!CommitteeUserRights.canDelete(user, committee)) {
+            throw new AssertionFailedException("User cannot delete committee");
+        }
         committeeService.delete(user, committee);
     }
 

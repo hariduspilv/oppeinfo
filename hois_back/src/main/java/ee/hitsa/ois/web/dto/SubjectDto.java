@@ -13,7 +13,6 @@ import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
@@ -49,7 +48,7 @@ public class SubjectDto extends SubjectForm {
 
     public static SubjectDto of(Subject subject, List<CurriculumVersion> curriculumVersions) {
         SubjectDto dto = EntityUtil.bindToDto(subject, new SubjectDto(), "languages", "curriculumVersions");
-        dto.setLanguages(StreamUtil.toMappedSet(EntityUtil::getCode, SubjectUtil.getLanguages(subject)));
+        dto.setLanguages(StreamUtil.toMappedSet(r -> EntityUtil.getCode(r.getLanguage()), subject.getSubjectLanguages()));
         dto.setCurriculumVersions(StreamUtil.toMappedSet(AutocompleteResult::of, curriculumVersions));
 
         dto.setPrimarySubjects(

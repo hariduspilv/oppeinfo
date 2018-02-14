@@ -12,8 +12,8 @@ import javax.validation.Payload;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PeriodRange {
-
-    String message() default "MissingPeriodRange";
+    static final String MESSAGE = "MissingPeriodRange";
+    String message() default MESSAGE;
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

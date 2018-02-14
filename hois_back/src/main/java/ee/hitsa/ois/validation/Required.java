@@ -14,7 +14,7 @@ import javax.validation.ReportAsSingleViolation;
 @Retention(RetentionPolicy.RUNTIME)
 @ReportAsSingleViolation
 public @interface Required {
-    public static final String MESSAGE = "required";
+    static final String MESSAGE = "required";
     String message() default MESSAGE;
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};

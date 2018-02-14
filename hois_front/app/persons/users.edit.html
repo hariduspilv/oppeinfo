@@ -45,7 +45,9 @@
             <tbody md-body>
               <tr md-row ng-repeat="object in objectsForRole | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{currentLanguageNameField(object)}}</td>
-                <td md-cell ng-repeat="perm in permissions"><md-checkbox ng-model="(rights[object.code] || {})[perm.code]" aria-label="{{currentLanguageNameField(object)+' '+currentLanguageNameField(perm)}}" flex></md-checkbox></td>
+                <td md-cell ng-repeat="perm in permissions">
+                  <md-checkbox ng-if="showPermission(object.code, perm.code)" ng-model="(rights[object.code] || {})[perm.code]" aria-label="{{currentLanguageNameField(object)+' '+currentLanguageNameField(perm)}}" flex></md-checkbox>
+                </td>
               </tr>
             </tbody>
           </table>

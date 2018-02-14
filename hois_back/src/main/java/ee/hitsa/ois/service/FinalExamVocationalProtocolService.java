@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +49,6 @@ import ee.hitsa.ois.util.FinalExamProtocolUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
-import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ProtocolVdataForm;
@@ -70,12 +68,10 @@ import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolStudent
 
 @Transactional
 @Service
-public class FinalExamVocationalProtocolService {
-    
+public class FinalExamVocationalProtocolService extends AbstractProtocolService {
+
     private static final String FINAL_EXAM_CODE = "KUTSEMOODUL_L";
-    
-    @Autowired
-    private EntityManager em;
+
     @Autowired
     private LessonPlanModuleRepository lessonPlanModuleRepository;
 
@@ -235,23 +231,18 @@ public class FinalExamVocationalProtocolService {
                     ProtocolStudent ps = EntityUtil.bindToEntity(dto, new ProtocolStudent(), "student");
                     ps.setStudent(em.getReference(Student.class, dto.getStudentId()));
                     
-                    if (ProtocolUtil.gradeChangedButNotRemoved(dto, ps)) {
-                        ProtocolUtil.addHistory(ps);
+                    if (gradeChangedButNotRemoved(dto, ps)) {
+                        addHistory(ps);
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
                         Short mark = getMark(EntityUtil.getCode(grade));
-                        ProtocolUtil.gradeStudent(ps, grade, mark);
-                    } else if (ProtocolUtil.gradeRemoved(dto, ps)) {
-                        ProtocolUtil.addHistory(ps);
-                        ProtocolUtil.removeGrade(ps);
+                        gradeStudent(ps, grade, mark);
+                    } else if (gradeRemoved(dto, ps)) {
+                        addHistory(ps);
+                        removeGrade(ps);
                     }
                     return ps;
                 });
         assertRemovedStudents(storedStudents, protocol.getProtocolStudents());
-    }
-
-    public void delete(HoisUserDetails user, Protocol protocol) {
-        EntityUtil.setUsername(user.getUsername(), em);
-        EntityUtil.deleteEntity(protocol, em);
     }
 
     private static Short getMark(String grade) {
@@ -430,9 +421,7 @@ public class FinalExamVocationalProtocolService {
     }
     
     public Protocol confirm(HoisUserDetails user, Protocol protocol, FinalExamVocationalProtocolSaveForm protocolSaveForm) {
-        protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_K.name()));
-        protocol.setConfirmDate(LocalDate.now());
-        protocol.setConfirmer(user.getUsername());
+        setConfirmation(user, protocol);
         Protocol confirmedProtocol = null;
         if (protocolSaveForm != null) {
             confirmedProtocol = save(protocol, protocolSaveForm);
@@ -440,11 +429,10 @@ public class FinalExamVocationalProtocolService {
             confirmedProtocol = EntityUtil.save(protocol, em);
         }
 
-        for (ProtocolStudent protocolStudent : confirmedProtocol.getProtocolStudents()) {
-            if (protocolStudent.getGrade() == null) {
-                throw new ValidationFailedException("finalExamProtocol.messages.gradeNotSelectedForAllStudents");
-            }
+        if(confirmedProtocol.getProtocolStudents().stream().anyMatch(ps -> ps.getGrade() == null)) {
+            throw new ValidationFailedException("finalExamProtocol.messages.gradeNotSelectedForAllStudents");
         }
+
         return confirmedProtocol;
     }
 }

@@ -21,8 +21,8 @@ public class Certificate extends BaseEntityWithId {
     private String otherIdcode;
     private String wdUrl;
     private Long wdId;
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private Classifier type;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
@@ -30,6 +30,7 @@ public class Certificate extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private School school;
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
     private Student student;
 
     public String getOtherName() {

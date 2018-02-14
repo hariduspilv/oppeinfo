@@ -111,7 +111,8 @@
 
         <div layout="row">
           <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
-          <md-button class="md-raised" ng-if="record.id" ng-click="sendToConfirm()">{{'directive.sendToConfirm' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="record.id" ng-click="sendToConfirm(true)">{{'directive.sendToConfirm' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="record.id" ng-click="sendToConfirm(false)">{{'directive.sendToConfirmWithoutEkis' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
           <md-button ng-click="back('#/directives', directiveForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>

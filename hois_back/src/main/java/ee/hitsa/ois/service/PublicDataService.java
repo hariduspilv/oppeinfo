@@ -1,106 +1,69 @@
 package ee.hitsa.ois.service;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
+import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
+
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.CurriculumStatus;
-import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.service.curriculum.CurriculumSearchService;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.util.Translatable;
+import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.SubjectUtil;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
+import ee.hitsa.ois.web.dto.PublicDataMapper;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
 
 @Transactional
 @Service
 public class PublicDataService {
 
-    private static final Set<String> IGNORED_PROPERTIES = new HashSet<>(Arrays.asList("version", "inserted", "insertedBy", "changed", "changedBy", "class"));
-    private static final Set<String> IGNORED_CLASSES = new HashSet<>(Arrays.asList("org.hibernate.proxy.pojo.javassist.JavassistLazyInitializer"));
-
     @Autowired
     private EntityManager em;
+    @Autowired
+    private CurriculumSearchService curriculumSearchService;
 
-    public Map<String, Object> curriculum(Long curriculumId) {
+    public Object curriculum(Long curriculumId) {
         Curriculum curriculum = em.getReference(Curriculum.class, curriculumId);
         assertVisibleToPublic(curriculum);
-        Map<String, Object> dto = toJson(curriculum, "files", "versions");
-        // show only confirmed versions
-        dto.put("versions", curriculum.getVersions().stream().filter(PublicDataService::isVisibleToPublic).map(r -> toJson(r, "curriculum")).collect(Collectors.toList()));
-        return dto;
+        return new PublicDataMapper(Language.ET).map(curriculum);
     }
 
-    public Map<String, Object> curriculumVersion(Long curriculumId, Long curriculumVersionId) {
+    public Object curriculumVersion(Long curriculumId, Long curriculumVersionId) {
         CurriculumVersion curriculumVersion = em.getReference(CurriculumVersion.class, curriculumVersionId);
         if(curriculumId == null || !curriculumId.equals(EntityUtil.getId(curriculumVersion.getCurriculum()))) {
             throw new EntityNotFoundException();
         }
-        if(!isVisibleToPublic(curriculumVersion)) {
+        if(!CurriculumUtil.isCurriculumVersionConfirmed(curriculumVersion)) {
             throw new EntityNotFoundException();
         }
-        return toJson(curriculumVersion, "curriculum");
+        return new PublicDataMapper(Language.ET).map(curriculumVersion);
     }
 
-    private Map<String, Object> toJson(Object data, String...ignoredProperties) {
-        return toJson(data, new IdentityHashMap<>(), ignoredProperties);
-    }
-
-    private Map<String, Object> toJson(Object data, Map<Object, Object> visited, String...ignoredProperties) {
-        visited.put(data, null);
-        List<String> ignored = Arrays.asList(ignoredProperties);
-        Map<String, Object> dto = new LinkedHashMap<>();
-        List<PropertyDescriptor> propertyDescriptors = Arrays.asList(BeanUtils.getPropertyDescriptors(data.getClass()));
-        propertyDescriptors.sort(Comparator.comparing(PropertyDescriptor::getName));
-        for(PropertyDescriptor spd : propertyDescriptors) {
-            Method readMethod = spd.getReadMethod();
-            String propertyName = spd.getName();
-            if(readMethod != null && !IGNORED_PROPERTIES.contains(propertyName) && !ignored.contains(propertyName) && Modifier.isPublic(readMethod.getDeclaringClass().getModifiers())) {
-                try {
-                    Object value = readMethod.invoke(data);
-                    if(value != null && IGNORED_CLASSES.contains(value.getClass().getName())) {
-                        // blacklisted value classes
-                        continue;
-                    }
-                    if(value instanceof BaseEntityWithId && visited.containsKey(value)) {
-                        // already printed out, backreference
-                        continue;
-                    }
-                    if(value instanceof Translatable) {
-                        value = ((Translatable) value).getNameEt();
-                    } else if(value instanceof BaseEntityWithId) {
-                        value = toJson(value, visited);
-                    } else if(value instanceof Collection) {
-                        value = StreamUtil.toMappedList(r -> toJson(r, visited), (Collection<?>)value);
-                    }
-                    dto.put(propertyName, value);
-                } catch(Throwable e) {
-                    throw new FatalBeanException("Could not read property '" + propertyName + "' from data", e);
-                }
-            }
+    public Object subject(Long subjectId) {
+        Subject s = em.getReference(Subject.class, subjectId);
+        if(!SubjectUtil.isActive(s)) {
+            throw new EntityNotFoundException();
         }
-        return dto;
+        return new PublicDataMapper(Language.ET).map(s);
     }
 
     private static void assertVisibleToPublic(Curriculum curriculum) {
@@ -109,7 +72,34 @@ public class PublicDataService {
         }
     }
 
-    private static boolean isVisibleToPublic(CurriculumVersion curriculumVersion) {
-        return ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K, curriculumVersion.getStatus());
+    @SuppressWarnings("unchecked")
+    public Page<CurriculumSearchDto> curriculumSearch(CurriculumSearchCommand criteria, Pageable pageable) {
+        return JpaQueryUtil.query(CurriculumSearchDto.class, Curriculum.class, (root, query, cb) -> {
+            ((CriteriaQuery<CurriculumSearchDto>)query).select(cb.construct(CurriculumSearchDto.class,
+                root.get("id"), root.get("nameEt"), root.get("nameEn"),
+                root.get("credits"), root.get("validFrom"), root.get("validThru"), root.get("higher"),
+                root.get("status").get("code"), root.get("origStudyLevel").get("code"),
+                root.get("school").get("id"), root.get("school").get("nameEt"), root.get("school").get("nameEn"), 
+                root.get("ehisStatus").get("code"), root.get("code"), root.get("merCode")));
+
+            List<Predicate> filters = new ArrayList<>();
+
+            // only confirmed
+            filters.add(cb.equal(root.get("status").get("code"), CurriculumStatus.OPPEKAVA_STAATUS_K.name()));
+
+            String nameField = Language.EN.equals(criteria.getLang()) ? "nameEn" : "nameEt";
+            propertyContains(() -> root.get(nameField), cb, criteria.getName(), filters::add);
+
+            if(!CollectionUtils.isEmpty(criteria.getStudyLevel())) {
+                filters.add(root.get("origStudyLevel").get("code").in(criteria.getStudyLevel()));
+            }
+
+            List<Long> curriculumSchools = curriculumSearchService.getSchools(null, criteria.getSchool());
+            if(!curriculumSchools.isEmpty()) {
+                filters.add(curriculumSearchService.filterBySchools(root, query, cb, curriculumSchools, criteria.getIsPartnerSchool()));
+            }
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }, pageable, em);
     }
+
 }

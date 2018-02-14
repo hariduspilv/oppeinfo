@@ -36,7 +36,7 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
     return modules.map(function (it) { return $scope.currentLanguageNameField(it); }).join(", ");
   };
 
-  $scope.$watch("search.teacher", function (value) {
+  $scope.$watch("criteria.teacherObject", function (value) {
     $scope.criteria.teacher = angular.isObject(value) ? value.id : value;
   });
 

@@ -30,6 +30,10 @@
             </md-select>
           </md-input-container>
         </div>
+        <md-input-container flex ng-if="version.status === VERSION_STATUS.K">
+          <label>{{'public.url' | translate}}</label>
+          <input ng-model="publicUrl" type="text" readonly>
+        </md-input-container>
         <br>
       </div>
     </fieldset>

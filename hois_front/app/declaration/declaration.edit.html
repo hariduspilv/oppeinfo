@@ -60,6 +60,7 @@
           <th md-column>{{'declaration.eap_assessment' | translate}}</th>
           <th md-column>{{'declaration.module_isRequired' | translate}}</th>
           <th md-column>{{'declaration.prerequisites' | translate}}</th>
+          <th md-column>{{'studyMaterial.label' | translate}}</th>
           <th md-column></th>
         </tr>
       </thead>
@@ -84,6 +85,7 @@
               {{'declaration.seePrerequisites' | translate}}</a>
             </span>
           </td>
+          <td md-cell><a ng-href="/#/studyMaterial/higher/{{subject.subjectStudyPeriod}}/view">{{'studyMaterial.openfolder' | translate}}</a></td>
           <td md-cell>
             <a ng-if="!subject.isAssessed" class="remove nomargin" ng-click="removeSubject(subject)">&times;</a>
           </td>

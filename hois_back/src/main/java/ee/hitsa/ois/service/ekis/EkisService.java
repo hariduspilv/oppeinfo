@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Certificate;
@@ -234,9 +235,18 @@ public class EkisService {
 
     private static Content studentForRegisterDirective(DirectiveType directiveType, DirectiveStudent ds) {
         Content content = new Content();
-        content.setIdCode(ds.getPerson().getIdcode());
-        content.setFirstName(ds.getPerson().getFirstname());
-        content.setLastName(ds.getPerson().getLastname());
+        Person person = ds.getPerson();
+
+        String idcode = null;
+        if(StringUtils.hasText(person.getIdcode())) {
+            idcode = person.getIdcode();
+        } else if(person.getBirthdate() != null) {
+            idcode = DateUtils.date(person.getBirthdate());
+        }
+        content.setIdCode(idcode);
+
+        content.setFirstName(person.getFirstname());
+        content.setLastName(person.getLastname());
         switch(directiveType) {
         case KASKKIRI_AKAD:
             content.setStartDate(periodStart(ds));

@@ -328,8 +328,12 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
     private static void setPersonData(Person person, DirectiveStudentDto dto) {
         dto.setIdcode(person.getIdcode());
+        dto.setForeignIdcode(person.getForeignIdcode());
         dto.setFirstname(person.getFirstname());
         dto.setLastname(person.getLastname());
         dto.setFullname(person.getFullname());
+        dto.setBirthdate(person.getBirthdate());
+        dto.setSex(EntityUtil.getNullableCode(person.getSex()));
+        dto.setCitizenship(EntityUtil.getNullableCode(person.getCitizenship()));
     }
 }

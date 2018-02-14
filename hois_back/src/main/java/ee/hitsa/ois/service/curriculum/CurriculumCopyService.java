@@ -39,7 +39,7 @@ public class CurriculumCopyService {
         Curriculum newCurriculum = new Curriculum(); 
         BeanUtils.copyProperties
         (copiedCurriculum, newCurriculum, "id", "school", "inserted", "insertedBy", "changed", "changedBy", "version", 
-                "ehisStatus", "ehisChanged", "higher", "code", "merCode", "validFrom", "validThru",  
+                "ehisStatus", "ehisChanged", "higher", "code", "merCode", "validFrom", "validThru", "stateCurriculum", 
                 "studyLanguages", "departments", "files", "grades", "jointPartners", "specialities", 
                 "studyForms", "modules", "occupations", "versions");
 

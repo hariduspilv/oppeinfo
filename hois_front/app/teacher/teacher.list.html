@@ -53,15 +53,15 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
-          <th md-column md-order-by="school.{{currentLanguageNameField()}}" ng-if="showSchool">{{'school.label' | translate}}</th>
-          <th md-column md-order-by="person.lastname,person.firstname">{{'teacher.person.name' | translate}}</th>
-          <th md-column md-order-by="person.idcode">{{'teacher.person.idcode' | translate}}</th>
-          <th md-column md-order-by="email">{{'teacher.email' | translate}}</th>
-          <th md-column md-order-by="phone">{{'teacher.phone' | translate}}</th>
-          <th md-column md-order-by="teacherOccupation.{{currentLanguage() === 'en' ? 'occupationEn' : 'occupationEt'}}"
+          <th md-column md-order-by="s.{{currentLanguageNameField()}}" ng-if="showSchool">{{'school.label' | translate}}</th>
+          <th md-column md-order-by="p.lastname,p.firstname">{{'teacher.person.name' | translate}}</th>
+          <th md-column md-order-by="p.idcode">{{'teacher.person.idcode' | translate}}</th>
+          <th md-column md-order-by="t.email">{{'teacher.email' | translate}}</th>
+          <th md-column md-order-by="t.phone">{{'teacher.phone' | translate}}</th>
+          <th md-column md-order-by="tot.{{currentLanguage() === 'en' ? 'occupationEn' : 'occupationEt'}}"
             ng-if="!showSchool">{{'teacher.occupation.label' | translate}}</th>
           <th md-column ng-if="schoolHigher && !showSchool">{{'teacher.occupation.departments' | translate}}</th>
-          <th md-column md-order-by="isActive">{{'teacher.isActive' | translate}}</th>
+          <th md-column md-order-by="t.isActive">{{'teacher.isActive' | translate}}</th>
           <th md-column></th>
         </tr>
         </thead>
@@ -78,7 +78,7 @@
           <td md-cell ng-if="!showSchool">{{currentLanguageNameField(row.teacherOccupation)}}</td>
           <td md-cell ng-if="schoolHigher && !showSchool">
             <table>
-                <tr ng-repeat="department in removeDuplicateDepartments(row.schoolDepartments) | orderBy: 'nameEt'">
+                <tr ng-repeat="department in row.schoolDepartments | orderBy: 'nameEt'">
                     <td>{{currentLanguageNameField(department)}}</td>
                 </tr>
             </table>

@@ -42,9 +42,7 @@ public abstract class ApelApplicationUtil {
             throw new ValidationFailedException("apel.error.moduleIsNull");
         } else if (Boolean.FALSE.equals(module.getIsMySchool()) && module.getNameEt() == null) {
             throw new ValidationFailedException("apel.error.moduleNameEtIsNull");
-        } else if (Boolean.FALSE.equals(module.getIsMySchool()) && module.getNameEn() == null) {
-            throw new ValidationFailedException("apel.error.moduleNameEnIsNull");
-        } 
+        }
     }
 
     public static void assertInformalSubject(ApelApplicationInformalSubjectOrModule subject) {

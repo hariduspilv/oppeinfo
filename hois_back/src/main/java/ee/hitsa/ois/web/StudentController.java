@@ -2,7 +2,6 @@ package ee.hitsa.ois.web;
 
 import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.service.ApplicationService;
 import ee.hitsa.ois.service.StudentResultHigherService;
 import ee.hitsa.ois.service.StudentService;
 import ee.hitsa.ois.service.ehis.EhisStudentService;
@@ -54,6 +54,8 @@ import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 public class StudentController {
 
     @Autowired
+    private ApplicationService applicationService;
+    @Autowired
     private StudentService studentService;
     @Autowired
     private EhisStudentService ehisStudentService;
@@ -62,7 +64,7 @@ public class StudentController {
 
     @GetMapping
     public Page<StudentSearchDto> search(HoisUserDetails user, @Valid StudentSearchCommand criteria, Pageable pageable) {
-        return studentService.search(user.getSchoolId(), criteria, pageable);
+        return studentService.search(user, criteria, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
@@ -116,8 +118,14 @@ public class StudentController {
         int pagesize = 5;
         // TODO correct sorting
         result.put("applications", applications(user, student, new PageRequest(0, pagesize, null, "inserted")));
+        if(user.isStudent()) {
+            result.put("applicationTypesApplicable", applicationService.applicableApplicationTypes(student));
+        }
         result.put("directives", directives(user, student, new PageRequest(0, pagesize, null, "headline")));
-        result.put("student", Collections.singletonMap("isVocational", Boolean.valueOf(StudentUtil.isVocational(student))));
+        Map<String, Object> studentDto = new HashMap<>();
+        studentDto.put("isVocational", Boolean.valueOf(StudentUtil.isVocational(student)));
+        studentDto.put("status", EntityUtil.getCode(student.getStatus()));
+        result.put("student", studentDto);
         return result;
     }
 

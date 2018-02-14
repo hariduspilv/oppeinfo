@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        springBootVersion = '1.5.9.RELEASE'
+        springBootVersion = '1.5.10.RELEASE'
     }
     repositories {
         mavenCentral()
@@ -70,7 +70,7 @@ dependencies {
 	compile('org.postgresql:postgresql')
     compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.10')
     compile('com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.8.10')
-    compile('org.xhtmlrenderer:flying-saucer-pdf:9.1.9') {
+    compile('org.xhtmlrenderer:flying-saucer-pdf:9.1.11') {
         //because of digidoc4j libraries conflicts
         exclude group: 'org.bouncycastle', module: 'bctsp-jdk14'
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk14'

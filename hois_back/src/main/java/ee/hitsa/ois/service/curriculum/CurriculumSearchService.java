@@ -69,9 +69,10 @@ public class CurriculumSearchService {
             if(criteria.getCreditsMax() != null) {
                 filters.add(cb.lessThanOrEqualTo(root.get("credits"), criteria.getCreditsMax()));
             }
-            if(Boolean.TRUE.equals(criteria.getIsJoint())) {
-                filters.add(cb.equal(root.get("joint"), Boolean.TRUE));
+            if (criteria.getIsJoint() != null) {
+                filters.add(cb.equal(root.get("joint"), criteria.getIsJoint()));
             }
+            
             if (Boolean.TRUE.equals(criteria.getIsVocational())) {
                 filters.add(cb.equal(cb.substring(root.get("origStudyLevel").get("value"), 1, 1), "4"));
             } else if (Boolean.FALSE.equals(criteria.getIsVocational())) {
@@ -149,7 +150,7 @@ public class CurriculumSearchService {
 
             List<Long> curriculumSchools = getSchools(user.getSchoolId(), criteria.getSchool());
             if(!curriculumSchools.isEmpty()) {
-                filters.add(filterBySchools(root, query, cb, curriculumSchools));
+                filters.add(filterBySchools(root, query, cb, curriculumSchools, criteria.getIsPartnerSchool()));
             }
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable, em).map(c -> {
@@ -162,7 +163,7 @@ public class CurriculumSearchService {
      * @return school ids from search criteria or user's school. 
      * Returns empty list if none are present.
      */
-    private static List<Long> getSchools(Long usersSchool, List<Long> criteriaSchools) {
+    public List<Long> getSchools(Long usersSchool, List<Long> criteriaSchools) {
         List<Long> curriculumSchools = new ArrayList<>();
         if(!CollectionUtils.isEmpty(criteriaSchools)) {
             curriculumSchools.addAll(criteriaSchools);
@@ -175,7 +176,7 @@ public class CurriculumSearchService {
     /**
      * Shows curriculums and joint curriculums(!) of defined schools
      */
-    private static Predicate filterBySchools(Root<Curriculum> root, CriteriaQuery<?> query, CriteriaBuilder cb, List<Long> curriculumSchools) {
+    public Predicate filterBySchools(Root<Curriculum> root, CriteriaQuery<?> query, CriteriaBuilder cb, List<Long> curriculumSchools, Boolean isPartnerSchool) {
         Predicate mySchool = root.get("school").get("id").in(curriculumSchools);
         
         Subquery<Long> partnerSchools = query.subquery(Long.class);
@@ -185,6 +186,9 @@ public class CurriculumSearchService {
         Root<School> schoolsRoot = schools.from(School.class);
         schools = schools.select(schoolsRoot.get("ehisSchool").get("code")).where(schoolsRoot.get("id").in(curriculumSchools));
         
+        if (Boolean.FALSE.equals(isPartnerSchool)) {
+            return cb.and(mySchool);
+        }
         partnerSchools = partnerSchools.select(partnersRoot.get("curriculum").get("id")).where(partnersRoot.get("ehisSchool").get("code").in(schools));
         Predicate partnerSchool = root.get("id").in(partnerSchools);
         

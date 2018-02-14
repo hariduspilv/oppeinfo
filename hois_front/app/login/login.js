@@ -1,11 +1,17 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('LoginController', function (message, $rootScope, $scope, AuthService, AUTH_EVENTS, $location, config, $mdDialog, $timeout, ArrayUtils, PUBLIC_ROUTES,$route ) {
+  .controller('LoginController', function (message, $rootScope, $scope, AuthService, AUTH_EVENTS, $location, config, $mdDialog, $timeout, ArrayUtils, PUBLIC_ROUTES, $route, QueryUtils) {
 
     var NOT_MOBILE_ID_USER_ERROR = 301;
 
     function setLoggedInVisuals(authenticatedUser) {
+      if (angular.isObject(authenticatedUser) && authenticatedUser.roleCode !== 'ROLL_V') {
+        QueryUtils.endpoint('/message/received/new').get().$promise.then(function (result) {
+          $rootScope.unreadMessages = result.unread;
+        });
+      }
+
       if (angular.isObject(authenticatedUser) && angular.isObject(authenticatedUser.school)) {
         $rootScope.state.logo = config.apiUrl + '/school/' + authenticatedUser.school.id + '/logo';
       } else {

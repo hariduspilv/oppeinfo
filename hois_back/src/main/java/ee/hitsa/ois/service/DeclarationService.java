@@ -26,6 +26,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -285,6 +286,9 @@ public class DeclarationService {
 
         Student student = em.getReference(Student.class, studentId);
         Long studyPeriodId = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
+        if(studyPeriodId == null) {
+            throw new ValidationFailedException("studyYear.studyPeriod.missingCurrent");
+        }
         StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, studyPeriodId);
 
         AssertionFailedException.throwIf(!EntityUtil.getId(studyPeriod.getStudyYear().getSchool()).equals(user.getSchoolId()),
@@ -420,18 +424,16 @@ public class DeclarationService {
 
     public AutocompleteResult getCurrentStudyPeriod(Long schoolId) {
         Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
-        return AutocompleteResult.of(em.getReference(StudyPeriod.class, studyPeriodId));
+        return studyPeriodId != null ? AutocompleteResult.of(em.getReference(StudyPeriod.class, studyPeriodId)) : null;
     }
-    
+
     private StudyPeriodEventDto getCurrentStudyPeriodDeclarationPeriod(Long schoolId) {
         Long currentStudyPeriod = studyYearService.getCurrentStudyPeriod(schoolId);
         if (currentStudyPeriod == null) {
             return null;
         }
-        
-        String select = "from study_period_event spe inner join study_period sp on sp.id = spe.study_period_id";
-        
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(select);
+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from study_period_event spe join study_period sp on sp.id = spe.study_period_id");
         qb.requiredCriteria("sp.id = :studyPeriodId", "studyPeriodId", currentStudyPeriod);
         qb.requiredCriteria("spe.event_type_code = :eventTypeCode", "eventTypeCode", DECLARATION_PERIOD_EVENT_TYPE);
 
@@ -531,6 +533,11 @@ public class DeclarationService {
     }
 
     public Page<StudentSearchDto> searchStudentsWithoutDeclaration(UsersSearchCommand command, Long schoolId, Pageable pageable) {
+        Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
+        if(studyPeriodId == null) {
+            return new PageImpl<>(Arrays.asList());
+        }
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(WITHOUT_DECLARATION_FROM).sort(pageable);
 
         qb.requiredCriteria("s.school_id = :schoolId ", "schoolId", schoolId);
@@ -538,15 +545,12 @@ public class DeclarationService {
         qb.filter(" c.is_higher = true ");
 
         qb.requiredCriteria(" not exists("
-                + "select d.id "
-                + "from declaration d "
-                + "where d.student_id = s.id and "
-                + "d.study_period_id = :currentStudyPeriod) ", 
-                "currentStudyPeriod", studyYearService.getCurrentStudyPeriod(schoolId));
-        
+                + "select d.id from declaration d where d.student_id = s.id and d.study_period_id = :currentStudyPeriod) ", 
+                "currentStudyPeriod", studyPeriodId);
+
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name",
                 command.getName());
-        
+
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, WITHOUT_DECLARATION_SELECT, em, pageable);
         return results.map(r -> {
             StudentSearchDto dto = new StudentSearchDto();

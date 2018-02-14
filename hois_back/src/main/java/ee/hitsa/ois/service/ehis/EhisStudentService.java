@@ -24,6 +24,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
@@ -38,8 +39,8 @@ import ee.hois.xroad.ehis.generated.KhlVOTAArr;
 @Service
 public class EhisStudentService extends EhisService {
 
-    private static BigInteger FORMAL_LEARNING_TYPE = BigInteger.ONE;
-    private static BigInteger INFORMAL_LEARNING_TYPE = BigInteger.valueOf(2);
+    private static final BigInteger FORMAL_LEARNING_TYPE = BigInteger.ONE;
+    private static final BigInteger INFORMAL_LEARNING_TYPE = BigInteger.valueOf(2);
 
     @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
@@ -78,7 +79,7 @@ public class EhisStudentService extends EhisService {
             }
             return apelApplications;
         default:
-            throw new IllegalArgumentException("Unknown datatype");
+            throw new AssertionFailedException("Unknown datatype");
         }
     }
 

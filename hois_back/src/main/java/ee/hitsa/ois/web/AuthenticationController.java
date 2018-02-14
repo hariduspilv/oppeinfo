@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -56,6 +57,8 @@ public class AuthenticationController {
     private LdapService ldapService;
     @Autowired
     private UserService userService;
+    @Value("${hois.frontend.baseUrl}")
+    private String frontendBaseUrl;
 
     @RequestMapping("/user")
     public AuthenticatedUser user(HttpServletRequest request, Principal principal) {
@@ -75,10 +78,18 @@ public class AuthenticationController {
                     .compact();
             addJwtHeader(response, token);
         }
-        return "<form id='id_form' method='get' action='" + request.getHeader(HttpHeaders.REFERER) + "#/?_code=" + token + "'></form>"
+        return "<form id='id_form' method='get' action='" + getIdRedirectUrl(request.getHeader(HttpHeaders.REFERER)) 
+                + "#/?_code=" + token + "'></form>"
                 + "<script>document.getElementById('id_form').submit();</script>";
     }
 
+    private String getIdRedirectUrl(String referer) {
+        if (referer != null) {
+            return referer;
+        }
+        return frontendBaseUrl;
+    }
+    
     private void addJwtHeader(HttpServletResponse response, String token) {
         response.addHeader(hoisJwtProperties.getHeader(), hoisJwtProperties.getTokenPrefix() + " " + token);
     }

@@ -1,0 +1,31 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex class="form-readonly">
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label class="textInput">{{'journal.studyYear' | translate}}</label>
+        <hois-value value="currentLanguageNameField(journal.studyYear)"></hois-value>
+      </md-input-container>
+      <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <label class="textInput">{{'journal.label' | translate}}</label>
+        <hois-value value="journal.nameEt"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label class="textInput">{{'journal.teachers' | translate}}</label>
+        <hois-value value="teachers"></hois-value>
+      </md-input-container>
+    </div>
+  </div>
+  <div flex>
+    <div layout="column" flex>
+      <br/>
+      <div ng-include="'studyMaterial/templates/journal.material.view.tmpl.html'"></div>
+      <br/>
+    </div>
+
+    <div layout="row">
+      <md-button class="md-raised md-default" ng-click="back()">{{'main.button.back' | translate}}</md-button>
+    </div>
+  </div>
+</div>

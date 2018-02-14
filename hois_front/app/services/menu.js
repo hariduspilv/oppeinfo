@@ -125,6 +125,20 @@ angular.module('hitsaOis')
             url: "/practiceJournals?_menu"
           },
           {
+            name: 'main.menu.study.material.higher',
+            url: "/studyMaterial/higher?_menu",
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.study.material.vocational',
+            url: "/studyMaterial/vocational?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
             name: 'main.menu.study.examTimes',
             url: '/examTimes',
             studyLevel: {
@@ -505,6 +519,20 @@ angular.module('hitsaOis')
             }
           },
           {
+            name: 'main.menu.study.material.higher',
+            url: "/studyMaterial/higher?_menu",
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.study.material.vocational',
+            url: "/studyMaterial/vocational?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
             name: 'main.menu.study.loads',
             url: "/lessonplans/vocational"
           },
@@ -818,7 +846,6 @@ angular.module('hitsaOis')
         url: "/academicCalendars"
       });
 
-      /*
       sections.push({
         name: 'main.menu.timetableLink.label',
         type: 'link',
@@ -827,10 +854,9 @@ angular.module('hitsaOis')
 
       sections.push({
         name: 'main.menu.curriculums.label',
-        url: "/",
         type: 'link',
+        url: "/curriculums?_menu"
       });
-      */
     }
 
     var self;

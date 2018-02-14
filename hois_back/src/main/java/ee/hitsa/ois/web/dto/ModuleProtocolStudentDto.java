@@ -23,6 +23,7 @@ public class ModuleProtocolStudentDto {
     private String grade;
     @ClassifierRestriction(MainClassCode.OPPURSTAATUS)
     private String status;
+    private String addInfo;
     private List<ModuleProtocolJournalResultDto> journalResults = new ArrayList<>();
     /**
      * This variable does not consider user rights, it is checked by ModuleProtocolDto.canBeEdited
@@ -115,6 +116,14 @@ public class ModuleProtocolStudentDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+    
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
 
     public Boolean getCanBeDeleted() {

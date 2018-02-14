@@ -96,7 +96,7 @@ public class ControllerErrorHandler {
         } else if (e instanceof OptimisticLockingFailureException || e instanceof OptimisticLockException) {
             status = HttpStatus.CONFLICT;
         } else if (e instanceof AuthenticationException) {
-            status = HttpStatus.FORBIDDEN;
+            status = HttpStatus.UNAUTHORIZED;
         } else if (e instanceof HttpRequestMethodNotSupportedException) {
             status = HttpStatus.METHOD_NOT_ALLOWED;
         }  else if (e instanceof SingleMessageWithParamsException) {

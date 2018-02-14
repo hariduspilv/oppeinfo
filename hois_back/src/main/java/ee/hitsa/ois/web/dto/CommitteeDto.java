@@ -26,6 +26,7 @@ public class CommitteeDto extends VersionedCommand {
     private LocalDate validThru;
     @NotEmpty
     private List<CommitteeMemberDto> members;
+    private Boolean canEdit = Boolean.FALSE;
     
     public static CommitteeDto of(Committee committee) {
         CommitteeDto dto = EntityUtil.bindToDto(committee, new CommitteeDto(), "members");
@@ -72,4 +73,13 @@ public class CommitteeDto extends VersionedCommand {
     public void setMembers(List<CommitteeMemberDto> members) {
         this.members = members;
     }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
+    
 }

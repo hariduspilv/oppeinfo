@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.ehis.EhisLogService;
 import ee.hitsa.ois.service.ekis.EkisLogService;
 import ee.hitsa.ois.service.kutseregister.KutseregisterLogService;
@@ -54,23 +56,25 @@ public class LogsController {
 
     @GetMapping("/ehis")
     public Page<EhisLogDto> ehisSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
         return ehisLogService.search(user.getSchoolId(), command, pageable);
     }
 
     @GetMapping("/ehis/{id:\\d+}")
     public EhisLogDto ehisGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
         return ehisLogService.get(user, id, messageType);
     }
 
     @GetMapping("/ekis")
     public Page<EkisLogDto> ekisSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EKIS);
         return ekisLogService.search(user.getSchoolId(), command, pageable);
     }
 
     @GetMapping("/ekis/{id:\\d+}")
     public EkisLogDto ekisGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EKIS);
         return ekisLogService.get(user, id, messageType);
     }
 
@@ -95,36 +99,38 @@ public class LogsController {
 
     @GetMapping("/rtip")
     public Page<RtipLogDto> rtipSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_RTIP);
         return rtipLogService.search(user.getSchoolId(), command, pageable);
     }
 
     @GetMapping("/rtip/{id:\\d+}")
     public RtipLogDto rtipGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_RTIP);
         return rtipLogService.get(user, id, messageType);
     }
 
     @PostMapping("/rtip/sync")
     public void rtipSync(HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_RTIP);
         rtipService.syncSchoolTeacherData(user);
     }
 
     // TODO remove - for testing only
     @PostMapping("/rtip/zemploees")
     public void rtipZemploees(HoisUserDetails user, @RequestBody @Valid RtipZemploeesForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_RTIP);
         rtipService.syncSchool(user, form.getFrom(), form.getThru());
     }
 
     @GetMapping("/sais")
     public Page<SaisLogDto> saisSearch(HoisUserDetails user, @Valid SaisLogCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_SAIS);
         return saisLogService.search(user.getSchoolId(), command, pageable);
     }
 
     @GetMapping("/sais/{id:\\d+}")
     public SaisLogDto saisGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_SAIS);
         return saisLogService.get(user, id, messageType);
     }
 }

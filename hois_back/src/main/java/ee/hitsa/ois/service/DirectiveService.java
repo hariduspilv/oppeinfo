@@ -19,11 +19,13 @@ import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_A;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_K;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_O;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_V;
+import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,7 +40,9 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
+import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +70,10 @@ import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.SaisApplicationStatus;
 import ee.hitsa.ois.enums.ScholarshipStatus;
 import ee.hitsa.ois.enums.StudentStatus;
@@ -87,7 +95,9 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
+import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForField;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
@@ -220,6 +230,7 @@ public class DirectiveService {
             }
         }
         dto.setUserCanCancel(Boolean.valueOf(canCancel));
+        dto.setUserCanConfirm(Boolean.valueOf(userCanConfirm(user, directive)));
         dto.setUserCanEdit(Boolean.valueOf(UserUtil.canEditDirective(user, directive)));
         return dto;
     }
@@ -292,10 +303,27 @@ public class DirectiveService {
         assertSameSchool(directive, coordinator != null ? coordinator.getSchool() : null);
         directive.setDirectiveCoordinator(coordinator);
 
+        List<ErrorForField> errors = new ArrayList<>();
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
         if(directiveType.validationGroup() != null) {
             // second validation of input: specific for given directive type
-            ValidationFailedException.throwOnError(validator.validate(form, directiveType.validationGroup()));
+            for(ConstraintViolation<DirectiveForm> e : validator.validate(form, directiveType.validationGroup())) {
+                errors.add(new ErrorForField(e.getMessage(), e.getPropertyPath().toString()));
+            }
+        }
+
+        if(KASKKIRI_IMMAT.equals(directiveType)) {
+            // one of idcode, foreignIdcode or birthdate must be set
+            long rowNum = 0;
+            for(DirectiveFormStudent dfs : StreamUtil.nullSafeList(form.getStudents())) {
+                if(!StringUtils.hasText(dfs.getSex())) {
+                    errors.add(new ErrorForField(Required.MESSAGE, DirectiveConfirmService.propertyPath(rowNum, "sex")));
+                }
+                rowNum++;
+            }
+        }
+        if(!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
         }
 
         if(KASKKIRI_TYHIST.equals(directiveType) && directive.getId() == null) {
@@ -796,6 +824,29 @@ public class DirectiveService {
                     person.setLastname(formStudent.getLastname());
                     person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(idcode));
                     person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(idcode)));
+                    person.setCitizenship(EntityUtil.validateClassifier(EntityUtil.getOptionalOne(formStudent.getCitizenship(), em), MainClassCode.RIIK));
+                }
+                person = EntityUtil.save(person, em);
+            } else if(sais != null) {
+                // update existing person from sais application
+                personFromSaisApplication(person, sais);
+            }
+            directiveStudent.setPerson(person);
+        } else if(StringUtils.hasText(formStudent.getForeignIdcode()) || (formStudent.getBirthdate() != null && StringUtils.hasText(formStudent.getSex()))) {
+            // add new person if person foreign idcode is not known or not set
+            Person person = findForeignPerson(formStudent);
+            SaisApplication sais = directiveStudent.getSaisApplication();
+            if(person == null) {
+                person = new Person();
+                if(sais != null) {
+                    personFromSaisApplication(person, sais);
+                } else {
+                    person.setForeignIdcode(formStudent.getForeignIdcode());
+                    person.setFirstname(formStudent.getFirstname());
+                    person.setLastname(formStudent.getLastname());
+                    person.setBirthdate(formStudent.getBirthdate());
+                    person.setSex(EntityUtil.validateClassifier(EntityUtil.getOptionalOne(formStudent.getSex(), em), MainClassCode.SUGU));
+                    person.setCitizenship(EntityUtil.validateClassifier(EntityUtil.getOptionalOne(formStudent.getCitizenship(), em), MainClassCode.RIIK));
                 }
                 person = EntityUtil.save(person, em);
             } else if(sais != null) {
@@ -819,6 +870,22 @@ public class DirectiveService {
         person.setCitizenship(sais.getCitizenship());
         person.setResidenceCountry(sais.getResidenceCountry());
         person.setAddressAds(sais.getAddressAds());
+    }
+
+    private Person findForeignPerson(DirectiveFormStudent formStudent) {
+        TypedQuery<Person> q;
+        if(StringUtils.hasText(formStudent.getForeignIdcode())) {
+            q = em.createQuery("select p from Person p where p.foreignIdcode = ?1", Person.class)
+                    .setParameter(1, formStudent.getForeignIdcode());
+        } else {
+            q = em.createQuery("select p from Person p where upper(p.firstname) = ?1 and upper(p.lastname) = ?2 and p.birthdate = ?3 and p.sex.code = ?4", Person.class)
+                    .setParameter(1, formStudent.getFirstname().toUpperCase())
+                    .setParameter(2, formStudent.getLastname().toUpperCase())
+                    .setParameter(3, formStudent.getBirthdate())
+                    .setParameter(4, formStudent.getSex());
+        }
+        List<Person> data = q.setMaxResults(1).getResultList();
+        return data.isEmpty() ? null : data.get(0);
     }
 
     private DirectiveStudent createDirectiveStudent(Long studentId, Directive directive) {
@@ -870,6 +937,19 @@ public class DirectiveService {
                 .setParameter(1, studentIds)
                 .getResultList();
         return data.stream().map(r -> resultAsLong(r, 0)).collect(Collectors.toSet());
+    }
+
+    private boolean userCanConfirm(HoisUserDetails user, Directive directive) {
+        Timestamp now = parameterAsTimestamp(LocalDate.now());
+        return UserUtil.isSchoolAdmin(user, directive.getSchool()) &&
+               UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_KASKKIRI) &&
+             !em.createNativeQuery("select true from user_ u where u.person_id = ?1 and (u.valid_from is null or u.valid_from <= ?2) and (u.valid_thru is null or u.valid_thru >= ?3) and u.role_code = ?4")
+            .setParameter(1, user.getPersonId())
+            .setParameter(2, now)
+            .setParameter(3, now)
+            .setParameter(4, Role.ROLL_P.name())
+            .setMaxResults(1)
+            .getResultList().isEmpty();
     }
 
     private static StudentGroup findStudentGroup(DirectiveStudentDto directiveStudent, List<StudentGroup> groups, Map<Long, Integer> addedCount) {

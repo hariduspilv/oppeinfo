@@ -41,7 +41,7 @@
             <tbody md-body>
             <tr md-row ng-repeat="object in objects | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell>{{currentLanguageNameField(object)}}</td>
-              <td md-cell ng-repeat="perm in permissions">{{(user.rights[object.code] || []).indexOf(perm.code) !== -1 ? 'main.yes' : 'main.no' | translate}}</td>
+              <td md-cell ng-repeat="perm in permissions">{{showPermission(object.code, perm.code) ? ((user.rights[object.code] || []).indexOf(perm.code) !== -1 ? 'main.yes' : 'main.no' | translate) : ''}}</td>
             </tr>
             </tbody>
           </table>

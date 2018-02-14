@@ -1,9 +1,5 @@
 package ee.hitsa.ois.web.dto.student;
 
-import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.student.StudentGroup;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudentSearchDto {
@@ -88,15 +84,5 @@ public class StudentSearchDto {
 
     public void setPersonId(Long personId) {
         this.personId = personId;
-    }
-
-    public static StudentSearchDto of(Student student) {
-        StudentSearchDto dto = EntityUtil.bindToDto(student, new StudentSearchDto());
-        Person p = student.getPerson();
-        dto.setFullname(p.getFullname());
-        dto.setIdcode(p.getIdcode());
-        StudentGroup sg = student.getStudentGroup();
-        dto.setStudentGroup(sg != null ? AutocompleteResult.of(sg) : null);
-        return dto;
     }
 }

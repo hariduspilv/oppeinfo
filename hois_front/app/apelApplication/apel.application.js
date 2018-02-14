@@ -1031,12 +1031,12 @@
             if (assessment === 'KUTSEHINDAMISVIIS_M') {
               dialogScope.grades = Classifier.queryForDropdown({
                 mainClassCode: 'KUTSEHINDAMINE',
-                filterValues: ['KUTSEHINDAMINE_5', 'KUTSEHINDAMINE_4', 'KUTSEHINDAMINE_3', 'KUTSEHINDAMINE_2', 'KUTSEHINDAMINE_MA', 'KUTSEHINDAMINE_X'] 
+                filterValues: ['KUTSEHINDAMINE_5', 'KUTSEHINDAMINE_4', 'KUTSEHINDAMINE_3', 'KUTSEHINDAMINE_2', 'KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_MA', 'KUTSEHINDAMINE_X'] 
               });
             } else if (assessment === 'KUTSEHINDAMISVIIS_E') {
               dialogScope.grades = Classifier.queryForDropdown({
                 mainClassCode: 'KUTSEHINDAMINE',
-                filterValues: ['KUTSEHINDAMINE_2', 'KUTSEHINDAMINE_MA', 'KUTSEHINDAMINE_A', 'KUTSEHINDAMINE_X'] 
+                filterValues: ['KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_2', 'KUTSEHINDAMINE_MA', 'KUTSEHINDAMINE_A', 'KUTSEHINDAMINE_X'] 
               });
             }
           } else {
@@ -1338,7 +1338,7 @@
 
     $scope.sendBackToCreation = function () {
       dialogService.confirmDialog({
-        prompt: 'apel.sendBackToCreation'
+        prompt: 'apel.sendBackToCreationConfirm'
       }, function () {
         QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({}, function (response) {
           message.info('apel.messages.sentBackToCreation');

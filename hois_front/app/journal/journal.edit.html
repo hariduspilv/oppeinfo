@@ -15,12 +15,13 @@
         <thead md-head md-on-reorder="loadEntries">
           <tr md-row flex>
             <th md-column style="padding-right:11em;"><span>{{'student.label' | translate}}, {{'journal.studentGroup' | translate}}</span></th>
-            <th md-column style="padding-left:1em;" ng-repeat="journalEntry in journal.journalEntriesByDate">
+            <th md-column class="bordered" style="padding-left:1em;"
+              md-colors="{background: getEntryColor(journalEntry.entryType.code)}" 
+              ng-repeat="journalEntry in journal.journalEntriesByDate">
               <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}}</span>
               <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L'">{{journalEntry.entryDate  ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
               <md-tooltip>
-                {{journalEntry.startLessonNr}}
-                <span ng-if="journalEntry.startLessonNr">,&nbsp;</span> {{journalEntry.nameEt}}
+                <span ng-if="journalEntry.startLessonNr">{{journalEntry.startLessonNr}}. {{'journal.lesson' | translate}},&nbsp;</span> {{journalEntry.nameEt}}
                 <span>,&nbsp;</span> {{currentLanguageNameField(journalEntry.entryType)}}
                 <span>,&nbsp;</span> {{journalEntry.teacher}}
               </md-tooltip>
@@ -31,7 +32,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in journal.journalStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}</td>
-            <td md-cell class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate" md-colors="{background: getEntryColor(journalEntry.entryType.code)}">
+            <td md-cell class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate">
               <div layout="row" style="padding-left:1em;">
                 <div ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
                   <span>
@@ -49,7 +50,8 @@
                   </span>
                   <span ng-if="result.absence.value">/</span>
                   <span>
-                    {{result.grade.value}}
+                    <span ng-class="{journalFinalResult: journalEntry.entryType.code === 'SISSEKANNE_L', 
+                    journalFinalResultBad: journalEntry.entryType.code === 'SISSEKANNE_L' && !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
                     <md-tooltip ng-if="result.grade.value">
                       {{result.gradeInserted | hoisDate}}
                       <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}

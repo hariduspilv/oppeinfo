@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -43,6 +44,11 @@ public class MessageController {
     @GetMapping("/received/mainPage")
     public Page<MessageSearchDto> show(HoisUserDetails user, Pageable pageable) {
         return messageService.show(user, pageable);
+    }
+    
+    @GetMapping("/received/new")
+    public Map<String, Long> unreadReceivedCount(HoisUserDetails user) {
+        return messageService.unreadReceivedCount(user);
     }
 
     @GetMapping("/sent")
@@ -94,7 +100,7 @@ public class MessageController {
 
     @GetMapping("/students")
     public List<MessageReceiverDto> getStudents(HoisUserDetails user, @Valid StudentSearchCommand criteria, Pageable pageable) {
-        return messageService.getStudents(user.getSchoolId(), criteria, pageable);
+        return messageService.getStudents(user, criteria, pageable);
     }
 
     @GetMapping("/{studentId:\\d+}/parents")

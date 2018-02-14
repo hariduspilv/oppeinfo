@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolController', function ($scope, $route, Classifier, $q, ArrayUtils, QueryUtils, message, $location, dialogService, $mdDialog, $window, oisFileService, config, $timeout) {
+angular.module('hitsaOis').controller('ModuleProtocolController', function ($scope, $route, Classifier, $q, ArrayUtils, QueryUtils, message, $location, dialogService, $mdDialog, $window, oisFileService, config, $timeout, $filter) {
   var endpoint = '/moduleProtocols/';
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', status: 'PROTOKOLL_STAATUS' });
@@ -68,30 +68,85 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     return allGraded;
   }
 
+  function allChangedGradesHaveAddInfo() {
+    if (!angular.isDefined($scope.protocol) || !angular.isArray($scope.protocol.protocolStudents)) {
+      return false;
+    }
+
+    var allHaveAddInfo = true;
+    if ($scope.formState.canEditConfirmedProtocol) {
+      for (var i = 0; i < $scope.protocol.protocolStudents.length; i++) {
+        if ($scope.protocol.protocolStudents[i].gradeHasChanged) {
+          var addInfo = $scope.protocol.protocolStudents[i].addInfo;
+          addInfo = addInfo !== undefined && addInfo !== null ? addInfo.split(' ').join('') : null;
+          
+          if (!addInfo) {
+            allHaveAddInfo = false;
+            break;
+          }
+        }
+      }
+    }
+    return allHaveAddInfo;
+  }
+
+  function canChangeConfirmedProtocolGrade() {
+    return canEditConfirmedProtocol() && $scope.protocol.status.code === 'PROTOKOLL_STAATUS_K';
+  }
+
   function canEditConfirmedProtocol() {
     return ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M') &&
       ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_K_TEEMAOIGUS_MOODULPROTOKOLL");
   }
 
   function canConfirm() {
-    return allProtocolStudentsGraded() && ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M') &&
+    return allProtocolStudentsGraded() && allChangedGradesHaveAddInfo() && 
+      ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M') &&
       ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_K_TEEMAOIGUS_MOODULPROTOKOLL");
   }
 
   function entityToDto(entity) {
     $q.all(clMapper.promises).then(function () {
       $scope.protocol = clMapper.objectmapper(entity);
+      $scope.savedStudents = angular.copy($scope.protocol.protocolStudents);
       $scope.getUrl = oisFileService.getUrl;
       loadJournals();
       loadGradesSelect();
       $scope.formState.canEditConfirmedProtocol = canEditConfirmedProtocol();
+      $scope.formState.canChangeConfirmedProtocolGrade = canChangeConfirmedProtocolGrade();
       $scope.formState.canAddDeleteStudents = $scope.protocol.status.code !== 'PROTOKOLL_STAATUS_K' && $scope.protocol.canBeEdited;
       $scope.formState.canConfirm = $scope.protocol.status.code !== 'PROTOKOLL_STAATUS_K' && canConfirm();
       $scope.formState.protocolPdfUrl = config.apiUrl + endpoint + entity.id + '/print/protocol.pdf';
     });
   }
 
-  $scope.gradeChanged = function() {
+  $scope.gradeChanged = function(row) {
+    if (row) {
+      var savedResult = $filter('filter')($scope.savedStudents, {id: row.id}, true)[0];
+      if (savedResult.grade !== row.grade) {
+        $scope.moduleProtocolForm.$setSubmitted();
+        row.gradeHasChanged = true;
+      } else {
+        row.gradeHasChanged = false;
+
+        if (!savedResult.addInfo) {
+          row.addInfo = null;
+        } else {
+          row.addInfo = savedResult.addInfo;
+        }
+      }
+    }
+
+    if ($scope.protocol.status.code === 'PROTOKOLL_STAATUS_K' && $scope.auth.isAdmin()) {
+      $scope.formState.canConfirm = canConfirm();
+    }
+  };
+
+  $scope.addInfoChanged = function (row) {
+    if (row.addInfo && row.addInfo.charAt(0) === ' ') {
+      row.addInfo = null;
+    }
+    
     if ($scope.protocol.status.code === 'PROTOKOLL_STAATUS_K' && $scope.auth.isAdmin()) {
       $scope.formState.canConfirm = canConfirm();
     }

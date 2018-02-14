@@ -2,7 +2,9 @@ package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
@@ -20,9 +22,9 @@ public class JournalDto {
     private String studyYear;
     private LocalDate studyYearEndDate;
     private String nameEt;
-    private List<String> studentGroups = new ArrayList<>();
+    private Set<String> studentGroups = new HashSet<>();
     private List<String> journalTeachers = new ArrayList<>();
-    private List<AutocompleteResult> curriculumModules = new ArrayList<>();
+    private Set<AutocompleteResult> curriculumModules = new HashSet<>();
     private List<JournalModuleDescriptionDto> moduleDescriptions = new ArrayList<>();
     private Integer plannedHours;
     private Integer usedHours;
@@ -92,11 +94,11 @@ public class JournalDto {
         this.nameEt = nameEt;
     }
 
-    public List<String> getStudentGroups() {
+    public Set<String> getStudentGroups() {
         return studentGroups;
     }
 
-    public void setStudentGroups(List<String> studentGroups) {
+    public void setStudentGroups(Set<String> studentGroups) {
         this.studentGroups = studentGroups;
     }
 
@@ -108,11 +110,11 @@ public class JournalDto {
         this.journalTeachers = journalTeachers;
     }
 
-    public List<AutocompleteResult> getCurriculumModules() {
+    public Set<AutocompleteResult> getCurriculumModules() {
         return curriculumModules;
     }
 
-    public void setCurriculumModules(List<AutocompleteResult> curriculumModules) {
+    public void setCurriculumModules(Set<AutocompleteResult> curriculumModules) {
         this.curriculumModules = curriculumModules;
     }
 

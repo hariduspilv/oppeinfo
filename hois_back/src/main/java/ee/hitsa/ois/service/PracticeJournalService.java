@@ -7,7 +7,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.lang.invoke.MethodHandles;
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +28,7 @@ import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.domain.PracticeJournalEntry;
 import ee.hitsa.ois.domain.PracticeJournalFile;
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.school.School;
@@ -171,26 +171,25 @@ public class PracticeJournalService {
     }
     
     public PracticeJournalDto get(PracticeJournal practiceJournal) {
-        PracticeJournalDto dto = PracticeJournalDto.of(practiceJournal);
-        dto.setCanDelete(Boolean.valueOf(canDelete(practiceJournal)));
-        return dto;
+        return PracticeJournalDto.of(practiceJournal);
     }
 
     public PracticeJournalDto get(HoisUserDetails user, PracticeJournal practiceJournal) {
         PracticeJournalDto dto = get(practiceJournal);
         dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate())));
+        dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, dto.getEndDate())));
         return dto;
-    }
-
-    private static boolean canDelete(PracticeJournal practiceJournal) {
-        return !hasPracticeEnded(practiceJournal);
     }
 
     public PracticeJournal create(Long schoolId, PracticeJournalForm practiceJournalForm) {
         PracticeJournal practiceJournal = new PracticeJournal();
         practiceJournal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
         practiceJournal.setSchool(em.getReference(School.class, schoolId));
-        practiceJournal.setStudyYear(studyYearService.getCurrentStudyYear(schoolId));
+        StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        if(studyYear == null) {
+            throw new ValidationFailedException("studyYear.missingCurrent");
+        }
+        practiceJournal.setStudyYear(studyYear);
         return save(practiceJournal, practiceJournalForm);
     }
 
@@ -217,12 +216,8 @@ public class PracticeJournalService {
     }
 
     public void delete(HoisUserDetails user, PracticeJournal practiceJournal) {
-        if (hasPracticeEnded(practiceJournal)) {
-            throw new ValidationFailedException("practiceJournal.messages.deletionNotAllowedPracticeHasEnded");
-        }
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(practiceJournal, em);
-
     }
 
     public PracticeJournal saveEntriesStudent(PracticeJournal practiceJournal,
@@ -320,10 +315,6 @@ public class PracticeJournalService {
                     file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));
                     return file;
                 });
-    }
-
-    private static boolean hasPracticeEnded(PracticeJournal practiceJournal) {
-        return LocalDate.now().isAfter(practiceJournal.getEndDate());
     }
 
     public PracticeJournal getFromSupervisorUrl(String uuid) {

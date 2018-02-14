@@ -30,4 +30,9 @@ public final class PracticeJournalUserRights {
         }
         return false;
     }
+
+    public static boolean canDelete(HoisUserDetails user, LocalDate endDate) {
+        return canEdit(user, endDate);
+    }
+    
 }

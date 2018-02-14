@@ -2,11 +2,9 @@ package ee.hitsa.ois.web;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.junit.After;
@@ -18,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -35,11 +32,9 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
-import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
-import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.PracticeJournalService;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.ContractForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ContractDto;
@@ -57,12 +52,6 @@ public class ContractControllerTests {
     @Autowired
     private TestConfigurationService testConfigurationService;
     @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
-    private CurriculumVersionOccupationModuleRepository curriculumVersionOccupationModuleRepository;
-    @Autowired
-    private TeacherRepository teacherRepository;
-    @Autowired
     private EntityManager em;
     @Autowired
     private PracticeJournalService practiceJournalService;
@@ -78,12 +67,10 @@ public class ContractControllerTests {
             List<School> userSchools = testConfigurationService.personSchools(role);
             Assert.assertFalse(userSchools.isEmpty());
 
-            student = studentRepository.findAll((root, query, cb) -> {
-                List<Predicate> filters = new ArrayList<>();
-                filters.add(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()));
-                filters.add(root.get("school").in(userSchools));
-                return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).get(0);
+            student = em.createQuery("select s from Student s where s.status.code = ?1 and s.school in (?2)", Student.class)
+                .setParameter(1, StudentStatus.OPPURSTAATUS_O.name())
+                .setParameter(2, userSchools)
+                .setMaxResults(1).getResultList().get(0);
 
             userSchool = student.getSchool();
         }
@@ -217,9 +204,8 @@ public class ContractControllerTests {
 
     private ContractForm createForm() {
         ContractForm form = new ContractForm();
-        PageRequest SINGLE_RESULT = new PageRequest(1, 1);
         form.setStudent(AutocompleteResult.of(student));
-        form.setModule(curriculumVersionOccupationModuleRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
+        form.setModule(curriculumVersionOccupationModuleId());
         form.setCredits(BigDecimal.ONE);
         form.setHours(Short.valueOf((short) 1));
         form.setStartDate(LocalDate.now());
@@ -230,10 +216,14 @@ public class ContractControllerTests {
         form.setContactPersonEmail("test@test.ee");
         form.setSupervisorName("supervisor");
         form.setSupervisorEmail("test@test.ee");
-        form.setTeacher(teacherRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
+        form.setTeacher(teacherId());
         form.setContractCoordinator(directiveCoordinator().getId());
         form.setPracticePlan("plan");
         return form;
+    }
+
+    private Long curriculumVersionOccupationModuleId() {
+        return JpaQueryUtil.resultAsLong(em.createNativeQuery("select id from curriculum_version_omodule").setMaxResults(1).getResultList().get(0), 0);
     }
 
     private DirectiveCoordinator directiveCoordinator() {
@@ -242,5 +232,9 @@ public class ContractControllerTests {
 
     private Enterprise enterprise() {
         return em.createQuery("select e from Enterprise e", Enterprise.class).setMaxResults(1).getResultList().get(0);
+    }
+
+    private Long teacherId() {
+        return JpaQueryUtil.resultAsLong(em.createNativeQuery("select id from teacher").setMaxResults(1).getResultList().get(0), 0);
     }
 }

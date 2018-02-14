@@ -55,47 +55,45 @@ public class CertificateContentService {
     @Autowired
     private PersonRepository personRepository;
 
-    public String generate(CertificateContentCommand command) {
-        CertificateReport report = null;
+    public String generate(Long schoolId, CertificateContentCommand command) {
         CertificateType type = CertificateType.valueOf(command.getType());
-        boolean isHigher = false;
-
         if(command.getStudent() != null) {
             Student student = em.getReference(Student.class, command.getStudent());
-            report = CertificateReport.of(student);
-            setStudentResults(report, student, type);
-            
-            StudyYear studyYear = studyYearService.getCurrentStudyYear(command.getSchool());
-            report.setStudyYear(studyYear.getYear().getNameEt());
-            setSessions(report, studyYear, type);
-            setLastSession(report, studyYear, type);
-            isHigher = StudentUtil.isHigher(student);
-            
-        } else if(command.getOtherIdcode() != null) {
-            Person person = personRepository.findByIdcode(command.getOtherIdcode());
-            School school = em.getReference(School.class, command.getSchool());
-            if(person != null) {
-                report = CertificateReport.of(person, school);
-            } else {
-                report = CertificateReport.of(school, command.getOtherName(), command.getOtherIdcode());
+            if(!schoolId.equals(EntityUtil.getId(student.getSchool()))) {
+                throw new ValidationFailedException("certificate.error.content");
             }
-        } else {
+            return generate(student, type);
+        }
+
+        if(command.getOtherIdcode() == null) {
             throw new ValidationFailedException("certificate.error.content");
         }
-        return templateService.evaluateTemplate(getTemplateName(isHigher, type), 
+
+        Person person = personRepository.findByIdcode(command.getOtherIdcode());
+        School school = em.getReference(School.class, schoolId);
+        CertificateReport report = null;
+        if(person != null) {
+            report = CertificateReport.of(person, school);
+        } else {
+            report = CertificateReport.of(school, command.getOtherName(), command.getOtherIdcode());
+        }
+        return templateService.evaluateTemplate(getTemplateName(false, type),
                 Collections.singletonMap("content", report));
     }
-    
+
     public String generate(Student student, CertificateType type) {
         CertificateReport report = CertificateReport.of(student);
         StudyYear studyYear = studyYearService.getCurrentStudyYear(EntityUtil.getId(student.getSchool()));
+        if(studyYear == null) {
+            throw new ValidationFailedException("studyYear.missingCurrent");
+        }
         report.setStudyYear(studyYear.getYear().getNameEt());
 
         setStudentResults(report, student, type);
         setSessions(report, studyYear, type);
         setLastSession(report, studyYear, type);
 
-        return templateService.evaluateTemplate(getTemplateName(StudentUtil.isHigher(student), type), 
+        return templateService.evaluateTemplate(getTemplateName(StudentUtil.isHigher(student), type),
                 Collections.singletonMap("content", report));
     }
 
@@ -123,7 +121,7 @@ public class CertificateContentService {
 
     private static void setSessions(CertificateReport report, StudyYear studyYear, CertificateType type) {
         if(CertificateType.TOEND_LIIK_SESS.equals(type)) {
-            report.setSessions(StreamUtil.toMappedList(CertificateReportSession::of, 
+            report.setSessions(StreamUtil.toMappedList(CertificateReportSession::new,
                     currentStudyYearsSessions(studyYear)));
         }
     }
@@ -135,11 +133,11 @@ public class CertificateContentService {
 
             if(!finishedSessions.isEmpty()) {
                 StudyPeriodEvent lastSession = finishedSessions.get(finishedSessions.size() - 1);
-                report.setLastSession(CertificateReportSession.of(lastSession));
+                report.setLastSession(new CertificateReportSession(lastSession));
             }
         }
     }
-    
+
     private static List<StudyPeriodEvent> currentStudyYearsSessions(StudyYear studyYear) {
         List<StudyPeriodEvent> sessions = StreamUtil.toFilteredList(e -> isSession(e), studyYear.getStudyPeriodEvents());
         Collections.sort(sessions, Comparator.comparing(StudyPeriodEvent::getEnd));

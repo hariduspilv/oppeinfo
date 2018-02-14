@@ -27,7 +27,7 @@
           <hois-select ng-model="row.studentGroup" name="students[{{$index}}].studentGroup" values="formState.studentGroupMap[row.oldCurriculumVersion.id]" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
         </td>
         <td md-cell>
-          <a ng-click="deleteStudent(row.idcode)" md-no-ink class="remove">&times;</a>
+          <a ng-click="deleteStudent(row)" md-no-ink class="remove">&times;</a>
         </td>
       </tr>
     </tbody>

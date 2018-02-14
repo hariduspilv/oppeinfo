@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
@@ -15,14 +17,14 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class JournalSearchDto {
 
     private Long id;
-    private List<String> studentGroups = new ArrayList<>();
+    private Set<String> studentGroups = new HashSet<>();
     private String nameEt;
     private List<String> teachers = new ArrayList<>();
-    private List<AutocompleteResult> modules = new ArrayList<>();
+    private Set<AutocompleteResult> modules = new HashSet<>();
     private Integer plannedHours;
     private Integer usedHours;
     private String status;
-    private List<String> curriculums = new ArrayList<>();
+    private Set<String> curriculums = new HashSet<>();
     private Boolean canEdit;
     
     public static JournalSearchDto of(HoisUserDetails user, Journal journal) {
@@ -54,10 +56,10 @@ public class JournalSearchDto {
     public void setId(Long id) {
         this.id = id;
     }
-    public List<String> getStudentGroups() {
+    public Set<String> getStudentGroups() {
         return studentGroups;
     }
-    public void setStudentGroups(List<String> studentGroups) {
+    public void setStudentGroups(Set<String> studentGroups) {
         this.studentGroups = studentGroups;
     }
     public String getNameEt() {
@@ -72,10 +74,10 @@ public class JournalSearchDto {
     public void setTeachers(List<String> teachers) {
         this.teachers = teachers;
     }
-    public List<AutocompleteResult> getModules() {
+    public Set<AutocompleteResult> getModules() {
         return modules;
     }
-    public void setModules(List<AutocompleteResult> modules) {
+    public void setModules(Set<AutocompleteResult> modules) {
         this.modules = modules;
     }
     public Integer getPlannedHours() {
@@ -96,10 +98,10 @@ public class JournalSearchDto {
     public void setStatus(String status) {
         this.status = status;
     }
-    public List<String> getCurriculums() {
+    public Set<String> getCurriculums() {
         return curriculums;
     }
-    public void setCurriculums(List<String> curriculums) {
+    public void setCurriculums(Set<String> curriculums) {
         this.curriculums = curriculums;
     }
     public Boolean getCanEdit() {

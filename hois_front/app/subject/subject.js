@@ -114,14 +114,15 @@ angular.module('hitsaOis')
         });
       };
     })
-  .controller('SubjectViewController',
-    function ($scope, $route, QueryUtils) {
+  .controller('SubjectViewController', ['$scope', '$route', 'config', 'QueryUtils',
+    function ($scope, $route, config, QueryUtils) {
       var id = $route.current.params.id;
       var backUrl = $route.current.params.backUrl;
 
       $scope.formState = {backUrl: backUrl ? '#/' + backUrl : '#/subject'};
       $scope.subject = QueryUtils.endpoint('/subject').get({id: id});
-  })
+      $scope.publicUrl = config.apiUrl + '/public/subject/' + id + '?format=json';
+  }])
   .controller('SubjectListController', ['$q', '$scope', 'Classifier', 'QueryUtils',
     function ($q, $scope, Classifier, QueryUtils) {
       var clMapper = Classifier.valuemapper({status: 'AINESTAATUS', assessment: 'HINDAMISVIIS', languages: 'OPPEKEEL'});

@@ -84,12 +84,10 @@ angular.module('hitsaOis')
       return !!$localStorage.userId;
     };
 
-    var $injector = angular.injector();
     authService.isAuthorized = function (authorizedRoles) {
       if (authService.isAuthenticated()) {
         if(angular.isFunction(authorizedRoles)) {
           return authorizedRoles(Session, $localStorage.authorizedRoles);
-          //return $injector.invoke(authorizedRoles, null, {Session: Session, authorizedRoles: $localStorage.authorizedRoles});
         }
         if (!angular.isArray(authorizedRoles)) {
           authorizedRoles = [authorizedRoles];
@@ -182,7 +180,6 @@ angular.module('hitsaOis')
       } else {
         if (!ArrayUtils.contains(PUBLIC_ROUTES, next.originalPath) && next.originalPath !== '/') {
           // user is not logged in and not public route
-          console.log(next.originalPath);
           event.preventDefault();
           $rootScope.$broadcast(AUTH_EVENTS.notAuthenticated);
         } 
@@ -205,16 +202,16 @@ angular.module('hitsaOis')
   .constant('PUBLIC_ROUTES', [
     '/academicCalendars', 
     '/academicCalendar/:schoolId?',
-    '/curriculums',
-    '/curriculums/:id',
+    '/curriculums/:schoolId?',
+    '/curriculum/:id',
+    '/curriculum/:curriculumId/version/:id',
     '/timetables',
     '/timetable/generalTimetableByGroup/:schoolId?',
     '/timetable/generalTimetableByTeacher/:schoolId?',
     '/timetable/generalTimetableByRoom/:schoolId?',
-    '/timetable/group/:schoolId/:periodId/:groupId/:timetableId/:weekIndex?',
-    '/timetable/teacher/:schoolId/:periodId/:teacherId/:timetableId/:weekIndex?',
-    '/timetable/room/:schoolId/:periodId/:roomId/:timetableId/:weekIndex?',
-    '/timetable/student/:schoolId/:periodId/:studentId/:timetableId'
+    '/timetable/group/:schoolId/:groupId/:weekIndex?',
+    '/timetable/teacher/:schoolId/:teacherId/:weekIndex?',
+    '/timetable/room/:schoolId/:roomId/:weekIndex?'
   ])
   .service('Session', function ($localStorage) {
     this.school = {};
@@ -277,6 +274,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA: 'ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA',	//Õpingukavad
     ROLE_OIGUS_V_TEEMAOIGUS_OPPEASUTUS: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPEASUTUS',	//Õppeasutused
     ROLE_OIGUS_V_TEEMAOIGUS_OPPEKAVA: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPEKAVA',	//Õppekavad
+    ROLE_OIGUS_V_TEEMAOIGUS_OPPEMATERJAL: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPEMATERJAL',
     ROLE_OIGUS_V_TEEMAOIGUS_OPPEPERIOOD: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPEPERIOOD',	//Õppeperioodid
     ROLE_OIGUS_V_TEEMAOIGUS_OPPERYHM: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPERYHM',	//Õpperühmad
     ROLE_OIGUS_V_TEEMAOIGUS_OPPETASE: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPETASE',	//Õppetasemed
@@ -334,6 +332,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA: 'ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA',	//Õpingukavad
     ROLE_OIGUS_M_TEEMAOIGUS_OPPEASUTUS: 'ROLE_OIGUS_M_TEEMAOIGUS_OPPEASUTUS',	//Õppeasutused
     ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA: 'ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA',	//Õppekavad
+    ROLE_OIGUS_M_TEEMAOIGUS_OPPEMATERJAL: 'ROLE_OIGUS_M_TEEMAOIGUS_OPPEMATERJAL',
     ROLE_OIGUS_M_TEEMAOIGUS_OPPEPERIOOD: 'ROLE_OIGUS_M_TEEMAOIGUS_OPPEPERIOOD',	//Õppeperioodid
     ROLE_OIGUS_M_TEEMAOIGUS_OPPERYHM: 'ROLE_OIGUS_M_TEEMAOIGUS_OPPERYHM',	//Õpperühmad
     ROLE_OIGUS_M_TEEMAOIGUS_OPPETASE: 'ROLE_OIGUS_M_TEEMAOIGUS_OPPETASE',	//Õppetasemed
@@ -360,4 +359,22 @@ angular.module('hitsaOis')
     ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS: 'ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS' //Stipendiumid ja toetused
     
   })
+  .constant('USER_CONFIRM_RIGHTS', [
+    'TEEMAOIGUS_EKSAM',
+    'TEEMAOIGUS_ESINDAVALDUS',
+    'TEEMAOIGUS_HINNETELEHT',
+    'TEEMAOIGUS_KASKKIRI',
+    'TEEMAOIGUS_KOMISJON',
+    'TEEMAOIGUS_LOPMOODULPROTOKOLL',
+    'TEEMAOIGUS_LOPPROTOKOLL',
+    'TEEMAOIGUS_LOPTEEMA',
+    'TEEMAOIGUS_MOODULPROTOKOLL',
+    'TEEMAOIGUS_OPINGUKAVA',
+    'TEEMAOIGUS_OPPEKAVA',
+    'TEEMAOIGUS_PAEVIK',
+    'TEEMAOIGUS_PRAKTIKAPAEVIK',
+    'TEEMAOIGUS_PROTOKOLL',
+    'TEEMAOIGUS_TUNNIPLAAN',
+    'TEEMAOIGUS_VOTA'
+  ])
 ;

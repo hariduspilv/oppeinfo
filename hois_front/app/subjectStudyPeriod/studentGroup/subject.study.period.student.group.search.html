@@ -68,7 +68,7 @@
             <td md-cell>{{currentLanguageNameField(row.curriculum)}}</td>
             <td md-cell>{{row.hours}}</td>
             <td md-cell>
-              <a ng-if="row.timetable" href="#/timetable/group/{{row.studyPeriod}}/{{row.id}}/{{row.timetable}}">{{'subjectStudyPeriod.timetable' | translate}}</a>
+              <a href="#/timetable/group/{{schoolId}}/{{row.id}}">{{'subjectStudyPeriod.timetable' | translate}}</a>
             </td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/studentGroups/{{row.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}

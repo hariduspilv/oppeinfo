@@ -110,13 +110,13 @@ public class TeacherController {
 
     @PutMapping("/{id:\\d+}/sendToEhis")
     public TeacherDto sendToEhis(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Teacher teacher, @Valid @RequestBody TeacherForm teacherForm) {
-        TeacherUserRightsValidator.assertCanConfirm(user, teacher);        
+        TeacherUserRightsValidator.assertCanEdit(user, teacher);
         return teacherService.sendToEhis(user, teacher, teacherForm);
     }
 
     @PostMapping("/{id:\\d+}/rtip")
     public NoContentResponse rtip(HoisUserDetails user, @WithEntity Teacher teacher) {
-        TeacherUserRightsValidator.assertCanConfirm(user, teacher);        
+        TeacherUserRightsValidator.assertCanEdit(user, teacher);
         rtipService.syncTeacher(teacher);
         return HttpUtil.NO_CONTENT_RESPONSE;
     }
@@ -178,13 +178,13 @@ public class TeacherController {
 
     @PostMapping("/exportToEhis/higher")
     public List<EhisTeacherExportResultDto> exportToEhisHigher(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
-        TeacherUserRightsValidator.assertCanConfirm(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
         return ehisTeacherExportService.exportToEhis(user.getSchoolId(), true, form);
     }
 
     @PostMapping("/exportToEhis/vocational")
     public List<EhisTeacherExportResultDto> exportToEhisVocational(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
-        TeacherUserRightsValidator.assertCanConfirm(user);        
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
         return ehisTeacherExportService.exportToEhis(user.getSchoolId(), false, form);
     }
 }

@@ -31,6 +31,7 @@ import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.studymaterial.StudyMaterialAutocompleteCommand;
 import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
@@ -188,6 +189,14 @@ public class AutocompleteController {
             lookup.setId(user.getStudentId());
         }
         return asPage(autocompleteService.students(user.getSchoolId(), lookup));
+    }
+
+    @GetMapping("/studyMaterials")
+    public List<AutocompleteResult> studyMaterials(HoisUserDetails user, StudyMaterialAutocompleteCommand lookup) {
+        if (user.isTeacher()) {
+            lookup.setTeacher(user.getTeacherId());
+        }
+        return autocompleteService.studyMaterials(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/studyPeriods")

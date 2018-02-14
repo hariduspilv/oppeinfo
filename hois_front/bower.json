@@ -2,13 +2,13 @@
   "name": "hitsa-ois",
   "version": "0.0.1",
   "dependencies": {
-    "angular": "1.6.8",
-    "angular-animate": "1.6.8",
-    "angular-aria": "1.6.8",
-    "angular-messages": "1.6.8",
-    "angular-resource": "1.6.8",
-    "angular-route": "1.6.8",
-    "angular-sanitize": "1.6.8",
+    "angular": "1.6.9",
+    "angular-animate": "1.6.9",
+    "angular-aria": "1.6.9",
+    "angular-messages": "1.6.9",
+    "angular-resource": "1.6.9",
+    "angular-route": "1.6.9",
+    "angular-sanitize": "1.6.9",
     "angular-material": "1.1.6",
     "angular-translate": "2.17.0",
     "angular-translate-loader-static-files": "2.17.0",
@@ -27,12 +27,12 @@
     }
   },
   "devDependencies": {
-    "angular-mocks": "1.6.8"
+    "angular-mocks": "1.6.9"
   },
   "appPath": "app",
   "moduleName": "hitsaOis",
   "resolutions": {
-    "angular": "^1.6.8",
+    "angular": "^1.6.9",
     "angular-translate": "2.17.0"
   }
 }

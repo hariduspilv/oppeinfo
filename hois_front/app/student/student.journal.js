@@ -58,8 +58,8 @@
         scope.nextWeekIndex = scope.weeks[shownWeekIndex + 1] ? shownWeekIndex + 1 : null;
     }
 
-    angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'QueryUtils', '$mdDialog', 'Classifier', 'ArrayUtils',
-        function ($scope, $route, QueryUtils, $mdDialog, Classifier, ArrayUtils) {
+    angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'QueryUtils', '$mdDialog', 'Classifier',
+        function ($scope, $route, QueryUtils, $mdDialog, Classifier) {
             $scope.currentNavItem = 'journals';
 
             var studentId = $route.current.locals.auth.student;
@@ -109,14 +109,14 @@
                 return journalYears;
             }
 
+            var positiveResults = ['A', '3', '4', '5'];
             $scope.resultIsPostive = function (result) {
-                var postiveResults = ['A', '3', '4', '5'];
-                return ArrayUtils.contains(postiveResults, result);
+                return positiveResults.indexOf(result) !== -1;
             };
 
+            var boldResults = ['SISSEKANNE_E', "SISSEKANNE_I", "SISSEKANNE_H"];
             $scope.isTestButNotFinal = function (entryType) {
-                var boldResults = ['SISSEKANNE_E', "SISSEKANNE_I", "SISSEKANNE_H"];
-                return ArrayUtils.contains(boldResults, entryType);
+                return boldResults.indexOf(entryType) !== -1;
             };
 
             $scope.showJournal = function (journal) {

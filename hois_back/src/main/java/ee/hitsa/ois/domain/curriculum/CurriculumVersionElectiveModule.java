@@ -10,18 +10,19 @@ import javax.persistence.Transient;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.util.Translatable;
 
 @Entity
-public class CurriculumVersionElectiveModule extends BaseEntityWithId {
+public class CurriculumVersionElectiveModule extends BaseEntityWithId implements Translatable {
+
     private String nameEt;
     private String nameEn;
-    
+
     @OneToMany(mappedBy = "electiveModule", fetch = FetchType.LAZY)
     private Set<CurriculumVersionHigherModuleSubject> subjects = new HashSet<>();
-    
     @Transient
     private Long referenceNumber;
-    
+
     public Long getReferenceNumber() {
         AssertionFailedException.throwIf(referenceNumber == null && getId() == null, "CurriculumVersionElectiveModule should whether be saved before or have a reference number!");
         return referenceNumber != null ? referenceNumber : getId();
@@ -31,6 +32,7 @@ public class CurriculumVersionElectiveModule extends BaseEntityWithId {
         this.referenceNumber = referenceNumber;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -39,6 +41,7 @@ public class CurriculumVersionElectiveModule extends BaseEntityWithId {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }

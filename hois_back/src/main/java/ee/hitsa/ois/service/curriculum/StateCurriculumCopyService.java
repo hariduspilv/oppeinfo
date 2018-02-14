@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -181,7 +182,7 @@ public class StateCurriculumCopyService {
 
     private CurriculumModule copyModule(Curriculum newCurriculum, StateCurriculumModule copied, Set<String> codes) {
         CurriculumModule newModule = new CurriculumModule();
-        BeanUtils.copyProperties(copied, newModule, "id", "inserted", "insertedBy", "changed", "changedBy", "version");
+        BeanUtils.copyProperties(copied, newModule, "id", "inserted", "insertedBy", "changed", "changedBy", "version", "outcomes");
         newModule.setCurriculum(newCurriculum);
         newModule.setPractice(Boolean.FALSE);
         copyOutcomes(newModule, copied.getOutcomes());
@@ -190,12 +191,14 @@ public class StateCurriculumCopyService {
     }
 
     private static void copyOutcomes(CurriculumModule newModule, Set<StateCurriculumModuleOutcome> outcomes) {
-        if(!CollectionUtils.isEmpty(outcomes)) {
-            newModule.setOutcomes(new HashSet<>());
-            for(StateCurriculumModuleOutcome copied : outcomes) {
+        if(!outcomes.isEmpty()) {
+            // order outcomes initially using record id
+            long rowNum = 0;
+            for(StateCurriculumModuleOutcome copied : outcomes.stream().sorted(Comparator.comparing(StateCurriculumModuleOutcome::getId)).collect(Collectors.toList())) {
                 CurriculumModuleOutcome outcome = new CurriculumModuleOutcome();
                 outcome.setOutcomeEt(copied.getOutcomesEt());
                 outcome.setOutcomeEn(copied.getOutcomesEn());
+                outcome.setOrderNr(Long.valueOf(rowNum++));
                 newModule.getOutcomes().add(outcome);
             }
         }

@@ -38,7 +38,7 @@
         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
         md-page-select></md-table-pagination>
 
-      <br/>
+      <br ng-if="auth.isStudent()">
       <md-table-container ng-if="auth.isStudent()">
         <table md-table md-progress="applicationTypes.$promise" class="secondary-table">
           <thead md-head>
@@ -88,8 +88,9 @@
         </table>
       </md-table-container>
       <md-table-pagination ng-if="!auth.isTeacher() && certificates.totalElements > certificatesCriteria.size" md-limit="certificatesCriteria.size" md-limit-options="[5, 10, 15]" md-page="certificatesCriteria.page"
-        md-total="{{certificatesCriteria.totalElements}}" md-on-paginate="loadCertificates" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-total="{{certificates.totalElements}}" md-on-paginate="loadCertificates" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
         md-page-select></md-table-pagination>
+      <br ng-if="auth.isStudent()">
 
       <md-table-container>
         <table md-table ng-if="auth.isStudent()" class="secondary-table">

@@ -1,0 +1,65 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex class="form-readonly">
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label class="textInput">{{'studyYear.label' | translate}}</label>
+        <hois-value value="currentLanguageNameField(journal.studyYear)"></hois-value>
+      </md-input-container>
+      <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <label class="textInput">{{'journal.label' | translate}}</label>
+        <hois-value value="journal.nameEt"></hois-value>
+      </md-input-container>
+    </div>
+  </div>
+  <div flex>
+    <form name="studyMaterialForm" ng-submit="save()" novalidate>
+      <div layout="row">
+        <hois-autocomplete ng-if="auth.isAdmin()" flex ng-model="$parent.teacher" method="teachers" name="teacher" label="teacher.label"
+          required></hois-autocomplete>
+      </div>
+      <md-input-container layout="row">
+        <label class="textInput">{{'studyMaterial.type' | translate}}</label>
+        <hois-classifier-select ng-model="material.typeCode" main-classifier-code="OPPEMATERJAL" model-value-attr="code" ng-disabled="material.id"
+          required></hois-classifier-select>
+      </md-input-container>
+      <span ng-if="!material.id && material.typeCode === 'OPPEMATERJAL_F'">
+        <md-input-container flex>
+          <lf-ng-md-file-input name="file" lf-files="$parent.files" lf-browse-label="{{'main.addFile' | translate}}" lf-remove-label="{{'main.button.delete' | translate}}"
+            lf-placeholder="" lf-filesize="5MB" disallow-same-file="addedFiles" lf-required> </lf-ng-md-file-input>
+        </md-input-container>
+        <div ng-messages="studyMaterialForm.file.$error">
+          <div class="invalid" ng-message="required">{{'main.messages.error.selectFile' | translate}}</div>
+          <div class="invalid" ng-message="filesize">{{'main.messages.error.fileTooLarge' | translate}} 5MB!</div>
+          <div class="invalid" ng-message="samefile">{{'main.messages.error.fileAlreadyExists' | translate}}</div>
+        </div>
+      </span>
+      <md-input-container layout="row" ng-if="material.typeCode === 'OPPEMATERJAL_L'">
+        <label>{{'studyMaterial.link' | translate}}</label>
+        <input ng-model="material.url" type="text" required>
+      </md-input-container>
+      <md-input-container layout="row">
+        <label>{{'studyMaterial.name' | translate}}</label>
+        <input ng-model="material.nameEt" type="text" required>
+      </md-input-container>
+      <md-input-container layout="row">
+        <label>{{'studyMaterial.description' | translate}}</label>
+        <input ng-model="material.descriptionEt" type="text">
+      </md-input-container>
+      <md-input-container>
+        <md-checkbox ng-model="material.isVisibleToStudents" aria-label="isVisibleToStudents">
+          {{'studyMaterial.isVisibleToStudents' | translate}}
+        </md-checkbox>
+      </md-input-container>
+      <md-input-container>
+        <md-checkbox ng-model="material.isPublic" aria-label="isPublic">
+          {{'studyMaterial.isPublic' | translate}}
+        </md-checkbox>
+      </md-input-container>
+
+      <div layout="row">
+        <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+        <md-button class="md-raised md-default" href="/#{{backPath}}">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -220,37 +220,46 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
       });
   };
 
-}]).controller('DeclarationSearchController', ['$scope', '$sessionStorage', 'ArrayUtils', 'Classifier', 'DataUtils', 'QueryUtils', '$q', 'message', 'dialogService',
-  function ($scope, $sessionStorage, ArrayUtils, Classifier, DataUtils, QueryUtils, $q, message, dialogService) {
+}]).controller('DeclarationSearchController', ['$scope', '$route', '$q', '$timeout', 'Classifier', 'DataUtils', 'QueryUtils', 'message', 'dialogService',
+  function ($scope, $route, $q, $timeout, Classifier, DataUtils, QueryUtils, message, dialogService) {
 
+    var auth = $route.current.locals.auth;
     var clMapper = Classifier.valuemapper({status: 'OPINGUKAVA_STAATUS'});
     QueryUtils.createQueryForm($scope, '/declarations', {order: 'dId'}, clMapper.objectmapper);
-    $q.all(clMapper.promises);
     DataUtils.convertStringToDates($scope.criteria, ['inserted', 'confirmDate']);
 
-    function setCurrentStudyPeriod() {
-        if($scope.criteria && !$scope.criteria.studyPeriod) {
-            $scope.criteria.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
-        }
-    }
-
-    var promises = clMapper.promises;
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
-    promises.push($scope.studyPeriods.$promise);
-
-    $q.all(promises).then(function() {
-      setCurrentStudyPeriod();
-      $scope.loadData();
-    });
-
-    $scope.$watch('criteria.studyPeriod', function() {
-      if(!ArrayUtils.isEmpty($scope.studyPeriods) && !$scope.criteria.studyPeriod) {
-        setCurrentStudyPeriod();
-      }
-    });
-
     $scope.curriculumVersions = QueryUtils.endpoint('/autocomplete/curriculumversions').query({higher: true, valid: true});
     $scope.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').query();
+    var promises = clMapper.promises;
+    promises.push($scope.studyPeriods.$promise);
+    promises.push($scope.curriculumVersions.$promise);
+    promises.push($scope.studentGroups.$promise);
+
+    $scope.formState = {canCreate: auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA') !== -1 };
+
+    var loadData = $scope.loadData;
+    $scope.loadData = function() {
+      $scope.declarationSearchForm.$setSubmitted();
+      if(!$scope.declarationSearchForm.$valid) {
+        message.error('main.messages.form-has-errors');
+      } else {
+        loadData();
+      }
+    };
+
+    $q.all(promises).then(function() {
+      if($scope.studyPeriods.length > 0 && !$scope.criteria.studyPeriod) {
+        var currentStudyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods);
+        $scope.criteria.studyPeriod = currentStudyPeriod ? currentStudyPeriod.id : undefined;
+      }
+      if($scope.criteria.studyPeriod) {
+        $timeout($scope.loadData);
+      } else if($scope.studyPeriods.length === 0) {
+        $scope.formState.canCreate = false;
+        message.error('studyYear.studyPeriod.missing');
+      }
+    });
 
     $scope.confirmAll = function() {
       dialogService.confirmDialog({prompt: 'declaration.prompt.confirmAll'}, function() {
@@ -272,10 +281,9 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
         function () {
       });
     };
-
   }
-]).controller('DeclarationStudentSearchController', ['$scope', '$sessionStorage', 'Classifier', 'QueryUtils', '$q',
-  function ($scope, $sessionStorage, Classifier, QueryUtils, $q) {
+]).controller('DeclarationStudentSearchController', ['$scope', '$q', 'Classifier', 'QueryUtils',
+  function ($scope, $q, Classifier, QueryUtils) {
 
     $scope.currentNavItem = 'previous';
     var clMapper = Classifier.valuemapper({status: 'OPINGUKAVA_STAATUS'});

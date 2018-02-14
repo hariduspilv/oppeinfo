@@ -1,18 +1,15 @@
 package ee.hitsa.ois.web.commandobject;
 
-import javax.validation.constraints.NotNull;
-
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.Required;
 
 public class CertificateContentCommand {
-    
+
     private Long student;
-    private Long school;
     private String otherName;
     private String otherIdcode;
-    
-    @NotNull
+    @Required
     @ClassifierRestriction(MainClassCode.TOEND_LIIK)
     private String type;
 
@@ -46,13 +43,5 @@ public class CertificateContentCommand {
 
     public void setOtherIdcode(String otherIdcode) {
         this.otherIdcode = otherIdcode;
-    }
-
-    public Long getSchool() {
-        return school;
-    }
-
-    public void setSchool(Long school) {
-        this.school = school;
     }
 }
