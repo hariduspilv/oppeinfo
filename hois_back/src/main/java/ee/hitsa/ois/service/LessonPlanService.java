@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
@@ -35,12 +37,14 @@ import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalCapacityType;
+import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalRoom;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.enums.GroupProportion;
+import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.exception.AssertionFailedException;
@@ -56,6 +60,7 @@ import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanCreateForm;
@@ -392,7 +397,70 @@ public class LessonPlanService {
             jmt.setCurriculumVersionOccupationModuleTheme(em.getReference(CurriculumVersionOccupationModuleTheme.class, jm.getCvomt()));
             return jmt;
         });
+        
+        if (Boolean.TRUE.equals(form.getAddModuleOutcomes())) {
+            addJournalOutcomeEntries(journal, form.getJournalOccupationModuleThemes());
+        } else if (journal.getId() != null) {
+            removeJournalOutcomeEntries(journal);
+        }
+        
+        
         return EntityUtil.save(journal, em);
+    }
+    
+    private void addJournalOutcomeEntries(Journal journal, List<Long> curriculumVersionOmoduleThemeIds) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_module_outcomes cmo "
+                + "inner join curriculum_version_omodule cvo on cvo.curriculum_module_id = cmo.curriculum_module_id "
+                + "inner join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id ");
+        qb.requiredCriteria("cvot.id in (:curriculumVersionOmoduleThemes)", "curriculumVersionOmoduleThemes", curriculumVersionOmoduleThemeIds);
+
+        List<?> moduleOutcomesResult = qb.select("distinct cmo.id, cmo.outcome_et", em).getResultList();
+        Map<Long, String> moduleOutcomes = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> resultAsString(r, 1), moduleOutcomesResult);
+        
+        Map<Long, JournalEntry> oldEntries = getOldJournalEntriesFromOutcomes(journal);
+        
+        moduleOutcomes.forEach((id, name) -> {
+            JournalEntry entry = oldEntries != null ? oldEntries.remove(id) : null;
+
+            if (entry == null) {
+                entry = new JournalEntry();
+            }
+            entry.setJournal(journal);
+            if (name != null && name.length() > 100) {
+                entry.setNameEt(name.substring(0, 99));
+            } else {
+                entry.setNameEt(name);
+            }
+            entry.setEntryType(em.getReference(Classifier.class, JournalEntryType.SISSEKANNE_O.name()));
+            entry.setCurriculumModuleOutcomes(em.getReference(CurriculumModuleOutcome.class, id));
+            journal.getJournalEntries().add(entry);
+        });
+    }
+    
+    private void removeJournalOutcomeEntries(Journal journal) {
+        Query q = em.createNativeQuery("select jes.id from journal_entry_student jes "
+                + "inner join journal_entry je on je.id = jes.journal_entry_id "
+                + "where jes.journal_entry_id in (select je.id from journal_entry je where je.entry_type_code = 'SISSEKANNE_O' and je.journal_id = ?1)");
+        q.setParameter(1, journal.getId());
+       
+        List<?> data = q.getResultList();
+        if (!data.isEmpty()) {
+            throw new ValidationFailedException("lessonplan.journal.outcomesReferenced");
+        }
+        
+        Map<Long, JournalEntry> oldEntries = getOldJournalEntriesFromOutcomes(journal);
+        oldEntries.forEach((id, entry) -> {
+            journal.getJournalEntries().remove(entry);
+        });
+    }
+    
+    private Map<Long, JournalEntry> getOldJournalEntriesFromOutcomes(Journal journal) {
+        if (journal.getId() != null) {
+            List<JournalEntry> data = em.createQuery("select je from JournalEntry je where je.journal = ?1 and je.entryType.code = ?2", JournalEntry.class)
+                    .setParameter(1, journal).setParameter(2, JournalEntryType.SISSEKANNE_O.name()).getResultList();
+            return StreamUtil.toMap(d -> d.getCurriculumModuleOutcomes().getId(), data);            
+        }
+        return null;
     }
 
     private void createMissingPlansAndAdd(Collection<Long> newGroupIds, Map<Long, Long> lessonPlanIds, Long studyYearId, HoisUserDetails user) {

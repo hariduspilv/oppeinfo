@@ -40,14 +40,14 @@
               <input type="text" ng-model="teacher.person.idcode" readonly>
             </md-input-container>
 
-            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.birthdate' | translate}}</label>
-              <md-datepicker ng-model="teacher.person.birthdate" md-max-date="maxDate" ng-disabled="formState.person || formState.id" required
+              <md-datepicker ng-model="teacher.person.birthdate" md-max-date="maxDate" ng-disabled="teacher.person.idcode" required
                 md-open-on-focus></md-datepicker>
             </md-input-container>
-            <md-input-container flex="10" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.sex' | translate}}</label>
-              <hois-classifier-select ng-model="teacher.person.sex" main-classifier-code="SUGU" model-value-attr="code" ng-disabled="formState.person || formState.id"
+              <hois-classifier-select ng-model="teacher.person.sex" main-classifier-code="SUGU" model-value-attr="code" ng-disabled="teacher.person.idcode"
                 required></hois-classifier-select>
             </md-input-container>
           </div>
@@ -55,13 +55,13 @@
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="25" flex-sm="100" flex-xs="100">
               <label>{{'teacher.person.firstname' | translate}}</label>
-              <input ng-model="teacher.person.firstname" type="text" ng-blur="generateEmail()" ng-disabled="formState.person" required>
+              <input ng-model="teacher.person.firstname" type="text" ng-blur="generateEmail()" required>
             </md-input-container>
-            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.lastname' | translate}}</label>
-              <input ng-model="teacher.person.lastname" type="text" ng-blur="generateEmail()" ng-disabled="formState.person" required>
+              <input ng-model="teacher.person.lastname" type="text" ng-blur="generateEmail()" required>
             </md-input-container>
-            <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.nativeLanguage' | translate}}</label>
               <input ng-model="teacher.person.nativeLanguage" type="text">
             </md-input-container>
@@ -70,14 +70,13 @@
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="25" flex-sm="100" flex-xs="100">
               <label>{{'teacher.person.citizenship' | translate}}</label>
-              <hois-classifier-select ng-model="teacher.person.citizenship" main-classifier-code="RIIK" model-value-attr="code" required
-                ng-disabled="teacher.id"></hois-classifier-select>
+              <hois-classifier-select ng-model="teacher.person.citizenship" main-classifier-code="RIIK" model-value-attr="code" required></hois-classifier-select>
             </md-input-container>
-            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.phone' | translate}}</label>
               <input ng-model="teacher.person.phone" type="text">
             </md-input-container>
-            <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.email' | translate}}</label>
               <input ng-model="teacher.person.email" type="email">
             </md-input-container>
@@ -93,57 +92,68 @@
                 </md-option>
               </md-select>
             </md-input-container>
-            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.phone' | translate}}</label>
               <input ng-model="teacher.phone" type="text" required>
             </md-input-container>
-            <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.email' | translate}}</label>
               <input ng-model="teacher.email" type="email" required>
             </md-input-container>
           </div>
 
           <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.scheduleLoad' | translate}}</label>
               <input ng-model="teacher.scheduleLoad" type="number" required>
             </md-input-container>
             <!-- todo: alert or check for need for alert -->
-            <md-radio-group ng-model="teacher.isStudyPeriodScheduleLoad" required layout="row" layout-sm="column" layout-xs="column"
-              flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" class="align-center">
-              <md-radio-button ng-value="true">
-                {{'teacher.studyPeriodLoad' | translate}}
-              </md-radio-button>
-              <md-radio-button ng-value="false">
-                {{'teacher.studyYearLoad' | translate}}
-              </md-radio-button>
-            </md-radio-group>
-            <div md-colors="{color: 'warn-A400'}" ng-if="teacherForm.$submitted && teacher.isStudyPeriodScheduleLoad !== true && teacher.isStudyPeriodScheduleLoad !== false"
-              flex-offset="5">
-              <div>{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
+            <div layout="row" flex="70" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" layout-sm="column" layout-xs="column">
+              <md-radio-group ng-model="teacher.isStudyPeriodScheduleLoad" required class="align-center">
+                <md-radio-button ng-value="true">
+                  {{'teacher.studyPeriodLoad' | translate}}&nbsp;&nbsp;&nbsp;
+                </md-radio-button>
+                <md-radio-button ng-value="false">
+                  {{'teacher.studyYearLoad' | translate}}
+                </md-radio-button>
+              </md-radio-group>
+              <div flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" md-colors="{color: 'warn-A400'}" ng-if="teacherForm.$submitted && teacher.isStudyPeriodScheduleLoad !== true && teacher.isStudyPeriodScheduleLoad !== false"  class="md-title-very-small" style="margin-top:12px">
+                <div>{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
+              </div>
             </div>
           </div>
 
-          <div layout="row" layout-sm="column" layout-xs="column">
-            <md-checkbox ng-model="teacher.isVocational" ng-required="!teacher.isVocational && !teacher.isHigher" flex="10" flex-sm="100"
-              flex-xs="100">
+          <!---->
+
+          <div layout="row" flex layout-align="none center" >
+            <md-checkbox ng-model="teacher.isVocational" ng-required="!teacher.isVocational && !teacher.isHigher">
               {{'teacher.isVocational' | translate}}
             </md-checkbox>
             <md-checkbox ng-model="teacher.isHigher" ng-required="!teacher.isVocational && !teacher.isHigher">
               {{'teacher.isHigher' | translate}}
             </md-checkbox>
-            <div md-colors="{color: 'warn-A400'}" ng-if="teacherForm.$submitted && !teacher.isVocational && !teacher.isHigher" flex-offset="5">
-              <div>{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
-            </div>
           </div>
 
-          <div layout="row" layout-sm="column" layout-xs="column">
-	        <md-checkbox ng-model="teacher.isActive" flex="25" flex-sm="100" flex-xs="100">
-	          {{'teacher.isActive' | translate}}
-	        </md-checkbox>
-            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div md-colors="{color: 'warn-A400'}" ng-if="teacherForm.$submitted && !teacher.isVocational && !teacher.isHigher" class="md-title-very-small" style="margin-top:-12px">
+              <div>{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" flex>
+            <div flex="25" flex-sm="100" flex-xs="100" layout-align="none center" layout="row">
+              <md-checkbox ng-model="teacher.isActive">
+                {{'teacher.isActive' | translate}}
+              </md-checkbox>
+            </div>
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.rtipNr' | translate}}</label>
               <input ng-model="teacher.rtipNr" type="text">
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" flex>
+            <md-input-container flex>
+              <label>{{'teacher.addInfo' | translate}}</label>
+              <textarea ng-model="teacher.addInfo" md-maxlength="1000" max-rows="10" dfs md-select-on-focus></textarea>
             </md-input-container>
           </div>
 
@@ -284,13 +294,13 @@
         </hois-collapsable>
       </div>
       <div>
-        <md-button ng-click="newTeacherPositionEhis()" class="md-primary">{{'teacher.teacherPositionEhis.add' | translate}}
+        <md-button ng-click="newTeacherPositionEhis()" class="md-raised">{{'teacher.teacherPositionEhis.add' | translate}}
         </md-button>
       </div>
-      <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+
     </form>
   </div>
-
+  <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
   <md-button ng-href="#/teachers" class="md-raised">{{'main.button.back' | translate}}</md-button>
   <md-button ng-if="teacher.id" ng-click="sendToEhis()" class="md-raised">{{'main.button.sendToEhis' | translate}}</md-button>
   <md-button ng-if="teacher.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>

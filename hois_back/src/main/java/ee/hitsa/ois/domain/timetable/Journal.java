@@ -65,6 +65,7 @@ public class Journal extends BaseEntityWithId {
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
     private Set<JournalEntry> journalEntries = new HashSet<>();
 
+    private Boolean addModuleOutcomes;
 
     public School getSchool() {
         return school;
@@ -177,4 +178,13 @@ public class Journal extends BaseEntityWithId {
     public void setJournalEntries(Set<JournalEntry> journalEntries) {
         this.journalEntries = journalEntries;
     }
+
+    public Boolean getAddModuleOutcomes() {
+        return addModuleOutcomes;
+    }
+
+    public void setAddModuleOutcomes(Boolean addModuleOutcomes) {
+        this.addModuleOutcomes = addModuleOutcomes;
+    }
+    
 }

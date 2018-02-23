@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.StudentGroupService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -57,24 +59,24 @@ public class StudentGroupController {
     @GetMapping("/{id:\\d+}")
     public StudentGroupDto get(HoisUserDetails user, @WithEntity StudentGroup studentGroup) {
         UserUtil.assertSameSchool(user, studentGroup.getSchool());
-        return StudentGroupDto.of(studentGroup);
+        return studentGroupService.get(user, studentGroup);
     }
 
     @PostMapping
     public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody StudentGroupForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return HttpUtil.created(studentGroupService.create(user, form));
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
+        return new HttpUtil.CreatedResponse(studentGroupService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")
     public StudentGroupDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudentGroup studentGroup, @Valid @RequestBody StudentGroupForm form) {
-        UserUtil.assertIsSchoolAdmin(user, studentGroup.getSchool());
-        return get(user, studentGroupService.save(user, studentGroup, form));
+        UserUtil.assertIsSchoolAdmin(user, studentGroup.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
+        return studentGroupService.save(user, studentGroup, form);
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") StudentGroup studentGroup, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdmin(user, studentGroup.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, studentGroup.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
         studentGroupService.delete(user, studentGroup);
     }
 
@@ -86,6 +88,7 @@ public class StudentGroupController {
 
     @GetMapping("/findstudents")
     public List<StudentGroupStudentDto> searchStudents(HoisUserDetails user, @Valid StudentGroupSearchStudentsCommand criteria) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
         return studentGroupService.searchStudents(user.getSchoolId(), criteria);
     }
 }

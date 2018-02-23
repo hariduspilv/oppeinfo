@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.GeneralMessage;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.GeneralMessageService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
@@ -39,7 +41,7 @@ public class GeneralMessageController {
 
     @GetMapping
     public Page<GeneralMessageDto> search(HoisUserDetails user, @Valid GeneralMessageSearchCommand criteria, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_YLDTEADE);
         return generalMessageService.search(user.getSchoolId(), criteria, pageable);
     }
 
@@ -51,19 +53,20 @@ public class GeneralMessageController {
 
     @PostMapping
     public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody GeneralMessageForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_YLDTEADE);
         return HttpUtil.created(generalMessageService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")
     public GeneralMessageDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) GeneralMessage generalMessage, @Valid @RequestBody GeneralMessageForm form) {
-        UserUtil.assertIsSchoolAdmin(user, generalMessage.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, generalMessage.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_YLDTEADE);
         return get(user, generalMessageService.save(user, generalMessage, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") GeneralMessage generalMessage, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdmin(user, generalMessage.getSchool());
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") GeneralMessage generalMessage,
+            @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        UserUtil.assertIsSchoolAdmin(user, generalMessage.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_YLDTEADE);
         generalMessageService.delete(user, generalMessage);
     }
 }

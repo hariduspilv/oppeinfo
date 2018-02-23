@@ -1068,7 +1068,8 @@ hois-created-modified {
 fieldset{
 	border-style: solid;
 	border-width: 1px;
-	height: 100%;
+  height: 100%;
+  min-width: 0;
 }
 
 fieldset legend{
@@ -1097,6 +1098,26 @@ fieldset legend{
 
 .form-readonly md-input-container > label, .readonly > label{
     transform: translate3d(2px, 4px, 0) scale(0.85)!important;
+}
+
+.form-readonly .active md-input-container label:not(.md-no-float):not(.md-container-ignore), md-input-container .md-placeholder {
+  transform: translate3d(3px, 28px, 0) scale(1)!important;
+}
+
+.form-readonly .active md-input-container.md-input-focused label:not(.md-no-float), .form-readonly .active md-input-container.md-input-has-placeholder label:not(.md-no-float), .form-readonly .active md-input-container.md-input-has-value label:not(.md-no-float){
+    transform: translate3d(2px, 20px, 0) scale(0.85)!important;
+}
+
+
+
+.form-readonly .active md-input-container
+{
+  display: block;
+}
+
+.form-readonly .active
+{
+  margin-top: -18px;
 }
 
 .form-readonly md-input-container > div, .readonly > div{
@@ -1463,19 +1484,34 @@ md-grid-tile {
   padding:0px!important;
 }
 
-.timetableEvent > div:nth-child(1) > span:nth-child(1)
+.timetableEvent > div:nth-child(1) > div:nth-child(1)
+{
+  width: 80%;
+}
+
+.timetableEvent > div:nth-child(1) > div:nth-child(1) > span:nth-child(1)
 {
   font-size:10px!important;
   font-weight:bold;
 }
 
-.timetableEvent > div:nth-child(1) > span:nth-child(2)
+.timetableEvent > div:nth-child(1) > div:nth-child(1) > span:nth-child(2)
 {
   font-size:12px!important;
 }
 .timetableEvent > div:not(:nth-child(1))
 {
   font-size:10px!important;
+}
+
+.studyMaterialsIcon {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+
+.studyMaterialsIcon > .material-icons {
+  font-size: 20px;
 }
 
 .md-nav-bar li a {
@@ -1572,6 +1608,11 @@ tr.scholarship-bottom-border td {
   padding: 5px;
   border: solid 1px lightgray;
   font-size: 13px;
+}
+
+.middle-text {
+  padding: 12px;
+  vertical-align: middle;
 }
 
 /* Following CSS used by InAadress component
@@ -1917,7 +1958,7 @@ label.ui-btn {
   max-height: 60%;
 }
 
-.schoolTileFooter figcaption { 
+.schoolTileFooter figcaption {
   width:100%;
   text-align: center;
   font-size: 14px;

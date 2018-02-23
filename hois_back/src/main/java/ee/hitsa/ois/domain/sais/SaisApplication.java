@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -24,80 +23,59 @@ public class SaisApplication extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, insertable = false, updatable = false)
     private SaisAdmission saisAdmission;
-
-    @Column(nullable = false)
+    @Required
     private LocalDate submitted;
     private LocalDate saisChanged;
-
     @Required
     @Size(max = 100)
     private String firstname;
-
     @Required
     @Size(max = 100)
     private String lastname;
-
-    @Column(nullable = false)
+    @Required
     private LocalDate birthdate;
-
     @Size(max = 11)
     private String idcode;
-
     @Size(max = 50)
     private String foreignIdcode;
-
     @Size(max = 100)
     private String address;
-
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier sex;
-
     @Size(max = 100)
     private String phone;
-
     @Size(max = 100)
     private String email;
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier fin;
-
     private BigDecimal points;
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
-
     @Required
     @Size(max = 100)
     private String applicationNr;
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier citizenship;
-
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyLoad;
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier residenceCountry;
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier studyForm;
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier language;
-
     @Size(max = 50)
     private String saisId;
     @Size(max = 50)
     private String addressAds;
-
+    @Size(max = 50)
+    private String addressAdsOid;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sais_application_id", nullable = false, updatable = false)
     private Set<SaisApplicationGraduatedSchool> graduatedSchools = new HashSet<>();
-
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sais_application_id", nullable = false, updatable = false)
     private Set<SaisApplicationGrade> grades = new HashSet<>();
-
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sais_application_id", nullable = false, updatable = false)
     private Set<SaisApplicationOtherData> otherData = new HashSet<>();
@@ -284,6 +262,14 @@ public class SaisApplication extends BaseEntityWithId {
 
     public void setAddressAds(String addressAds) {
         this.addressAds = addressAds;
+    }
+
+    public String getAddressAdsOid() {
+        return addressAdsOid;
+    }
+
+    public void setAddressAdsOid(String addressAdsOid) {
+        this.addressAdsOid = addressAdsOid;
     }
 
     public Set<SaisApplicationGraduatedSchool> getGraduatedSchools() {

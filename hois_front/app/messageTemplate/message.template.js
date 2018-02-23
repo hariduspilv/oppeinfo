@@ -1,16 +1,24 @@
 'use strict';
 
-angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q) {
+angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope', 'Classifier', 'DataUtils', 'QueryUtils', '$q',
+  function ($scope, Classifier, DataUtils, QueryUtils, $q) {
 
     var clMapper = Classifier.valuemapper({type: 'TEATE_LIIK'});
-    QueryUtils.createQueryForm($scope, '/messageTemplate', {order: 'type.' + $scope.currentLanguageNameField()}, clMapper.objectmapper);
-    $q.all(clMapper.promises).then($scope.loadData);
+    QueryUtils.createQueryForm($scope, '/messageTemplate', {order: 'type.' + $scope.currentLanguageNameField()}, function(result) {
+      clMapper.objectmapper(result);
+      DataUtils.convertStringToDates(result, ['validThru', 'validFrom']);
+      var now = moment();
+      for (var i = 0; i < result.length; i++) {
+        var valid = true;
+        var row = result[i];
+        row._isValid = (!row.validFrom || moment(row.validFrom).isSameOrBefore(now, 'day')) && (!row.validThru || moment(row.validThru).isSameOrAfter(now, 'day'));
+      }
+    });
     DataUtils.convertStringToDates($scope.criteria, ['validFrom', 'validThru']);
 
-    $scope.isValid = function(record) {
-        return (!record.validFrom || new Date(record.validFrom) <= new Date()) && (!record.validThru || new Date(record.validThru) >= new Date());
-    };
-}]).controller('MessageTemplateEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', '$rootScope',
+    $q.all(clMapper.promises).then($scope.loadData);
+  }
+]).controller('MessageTemplateEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', '$rootScope',
   function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils, $rootScope) {
 
     $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1;

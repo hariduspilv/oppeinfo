@@ -10,8 +10,9 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
-public class JournalEntryDto {
+public class JournalEntryDto extends VersionedCommand  {
 
     private Long id;
     private LocalDateTime inserted;

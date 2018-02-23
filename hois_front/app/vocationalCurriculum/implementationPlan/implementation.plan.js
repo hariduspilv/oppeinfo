@@ -41,6 +41,8 @@ angular.module('hitsaOis')
       });
 
     }  else {
+      var years = Math.floor(((curriculumEntity.studyPeriod || 0) + 11) / 12);
+      initialImplementationPlan.yearCapacities = Array.apply(null, {length: years}).fill(0);
       angular.extend(entity, initialImplementationPlan);
       $scope.implementationPlan = entity;
     }

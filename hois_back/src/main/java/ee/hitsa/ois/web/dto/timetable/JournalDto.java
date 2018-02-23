@@ -33,6 +33,7 @@ public class JournalDto {
     private LocalDate endDate;
     private Boolean hasJournalStudents;
     private List<AutocompleteResult> journalRooms = new ArrayList<>();
+    private Boolean moduleOutcomesAsEntries;
     
     private Boolean canBeConfirmed;
     private Boolean canBeUnconfirmed;
@@ -56,6 +57,7 @@ public class JournalDto {
                 r.getRoom().getCode(), r.getRoom().getCode()), journal.getJournalRooms()));
 
         dto.setHasJournalStudents(Boolean.valueOf(!journal.getJournalStudents().isEmpty()));
+        dto.setModuleOutcomesAsEntries(journal.getAddModuleOutcomes());
 
         dto.setPlannedHours(Integer.valueOf(journal.getJournalCapacities().stream().mapToInt(it -> it.getHours() == null ? 0 : it.getHours().intValue()).sum()));
         dto.setUsedHours(Integer.valueOf(journal.getJournalEntries().stream().mapToInt(it -> it.getLessons() == null ? 0 : it.getLessons().intValue()).sum()));
@@ -172,6 +174,14 @@ public class JournalDto {
 
     public void setModuleDescriptions(List<JournalModuleDescriptionDto> moduleDescriptions) {
         this.moduleDescriptions = moduleDescriptions;
+    }
+    
+    public Boolean getModuleOutcomesAsEntries() {
+        return moduleOutcomesAsEntries;
+    }
+
+    public void setModuleOutcomesAsEntries(Boolean moduleOutcomesAsEntries) {
+        this.moduleOutcomesAsEntries = moduleOutcomesAsEntries;
     }
 
     public Boolean getCanBeConfirmed() {

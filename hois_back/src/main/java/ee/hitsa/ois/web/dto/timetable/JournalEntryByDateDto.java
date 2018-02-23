@@ -17,6 +17,9 @@ public class JournalEntryByDateDto {
     @ClassifierRestriction(MainClassCode.SISSEKANNE)
     private String entryType;
     private String teacher;
+    private Long curriculumModuleOutcomes;
+    private Long outcomeOrderNr;
+    
     // Key is JournalStudent ID
     private Map<Long, List<JournalEntryStudentResultDto>> journalStudentResults = new HashMap<>();
 
@@ -66,6 +69,22 @@ public class JournalEntryByDateDto {
 
     public void setTeacher(String teacher) {
         this.teacher = teacher;
+    }
+
+    public Long getCurriculumModuleOutcomes() {
+        return curriculumModuleOutcomes;
+    }
+
+    public void setCurriculumModuleOutcomes(Long curriculumModuleOutcomes) {
+        this.curriculumModuleOutcomes = curriculumModuleOutcomes;
+    }
+    
+    public Long getOutcomeOrderNr() {
+        return outcomeOrderNr;
+    }
+
+    public void setOutcomeOrderNr(Long outcomeOrderNr) {
+        this.outcomeOrderNr = outcomeOrderNr;
     }
 
     public Map<Long, List<JournalEntryStudentResultDto>> getJournalStudentResults() {

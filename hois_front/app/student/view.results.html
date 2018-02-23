@@ -9,8 +9,7 @@
     <div ng-if="student && student.isVocational===false" ng-include="'student/templates/view.results.higher.tmpl.html'"></div>
   </div>
 
-
   <div layout="row" layout-margin>
-    <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="!auth.isStudent() && !auth.isParent() && resultsCurrentNavItem !== 'student.changeModules'" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

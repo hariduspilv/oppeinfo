@@ -342,6 +342,14 @@ public class ModuleProtocolService extends AbstractProtocolService {
             }
         }
     }
+    
+    public void removeStudent(HoisUserDetails user, ProtocolStudent student) {
+        if (!ModuleProtocolUtil.studentCanBeDeleted(student)) {
+            throw new ValidationFailedException("moduleProtocol.messages.cantRemoveStudent");
+        }
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(student, em);
+    }
 
     public Collection<ModuleProtocolStudentSelectDto> otherStudents(HoisUserDetails user, Protocol protocol) {
         Map<Long, ModuleProtocolStudentSelectDto> result = studentsForSelection(user,

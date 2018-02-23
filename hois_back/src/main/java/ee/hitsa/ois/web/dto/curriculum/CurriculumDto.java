@@ -58,15 +58,15 @@ public class CurriculumDto extends CurriculumForm {
         dto.setCode(curriculum.getCode());
         dto.setCredits(curriculum.getCredits());
         dto.setOccupation(curriculum.getOccupation());
+        dto.setStudyPeriod(curriculum.getStudyPeriod());
         //TODO: autocomplete result here would be better
         dto.setSpecialities(StreamUtil.toMappedSet(CurriculumSpecialityDto::of, curriculum.getSpecialities()));
-        
+
         dto.setModules(StreamUtil.toMappedSet(CurriculumModuleDto::of, curriculum.getModules()));
         dto.setStudyForms(StreamUtil.toMappedSet(f -> EntityUtil.getNullableCode(f.getStudyForm()), curriculum.getStudyForms()));
 
         //TODO: use partial dto 
         dto.setOccupations(StreamUtil.toMappedSet(CurriculumOccupationDto::of, curriculum.getOccupations()));
-
         dto.setCanHaveOccupations(Boolean.valueOf(CurriculumUtil.canHaveOccupations(curriculum)));
 
         return dto;

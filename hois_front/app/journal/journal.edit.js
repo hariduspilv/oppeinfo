@@ -10,6 +10,12 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   $scope.formState = {};
   $scope.showAllStudentsModel = true;
 
+  function loadUsedHours() {
+    QueryUtils.endpoint('/journals/' + entity.id + '/usedHours').get().$promise.then(function (result) {
+      $scope.journal.usedHours = result.usedHours;
+    });
+  }
+
   function loadJournalStudents(showNonStudying) {
     var journalStudentsQueryPromise = QueryUtils.endpoint('/journals/' + entity.id + '/journalStudents').query({ allStudents: !!showNonStudying }).$promise;
 
@@ -91,7 +97,8 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     'SISSEKANNE_E': 'amber-100',
     'SISSEKANNE_I': 'lime-100',
     'SISSEKANNE_H': 'pink-50',
-    'SISSEKANNE_L': 'pink-300'
+    'SISSEKANNE_L': 'pink-300',
+    'SISSEKANNE_O': 'light-blue-50'
   };
   $scope.journalEntryTypes = {};
   Classifier.queryForDropdown({ mainClassCode: 'SISSEKANNE' }, function (result) {
@@ -146,6 +153,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         }
       }
     });
+    dialogScope.forbiddenEntryTypes.push('SISSEKANNE_O');
   }
 
   function showEntryDialog(editEntity) {
@@ -193,6 +201,10 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       dialogScope.journalEntryStudents = {};
       dialogScope.forbiddenEntryTypes = [];
 
+      function canDeleteEntries() {
+        return dialogScope.journalEntry.entryType !== 'SISSEKANNE_O' && dialogScope.journalEntry.journalEntryStudents.length === 0;
+      }
+
       loadJournalEntryDialogInitialData(dialogScope);
       if (angular.isDefined(editEntity)) {
         angular.extend(dialogScope.journalEntry, editEntity);
@@ -206,6 +218,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         editEntity.journalEntryCapacityTypes.forEach(function (it) {
           dialogScope.selectedCapacityTypes[it] = true;
         });
+        dialogScope.canDeleteEntries = canDeleteEntries();
       }
 
       setForbiddenTypes(dialogScope, editEntity);
@@ -248,6 +261,16 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         dialogScope.journalEntry.nameEt = holder.entryType.nameEt;
       };
       dialogScope.grades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
+
+      dialogScope.delete = function () {
+        new JournalEntryEndpoint(dialogScope.journalEntry).$delete().then(function () {
+          message.info('main.messages.delete.success');
+          loadUsedHours();
+          loadJournalEntries();
+          loadJournalStudents($scope.showAllStudentsModel);
+        }).catch(angular.noop);
+        dialogScope.cancel();
+      };
     }, function (submittedDialogScope) {
       var newEntity = angular.extend({}, submittedDialogScope.journalEntry);
       newEntity.journalEntryStudents = submittedDialogScope.changedJournalEntryStudents;
@@ -262,12 +285,14 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       if (angular.isDefined(newEntity.id)) {
         journalEntry.$update().then(function () {
           message.info('main.messages.create.success');
+          loadUsedHours();
           loadJournalEntries();
           loadJournalStudents($scope.showAllStudentsModel);
         });
       } else {
         journalEntry.$save().then(function () {
           message.info('main.messages.create.success');
+          loadUsedHours();
           loadJournalEntries();
           loadJournalStudents($scope.showAllStudentsModel);
         });
@@ -334,6 +359,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   };
 
   $scope.getFileUrl = oisFileService.getUrl;
+  var ConnectEndpoint = QueryUtils.endpoint('/studyMaterial/connect');
   var clMapper = Classifier.valuemapper({
     typeCode: 'OPPEMATERJAL'
   });
@@ -346,4 +372,29 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     });
   }
   loadMaterials();
+  $scope.deleteConnection = function (materialConnect, connections) {
+    dialogService.confirmDialog({
+      prompt: (connections > 1) ? 'studyMaterial.deleteconfirm' : 'studyMaterial.deletelastconfirm'
+    }, function () {
+      var connection = new ConnectEndpoint(materialConnect);
+      connection.$delete().then(function () {
+        message.info('main.messages.delete.success');
+        loadMaterials();
+      }).catch(angular.noop);
+    });
+  };
+  $scope.addExisting = function () {
+    if (!$scope.existingMaterial) {
+      message.error('main.messages.form-has-errors');
+      return;
+    }
+    var connection = new ConnectEndpoint();
+    connection.studyMaterial = $scope.existingMaterial.id;
+    connection.journal = $scope.journal.id;
+    connection.$save().then(function () {
+      $scope.existingMaterial = undefined;
+      loadMaterials();
+    });
+  };
+
 });

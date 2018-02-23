@@ -122,17 +122,10 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
       }
       DataUtils.convertStringToDates(users, ['validThru', 'validFrom']);
 
-      var now = new moment();
+      var now = moment();
       for (var i = 0; i < users.length; i++) {
-        var valid = true;
-        var item = users[i];
-        if (item.validThru !== null && moment(item.validThru).isBefore(now)) {
-          valid = false;
-        }
-        if (item.validFrom !== null && moment(item.validFrom).isAfter(now)) {
-          valid = false;
-        }
-        item.valid = valid;
+        var row = users[i];
+        row.valid = (!row.validFrom || moment(row.validFrom).isSameOrBefore(now, 'day')) && (!row.validThru || moment(row.validThru).isSameOrAfter(now, 'day'));
       }
     };
 

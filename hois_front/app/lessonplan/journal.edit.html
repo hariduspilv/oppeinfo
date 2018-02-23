@@ -11,8 +11,16 @@
               <span class="common-label">{{'lessonplan.studentGroup' | translate}}: {{record.studentGroupCode}}</span>
             </div>
           </div>
+
+          <div flex>
+            <br>
+            <md-checkbox ng-model="record.addModuleOutcomes" aria-label="{{'lessonplan.journal.addModuleOutcomes' | translate}}">
+              {{'lessonplan.journal.addModuleOutcomes' | translate}}
+            </md-checkbox>
+          </div>
+
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
-            <md-input-container flex>
+            <md-input-container flex> 
               <label class="textInput">{{'lessonplan.journal.theme' | translate}}</label>
               <hois-select name="theme" ng-model="formState.theme" values="formState.themes"></hois-select>
             </md-input-container>

@@ -60,6 +60,13 @@
             <hois-value value="record.directiveCoordinator.nameEt"></hois-value>
           </md-input-container>
         </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'directive.status' | translate}}</label>
+            <hois-classifier-value ng-model="record.status" main-classifier-code="KASKKIRI_STAATUS"></hois-classifier-value>
+          </md-input-container>
+        </div>
       </div>
     </div>
 

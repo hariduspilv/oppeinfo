@@ -31,7 +31,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
         $scope.timetableEvent.$update().then(afterLoad).then(message.updateSuccess);
       } else {
         $scope.timetableEvent.$save().then(function () {
-          message.info('timetable.timetableEvent.created');
+          message.info('main.messages.create.success');
           $location.url('/lessonplans/events?_menu');
         });
       }

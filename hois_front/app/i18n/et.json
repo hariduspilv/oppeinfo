@@ -111,6 +111,7 @@
     },
     "list": "Nimekiri",
     "page": "Lehekülg",
+    "rowno": "Rea nr",
     "rowPerPage": "Ridu",
     "of": "kokku",
     "OF": "KOKKU",
@@ -473,6 +474,7 @@
     "student": {
       "homeworkAndTests": "Kodutööd ja kontrolltööd",
       "absences": "Puudumised ja hilinemised (30p)",
+      "declaredSubjects": "Hetkel deklareeritud ained",
       "lastResults": "Viimased hinded",
       "today": "Täna",
       "tomorrow": "Homme",
@@ -687,7 +689,12 @@
       "inOrderOfStudyYear": "Õppeaastate kaupa",
       "inOrderOfStudyPeriod": "Õppeperioodide kaupa",
       "inOrderOfPassing": "Sooritamise järjekorras",
+      "journalsAndProtocols": "Päevikud ja protokollid",
+      "changeModules": "Moodulite vahetus",
+      "oldModule": "Vana moodul",
+      "newModule": "Uus moodul",
       "moduleTheme": "Moodul/teema",
+      "module": "Moodul",
       "theme": "Teema",
       "ekap": "EKAP",
       "grade": "Hinne",
@@ -701,6 +708,9 @@
       "moduleNotGraded": "Moodul hindamata",
       "otherModuleResults": "Õppekava välised sooritused",
       "missing": "Tulemused puuduvad",
+      "name": "Nimetus",
+      "studyYear": "Õppeaasta",
+      "protocolNr": "Protokolli number",
       "higher": {
         "curriculumVersion": "Õppekava versioon",
         "consideredCredits": "Kokku / õppekava täitmisel arvesse võetud EAP",
@@ -1058,7 +1068,9 @@
       "capacity-type": "Õppetöö liik",
       "group": "Seotud rühm",
       "group-module": "Moodul",
-      "group-theme": "Teema"
+      "group-theme": "Teema",
+      "addModuleOutcomes": "Lisa õpiväljundid",
+      "outcomesReferenced": "Õpiväljunditega on seotud teisi kirjeid"
     },
     "search": {
       "vocational": "Õpperühmad (kutse)",
@@ -1511,7 +1523,8 @@
       "themeCreditsAndHoursMismatch": "Teema EKAP-de arv ei vasta tundide arvule",
       "themeCapacitiesAndHoursMismatch": "Teema mahu jaotus ei vasta teema mahule (tundides)",
       "noSuchStudyLevel": "Kool pole seotud vastava õppetasemega",
-      "noSubject": "Vähemalt üks õppeaine peab olema lisatud"
+      "noSubject": "Vähemalt üks õppeaine peab olema lisatud",
+      "vocationalThemesWithBadStudyYearNumberPresent": "Ei saa lühendada õppeaega, teemad on seotud õppeaastaga rakenduskavades {{versions}}"
     },
     "prompt": {
       "deleteJointPartner": "Selle õppeasutuse ained on lisatud õppekavasse. Kas oled kindel, et soovid partnerülikooli kustutada?",
@@ -1605,6 +1618,7 @@
     "addedBy": "Lisaja"
   },
   "teacher": {
+    "addInfo": "Lisainfo",
     "label": "Õpetaja",
     "data": "Põhiandmed",
     "deleteConfirm": "Kas oled kindel, et soovid õpetaja kustutada?",
@@ -1649,7 +1663,7 @@
     "teacherPositionEhis": {
       "label": "EHISe ametikoht",
       "teachingLevel": "Õppetase",
-      "add": "lisa EHISe ametikoht",
+      "add": "Lisa EHISe ametikoht",
       "contractType": "Lepingu liik",
       "contractStart": "Lepingu alguskuupäev",
       "contractEnd": "Lepingu lõppkuupäev",
@@ -1672,7 +1686,7 @@
       "schoolDepartment": "Struktuuriüksus"
     },
     "qualification": {
-      "add": "lisa Kvalifikatsioon",
+      "add": "Lisa kvalifikatsioon",
       "exSchool": "Õppeasutuse endine nimetus",
       "qualification": "Kvalifikatsioon",
       "qualificationName": "Kvalifikatsiooni nimetus",
@@ -1690,17 +1704,17 @@
       "deleteConfirm": "Kas oled kindel, et soovid õpetaja kvalifikatsiooni kustutada?"
     },
     "mobility": {
-      "add": "Lisa Lühiajaline eemalolek",
-      "end": "Eemaloleku lõppkuupäev",
+      "add": "Lisa lühiajaline eemalolek",
+      "end": "Eemaloleku lõpp kp",
       "mobility": "Lühiajaline eemalolek",
       "school": "Õppeasutus",
-      "start": "Eemaloleku alguskuupäev",
+      "start": "Eemaloleku algus kp",
       "state": "Sihtriik",
       "target": "Eesmärk",
       "deleteConfirm": "Kas oled kindel, et soovid õpetaja lühiajalist eemalolekut kustutada?"
     },
     "continuingEducation": {
-      "label": "Täiendkoolitused",
+      "label": "Täiendkoolitus",
       "add": "Lisa täiendkoolitus",
       "continuingEducation": "Täiendkoolitus",
       "school": "Õppeasutus",
@@ -1709,7 +1723,7 @@
       "name": "Täiendkoolituse nimetus",
       "capacity": "Maht",
       "diplomaCode": "Täiendkoolitusel saadud dokument",
-      "diplomaDate": "Koolitust tõendava dokumendi väljastamise kuupäev",
+      "diplomaDate": "Tõend dok väljast kp",
       "diplomaNr": "Koolitust tõendava dokumendi number",
       "isAbroad": "Täiendkoolitus toimus välisriigis",
       "abroadDescription": "Välisriigi koolituse sisu",
@@ -1828,10 +1842,8 @@
     "capacityEkapPerHour": "Maht (EKAP/tund)",
     "subthemes": "Alamteemad",
     "studyYear": "Õppeaasta",
+    "studyYearLowercase": "õppeaasta",
     "proportionPerStudyYear": "Mooduli mahtude jaotus õppeaastate lõikes (EKAP)",
-    "firstStudyYear": "1. õppeaasta",
-    "secondStudyYear": "2. õppeaasta",
-    "thirdStudyYear": "3. õppeaasta",
     "supervisor": "Mooduli eest vastutav isik",
     "modulesWithoutPartOccupationOccuaptionSpecialization": "Moodulid ilma kutse/osakutse/spetsialiseerumiseta",
     "implementationPlan": {
@@ -1875,7 +1887,9 @@
     "journalCount": "Seotud päevikud",
     "isVisibleToStudents": "Nähtav õppuritele",
     "isPublic": "Avalik",
-    "deleteconfirm": "Kas oled kindel, et soovid materjali eemaldada?"
+    "orChooseExisting": "või vali olemasolev",
+    "deleteconfirm": "Kas oled kindel, et soovid materjali eemaldada?",
+    "deletelastconfirm": "Kas oled kindel, et soovid materjali kustutada?"
   },
   "studyOutcome": {
     "add": "Lisa õpiväljund",
@@ -1887,6 +1901,7 @@
     "year": "Õppeaasta",
     "startDate": "Alguskuupäev",
     "endDate": "Lõppkuupäev",
+    "missing": "Õppeasutusel puuduvad õppeaastad",
     "missingCurrent": "Õppeasutusel puudub jooksev õppeaasta",
     "periods": "Perioodide arv",
     "studyPeriods": "Õppeperiood",
@@ -2046,6 +2061,7 @@
     "speciality": "Spetsialiseerumine",
     "studentCount": "Õppurite arv",
     "studentname": "Õppuri nimi",
+    "studentstatus": "Õppuri staatus",
     "studyForm": "Õppevorm",
     "studyLevel": "Õppetase",
     "teacher": "Rühmajuhataja"
@@ -2055,7 +2071,7 @@
     "capacityAndUnit": "Teema maht ja ühik",
     "proportionInModule": "Teema osakaal moodulis",
     "capacityDistribution": "Teema mahu jaotus",
-    "connectionToStudyOutcome": "Seos mooduli õppeväljundiga",
+    "connectionToStudyOutcome": "Seos mooduli õpiväljundiga",
     "assessmentType": "Teema hindamisviis"
   },
   "application": {
@@ -2315,6 +2331,7 @@
     "curriculumVersionModuleOrThemeDescription": "Rakenduskava mooduli/teema kirjeldus",
     "studentDeleteconfirm": "Õppuri kustutamisel kustutatakse ka kõik temaga seotud sissekanded. Olete kindel, et soovite õppuri kustutada?",
     "moduleDescription": "Teema kirjeldus",
+    "outcome": "ÕV",
     "finalResult": "Lõpptulemus",
     "showAll": "Näita kõiki",
     "unconfirmedCountOne": "Teil on 1 kinnitamata päevik!",
@@ -2391,6 +2408,7 @@
     "studyOutcomes": "Õpiväljundid",
     "journalCapacity":"maht {{capacity}} tundi",
     "downloadSigned": "Lae allkirjastatud protokoll",
+    "outcome": "ÕV",
     "messages": {
       "studentSuccesfullyAdded": "Õppurid edukalt lisatud",
       "confirmed": "Mooduli protokoll edukalt kinnitatud",

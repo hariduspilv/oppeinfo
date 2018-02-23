@@ -28,6 +28,14 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         auth: function (AuthResolver) { return AuthResolver.resolve(); }},
         data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA]}
     })
+    .when('/teachers/:id/editmydata', {
+      templateUrl: 'teacher/teacher.edit.mydata.html',
+      controller: 'TeacherEditController',
+      controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }},
+        data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA]}
+    })
     .when('/teachers/:id/continuingEducation', {
       templateUrl: 'teacher/teacher.continuing.education.edit.html',
       controller: 'TeacherContinuingEducationEditController',

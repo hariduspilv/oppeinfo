@@ -67,19 +67,19 @@ public class CurriculumVersionOccupationModuleController {
         validate(user, EntityUtil.getId(occupationModule.getCurriculumVersion()));
         return get(user, curriculumVersionOccupationModuleService.update(dto, occupationModule));
     }
-    
+
     @GetMapping("/curriculumModule/{id:\\d+}")
     public CurriculumModuleDto getCurriculumModule(@WithEntity CurriculumModule module) {
         return CurriculumModuleDto.forOccupationModule(module);
     }
-    
+
     @PostMapping("/theme")
     public CurriculumVersionOccupationModuleThemeDto createTheme(HoisUserDetails user,
             @NotNull @Valid @RequestBody CurriculumVersionOccupationModuleThemeDto dto) {
         validate(user, EntityUtil.getId(em.getReference(CurriculumVersionOccupationModule.class, dto.getModule()).getCurriculumVersion()));
-        return curriculumVersionOccupationModuleService.getTheme(curriculumVersionOccupationModuleService.createTheme(dto));
+        return curriculumVersionOccupationModuleService.createTheme(dto);
     }
-    
+
     @GetMapping("/theme/{id:\\d+}")
     public CurriculumVersionOccupationModuleThemeDto getTheme(@WithEntity CurriculumVersionOccupationModuleTheme theme) {
         return CurriculumVersionOccupationModuleThemeDto.of(theme);
@@ -90,7 +90,7 @@ public class CurriculumVersionOccupationModuleController {
             @NotNull @Valid @RequestBody CurriculumVersionOccupationModuleThemeDto dto,
             @WithEntity CurriculumVersionOccupationModuleTheme theme) {
         validate(user, EntityUtil.getId(theme.getModule().getCurriculumVersion()));
-        return curriculumVersionOccupationModuleService.getTheme(curriculumVersionOccupationModuleService.updateTheme(theme, dto));
+        return curriculumVersionOccupationModuleService.updateTheme(theme, dto);
     }
 
     @DeleteMapping("/theme/{id:\\d+}")
@@ -99,7 +99,7 @@ public class CurriculumVersionOccupationModuleController {
         validate(user, EntityUtil.getId(theme.getModule().getCurriculumVersion()));
         curriculumVersionOccupationModuleService.deleteTheme(user, theme);
     }
-    
+
     @GetMapping("/outcome/{id:\\d+}")
     public CurriculumModuleOutcomeDto getTheme(@WithEntity CurriculumModuleOutcome outcome) {
         return CurriculumModuleOutcomeDto.of(outcome);

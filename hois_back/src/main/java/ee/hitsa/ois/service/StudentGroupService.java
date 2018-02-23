@@ -43,6 +43,7 @@ import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchStudentsCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.student.StudentGroupDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupStudentDto;
 
@@ -65,6 +66,14 @@ public class StudentGroupService {
     @Autowired
     private StudentService studentService;
 
+    /**
+     * Search student groups
+     *
+     * @param schoolId
+     * @param criteria
+     * @param pageable
+     * @return
+     */
     public Page<StudentGroupSearchDto> search(Long schoolId, StudentGroupSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_GROUP_LIST_FROM).sort(pageable);
 
@@ -94,13 +103,43 @@ public class StudentGroupService {
         });
     }
 
-    public StudentGroup create(HoisUserDetails user, StudentGroupForm form) {
-        StudentGroup studentGroup = new StudentGroup();
-        studentGroup.setSchool(em.getReference(School.class, user.getSchoolId()));
-        return save(user, studentGroup, form);
+    /**
+     * Get student group record
+     *
+     * @param user
+     * @param studentGroup
+     * @return
+     */
+    public StudentGroupDto get(HoisUserDetails user, StudentGroup studentGroup) {
+        return StudentGroupDto.of(user, studentGroup);
     }
 
-    public StudentGroup save(HoisUserDetails user, StudentGroup studentGroup, StudentGroupForm form) {
+    /**
+     * Add new student group
+     *
+     * @param user
+     * @param form
+     * @return
+     */
+    public Long create(HoisUserDetails user, StudentGroupForm form) {
+        StudentGroup studentGroup = new StudentGroup();
+        studentGroup.setSchool(em.getReference(School.class, user.getSchoolId()));
+        return saveInternal(user, studentGroup, form).getId();
+    }
+
+    /**
+     * Update student group
+     *
+     * @param user
+     * @param studentGroup
+     * @param form
+     * @return
+     */
+    public StudentGroupDto save(HoisUserDetails user, StudentGroup studentGroup, StudentGroupForm form) {
+        return get(user, saveInternal(user, studentGroup, form));
+    }
+
+    private StudentGroup saveInternal(HoisUserDetails user, StudentGroup studentGroup, StudentGroupForm form) {
         EntityUtil.bindToEntity(form, studentGroup, classifierRepository, "students");
 
         // curriculum is required and must be from same school
@@ -155,22 +194,36 @@ public class StudentGroupService {
         return studentGroup;
     }
 
+    /**
+     * Delete student group
+     *
+     * @param user
+     * @param studentGroup
+     */
     public void delete(HoisUserDetails user, StudentGroup studentGroup) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(studentGroup, em);
     }
 
+    /**
+     * Search students for adding into student group
+     *
+     * @param schoolId
+     * @param criteria
+     * @return
+     */
     public List<StudentGroupStudentDto> searchStudents(Long schoolId, StudentGroupSearchStudentsCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s join curriculum_version cv on s.curriculum_version_id = cv.id join curriculum c on cv.curriculum_id = c.id join person p on s.person_id = p.id").sort("p.lastname", "p.firstname");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("s.status_code in :activeStatuses", "activeStatuses", StudentStatus.STUDENT_STATUS_ACTIVE);
         qb.requiredCriteria("cv.curriculum_id = :curriculum", "curriculum", criteria.getCurriculum());
         qb.optionalCriteria("s.curriculum_version_id = :curriculumVersion", "curriculumVersion", criteria.getCurriculumVersion());
         qb.optionalCriteria("(s.student_group_id is null or s.student_group_id != :studentGroup)", "studentGroup", criteria.getId());
         qb.optionalCriteria("s.language_code = :language", "language", criteria.getLanguage());
         qb.optionalCriteria("s.study_form_code = :studyForm", "studyForm", criteria.getStudyForm());
 
-        List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code, c.name_et, c.name_en", em).getResultList();
+        List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code, c.name_et, c.name_en, s.status_code", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             StudentGroupStudentDto dto = new StudentGroupStudentDto();
             dto.setId(resultAsLong(r, 0));
@@ -179,6 +232,7 @@ public class StudentGroupService {
             String cvCode = resultAsString(r, 5);
             dto.setCurriculumVersion(new AutocompleteResult(resultAsLong(r, 4),
                     CurriculumUtil.versionName(cvCode, resultAsString(r, 6)), CurriculumUtil.versionName(cvCode, resultAsString(r, 7))));
+            dto.setStatus(resultAsString(r, 8));
             return dto;
         }, data);
     }

@@ -73,6 +73,11 @@ public class StudyMaterialService {
             + ", m.type_code, m.is_public, m.is_visible_to_students, f.id as file_id, f.fname, f.ftype, m.url"
             + ", mc.id as connect_id, mc.version as connect_version"
             + ", (select count(*) from study_material_connect where study_material_id = m.id) as journal_count";
+    
+    private static final String MATERIAL_DELETE = "delete from study_material"
+            + " where id in (select m.id from study_material m"
+            + " left join study_material_connect mc on mc.study_material_id = m.id"
+            + " where mc.id is null)";
 
     public Page<SubjectStudyPeriodSearchDto> searchSubjectStudyPeriods(HoisUserDetails user, 
             SubjectStudyPeriodSearchCommand command, Pageable pageable) {
@@ -205,11 +210,6 @@ public class StudyMaterialService {
         return EntityUtil.save(oisFile, em);
     }
     
-    public void delete(HoisUserDetails user, StudyMaterial material) {
-        EntityUtil.setUsername(user.getUsername(), em);
-        EntityUtil.deleteEntity(material, em);
-    }
-
     public StudyMaterialConnect connect(HoisUserDetails user, Long materialId, Long subjectStudyPeriodId, Long journalId) {
         EntityUtil.setUsername(user.getUsername(), em);
         StudyMaterialConnect materialConnect = new StudyMaterialConnect();
@@ -226,6 +226,7 @@ public class StudyMaterialService {
     public void delete(HoisUserDetails user, StudyMaterialConnect materialConnect) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(materialConnect, em);
+        em.createNativeQuery(MATERIAL_DELETE).executeUpdate();
     }
 
 }

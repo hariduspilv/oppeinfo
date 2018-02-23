@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.dto.student;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -11,6 +12,7 @@ public class StudentGroupStudentDto {
     private String fullname;
     private String idcode;
     private AutocompleteResult curriculumVersion;
+    private String status;
 
     public Long getId() {
         return id;
@@ -44,11 +46,24 @@ public class StudentGroupStudentDto {
         this.curriculumVersion = curriculumVersion;
     }
 
-    public static StudentGroupStudentDto of(Student student) {
-        StudentGroupStudentDto dto = EntityUtil.bindToDto(student, new StudentGroupStudentDto());
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public static StudentGroupStudentDto of(HoisUserDetails user, Student student) {
+        StudentGroupStudentDto dto = new StudentGroupStudentDto();
         Person p = student.getPerson();
         dto.setFullname(p.getFullname());
-        dto.setIdcode(p.getIdcode());
+        if (user.isSchoolAdmin() || user.isTeacher()) {
+            dto.setId(student.getId());
+            dto.setIdcode(p.getIdcode());
+        }
+        dto.setCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+        dto.setStatus(EntityUtil.getCode(student.getStatus()));
         return dto;
     }
 }

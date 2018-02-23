@@ -2,13 +2,10 @@ package ee.hitsa.ois.web.commandobject.student;
 
 import javax.validation.constraints.Size;
 
-import ee.hitsa.ois.validation.EstonianIdCode;
-
 public class StudentRepresentativeApplicationSearchCommand {
 
     @Size(max = 255)
     private String name;
-    @EstonianIdCode
     private String idcode;
     private String status;
 

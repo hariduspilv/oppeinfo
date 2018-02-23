@@ -14,6 +14,10 @@ import ee.hitsa.ois.web.commandobject.OisFileForm;
 public class ScholarshipStudentApplicationForm {
 
     private Long id;
+    @Size(max = 100)
+    private String email;
+    @Size(max = 100)
+    private String phone;
     @Required
     @Size(max = 50)
     private String bankAccount;
@@ -40,6 +44,22 @@ public class ScholarshipStudentApplicationForm {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getBankAccount() {

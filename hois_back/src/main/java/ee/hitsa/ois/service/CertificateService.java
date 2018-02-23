@@ -89,11 +89,11 @@ public class CertificateService {
         qb.optionalCriteria("c.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
 
         if(user.isRepresentative()) {
-            qb.requiredCriteria(" exists("
+            qb.requiredCriteria("exists("
                     + "select * from student_representative sr "
                     + "where sr.student_id = s.id "
                     + "and sr.is_student_visible = true "
-                    + "and sr.person_id = :representtivePersonId)", "representtivePersonId", user.getPersonId());
+                    + "and sr.person_id = :representativePersonId)", "representativePersonId", user.getPersonId());
         }
 
         Page<Object[]> result = JpaQueryUtil.pagingResult(qb, CERTIFICATE_SELECT, em, pageable);
@@ -175,15 +175,22 @@ public class CertificateService {
     /**
      * Lookup student for certificate
      *
-     * @param schoolId
+     * @param user
      * @param id
      * @param idcode
      * @return null if idcode is null or person with given idcode is not found
      * @throws EntityNotFoundException when id is not null and student is not found
      */
-    public StudentSearchDto otherStudent(Long schoolId, Long id, String idcode) {
+    public StudentSearchDto otherStudent(HoisUserDetails user, Long id, String idcode) {
+        if(user.isStudent()) {
+            id = user.getStudentId();
+        }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s join person p on s.person_id = p.id");
-        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if(user.isRepresentative()) {
+            // check it has rights to see given student
+            qb.requiredCriteria("s.id in (select sr.student_id from student_representative sr where sr.person_id = :personId and sr.is_student_visible = true)", "personId", user.getPersonId());
+        }
         if(id != null) {
             qb.requiredCriteria("s.id = :id", "id", id);
         } else {

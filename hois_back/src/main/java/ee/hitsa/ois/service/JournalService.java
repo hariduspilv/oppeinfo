@@ -31,12 +31,7 @@ import javax.validation.Validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.domain.Sort.NullHandling;
-import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -264,6 +259,7 @@ public class JournalService {
 
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
+            //TODO: add StudentStatus.OPPURSTAATUS_A
             filters.add(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()));
 
             Subquery<Long> studentGroupsQuery = query.subquery(Long.class);
@@ -278,9 +274,15 @@ public class JournalService {
                                     cb.equal(
                                             journalOmoduleThemesJoin.get("lessonPlanModule").get("lessonPlan")
                                                     .get("studentGroup").get("id"),
-                                            root.get("studentGroup").get("id"))));
+                                            root.get("studentGroup").get("id")))
+                            
+                            );
             filters.add(cb.exists(studentGroupsQuery));
 
+            Journal journal = journalRepository.findOne(journalId);
+            Set<Long> modules = StreamUtil.toMappedSet(t -> EntityUtil.getId(
+                    t.getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule()), journal.getJournalOccupationModuleThemes());
+            
             // kellel puudub vastavas moodulis positiivne tulemus.
             Subquery<Long> protocolStudentsQuery = query.subquery(Long.class);
             Root<Protocol> protocolRoot = protocolStudentsQuery.from(Protocol.class);
@@ -288,8 +290,7 @@ public class JournalService {
             protocolStudentsQuery.select(protocolStudentsJoin.get("student").get("id")).where(
                     cb.and(cb.equal(protocolStudentsJoin.get("student").get("id"), root.get("id"))),
                     protocolStudentsJoin.get("grade").get("code").in(OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE),
-                    cb.equal(protocolRoot.get("protocolVdata").get("curriculumVersion").get("id"),
-                            root.get("curriculumVersion").get("id")));
+                    protocolRoot.get("protocolVdata").get("curriculumVersionOccupationModule").get("curriculumModule").get("id").in(modules));
             filters.add(cb.not(cb.exists(protocolStudentsQuery)));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
@@ -338,6 +339,11 @@ public class JournalService {
                 "journalEntryCapacityTypes");
         saveJournalEntryStudents(journalEntryForm, journalEntry);
         EntityUtil.save(journalEntry, em);
+    }
+    
+    public void deleteJournalEntry(HoisUserDetails user, JournalEntry entry) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(entry, em);
     }
 
     private void validateJournalEntry(JournalEntryForm journalEntryForm) {
@@ -436,17 +442,13 @@ public class JournalService {
     }
 
     public Page<JournalEntryTableDto> journalTableEntries(Long journalId, Pageable pageable) {
-        // TODO: If we make NULLS_LAST default, we can remove this hacky line
-        PageRequest sortedByEntryDateNullsLast = new PageRequest(pageable.getPageNumber(), pageable.getPageSize(),
-                new Sort(new Order(Direction.DESC, "entryDate", NullHandling.NULLS_LAST)));
-
-        JpaNativeQueryBuilder jeQb = new JpaNativeQueryBuilder("from journal_entry je")
-                .sort(sortedByEntryDateNullsLast);
+        JpaNativeQueryBuilder jeQb = new JpaNativeQueryBuilder("from journal_entry je left join curriculum_module_outcomes cmo on cmo.id = je.curriculum_module_outcomes_id")
+                .sort("je.entry_date desc nulls last, lower(je.entry_type_code)='sissekanne_l' asc , lower(je.entry_type_code)='sissekanne_o' asc, cmo.order_nr");
 
         jeQb.requiredCriteria("je.journal_id=:journalId", "journalId", journalId);
 
         return JpaQueryUtil.pagingResult(jeQb,
-                "je.id, je.entry_type_code, je.entry_date, " + "je.content, je.homework, je.homework_duedate", em,
+                "je.id, je.entry_type_code, je.entry_date, je.content, je.homework, je.homework_duedate, cmo.order_nr", em,
                 pageable).map(r -> {
                     JournalEntryTableDto dto = new JournalEntryTableDto();
                     dto.setId(resultAsLong(r, 0));
@@ -479,6 +481,7 @@ public class JournalService {
                     new JournalEntryByDateDto());
             journalEntryByDateDto.setTeacher(PersonUtil.stripIdcodeFromFullnameAndIdcode(journalEntry.getInsertedBy()));
             journalEntryByDateDto.setEntryDate(journalEntry.getEntryDate());
+            journalEntryByDateDto.setOutcomeOrderNr(journalEntry.getCurriculumModuleOutcomes() != null ? journalEntry.getCurriculumModuleOutcomes().getOrderNr() : null);
 
             for (JournalEntryStudent journalEntryStudent : journalEntry.getJournalEntryStudents()) {
                 if (Boolean.TRUE.equals(allStudents)
@@ -493,9 +496,13 @@ public class JournalService {
             }
             result.add(journalEntryByDateDto);
         }
-
-        Collections.sort(result, Comparator.comparing(JournalEntryByDateDto::getEntryDate, Comparator.nullsLast(Comparator.naturalOrder())));
         
+        // order outcome entries by order
+        Collections.sort(result, Comparator.comparing(JournalEntryByDateDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
+
+        // order entries by entry date
+        Collections.sort(result, Comparator.comparing(JournalEntryByDateDto::getEntryDate, Comparator.nullsLast(Comparator.naturalOrder())));
+                
         // put final results to the end of the list
         Collections.sort(result, (JournalEntryByDateDto o1, JournalEntryByDateDto o2) -> {
             if(isFinalResult(o1) && !isFinalResult(o2)) {
@@ -512,6 +519,10 @@ public class JournalService {
         return journal.getJournalStudents().stream()
                 .filter(jt -> Boolean.TRUE.equals(allStudents) || StudentUtil.isStudying(jt.getStudent()))
                 .map(JournalStudentDto::of).collect(Collectors.toList());
+    }
+    
+    public Map<String, Integer> usedHours(Journal journal) {
+        return Collections.singletonMap("usedHours", Integer.valueOf(journal.getJournalEntries().stream().mapToInt(it -> it.getLessons() == null ? 0 : it.getLessons().intValue()).sum()));
     }
 
     public byte[] journalAsExcel(Journal journal) {

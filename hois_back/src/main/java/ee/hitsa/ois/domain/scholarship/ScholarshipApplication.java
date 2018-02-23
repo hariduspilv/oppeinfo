@@ -26,8 +26,9 @@ public class ScholarshipApplication extends BaseEntityWithId {
     private ScholarshipTerm scholarshipTerm;
     private BigDecimal averageMark;
     private BigDecimal curriculumCompletion;
-    private String addressAds;
     private String address;
+    private String addressAds;
+    private String addressAdsOid;
     @Column(nullable = false)
     private String bankAccount;
     private BigDecimal lastPeriodMark;
@@ -92,6 +93,14 @@ public class ScholarshipApplication extends BaseEntityWithId {
         this.curriculumCompletion = curriculumCompletion;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
     public String getAddressAds() {
         return addressAds;
     }
@@ -100,12 +109,12 @@ public class ScholarshipApplication extends BaseEntityWithId {
         this.addressAds = addressAds;
     }
 
-    public String getAddress() {
-        return address;
+    public String getAddressAdsOid() {
+        return addressAdsOid;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setAddressAdsOid(String addressAdsOid) {
+        this.addressAdsOid = addressAdsOid;
     }
 
     public String getBankAccount() {

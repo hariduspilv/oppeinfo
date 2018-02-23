@@ -119,6 +119,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
   
         $scope.studentAbsences = QueryUtils.endpoint('/journals/studentJournalAbsences/').query({studentId: Session.studentId});
         $scope.lastResults = QueryUtils.endpoint('/journals/studentJournalLastResults/').query({studentId: Session.studentId});
+        $scope.declaration = Session.roleCode === 'ROLL_L' ? undefined : QueryUtils.endpoint('/declarations/current').get();
       } else {
         $scope.sessionStudentId = null;
         $scope.tasks = [];

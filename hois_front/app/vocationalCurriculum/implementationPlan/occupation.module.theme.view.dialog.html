@@ -39,9 +39,7 @@
 
             <md-input-container flex="20">
               <label>{{'module.studyYear' | translate}}</label>
-              <md-select ng-model="occupationModuleTheme.studyYearNumber" disabled>
-                <md-option ng-repeat="studyYearNumber in [1,2,3]" ng-value="studyYearNumber" aria-label="{{studyYearNumber}}">{{studyYearNumber}}</md-option>
-              </md-select>
+              <input ng-model="occupationModuleTheme.studyYearNumber" readonly>
             </md-input-container>
           </div>
           <div flex>

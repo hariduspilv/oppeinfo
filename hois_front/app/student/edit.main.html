@@ -20,7 +20,8 @@
         </md-input-container>
 
         <div class="md-block" ng-if="student.person.residenceCountry === 'RIIK_EST'">
-          <hois-ads-adapter class="md-text" ng-model="student.person.addressAds" address-model="student.person.address" required></hois-ads-adapter>
+          <hois-ads-adapter class="md-text" ng-model="student.person.addressAds" ads-oid-model="student.person.addressAdsOid"
+            address-model="student.person.address" required></hois-ads-adapter>
         </div>
 
         <md-input-container class="md-block" ng-if="student.person.residenceCountry !== 'RIIK_EST'">

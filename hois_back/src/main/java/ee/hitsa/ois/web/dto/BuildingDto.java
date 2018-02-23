@@ -6,17 +6,6 @@ import ee.hitsa.ois.web.commandobject.BuildingForm;
 public class BuildingDto extends BuildingForm {
     private Long id;
 
-    public BuildingDto() {
-    }
-
-    public BuildingDto(Long id, String code, String name, String address, Long version) {
-        this.id = id;
-        setCode(code);
-        setName(name);
-        setAddress(address);
-        setVersion(version);
-    }
-
     public Long getId() {
         return id;
     }
@@ -26,6 +15,14 @@ public class BuildingDto extends BuildingForm {
     }
 
     public static BuildingDto of(Building building) {
-        return new BuildingDto(building.getId(), building.getCode(), building.getName(), building.getAddress(), building.getVersion());
+        BuildingDto dto = new BuildingDto();
+        dto.setId(building.getId());
+        dto.setCode(building.getCode());
+        dto.setName(building.getName());
+        dto.setAddress(building.getAddress());
+        dto.setAddressAds(building.getAddressAds());
+        dto.setAddressAdsOid(building.getAddressAdsOid());
+        dto.setVersion(building.getVersion());
+        return dto;
     }
 }

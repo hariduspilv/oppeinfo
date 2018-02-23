@@ -46,7 +46,7 @@
         <input ng-model="material.descriptionEt" type="text">
       </md-input-container>
       <md-input-container>
-        <md-checkbox ng-model="material.isVisibleToStudents" aria-label="isVisibleToStudents">
+        <md-checkbox ng-model="material.isVisibleToStudents" ng-disabled="material.isPublic === true" aria-label="isVisibleToStudents">
           {{'studyMaterial.isVisibleToStudents' | translate}}
         </md-checkbox>
       </md-input-container>
@@ -58,7 +58,7 @@
 
       <div layout="row">
         <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
-        <md-button class="md-raised md-default" href="/#{{backPath}}">{{'main.button.back' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="back(backPath)">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
   </div>

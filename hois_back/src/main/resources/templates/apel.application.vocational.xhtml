@@ -47,8 +47,9 @@
       {% endif %}
 
       {% for replacedSubjectOrModule in record.formalReplacedSubjectsOrModules %}
-        {% if loop.index == 0 %}
-          <table class="reporttable">
+      {% if loop.index == 0 %}
+      <p class="reporttablesubheader">{{ record.recordNr }}. {{ "report.apel.application.block" | translate }}</p>
+        <table class="reporttable">
           <tr>
               <td class="reporttableheader" colspan="2">{{ "report.apel.application.ownSchool" | translate }}</td>
           </tr>
@@ -65,7 +66,7 @@
 
         {% if loop.index == loop.length - 1 %}
           </table>
-          <br/><br/>
+          <br/>
         {% endif %}
       {% endfor %}
 
@@ -97,7 +98,7 @@
             <td>{{ formalSubjectOrModule.teachers }}</td>
             <td>
                 {% if formalSubjectOrModule.transfer %}
-                X
+                  {{ "yes" | translate }}
                 {% endif %}
             </td>
           </tr>
@@ -116,6 +117,7 @@
       
       {% for informalSubjectOrModule in record.informalSubjectsOrModules %} 
         {% if loop.index == 0 %}
+        <p class="reporttablesubheader">{{ record.recordNr }}. {{ "report.apel.application.block" | translate }}</p>
           <table class="reporttable">
             <tr>
               <td class="reporttableheader" colspan="7">{{ "report.apel.application.ownSchool" | translate }}</td>
@@ -151,7 +153,7 @@
 
         {% if loop.index == loop.length - 1 %}
           </table>
-          <br/><br/>
+          <br/>
         {% endif %}
       {% endfor %}
 
@@ -184,7 +186,7 @@
         {% endif %}
       {% endfor %}
     {% endfor %}
-    <br/><br/>
+    <br/>
 
     {% for comment in content.comments %} 
       {% if loop.index == 0 %}
@@ -208,7 +210,7 @@
         <br/>
       {% endif %}
     {% endfor %}
-    <br/><br/>
+    <br/>
 
     <table width="100%">
       <tr>

@@ -15,6 +15,7 @@ import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 
 public abstract class JournalUtil {
@@ -105,5 +106,57 @@ public abstract class JournalUtil {
     public static boolean canConfirmAll(HoisUserDetails user, StudyYear studyYear) {
         return studyYear != null && user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_PAEVIK) &&
                 LocalDate.now().plusWeeks(2).isAfter(studyYear.getEndDate());
+    }
+
+    public static void assertCanView(HoisUserDetails user) {
+        if(!hasPermissionToView(user)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanView(HoisUserDetails user, Journal journal) {
+        if(!hasPermissionToView(user, journal.getSchool())) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void asssertCanChange(HoisUserDetails user, Journal journal) {
+        if(!hasPermissionToChange(user, journal)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void asssertCanConfirm(HoisUserDetails user, Journal journal) {
+        if(!canConfirm(user, journal)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void asssertCanUnconfirm(HoisUserDetails user, Journal journal) {
+        if(!canUnconfirm(user, journal)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanRemoveStudent(HoisUserDetails user, Journal journal) {
+        if (!canRemoveStudent(user, journal)) {
+            String message = "journal.messages.removingStudentIsNotAllowed";
+            if(user.isTeacher() && !teacherCanRemoveStudent(journal)) {
+                message = "journal.messages.removingStudentIsNotAllowedForTeacher";
+            }
+            throw new ValidationFailedException(message);
+        }
+    }
+
+    public static void assertCanAddStudent(HoisUserDetails user, Journal journal) {
+        if (!hasPermissionToChange(user, journal)) {
+            throw new ValidationFailedException("journal.messages.addingStudentIsNotAllowed");
+        }
+    }
+
+    public static void assertCanConfirmAll(HoisUserDetails user, StudyYear studyYear) {
+        if(!canConfirmAll(user, studyYear)) {
+            throw new ValidationFailedException("journal.messages.confirmAllNotAllowed");
+        }
     }
 }

@@ -105,6 +105,7 @@ import ee.hois.xroad.sais2.generated.CandidateStateExam;
 import ee.hois.xroad.sais2.generated.FormFieldOption;
 import ee.hois.xroad.sais2.generated.Kvp;
 import ee.hois.xroad.sais2.generated.ObjectFactory;
+import ee.hois.xroad.sais2.generated.SAISClassification;
 import ee.hois.xroad.sais2.service.SaisApplicationResponse;
 import ee.hois.xroad.sais2.service.SaisClient;
 
@@ -620,7 +621,7 @@ public class SaisApplicationService {
         }
         saisApplication.setSaisAdmission(admissionMap.get(application.getAdmissionCode()));
         saisAdmission = admissionMap.get(application.getAdmissionCode());
-        saisApplication.setStatus(classifiers.getByEhisValue(application.getApplicationStatus().getValue(), MainClassCode.SAIS_AVALDUSESTAATUS));
+        saisApplication.setStatus(classifiers.getByEhisValue(classifierValue(application.getApplicationStatus()), MainClassCode.SAIS_AVALDUSESTAATUS));
         saisApplication.setFirstname(application.getFirstName());
         saisApplication.setLastname(application.getLastName());
         if(application.getDateModified() != null) {
@@ -628,6 +629,13 @@ public class SaisApplicationService {
             saisApplication.setSubmitted(DateUtils.toLocalDate(application.getDateModified()));
         }
         saisApplication.setIdcode(application.getIdCode());
+        saisApplication.setSaisId(application.getId());
+        if(application.getBirthday() != null) {
+            saisApplication.setBirthdate(DateUtils.toLocalDate(application.getBirthday()));
+        }
+        if(application.getOtherIdNumber() != null) {
+            saisApplication.setForeignIdcode(application.getOtherIdNumber());
+        }
 
         //siia validate et ei tootleks mottetult avaldusi
         String error = "";
@@ -636,20 +644,11 @@ public class SaisApplicationService {
             return new SaisApplicationImportedRowDto(saisApplication.getApplicationNr(), saisApplication.getSubmitted(), error);
         }
 
-        saisApplication.setSaisId(application.getId());
-        if(application.getBirthday() != null) {
-            saisApplication.setBirthdate(DateUtils.toLocalDate(application.getBirthday()));
-        }
-
-        if(application.getOtherIdNumber() != null) {
-            saisApplication.setForeignIdcode(application.getOtherIdNumber());
-        }
-
         ArrayOfCandidateAddress addrArray = application.getCandidateAddresses();
         if(addrArray != null && !addrArray.getCandidateAddress().isEmpty()) {
             StringBuilder addrString = new StringBuilder();
             // take contact address, if possible
-            CandidateAddress address = addrArray.getCandidateAddress().stream().filter(r -> r.getAddressType() != null && CONTACT_ADDR_VALUE.equals(r.getAddressType().getValue()))
+            CandidateAddress address = addrArray.getCandidateAddress().stream().filter(r -> CONTACT_ADDR_VALUE.equals(classifierValue(r.getAddressType())))
                     .findFirst().orElse(addrArray.getCandidateAddress().get(0));
             if(StringUtils.hasText(address.getAddress())) {
                 addrString.append(address.getAddress());
@@ -692,9 +691,10 @@ public class SaisApplicationService {
             }
             saisApplication.setAddress(addrString.toString());
             saisApplication.setAddressAds(address.getAdsAddressCode());
+            saisApplication.setAddressAdsOid(address.getAdsOid());
         }
 
-        String sexCode = application.getSexClassification().getValue();
+        String sexCode = classifierValue(application.getSexClassification());
         if (StringUtils.hasText(sexCode)) {
             saisApplication.setSex(classifiers.getByValue(sexCode, MainClassCode.SUGU));
         }
@@ -703,11 +703,11 @@ public class SaisApplicationService {
         saisApplication.setEmail(application.getEmail());
         saisApplication.setFin(classifiers.getByCode((application.isIsTuitionFeeRequired() ? FinSource.FINALLIKAS_REV : FinSource.FINALLIKAS_RE).name(), MainClassCode.FINALLIKAS));
         saisApplication.setPoints(application.getApplicationTotalPoints());
-        saisApplication.setCitizenship(classifiers.getByValue(application.getCitizenshipCountry().getValue(), MainClassCode.RIIK));
+        saisApplication.setCitizenship(classifiers.getByValue(classifierValue(application.getCitizenshipCountry()), MainClassCode.RIIK));
         saisApplication.setStudyLoad(classifiers.getByCode((Boolean.TRUE.equals(application.isIsFullLoad()) ? StudyLoad.OPPEKOORMUS_TAIS : StudyLoad.OPPEKOORMUS_OSA).name(), MainClassCode.OPPEKOORMUS));
         // XXX is this correct
         saisApplication.setResidenceCountry(classifiers.getByCode(ClassifierUtil.COUNTRY_ESTONIA, MainClassCode.RIIK));
-        saisApplication.setStudyForm(classifiers.getByValue(application.getStudyForm().getValue(), MainClassCode.OPPEVORM));
+        saisApplication.setStudyForm(classifiers.getByValue(classifierValue(application.getStudyForm()), MainClassCode.OPPEVORM));
         saisApplication.setLanguage(saisAdmission.getLanguage());
 
         saisApplication.getGrades().clear();
@@ -759,6 +759,9 @@ public class SaisApplicationService {
         if(application.getLastname() == null) {
             return messageForMissing + "kandideerija perekonnanimi";
         }
+        if(application.getBirthdate() == null) {
+            return messageForMissing + "kandideerija sünnikuupäev";
+        }
         if(application.getSubmitted() == null) {
             return messageForMissing + "esitamise kuupäev";
         }
@@ -782,10 +785,10 @@ public class SaisApplicationService {
             graduated.setEndDate(DateUtils.toLocalDateTime(education.getStudyEndDate()));
         }
         graduated.setRegCode(education.getInstitutionRegNr() != null ? education.getInstitutionRegNr().toString() : "");
-        graduated.setIsAbroad(education.getInstitutionCountry() == null || "EST".equals(education.getInstitutionCountry().getValue()) ? Boolean.FALSE : Boolean.TRUE);
-        graduated.setStudyLevel(classifiers.getByValue(education.getEhisLevel().getValue(), MainClassCode.OPPEASTE));
+        graduated.setIsAbroad(education.getInstitutionCountry() == null || "EST".equals(classifierValue(education.getInstitutionCountry())) ? Boolean.FALSE : Boolean.TRUE);
+        graduated.setStudyLevel(classifiers.getByValue(classifierValue(education.getEhisLevel()), MainClassCode.OPPEASTE));
         if(education.getStudyFormClassification() != null) {
-            graduated.setStudyForm(classifiers.getByValue(education.getStudyFormClassification().getValue(), MainClassCode.OPPEVORM));
+            graduated.setStudyForm(classifiers.getByValue(classifierValue(education.getStudyFormClassification()), MainClassCode.OPPEVORM));
         }
         for(CandidateGrade grade : education.getCandidateGrades().getCandidateGrade()) {
             processGrade(grade, application);
@@ -794,11 +797,15 @@ public class SaisApplicationService {
     }
 
     private static void processGrade(CandidateGrade grade, SaisApplication application) {
-        if(grade.getGrade() != null) {
+        if(grade.getReplacedResult() != null || grade.getGrade() != null) {
             SaisApplicationGrade applicationGrade = new SaisApplicationGrade();
             applicationGrade.setSubjectName(kvpHandler(grade.getCurriculumClassification().getTranslations(), ESTONIAN));
-            applicationGrade.setSubjectName(grade.getCurriculumClassification().getClassificationTypeName());
-            applicationGrade.setGrade(grade.getGrade().toString());
+            applicationGrade.setSubjectType(grade.getCurriculumClassification().getClassificationTypeName());
+            Integer result = grade.getReplacedResult();
+            if(result == null) {
+                result = grade.getGrade();
+            }
+            applicationGrade.setGrade(result.toString());
             application.getGrades().add(applicationGrade);
         }
     }
@@ -806,8 +813,12 @@ public class SaisApplicationService {
     private static void processExam(CandidateStateExam exam, SaisApplication application) {
         SaisApplicationGrade applicationGrade = new SaisApplicationGrade();
         applicationGrade.setSubjectName(kvpHandler(exam.getStateExamClassification().getTranslations(), ESTONIAN));
-        applicationGrade.setSubjectName(exam.getStateExamClassification().getClassificationTypeName());
-        applicationGrade.setGrade(Integer.toString(exam.getResult()));
+        applicationGrade.setSubjectType(exam.getStateExamClassification().getClassificationTypeName());
+        Integer result = exam.getReplacedResult();
+        if(result == null) {
+            result = Integer.valueOf(exam.getResult());
+        }
+        applicationGrade.setGrade(result.toString());
         application.getGrades().add(applicationGrade);
     }
 
@@ -873,6 +884,10 @@ public class SaisApplicationService {
         request.setInstitutionRegCodes(aoi);
         request.setPage(objectFactory.createAllAppsExportRequestPage(Integer.valueOf(0)));
         return request;
+    }
+
+    private static String classifierValue(SAISClassification c) {
+        return c != null ? c.getValue() : null;
     }
 
     private static boolean applicationForSamePerson(Application application, SaisApplication prevApp) {

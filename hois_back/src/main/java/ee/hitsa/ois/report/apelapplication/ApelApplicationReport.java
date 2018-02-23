@@ -23,6 +23,8 @@ public class ApelApplicationReport {
     private final String status;
     private final List<ApelApplicationRecordReport> records;
     private final List<ApelApplicationCommentReport> comments;
+    private Long informalLearningRecords = Long.valueOf(0L);
+    private Long formalLearningRecords = Long.valueOf(0L);
     
     public ApelApplicationReport(ApelApplication application) {
         this(application, Language.ET);
@@ -35,7 +37,7 @@ public class ApelApplicationReport {
         inserted = application.getInserted() != null ? application.getInserted().toLocalDate() : null;
         confirmed = application.getConfirmed() != null ? application.getConfirmed().toLocalDate() : null;
         status = name(application.getStatus(), lang);
-        records = StreamUtil.toMappedList(r -> new ApelApplicationRecordReport(r, lang), application.getRecords());
+        records = StreamUtil.toMappedList(r -> new ApelApplicationRecordReport(this, r, lang), application.getRecords());
         comments = StreamUtil.toMappedList(c -> new ApelApplicationCommentReport(c), application.getComments());
         comments.sort(Comparator.comparing(ApelApplicationCommentReport::getInserted));
     }
@@ -66,6 +68,22 @@ public class ApelApplicationReport {
     
     public List<ApelApplicationCommentReport> getComments() {
         return comments;
+    }
+
+    public Long getInformalLearningRecords() {
+        return informalLearningRecords;
+    }
+
+    public void setInformalLearningRecords(Long informalLearningRecords) {
+        this.informalLearningRecords = informalLearningRecords;
+    }
+
+    public Long getFormalLearningRecords() {
+        return formalLearningRecords;
+    }
+
+    public void setFormalLearningRecords(Long formalLearningRecords) {
+        this.formalLearningRecords = formalLearningRecords;
     }
     
 }

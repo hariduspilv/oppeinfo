@@ -32,7 +32,7 @@ import ee.hitsa.ois.service.FinalExamVocationalProtocolService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.MobileIdStatus;
-import ee.hitsa.ois.util.FinalExamProtocolValidationUtil;
+import ee.hitsa.ois.util.FinalExamProtocolUtil;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -81,7 +81,7 @@ public class FinalExamVocationalProtocolController {
     @PostMapping
     public FinalExamVocationalProtocolDto create(HoisUserDetails user,
             @Valid @RequestBody FinalExamVocationalProtocolCreateForm finalExamProtocolCreateForm) {
-        FinalExamProtocolValidationUtil.assertIsSchoolAdminOrTeacherResponsible(user, finalExamProtocolCreateForm.getProtocolVdata().getTeacher());
+        FinalExamProtocolUtil.assertIsSchoolAdminOrTeacherResponsible(user, finalExamProtocolCreateForm.getProtocolVdata().getTeacher());
         return FinalExamVocationalProtocolDto.of(finalExamProtocolService.create(user, finalExamProtocolCreateForm));
     }
     
@@ -89,7 +89,7 @@ public class FinalExamVocationalProtocolController {
     public FinalExamVocationalProtocolDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody FinalExamVocationalProtocolSaveForm finalExamProtocolSaveForm) {
-        FinalExamProtocolValidationUtil.assertCanEdit(user, protocol);
+        FinalExamProtocolUtil.assertCanEdit(user, protocol);
         return get(user, finalExamProtocolService.save(protocol, finalExamProtocolSaveForm));
     }
 
@@ -97,7 +97,7 @@ public class FinalExamVocationalProtocolController {
     public void delete(HoisUserDetails user,
             @WithVersionedEntity(versionRequestParam = "version") Protocol protocol,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        FinalExamProtocolValidationUtil.assertCanDelete(user, protocol);
+        FinalExamProtocolUtil.assertCanDelete(user, protocol);
         finalExamProtocolService.delete(user, protocol);
     }
     
@@ -132,7 +132,7 @@ public class FinalExamVocationalProtocolController {
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody FinalExamVocationalProtocolSignForm protocolSignForm, HttpSession httpSession) {
 
-        FinalExamProtocolValidationUtil.assertCanEdit(user, protocol);
+        FinalExamProtocolUtil.assertCanEdit(user, protocol);
 
         Protocol savedProtocol = finalExamProtocolService.save(protocol, protocolSignForm);
 
@@ -161,7 +161,7 @@ public class FinalExamVocationalProtocolController {
     public EntityMobileSignDto mobileSignToConfirm(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody FinalExamVocationalProtocolSignForm protocolSaveForm, HttpSession httpSession) {
-        FinalExamProtocolValidationUtil.assertCanEdit(user, protocol);
+        FinalExamProtocolUtil.assertCanEdit(user, protocol);
 
         Protocol savedProtocol = finalExamProtocolService.save(protocol, protocolSaveForm);
         byte[] pdfData = pdfService.generate(FinalExamProtocolReport.TEMPLATE_NAME, new FinalExamProtocolReport(savedProtocol));
@@ -209,7 +209,7 @@ public class FinalExamVocationalProtocolController {
     public FinalExamVocationalProtocolDto confirm(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody FinalExamVocationalProtocolSaveForm protocolSaveForm) {
-        FinalExamProtocolValidationUtil.assertCanEdit(user, protocol);
+        FinalExamProtocolUtil.assertCanEdit(user, protocol);
         return get(user, finalExamProtocolService.confirm(user, protocol, protocolSaveForm));
     }
 

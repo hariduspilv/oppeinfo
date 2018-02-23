@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.ApplicationService;
 import ee.hitsa.ois.service.StudentResultHigherService;
@@ -30,7 +32,7 @@ import ee.hitsa.ois.service.StudentService;
 import ee.hitsa.ois.service.ehis.EhisStudentService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.StudentAbsenceValidationUtil;
+import ee.hitsa.ois.util.StudentAbsenceUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -38,6 +40,7 @@ import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
+import ee.hitsa.ois.web.commandobject.student.StudentModuleListChangeForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EhisStudentReport;
@@ -47,6 +50,8 @@ import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherResultDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
+import ee.hitsa.ois.web.dto.student.StudentVocationalConnectedEntity;
+import ee.hitsa.ois.web.dto.student.StudentVocationalModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 
 @RestController
@@ -89,19 +94,19 @@ public class StudentController {
 
     @PostMapping("/{studentId:\\d+}/absences")
     public void createAbsence(HoisUserDetails user, @WithEntity("studentId") Student student, @Valid @RequestBody StudentAbsenceForm form) {
-        StudentAbsenceValidationUtil.assertCanCreate(user, student);
+        StudentAbsenceUtil.assertCanCreate(user, student);
         studentService.create(user, student, form);
     }
 
     @PutMapping("/{studentId:\\d+}/absences/{id:\\d+}")
     public void saveAbsence(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudentAbsence absence, @Valid @RequestBody StudentAbsenceForm form) {
-        StudentAbsenceValidationUtil.assertCanEdit(user, absence);
+        StudentAbsenceUtil.assertCanEdit(user, absence);
         studentService.save(absence, form);
     }
 
     @DeleteMapping("/{studentId:\\d+}/absences/{id:\\d+}")
     public void deleteAbsence(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") StudentAbsence absence, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        StudentAbsenceValidationUtil.assertCanEdit(user, absence);
+        StudentAbsenceUtil.assertCanEdit(user, absence);
         studentService.delete(user, absence);
     }
 
@@ -164,8 +169,40 @@ public class StudentController {
         assertCanView(user, student);
         return studentResultHigherService.higherResults(student);
     }
+    
+    @GetMapping("/{id:\\d+}/vocationalConnectedEntities")
+    public List<StudentVocationalConnectedEntity> vocationalConnectedEntities(HoisUserDetails user, @WithEntity Student student) {
+        assertIsSchoolAdminOrStudentGroupTeacher(user, student);
+        return studentService.vocationalConnectedEntities(student.getId());
+    }
+    
+    @GetMapping("/{id:\\d+}/vocationalChangeableModules")
+    public List<StudentVocationalModuleResultDto> changeableModules(HoisUserDetails user, @WithEntity Student student) {
+        assertIsSchoolAdmin(user);
+        return studentService.vocationalChangeableModules(student.getId());
+    }
+    
+    @GetMapping("/{id:\\d+}/vocationalCurriculumModules")
+    public List<AutocompleteResult> vocationalCurriculumModulesForSelection(HoisUserDetails user, @WithEntity Student student) {
+        assertIsSchoolAdmin(user);
+        return studentService.vocationalCurriculumModulesForSelection(student.getCurriculumVersion().getId());
+    }
+    
+    @PostMapping("/{id:\\d+}/changeVocationalCurriculumModules")
+    public List<StudentVocationalModuleResultDto> changeVocationalCurriculumModules(HoisUserDetails user, @WithEntity Student student, @Valid @RequestBody StudentModuleListChangeForm form) {
+        if(!StudentUtil.isActive(student) || !UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) {
+            throw new AssertionFailedException("User cannot edit student data");
+        }
+        studentService.changeVocationalCurriculumModules(student, form);
+        return changeableModules(user, student);
+    }
 
     private static void assertCanView(HoisUserDetails user, Student student) {
         AssertionFailedException.throwIf(!UserUtil.canViewStudent(user, student), "User cannot view student data");
+    }
+    
+    private static void assertIsSchoolAdminOrStudentGroupTeacher(HoisUserDetails user, Student student) {
+        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !UserUtil.isStudentGroupTeacher(user, student),
+                "User is not school admin or student group teacher");
     }
 }

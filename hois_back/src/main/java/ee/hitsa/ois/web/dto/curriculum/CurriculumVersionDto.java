@@ -105,7 +105,8 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
         if(CurriculumUtil.isVocational(version.getCurriculum())) {
             dto.setOccupationModules(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleDto::forCurriculumVersionForm, version.getOccupationModules()));
             List<BigDecimal> capacities = new ArrayList<>();
-            for(short year = 1; year <= 3; year++) {
+            short studyYears = (short)CurriculumUtil.studyYears(version.getCurriculum());
+            for(short year = 1; year <= studyYears; year++) {
                 capacities.add(CurriculumVersionYearCapacitiesUtil.calculate(version.getOccupationModules(), Short.valueOf(year)));
             }
             dto.setYearCapacities(capacities);

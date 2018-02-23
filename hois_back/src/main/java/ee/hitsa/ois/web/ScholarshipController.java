@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.ScholarshipService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -90,21 +92,21 @@ public class ScholarshipController {
     @PutMapping("/acceptApplications")
     public HttpStatus acceptApplications(HoisUserDetails user,
             @Valid @RequestBody ScholarshipApplicationListSubmitForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
         return scholarshipService.acceptApplications(form, user);
     }
 
     @PutMapping("/annulApplications")
     public HttpStatus annulApplications(HoisUserDetails user,
             @Valid @RequestBody ScholarshipApplicationListSubmitForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
         return scholarshipService.annulApplications(form, user);
     }
 
     @PutMapping("/rejectApplications")
     public HttpStatus rejectApplications(HoisUserDetails user,
             @Valid @RequestBody ScholarshipApplicationListSubmitForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
         return scholarshipService.rejectApplications(form, user);
     }
 

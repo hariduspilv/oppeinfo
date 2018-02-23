@@ -17,8 +17,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,16 +29,20 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
+import ee.hitsa.ois.domain.student.StudentVocationalResult;
+import ee.hitsa.ois.domain.student.StudentVocationalResultOmodule;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.message.StudentAbsenceCreated;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
@@ -52,7 +58,9 @@ import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
+import ee.hitsa.ois.web.commandobject.student.StudentModuleListChangeForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentVocationalResultModuleChangeForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
@@ -61,7 +69,9 @@ import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
+import ee.hitsa.ois.web.dto.student.StudentVocationalConnectedEntity;
 import ee.hitsa.ois.web.dto.student.StudentVocationalModuleDto;
+import ee.hitsa.ois.web.dto.student.StudentVocationalModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
 
@@ -514,5 +524,81 @@ public class StudentService {
             .setParameter(1, EntityUtil.getId(student))
             .getResultList();
         return StreamUtil.toMappedList(StudentOccupationCertificateDto::new, data);
+    }
+    
+    public List<StudentVocationalModuleResultDto> vocationalChangeableModules(Long studentId) {
+        Query q = em.createNativeQuery("select svr.id, coalesce(svrm.curriculum_version_omodule_id, svr.curriculum_version_omodule_id), "
+                + "svr.module_name_et, svr.module_name_en, svr.credits, svr.grade, svr.grade_date from student_vocational_result svr "
+                + "left join student_vocational_result_omodule svrm on svrm.student_vocational_result_id = svr.id "
+                + "where student_id = ?1");
+        q.setParameter(1, studentId);
+        List<?> data = q.getResultList();
+        
+        return StreamUtil.toMappedList(r -> new StudentVocationalModuleResultDto(resultAsLong(r, 0), resultAsLong(r, 1),
+                resultAsString(r, 2), resultAsString(r, 3), resultAsDecimal(r, 4), resultAsString(r, 5), resultAsLocalDate(r, 6)), data);
+    }
+    
+    public List<AutocompleteResult> vocationalCurriculumModulesForSelection(Long curriculumVersionId) {
+        Query q = em.createNativeQuery("select cvo.id, cm.name_et, cm.name_en from curriculum_version_omodule cvo " + 
+                "inner join curriculum_module cm on cvo.curriculum_module_id = cm.id " + 
+                "where cvo.curriculum_version_id = ?1");
+        q.setParameter(1, curriculumVersionId);
+        List<?> data = q.getResultList();
+        
+        return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)), data);
+    }
+    
+    public void changeVocationalCurriculumModules(Student student, StudentModuleListChangeForm form) {
+        StudentVocationalResult result = em.getReference(StudentVocationalResult.class, form.getVocationalModules().get(0).getId());
+        if (!student.equals(result.getStudent())) {
+            throw new AssertionFailedException("Student mismatch");
+        }
+        
+        List<Long> vocationalResultIds = form.getVocationalModules().stream().map(m -> m.getId()).collect(Collectors.toList());
+        List<StudentVocationalResultOmodule> data = em.createQuery(
+                "select svro from StudentVocationalResultOmodule svro where svro.studentVocationalResult.id in (?1)",
+                StudentVocationalResultOmodule.class).setParameter(1, vocationalResultIds).getResultList();
+        
+        Map<Long, StudentVocationalResultOmodule> vocationalResultModules = StreamUtil.toMap(d -> d.getStudentVocationalResult().getId(), data);
+
+        for (StudentVocationalResultModuleChangeForm vocationalModule : form.getVocationalModules()) {
+            if (!vocationalModule.getCurriculumVersionOmoduleId().equals(vocationalModule.getOldCurriculumVersionOmoduleId())) {
+                StudentVocationalResultOmodule module = vocationalResultModules.get(vocationalModule.getId());
+                if (module != null) {
+                    module.setCurriculumVersionOmodule(em.getReference(CurriculumVersionOccupationModule.class, vocationalModule.getCurriculumVersionOmoduleId()));
+                    em.merge(module);
+                } else {
+                    module = EntityUtil.bindToEntity(form, new StudentVocationalResultOmodule());
+                    module.setStudentVocationalResult(em.getReference(StudentVocationalResult.class, vocationalModule.getId()));
+                    module.setCurriculumVersionOmodule(em.getReference(CurriculumVersionOccupationModule.class, vocationalModule.getCurriculumVersionOmoduleId()));
+                    em.persist(module);
+                }
+            }
+        }
+    }
+    
+    public List<StudentVocationalConnectedEntity> vocationalConnectedEntities(Long studentId) {
+        Query q = em.createNativeQuery("select jj.id, 'journal' as type, jj.name_et as name_et, jj.name_et as name_en, sy.end_date, sy.year_code, null as protocol_nr from journal jj "
+                + "inner join journal_student js on jj.id=js.journal_id " 
+                + "inner join study_year sy on jj.study_year_id = sy.id " 
+                + "where js.student_id = ?1 " 
+                + "union " 
+                + "select ps.protocol_id, 'protocol', cm.name_et, cm.name_et, sy.end_date, sy.year_code, p.protocol_nr from protocol_student ps "
+                + "inner join protocol p on ps.protocol_id = p.id "
+                + "inner join protocol_vdata pvd on ps.protocol_id = pvd.protocol_id "  
+                + "inner join curriculum_version_omodule cvo on pvd.curriculum_version_omodule_id = cvo.id " 
+                + "inner join curriculum_module cm on cvo.curriculum_module_id = cm.id " 
+                + "inner join study_year sy on pvd.study_year_id = sy.id " 
+                + "where ps.student_id = ?1 " 
+                + "union " 
+                + "select aa.id, 'apel', 'VÕTA avaldus', 'APEL application', aa.confirmed, null as year_code, null from apel_application aa "
+                + "where aa.student_id = ?1 and aa.status_code='VOTA_STAATUS_C' " 
+                + "order by 5 desc");
+        q.setParameter(1, studentId);
+        List<?> data = q.getResultList();
+        
+        return StreamUtil.toMappedList(
+                r -> new StudentVocationalConnectedEntity(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2),
+                        resultAsString(r, 3), resultAsLocalDate(r, 4), resultAsString(r, 5), resultAsString(r, 6)), data);
     }
 }

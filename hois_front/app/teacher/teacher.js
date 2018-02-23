@@ -25,13 +25,14 @@
 
   angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$route', '$translate', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
     function ($location, $route, $translate, $scope, dialogService, message, DataUtils, QueryUtils) {
+      var auth = $route.current.locals.auth;
       var id = $route.current.params.id;
       var baseUrl = '/teachers';
       var Endpoint = QueryUtils.endpoint(baseUrl);
       var TeacherPositionEhisEndpoint = QueryUtils.endpoint('/teachers/' + id + '/ehisPositions');
       var EmailGeneratorEndpoint = QueryUtils.endpoint('/school/generateEmail', {post: {method: 'POST'}});
 
-      var school = $route.current.locals.auth.school;
+      var school = auth.school;
       var onlyHigherSchool = school && school.higher && !school.vocational;
       $scope.occupations = QueryUtils.endpoint('/school/teacheroccupations/all').query();
 
@@ -117,8 +118,8 @@
         dialogService.confirmDialog({prompt: 'teacher.deleteConfirm'}, function () {
           $scope.teacher.$delete().then(function () {
             message.info('main.messages.delete.success');
-            $location.path(baseUrl);
-          });
+            $location.url(baseUrl + '?_noback');
+          }).catch(angular.noop);
         });
       };
 
@@ -129,12 +130,15 @@
           return;
         }
         if ($scope.teacher.id) {
-          $scope.teacher.$update().then(afterLoad).then(message.updateSuccess);
+          var success = auth.isTeacher() ? function() {
+            $location.url(baseUrl + '/myData?_noback');
+          } : afterLoad;
+          $scope.teacher.$update().then(success).then(message.updateSuccess).catch(angular.noop);
         } else {
           $scope.teacher.$save().then(function (response) {
             message.info('main.messages.create.success');
             $location.url(baseUrl + '/' + response.id + '/edit?_noback');
-          });
+          }).catch(angular.noop);
         }
       };
 
@@ -148,7 +152,7 @@
           QueryUtils.endpoint(baseUrl + '/' + $scope.teacher.id + '/sendToEhis').put({}, $scope.teacher).$promise.then(function() {
             message.info('teacher.sentToEhis');
             $location.url(baseUrl + '/' + $scope.teacher.id + '/edit?_noback');
-          });
+          }).catch(angular.noop);
         });
       };
 
@@ -161,7 +165,7 @@
               $scope.teacher.teacherPositionEhis = $scope.teacher.teacherPositionEhis.filter(function (it) {
                 return it.id !== ehisPosition.id;
               });
-            });
+            }).catch(angular.noop);
           } else {
             removeFromCollection($scope.teacher, 'teacherPositionEhis', ehisPosition);
           }
@@ -380,12 +384,10 @@
     $scope.loadData();
   }]).controller('TeacherViewController', ['$scope', '$route', '$translate', 'QueryUtils', function ($scope, $route, $translate, QueryUtils) {
     $scope.isShowingRtipTab = false;
-    $scope.auth = $route.current.locals.auth;
     var auth = $route.current.locals.auth;
-
+    $scope.auth = auth;
     var id = (auth.isTeacher() ? auth.teacher : $route.current.params.id);
 
-    //var id = $route.current.params.id;
     $scope.teacherId = id;
     var Endpoint = QueryUtils.endpoint('/teachers');
 
@@ -399,7 +401,7 @@
         array.push('teacher.isHigher');
       }
       $translate(array).then(function (value) {
-        $scope.vocationalHigher = Object.keys(value).map(function (key) {
+        $scope.vocationalHigher = array.map(function (key) {
           return value[key];
         }).join('; ');
       });

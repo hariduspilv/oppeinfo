@@ -30,7 +30,7 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherSearchDto;
 @RestController
 @RequestMapping("/subjectStudyPeriods/teachers")
 public class SubjectStudyPeriodTeacherController {
-    
+
     @Autowired
     private TeacherService teacherService;
     @Autowired
@@ -39,12 +39,12 @@ public class SubjectStudyPeriodTeacherController {
     private SubjectStudyPeriodTeacherSearchService subjectStudyPeriodTeacherSearchService;
     @Autowired
     private SubjectStudyPeriodTeacherService subjectStudyPeriodTeacherService;
-        
+
     @GetMapping
     public Page<SubjectStudyPeriodTeacherSearchDto> searchByTeachers(HoisUserDetails user, SubjectStudyPeriodSearchCommand criteria, Pageable pageable) {
         return subjectStudyPeriodTeacherSearchService.search(user.getSchoolId(), criteria, pageable);
     }
-    
+
     @GetMapping("/container")
     public SubjectStudyPeriodDtoContainer getTeachersSspContainer(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container) {
         AssertionFailedException.throwIf(container.getTeacher() == null,
@@ -54,7 +54,7 @@ public class SubjectStudyPeriodTeacherController {
         subjectStudyPeriodTeacherService.setSubjectStudyPeriodPlansToTeachersContainer(container);
         return container;
     }
-    
+
     @PutMapping("/container")
     public SubjectStudyPeriodDtoContainer updateTeachersSspCapacities(HoisUserDetails user, @Valid @RequestBody SubjectStudyPeriodDtoContainer container) {
         UserUtil.assertIsSchoolAdmin(user);
@@ -63,17 +63,14 @@ public class SubjectStudyPeriodTeacherController {
         subjectStudyPeriodCapacitiesService.updateSspCapacities(user.getSchoolId(), container);
         return getTeachersSspContainer(user, container);
     }
-    
+
     @GetMapping("/page")
     public Page<AutocompleteResult> getTeachersPage(TeacherSearchCommand command, Pageable pageable, HoisUserDetails user) {
-        command.setSchool(user.getSchoolId());
         command.setIsHigher(Boolean.TRUE);
         command.setIsActive(Boolean.TRUE);
-        return teacherService.search(user, command, pageable).map(t -> {
-            return new AutocompleteResult(t.getId(), t.getName(), t.getName());
-        });
+        return teacherService.search(user, command, pageable).map(t -> new AutocompleteResult(t.getId(), t.getName(), t.getName()));
     }
-    
+
     @GetMapping("/list/limited/{studyPeriodId:\\d+}")
     public List<AutocompleteResult> getTeachersFilteredList(HoisUserDetails user, @PathVariable("studyPeriodId") Long studyPeriodId) {
         return subjectStudyPeriodTeacherService.getTeachersList(user.getSchoolId(), studyPeriodId);

@@ -148,15 +148,16 @@ public class PublicDataMapper {
     }
 
     private static List<Map<String, Object>> calculateYearCapacities(CurriculumVersion cv) {
-        if (cv.getOccupationModules().size() == 0) {
+        if (CurriculumUtil.isHigher(cv.getCurriculum())) {
             return null;
         }
-       
+
         List<Map<String, Object>> capacities = new ArrayList<>();
-        for(short year = 1; year <= 3; year++) {
+        int studyYears = CurriculumUtil.studyYears(cv.getCurriculum());
+        for(int year = 1; year <= studyYears; year++) {
             Map<String, Object> dto = new LinkedHashMap<>();
-            dto.put("studyYearNumber", Short.valueOf(year));
-            dto.put("credits", CurriculumVersionYearCapacitiesUtil.calculate(cv.getOccupationModules(), Short.valueOf(year)));
+            dto.put("studyYearNumber", Integer.valueOf(year));
+            dto.put("credits", CurriculumVersionYearCapacitiesUtil.calculate(cv.getOccupationModules(), Short.valueOf((short)year)));
             capacities.add(dto);
         }
         return capacities;

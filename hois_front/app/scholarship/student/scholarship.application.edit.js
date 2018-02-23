@@ -108,7 +108,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
             callBack(result);
           } else {
             afterLoad(result);
-            message.info('message.updateSuccess');
+            message.updateSuccess();
           }
         });
       } else {

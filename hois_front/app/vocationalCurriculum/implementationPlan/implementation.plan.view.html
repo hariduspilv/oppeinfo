@@ -196,16 +196,12 @@
       <table md-table class="secondary-table">
         <thead md-head>
           <tr md-row>
-            <th md-column>{{'module.firstStudyYear' | translate}}</th>
-            <th md-column>{{'module.secondStudyYear' | translate}}</th>
-            <th md-column>{{'module.thirdStudyYear' | translate}}</th>
+            <th md-column ng-repeat="yc in implementationPlan.yearCapacities track by $index">{{$index+1}}.&nbsp;{{'module.studyYearLowercase' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row>
-            <td md-cell>{{implementationPlan.yearCapacities[0]}}</td>
-            <td md-cell>{{implementationPlan.yearCapacities[1]}}</td>
-            <td md-cell>{{implementationPlan.yearCapacities[2]}}</td>
+            <td md-cell ng-repeat="yc in implementationPlan.yearCapacities track by $index">{{yc}}</td>
           </tr>
         </tbody>
       </table>

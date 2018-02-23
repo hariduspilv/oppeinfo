@@ -61,10 +61,12 @@
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
 
       <div flex ng-if="formState.state === 'EDIT'">
-        <md-input-container class="md-block" ng-if="record.type === 'KASKKIRI_TYHIST'">
-          <label class="textInput">{{'directive.canceledDirective' | translate}}</label>
-          <hois-value value="formState.canceledDirective.nameEt" href-value="'#/directives/' + formState.canceledDirective.id + '/view'"></hois-value>
-        </md-input-container>
+        <div class="form-readonly top-margin" ng-if="record.type === 'KASKKIRI_TYHIST'">
+          <md-input-container class="md-block">
+            <label class="textInput">{{'directive.canceledDirective' | translate}}</label>
+            <hois-value value="formState.canceledDirective.nameEt" href-value="'#/directives/' + formState.canceledDirective.id + '/view'"></hois-value>
+          </md-input-container>
+        </div>
 
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.headline' | translate}}</label>

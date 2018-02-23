@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.service.FinalExamHigherProtocolService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.FinalExamProtocolValidationUtil;
+import ee.hitsa.ois.util.FinalExamProtocolUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
@@ -52,7 +52,7 @@ public class FinalExamHigherProtocolController {
     @PostMapping
     public FinalExamVocationalProtocolDto create(HoisUserDetails user,
             @Valid @RequestBody FinalExamHigherProtocolCreateForm finalExamProtocolCreateForm) {
-        FinalExamProtocolValidationUtil.assertCanCreateHigherProtocol(user);
+        FinalExamProtocolUtil.assertCanCreateHigherProtocol(user);
         return FinalExamVocationalProtocolDto.of(finalExamProtocolService.create(user, finalExamProtocolCreateForm));
     }
     

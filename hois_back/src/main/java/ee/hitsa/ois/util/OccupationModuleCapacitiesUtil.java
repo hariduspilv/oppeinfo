@@ -114,7 +114,8 @@ public abstract class OccupationModuleCapacitiesUtil {
 
     // update module year capacities
     public static void updateModuleYearCapacitiesHours(CurriculumVersionOccupationModule occupationModule) {
-        for(int year = 1; year <= 3; year++) {
+        int studyYears = CurriculumUtil.studyYears(occupationModule.getCurriculumVersion().getCurriculum());
+        for(int year = 1; year <= studyYears; year++) {
             CurriculumVersionOccupationModuleYearCapacity capacity = getYearCapacity(occupationModule, year);
             BigDecimal credits = getThemesHours(occupationModule.getThemes(), year);
             capacity.setCredits(credits);

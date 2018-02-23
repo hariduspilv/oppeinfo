@@ -60,6 +60,12 @@
           <md-nav-item md-nav-click="loadModuleThemeResults()" name="student.inOrderOfPassing">
             {{'student.result.inOrderOfPassing' | translate}}
           </md-nav-item>
+          <md-nav-item ng-if="canWatchStudentConnectedEntities" md-nav-click="loadJournalsAndProtocols()" name="student.journalsAndProtocols">
+            {{'student.result.journalsAndProtocols' | translate}}
+          </md-nav-item>
+          <md-nav-item ng-if="canChangeStudentModules" md-nav-click="loadChangeableModules()" name="student.changeModules">
+            {{'student.result.changeModules' | translate}}
+          </md-nav-item>
         </md-nav-bar>
         <div layout-margin>
           <div ng-show="resultsCurrentNavItem === 'student.curriculumFulfillment'">
@@ -70,6 +76,12 @@
           </div>
           <div ng-show="resultsCurrentNavItem === 'student.inOrderOfPassing'">
             <div ng-include="'student/templates/view.results.vocational.orderofpassing.tmpl.html'"></div>
+          </div>
+          <div ng-if="canWatchStudentConnectedEntities" ng-show="resultsCurrentNavItem === 'student.journalsAndProtocols'">
+            <div ng-include="'student/templates/journals.and.protocols.tmpl.html'"></div>
+          </div>
+          <div ng-if="canChangeStudentModules" ng-show="resultsCurrentNavItem === 'student.changeModules'">
+            <div ng-include="'student/templates/change.modules.vocational.tmpl.html'"></div>
           </div>
         </div>
       </md-content>

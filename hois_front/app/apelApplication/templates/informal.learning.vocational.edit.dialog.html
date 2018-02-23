@@ -117,7 +117,7 @@
                       </md-input-container>
                     </td>
                     <td md-cell>
-                      <md-input-container ng-repeat="outcome in subjectOrModule.outcomes | orderBy: 'curriculumModuleOutcomes.id'" layout="row">
+                      <md-input-container ng-repeat="outcome in subjectOrModule.outcomes | orderBy: ['curriculumModuleOutcomes.orderNr', 'curriculumModuleOutcomes.' + currentLanguage() === 'en' ? outcomeEn : outcomeEt]" layout="row">
                         <md-checkbox ng-model="outcome.acquired" aria-label="{{'apel.informalLearnings.outcomes' | translate}}"></md-checkbox>
                         {{currentLanguage() === 'en' ? outcome.curriculumModuleOutcomes.outcomeEn : outcome.curriculumModuleOutcomes.outcomeEt}}
                       </md-input-container>

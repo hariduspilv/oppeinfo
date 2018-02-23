@@ -127,7 +127,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
             return;
           }
           $scope.stipend.$update({}, function () {
-            QueryUtils.endpoint(baseUrl + '/' + $scope.stipend.id + '/publish').put({}, function (result) {
+            QueryUtils.endpoint(baseUrl + '/' + $scope.stipend.id + '/publish').put({}, function () {
               $route.reload();
             });
           });

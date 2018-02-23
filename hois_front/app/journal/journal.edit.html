@@ -19,7 +19,8 @@
               md-colors="{background: getEntryColor(journalEntry.entryType.code)}" 
               ng-repeat="journalEntry in journal.journalEntriesByDate">
               <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}}</span>
-              <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L'">{{journalEntry.entryDate  ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
+              <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_O'">{{'journal.outcome' | translate}}{{journalEntry.outcomeOrderNr + 1}}</span>
+              <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L' && journalEntry.entryType.code !== 'SISSEKANNE_O'">{{journalEntry.entryDate  ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
               <md-tooltip>
                 <span ng-if="journalEntry.startLessonNr">{{journalEntry.startLessonNr}}. {{'journal.lesson' | translate}},&nbsp;</span> {{journalEntry.nameEt}}
                 <span>,&nbsp;</span> {{currentLanguageNameField(journalEntry.entryType)}}
@@ -93,6 +94,7 @@
         <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_E')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_E'])}}</span>
         <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_I')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_I'])}}</span>
         <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_H')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_H'])}}</span>
+        <span ng-if="journal.moduleOutcomesAsEntries" class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_O')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_O'])}}</span>
         <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_L')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}</span>
       </div>
     </div>
@@ -107,7 +109,7 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-repeat="row in journalEntries.content " md-auto-select ng-click="editJournalEntry(row.id)" ng-class-odd="'odd'"
+          <tr md-row ng-repeat="row in journalEntries.content" md-auto-select ng-click="editJournalEntry(row.id)" ng-class-odd="'odd'"
             ng-class-even="'even'" md-colors="{background: getEntryColor(row.entryType)}">
             <td md-cell>{{row.entryDate ? (row.entryDate | hoisDate) : '-'}}</td>
             <td md-cell>{{row.content}}</td>
@@ -123,6 +125,11 @@
   </div>
 </div>
 
+<div layout-padding>
+  <div flex>
+    <div ng-include="'studyMaterial/templates/journal.material.edit.tmpl.html'"></div>
+  </div>
+</div>
 
 <div layout-padding>
   <hois-collapsable label="('journal.curriculumVersionModuleOrThemeDescription' | translate)" expanded="false">

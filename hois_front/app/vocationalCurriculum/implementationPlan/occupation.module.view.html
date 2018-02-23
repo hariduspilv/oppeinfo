@@ -141,19 +141,9 @@
             <fieldset tabindex="4" layout="column">
               <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.proportionPerStudyYear' | translate}}</legend>
               <div layout="row">
-                <md-input-container flex>
-                  <label>{{'module.firstStudyYear' | translate}}</label>
-                  <input disabled ng-model="occupationModule.yearCapacities[0].credits" type="number">
-                </md-input-container>
-
-                <md-input-container flex>
-                  <label>{{'module.secondStudyYear' | translate}}</label>
-                  <input disabled ng-model="occupationModule.yearCapacities[1].credits" type="number">
-                </md-input-container>
-
-                <md-input-container flex>
-                  <label>{{'module.thirdStudyYear' | translate}}</label>
-                  <input disabled ng-model="occupationModule.yearCapacities[2].credits" type="number">
+                <md-input-container flex ng-repeat="yc in occupationModule.yearCapacities track by $index">
+                  <label>{{$index+1}}.&nbsp;{{'module.studyYearLowercase' | translate}}</label>
+                  <input disabled ng-model="yc.credits" type="number">
                 </md-input-container>
               </div>
             </fieldset>

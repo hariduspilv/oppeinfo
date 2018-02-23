@@ -163,17 +163,17 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       }
     }
 
-    function clearErrors() {
-      function clear(ctrl, name) {
-        ctrl.$serverError = undefined;
-        ctrl.$setValidity(name, null);
-      }
+    function clearCtrlError(ctrl, name) {
+      ctrl.$serverError = undefined;
+      ctrl.$setValidity(name, null);
+    }
 
+    function clearErrors() {
       var invalidCtrls = $scope.directiveForm.$error;
       if(invalidCtrls) {
         Object.keys(invalidCtrls).forEach(function(name) {
           var ctrls = invalidCtrls[name].slice();
-            ctrls.forEach(function(ctrl) { clear(ctrl, name); });
+            ctrls.forEach(function(ctrl) { clearCtrlError(ctrl, name); });
         });
       }
     }
@@ -320,6 +320,11 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     };
 
     $scope.lookupStudent = function(row) {
+      var ctrlName = 'students[' + $scope.record.students.indexOf(row) +'].idcode';
+      var ctrl = $scope.directiveForm[ctrlName];
+      if(ctrl) {
+        clearCtrlError(ctrl, 'serverside');
+      }
       var idcode = row._foreign ? row.foreignIdcode : row.idcode;
       if(idcode && (idcode.length === 11 || row._foreign) && idcode !== row._idcode) {
         row._idcode = idcode;
@@ -334,11 +339,9 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
           if(response.status === 404) {
             message.info('directive.newperson');
           } else if(response.status === 412) {
-            $scope.record.students.forEach(function(it, i) {
-              if(it === row) {
-                displayFormErrors({data: {_errors: [{code: 'InvalidEstonianIdCode', field: 'students[' + i +'].idcode'}]}});
-              }
-            });
+            ctrl.$serverError = ctrl.$serverError || [];
+            ctrl.$serverError.push({code: 'InvalidEstonianIdCode'});
+            ctrl.$setValidity('serverside', false);
           } else {
             displayFormErrors(response);
           }
@@ -357,6 +360,11 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         });
       } else if(idcode !== row._idcode) {
         row._found = false;
+        if(!row._foreign && idcode && ctrl) {
+          ctrl.$serverError = ctrl.$serverError || [];
+          ctrl.$serverError.push({code: 'InvalidEstonianIdCode'});
+          ctrl.$setValidity('serverside', false);
+        }
       }
     };
 
@@ -454,6 +462,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       var templateId = $scope.record.type === 'KASKKIRI_TYHIST' ? $scope.record.canceledDirectiveType.substr(9).toLowerCase() : ($scope.record.type ? $scope.record.type.substr(9).toLowerCase() : 'unknown');
       $scope.formState.templateUrl = 'directive/directive.type.'+templateId+'.view.html';
       clMapper.objectmapper($scope.record.cancelingDirectives || []);
+      $scope.record.students.forEach(function(it) { it._foreign = !it.idcode; });
     });
 
     $scope.cancelDirective = function() {

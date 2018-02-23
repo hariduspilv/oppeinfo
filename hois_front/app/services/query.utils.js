@@ -91,7 +91,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       scope.afterLoadData = function(resultData) {
         scope.tabledata.content = resultData.content;
         scope.tabledata.totalElements = resultData.totalElements;
-        if(resultData.content.length === 0) {
+        if(resultData.totalElements === 0) {
           message.info('main.messages.error.notFound');
         }
         if(angular.isFunction(postLoad)) {

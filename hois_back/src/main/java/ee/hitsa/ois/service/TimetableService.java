@@ -782,12 +782,12 @@ public class TimetableService {
         StudyPeriod sp = em.getReference(StudyPeriod.class, criteria.getStudyPeriod());
         wrappedData = addMissingDatesToBlocked(sp, wrappedData);
 
-        int start = pageable.getOffset();
-        int end = (start + pageable.getPageSize()) > wrappedData.size() ? wrappedData.size()
-                : (start + pageable.getPageSize());
+        int totalCount = wrappedData.size();
+        int start = Math.min(pageable.getOffset(), totalCount);
+        int end = Math.min(start + pageable.getPageSize(), totalCount);
         return new PageImpl<>(wrappedData.subList(start, end), pageable, wrappedData.size());
     }
-    
+
     public List<TimetableManagementSearchDto> getPossibleTargetsForCopy(HoisUserDetails user, Long timetableId) {
         Timetable timetable = em.getReference(Timetable.class, timetableId);
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable t").sort("t.start_date desc");
@@ -1094,46 +1094,40 @@ public class TimetableService {
         List<TimetableStudentGroupCapacityDto> result = StreamUtil
                 .toMappedList(r -> new TimetableStudentGroupCapacityDto(resultAsLong(r, 2), resultAsLong(r, 0),
                         resultAsLong(r, 1), resultAsLong(r, 3), resultAsString(r, 4)), data);
-        if(!timetable.getTimetableObjects().isEmpty()) {
-            Map<Long, Map<String, AllocatedLessons>> allocatedCapacities = getAllocatedLessonsForByJournalByStudentGroupAndCapacity(
-                    timetable);
-            for (TimetableStudentGroupCapacityDto dto : result) {
-                Map<String, AllocatedLessons> groupAllocatedLessons = allocatedCapacities.get(dto.getJournal());
-                if (groupAllocatedLessons != null) {
-                    AllocatedLessons currentLessons = groupAllocatedLessons
-                            .get(dto.getStudentGroup() + "/" + dto.getCapacityType());
-                    if (currentLessons != null) {
-                        dto.setTotalAllocatedLessons(currentLessons.getTotalAllocated());
-                        dto.setLessonsLeft(Long.valueOf(dto.getThisPlannedLessons().longValue()
-                                - currentLessons.getCurrentWeekAllocated().longValue()));
-                        dto.setTotalLessonsLeft(Long.valueOf(
-                                dto.getTotalPlannedLessons().longValue() - dto.getTotalAllocatedLessons().longValue()));
-                        dto.setCapacityType(currentLessons.getCapacityType());
-                    } else {
-                        dto.setTotalAllocatedLessons(Long.valueOf(0));
-                        dto.setTotalLessonsLeft(Long.valueOf(
-                                dto.getTotalPlannedLessons().longValue() - dto.getTotalAllocatedLessons().longValue()));
-                    }
+        
+        Map<Long, Map<String, AllocatedLessons>> allocatedCapacities = getAllocatedLessonsForByJournalAndCapacity(
+                timetable);
+        for (TimetableStudentGroupCapacityDto dto : result) {
+            Map<String, AllocatedLessons> groupAllocatedLessons = allocatedCapacities.get(dto.getJournal());
+            if (groupAllocatedLessons != null) {
+                AllocatedLessons currentLessons = groupAllocatedLessons
+                        .get(dto.getStudentGroup() + "/" + dto.getCapacityType());
+                if (currentLessons != null) {
+                    dto.setTotalAllocatedLessons(currentLessons.getTotalAllocated());
+                    dto.setLessonsLeft(Long.valueOf(dto.getThisPlannedLessons().longValue()
+                            - currentLessons.getCurrentWeekAllocated().longValue()));
+                    dto.setTotalLessonsLeft(Long.valueOf(
+                            dto.getTotalPlannedLessons().longValue() - dto.getTotalAllocatedLessons().longValue()));
+                    dto.setCapacityType(currentLessons.getCapacityType());
                 } else {
-                    dto.setTotalLessonsLeft(dto.getTotalPlannedLessons());
+                    dto.setTotalAllocatedLessons(Long.valueOf(0));
+                    dto.setTotalLessonsLeft(Long.valueOf(
+                            dto.getTotalPlannedLessons().longValue() - dto.getTotalAllocatedLessons().longValue()));
                 }
+            } else {
+                dto.setTotalLessonsLeft(dto.getTotalPlannedLessons());
             }
         }
         return result;
     }
 
-    private Map<Long, Map<String, AllocatedLessons>> getAllocatedLessonsForByJournalByStudentGroupAndCapacity(
+    private Map<Long, Map<String, AllocatedLessons>> getAllocatedLessonsForByJournalAndCapacity(
             Timetable timetable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event te inner join timetable_object too"
-                + " on too.id = te.timetable_object_id inner join timetable_object_student_group tsog"
+                + " on too.id = te.timetable_object_id and too.journal_id is not null inner join timetable_object_student_group tsog"
                 + " on tsog.timetable_object_id = too.id inner join timetable t on t.id = too.timetable_id");
 
         qb.requiredCriteria("t.study_period_id = :studyPeriodId", "studyPeriodId", EntityUtil.getId(timetable.getStudyPeriod()));
-        //get the student group ids from timetable
-        qb.requiredCriteria("tsog.student_group_id in (:studentGroupIds)", "studentGroupIds",
-                StreamUtil.toMappedSet(tsog -> EntityUtil.getId(tsog.getStudentGroup()), StreamUtil
-                        .toMappedList(to -> to.getTimetableObjectStudentGroups(), timetable.getTimetableObjects())
-                        .stream().flatMap(List::stream).collect(Collectors.toList())));
         String groupBy = "too.journal_id, tsog.student_group_id, te.capacity_type_code";
         qb.parameter("timetableId", EntityUtil.getId(timetable));
         

@@ -13,9 +13,7 @@
       <tbody md-body>
         <tr md-row ng-repeat="material in materials | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell>{{currentLanguageNameField(material.typeCode)}}</td>
-          <td md-cell>
-            <a ng-href="/#/studyMaterial/higher/{{subjectStudyPeriod.id}}/edit/{{material.id}}">{{currentLanguageNameField(material)}}</a>
-          </td>
+          <td md-cell>{{currentLanguageNameField(material)}}</td>
           <td md-cell ng-if="material.typeCode.code === 'OPPEMATERJAL_F'">
             <div layout="row" flex>
               <div>{{material.oisFile.fname}}</div>

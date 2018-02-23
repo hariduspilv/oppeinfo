@@ -32,30 +32,23 @@ public class Teacher extends BaseEntityWithId {
     private Boolean isVocational;
     private Boolean isHigher;
     private Short scheduleLoad;
-
     private Boolean isStudyPeriodScheduleLoad;
     private Boolean isActive;
-
     private String rtipNr;
+    private String addInfo;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private TeacherOccupation teacherOccupation;
-
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeacherAbsence> teacherAbsence;
-
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TeacherPositionEhis> teacherPositionEhis;
-
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TeacherMobility> teacherMobility;
-    
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TeacherContinuingEducation> teacherContinuingEducation;
-
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TeacherQualification> teacherQualification;
-    
     @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)
     private List<SubjectStudyPeriodTeacher> subjectStudyPeriods;
 
@@ -137,6 +130,14 @@ public class Teacher extends BaseEntityWithId {
 
     public void setRtipNr(String rtipNr) {
         this.rtipNr = rtipNr;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
 
     public TeacherOccupation getTeacherOccupation() {

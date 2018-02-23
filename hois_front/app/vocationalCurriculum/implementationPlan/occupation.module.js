@@ -21,24 +21,45 @@ angular.module('hitsaOis')
       return url && url.indexOf("new") !== -1;
     });
 
+    function filterAndSortYearCapacities() {
+      if($scope.studyYears && $scope.occupationModule && $scope.occupationModule.yearCapacities) {
+        var studyYears = $scope.studyYears.length;
+        $scope.occupationModule.yearCapacities = $scope.occupationModule.yearCapacities.filter(function(yc) {
+          return yc.studyYearNumber <= studyYears;
+        }).sort(function(yc1, yc2) {
+          return yc1.studyYearNumber - yc2.studyYearNumber;
+        });
+      }
+    }
+
     QueryUtils.endpoint(baseUrl + '/curriculumModule').get({ id: curriculumModule }).$promise.then(function(response){
       $scope.curriculumModule = response;
       if(!id) {
         $scope.occupationModule.assessmentsEt = response.assessmentsEt;
       }
+      var years = Math.floor(((response.studyPeriod || 0) + 11) / 12);
+      $scope.studyYears = Array.apply(null, {length: years}).map(function(it, index) { return index + 1; });
+      if(!id) {
+        $scope.occupationModule.yearCapacities = $scope.studyYears.map(function(it) { return {credits: 0, studyYearNumber: it}; });
+      } else {
+        filterAndSortYearCapacities();
+      }
     });
     $scope.backToEditForm = '#/vocationalCurriculum/' + curriculum + '/moduleImplementationPlan/' + curriculumVersion + '/edit';
     $scope.backToViewForm = '#/vocationalCurriculum/' + curriculum + '/moduleImplementationPlan/' + curriculumVersion + '/view';
+
+    var allCapacities = Classifier.queryForDropdown({ mainClassCode: 'MAHT', order: 'nameEt' });
+    allCapacities.$promise.then(function() {
+      $scope.capacities = allCapacities.filter(function (el) {
+        return el.vocational;
+      })
+    });
 
     var initial = {
       curriculumModule: curriculumModule,
       curriculumVersion: curriculumVersion,
       assessment: 'KUTSEHINDAMISVIIS_E',
-      yearCapacities: [
-        {credits: 0, studyYearNumber: 1},
-        {credits: 0, studyYearNumber: 2},
-        {credits: 0, studyYearNumber: 3}
-      ],
+      yearCapacities: [ {credits: 0, studyYearNumber: 1} ],
       themes: [],
       capacities: []
     };
@@ -63,14 +84,14 @@ angular.module('hitsaOis')
         message.info('main.messages.update.success');
         dtoToModel(response);
         $scope.occupationModuleForm.$setPristine();
-      });
+      }).catch(angular.noop);
     }
 
     function create() {
       $scope.occupationModule.$save().then(function (response) {
         message.info('main.messages.create.success');
         $location.path('/occupationModule/' + curriculum + '/' + curriculumVersion + '/' + curriculumModule + '/' + response.id + '/edit');
-      });
+      }).catch(angular.noop);
     }
 
     function capacitiesMatch() {
@@ -124,17 +145,21 @@ angular.module('hitsaOis')
      */
     function dtoToModel(response) {
       $scope.occupationModule = new Endpoint(response);
-      Classifier.queryForDropdown({ mainClassCode: 'MAHT', order: 'nameEt' }, function (response) {
-        $scope.capacities = response.filter(function (el) {
-          return el.vocational;
-        });
-        if(!$scope.occupationModule.id) {
+      if ($scope.occupationModule.supervisor) {
+        $scope.occupationModule.supervisor = $scope.occupationModule.supervisor.trim();
+      }
+      if ($scope.occupationModule.totalGradeDescription) {
+        $scope.occupationModule.totalGradeDescription = $scope.occupationModule.totalGradeDescription.trim();
+      }
+      if ($scope.occupationModule.requirementsEt) {
+        $scope.occupationModule.requirementsEt = $scope.occupationModule.requirementsEt.trim();
+      }
+      if(!$scope.occupationModule.id) {
+        allCapacities.$promise.then(function () {
           $scope.occupationModule.capacities = $scope.capacities.map(classifierToCapacity);
-        }
-      });
-      $scope.occupationModule.yearCapacities.sort(function(yc1, yc2){
-        return yc1.studyYearNumber - yc2.studyYearNumber;
-      });
+        });
+      }
+      filterAndSortYearCapacities();
     }
 
     $scope.hasThemes = function() {
@@ -145,9 +170,7 @@ angular.module('hitsaOis')
       Endpoint.get({id: id}).$promise.then(function(response){
         $scope.occupationModule.capacities = response.capacities;
         $scope.occupationModule.yearCapacities = response.yearCapacities;
-        $scope.occupationModule.yearCapacities.sort(function(yc1, yc2){
-          return yc1.studyYearNumber - yc2.studyYearNumber;
-        });
+        filterAndSortYearCapacities();
       });
     }
 
@@ -190,10 +213,8 @@ angular.module('hitsaOis')
               dialogScope.dialogForm.hours.$setDirty();
             }
           };
-
-          Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMISVIIS'}, function(response){
-            dialogScope.assessments = response;
-          });
+          dialogScope.studyYears = $scope.studyYears;
+          dialogScope.assessments = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMISVIIS'});
 
           dialogScope.setDefaultCredits = function () {
             dialogScope.occupationModuleTheme.credits = Math.round((dialogScope.occupationModuleTheme.hours / HOURS_PER_EKAP) * 10) / 10;

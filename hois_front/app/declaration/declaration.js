@@ -220,10 +220,10 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
       });
   };
 
-}]).controller('DeclarationSearchController', ['$scope', '$route', '$q', '$timeout', 'Classifier', 'DataUtils', 'QueryUtils', 'message', 'dialogService',
-  function ($scope, $route, $q, $timeout, Classifier, DataUtils, QueryUtils, message, dialogService) {
-
+}]).controller('DeclarationSearchController', ['$scope', '$route', '$q', '$timeout', 'Classifier', 'DataUtils', 'QueryUtils', 'message', 'dialogService', 'USER_ROLES', 'AuthService',
+  function ($scope, $route, $q, $timeout, Classifier, DataUtils, QueryUtils, message, dialogService, USER_ROLES, AuthService) {
     var auth = $route.current.locals.auth;
+    $scope.canConfirm = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_K_TEEMAOIGUS_OPINGUKAVA);
     var clMapper = Classifier.valuemapper({status: 'OPINGUKAVA_STAATUS'});
     QueryUtils.createQueryForm($scope, '/declarations', {order: 'dId'}, clMapper.objectmapper);
     DataUtils.convertStringToDates($scope.criteria, ['inserted', 'confirmDate']);

@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
@@ -223,8 +224,13 @@ public class ScholarshipService {
         Student student = em.getReference(Student.class, user.getStudentId());
         ScholarshipApplication application = getApplicationForTermAndStudent(term, student);
         result.put("stipend", ScholarshipTermApplicationDto.of(term));
-        result.put("studentInfo", ScholarshipStudentDto.of(student, getStudentCurriculumCompletion(student)));
+        ScholarshipStudentDto studentDto = ScholarshipStudentDto.of(student, getStudentCurriculumCompletion(student));
+        result.put("studentInfo", studentDto);
         ScholarshipApplicationDto studentSubmitData = ScholarshipApplicationDto.of(application);
+        if (application == null) {
+            studentSubmitData.setPhone(studentDto.getPhone());
+            studentSubmitData.setEmail(studentDto.getEmail());
+        }
         List<ScholarshipApplication> prevApplications = studentStipends(user.getStudentId());
         if (!prevApplications.isEmpty()) {
             prevApplications = prevApplications.stream().filter(a -> a.getBankAccount() != null)
@@ -263,6 +269,10 @@ public class ScholarshipService {
         application.setStudentGroup(student.getStudentGroup());
         refreshCompletionWithApplication(application);
         application.setCurriculumVersion(student.getCurriculumVersion());
+        Person person = student.getPerson();
+        application.setAddress(person.getAddress());
+        application.setAddressAds(person.getAddressAds());
+        application.setAddressAdsOid(person.getAddressAdsOid());
         application = bindApplicationFormToApplication(application, form);
         return EntityUtil.save(application, em);
     }

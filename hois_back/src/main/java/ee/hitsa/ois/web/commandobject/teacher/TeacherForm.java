@@ -39,6 +39,8 @@ public class TeacherForm extends VersionedCommand {
     private Short scheduleLoad;
     @Size(max = 20)
     private String rtipNr;
+    @Size(max = 1000)
+    private String addInfo;
 
     public Boolean getIsStudyPeriodScheduleLoad() {
         return isStudyPeriodScheduleLoad;
@@ -126,6 +128,14 @@ public class TeacherForm extends VersionedCommand {
 
     public void setRtipNr(String rtipNr) {
         this.rtipNr = rtipNr;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
 
     public static class TeacherPersonForm {

@@ -14,6 +14,7 @@
         replace: true,
         scope: {
           value: "=ngModel",
+          adsOid: "=adsOidModel",
           address: "=addressModel",
           required:'@',
           ngRequired:'=',
@@ -33,6 +34,7 @@
             var info = event.detail[0];
             scope.$apply(function(scope) {
               scope.value = info.koodaadress;
+              scope.adsOid = info.ads_oid;
               scope.address = info.aadress;
             });
             inAadressService.getInAds().hideResult();

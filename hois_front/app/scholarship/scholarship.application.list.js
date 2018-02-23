@@ -1,12 +1,13 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'DataUtils', '$q', '$sessionStorage',
-  function (Classifier, $scope, $location, message, QueryUtils, $route, DataUtils, $q, $sessionStorage) {
+angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'DataUtils', '$q', '$sessionStorage', 'AuthService', 'USER_ROLES',
+  function (Classifier, $scope, $location, message, QueryUtils, $route, DataUtils, $q, $sessionStorage, AuthService, USER_ROLES) {
     var baseUrl = '/scholarships';
     $scope.criteria = {};
     $scope.formState = {};
     $scope.formState.allowedStipendTypes = $route.current.locals.params.allowedStipendTypes;
     var stipend = $route.current.locals.params.stipend;
+    $scope.canManage = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS);
 
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
     var clMapper = Classifier.valuemapper({

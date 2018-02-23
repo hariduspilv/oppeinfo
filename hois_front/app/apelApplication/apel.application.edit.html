@@ -12,7 +12,7 @@
       </div>
 
       <div ng-hide="!application.student">
-        <fieldset style="min-width: 0;">
+        <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.formalLearnings.labelWithSubTitle' | translate}}</legend>
           <span ng-if="application.isVocational" ng-repeat="record in application.records | filter:{isFormalLearning: true} | orderBy:'id'">
             <div ng-include="'apelApplication/templates/apel.application.formal.learning.vocational.list.html'"
@@ -26,7 +26,7 @@
       <br>
 
       <div ng-hide="!application.student">
-        <fieldset style="min-width: 0;">
+        <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.informalLearnings.labelWithSubTitle' | translate}}</legend>
           <span ng-repeat="record in application.records | filter:{isFormalLearning: false} | orderBy:'id'">
               <div ng-if="application.isVocational" ng-include="'apelApplication/templates/apel.application.informal.learning.vocational.list.html'"
@@ -40,7 +40,7 @@
       <br>
 
       <div ng-hide="!application.student" layout="column" flex>
-        <fieldset style="min-width: 0;">
+        <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.addInfo.addInfos' | translate}}</legend>
           <md-button ng-if="editing" class="md-raised" ng-click="openEditCommentDialog()">{{'main.button.create' | translate}}</md-button>
           <md-table-container>
@@ -68,7 +68,7 @@
       <br>
 
       <div ng-hide="!application.student" layout="column" flex>
-        <fieldset style="min-width: 0;">
+        <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
           <md-button class="md-raised" ng-if="editing" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
           <table md-table class="secondary-table">

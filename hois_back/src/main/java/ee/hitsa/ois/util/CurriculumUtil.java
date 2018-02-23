@@ -47,6 +47,14 @@ public abstract class CurriculumUtil {
         return versionCode+" "+curriculumName;
     }
 
+    public static int studyYears(Curriculum c) {
+        return studyYears(c.getStudyPeriod());
+    }
+
+    public static int studyYears(Integer studyMonths) {
+        return studyMonths != null ? (studyMonths.intValue() + 11) / 12 : 1;
+    }
+
     public static boolean basicDataCanBeEdited(Curriculum c) {
         return !ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, c.getStatus());
     }

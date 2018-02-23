@@ -2,9 +2,11 @@ package ee.hitsa.ois.report.apelapplication;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationInformalSubjectOrModule;
+import ee.hitsa.ois.domain.apelapplication.ApelApplicationInformalSubjectOrModuleOutcomes;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
@@ -37,14 +39,14 @@ public class ApelApplicationInformalSubjectOrModuleReport {
             List<CurriculumVersionOccupationModuleTheme> themes = new ArrayList<>(informalSubjectOrModule.getCurriculumVersionOmodule().getThemes());
             credits = informalSubjectOrModule.getCurriculumVersionOmodule().getCurriculumModule().getCredits();
             hours = Short.valueOf((short) themes.stream().mapToInt(t -> t.getHours().intValue()).sum());
-            outcomes = StreamUtil.toMappedList(o -> outcomeName(o.getCurriculumModuleOutcomes(), lang), informalSubjectOrModule.getOutcomes());
+            outcomes = sortedOutcomes(informalSubjectOrModule.getOutcomes(), lang);
             module = null;
         } else {
             CurriculumModule curriculumModule = informalSubjectOrModule.getCurriculumVersionOmodule().getCurriculumModule();
             name = curriculumModule.getNameEt() + "/" + informalSubjectOrModule.getCurriculumVersionOmoduleTheme().getNameEt();
             credits = informalSubjectOrModule.getCurriculumVersionOmoduleTheme().getCredits();
             hours = informalSubjectOrModule.getCurriculumVersionOmoduleTheme().getHours();
-            outcomes = StreamUtil.toMappedList(o -> outcomeName(o.getCurriculumModuleOutcomes(), lang), informalSubjectOrModule.getOutcomes());
+            outcomes = sortedOutcomes(informalSubjectOrModule.getOutcomes(), lang);
             module = null;
         }
         isCompulsory = Boolean.valueOf(!informalSubjectOrModule.getIsOptional().booleanValue());
@@ -92,5 +94,12 @@ public class ApelApplicationInformalSubjectOrModuleReport {
 
     private static String outcomeName(CurriculumModuleOutcome outcome, Language lang) {
         return  Language.EN.equals(lang) ? outcome.getOutcomeEn() : outcome.getOutcomeEt();
+    }
+    
+    private static List<String> sortedOutcomes(List<ApelApplicationInformalSubjectOrModuleOutcomes> outcomes, Language lang) {
+        List<CurriculumModuleOutcome> moduleOutcomes = StreamUtil.toMappedList(o -> o.getCurriculumModuleOutcomes(), outcomes);
+        moduleOutcomes.sort(Comparator.comparing(CurriculumModuleOutcome::getOrderNr)
+                .thenComparing(Language.EN.equals(lang) ? CurriculumModuleOutcome::getOutcomeEn : CurriculumModuleOutcome::getOutcomeEt));
+        return StreamUtil.toMappedList(o -> outcomeName(o, lang), moduleOutcomes);
     }
 }

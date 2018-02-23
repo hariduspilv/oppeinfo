@@ -21,7 +21,7 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodSearchService;
 import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodService;
-import ee.hitsa.ois.util.SubjectStudyPeriodValidationUtil;
+import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -62,14 +62,14 @@ public class SubjectStudyPeriodController {
     public SubjectStudyPeriodDto update(
             @WithVersionedEntity(versionRequestBody = true) SubjectStudyPeriod subjectStudyPeriod, 
             @Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user) {
-        SubjectStudyPeriodValidationUtil.assertCanUpdate(user, subjectStudyPeriod);
+        SubjectStudyPeriodUtil.assertCanUpdate(user, subjectStudyPeriod);
         return get(user, subjectStudyPeriodService.update(subjectStudyPeriod, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") 
     SubjectStudyPeriod subjectStudyPeriod, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        SubjectStudyPeriodValidationUtil.assertCanUpdate(user, subjectStudyPeriod);
+        SubjectStudyPeriodUtil.assertCanUpdate(user, subjectStudyPeriod);
         subjectStudyPeriodService.delete(user, subjectStudyPeriod);
     }
     

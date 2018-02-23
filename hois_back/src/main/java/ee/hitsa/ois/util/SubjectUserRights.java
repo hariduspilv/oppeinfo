@@ -4,6 +4,7 @@ import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.validation.ValidationFailedException;
 
 public abstract class SubjectUserRights {
 
@@ -52,5 +53,47 @@ public abstract class SubjectUserRights {
         return UserUtil.isSchoolAdmin(user, subject.getSchool())
                 && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_AINE)
                 && SubjectUtil.isActive(subject);
+    }
+
+    public static void assertCanView(HoisUserDetails user, Subject subject) {
+        if(!canView(user, subject)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanSearch(HoisUserDetails user) {
+        if(!canSearch(user)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanCreate(HoisUserDetails user) {
+        if(!hasPermissionToEdit(user)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanEdit(HoisUserDetails user, Subject subject) {
+        if(!canEdit(user, subject)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanDelete(HoisUserDetails user, Subject subject) {
+        if(!canDelete(user, subject)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanSetActive(HoisUserDetails user, Subject subject) {
+        if(!canSetActive(user, subject)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanSetPassive(HoisUserDetails user, Subject subject) {
+        if(!canSetPassive(user, subject)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
     }
 }

@@ -9,7 +9,6 @@ angular.module('hitsaOis').controller('ApelApplicationListController', function 
   QueryUtils.createQueryForm($scope, '/apelApplications', {
     order: 'student_lastname, student_firstname, inserted desc'
   });
-  $q.all(clMapper.promises).then($scope.loadData);
 
   if ($scope.auth.isStudent()) {
     $scope.afterLoadData = function (resultData) {
@@ -18,9 +17,11 @@ angular.module('hitsaOis').controller('ApelApplicationListController', function 
     };
   }
 
-  if ($scope.criteria && !$scope.criteria.status && !$scope.auth.isStudent()) {
+  if (!$scope.criteria.status && !$scope.auth.isStudent()) {
     $scope.criteria.status = ["VOTA_STAATUS_E"];
   }
+
+  $q.all(clMapper.promises).then($scope.loadData);
 
   $scope.$watch('criteria.studentObject', function () {
     $scope.criteria.student = $scope.criteria.studentObject ? $scope.criteria.studentObject.id : null;

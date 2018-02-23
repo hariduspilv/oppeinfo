@@ -4,6 +4,8 @@ import java.util.EnumMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.springframework.security.access.AccessDeniedException;
+
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
@@ -279,7 +281,7 @@ public abstract class UserUtil {
     }
 
     public static void assertIsSchoolAdmin(HoisUserDetails user, Permission permission, PermissionObject object) {
-        AssertionFailedException.throwIf(!user.isSchoolAdmin() || !hasPermission(user, permission, object), "User is not school admin or has no rights");
+        throwAccessDeniedIf(!user.isSchoolAdmin() || !hasPermission(user, permission, object), "User is not school admin or has no rights");
     }
 
     public static void assertIsMainAdmin(HoisUserDetails user) {
@@ -290,8 +292,12 @@ public abstract class UserUtil {
         AssertionFailedException.throwIf(!isSchoolAdmin(user, school), "User is not school admin in given school");
     }
 
+    public static void assertHasPermission(HoisUserDetails user, Permission permission, PermissionObject object) {
+        throwAccessDeniedIf(!hasPermission(user, permission, object), "User has no rights");
+    }
+
     public static void assertIsSchoolAdmin(HoisUserDetails user, School school, Permission permission, PermissionObject object) {
-        AssertionFailedException.throwIf(!isSchoolAdmin(user, school) || !hasPermission(user, permission, object), "User is not school admin in given school or has no rights");
+        throwAccessDeniedIf(!isSchoolAdmin(user, school) || !hasPermission(user, permission, object), "User is not school admin in given school or has no rights");
     }
 
     public static void assertIsSchoolAdminOrTeacher(HoisUserDetails user) {
@@ -346,4 +352,11 @@ public abstract class UserUtil {
             ROLE_NAME_CACHE.put(p, new ConcurrentHashMap<>());
         }
     }
+    
+    public static void throwAccessDeniedIf(boolean expression, String message) {
+        if (expression) {
+            throw new AccessDeniedException(message);
+        }
+    }
+    
 }

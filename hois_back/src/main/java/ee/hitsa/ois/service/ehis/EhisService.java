@@ -154,10 +154,11 @@ public abstract class EhisService {
                 isikuandmedLisa.setPerenimi(person.getLastname());
             }
             if (person.getCitizenship() != null) {
-                isikuandmedLisa.setKlKodakondsus(EntityUtil.getCode(person.getCitizenship()));
+                // XXX citizenship is three letters?
+                isikuandmedLisa.setKlKodakondsus(value(person.getCitizenship()));
             }
             if (person.getResidenceCountry() != null) {
-                isikuandmedLisa.setKlElukohamaa(value2(person.getCitizenship()));
+                isikuandmedLisa.setKlElukohamaa(value2(person.getResidenceCountry()));
             }
         }
 

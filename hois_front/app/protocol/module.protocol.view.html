@@ -17,6 +17,12 @@
                       </md-tooltip>
                     </div>
                   </th>
+                  <th md-column ng-if="formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
+                    <div>
+                      {{'moduleProtocol.outcome' | translate}}{{outcome.orderNr + 1}}
+                      <md-tooltip>{{outcome.nameEt}}</md-tooltip>
+                    </div>
+                  </th>
                   <th md-column>{{'moduleProtocol.moduleGrade' | translate}}</th>
                 </tr>
               </thead>
@@ -26,6 +32,9 @@
                 <td md-cell>{{row.idcode}}</td>
                 <td md-cell ng-repeat="journal in journals | orderBy: 'nameEt'">
                   {{journalResultsView(journal.id, row)}}
+                </td>
+                <td md-cell ng-if="formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
+                  {{outcomeResultsView(outcome.id, row)}}
                 </td>
                 <td md-cell>{{gradeValue(row.grade)}}</td>
               </tr>

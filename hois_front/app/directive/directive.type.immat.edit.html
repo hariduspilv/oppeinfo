@@ -69,8 +69,7 @@
           </div>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-if="!row._found" ng-model="row.citizenship" name="students[{{$index}}].citizenship" model-value-attr="code" main-classifier-code="RIIK" aria-label="{{'directive.student.citizenship' | translate}}"></hois-classifier-select>
-          <hois-classifier-value ng-if="row._found" ng-model="row.citizenship" main-classifier-code="RIIK"></hois-classifier-value>
+          <hois-classifier-select ng-model="row.citizenship" name="students[{{$index}}].citizenship" model-value-attr="code" main-classifier-code="RIIK" aria-label="{{'directive.student.citizenship' | translate}}"></hois-classifier-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].citizenship'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
           </div>
@@ -83,7 +82,7 @@
         </td>
         <td md-cell ng-if="formState.school.higher">
           <hois-classifier-select ng-model="row.studyLoad" name="students[{{$index}}].studyLoad" criteria="{higher: true}" model-value-attr="code" main-classifier-code="OPPEKOORMUS" aria-label="{{'directive.student.studyLoad' | translate}}"></hois-classifier-select>
-          <div class="invalid" ng-messages="directiveForm['students['+$index+'studyLoad'].$error">
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].studyLoad'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
           </div>
         </td>

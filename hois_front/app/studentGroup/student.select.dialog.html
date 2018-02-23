@@ -4,18 +4,20 @@
       <div class="md-dialog-content">
         <md-table-container>
           <table md-table md-row-select multiple ng-model="formState.selectedStudents">
-            <thead md-head md-order="criteria.order">
+            <thead md-head md-order="formState.order">
               <tr md-row>
-                <th md-column>{{'studentGroup.studentname' | translate}}</th>
-                <th md-column>{{'studentGroup.idcode' | translate}}</th>
-                <th md-column>{{formState.curriculumVersionLabel | translate}}</th>
+                <th md-column md-order-by="rowno">{{'studentGroup.studentname' | translate}}</th>
+                <th md-column md-order-by="idcode">{{'studentGroup.idcode' | translate}}</th>
+                <th md-column md-order-by="curriculumVersion.{{$root.currentLanguageNameField()}}">{{formState.curriculumVersionLabel | translate}}</th>
+                <th md-column md-order-by="status.{{$root.currentLanguageNameField()}}">{{'studentGroup.studentstatus' | translate}}</th>
               </tr>
             </thead>
             <tbody md-body>
-              <tr md-row md-select="row" md-select-id="id" md-auto-select ng-repeat="row in formState.students" ng-class-odd="'odd'" ng-class-even="'even'">
+              <tr md-row md-select="row" md-select-id="id" md-auto-select ng-repeat="row in formState.students | orderBy: formState.order" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{::row.fullname}}</td>
                 <td md-cell>{{::row.idcode}}</td>
                 <td md-cell>{{$root.currentLanguageNameField(row.curriculumVersion)}}</td>
+                <td md-cell>{{$root.currentLanguageNameField(row.status)}}</td>
               </tr>
             </tbody>
           </table>

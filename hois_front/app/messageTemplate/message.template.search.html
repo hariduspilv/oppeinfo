@@ -57,7 +57,7 @@
             <td md-cell>{{::row.headline}}</td>
             <td md-cell>{{::row.validFrom | hoisDate}}</td>
             <td md-cell>{{::row.validThru | hoisDate}}</td>
-            <td md-cell>{{isValid(row) ? 'main.valid' : 'main.invalid' | translate}}</td>
+            <td md-cell>{{row._isValid ? 'main.valid' : 'main.invalid' | translate}}</td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AUTOTEADE')" ng-href="#/messageTemplate/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>

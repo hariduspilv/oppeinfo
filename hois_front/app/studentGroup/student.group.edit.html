@@ -81,21 +81,25 @@
 	<div>&nbsp;</div>
     <md-table-container ng-if="formState.students">
       <table md-table md-row-select="!record.id" multiple ng-model="formState.selectedStudents">
-        <thead md-head md-order="criteria.order">
+        <thead md-head md-order="formState.order">
           <tr md-row>
-            <th md-column>{{'studentGroup.studentname' | translate}}</th>
-            <th md-column>{{'studentGroup.idcode' | translate}}</th>
-            <th md-column>{{formState.curriculumVersionLabel | translate}}</th>
+            <th md-column>{{'main.rowno' | translate}}</th>
+            <th md-column md-order-by="rowno">{{'studentGroup.studentname' | translate}}</th>
+            <th md-column md-order-by="idcode">{{'studentGroup.idcode' | translate}}</th>
+            <th md-column md-order-by="curriculumVersion.{{currentLanguageNameField()}}">{{formState.curriculumVersionLabel | translate}}</th>
+            <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'studentGroup.studentstatus' | translate}}</th>
             <th></th>
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row md-select="row" md-select-id="id" md-auto-select ng-repeat="row in formState.students" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row md-select="row" md-select-id="id" md-auto-select ng-repeat="row in formState.students | orderBy: formState.order" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.rowno}}</td>
             <td md-cell>
               <a ng-disabled="!record.id" class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
             </td>
             <td md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>
               <a ng-if="record.id" md-no-ink class="remove" ng-click="removeStudent(row.id)">&times;</a>
             </td>

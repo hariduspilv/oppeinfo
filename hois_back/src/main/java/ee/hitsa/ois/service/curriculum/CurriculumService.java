@@ -3,10 +3,15 @@ package ee.hitsa.ois.service.curriculum;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -27,6 +32,8 @@ import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapacity;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
@@ -48,6 +55,7 @@ import ee.hitsa.ois.util.StateCurriculumUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudyLevelUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumFileForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumForm;
@@ -76,6 +84,12 @@ public class CurriculumService {
     @Autowired
     private SchoolService schoolService;
 
+    /**
+     * Delete curriculum
+     *
+     * @param user
+     * @param curriculum
+     */
     public void delete(HoisUserDetails user, Curriculum curriculum) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(curriculum, em);
@@ -85,6 +99,13 @@ public class CurriculumService {
         return classifierRepository.findAreasOfStudyByGroupOfStudy(code);
     }
 
+    /**
+     * Create new curriculum
+     *
+     * @param user
+     * @param curriculumForm
+     * @return
+     */
     public Curriculum create(HoisUserDetails user, CurriculumForm curriculumForm) {
         Curriculum curriculum = new Curriculum();
         curriculum.setSchool(em.getReference(School.class, user.getSchoolId()));
@@ -102,23 +123,91 @@ public class CurriculumService {
         return save(user, curriculum, curriculumForm);
     }
 
+    /**
+     * Update curriculum
+     *
+     * @param user
+     * @param curriculum
+     * @param curriculumForm
+     * @return
+     */
     public Curriculum save(HoisUserDetails user, Curriculum curriculum, CurriculumForm curriculumForm) {
         EntityUtil.setUsername(user.getUsername(), em);
+        Integer oldStudyPeriod = curriculum.getStudyPeriod();
         EntityUtil.bindToEntity(curriculumForm, curriculum, classifierRepository, "draft", "higher",
               "versions", "studyLanguages", "studyForms", "schoolDepartments", "files",
               "jointPartners", "specialities", "modules", "occupations", "grades");
 
-        if(CurriculumUtil.isVocational(curriculum)) {
-            updateStudyForms(curriculum, curriculumForm.getStudyForms());
-        }
         if(curriculum.getId() != null) {
             updateCurriculumFiles(curriculum, StreamUtil.toMappedSet(CurriculumFileDto::of, curriculumForm.getFiles()));
         }
         updateDepartments(curriculum, curriculumForm.getSchoolDepartments());
         updateLanguages(curriculum, curriculumForm.getStudyLanguages());
         updateJointPartners(curriculum, curriculumForm.getJointPartners());
-        if(CurriculumUtil.isVocational(curriculum) && Boolean.TRUE.equals(curriculum.getJoint())) {
-            updateVersionsSchoolDepartments(curriculum);
+        if(CurriculumUtil.isVocational(curriculum)) {
+            updateStudyForms(curriculum, curriculumForm.getStudyForms());
+            if(Boolean.TRUE.equals(curriculum.getJoint())) {
+                updateVersionsSchoolDepartments(curriculum);
+            }
+            if(curriculum.getId() != null) {
+                // check studyPeriod length change and adjust studyYearNumber-related data
+                int oldStudyYears = CurriculumUtil.studyYears(oldStudyPeriod);
+                int newStudyYears = CurriculumUtil.studyYears(curriculumForm.getStudyPeriod());
+                if(oldStudyYears > newStudyYears) {
+                    // new period is shorter, check that there are no themes with given years
+                    List<?> data = em.createNativeQuery("select cv.code from curriculum_version_omodule_theme cvot"
+                            + " join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id"
+                            + " join curriculum_version cv on cvo.curriculum_version_id = cv.id"
+                            + " where cv.curriculum_id = ?1 and cvot.study_year_number > ?2")
+                        .setParameter(1, curriculum.getId())
+                        .setParameter(2, Integer.valueOf(newStudyYears))
+                        .getResultList();
+                    if(!data.isEmpty()) {
+                        // themes with bad study year numbers, fail
+                        String cvNames = data.stream().map(r -> resultAsString(r, 0)).distinct().sorted().collect(Collectors.joining(", "));
+                        throw new ValidationFailedException(
+                                Collections.singletonList(new Error("curriculum.error.vocationalThemesWithBadStudyYearNumberPresent",
+                                        Collections.singletonMap("versions", cvNames))));
+                    }
+                    // delete excess year capacities
+                    em.createNativeQuery("delete from curriculum_version_omodule_year_capacity cvomyc"
+                            + " where curriculum_version_omodule_id in (select cvo.id from curriculum_version_omodule cvo"
+                                + " join curriculum_version cv on cvo.curriculum_version_id = cv.id and cv.curriculum_id = ?1)"
+                                + " and study_year_number > ?2")
+                        .setParameter(1, curriculum.getId())
+                        .setParameter(2, Integer.valueOf(newStudyYears))
+                        .executeUpdate();
+                } else if(oldStudyYears < newStudyYears) {
+                    // new period is longer, add new year capacity entries for modules
+                    // watch out for existing legacy values for first 3 years
+                    List<?> data = em.createNativeQuery("select cvo.id, cvomyc.study_year_number from curriculum_version_omodule cvo"
+                            + " join curriculum_version cv on cvo.curriculum_version_id = cv.id"
+                            + " left join curriculum_version_omodule_year_capacity cvomyc on cvomyc.curriculum_version_omodule_id = cvo.id"
+                            + " where cv.curriculum_id = ?1")
+                        .setParameter(1, curriculum.getId())
+                        .getResultList();
+
+                    Map<Long, Set<Long>> yearCapacities = data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                            Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toSet())));
+                    List<Long> changedYears = new ArrayList<>();
+                    for(int i = Math.min(oldStudyYears, newStudyYears)+1, cnt = Math.max(oldStudyYears, newStudyYears);i <= cnt;i++) {
+                        changedYears.add(Long.valueOf((short)i));
+                    }
+
+                    for(Map.Entry<Long, Set<Long>> cvo : yearCapacities.entrySet()) {
+                        CurriculumVersionOccupationModule cvom = em.getReference(CurriculumVersionOccupationModule.class, cvo.getKey());
+                        for(Long studyYearNumber : changedYears) {
+                            if(!cvo.getValue().contains(studyYearNumber)) {
+                                CurriculumVersionOccupationModuleYearCapacity cvomyc = new CurriculumVersionOccupationModuleYearCapacity();
+                                cvomyc.setModule(cvom);
+                                cvomyc.setStudyYearNumber(Short.valueOf(studyYearNumber.shortValue()));
+                                cvomyc.setCredits(BigDecimal.ZERO);
+                                cvom.getYearCapacities().add(cvomyc);
+                            }
+                        }
+                    }
+                }
+            }
         }
         return EntityUtil.save(curriculum, em);
     }
@@ -150,7 +239,7 @@ public class CurriculumService {
         qb.requiredCriteria("s.ehis_school_code in :ehisSchools", "ehisSchools", ehisSchools);
 
         List<?> data = qb.select("sd.id", em).getResultList();
-        List<Long> schoolDepartments = StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
+        Set<Long> schoolDepartments = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
 
         for(CurriculumVersion version: curriculum.getVersions()) {
             if(!schoolDepartments.contains(EntityUtil.getNullableId(version.getSchoolDepartment()))) {

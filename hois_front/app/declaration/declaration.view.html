@@ -56,6 +56,7 @@
           <th md-column>{{'declaration.eap_assessment' | translate}}</th>
           <th md-column>{{'declaration.module_isRequired' | translate}}</th>
           <th md-column>{{'declaration.prerequisites' | translate}}</th>
+          <th md-column>{{'studyMaterial.label' | translate}}</th>
         </tr>
       </thead>
       <tbody md-body>
@@ -79,6 +80,7 @@
               {{'declaration.seePrerequisites' | translate}}</a>
             </span>
           </td>
+          <td md-cell><a ng-href="/#/studyMaterial/higher/{{subject.subjectStudyPeriod}}/view">{{'studyMaterial.openfolder' | translate}}</a></td>
         </tr>
       </tbody>
     </table>

@@ -3,7 +3,7 @@
     <div ng-include="'apelApplication/templates/apel.application.information.html'"></div>
 
     <div>
-      <fieldset style="min-width: 0;">
+      <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.formalLearnings.labelWithSubTitle' | translate}}</legend>
         <span ng-if="application.isVocational" ng-repeat="record in application.records | filter:{isFormalLearning: true}">
           <div ng-include="'apelApplication/templates/apel.application.formal.learning.vocational.list.html'"
@@ -16,7 +16,7 @@
     <br>
 
     <div>
-      <fieldset style="min-width: 0;">
+      <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.informalLearnings.labelWithSubTitle' | translate}}</legend>
         <span ng-repeat="record in application.records | filter:{isFormalLearning: false}">
           <div ng-if="application.isVocational" ng-include="'apelApplication/templates/apel.application.informal.learning.vocational.list.html'"
@@ -95,7 +95,14 @@
 
       <div layout="row">
         <md-button ng-if="application.status !== 'VOTA_STAATUS_C' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_VOTA')" class="md-raised md-primary" ng-href="#/apelApplication/{{::applicationId}}/edit">{{'main.button.edit' | translate}}</md-button>
-        <md-button ng-if="application.status === 'VOTA_STAATUS_C' && auth.isAdmin() && canConfirmAndRemoveConfirmation" class="md-raised md-default"
+        <md-button class="md-raised md-default" ng-if="application.status === 'VOTA_STAATUS_E' && auth.isAdmin()" ng-click="sendToConfirm()">{{'apel.sendToConfirm' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-if="application.status === 'VOTA_STAATUS_E' && auth.isAdmin()" ng-click="sendBackToCreation()">{{'apel.sendBackToCreation' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-if="application.status === 'VOTA_STAATUS_Y' && auth.isAdmin() && canConfirmAndRemoveConfirmation"
+          ng-click="confirm()">{{'apel.confirm' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-if="application.status === 'VOTA_STAATUS_Y' && auth.isAdmin()" ng-click="sendBack()">{{'apel.sendBack' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-if="(application.status === 'VOTA_STAATUS_E' || application.status === 'VOTA_STAATUS_Y') && auth.isAdmin()"
+          ng-click="reject()">{{'apel.reject' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-if="application.status === 'VOTA_STAATUS_C' && auth.isAdmin() && canConfirmAndRemoveConfirmation"
           ng-click="removeConfirmation()">{{'apel.removeConfirmation' | translate}}</md-button>
         <a href="{{applicationPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
         <md-button class="md-raised md-default" href="/#/apelApplication/">{{'main.button.back' | translate}}</md-button>

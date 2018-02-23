@@ -1,22 +1,35 @@
 'use strict';
 
 angular.module('hitsaOis').controller('StudentAbsenceController',
-  ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', 'message', '$route', function ($scope, $sessionStorage, QueryUtils, DataUtils, message, $route) {
+  ['$scope', '$route', '$timeout', 'QueryUtils', 'DataUtils', 'message', function ($scope, $route, $timeout, QueryUtils, DataUtils, message) {
 
-    var defaultParams = {
-      order: '-sa.inserted',
-      studyYear: $route.current.locals.currentStudyYear.currentStudyYear,
-      isAccepted: false
+    QueryUtils.createQueryForm($scope, '/absences', {order: '-sa.inserted', isAccepted: false});
+    DataUtils.convertStringToDates($scope.criteria, ['validFrom', 'validThru']);
+
+    var loadData = $scope.loadData;
+    $scope.loadData = function() {
+      $scope.absencesSearchForm.$setSubmitted();
+      if(!$scope.absencesSearchForm.$valid) {
+        message.error('main.messages.form-has-errors');
+      } else {
+        loadData();
+      }
     };
 
-    QueryUtils.createQueryForm($scope, '/absences', defaultParams);
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+    $scope.studyYears = QueryUtils.endpoint('/autocomplete/studyYears').query();
+    $scope.studyYears.$promise.then(function() {
+      var currentStudyYear = DataUtils.getCurrentStudyYearOrPeriod($scope.studyYears);
+      $scope.criteria.studyYear = currentStudyYear ? currentStudyYear.id : undefined;
 
-    $scope.studyPeriods = $route.current.locals.studyPeriods;
+      if($scope.criteria.studyYear) {
+        $timeout($scope.loadData);
+      } else if($scope.studyYears.length === 0) {
+        message.error('studyYear.missing');
+      }
+    });
 
-    DataUtils.convertStringToDates($scope.criteria, ['validFrom', 'validThru']);
-    $scope.loadData();
     var AcceptEndpoint = QueryUtils.endpoint('/absences/accept');
-
     $scope.accept = function (absence) {
       new AcceptEndpoint(absence).$update().then(function (response) {
         absence.isAccepted = response.isAccepted;
@@ -26,23 +39,13 @@ angular.module('hitsaOis').controller('StudentAbsenceController',
       });
     };
 
-    var initialLoad = true;
-
-    $scope.$watch('criteria.studyYear', function () {
-      if (!$scope.criteria.studyYear) {
-        $scope.criteria.studyYear = $route.current.locals.currentStudyYear.currentStudyYear;
-      }
-      if(initialLoad) {
-        initialLoad = false;
-      } else {
-        $scope.criteria.studyPeriod = undefined;
-      }
-    });
-
     $scope.filterByStudyYear = function(studyYearId) {
       return function(studyPeriod) {
         return !studyYearId || studyPeriod.studyYear === studyYearId;
       };
     };
 
+    $scope.studyYearChanged = function() {
+      $scope.criteria.studyPeriod = undefined;
+    };
   }]);

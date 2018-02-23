@@ -25,6 +25,7 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
     /* variables related to curriculum */
     private Set<CurriculumOccupationDto> curriculumOccupations;
     private Boolean occupation;
+    private Integer studyPeriod;
     private Boolean basicDataCanBeEdited;
     public Boolean canHaveOccupations;
 
@@ -59,7 +60,7 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
         dto.setType(ClassifierSelection.of(module.getModule()));
         dto.setOutcomes(StreamUtil.toMappedSet(CurriculumModuleOutcomeDto::of, module.getOutcomes()));
         dto.setAssessmentsEt(module.getAssessmentsEt());
-        
+        dto.setStudyPeriod(module.getCurriculum().getStudyPeriod());
         return dto;
     }
 
@@ -109,6 +110,14 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
 
     public void setOccupation(Boolean occupation) {
         this.occupation = occupation;
+    }
+
+    public Integer getStudyPeriod() {
+        return studyPeriod;
+    }
+
+    public void setStudyPeriod(Integer studyPeriod) {
+        this.studyPeriod = studyPeriod;
     }
 
     public Boolean getCanHaveOccupations() {

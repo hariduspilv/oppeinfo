@@ -37,7 +37,9 @@
           rooms: event.rooms,
           teachers: event.teachers,
           studentGroups: event.studentGroups,
-          public: event.publicEvent
+          public: event.publicEvent,
+          journalId: event.journalId,
+          subjectStudyPeriodId: event.subjectStudyPeriodId
         });
       }
     }

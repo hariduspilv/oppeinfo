@@ -313,11 +313,13 @@ public class DirectiveService {
         }
 
         if(KASKKIRI_IMMAT.equals(directiveType)) {
-            // one of idcode, foreignIdcode or birthdate must be set
             long rowNum = 0;
             for(DirectiveFormStudent dfs : StreamUtil.nullSafeList(form.getStudents())) {
                 if(!StringUtils.hasText(dfs.getSex())) {
                     errors.add(new ErrorForField(Required.MESSAGE, DirectiveConfirmService.propertyPath(rowNum, "sex")));
+                }
+                if(!StringUtils.hasText(dfs.getCitizenship())) {
+                    errors.add(new ErrorForField(Required.MESSAGE, DirectiveConfirmService.propertyPath(rowNum, "citizenship")));
                 }
                 rowNum++;
             }
@@ -830,6 +832,8 @@ public class DirectiveService {
             } else if(sais != null) {
                 // update existing person from sais application
                 personFromSaisApplication(person, sais);
+            } else {
+                setPersonCitizenship(person, formStudent);
             }
             directiveStudent.setPerson(person);
         } else if(StringUtils.hasText(formStudent.getForeignIdcode()) || (formStudent.getBirthdate() != null && StringUtils.hasText(formStudent.getSex()))) {
@@ -852,9 +856,15 @@ public class DirectiveService {
             } else if(sais != null) {
                 // update existing person from sais application
                 personFromSaisApplication(person, sais);
+            } else {
+                setPersonCitizenship(person, formStudent);
             }
             directiveStudent.setPerson(person);
         }
+    }
+
+    private void setPersonCitizenship(Person person, DirectiveFormStudent formStudent) {
+        person.setCitizenship(EntityUtil.validateClassifier(EntityUtil.getOptionalOne(formStudent.getCitizenship(), em), MainClassCode.RIIK));
     }
 
     private static void personFromSaisApplication(Person person, SaisApplication sais) {
@@ -870,6 +880,7 @@ public class DirectiveService {
         person.setCitizenship(sais.getCitizenship());
         person.setResidenceCountry(sais.getResidenceCountry());
         person.setAddressAds(sais.getAddressAds());
+        person.setAddressAdsOid(sais.getAddressAdsOid());
     }
 
     private Person findForeignPerson(DirectiveFormStudent formStudent) {
@@ -878,7 +889,9 @@ public class DirectiveService {
             q = em.createQuery("select p from Person p where p.foreignIdcode = ?1", Person.class)
                     .setParameter(1, formStudent.getForeignIdcode());
         } else {
-            q = em.createQuery("select p from Person p where upper(p.firstname) = ?1 and upper(p.lastname) = ?2 and p.birthdate = ?3 and p.sex.code = ?4", Person.class)
+            // XXX similar code in TeacherService.create
+            q = em.createQuery("select p from Person p where p.idcode is null and p.foreignIdcode is null " +
+                    "and upper(p.firstname) = ?1 and upper(p.lastname) = ?2 and p.birthdate = ?3 and p.sex.code = ?4", Person.class)
                     .setParameter(1, formStudent.getFirstname().toUpperCase())
                     .setParameter(2, formStudent.getLastname().toUpperCase())
                     .setParameter(3, formStudent.getBirthdate())

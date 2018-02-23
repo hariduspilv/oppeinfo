@@ -31,9 +31,9 @@
 
       loadMaterials();
 
-      $scope.deleteConnection = function (materialConnect) {
+      $scope.deleteConnection = function (materialConnect, connections) {
         dialogService.confirmDialog({
-          prompt: 'studyMaterial.deleteconfirm'
+          prompt: (connections > 1) ? 'studyMaterial.deleteconfirm' : 'studyMaterial.deletelastconfirm'
         }, function () {
           var connection = new ConnectEndpoint(materialConnect);
           connection.$delete().then(function () {
@@ -52,6 +52,7 @@
         connection.studyMaterial = $scope.existingMaterial.id;
         connection.subjectStudyPeriod = $scope.subjectStudyPeriod.id;
         connection.$save().then(function () {
+          $scope.existingMaterial = undefined;
           loadMaterials();
         });
       };
@@ -81,9 +82,9 @@
 
         loadMaterials();
 
-        $scope.deleteConnection = function (materialConnect) {
+        $scope.deleteConnection = function (materialConnect, connections) {
           dialogService.confirmDialog({
-            prompt: 'studyMaterial.deleteconfirm'
+            prompt: (connections > 1) ? 'studyMaterial.deleteconfirm' : 'studyMaterial.deletelastconfirm'
           }, function () {
             var connection = new ConnectEndpoint(materialConnect);
             connection.$delete().then(function () {
@@ -102,6 +103,7 @@
           connection.studyMaterial = $scope.existingMaterial.id;
           connection.journal = $scope.journal.id;
           connection.$save().then(function () {
+            $scope.existingMaterial = undefined;
             loadMaterials();
           });
         };

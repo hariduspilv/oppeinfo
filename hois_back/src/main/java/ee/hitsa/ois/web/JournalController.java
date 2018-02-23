@@ -13,6 +13,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,15 +25,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.service.JournalService;
 import ee.hitsa.ois.service.JournalUnconfirmedService;
 import ee.hitsa.ois.service.StudyYearService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.JournalUtil;
-import ee.hitsa.ois.util.JournalValidationUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.JournalStudentHasAbsenceCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEndDateCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
@@ -67,13 +69,13 @@ public class JournalController {
 
     @GetMapping
     public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
-        JournalValidationUtil.assertCanView(user);
+        JournalUtil.assertCanView(user);
         return journalService.search(user, command, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
     public JournalDto get(HoisUserDetails user, @WithEntity Journal journal) {
-        JournalValidationUtil.assertCanView(user, journal);
+        JournalUtil.assertCanView(user, journal);
         JournalDto dto = JournalDto.of(journal);
         dto.setCanBeConfirmed(Boolean.valueOf(JournalUtil.canConfirm(user, journal)));
         dto.setCanBeUnconfirmed(Boolean.valueOf(JournalUtil.canUnconfirm(user, journal)));
@@ -83,55 +85,62 @@ public class JournalController {
 
     @PutMapping("/confirm/{id:\\d+}")
     public JournalDto confirm(HoisUserDetails user, @WithEntity Journal journal) {
-        JournalValidationUtil.asssertCanConfirm(user, journal);
+        JournalUtil.asssertCanConfirm(user, journal);
         return get(user, journalService.confirm(journal));
     }
     
     @PutMapping("/unconfirm/{id:\\d+}")
     public JournalDto unconfirm(HoisUserDetails user, @WithEntity Journal journal) {
-        JournalValidationUtil.asssertCanUnconfirm(user, journal);
+        JournalUtil.asssertCanUnconfirm(user, journal);
         return get(user, journalService.unconfirm(journal));
     }
 
     @PostMapping("/{id:\\d+}/saveEndDate")
     public void saveEndDate(HoisUserDetails user, @WithEntity Journal journal, @RequestBody JournalEndDateCommand command) {
-        JournalValidationUtil.asssertCanConfirm(user, journal);
+        JournalUtil.asssertCanConfirm(user, journal);
         journalService.saveEndDate(journal, command);
     }
 
     @GetMapping("/{id:\\d+}/journalEntry")
     public Page<JournalEntryTableDto> journalTableEntries(HoisUserDetails user, @PathVariable("id") Long journalId, Pageable pageable) {
-        JournalValidationUtil.assertCanView(user, em.find(Journal.class, journalId));
+        JournalUtil.assertCanView(user, em.find(Journal.class, journalId));
         return journalService.journalTableEntries(journalId, pageable);
     }
 
     @GetMapping("/{id:\\d+}/journalEntry/{journalEntry:\\d+}")
     public JournalEntryDto journalEntry(HoisUserDetails user, @PathVariable("id") Long journalId, @PathVariable("journalEntry") Long journalEntrylId) {
-        JournalValidationUtil.assertCanView(user, em.find(Journal.class, journalId));
+        JournalUtil.assertCanView(user, em.find(Journal.class, journalId));
         return journalService.journalEntry(journalId, journalEntrylId);
     }
 
     @PostMapping("/{id:\\d+}/journalEntry")
     public void saveJournalEntry(HoisUserDetails user, @WithEntity Journal journal, @RequestBody JournalEntryForm journalEntryForm) {
-        JournalValidationUtil.asssertCanChange(user, journal);
+        JournalUtil.asssertCanChange(user, journal);
         journalService.saveJournalEntry(user, journal, journalEntryForm);
     }
 
     @PutMapping("/{id:\\d+}/journalEntry/{journalEntry:\\d+}")
     public void updateJournalEntry(HoisUserDetails user, @WithEntity Journal journal, @RequestBody JournalEntryForm journalEntryForm, @PathVariable("journalEntry") Long journalEntrylId) {
-        JournalValidationUtil.asssertCanChange(user, journal);
+        JournalUtil.asssertCanChange(user, journal);
         journalService.updateJournalEntry(user, journalEntryForm, journalEntrylId);
+    }
+
+    @DeleteMapping("/{journalId:\\d+}/journalEntry/{id:\\d+}")
+    public void deleteJournalEntry(HoisUserDetails user, @WithEntity("journalId") Journal journal, @WithVersionedEntity(versionRequestParam = "version") JournalEntry entry, 
+            @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        JournalUtil.asssertCanChange(user, journal);
+        journalService.deleteJournalEntry(user, entry);
     }
 
     @PostMapping("/{id:\\d+}/addStudentsToJournal")
     public void addStudentsToJournal(HoisUserDetails user, @WithEntity Journal journal, @RequestBody JournalStudentsCommand command) {
-        JournalValidationUtil.assertCanAddStudent(user, journal);
+        JournalUtil.assertCanAddStudent(user, journal);
         journalService.addStudentsToJournal(journal, command);
     }
 
     @PostMapping("/{id:\\d+}/removeStudentsFromJournal")
     public void removeStudentsFromJournal(HoisUserDetails user, @WithEntity Journal journal, @RequestBody JournalStudentsCommand command) {
-        JournalValidationUtil.assertCanRemoveStudent(user, journal);
+        JournalUtil.assertCanRemoveStudent(user, journal);
         journalService.removeStudentsFromJournal(user, journal, command);
     }
 
@@ -143,44 +152,50 @@ public class JournalController {
 
     @GetMapping("/{id:\\d+}/suitedStudents")
     public List<JournalStudentDto> suitedStudents(HoisUserDetails user, @PathVariable("id") Long journalId) {
-        JournalValidationUtil.asssertCanChange(user, em.find(Journal.class, journalId));
+        JournalUtil.asssertCanChange(user, em.find(Journal.class, journalId));
         return journalService.suitedStudents(user, journalId);
     }
 
     @GetMapping("/{id:\\d+}/journalStudents")
     public List<JournalStudentDto> journalStudents(HoisUserDetails user, @WithEntity Journal journal, @RequestParam(required = false) Boolean allStudents) {
-        JournalValidationUtil.assertCanView(user, journal);
+        JournalUtil.assertCanView(user, journal);
         return journalService.journalStudents(journal, allStudents);
     }
 
     @GetMapping("/{id:\\d+}/journalEntriesByDate")
     public List<JournalEntryByDateDto> journalEntriesByDate(HoisUserDetails user, @WithEntity Journal journal, @RequestParam(required = false) Boolean allStudents) {
-        JournalValidationUtil.assertCanView(user, journal);
+        JournalUtil.assertCanView(user, journal);
         return journalService.journalEntriesByDate(journal, allStudents);
     }
 
     @GetMapping("/{id:\\d+}/journalEntry/lessonInfo")
     public JournalEntryLessonInfoDto journalEntryLessonInfo(HoisUserDetails user, @WithEntity Journal journal) {
-        JournalValidationUtil.assertCanView(user, journal);
+        JournalUtil.assertCanView(user, journal);
         return journalService.journalEntryLessonInfo(journal);
     }
 
     @GetMapping("/{id:\\d+}/journal.xls")
     public void journalAsExcel(HoisUserDetails user, @WithEntity Journal journal, HttpServletResponse response) throws IOException {
-        JournalValidationUtil.assertCanView(user, journal);
+        JournalUtil.assertCanView(user, journal);
         HttpUtil.xls(response, "journal.xls", journalService.journalAsExcel(journal));
     }
-    
+
     @GetMapping("/{id:\\d+}/hasFinalEntry")
     public Map<String, Boolean> hasFinalEntry(HoisUserDetails user, @WithEntity Journal journal)  {
-        JournalValidationUtil.assertCanView(user, journal);
+        JournalUtil.assertCanView(user, journal);
         return Collections.singletonMap("hasFinalEntry", Boolean.valueOf(JournalUtil.hasFinalEntry(journal)));
     }
     
+    @GetMapping("/{id:\\d+}/usedHours")
+    public Map<String, Integer> usedHours(HoisUserDetails user, @WithEntity Journal journal) {
+        JournalUtil.assertCanView(user, journal);
+        return journalService.usedHours(journal);
+    }
+
     @GetMapping("/{id:\\d+}/studentsWithAcceptedAbsence")
     public Set<Long> journalStudentsWithAcceptedAbsence(HoisUserDetails user, @WithEntity Journal journal,
             @Valid JournalStudentHasAbsenceCommand command)  {
-        JournalValidationUtil.assertCanView(user, journal);
+        JournalUtil.assertCanView(user, journal);
         return journalService.journalStudentsWithAcceptedAbsence(journal, command.getEntryDate());
     }
 
@@ -204,21 +219,21 @@ public class JournalController {
 
     @GetMapping("/{id:\\d+}/withoutFinalResult")
     public List<JournalStudentDto> withoutFinalResult(HoisUserDetails user, @WithEntity Journal journal) {
-        JournalValidationUtil.assertCanView(user);
+        JournalUtil.assertCanView(user);
         return JournalUtil.withoutFinalResult(journal);
     }
-    
+
     @GetMapping("/canConfirmAll")
     public Map<String, Boolean> canConfirmAll(HoisUserDetails user) {
-        JournalValidationUtil.assertCanView(user);
+        JournalUtil.assertCanView(user);
         StudyYear studyYear = studyYearService.getCurrentStudyYear(user.getSchoolId());
         return Collections.singletonMap("canConfirmAll", Boolean.valueOf(JournalUtil.canConfirmAll(user, studyYear)));
     }
-    
+
     @PutMapping("/confirmAll")
     public Map<String, Integer> confirmAll(HoisUserDetails user) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(user.getSchoolId());
-        JournalValidationUtil.assertCanConfirmAll(user, studyYear);
+        JournalUtil.assertCanConfirmAll(user, studyYear);
         return Collections.singletonMap("numberOfConfirmedJournals", journalService.confirmAll(user));
     }
 
@@ -245,11 +260,10 @@ public class JournalController {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
         return journalService.studentAbsences(user.getSchoolId(), studentId);
     }
-    
+
     @GetMapping("/studentJournalLastResults")
     public List<StudentJournalResultDto> studentLastResults(HoisUserDetails user, @RequestParam("studentId") Long studentId) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
         return journalService.studentLastResults(user.getSchoolId(), studentId);
     }
-    
 }

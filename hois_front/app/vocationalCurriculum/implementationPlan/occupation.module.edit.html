@@ -153,48 +153,12 @@
         <fieldset tabindex="4" layout="column">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.proportionPerStudyYear' | translate}}</legend>
           <div layout="row">
-            <md-input-container flex>
-              <label>{{'module.firstStudyYear' | translate}}</label>
-              <input ng-disabled="occupationModule.themes.length > 0" ng-model="occupationModule.yearCapacities[0].credits"
+            <md-input-container flex ng-repeat="yc in studyYears track by $index">
+              <label>{{$index+1}}.&nbsp;{{'module.studyYearLowercase' | translate}}</label>
+              <input ng-disabled="occupationModule.themes.length > 0" ng-model="occupationModule.yearCapacities[$index].credits"
                 type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" aria-label="year capacity credits"
-                name="yearCapacities0" required>
-              <div ng-messages="dialogForm.yearCapacities0.$error" ng-show="dialogForm.yearCapacities0.$dirty">
-                <div ng-message="min">
-                  {{'main.messages.error.positive' | translate}}
-                </div>
-                <div ng-message="max">
-                  {{'curriculum.error.max999' | translate}}
-                </div>
-                <div ng-message="pattern">
-                  {{'stateCurriculum.error.decimalPresision' | translate}}
-                </div>
-              </div>
-            </md-input-container>
-
-            <md-input-container flex>
-              <label>{{'module.secondStudyYear' | translate}}</label>
-              <input ng-disabled="occupationModule.themes.length > 0" ng-model="occupationModule.yearCapacities[1].credits"
-                type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" aria-label="year capacity credits"
-                name="yearCapacities1" required>
-              <div ng-messages="dialogForm.yearCapacities1.$error" ng-show="dialogForm.yearCapacities1.$dirty">
-                <div ng-message="min">
-                  {{'main.messages.error.positive' | translate}}
-                </div>
-                <div ng-message="max">
-                  {{'curriculum.error.max999' | translate}}
-                </div>
-                <div ng-message="pattern">
-                  {{'stateCurriculum.error.decimalPresision' | translate}}
-                </div>
-              </div>
-            </md-input-container>
-
-            <md-input-container flex>
-              <label>{{'module.thirdStudyYear' | translate}}</label>
-              <input ng-disabled="occupationModule.themes.length > 0" ng-model="occupationModule.yearCapacities[2].credits"
-                type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" aria-label="year capacity credits"
-                name="yearCapacities2" required>
-              <div ng-messages="dialogForm.yearCapacities2.$error" ng-show="dialogForm.yearCapacities2.$dirty">
+                name="yearCapacities{{$index}}" required>
+              <div ng-messages="dialogForm['yearCapacities'+$index].$error" ng-show="dialogForm['yearCapacities'+$index].$dirty">
                 <div ng-message="min">
                   {{'main.messages.error.positive' | translate}}
                 </div>

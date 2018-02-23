@@ -25,6 +25,7 @@ public class ModuleProtocolStudentDto {
     private String status;
     private String addInfo;
     private List<ModuleProtocolJournalResultDto> journalResults = new ArrayList<>();
+    private List<ModuleProtocolOutcomeResultDto> outcomeResults = new ArrayList<>();
     /**
      * This variable does not consider user rights, it is checked by ModuleProtocolDto.canBeEdited
      */
@@ -37,9 +38,12 @@ public class ModuleProtocolStudentDto {
         dto.setFullname(PersonUtil.fullname(protocolStudent.getStudent().getPerson()));
         dto.setIdcode(protocolStudent.getStudent().getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
+        
+        
 
         if (protocolStudent.getStudent().getJournalStudents() != null) {
-            for (JournalStudent journalStudent : protocolStudent.getStudent().getJournalStudents()) {
+            List<JournalStudent> journalStudents = protocolStudent.getStudent().getJournalStudents();
+            for (JournalStudent journalStudent : journalStudents) {
                 journalStudent.getJournalEntryStudents().stream()
                         .filter(jes -> JournalEntryType.SISSEKANNE_L.name()
                                 .equals(EntityUtil.getCode(jes.getJournalEntry().getEntryType())))
@@ -54,9 +58,23 @@ public class ModuleProtocolStudentDto {
                                                 .stream().mapToInt(it -> it.getHours() == null ? 0
                                                         : it.getHours().intValue())
                                                 .sum()),
-                                        EntityUtil.getCode(jes.getGrade()))));
+                                        EntityUtil.getCode(jes.getGrade()),
+                                        jes.getJournalEntry().getJournal().getAddModuleOutcomes())));
+                
+                journalStudent.getJournalEntryStudents().stream()
+                .filter(jes -> JournalEntryType.SISSEKANNE_O.name()
+                        .equals(EntityUtil.getCode(jes.getJournalEntry().getEntryType())))
+                .filter(jes -> EntityUtil.getId(jes.getJournalEntry().getJournal().getStudyYear())
+                        .equals(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getStudyYear())))
+                .filter(jes -> EntityUtil.getNullableCode(jes.getGrade()) != null)
+                .filter(jes -> JournalUtil.filterJournalEntryStudentsByOccupationalModule(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule(), jes))
+                .forEach(jes -> dto.getOutcomeResults()
+                        .add(new ModuleProtocolOutcomeResultDto(jes.getJournalEntry().getJournal().getId(),
+                                jes.getJournalEntry().getCurriculumModuleOutcomes().getId(),
+                                EntityUtil.getCode(jes.getGrade()),
+                                jes.getGradeInserted())));
             }
-
+            
         }
         dto.setCanBeDeleted(Boolean.valueOf(ModuleProtocolUtil.studentCanBeDeleted(protocolStudent)));
         return dto;
@@ -108,6 +126,14 @@ public class ModuleProtocolStudentDto {
 
     public void setJournalResults(List<ModuleProtocolJournalResultDto> journalResults) {
         this.journalResults = journalResults;
+    }
+    
+    public List<ModuleProtocolOutcomeResultDto> getOutcomeResults() {
+        return outcomeResults;
+    }
+
+    public void setOutcomeResults(List<ModuleProtocolOutcomeResultDto> outcomeResults) {
+        this.outcomeResults = outcomeResults;
     }
 
     public String getStatus() {

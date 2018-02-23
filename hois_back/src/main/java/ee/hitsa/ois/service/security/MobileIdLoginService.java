@@ -67,7 +67,7 @@ public class MobileIdLoginService {
             return session;
         }
         String challenge = response.getChallenge();
-        if (challenge == null || !challenge.substring(0, SP_CHALLENGE_LENGTH).equalsIgnoreCase(spChallenge)) {
+        if (challenge == null || !challenge.substring(0, Math.min(challenge.length(), SP_CHALLENGE_LENGTH)).equalsIgnoreCase(spChallenge)) {
             log.warn("challenge ({}) first 10 bytes do not match spChallenge ({})", challenge, spChallenge);
             session.setErrorCode(GENERAL_ERROR);
             return session;

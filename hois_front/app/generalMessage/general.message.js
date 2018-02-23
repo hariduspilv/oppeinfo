@@ -1,6 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils) {
+angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', 'USER_ROLES', 'AuthService', 
+function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, USER_ROLES, AuthService) {
+  $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE);
   $scope.roleDefs = Classifier.queryForDropdown({mainClassCode: 'ROLL'});
   $scope.fromStorage = function(key) {
     var criteria = JSON.parse($sessionStorage[key] || '{}');
@@ -83,9 +85,10 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
       });
     };
   }
-]).controller('GeneralMessageViewController', ['$route', '$scope', 'QueryUtils',
-  function ($route, $scope, QueryUtils) {
+]).controller('GeneralMessageViewController', ['$route', '$scope', 'QueryUtils', 'USER_ROLES', 'AuthService',
+  function ($route, $scope, QueryUtils, USER_ROLES, AuthService) {
     var id = $route.current.params.id;
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE);
 
     $scope.record = QueryUtils.endpoint('/generalmessages').get({id: id});
   }

@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.DeclarationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DeclarationUtil;
@@ -138,7 +140,7 @@ public class DeclarationController {
 
     @PutMapping("/confirm/all")
     public Map<String, ?> confirmAll(HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPINGUKAVA);
         Integer numberOfNewlyConfirmedDeclarations = declarationService.confirmAll(user);
         Map<String, Object> response = new HashMap<>();
         response.put("numberOfNewlyConfirmedDeclarations", numberOfNewlyConfirmedDeclarations);

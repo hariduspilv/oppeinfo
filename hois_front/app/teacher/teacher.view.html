@@ -64,7 +64,7 @@
                             layout="row" layout-sm="column" layout-xs="column"
                             flex="30" flex-sm="100" flex-xs="100"
                             flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
-                            class="align-center" disabled>
+                            class="align-center" disabled style="margin-top: -18px">
               <md-radio-button ng-value="true">
                 {{'teacher.studyPeriodLoad' | translate}}
               </md-radio-button>
@@ -86,6 +86,12 @@
             <md-input-container flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
               <label>{{'teacher.rtipNr' | translate}}</label>
               <hois-value value="teacher.rtipNr"></hois-value>
+            </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column" flex>
+            <md-input-container flex>
+              <label>{{'teacher.addInfo' | translate}}</label>
+              <hois-value value="teacher.addInfo"></hois-value>
             </md-input-container>
           </div>
         </div>
@@ -184,6 +190,7 @@
           </div>
         </hois-collapsable>
       </div>
+      <md-button ng-if="teacher.canEdit && auth.isTeacher()" ng-href="#/teachers/{{teacher.id}}/editmydata" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
     </md-content>
   </md-tab>
   <md-tab label="{{'teacher.continuingEducation.continuingEducation' | translate}}" ng-if="teacher.teacherContinuingEducations.length > 0 && teacher.isVocational">

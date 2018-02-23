@@ -73,13 +73,14 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     var id = $route.current.params.id;
     var baseUrl = '/studentgroups';
     var Endpoint = QueryUtils.endpoint(baseUrl);
-    var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM', studyLevel: 'OPPEASTE'});
+    var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM', studyLevel: 'OPPEASTE', status: 'OPPURSTAATUS'});
 
     var school = Session.school || {};
     var onlyvocational = !school.higher && school.vocational;
     $scope.formState = {allCurriculumVersions: Curriculum.queryVersions(), curriculumVersions: [],
-                        languages: [], studyForms: [], specialities: [], selectedStudents: [],
-                        curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyvocational: onlyvocational, isVocational: school.vocational};
+                        languages: [], studyForms: [], specialities: [], selectedStudents: [], order: 'rowno',
+                        curriculumVersionLabel: 'studentGroup.curriculumVersionBoth',
+                        onlyvocational: onlyvocational, isVocational: school.vocational};
 
     if(onlyvocational) {
       $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionVocational';
@@ -136,6 +137,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       $scope.formState.selectedStudents = angular.copy($scope.formState.students);
       $scope.formState.readonly = $scope.record.id && $scope.formState.students && $scope.formState.students.length > 0;
       $scope.curriculumChanged();
+      $scope.record.members.forEach(function(it, i) { it.rowno = i + 1; });
     }
 
     if(id) {
@@ -155,12 +157,12 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
 
       $scope.record.students = $scope.formState.selectedStudents.map(function(item) { return item.id; });
       if($scope.record.id) {
-        $scope.record.$update().then(afterLoad).then(message.updateSuccess);
+        $scope.record.$update().then(afterLoad).then(message.updateSuccess).catch(angular.noop);
       }else{
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
-        });
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
+        }).catch(angular.noop);
       }
     };
 
@@ -168,8 +170,8 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       dialogService.confirmDialog({prompt: 'studentGroup.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.url(baseUrl);
-        });
+          $location.url(baseUrl + '?_noback');
+        }).catch(angular.noop);
       });
     };
 
@@ -179,7 +181,10 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     }
 
     $scope.addStudents = function() {
-      var query = angular.extend({}, $scope.record);
+      var query = ['id', 'curriculum', 'curriculumVersion', 'language', 'studyForm'].reduce(function(q, name) {
+        q[name] = $scope.record[name];
+        return q;
+      }, {});
       var findstudents = function(scope) {
         QueryUtils.endpoint(baseUrl+'/findstudents').query(query, function(result) {
           if(result.length === 0) {
@@ -192,6 +197,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
             if (angular.isNumber($scope.formState.curriculumVersion)) {
               students = students.filter(function(student) {return student.curriculumVersion.id === $scope.formState.curriculumVersion;});
             }
+            students.forEach(function(it, i) { it.rowno = i + 1; });
             scope.formState.students = students;
           });
         });
@@ -201,7 +207,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
         var labelId = $scope.formState.curriculumVersionLabel;
         $mdDialog.show({
           controller: function($scope) {
-            $scope.formState = {selectedStudents: [], curriculumVersionLabel: labelId};
+            $scope.formState = {selectedStudents: [], curriculumVersionLabel: labelId, order: 'rowno'};
 
             $scope.cancel = $mdDialog.hide;
             $scope.select = function() {
@@ -234,15 +240,20 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       });
     };
   }
-]).controller('StudentGroupViewController', ['$route', '$scope', 'Curriculum', 'QueryUtils', 'Session',
-  function ($route, $scope, Curriculum, QueryUtils, Session) {
+]).controller('StudentGroupViewController', ['$route', '$scope', '$q', 'Classifier', 'Curriculum', 'QueryUtils', 'Session', 'USER_ROLES', 'AuthService',
+  function ($route, $scope, $q, Classifier, Curriculum, QueryUtils, Session, USER_ROLES, AuthService) {
+    $scope.auth = $route.current.locals.auth;
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPERYHM);
+    $scope.showPersonalData = $scope.auth.isAdmin() || $scope.auth.isTeacher();
     var id = $route.current.params.id;
     var baseUrl = '/studentgroups';
+
+    var clMapper = Classifier.valuemapper({status: 'OPPURSTAATUS'});
 
     var school = Session.school || {};
     var onlyvocational = !school.higher && school.vocational;
     $scope.formState = {curriculumVersionLabel: 'studentGroup.curriculumVersionBoth',
-                        onlyvocational: onlyvocational, isVocational: school.vocational};
+                        onlyvocational: onlyvocational, isVocational: school.vocational, order: 'rowno'};
 
     if(onlyvocational) {
       $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionVocational';
@@ -263,6 +274,8 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
           $scope.formState.curriculumVersion = current.length > 0 ? current[0] : undefined;
         });
       }
+      $q.all(clMapper.promises).then(clMapper.objectmapper(result.members));
+      result.members.forEach(function(it, i) { it.rowno = i + 1; });
     });
   }
 ]);

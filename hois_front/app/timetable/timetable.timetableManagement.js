@@ -1,10 +1,30 @@
 'use strict';
 
 angular.module('hitsaOis').controller('TimetableManagementController', 
-  function ($scope, message, QueryUtils, DataUtils, Classifier, $location, dialogService, USER_ROLES, AuthService) {
+  function ($scope, $location, $timeout, message, QueryUtils, DataUtils, Classifier, dialogService, USER_ROLES, AuthService) {
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIPLAAN);
     var baseUrl = '/timetables';
+
+    var clMapper = Classifier.valuemapper({status: 'TUNNIPLAAN_STAATUS'});
+    QueryUtils.createQueryForm($scope, baseUrl + "/searchTimetableForManagement", {order: 'start_date'}, clMapper.objectmapper);
+
     $scope.formState = {xlsDiffUrl: 'timetables/timetableDifference.xls', xlsPlanUrl: 'timetables/timetablePlan.xlsx'};
+
+    var loadData = $scope.loadData;
+    $scope.loadData = function() {
+      $scope.timetableSearchForm.$setSubmitted();
+      if(!$scope.timetableSearchForm.$valid) {
+        message.error('main.messages.form-has-errors');
+      } else {
+        loadData();
+      }
+    };
+
+    function filterStudyPeriods() {
+      $scope.formState.studyPeriods = $scope.allStudyPeriods.filter(function (t) {
+        return t.studyYear === $scope.criteria.studyYear;
+      });
+    }
 
     QueryUtils.endpoint(baseUrl + '/managementSearchFormData').search().$promise.then(function (result) {
       $scope.formState.studyYears = result.studyYears;
@@ -12,9 +32,7 @@ angular.module('hitsaOis').controller('TimetableManagementController',
       var sy = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyYears);
       if (sy) {
         $scope.criteria.studyYear = sy.id;
-        $scope.formState.studyPeriods = $scope.allStudyPeriods.filter(function (t) {
-          return t.studyYear === $scope.criteria.studyYear;
-        });
+        filterStudyPeriods();
         $scope.criteria.studyPeriod = result.currentStudyPeriod;
       }
       $scope.higher = result.higher;
@@ -24,14 +42,18 @@ angular.module('hitsaOis').controller('TimetableManagementController',
           $scope.criteria.type = 'TUNNIPLAAN_LIIK_H';
         }
       }
-      $scope.loadData();
+      if($scope.criteria.studyYear && $scope.criteria.studyPeriod) {
+        $timeout($scope.loadData);
+      } else if($scope.formState.studyYears.length === 0) {
+        message.error('studyYear.missing');
+      } else if($scope.allStudyPeriods.length === 0) {
+        message.error('studyYear.studyPeriod.missing');
+      }
     });
 
     $scope.$watch('criteria.studyYear', function () {
       if ($scope.criteria.studyYear !== undefined && $scope.allStudyPeriods) {
-        $scope.formState.studyPeriods = $scope.allStudyPeriods.filter(function (t) {
-          return t.studyYear === $scope.criteria.studyYear;
-        });
+        filterStudyPeriods();
       }
     });
 
@@ -69,7 +91,4 @@ angular.module('hitsaOis').controller('TimetableManagementController',
         $location.url('/timetable/' + result.id + '/view');
       });
     };
-
-    var clMapper = Classifier.valuemapper({status: 'TUNNIPLAAN_STAATUS'});
-    QueryUtils.createQueryForm($scope, baseUrl + "/searchTimetableForManagement", {order: 'start_date'}, clMapper.objectmapper);
   });

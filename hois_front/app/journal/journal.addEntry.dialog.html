@@ -14,13 +14,17 @@
       <div class="md-dialog-content">
         <div flex>
             <div layout="row" layout-sm="column" layout-xs="column">
-              <md-input-container flex="45">
+              <md-input-container ng-if="journalEntry.entryType !== 'SISSEKANNE_O'" flex="45">
                 <label>{{'journal.entry.type' | translate}}</label>
                 <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" required ng-change="setJournalEntryDefaultName(journalEntry.entryType)" filter-values="forbiddenEntryTypes"></hois-classifier-select>
               </md-input-container>
+              <md-input-container ng-if="journalEntry.entryType === 'SISSEKANNE_O'" flex="45">
+                <label>{{'journal.entry.type' | translate}}</label>
+                <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" disabled></hois-classifier-select>
+              </md-input-container>
               <md-input-container flex="45" flex-offset="10">
                 <label>{{'journal.entry.name' | translate}}</label>
-                <input type="text" ng-model="journalEntry.nameEt">
+                <input type="text" ng-model="journalEntry.nameEt" md-maxlength="100">
               </md-input-container>
             </div>
             <div layout="row" layout-sm="column" layout-xs="column">
@@ -136,6 +140,7 @@
         <span flex></span>
         <md-dialog-actions layout="row" layout-align="start center">
           <md-button class="md-raised md-primary" ng-click="submit()">{{'main.button.save' | translate}}</md-button>
+          <md-button ng-if="canDeleteEntries" class="md-raised" ng-click="delete()">{{"main.button.delete" | translate}}</md-button>
           <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
         </md-dialog-actions>
       </div>

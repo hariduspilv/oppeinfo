@@ -27,6 +27,7 @@ import ee.hitsa.ois.enums.VocationalGradeType;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.OccupationModuleCapacitiesUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -144,7 +145,7 @@ public class CurriculumVersionOccupationModuleService {
         return themeDto;
     }
 
-    public CurriculumVersionOccupationModuleTheme createTheme(CurriculumVersionOccupationModuleThemeDto dto) {
+    public CurriculumVersionOccupationModuleThemeDto createTheme(CurriculumVersionOccupationModuleThemeDto dto) {
         CurriculumVersionOccupationModuleTheme theme = new CurriculumVersionOccupationModuleTheme();
         CurriculumVersionOccupationModule module = em.getReference(CurriculumVersionOccupationModule.class, dto.getModule());
         theme.setModule(module);
@@ -152,7 +153,7 @@ public class CurriculumVersionOccupationModuleService {
         return updateTheme(theme, dto);
     }
 
-    public CurriculumVersionOccupationModuleTheme updateTheme(CurriculumVersionOccupationModuleTheme theme, 
+    public CurriculumVersionOccupationModuleThemeDto updateTheme(CurriculumVersionOccupationModuleTheme theme,
             CurriculumVersionOccupationModuleThemeDto dto) {
 
         EntityUtil.bindToEntity(dto, theme, classifierRepository, "capacities", "outcomes");
@@ -169,6 +170,12 @@ public class CurriculumVersionOccupationModuleService {
             theme.setTotalGradeDescription(null);
         }
 
+        // check studyYearNumber and clear, if out of range
+        int studyYears = CurriculumUtil.studyYears(theme.getModule().getCurriculumVersion().getCurriculum());
+        if(theme.getStudyYearNumber() != null && theme.getStudyYearNumber().intValue() > studyYears) {
+            theme.setStudyYearNumber(null);
+        }
+
         updateThemeCapacities(theme, dto.getCapacities());
         updateThemeOutcomes(theme, dto.getOutcomes());
 
@@ -178,7 +185,7 @@ public class CurriculumVersionOccupationModuleService {
         OccupationModuleCapacitiesUtil.updateModuleYearCapacitiesHours(saved.getModule());
         EntityUtil.save(saved.getModule(), em);
 
-        return saved;
+        return getTheme(saved);
     }
 
     private void updateThemeCapacities(CurriculumVersionOccupationModuleTheme theme, 

@@ -13,6 +13,7 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 
 @Entity
 public class JournalEntry extends BaseEntityWithId {
@@ -30,12 +31,16 @@ public class JournalEntry extends BaseEntityWithId {
     private String content;
     private String homework;
     private LocalDate homeworkDuedate;
+    
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true)
+    private CurriculumModuleOutcome curriculumModuleOutcomes;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, orphanRemoval = true)
     @JoinColumn(name = "journal_entry_id", nullable = false, updatable = true)
     private Set<JournalEntryCapacityType> journalEntryCapacityTypes = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, orphanRemoval = true)
     @JoinColumn(name = "journal_entry_id", nullable = false, updatable = true)
     private Set<JournalEntryStudent> journalEntryStudents = new HashSet<>();
 
@@ -104,6 +109,12 @@ public class JournalEntry extends BaseEntityWithId {
     }
     public void setJournalEntryStudents(Set<JournalEntryStudent> journalEntryStudents) {
         this.journalEntryStudents = journalEntryStudents;
+    }
+    public CurriculumModuleOutcome getCurriculumModuleOutcomes() {
+        return curriculumModuleOutcomes;
+    }
+    public void setCurriculumModuleOutcomes(CurriculumModuleOutcome curriculumModuleOutcomes) {
+        this.curriculumModuleOutcomes = curriculumModuleOutcomes;
     }
 
 }

@@ -75,7 +75,7 @@
         </div>
         <div layout="row">
           <md-button class="md-raised" ng-click="showUncomposed()">{{'declaration.showUncomposed' | translate}}</md-button>
-          <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-click="confirmAll()">{{'declaration.confirmAll' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="canConfirm" ng-click="confirmAll()">{{'declaration.confirmAll' | translate}}</md-button>
         </div>
 
       </form>

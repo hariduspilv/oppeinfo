@@ -31,8 +31,8 @@ import ee.hitsa.ois.service.rtip.RtipService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.HttpUtil.NoContentResponse;
+import ee.hitsa.ois.util.TeacherUserRights;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.util.TeacherUserRightsValidator;
 import ee.hitsa.ois.util.TeacherUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -65,16 +65,13 @@ public class TeacherController {
 
     @GetMapping("/{id:\\d+}")
     public TeacherDto get(HoisUserDetails user, @WithEntity Teacher teacher) {
-        TeacherUserRightsValidator.assertCanView(user, teacher);        
+        TeacherUserRights.assertCanView(user, teacher);
         return teacherService.get(user, teacher);
     }
 
     @GetMapping
     public Page<TeacherSearchDto> search(TeacherSearchCommand command, Pageable pageable, HoisUserDetails user) {
-        TeacherUserRightsValidator.assertCanSearch(user);        
-        if (!user.isExternalExpert()) {
-            command.setSchool(user.getSchoolId());
-        }
+        TeacherUserRights.assertCanSearch(user);
         return teacherService.search(user, command, pageable);
     }
 
@@ -92,62 +89,66 @@ public class TeacherController {
     
     @GetMapping("/{id:\\d+}/absences")
     public Page<TeacherAbsenceDto> teacherAbsences(HoisUserDetails user, @WithEntity Teacher teacher, Pageable pageable) {
-        TeacherUserRightsValidator.assertCanView(user, teacher);        
+        TeacherUserRights.assertCanView(user, teacher);
         return teacherService.teacherAbsences(teacher, pageable);
     }
 
     @PostMapping
     public TeacherDto create(@Valid @RequestBody TeacherForm teacherForm, HoisUserDetails user) {
-        TeacherUserRightsValidator.assertCanCreate(user);        
+        TeacherUserRights.assertCanCreate(user);
         return teacherService.create(user, teacherForm);
     }
 
     @PutMapping("/{id:\\d+}")
     public TeacherDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Teacher teacher, @Valid @RequestBody TeacherForm teacherForm) {
-        TeacherUserRightsValidator.assertCanEdit(user, teacher);        
+        if(user.isTeacher()) {
+            TeacherUserRights.assertCanEditAsTeacher(user, teacher);
+            return teacherService.saveAsTeacher(user, teacher, teacherForm);
+        }
+        TeacherUserRights.assertCanEdit(user, teacher);
         return teacherService.save(user, teacher, teacherForm);
     }
 
     @PutMapping("/{id:\\d+}/sendToEhis")
     public TeacherDto sendToEhis(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Teacher teacher, @Valid @RequestBody TeacherForm teacherForm) {
-        TeacherUserRightsValidator.assertCanEdit(user, teacher);
+        TeacherUserRights.assertCanEdit(user, teacher);
         return teacherService.sendToEhis(user, teacher, teacherForm);
     }
 
     @PostMapping("/{id:\\d+}/rtip")
     public NoContentResponse rtip(HoisUserDetails user, @WithEntity Teacher teacher) {
-        TeacherUserRightsValidator.assertCanEdit(user, teacher);
+        TeacherUserRights.assertCanEdit(user, teacher);
         rtipService.syncTeacher(teacher);
         return HttpUtil.NO_CONTENT_RESPONSE;
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Teacher teacher,  @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        TeacherUserRightsValidator.assertCanEdit(user, teacher);        
+        TeacherUserRights.assertCanEdit(user, teacher);
         teacherService.delete(user, teacher);
     }
 
     @PutMapping("/{id:\\d+}/continuingEducations")
     public TeacherDto saveContinuingEducations(HoisUserDetails user, @WithEntity Teacher teacher, @Valid @RequestBody TeacherContinuingEducationFormWrapper teacherContinuingEducationForms) {
-        TeacherUserRightsValidator.assertCanEdit(user, teacher);        
-        return teacherService.saveContinuingEducations(teacher, teacherContinuingEducationForms.getContinuingEducations());
+        TeacherUserRights.assertCanEdit(user, teacher);
+        return teacherService.saveContinuingEducations(user, teacher, teacherContinuingEducationForms.getContinuingEducations());
     }
 
     @PutMapping("/{id:\\d+}/qualifications")
     public TeacherDto saveQualifications(HoisUserDetails user, @WithEntity Teacher teacher, @Valid @RequestBody TeacherQualificationFromWrapper teacherQualificationFroms) {
-        TeacherUserRightsValidator.assertCanEdit(user, teacher);        
-        return teacherService.saveQualifications(teacher, teacherQualificationFroms.getQualifications());
+        TeacherUserRights.assertCanEdit(user, teacher);
+        return teacherService.saveQualifications(user, teacher, teacherQualificationFroms.getQualifications());
     }
 
     @PutMapping("/{id:\\d+}/mobilities")
     public TeacherDto saveMobilities(HoisUserDetails user, @WithEntity Teacher teacher, @Valid @RequestBody TeacherMobilityFormWrapper mobilityForms) {
-        TeacherUserRightsValidator.assertCanEdit(user, teacher);        
-        return teacherService.saveMobilities(teacher, mobilityForms.getMobilities());
+        TeacherUserRights.assertCanEdit(user, teacher);
+        return teacherService.saveMobilities(user, teacher, mobilityForms.getMobilities());
     }
 
     @DeleteMapping("/{teacherId:\\d+}/continuingEducations/{id:\\d+}")
     public void deleteContinuingEducation(HoisUserDetails user, @WithEntity("teacherId") Teacher teacher, @WithEntity TeacherContinuingEducation continuingEducation) {
-        TeacherUserRightsValidator.assertCanEdit(user, teacher);        
+        TeacherUserRights.assertCanEdit(user, teacher);
         TeacherUtil.assertContinuingEducationBelongsToTeacher(continuingEducation, teacher);
         teacherService.delete(user, continuingEducation);
     }
@@ -164,14 +165,14 @@ public class TeacherController {
 
     @DeleteMapping("/{teacherId:\\d+}/mobilities/{id:\\d+}")
     public void deleteMobilities(HoisUserDetails user, @WithEntity("teacherId") Teacher teacher, @WithEntity TeacherMobility teacherMobility) {
-        TeacherUserRightsValidator.assertCanEdit(user, teacher);        
+        TeacherUserRights.assertCanEdit(user, teacher);
         TeacherUtil.assertMobilityBelongsToTeacher(teacherMobility, teacher);
         teacherService.delete(user, teacherMobility);
     }
 
     @DeleteMapping("/{teacherId:\\d+}/ehisPositions/{id:\\d+}")
     public void deleteEhisPosition(HoisUserDetails user, @WithEntity("teacherId") Teacher teacher, @WithEntity TeacherPositionEhis teacherPositionEhis) {
-        TeacherUserRightsValidator.assertCanEdit(user, teacher);        
+        TeacherUserRights.assertCanEdit(user, teacher);
         TeacherUtil.assertEhisPositionBelongsToTeacher(teacherPositionEhis, teacher);
         teacherService.delete(user, teacherPositionEhis);
     }

@@ -4,13 +4,10 @@ import java.util.List;
 
 import javax.validation.constraints.Size;
 
-import ee.hitsa.ois.validation.EstonianIdCode;
-
 public class StudentSearchCommand {
 
     @Size(max = 255)
     private String name;
-    @EstonianIdCode
     private String idcode;
     private List<Long> curriculum;
     private List<Long> curriculumVersion;

@@ -122,17 +122,41 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
   $scope.auth = $route.current.locals.auth;
 
   $scope.studentId = ($scope.auth.isStudent() || $scope.auth.isParent() ? $scope.auth.student : $route.current.params.id);
-  $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
+  QueryUtils.endpoint('/students').get({ id: $scope.studentId }).$promise.then(function (student) {
+    $scope.student = student;
+    canWatchStudentConnectedEntities();
+  });
   $scope.currentNavItem = 'student.results';
   $scope.resultsCurrentNavItem = 'student.curriculumFulfillment';
+
+  function canWatchStudentConnectedEntities() {
+    if ($scope.auth.isAdmin()) {
+      $scope.canWatchStudentConnectedEntities = true;
+    } else if ($scope.auth.isTeacher()) {
+      QueryUtils.endpoint('/studentgroups').get({ id: $scope.student.studentGroup.id }).$promise.then(function (studentGroup) {
+        if (studentGroup.teacher.id === $scope.auth.teacher) {
+          $scope.canWatchStudentConnectedEntities = true;
+        }
+      });
+    }
+  }
 
   $scope.isStudentCurriculumFulfilled = function (student) {
     return student && angular.isNumber(student.credits) && student.credits >= student.curriculumCredits;
   };
-}]).controller('StudentViewResultsVocationalController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope', 'VocationalGradeUtil', function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGradeUtil) {
+
+  $scope.changeResultsCurrentNavItem = function (navItem) {
+    $scope.resultsCurrentNavItem = navItem;
+  };
+}]).controller('StudentViewResultsVocationalController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope', 'VocationalGradeUtil', 'StudentUtil', 
+function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGradeUtil, StudentUtil) {
   var gradeMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', studyYear: 'OPPEAASTA' });
   var moduleMapper = Classifier.valuemapper({ module: 'KUTSEMOODUL' });
+
+  $scope.canChangeStudentModules = $scope.auth.isAdmin() && StudentUtil.isActive($scope.student.status) && $scope.auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR') !== -1;
+
   $scope.loadCurriculumFulfillment = function () {
+    $scope.changeResultsCurrentNavItem('student.curriculumFulfillment');
     if (!angular.isObject($scope.vocationalResultsCurriculum)) {
       var curriculumModulesById = {};
       $scope.vocationalResults.curriculumModules.forEach(function (it) {
@@ -194,6 +218,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 
 
   $scope.loadStudyYearResults = function () {
+    $scope.changeResultsCurrentNavItem('student.inOrderOfStudyYear');
     if (!angular.isObject($scope.vocationalResultsStudyYear)) {
       var yearToModule = {};
       $scope.vocationalResults.results.forEach(function (it) {
@@ -231,10 +256,48 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 
 
   $scope.loadModuleThemeResults = function () {
+    $scope.changeResultsCurrentNavItem('student.inOrderOfPassing');
     if (!angular.isObject($scope.vocationalResultsPassing)) {
       $scope.vocationalResultsPassing = $scope.vocationalResults;
     }
   };
+
+  $scope.loadJournalsAndProtocols = function () {
+    QueryUtils.endpoint('/students/' + $scope.student.id + '/vocationalConnectedEntities/').query(function (result) {
+      $scope.studentConnectedEntities = result;
+    });
+  };
+
+  $scope.loadChangeableModules = function () {
+    $scope.changeResultsCurrentNavItem('student.changeModules');
+    if (!angular.isArray($scope.vocationalResults)) {
+      QueryUtils.endpoint('/students/' + $scope.student.id + '/vocationalCurriculumModules/').query(function (curriculumModules) {
+        $scope.vocationalCurriculumModules = curriculumModules;
+        QueryUtils.endpoint('/students/' + $scope.student.id + '/vocationalChangeableModules').query(function (changeableModules) {
+          setChangeableModules(changeableModules);
+        });
+      });
+    }
+  };
+
+  $scope.saveChangedModules = function () {
+    QueryUtils.endpoint('/students/' + $scope.student.id + '/changeVocationalCurriculumModules/').post(
+      {vocationalModules: $scope.changeableModules}).$promise.then(function(changeableModules) {
+      setChangeableModules(changeableModules);
+    });
+  };
+
+  function setChangeableModules(changeableModules) {
+    changeableModules.forEach(function (changeableModule) {
+      changeableModule.oldCurriculumVersionOmoduleId = changeableModule.curriculumVersionOmoduleId;
+      $scope.vocationalCurriculumModules.forEach(function (curriculumModule) {
+        if (curriculumModule.id === changeableModule.curriculumVersionOmoduleId) {
+          changeableModule.curriculumVersionOmodule = curriculumModule;
+        }
+      });
+    });
+    $scope.changeableModules = changeableModules;
+  }
 
   $scope.displayTeachers = function (teachers) {
     if (angular.isArray(teachers)) {

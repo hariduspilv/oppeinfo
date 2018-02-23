@@ -15,6 +15,8 @@ public class BuildingForm extends VersionedCommand {
     private String address;
     @Size(max = 50)
     private String addressAds;
+    @Size(max = 50)
+    private String addressAdsOid;
 
     public String getCode() {
         return code;
@@ -46,6 +48,14 @@ public class BuildingForm extends VersionedCommand {
 
     public void setAddressAds(String addressAds) {
         this.addressAds = addressAds;
+    }
+
+    public String getAddressAdsOid() {
+        return addressAdsOid;
+    }
+
+    public void setAddressAdsOid(String addressAdsOid) {
+        this.addressAdsOid = addressAdsOid;
     }
     
 }

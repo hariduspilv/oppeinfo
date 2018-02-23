@@ -1,10 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ContractListController', function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, dialogService, $location) {
+angular.module('hitsaOis').controller('ContractListController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, $location) {
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ status: 'LEPING_STAATUS' });
   QueryUtils.createQueryForm($scope, '/contracts', {order: 'student_person.lastname,student_person.firstname'}, clMapper.objectmapper);
-  $q.all(clMapper.promises).then($scope.loadData);
 
   // Do not show 'notFound' message
   if ($scope.auth.isStudent()) {
@@ -14,6 +13,8 @@ angular.module('hitsaOis').controller('ContractListController', function ($scope
       clMapper.objectmapper(resultData.content);
     };
   }
+
+  $q.all(clMapper.promises).then($scope.loadData);
 
   $scope.newContract = function () {
     if ($scope.auth.school.higher && $scope.auth.school.vocational) {

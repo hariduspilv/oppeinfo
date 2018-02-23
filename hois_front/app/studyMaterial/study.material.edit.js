@@ -2,11 +2,11 @@
   'use strict';
 
   angular.module('hitsaOis').controller('StudyMaterialHigherEditController', ['$scope', '$route', 'QueryUtils', 'oisFileService',
-    'dialogService', 'message', '$location',
-    function ($scope, $route, QueryUtils, oisFileService, dialogService, message, $location) {
+    'dialogService', 'message',
+    function ($scope, $route, QueryUtils, oisFileService, dialogService, message) {
       $scope.auth = $route.current.locals.auth;
       $scope.subjectStudyPeriod = $route.current.locals.subjectStudyPeriod;
-      $scope.backPath = '/studyMaterial/higher/' + $scope.subjectStudyPeriod.id + '/edit';
+      $scope.backPath = '/#/studyMaterial/higher/' + $scope.subjectStudyPeriod.id + '/edit';
       var materialId = $route.current.params.materialId;
       var MaterialEndpoint = QueryUtils.endpoint('/studyMaterial');
       if (materialId) {
@@ -27,6 +27,11 @@
       $scope.$watch('material.typeCode', function (newTypeCode) {
         $scope.material.url = newTypeCode === 'OPPEMATERJAL_L' ? 'http://' : null;
       });
+      $scope.$watch('material.isPublic', function (newIsPublic) {
+        if (newIsPublic === true) {
+          $scope.material.isVisibleToStudents = true;
+        }
+      });
 
       $scope.delete = function () {
         dialogService.confirmDialog({
@@ -34,7 +39,7 @@
         }, function () {
           $scope.material.$delete().then(function () {
             message.info('main.messages.delete.success');
-            $location.path($scope.backPath);
+            $scope.back($scope.backPath);
           }).catch(angular.noop);
         });
       };
@@ -57,7 +62,7 @@
         }
         function afterSave() {
           message.info(materialId ? 'main.messages.update.success' : 'main.messages.create.success');
-          $location.path($scope.backPath);
+          $scope.back($scope.backPath);
         }
         if ($scope.material.typeCode === 'OPPEMATERJAL_F' && !$scope.material.id) {
           if ($scope.files.length !== 1) {
@@ -73,11 +78,11 @@
         }
       };
     }]).controller('StudyMaterialVocationalEditController', ['$scope', '$route', 'QueryUtils', 'oisFileService',
-      'dialogService', 'message', '$location',
-      function ($scope, $route, QueryUtils, oisFileService, dialogService, message, $location) {
+      'dialogService', 'message',
+      function ($scope, $route, QueryUtils, oisFileService, dialogService, message) {
         $scope.auth = $route.current.locals.auth;
         $scope.journal = $route.current.locals.journal;
-        $scope.backPath = '/studyMaterial/vocational/' + $scope.journal.id + '/edit';
+        $scope.backPath = '/#/studyMaterial/vocational/' + $scope.journal.id + '/edit';
         var materialId = $route.current.params.materialId;
         var MaterialEndpoint = QueryUtils.endpoint('/studyMaterial');
         if (materialId) {
@@ -98,6 +103,11 @@
         $scope.$watch('material.typeCode', function (newTypeCode) {
           $scope.material.url = newTypeCode === 'OPPEMATERJAL_L' ? 'http://' : null;
         });
+        $scope.$watch('material.isPublic', function (newIsPublic) {
+          if (newIsPublic === true) {
+            $scope.material.isVisibleToStudents = true;
+          }
+        });
 
         $scope.delete = function () {
           dialogService.confirmDialog({
@@ -105,7 +115,7 @@
           }, function () {
             $scope.material.$delete().then(function () {
               message.info('main.messages.delete.success');
-              $location.path($scope.backPath);
+              $scope.back($scope.backPath);
             }).catch(angular.noop);
           });
         };
@@ -128,7 +138,7 @@
           }
           function afterSave() {
             message.info(materialId ? 'main.messages.update.success' : 'main.messages.create.success');
-            $location.path($scope.backPath);
+            $scope.back($scope.backPath);
           }
           if ($scope.material.typeCode === 'OPPEMATERJAL_F' && !$scope.material.id) {
             if ($scope.files.length !== 1) {

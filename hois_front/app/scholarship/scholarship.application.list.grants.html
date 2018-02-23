@@ -120,9 +120,9 @@
 
 
     <div layout="row" ng-if="applications.length > 0">
-      <md-button ng-click="accept()" class="md-raised md-primary">{{'main.button.accept' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="annul()">{{'main.button.annul' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="reject()">{{'main.button.reject' | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="accept()" ng-if="canManage">{{'main.button.accept' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="annul()" ng-if="canManage">{{'main.button.annul' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="reject()" ng-if="canManage">{{'main.button.reject' | translate}}</md-button>
       <md-button class="md-raised" ng-click="refreshResults()">{{'main.button.refreshResults' | translate}}</md-button>
       <md-button class="md-raised" ng-click="checkComplies()">{{'main.button.checkComplies' | translate}}</md-button>
     </div>

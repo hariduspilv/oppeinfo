@@ -84,7 +84,7 @@
     var data = [];
     data.recordId = recordId;
     data.subjectOrModuleId = formalSubjectsOrModules.id;
-    if (formalSubjectsOrModules) {
+    if (formalSubjectsOrModules && !angular.equals(formalSubjectsOrModules, {})) {
       data.school = formalSubjectsOrModules.apelSchool ? formalSubjectsOrModules.apelSchool : scope.school;
     }
     data.moduleId = formalSubjectsOrModules.id;
@@ -1430,7 +1430,7 @@
         }).catch(angular.noop);
       });
     };
-  }).controller('ApelApplicationViewController', function ($scope, $route, QueryUtils, oisFileService, Classifier, ArrayUtils, dialogService, message, config) {
+  }).controller('ApelApplicationViewController', function ($scope, $route, QueryUtils, oisFileService, Classifier, ArrayUtils, DataUtils, dialogService, message, config) {
     $scope.applicationId = $route.current.params.id;
     $scope.auth = $route.current.locals.auth;
     $scope.canConfirmAndRemoveConfirmation = ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_K_TEEMAOIGUS_VOTA");
@@ -1463,6 +1463,89 @@
       $scope.application.status = "VOTA_STAATUS_K";
     }
     $scope.applicationPdfUrl = config.apiUrl + '/apelApplications/print/' + $scope.application.id + '/application.pdf';
+
+    $scope.removeConfirmation = function () {
+      dialogService.confirmDialog({
+        prompt: 'apel.removeConfirmationConfirm'
+      }, function () {
+        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/removeConfirmation/').put({}, function (response) {
+          message.info('apel.messages.removedConfirmation');
+          entityToForm(response);
+        });
+      });
+    };
+
+    $scope.sendBackToCreation = function () {
+      dialogService.confirmDialog({
+        prompt: 'apel.sendBackToCreationConfirm'
+      }, function () {
+        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({}, function (response) {
+          message.info('apel.messages.sentBackToCreation');
+          entityToForm(response);
+        });
+      });
+    };
+
+    $scope.sendToConfirm = function () {
+      recordsToIdentifiers(DataUtils, $scope.application.records);
+      dialogService.confirmDialog({
+        prompt: 'apel.sendToConfirmConfirm'
+      }, function () {
+        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
+          student: $scope.application.student, isVocational: $scope.application.isVocational, records:  $scope.application.records
+        }, function (response) {
+          message.info('apel.messages.sentToConfirm');
+          entityToForm(response);
+        });
+      });
+    };
+
+    $scope.confirm = function () {
+      if (atLeastOneLearningTransferred()) {
+        dialogService.confirmDialog({
+          prompt: 'apel.confirmConfirm'
+        }, function () {
+          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/confirm/').put({}, function (response) {
+            message.info('apel.messages.confirmed');
+            entityToForm(response);
+          });
+        });
+      } else {
+        message.error('apel.error.atLeastOneLearningMustBeTransferred');
+      }
+    };
+
+    function atLeastOneLearningTransferred() {
+      for (var i = 0; i < $scope.application.records.length; i++) {
+        for (var j = 0; j < $scope.application.records[i].data.length; j++) {
+          if ($scope.application.records[i].data[j].transfer) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }    
+
+    $scope.sendBack = function () {
+      dialogService.confirmDialog({
+        prompt: 'apel.sendBackConfirm'
+      }, function () {
+        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBack/').put({}, function (response) {
+          message.info('apel.messages.sentBack');
+          entityToForm(response);
+        });
+      });
+    };
+
+    $scope.reject = function () {
+      dialogService.showDialog('apelApplication/templates/reject.dialog.html', function () {}, function (submittedDialogScope) {
+        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/reject/').put({
+          addInfo: submittedDialogScope.rejectReason
+        }, function (response) {
+          entityToForm(response);
+        });
+      });
+    };
 
     $scope.removeConfirmation = function () {
       dialogService.confirmDialog({

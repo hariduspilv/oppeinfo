@@ -178,8 +178,8 @@ public class CertificateController {
 
     @GetMapping("/otherStudent")
     public StudentSearchDto otherStudent(HoisUserDetails user, OtherStudentCommand command) {
-        UserUtil.assertIsSchoolAdminOrStudent(user);
-        return certificateService.otherStudent(user.getSchoolId(), user.isStudent() ? user.getStudentId() : command.getId(), command.getIdcode());
+        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        return certificateService.otherStudent(user, command.getId(), command.getIdcode());
     }
 
     public static class OtherStudentCommand {

@@ -76,7 +76,8 @@
           <md-input-container flex="20">
             <label>{{'module.studyYear' | translate}}</label>
             <md-select ng-model="occupationModuleTheme.studyYearNumber">
-              <md-option ng-repeat="studyYearNumber in [null,1,2,3]" ng-value="studyYearNumber" aria-label="{{studyYearNumber}}">{{studyYearNumber}}</md-option>
+              <md-option ng-value="null"></md-option>
+              <md-option ng-repeat="studyYearNumber in studyYears" ng-value="studyYearNumber" aria-label="{{studyYearNumber}}">{{studyYearNumber}}</md-option>
             </md-select>
           </md-input-container>
         </div>

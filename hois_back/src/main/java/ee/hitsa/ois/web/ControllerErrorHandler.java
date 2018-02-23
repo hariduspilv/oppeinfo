@@ -20,6 +20,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
@@ -97,6 +98,8 @@ public class ControllerErrorHandler {
             status = HttpStatus.CONFLICT;
         } else if (e instanceof AuthenticationException) {
             status = HttpStatus.UNAUTHORIZED;
+        } else if (e instanceof AccessDeniedException) {
+            status = HttpStatus.FORBIDDEN;
         } else if (e instanceof HttpRequestMethodNotSupportedException) {
             status = HttpStatus.METHOD_NOT_ALLOWED;
         }  else if (e instanceof SingleMessageWithParamsException) {

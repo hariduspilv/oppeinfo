@@ -56,6 +56,7 @@ public class School extends BaseEntityWithId implements Translatable {
     private Classifier ehisSchool;
     private String address;
     private String addressAds;
+    private String addressAdsOid;
     private String phone;
     private String emailDomain;
     private Boolean generateUserEmail;
@@ -142,6 +143,14 @@ public class School extends BaseEntityWithId implements Translatable {
 
     public void setAddressAds(String addressAds) {
         this.addressAds = addressAds;
+    }
+
+    public String getAddressAdsOid() {
+        return addressAdsOid;
+    }
+
+    public void setAddressAdsOid(String addressAdsOid) {
+        this.addressAdsOid = addressAdsOid;
     }
 
     public String getPhone() {

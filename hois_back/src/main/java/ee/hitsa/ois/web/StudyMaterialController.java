@@ -20,6 +20,8 @@ import ee.hitsa.ois.domain.studymaterial.StudyMaterial;
 import ee.hitsa.ois.domain.studymaterial.StudyMaterialConnect;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.StudyMaterialService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -48,6 +50,7 @@ public class StudyMaterialController {
     @GetMapping("/subjectStudyPeriods")
     public Page<SubjectStudyPeriodSearchDto> subjectStudyPeriods(HoisUserDetails user, SubjectStudyPeriodSearchCommand command, 
             Pageable pageable) {
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEMATERJAL);
         if (user.isTeacher()) {
             command.setTeacher(user.getTeacherId());
         } else if (!user.isSchoolAdmin()) {
@@ -72,6 +75,7 @@ public class StudyMaterialController {
 
     @GetMapping("/journals")
     public Page<JournalSearchDto> journals(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEMATERJAL);
         if (user.isTeacher()) {
             command.setTeacher(user.getTeacherId());
         } else if (!user.isSchoolAdmin()) {
@@ -93,8 +97,16 @@ public class StudyMaterialController {
     }
 
     private List<StudyMaterialSearchDto> materials(HoisUserDetails user, Long subjectStudyPeriodId, Long journalId) {
-        Boolean isPublic = user.isRepresentative() ? Boolean.TRUE : null;
-        Boolean isVisibleToStudents = user.isStudent() ? Boolean.TRUE : null;
+        Boolean isPublic = null;
+        Boolean isVisibleToStudents = null;
+        if (!((user.isSchoolAdmin() || user.isTeacher())
+                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL))) {
+            if (user.isStudent()) {
+                isVisibleToStudents = Boolean.TRUE;
+            } else {
+                isPublic = Boolean.TRUE;
+            }
+        }
         return studyMaterialService.materials(subjectStudyPeriodId, journalId, isPublic, isVisibleToStudents);
     }
 
@@ -106,6 +118,7 @@ public class StudyMaterialController {
 
     @PostMapping
     public StudyMaterialDto create(HoisUserDetails user, @Valid @RequestBody StudyMaterialForm materialForm) {
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL);
         if (user.isTeacher()) {
             materialForm.setTeacher(user.getTeacherId());
         } else if (!user.isSchoolAdmin()) {
@@ -128,17 +141,10 @@ public class StudyMaterialController {
         return get(user, studyMaterialService.save(user, material, materialForm));
     }
 
-    @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user,
-            @WithVersionedEntity(versionRequestParam = "version") StudyMaterial material,
-            @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertAccess(user, material);
-        studyMaterialService.delete(user, material);
-    }
-
     @PostMapping("/connect")
     public void connect(HoisUserDetails user, @Valid @RequestBody StudyMaterialConnectForm connectForm) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL);
         if (connectForm.getSubjectStudyPeriod() != null) {
             studyMaterialService.connect(user, connectForm.getStudyMaterial(), connectForm.getSubjectStudyPeriod(), null);
         } else if (connectForm.getJournal() != null) {
@@ -157,9 +163,10 @@ public class StudyMaterialController {
     }
 
     private static void assertAccess(HoisUserDetails user, StudyMaterial material) {
-        if (!(UserUtil.isSchoolAdmin(user, material.getSchool()) 
-                || (user.isTeacher() && user.getTeacherId().equals(EntityUtil.getId(material.getTeacher()))))) {
-            throw new AssertionFailedException("User is not school admin or teacher who created the material");
+        if (!((UserUtil.isSchoolAdmin(user, material.getSchool()) 
+                || (user.isTeacher() && user.getTeacherId().equals(EntityUtil.getId(material.getTeacher())))))
+                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL)) {
+            throw new AssertionFailedException("User is not school admin or teacher who created the material or has no rights");
         }
     }
 

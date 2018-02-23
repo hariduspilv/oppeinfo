@@ -94,7 +94,7 @@
               </div>
             </td>
             <td md-cell>
-              <div ng-if="(auth.isStudent() && row.status === 'VOTA_STAATUS_K') || (auth.isAdmin() && row.status !== 'VOTA_STAATUS_C' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_VOTA'))">
+              <div ng-if="(auth.isStudent() && row.status === 'VOTA_STAATUS_K') || (auth.isAdmin() && row.status !== 'VOTA_STAATUS_C' && row.status !== 'VOTA_STAATUS_Y' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_VOTA'))">
                 <md-button md-no-ink class="md-primary change-button" ng-href="#/apelApplication/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
               </div>
             </td>

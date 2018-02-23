@@ -17,7 +17,6 @@ import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.service.StudentAbsenceService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.StudentAbsenceUtil;
-import ee.hitsa.ois.util.StudentAbsenceValidationUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceSearchCommand;
@@ -40,13 +39,13 @@ public class StudentAbsenceController {
 
     @GetMapping
     public Page<StudentAbsenceDto> search(HoisUserDetails user, @Valid StudentAbsenceSearchCommand criteria, Pageable pageable) {
-        StudentAbsenceValidationUtil.assertCanSearch(user);
+        StudentAbsenceUtil.assertCanSearch(user);
         return studentAbsenceService.search(user, criteria, pageable);
     }
 
     @PutMapping("/accept/{id:\\d+}")
     public StudentAbsenceDto accept(HoisUserDetails user, @WithEntity StudentAbsence studentAbsence) {
-        StudentAbsenceValidationUtil.assertCanAccept(user, studentAbsence);
+        StudentAbsenceUtil.assertCanAccept(user, studentAbsence);
         return get(user, studentAbsenceService.accept(studentAbsence));
     }
 

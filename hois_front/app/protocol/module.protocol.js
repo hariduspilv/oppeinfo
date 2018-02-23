@@ -32,7 +32,12 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     $scope.protocol.protocolStudents.forEach(function (protocolStudent) {
       protocolStudent.journalResults.forEach(function (journalResult) {
         if (!journalResults[journalResult.journalId]) {
-          journalResults[journalResult.journalId] = ({ id: journalResult.journalId, nameEt: journalResult.nameEt, capacity: journalResult.capacity });
+          journalResults[journalResult.journalId] = ({
+            id: journalResult.journalId,
+            nameEt: journalResult.nameEt,
+            capacity: journalResult.capacity,
+            hasOutcomes: journalResult.journalHasOutcomes
+          });
         }
 
         if (!protocolStudentJournalResults[protocolStudent.id]) {
@@ -45,12 +50,49 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
       });
     });
     var journals = [];
+    $scope.formState.outcomesAsEntries = false;
     for (var p in journalResults) {
       if (journalResults.hasOwnProperty(p)) {
         journals.push(journalResults[p]);
+        
+        if (!$scope.formState.outcomesAsEntries && journalResults[p].hasOutcomes) {
+          $scope.formState.outcomesAsEntries = true;
+        }
       }
     }
     $scope.journals = journals;
+  }
+
+  var protocolStudentOutcomeResults = {};
+  function loadOutcomes() {
+    protocolStudentOutcomeResults = {};
+    $scope.protocol.protocolStudents.forEach(function (protocolStudent) {
+      var outcomeResults = [];
+      protocolStudent.outcomeResults.forEach(function (outcomeResult) {
+        outcomeResults.push({id: outcomeResult.curriculumModuleOutcomeId, grade: outcomeResult.grade, gradeInserted: outcomeResult.gradeInserted });
+      });
+
+      outcomeResults = sortResultsByGradeInserted(outcomeResults);
+      outcomeResults.forEach(function (outcomeResult) {
+        if (!protocolStudentOutcomeResults[protocolStudent.id]) {
+          protocolStudentOutcomeResults[protocolStudent.id] = {};
+        }
+        if (!protocolStudentOutcomeResults[protocolStudent.id][outcomeResult.id]) {
+          protocolStudentOutcomeResults[protocolStudent.id][outcomeResult.id] = clMapper.objectmapper(outcomeResult).grade;
+        }
+      });
+    });
+
+    $scope.outcomes = $scope.protocol.protocolVdata.outcomes;
+  }
+
+  function sortResultsByGradeInserted(results) {
+    results.sort(function(a, b) {
+      a = new Date(a.gradeInserted);
+      b = new Date(b.gradeInserted);
+      return a>b ? -1 : a<b ? 1 : 0;
+    });
+    return results;
   }
 
   function allProtocolStudentsGraded() {
@@ -111,6 +153,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
       $scope.savedStudents = angular.copy($scope.protocol.protocolStudents);
       $scope.getUrl = oisFileService.getUrl;
       loadJournals();
+      loadOutcomes();
       loadGradesSelect();
       $scope.formState.canEditConfirmedProtocol = canEditConfirmedProtocol();
       $scope.formState.canChangeConfirmedProtocolGrade = canChangeConfirmedProtocolGrade();
@@ -160,7 +203,13 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
 
   $scope.deleteProtocolStudent = function (protocolStudent) {
     dialogService.confirmDialog({prompt: 'moduleProtocol.prompt.deleteStudent'}, function() {
-      ArrayUtils.remove($scope.protocol.protocolStudents, protocolStudent);
+      //ArrayUtils.remove($scope.protocol.protocolStudents, protocolStudent);
+      var ProtocolStudentEndpoint = QueryUtils.endpoint('/moduleProtocols/' + $scope.protocol.id + '/removeStudent');
+      var removedStudent = new ProtocolStudentEndpoint(protocolStudent);
+      removedStudent.$delete().then(function (protocol) {
+          message.info('main.messages.delete.success');
+          entityToDto(protocol);
+      }).catch(angular.noop);
     });
   };
 
@@ -191,6 +240,12 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
   $scope.journalResultsView = function (journalId, protocolStudent) {
     if (protocolStudentJournalResults[protocolStudent.id] && protocolStudentJournalResults[protocolStudent.id][journalId]) {
       return protocolStudentJournalResults[protocolStudent.id][journalId].map(function (it) { return it.value; }).join(' / ');
+    }
+  };
+
+  $scope.outcomeResultsView = function (curriculumModuleOutcomeId, protocolStudent) {
+    if (protocolStudentOutcomeResults[protocolStudent.id] && protocolStudentOutcomeResults[protocolStudent.id][curriculumModuleOutcomeId]) {
+      return protocolStudentOutcomeResults[protocolStudent.id][curriculumModuleOutcomeId].value;
     }
   };
 

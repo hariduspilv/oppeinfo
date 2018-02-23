@@ -3,7 +3,7 @@
 angular.module('hitsaOis').controller('StudyMaterialHigherListController', ['$scope', '$route', '$timeout', 'QueryUtils', 'message',
   'USER_ROLES', 'AuthService', 'DataUtils',
   function ($scope, $route, $timeout, QueryUtils, message, USER_ROLES, AuthService, DataUtils) {
-    $scope.canEdit = true;//AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEMATERJALID);
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEMATERJAL);
     $scope.auth = $route.current.locals.auth;
 
     QueryUtils.createQueryForm($scope, '/studyMaterial/subjectStudyPeriods', {
@@ -33,9 +33,9 @@ angular.module('hitsaOis').controller('StudyMaterialHigherListController', ['$sc
       $scope.criteria.teacher = newTeacher ? newTeacher.id : null;
     });
   }]).controller('StudyMaterialVocationalListController', ['$scope', '$route', '$timeout', 'QueryUtils', 'message',
-    'USER_ROLES', 'AuthService',
-    function ($scope, $route, $timeout, QueryUtils, message, USER_ROLES, AuthService) {
-      $scope.canEdit = true;//AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEMATERJALID);
+    'USER_ROLES', 'AuthService', 'DataUtils',
+    function ($scope, $route, $timeout, QueryUtils, message, USER_ROLES, AuthService, DataUtils) {
+      $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEMATERJAL);
       $scope.auth = $route.current.locals.auth;
 
       QueryUtils.createQueryForm($scope, '/studyMaterial/journals', {
@@ -52,7 +52,14 @@ angular.module('hitsaOis').controller('StudyMaterialHigherListController', ['$sc
         }
       };
   
-      $timeout($scope.loadData);
+      $scope.studyYears = QueryUtils.endpoint('/autocomplete/studyYears').query();
+      $scope.studyYears.$promise.then(function () {
+        if ($scope.studyYears.length > 0 && !$scope.criteria.studyYear) {
+          var currentStudyYear = DataUtils.getCurrentStudyYearOrPeriod($scope.studyYears);
+          $scope.criteria.studyYear = currentStudyYear ? currentStudyYear.id : undefined;
+        }
+        $timeout($scope.loadData);
+      });
 
       $scope.$watch('teacher', function (newTeacher) {
         $scope.criteria.teacher = newTeacher ? newTeacher.id : null;

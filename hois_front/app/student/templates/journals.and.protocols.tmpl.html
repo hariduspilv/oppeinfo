@@ -1,0 +1,25 @@
+<md-table-container>
+  <table md-table class="secondary-table">
+    <thead md-head>
+      <tr md-row>
+        <th md-column>{{'student.result.name' | translate}}</th>
+        <th md-column>{{'student.result.studyYear' | translate}}</th>
+        <th md-column>{{'student.result.protocolNr' | translate}}</th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row ng-repeat="entity in studentConnectedEntities" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>
+          <a ng-if="entity.type === 'journal'" ng-href="#/journal/{{entity.entityId}}/view">{{currentLanguageNameField(entity)}}</a>
+          <a ng-if="entity.type === 'protocol'" ng-href="#/moduleProtocols/{{entity.entityId}}/view"><b>{{currentLanguageNameField(entity)}}</b></a>
+          <a ng-if="entity.type === 'apel'" ng-href="#/apelApplication/{{entity.entityId}}/view">{{currentLanguageNameField(entity)}}</a>
+        </td>
+        <td md-cell>
+          <hois-classifier-value ng-if="entity.type !== 'apel'" ng-model="entity.yearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+          <span ng-if="entity.type === 'apel'">{{entity.date | hoisDate}}</span>
+        </td>
+        <td md-cell>{{entity.protocolNr}}</td>
+      </tr>
+    </tbody>
+  </table>
+</md-table-container>

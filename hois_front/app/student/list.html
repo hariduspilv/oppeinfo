@@ -9,7 +9,7 @@
             <input ng-model="criteria.name" name="name" type="text" autofocus>
           </md-input-container>
 
-          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container ng-if="!auth.isStudent()" flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'student.idcode' | translate}}</label>
             <input ng-model="criteria.idcode" name="idcode" type="text" md-minlength="11" md-maxlength="11">
           </md-input-container>
@@ -28,14 +28,14 @@
       <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'student.studyForm' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyForm" name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.studyForm" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
           </md-input-container>
 
           <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.status' | translate}}</label>
-            <hois-classifier-select ng-if="auth.isAdmin() || auth.isTeacher()" ng-model="criteria.status" name="status" model-value-attr="code"
+            <hois-classifier-select ng-if="auth.isAdmin() || auth.isTeacher()" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" ng-model="criteria.status" name="status" model-value-attr="code"
               main-classifier-code="OPPURSTAATUS" multiple></hois-classifier-select>
-              <hois-classifier-select ng-if="auth.isStudent()" ng-model="criteria.status" name="status" model-value-attr="code"
+            <hois-classifier-select ng-if="auth.isStudent()" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" ng-model="criteria.status" name="status" model-value-attr="code"
               main-classifier-code="OPPURSTAATUS" filter-values="['OPPURSTAATUS_K', 'OPPURSTAATUS_L']" multiple></hois-classifier-select>
           </md-input-container>
       </div>

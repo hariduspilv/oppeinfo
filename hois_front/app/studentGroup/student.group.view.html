@@ -79,26 +79,31 @@
 	<div>&nbsp;</div>
     <md-table-container ng-if="record.members && record.members.length > 0">
       <table md-table>
-        <thead md-head md-order="criteria.order">
+        <thead md-head md-order="formState.order">
           <tr md-row>
-            <th md-column>{{'studentGroup.studentname' | translate}}</th>
-            <th md-column>{{'studentGroup.idcode' | translate}}</th>
-            <th md-column>{{formState.curriculumVersionLabel | translate}}</th>
+            <th md-column>{{'main.rowno' | translate}}</th>
+            <th md-column md-order-by="rowno">{{'studentGroup.studentname' | translate}}</th>
+            <th md-column ng-if="showPersonalData" md-order-by="idcode">{{'studentGroup.idcode' | translate}}</th>
+            <th md-column md-order-by="curriculumVersion.{{currentLanguageNameField()}}">{{formState.curriculumVersionLabel | translate}}</th>
+            <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'studentGroup.studentstatus' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row md-select="row" ng-repeat="row in record.members" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row md-select="row" ng-repeat="row in record.members | orderBy: formState.order" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.rowno}}</td>
             <td md-cell>
-              <a class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
+              <a class="md-primary" ng-if="showPersonalData" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
+              <span ng-if="!showPersonalData">{{::row.fullname}}</span>
             </td>
-            <td md-cell>{{::row.idcode}}</td>
+            <td md-cell ng-if="showPersonalData">{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
           </tr>
         </tbody>
       </table>
     </md-table-container>
 
-    <md-button ng-href="#/studentgroups/{{record.id}}/edit" class="md-raised md-primary" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPPERYHM')">{{'main.button.change' | translate}}</md-button>
+    <md-button ng-href="#/studentgroups/{{record.id}}/edit" class="md-raised md-primary" ng-if="canEdit">{{'main.button.change' | translate}}</md-button>
     <md-button ng-click="back('#/studentgroups')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

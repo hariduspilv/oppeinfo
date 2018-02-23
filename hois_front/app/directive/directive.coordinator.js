@@ -22,12 +22,12 @@ angular.module('hitsaOis').controller('DirectiveCoordinatorEditController', ['$l
       }
 
       if($scope.record.id) {
-        $scope.record.$update().then(message.updateSuccess);
+        $scope.record.$update().then(message.updateSuccess).catch(angular.noop);
       }else{
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
-        });
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
+        }).catch(angular.noop);
       }
     };
 
@@ -35,8 +35,8 @@ angular.module('hitsaOis').controller('DirectiveCoordinatorEditController', ['$l
       dialogService.confirmDialog({prompt: 'directive.coordinator.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.url(baseUrl);
-        });
+          $location.url(baseUrl + '?_noback');
+        }).catch(angular.noop);
       });
     };
   }

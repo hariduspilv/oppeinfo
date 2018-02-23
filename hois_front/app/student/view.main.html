@@ -76,7 +76,7 @@
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.studentGroup' | translate}}</label>
             <hois-value value="currentLanguageNameField(student.studentGroup)"
-            href-value="'#/studentgroups/' + student.studentGroup.id + '/view'"></hois-value>
+                        href-value="!auth.isTeacher() ? ('#/studentgroups/' + student.studentGroup.id + '/view') : undefined"></hois-value>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.course' | translate}}</label>

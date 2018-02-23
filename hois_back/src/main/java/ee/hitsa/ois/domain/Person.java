@@ -36,6 +36,7 @@ public class Person extends BaseEntityWithId {
     private String email;
     private LocalDate birthdate;
     private String addressAds;
+    private String addressAdsOid;
     @OneToMany(mappedBy = "person")
     private Set<User> users;
 
@@ -165,6 +166,14 @@ public class Person extends BaseEntityWithId {
 
     public void setAddressAds(String addressAds) {
         this.addressAds = addressAds;
+    }
+
+    public String getAddressAdsOid() {
+        return addressAdsOid;
+    }
+
+    public void setAddressAdsOid(String addressAdsOid) {
+        this.addressAdsOid = addressAdsOid;
     }
 
     public Set<User> getUsers() {

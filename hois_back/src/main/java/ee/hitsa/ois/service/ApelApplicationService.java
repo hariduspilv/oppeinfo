@@ -101,7 +101,7 @@ public class ApelApplicationService {
             ApelApplicationSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(RPM_FROM).sort(pageable);
         
-        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("aa.school_id = :schoolId", "schoolId", user.getSchoolId());
         
         qb.optionalCriteria("aa.student_id = :studentId", "studentId", criteria.getStudent());
         if (user.isStudent()) {
@@ -473,6 +473,9 @@ public class ApelApplicationService {
      * @return
      */
     public ApelApplication sendToConfirm(ApelApplication application) {
+        if (application.getRecords().isEmpty()) {
+            throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
+        }
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_Y);
         return EntityUtil.save(application, em);
     }
