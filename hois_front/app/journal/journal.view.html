@@ -47,6 +47,13 @@
         <hois-value value="journal.plannedHours + '/' + journal.usedHours"></hois-value>
       </md-input-container>
     </div>
+
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label>{{'moodle.courseId' | translate}}</label>
+        <hois-value value="journal.moodleCourseId"></hois-value>
+      </md-input-container>
+    </div>
   </div>
 </div>
 <div ng-controller="JournalEditController as journalEditController">

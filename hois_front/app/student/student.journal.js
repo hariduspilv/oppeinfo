@@ -127,7 +127,8 @@
                             'SISSEKANNE_E': 'default-amber-100',
                             'SISSEKANNE_I': 'default-lime-100',
                             'SISSEKANNE_H': 'default-pink-50',
-                            'SISSEKANNE_L': 'default-pink-300'
+                            'SISSEKANNE_L': 'default-pink-300',
+                            'SISSEKANNE_O': 'default-light-blue-50'
                         };
                         $scope.journalEntryTypes = {};
                         Classifier.queryForDropdown({ mainClassCode: 'SISSEKANNE' }, function (result) {

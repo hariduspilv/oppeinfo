@@ -9,6 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +38,7 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.sais.SaisApplicationGraduatedSchool;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentHistory;
@@ -527,6 +529,15 @@ public class DirectiveConfirmService {
             email = directiveStudent.getPerson().getEmail();
         }
         student.setEmail(email);
+
+        if(directiveStudent.getSaisApplication() != null) {
+            Iterator<SaisApplicationGraduatedSchool> i = directiveStudent.getSaisApplication().getGraduatedSchools().iterator();
+            if(i.hasNext()) {
+                SaisApplicationGraduatedSchool s = i.next();
+                student.setPreviousSchoolName(s.getName());
+                student.setPreviousSchoolEndDate(s.getEndDate());
+            }
+        }
 
         // new role for student
         userService.enableUser(student, directiveStudent.getDirective().getConfirmDate());

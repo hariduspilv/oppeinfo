@@ -1,60 +1,36 @@
 package ee.hitsa.ois.web.dto.sais;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.sais.SaisApplicationGraduatedSchool;
-import ee.hitsa.ois.util.EntityUtil;
 
 public class SaisApplicationGraduatedSchoolDto {
 
-    private Long id;
-    private String name;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private final Long id;
+    private final String name;
+    private final LocalDate startDate;
+    private final LocalDate endDate;
 
-
-    public static SaisApplicationGraduatedSchoolDto of(SaisApplicationGraduatedSchool saisApplicationGraduatedSchool) {
-        SaisApplicationGraduatedSchoolDto dto = EntityUtil.bindToDto(saisApplicationGraduatedSchool, new SaisApplicationGraduatedSchoolDto());
-        return dto;
+    public SaisApplicationGraduatedSchoolDto(SaisApplicationGraduatedSchool saisApplicationGraduatedSchool) {
+        this.id = saisApplicationGraduatedSchool.getId();
+        this.name = saisApplicationGraduatedSchool.getName();
+        this.startDate = saisApplicationGraduatedSchool.getStartDate();
+        this.endDate = saisApplicationGraduatedSchool.getEndDate();
     }
-
-
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {
         return name;
     }
 
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-
-    public LocalDateTime getStartDate() {
+    public LocalDate getStartDate() {
         return startDate;
     }
 
-
-    public void setStartDate(LocalDateTime startDate) {
-        this.startDate = startDate;
-    }
-
-
-    public LocalDateTime getEndDate() {
+    public LocalDate getEndDate() {
         return endDate;
     }
-
-
-    public void setEndDate(LocalDateTime endDate) {
-        this.endDate = endDate;
-    }
-
 }

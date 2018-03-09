@@ -155,10 +155,7 @@ public class SubjectService {
                 filters.add(root.get("assessment").get("code").in(subjectSearchCommand.getAssessments()));
             }
             if(!SubjectUserRights.canViewAllSubjects(user)) {
-                if(subjectSearchCommand.getStatus() == null) {
-                    subjectSearchCommand.setStatus(new HashSet<>());
-                }
-                subjectSearchCommand.getStatus().add(SubjectStatus.AINESTAATUS_K.name());
+                subjectSearchCommand.setStatus(Collections.singletonList(SubjectStatus.AINESTAATUS_K.name()));
             }
             if (!CollectionUtils.isEmpty(subjectSearchCommand.getStatus())) {
                 filters.add(root.get("status").get("code").in(subjectSearchCommand.getStatus()));

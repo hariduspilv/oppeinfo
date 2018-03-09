@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 
@@ -10,6 +11,7 @@ public class StudentJournalDto {
     private final String nameEt;
     private final Long studyYearId;
     private final String yearCode;
+    private final Boolean moduleOutcomesAsEntries;
     private final Short absenceH;
     private final Short absenceP;
     private final Short absencePV;
@@ -20,9 +22,10 @@ public class StudentJournalDto {
         this.nameEt = (String) row[1];
         this.studyYearId = resultAsLong(row, 2);
         this.yearCode = (String) row[3];
-        this.absenceH = resultAsShort(row, 4);
-        this.absenceP = resultAsShort(row, 5);
-        this.absencePV = resultAsShort(row, 6);
+        this.moduleOutcomesAsEntries = resultAsBoolean(row, 4);
+        this.absenceH = resultAsShort(row, 5);
+        this.absenceP = resultAsShort(row, 6);
+        this.absencePV = resultAsShort(row, 7);
         this.journalEntries = null;
     }
     
@@ -31,9 +34,10 @@ public class StudentJournalDto {
         this.nameEt = (String) row[1];
         this.studyYearId = resultAsLong(row, 2);
         this.yearCode = (String) row[3];
-        this.absenceH = resultAsShort(row, 4);
-        this.absenceP = resultAsShort(row, 5);
-        this.absencePV = resultAsShort(row, 6);
+        this.moduleOutcomesAsEntries = resultAsBoolean(row, 4);
+        this.absenceH = resultAsShort(row, 5);
+        this.absenceP = resultAsShort(row, 6);
+        this.absencePV = resultAsShort(row, 7);
         this.journalEntries = journalEntries;
     }
 
@@ -52,6 +56,10 @@ public class StudentJournalDto {
     public String getYearCode() {
         return yearCode;
     }
+    
+    public Boolean getModuleOutcomesAsEntries() {
+        return moduleOutcomesAsEntries;
+    }
 
     public Short getAbsenceH() {
         return absenceH;
@@ -64,7 +72,7 @@ public class StudentJournalDto {
     public Short getAbsencePV() {
         return absencePV;
     }
-    
+
     public List<StudentJournalEntryDto> getJournalEntries() {
         return journalEntries;
     }

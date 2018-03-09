@@ -1,35 +1,20 @@
 'use strict';
 
 angular.module('hitsaOis').controller('ScholarshipSearchController', 
-  function (dialogService, $scope, Classifier, $location, message, QueryUtils, $route, DataUtils, ArrayUtils, $q, USER_ROLES, AuthService) {
+  function ($scope, $location, $q, $route, $timeout, dialogService, message, Classifier, QueryUtils, DataUtils, USER_ROLES, AuthService) {
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS);
     var baseUrl = '/scholarships';
-    var clMapper = Classifier.valuemapper({
-      type: 'STIPTOETUS'
-    });
+    var clMapper = Classifier.valuemapper({type: 'STIPTOETUS'});
     $scope.formState = {};
 
     //TODO: hardcoded
-    $scope.statuses = [{
-      id: 0,
-      nameEt: 'Sisestamisel',
-    }, {
-      id: 1,
-      nameEt: 'Avalik',
-    }];
+    $scope.statuses = [{id: 0, nameEt: 'Sisestamisel'}, {id: 1, nameEt: 'Avalik'}];
 
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
-    QueryUtils.createQueryForm($scope, baseUrl, {
-      order: 'id'
-    }, clMapper.objectmapper);
+    QueryUtils.createQueryForm($scope, baseUrl, {order: 'id'}, clMapper.objectmapper);
 
     var promises = clMapper.promises;
     promises.push($scope.studyPeriods.$promise);
-
-    $q.all(promises).then(function () {
-      $scope.criteria.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
-      $scope.loadData();
-    });
 
     $scope.criteria.allowedStipendTypes = $route.current.locals.params.allowedStipendTypes;
     if($route.current.locals.params.scholarship) {
@@ -39,6 +24,16 @@ angular.module('hitsaOis').controller('ScholarshipSearchController',
       $scope.scholarshipType = "grant";
     }
 
+    $q.all(promises).then(function () {
+      if(!$scope.criteria.studyPeriod) {
+        var sp = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods);
+        if(sp) {
+          $scope.criteria.studyPeriod = sp.id;
+        }
+      }
+      $timeout($scope.loadData);
+    });
+
     $scope.changeStipend = function (row) {
       var messageText;
       if (['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU', 'STIPTOETUS_DOKTOR'].indexOf(row.type.code) !== -1) {
@@ -47,17 +42,12 @@ angular.module('hitsaOis').controller('ScholarshipSearchController',
         messageText = 'stipend.confirmations.scholarshipIsPublishedChange';
       }
       if (row.isOpen) {
-        dialogService.confirmDialog({
-            prompt: messageText,
-            accept: 'main.yes',
-            cancel: 'main.no'
-          },
-          function () {
-            $location.url(baseUrl + '/' + row.id + '/edit');
-          });
+        dialogService.confirmDialog({prompt: messageText}, function () {
+          $location.url(baseUrl + '/' + row.id + '/edit');
+        });
       } else {
         $location.url(baseUrl + '/' + row.id + '/edit');
       }
     };
-
-  });
+  }
+);

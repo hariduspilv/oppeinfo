@@ -69,13 +69,6 @@ public class StudentControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
-        uriBuilder.queryParam("idcode", "3211212");
-        url = uriBuilder.build().toUriString();
-        responseEntity = restTemplate.getForEntity(url, Object.class);
-        Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
-
-        uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
         uriBuilder.queryParam("name", "NIMI");
         uriBuilder.queryParam("idcode", "48908209998");
         uriBuilder.queryParam("curriculumVersion", Long.valueOf(1));
@@ -121,6 +114,17 @@ public class StudentControllerTests {
     }
 
     @Test
+    public void foreignstudies() {
+        Assert.assertNotNull(student);
+
+        Long id = student.getId();
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(id.toString(), "foreignstudies");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void subjects() {
         Assert.assertNotNull(student);
 
@@ -148,6 +152,61 @@ public class StudentControllerTests {
 
         Long id = student.getId();
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(id.toString(), "higherResults");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void vocationalConnectedEntities() {
+        Assert.assertNotNull(student);
+
+        Long id = student.getId();
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(id.toString(), "vocationalConnectedEntities");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void vocationalChangeableModules() {
+        Assert.assertNotNull(student);
+
+        Long id = student.getId();
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(id.toString(), "vocationalChangeableModules");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void vocationalCurriculumModules() {
+        Assert.assertNotNull(student);
+
+        Long id = student.getId();
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(id.toString(), "vocationalCurriculumModules");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void higherChangeableModules() {
+        Assert.assertNotNull(student);
+
+        Long id = student.getId();
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(id.toString(), "higherChangeableModules");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void higherCurriculumModules() {
+        Assert.assertNotNull(student);
+
+        Long id = student.getId();
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(id.toString(), "higherCurriculumModules");
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

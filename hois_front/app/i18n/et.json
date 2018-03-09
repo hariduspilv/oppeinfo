@@ -97,7 +97,8 @@
         "nopermission": "Vajalikud õigused puuduvad",
         "mobileIdSignFailed": "Allkirjastamine ebaõnnestus",
         "maxlength": "Tekst liiga pikk",
-        "InvalidEstonianIdCode": "Isikukood ei vasta standardile"
+        "InvalidEstonianIdCode": "Isikukood ei vasta standardile",
+        "invalidMoodleCourse": "Vale Moodle kursuse ID"
       },
       "form-has-errors": "Vormil on vigu",
       "record": {
@@ -272,7 +273,7 @@
         "label": "Õppuri õppeinfo",
         "journal": "Päevik",
         "practiceJournal": "Praktikapäevik",
-        "results" :"Õppetulemused"
+        "results" :"Õpitulemused"
       },
       "lessonplan": {
         "label": "Tunniplaanid",
@@ -442,8 +443,8 @@
       "myStudyInformation": {
         "label": "Minu õppeinfo",
         "journal": "Päevik",
-        "practiceJournal": "Praktikapäevik",
-        "results": "Õppetulemused",
+        "practiceJournals": "Praktikapäevikud",
+        "results": "Õpitulemused",
         "declaration": "Õpingukava",
         "examRegistration": "Eksamile registreerimine",
         "thesisTopicInput": "Lõputöö teema sisestamine",
@@ -456,7 +457,7 @@
       },
       "practiceAndGraduation": {
         "label": "Praktika ja lõpetamine",
-        "practiceJournal": "Praktikapäevik",
+        "practiceJournals": "Praktikapäevikud",
         "committees": "Kaitsmiskomisjonid",
         "thesisProtocols": "Lõp. protokollid",
         "thesisTopics": "Lõputöö teema"
@@ -494,6 +495,21 @@
     "end": "Lõpp",
     "studyPeriod": "Õppeperiood",
     "notFound": "Akadeemilise kalendri sündmusi ei leitud"
+  },
+  "exam": {
+    "addInfo": "Lisainfo",
+    "assessment": "Hindamisviis",
+    "date": "Eksami kuupäev",
+    "deadline": "Registreerimise tähtaeg",
+    "register": "Registreeri",
+    "room": "Toimumise ruum",
+    "start": "Eksami algus",
+    "studentCount": "Registreerunuid",
+    "studyPeriod": "Õppeperiood",
+    "subject": "Õppeaine",
+    "teacher": "Õpetaja",
+    "type": "Eksami liik",
+    "unregister": "Tühista"
   },
   "generalTimetable": {
     "curriculum": "Õppekava",
@@ -592,6 +608,8 @@
     "nominalStudyEnd": "Eeldatav nominaalaja lõpp",
     "phone": "Kontakttelefon",
     "postcode": "Sihtnumber",
+    "previousSchoolEndDate": "Lõpetamise aasta",
+    "previousSchoolName": "Eelnevalt lõpetatud õppeasutus",
     "previousStudyLevel": "Eelnev haridus",
     "representatives": "Esindajad",
     "residenceCountry": "Elukohariik",
@@ -632,6 +650,14 @@
       "label": "Käskkirjad",
       "type": "Käskkirja liik"
     },
+    "foreignstudy": {
+      "school": "Õppeasutus",
+      "country": "Riik",
+      "startDate": "Välisõppe algus",
+      "endDate": "Välisõppe lõpp",
+      "purpose": "Õpingute eesmärk",
+      "programme": "Õppeprogramm"
+    },
     "occupationcertificate": {
       "certificateNr": "Registrinumber",
       "issueDate": "Väljastamise kuupäev",
@@ -663,15 +689,17 @@
       "studentnotfound": "Õppurit ei leitud",
       "studentVisible": "Õppuri andmed on esindajale nähtavad",
       "application": {
+        "accepted": "Avaldus kinnitatud",
         "adult": "Õppur ei ole alaealine. Täisealine õppur saab esindajale enda andmete nägemise õiguse anda õppuri andmete vormil",
         "alreadyexist": "Avaldus antud õppuri andmete nägemiseks on juba olemas",
         "applicantidcode": "Avalduse esitaja isikukood",
         "applicantname": "Avalduse esitaja nimi",
         "applied": "Esitatud",
         "apply": "Esita",
-        "confirm": "Kas kinnitada avaldus?",
+        "confirm": "Kas oled kindel, et soovid {{representative}} määrata {{student}} esindajaks?",
         "confirmDate": "Kinnitatud",
         "confirmDeclineDate": "Kinnitatud/tagasi lükatud",
+        "declined": "Avaldus tagasi lükatud",
         "declineDate": "Tagasi lükatud",
         "rejectReason": "Põhjendus",
         "status": "Staatus",
@@ -1058,6 +1086,7 @@
       "deleteconfirm": "Kas oled kindel, et soovid päeviku kustutada?",
       "duplicateteacher": "Õpetaja on juba olemas",
       "duplicateroom": "Ruum on juba olemas",
+      "duplicategroup": "Rühm on juba olemas",
       "duplicatetheme": "Teema on juba päevikus",
       "isConfirmer": "kinnitaja",
       "isFiller": "täitja",
@@ -1070,7 +1099,8 @@
       "group-module": "Moodul",
       "group-theme": "Teema",
       "addModuleOutcomes": "Lisa õpiväljundid",
-      "outcomesReferenced": "Õpiväljunditega on seotud teisi kirjeid"
+      "outcomesReferenced": "Õpiväljunditega on seotud teisi kirjeid",
+      "capacityTypeReferenced": "Eemaldatud õppetöö liikidega on seotud teisi kirjeid"
     },
     "search": {
       "vocational": "Õpperühmad (kutse)",
@@ -2290,7 +2320,9 @@
       "repetition": "Kordus",
       "teacher": "Õpetaja",
       "room": "Ruum",
-      "occupied": "Kinni"
+      "occupied": "Kinni",
+      "duplicateroom": "Ruum on juba olemas",
+      "duplicateTeacher": "Õpetaja on juba olemas"
     },
     "subjectTeacherPairs": "Aine-õpetaja paarid",
     "search": {
@@ -2315,7 +2347,7 @@
     "studentGroup": "Õpperühm",
     "studentGroups": "Õpperühm(ad)",
     "teachers": "Õpetaja(d)",
-    "modules": "Mooduli(d)",
+    "modules": "Moodul(id)",
     "plannedAndEnteredCapacities": "Planeeritud ja sissekantud tundide arv",
     "confirmAllJournals": "Kinnita kõik päevikud",
     "addSelectedStudents": "Lisa valitud õppurid päevikusse",
@@ -2366,6 +2398,7 @@
       "confirmed": "Päevik on kinnitatud",
       "unconfirmed": "Kinnitus on võetud maha",
       "changeIsNotAllowedStudentIsNotStudying": "Mitteõppivate, kuid päevikuga seotud õppurite õppetulemusi muuta ei saa",
+      "changingAbsenceIsNotAllowed": "Vabandatavat puudumist muuta ei saa",
       "confirmAllNotAllowed": "Kõikide päevikute kinnitamine pole lubatud",
       "allConfirmed": "Kinnitati {{numberOfConfirmedJournals}} päeviku"
     },
@@ -2431,6 +2464,24 @@
       "instructions": "Toimige palun telefonile ilmuvate juhiste kohaselt. Enne PIN-koodi sisestamist veenduge, et telefoni ekraanil olev kontrollkood on sama, mis allpool näidatud."
     }
   },
+  "moodle": {
+    "courseId": "Moodle kursuse ID",
+    "saveCourseId": "Salvesta Moodle ID",
+    "enrollStudents": "Registreeri õppijad Moodle kursusele",
+    "importGradeItems": "Impordi Moodle hindamisobjektid",
+    "importAllGrades": "Impordi kõik Moodle hinded",
+    "importMissingGrades": "Impordi puuduvad Moodle hinded",
+    "messages": {
+      "gradeItemsImported": "Moodle hindamisobjektid imporditud",
+      "allGradesImported": "Kõik Moodle hinded imporditud",
+      "missingGradesImported": "Puuduvad Moodle hinded imporditud"
+    },
+    "enroll": {
+      "enrolled": "Registreerimine õnnestus",
+      "failed": "Registreerimine ebaõnnestus",
+      "missingUser": "Puudub Moodle konto"
+    }
+  },
   "higherProtocol": {
     "add": "Protokolli lisamine",
     "calculate": "Arvuta",
@@ -2451,6 +2502,7 @@
     "finalGrade": "Lõpphinne",
     "insertedDate": "Loomise kp",
     "message": {
+      "gradeNotSelectedForAllStudents": "Mooduli protokoll kinnitamine ebaõnnestus - vähemalt ühel õpilasel on hinne määramata",
       "confirmed": "Protokoll on kinnitatud",
       "savedAndConfirmed": "Protokoll on salvestatud ja kinnitatud",
       "calculated": "Lõpphinne on arvutatud"
@@ -2496,7 +2548,10 @@
       "noteachersfound": "Tingimustele ei vastanud ükski õpetaja"
     },
     "student": {
+      "abroadProgramme": "Programm",
+      "abroadPurpose": "Eesmärk",
       "academicNr": "Akadeemilise õiendi nr",
+      "country": "Sihtriik",
       "cumLaude": "cum laude",
       "curriculum": "Õppekava",
       "dataType": "Saadetavad andmed",
@@ -2509,6 +2564,7 @@
       "percentage": "Täituvus",
       "points": "Ainepunktid",
       "result": "Õppurid, kelle andmed saadeti EHISesse",
+      "schoolName": "Õppeasutus",
       "sendToEhis": "Saada EHISesse",
       "sentDatesRange": "Andmete saatmise kuupäevade vahemik",
       "toDate": "Kuni",
@@ -2571,7 +2627,7 @@
     "course": "Kursus",
     "studentGroup": "Õpperühm",
     "status": "Õpingukava staatus",
-    "addCurriculumSubject": "LISA õppekava aine",
+    "addCurriculumSubject": "Lisa õppekava aine",
     "addExtraCurriculumSubject": "Lisa õppekava väline aine",
     "subject": "Õppeaine",
     "teacher": "Õpetaja",
@@ -2589,6 +2645,7 @@
     "noCurrentDeclaration": "Käesoleva õppeperioodi õpingukava pole veel lisatud",
     "notDeclarationPeriod": "Õpingukava koostamise periood ei ole veel kätte jõudnud",
     "declarationPeriodHasEnded": "Õpingukava koostamine lõppes",
+    "declarationPeriodHasNotStarted": "Õpingukava koostamine algab",
     "repeatingDeclaration": "Korduvkuulamine",
     "confirmAll": "Kinnita kõik jooksval perioodil koostatud õpingukavad",
     "showUncomposed": "Näita kõik jooksval perioodil koostamata õpingukavad",

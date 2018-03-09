@@ -11,6 +11,8 @@ public class Config {
     private String coursePath;
     private String pluginPath;
     private String pluginName;
+    private String privateKey;
+    private String certificate;
 
     public String getAddress() {
         return address;
@@ -59,4 +61,21 @@ public class Config {
     public void setPluginName(String pluginName) {
         this.pluginName = pluginName;
     }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public String getCertificate() {
+        return certificate;
+    }
+
+    public void setCertificate(String certificate) {
+        this.certificate = certificate;
+    }
+    
 }

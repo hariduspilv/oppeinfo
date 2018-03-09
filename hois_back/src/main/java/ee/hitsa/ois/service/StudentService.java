@@ -29,9 +29,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
+import ee.hitsa.ois.domain.student.StudentHigherResult;
+import ee.hitsa.ois.domain.student.StudentHigherResultModule;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.domain.student.StudentVocationalResult;
@@ -60,18 +63,19 @@ import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentModuleListChangeForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
-import ee.hitsa.ois.web.commandobject.student.StudentVocationalResultModuleChangeForm;
+import ee.hitsa.ois.web.commandobject.student.StudentResultModuleChangeForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
+import ee.hitsa.ois.web.dto.student.StudentForeignstudyDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalConnectedEntity;
 import ee.hitsa.ois.web.dto.student.StudentVocationalModuleDto;
-import ee.hitsa.ois.web.dto.student.StudentVocationalModuleResultDto;
+import ee.hitsa.ois.web.dto.student.StudentModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
 
@@ -319,6 +323,41 @@ public class StudentService {
     }
 
     /**
+     * Foreign studies related to student
+     *
+     * @param user
+     * @param student
+     * @param pageable
+     * @return
+     */
+    public Page<StudentForeignstudyDto> foreignstudies(HoisUserDetails user, Student student, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds join directive d on ds.directive_id = d.id " +
+                "join classifier country on ds.country_code = country.code " +
+                "join classifier purpose on ds.abroad_purpose_code = purpose.code " +
+                "join classifier programme on ds.abroad_programme_code = programme.code " +
+                "left join classifier ehis_school on ds.ehis_school_code = ehis_school.code " +
+                "left join study_period sp on ds.study_period_start_id = sp.id " +
+                "left join study_period ep on ds.study_period_end_id = ep.id").sort(pageable);
+        qb.requiredCriteria("ds.student_id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_VALIS);
+        qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.filter("ds.canceled = false");
+
+        return JpaQueryUtil.pagingResult(qb, "case when ds.is_abroad then abroad_school else ehis_school.name_et end, ds.country_code, " +
+                "case when ds.is_period then sp.start_date else ds.start_date end, case when ds.is_period then ep.end_date else ds.end_date end, " +
+                "ds.abroad_purpose_code, ds.abroad_programme_code", em, pageable).map(r -> {
+            StudentForeignstudyDto dto = new StudentForeignstudyDto();
+            dto.setSchool(resultAsString(r, 0));
+            dto.setCountry(resultAsString(r, 1));
+            dto.setStartDate(resultAsLocalDate(r, 2));
+            dto.setEndDate(resultAsLocalDate(r, 3));
+            dto.setAbroadPurpose(resultAsString(r, 4));
+            dto.setAbroadProgramme(resultAsString(r, 5));
+            return dto;
+        });
+    }
+
+    /**
      * Subjects related to student
      *
      * @param student
@@ -526,7 +565,7 @@ public class StudentService {
         return StreamUtil.toMappedList(StudentOccupationCertificateDto::new, data);
     }
     
-    public List<StudentVocationalModuleResultDto> vocationalChangeableModules(Long studentId) {
+    public List<StudentModuleResultDto> vocationalChangeableModules(Long studentId) {
         Query q = em.createNativeQuery("select svr.id, coalesce(svrm.curriculum_version_omodule_id, svr.curriculum_version_omodule_id), "
                 + "svr.module_name_et, svr.module_name_en, svr.credits, svr.grade, svr.grade_date from student_vocational_result svr "
                 + "left join student_vocational_result_omodule svrm on svrm.student_vocational_result_id = svr.id "
@@ -534,7 +573,7 @@ public class StudentService {
         q.setParameter(1, studentId);
         List<?> data = q.getResultList();
         
-        return StreamUtil.toMappedList(r -> new StudentVocationalModuleResultDto(resultAsLong(r, 0), resultAsLong(r, 1),
+        return StreamUtil.toMappedList(r -> new StudentModuleResultDto(resultAsLong(r, 0), resultAsLong(r, 1),
                 resultAsString(r, 2), resultAsString(r, 3), resultAsDecimal(r, 4), resultAsString(r, 5), resultAsLocalDate(r, 6)), data);
     }
     
@@ -548,29 +587,79 @@ public class StudentService {
         return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)), data);
     }
     
-    public void changeVocationalCurriculumModules(Student student, StudentModuleListChangeForm form) {
-        StudentVocationalResult result = em.getReference(StudentVocationalResult.class, form.getVocationalModules().get(0).getId());
+    public void changeVocationalCurriculumVersionModules(Student student, StudentModuleListChangeForm form) {
+        StudentVocationalResult result = em.getReference(StudentVocationalResult.class, form.getModules().get(0).getId());
         if (!student.equals(result.getStudent())) {
             throw new AssertionFailedException("Student mismatch");
         }
         
-        List<Long> vocationalResultIds = form.getVocationalModules().stream().map(m -> m.getId()).collect(Collectors.toList());
+        List<Long> vocationalResultIds = form.getModules().stream().map(m -> m.getId()).collect(Collectors.toList());
         List<StudentVocationalResultOmodule> data = em.createQuery(
                 "select svro from StudentVocationalResultOmodule svro where svro.studentVocationalResult.id in (?1)",
                 StudentVocationalResultOmodule.class).setParameter(1, vocationalResultIds).getResultList();
         
         Map<Long, StudentVocationalResultOmodule> vocationalResultModules = StreamUtil.toMap(d -> d.getStudentVocationalResult().getId(), data);
 
-        for (StudentVocationalResultModuleChangeForm vocationalModule : form.getVocationalModules()) {
-            if (!vocationalModule.getCurriculumVersionOmoduleId().equals(vocationalModule.getOldCurriculumVersionOmoduleId())) {
+        for (StudentResultModuleChangeForm vocationalModule : form.getModules()) {
+            if (vocationalModule.getCurriculumVersionModuleId() != null &&  !vocationalModule.getCurriculumVersionModuleId().equals(vocationalModule.getOldCurriculumVersionModuleId())) {
                 StudentVocationalResultOmodule module = vocationalResultModules.get(vocationalModule.getId());
                 if (module != null) {
-                    module.setCurriculumVersionOmodule(em.getReference(CurriculumVersionOccupationModule.class, vocationalModule.getCurriculumVersionOmoduleId()));
+                    module.setCurriculumVersionOmodule(em.getReference(CurriculumVersionOccupationModule.class, vocationalModule.getCurriculumVersionModuleId()));
                     em.merge(module);
                 } else {
                     module = EntityUtil.bindToEntity(form, new StudentVocationalResultOmodule());
                     module.setStudentVocationalResult(em.getReference(StudentVocationalResult.class, vocationalModule.getId()));
-                    module.setCurriculumVersionOmodule(em.getReference(CurriculumVersionOccupationModule.class, vocationalModule.getCurriculumVersionOmoduleId()));
+                    module.setCurriculumVersionOmodule(em.getReference(CurriculumVersionOccupationModule.class, vocationalModule.getCurriculumVersionModuleId()));
+                    em.persist(module);
+                }
+            }
+        }
+    }
+    
+    public List<StudentModuleResultDto> higherChangeableModules(Long studentId) {
+        Query q = em.createNativeQuery("select shr.id, coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id), "
+                + "shr.subject_name_et, shr.subject_name_en, shr.credits, shr.grade, shr.grade_date from student_higher_result shr "
+                + "left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id "
+                + "where student_id = ?1");
+        q.setParameter(1, studentId);
+        List<?> data = q.getResultList();
+        
+        return StreamUtil.toMappedList(r -> new StudentModuleResultDto(resultAsLong(r, 0), resultAsLong(r, 1),
+                resultAsString(r, 2), resultAsString(r, 3), resultAsDecimal(r, 4), resultAsString(r, 5), resultAsLocalDate(r, 6)), data);
+    }
+    
+    public List<AutocompleteResult> higherCurriculumModulesForSelection(Long curriculumVersionId) {
+        Query q = em.createNativeQuery("select cvh.id, cvh.name_et, cvh.name_en from curriculum_version_hmodule cvh " + 
+                "where cvh.curriculum_version_id = ?1");
+        q.setParameter(1, curriculumVersionId);
+        List<?> data = q.getResultList();
+        
+        return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)), data);
+    }
+    
+    public void changeHigherCurriculumVersionModules(Student student, StudentModuleListChangeForm form) {
+        StudentHigherResult result = em.getReference(StudentHigherResult.class, form.getModules().get(0).getId());
+        if (!student.equals(result.getStudent())) {
+            throw new AssertionFailedException("Student mismatch");
+        }
+        
+        List<Long> higherResultIds = form.getModules().stream().map(m -> m.getId()).collect(Collectors.toList());
+        List<StudentHigherResultModule> data = em.createQuery(
+                "select shrm from StudentHigherResultModule shrm where shrm.studentHigherResult.id in (?1)",
+                StudentHigherResultModule.class).setParameter(1, higherResultIds).getResultList();
+        
+        Map<Long, StudentHigherResultModule> higherResultModules = StreamUtil.toMap(d -> d.getStudentHigherResult().getId(), data);
+
+        for (StudentResultModuleChangeForm higherModule : form.getModules()) {
+            if (higherModule.getCurriculumVersionModuleId() != null && !higherModule.getCurriculumVersionModuleId().equals(higherModule.getOldCurriculumVersionModuleId())) {
+                StudentHigherResultModule module = higherResultModules.get(higherModule.getId());
+                if (module != null) {
+                    module.setCurriculumVersionHmodule(em.getReference(CurriculumVersionHigherModule.class, higherModule.getCurriculumVersionModuleId()));
+                    em.merge(module);
+                } else {
+                    module = EntityUtil.bindToEntity(form, new StudentHigherResultModule());
+                    module.setStudentHigherResult(em.getReference(StudentHigherResult.class, higherModule.getId()));
+                    module.setCurriculumVersionHmodule(em.getReference(CurriculumVersionHigherModule.class, higherModule.getCurriculumVersionModuleId()));
                     em.persist(module);
                 }
             }

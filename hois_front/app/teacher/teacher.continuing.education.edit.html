@@ -26,7 +26,7 @@
                         </md-input-container>
                         <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                             <label>{{'teacher.continuingEducation.otherSchool' | translate}}</label>
-                            <textarea ng-model="continuingEducation.otherSchool" md-maxlength="255" max-rows="2" md-select-on-focus ng-required="!continuingEducation.school"
+                            <textarea ng-model="continuingEducation.otherSchool" md-maxlength="1000" max-rows="2" md-select-on-focus ng-required="!continuingEducation.school"
                                 ng-disabled="continuingEducation.school"></textarea>
                         </md-input-container>
                         <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -38,11 +38,11 @@
                     <div layout="row" layout-sm="column" layout-xs="column">
                         <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
                             <label>{{'teacher.continuingEducation.name' | translate}}</label>
-                            <input ng-model="continuingEducation.nameEt" md-maxlength="255" type="text" required>
+                            <input ng-model="continuingEducation.nameEt" md-maxlength="1000" type="text" required>
                         </md-input-container>
                         <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                             <label>{{'teacher.continuingEducation.capacity' | translate}}</label>
-                            <input ng-model="continuingEducation.capacity" type="number" required>
+                            <input ng-model="continuingEducation.capacity" type="number" min="0" max="99999" required>
                         </md-input-container>
                         <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                             <label>{{'teacher.continuingEducation.diplomaCode' | translate}}</label>
@@ -57,7 +57,7 @@
                         </md-input-container>
                         <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                             <label>{{'teacher.continuingEducation.diplomaNr' | translate}}</label>
-                            <textarea ng-model="continuingEducation.diplomaNr" md-maxlength="255" max-rows="2" md-select-on-focus></textarea>
+                            <textarea ng-model="continuingEducation.diplomaNr" md-maxlength="100" max-rows="2" md-select-on-focus></textarea>
                         </md-input-container>
                         <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                             <md-checkbox ng-model="continuingEducation.isAbroad">{{'teacher.continuingEducation.isAbroad' | translate}}</md-checkbox>
@@ -66,7 +66,7 @@
                     <div layout="row" layout-sm="column" layout-xs="column">
                         <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
                             <label>{{'teacher.continuingEducation.abroadDescription' | translate}}</label>
-                            <textarea ng-model="continuingEducation.abroadDesc" md-maxlength="255" max-rows="2" md-select-on-focus ng-disabled="!continuingEducation.isAbroad"></textarea>
+                            <textarea ng-model="continuingEducation.abroadDesc" md-maxlength="4000" max-rows="5" md-select-on-focus ng-disabled="!continuingEducation.isAbroad"></textarea>
                         </md-input-container>
                     </div>
                 </div>

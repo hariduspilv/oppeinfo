@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q', '$rootScope', '$route', '$scope', 'dialogService', 'Classifier', 'message', 'QueryUtils', 'ArrayUtils', 'USER_CONFIRM_RIGHTS',
-  function ($location, $q, $rootScope, $route, $scope, dialogService, Classifier, message, QueryUtils, ArrayUtils, USER_CONFIRM_RIGHTS) {
+angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q', '$rootScope', '$route', '$scope', 'dialogService', 'Classifier', 'message', 'QueryUtils', 'ArrayUtils', 'AuthService',
+  function ($location, $q, $rootScope, $route, $scope, dialogService, Classifier, message, QueryUtils, ArrayUtils, AuthService) {
     var personId = $route.current.params.person;
     var userId = $route.current.params.user;
     var Endpoint = QueryUtils.endpoint('/persons/'+personId+'/users');
@@ -71,7 +71,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
     } 
 
     $scope.showPermission = function(objectCode, permCode) {
-      return permCode !== 'OIGUS_K' || USER_CONFIRM_RIGHTS.indexOf(objectCode) !== -1;
+      return AuthService.isValidRolePermission($scope.user.role, objectCode, permCode);
     };
 
     $scope.roleChanged = function () {
@@ -134,8 +134,8 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
       $scope.roleChanged();
     });
   }
-]).controller('UsersViewController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', 'USER_CONFIRM_RIGHTS',
-  function ($q, $route, $scope, Classifier, QueryUtils, USER_CONFIRM_RIGHTS) {
+]).controller('UsersViewController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', 'AuthService',
+  function ($q, $route, $scope, Classifier, QueryUtils, AuthService) {
     var personId = $route.current.params.person;
     var userId = $route.current.params.user;
     var Endpoint = QueryUtils.endpoint('/persons/'+personId+'/users');
@@ -146,7 +146,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
     $scope.user = Endpoint.get({id: userId});
 
     $scope.showPermission = function(objectCode, permCode) {
-      return permCode !== 'OIGUS_K' || USER_CONFIRM_RIGHTS.indexOf(objectCode) !== -1;
+      return AuthService.isValidRolePermission($scope.user.role, objectCode, permCode);
     };
 
     $q.all([$scope.objects.$promise, $scope.permissions.$promise, $scope.userRoleDefaults.$promise, $scope.user.$promise]).then(function() {

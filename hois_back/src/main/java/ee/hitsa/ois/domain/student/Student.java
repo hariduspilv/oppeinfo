@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.student;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -22,6 +23,8 @@ public class Student extends StudentBase {
     private Person person;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private School school;
+    private String previousSchoolName;
+    private LocalDate previousSchoolEndDate;
     @OneToOne(cascade = { CascadeType.PERSIST, CascadeType.REMOVE }, fetch = FetchType.LAZY)
     private StudentHistory studentHistory;
     @OneToMany(mappedBy = "student")
@@ -43,6 +46,22 @@ public class Student extends StudentBase {
 
     public void setSchool(School school) {
         this.school = school;
+    }
+
+    public String getPreviousSchoolName() {
+        return previousSchoolName;
+    }
+
+    public void setPreviousSchoolName(String previousSchoolName) {
+        this.previousSchoolName = previousSchoolName;
+    }
+
+    public LocalDate getPreviousSchoolEndDate() {
+        return previousSchoolEndDate;
+    }
+
+    public void setPreviousSchoolEndDate(LocalDate previousSchoolEndDate) {
+        this.previousSchoolEndDate = previousSchoolEndDate;
     }
 
     public StudentHistory getStudentHistory() {
@@ -68,5 +87,4 @@ public class Student extends StudentBase {
     public void setJournalStudents(List<JournalStudent> journalStudents) {
         this.journalStudents = journalStudents;
     }
-
 }

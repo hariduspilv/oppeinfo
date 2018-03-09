@@ -14,27 +14,21 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
 
     $scope.filteredStudyForm = ['OPPEVORM_P', 'OPPEVORM_Q', 'OPPEVORM_S', 'OPPEVORM_MS', 'OPPEVORM_K', 'OPPEVORM_M'];
 
-    $scope.formState = {};
-    $scope.formState.priorities = Classifier.queryForDropdown({
-      mainClassCode: 'PRIORITEET'
+    $scope.formState = {priorities: Classifier.queryForDropdown({mainClassCode: 'PRIORITEET'})};
+    Classifier.queryForDropdown({mainClassCode: 'STIPTOETUS'}).$promise.then(function(result) {
+      $scope.formState.typeMap = Classifier.toMap(result);
     });
+    $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+
     var id = $route.current.params.id;
     var baseUrl = '/scholarships';
     var Endpoint = QueryUtils.endpoint(baseUrl);
 
     $scope.stipendTypeChanged = function () {
       $scope.templateName = templateMap[$scope.stipend.type];
-      $scope.stipend.nameEt = Classifier.queryForDropdown({
-        mainClassCode: 'STIPTOETUS'
-      }).find(function (it) {
-        return it.code === $scope.stipend.type;
-      }).nameEt;
+      $scope.stipend.nameEt = ($scope.formState.typeMap[$scope.stipend.type] || {}).nameEt;
       if (angular.isArray($scope.formState.allowedStipendTypes) && $scope.formState.allowedStipendTypes.length === 1) {
-        if (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf($scope.formState.allowedStipendTypes[0]) !== -1) {
-          $scope.formState.typeIsScholarship = true;
-        } else {
-          $scope.formState.typeIsScholarship = false;
-        }
+        $scope.formState.typeIsScholarship = (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf($scope.formState.allowedStipendTypes[0]) !== -1);
       }
     };
 
@@ -42,7 +36,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       $scope.formState.allowedStipendTypes = [result.type];
       $scope.stipend = result;
       $scope.stipendTypeChanged();
-      $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(function () {
+      $scope.formState.studyPeriods.$promise.then(function () {
         $scope.formState.readonlyStudyPeriod = $scope.formState.studyPeriods.find(function (it) {
           return it.id === $scope.stipend.studyPeriod;
         });
@@ -50,10 +44,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
     }
 
     if (id) {
-      $scope.stipend = Endpoint.get({
-        id: id
-      });
-      $scope.stipend.$promise.then(afterLoad);
+      $scope.stipend = Endpoint.get({id: id}, afterLoad);
     } else {
       $scope.stipend = new Endpoint({});
       $scope.formState.allowedStipendTypes = $route.current.locals.params.allowedStipendTypes;
@@ -62,9 +53,12 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
         $scope.stipend.type = $scope.formState.allowedStipendTypes[0];
         $scope.stipendTypeChanged();
       }
-      $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(function () {
+      $scope.formState.studyPeriods.$promise.then(function () {
         if (!$scope.stipend.studyPeriod) {
-          $scope.stipend.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyPeriods).id;
+          var sp = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyPeriods);
+          if(sp) {
+            $scope.stipend.studyPeriod = sp.id;
+          }
         }
       });
       $scope.stipend.courses = ['KURSUS_1', 'KURSUS_2', 'KURSUS_3', 'KURSUS_4'];
@@ -75,12 +69,12 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
         return;
       }
       if ($scope.stipend.id) {
-        $scope.stipend.$update().then(afterLoad).then(message.updateSuccess);
+        $scope.stipend.$update().then(afterLoad).then(message.updateSuccess).catch(angular.noop);
       } else {
         $scope.stipend.$save().then(function () {
           message.info('main.messages.create.success');
           $location.url(baseUrl + '/' + $scope.stipend.id + '/edit?_noback');
-        });
+        }).catch(angular.noop);
       }
     };
 
@@ -99,7 +93,6 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
         $scope.stipend.curriculums.push($scope.formState.curriculum);
         if($scope.stipend.curriculums.length > 0) {
           $scope.missingCurriculums = false;
-          $scope.stipend.nameEt = $scope.missingCurriculums;
         }
         $scope.formState.curriculum = undefined;
       }
@@ -112,49 +105,36 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       }
       if($scope.stipend.curriculums.length === 0) {
         $scope.missingCurriculums = true;
-        $scope.stipend.nameEt = $scope.missingCurriculums;
       }
     };
 
     $scope.publish = function () {
-      dialogService.confirmDialog({
-          prompt: 'stipend.confirmations.saveAndPublish',
-          accept: 'main.yes',
-          cancel: 'main.no'
-        },
-        function () {
-          if (!formIsValid()) {
-            return;
-          }
-          $scope.stipend.$update({}, function () {
-            QueryUtils.endpoint(baseUrl + '/' + $scope.stipend.id + '/publish').put({}, function () {
-              $route.reload();
-            });
+      dialogService.confirmDialog({prompt: 'stipend.confirmations.saveAndPublish'}, function () {
+        if (!formIsValid()) {
+          return;
+        }
+        $scope.stipend.$update({}, function () {
+          QueryUtils.endpoint(baseUrl + '/' + $scope.stipend.id + '/publish').put({}, function () {
+            $route.reload();
           });
-        });
+        }).catch(angular.noop);
+      });
     };
 
     $scope.delete = function () {
-      var deleteType;
+      var deleteType, url;
       if (['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'].indexOf($scope.stipend.type) !== -1) {
         deleteType = 'stipend.confirmations.deleteGrant';
+        url = '/scholarships/grants';
       } else {
         deleteType = 'stipend.confirmations.deleteStipend';
+        url = '/scholarships/scholarships';
       }
-      dialogService.confirmDialog({
-          prompt: deleteType,
-          accept: 'main.yes',
-          cancel: 'main.no'
-        },
-        function () {
-          QueryUtils.endpoint(baseUrl + '/' + $scope.stipend.id + '/deleteTerm').delete({}, function () {
-            if (['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'].indexOf($scope.stipend.type) !== -1) {
-              $location.path('/scholarships/grants');
-            } else {
-              $location.path('/scholarships/scholarships');
-            }
-          });
-        });
+      dialogService.confirmDialog({prompt: deleteType}, function () {
+        QueryUtils.endpoint(baseUrl + '/' + $scope.stipend.id + '/deleteTerm').delete({}, function () {
+          $location.url(url + '?_noback');
+        }).catch(angular.noop);
+      });
     };
 
     function formIsValid() {
@@ -209,14 +189,8 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
     function afterLoad(result) {
       $scope.stipend = result;
       $scope.templateName = templateMap[result.type];
-      if (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf(result.type) !== -1) {
-        $scope.formState.typeIsScholarship = true;
-      } else {
-        $scope.formState.typeIsScholarship = false;
-      }
-      $scope.curriculumsDisplay = result.curriculums.map(function (it) {
-        return $scope.currentLanguageNameField(it);
-      });
+      $scope.formState.typeIsScholarship = (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf(result.type) !== -1);
+      $scope.curriculumsDisplay = result.curriculums.map($scope.currentLanguageNameField);
 
       $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(function () {
         $scope.formState.readonlyStudyPeriod = $scope.formState.studyPeriods.find(function (it) {
@@ -226,25 +200,15 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
     }
 
     $scope.publish = function () {
-      dialogService.confirmDialog({
-          prompt: 'stipend.confirmations.publish',
-          accept: 'main.yes',
-          cancel: 'main.no'
-        },
-        function () {
-          QueryUtils.endpoint(baseUrl + '/' + $scope.stipend.id + '/publish').put({}, function (result) {
-            afterLoad(result);
-          });
-        });
+      dialogService.confirmDialog({prompt: 'stipend.confirmations.publish'}, function () {
+        QueryUtils.endpoint(baseUrl + '/' + $scope.stipend.id + '/publish').put({}, function (result) {
+          afterLoad(result);
+        }).catch(angular.noop);
+      });
     };
 
     if (id) {
-      $scope.stipend = Endpoint.get({
-        id: id
-      });
-      $scope.stipend.$promise.then(afterLoad);
+      $scope.stipend = Endpoint.get({id: id}, afterLoad);
     }
-
-
   }
 ]);

@@ -1,6 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$scope', '$sessionStorage', 'QueryUtils',  '$route', 'message', 'MidtermTaskUtil', 'ArrayUtils', function ($scope, $sessionStorage, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils) {
+angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$scope', '$sessionStorage', 'QueryUtils',  '$route', 'message', 'MidtermTaskUtil', 'ArrayUtils', 'dialogService', 
+function ($scope, $sessionStorage, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dialogService) {
 
   $scope.subjectStudyPeriodId = $route.current.params.id;
   var Endpoint = QueryUtils.endpoint('/midtermTasks/studentResults');
@@ -34,17 +35,23 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
     });
   }
 
+  function loadTasks() {
+    Endpoint.get({id: $scope.subjectStudyPeriodId}).$promise.then(function(response){
+      $scope.record = response;
+      $scope.moodleCourseId = response.subjectStudyPeriod.moodleCourseId;
+      afterload();
+    });
+  }
+
   function afterload() {
     $scope.record.midtermTasks = midtermTaskUtil.getSortedMidtermTasks($scope.record.midtermTasks);
+    $scope.moodleTasks = midtermTaskUtil.getMoodleTasks($scope.record.midtermTasks);
   // TODO add to MidtermTaskUtil
     addEmptyStudentResults();
     midtermTaskUtil.sortStudentResults($scope.record.studentResults, $scope.record.midtermTasks);
   }
 
-  Endpoint.get({id: $scope.subjectStudyPeriodId}).$promise.then(function(response){
-    $scope.record = response;
-    afterload();
-  });
+  loadTasks();
 
   $scope.getMidtermTaskHeader = midtermTaskUtil.getMidtermTaskHeader;
 
@@ -65,6 +72,32 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
       message.updateSuccess();
       $scope.record = response;
       afterload();
+    });
+  };
+
+  $scope.enrollStudents = function () {
+    QueryUtils.endpoint('/midtermTasks/' + $scope.subjectStudyPeriodId + '/moodle/enrollStudents').save(null, function (moodleResponse) {
+      dialogService.showDialog('components/moodle.enroll.dialog.html', function (dialogScope) {
+        dialogScope.moodleResponse = moodleResponse;
+      }, loadTasks, loadTasks);
+    });
+  };
+  $scope.importGradeItems = function () {
+    QueryUtils.endpoint('/midtermTasks/' + $scope.subjectStudyPeriodId + '/moodle/importGradeItems').save(null, function () {
+      message.info('moodle.messages.gradeItemsImported');
+      loadTasks();
+    });
+  };
+  $scope.importAllGrades = function () {
+    QueryUtils.endpoint('/midtermTasks/' + $scope.subjectStudyPeriodId + '/moodle/importAllGrades').save(null, function () {
+      message.info('moodle.messages.allGradesImported');
+      loadTasks();
+    });
+  };
+  $scope.importMissingGrades = function () {
+    QueryUtils.endpoint('/midtermTasks/' + $scope.subjectStudyPeriodId + '/moodle/importMissingGrades').save(null, function () {
+      message.info('moodle.messages.missingGradesImported');
+      loadTasks();
     });
   };
 

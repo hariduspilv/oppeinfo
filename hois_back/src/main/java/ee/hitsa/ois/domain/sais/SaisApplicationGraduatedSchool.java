@@ -1,6 +1,6 @@
 package ee.hitsa.ois.domain.sais;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -22,8 +22,8 @@ public class SaisApplicationGraduatedSchool extends BaseEntityWithId {
     @Size(max = 255)
     private String name;
 
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
 
     @Size(max = 20)
     private String regCode;
@@ -53,19 +53,19 @@ public class SaisApplicationGraduatedSchool extends BaseEntityWithId {
         this.saisApplication = saisApplication;
     }
 
-    public LocalDateTime getStartDate() {
+    public LocalDate getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(LocalDateTime startDate) {
+    public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
     }
 
-    public LocalDateTime getEndDate() {
+    public LocalDate getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(LocalDateTime endDate) {
+    public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
 

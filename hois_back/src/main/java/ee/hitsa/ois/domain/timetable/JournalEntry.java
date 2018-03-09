@@ -31,6 +31,7 @@ public class JournalEntry extends BaseEntityWithId {
     private String content;
     private String homework;
     private LocalDate homeworkDuedate;
+    private Long moodleGradeItemId;
     
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(nullable = true)
@@ -97,6 +98,12 @@ public class JournalEntry extends BaseEntityWithId {
     }
     public void setHomeworkDuedate(LocalDate homeworkDuedate) {
         this.homeworkDuedate = homeworkDuedate;
+    }
+    public Long getMoodleGradeItemId() {
+        return moodleGradeItemId;
+    }
+    public void setMoodleGradeItemId(Long moodleGradeItemId) {
+        this.moodleGradeItemId = moodleGradeItemId;
     }
     public Set<JournalEntryCapacityType> getJournalEntryCapacityTypes() {
         return journalEntryCapacityTypes;

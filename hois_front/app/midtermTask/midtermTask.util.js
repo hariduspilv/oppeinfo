@@ -20,6 +20,17 @@ angular.module('hitsaOis').factory('MidtermTaskUtil', ['$rootScope', 'DataUtils'
         return orderBy(midtermTasks, ['taskDate', $rootScope.currentLanguageNameField()]);
       };
 
+      this.getMoodleTasks = function(midtermTasks) {
+        var result = {};
+        for (var i = 0; i < midtermTasks.length; i++) {
+          var task = midtermTasks[i];
+          if (task.moodleGradeItemId) {
+            result[task.id] = true;
+          }
+        }
+        return result;
+      };
+
       function indexOfMidtermTask(midtermTaskId, midtermTasks) {
         var midtermTask = midtermTasks.find(function(el){
           return el.id === midtermTaskId;

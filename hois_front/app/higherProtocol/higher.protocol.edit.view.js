@@ -39,11 +39,28 @@ angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$sco
     $scope.formState = {
       protocolPdfUrl: config.apiUrl + baseUrl + '/print/' + $scope.record.id + '/protocol.pdf',
       canCalculate: $scope.record.protocolType === 'PROTOKOLLI_LIIK_P' && $scope.record.canChange && !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject,
-      isConfirmed: $scope.record.status === 'PROTOKOLL_STAATUS_K'
+      isConfirmed: $scope.record.status === 'PROTOKOLL_STAATUS_K',
+      canConfirm: $scope.record.canConfirm && allProtocolStudentsGraded()
     };
   }
 
   afterLoad();
+
+  function allProtocolStudentsGraded() {
+    if (!angular.isDefined($scope.record) || !angular.isArray($scope.record.protocolStudents)) {
+      return false;
+    }
+
+    var allGraded = true;
+    for (var i = 0; i < $scope.record.protocolStudents.length; i++) {
+      if (!angular.isString($scope.record.protocolStudents[i].grade) || $scope.record.protocolStudents[i].grade.trim().length === 0) {
+        allGraded = false;
+        break;
+      }
+    }
+    return allGraded;
+  }
+
 
   function studentHasResultForTask(student, midtermTask) {
     var result = $scope.record.subjectStudyPeriodMidtermTaskDto.studentResults.find(function(studentResult){

@@ -56,6 +56,11 @@
                 <th md-column ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{'ehis.student.points' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.fromDate' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.toDate' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.abroadPurpose' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.points' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.schoolName' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.country' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.abroadProgramme' | translate}}</th>
                 <th md-column >{{'ehis.student.error' | translate}}</th>
                 <th md-column >{{'ehis.student.message' | translate}}</th>
               </tr>
@@ -72,6 +77,17 @@
                 <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.points}}</td>
                 <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{::row.fromDate | hoisDate}}</td>
                 <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{::row.toDate | hoisDate}}</td>
+                <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">
+                    <hois-classifier-value ng-model="row.abroadPurpose" main-classifier-code="VALISOPE_EESMARK"></hois-classifier-value>
+                </td>
+                <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{::row.points}}</td>
+                <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{::row.schoolName}}</td>
+                <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">
+                    <hois-classifier-value ng-model="row.country" main-classifier-code="RIIK"></hois-classifier-value>
+                </td>
+                <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">
+                    <hois-classifier-value ng-model="row.abroadProgramme" main-classifier-code="VALISKOOL_PROGRAMM"></hois-classifier-value>
+                </td>
                 <td md-cell>{{row.error ? 'main.no' : 'main.yes' | translate}}</td>
                 <td md-cell>{{::row.message}}</td>
               </tr>

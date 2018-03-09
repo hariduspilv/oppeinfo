@@ -18,6 +18,7 @@
             <th md-column class="bordered" style="padding-left:1em;"
               md-colors="{background: getEntryColor(journalEntry.entryType.code)}" 
               ng-repeat="journalEntry in journal.journalEntriesByDate">
+              <span ng-if="journalEntry.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span>
               <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}}</span>
               <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_O'">{{'journal.outcome' | translate}}{{journalEntry.outcomeOrderNr + 1}}</span>
               <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L' && journalEntry.entryType.code !== 'SISSEKANNE_O'">{{journalEntry.entryDate  ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
@@ -32,7 +33,10 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in journal.journalStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}</td>
+            <td md-cell>
+              <a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}
+              <span ng-if="row.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
+            </td>
             <td md-cell class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate">
               <div layout="row" style="padding-left:1em;">
                 <div ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">

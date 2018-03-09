@@ -11,8 +11,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import org.springframework.format.annotation.NumberFormat;
-
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.school.School;
@@ -31,7 +29,6 @@ public class Subject extends BaseEntityWithId implements Translatable {
     private String nameEt;
     private String nameEn;
     private String description;
-    @NumberFormat
     private BigDecimal credits;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -60,16 +57,12 @@ public class Subject extends BaseEntityWithId implements Translatable {
 
     @OneToMany(mappedBy = "subject",cascade = CascadeType.ALL, orphanRemoval=true)
     private Set<SubjectLanguage> subjectLanguages;
-
     @OneToMany(mappedBy = "primarySubject", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SubjectConnect> subjectConnections;
-
     @OneToMany(mappedBy = "connectSubject")
     private Set<SubjectConnect> parentConnections;
-    
     @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
     private Set<SubjectStudyPeriodPlan> subjectStudyPeriodPlans;
-    
     @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
     private Set<SubjectStudyPeriod> subjectStudyPeriods;
 
@@ -286,7 +279,7 @@ public class Subject extends BaseEntityWithId implements Translatable {
     }
 
     public Set<SubjectConnect> getParentConnections() {
-        return parentConnections != null ? parentConnections : (parentConnections = new HashSet<>());
+        return parentConnections;
     }
 
     public void setParentConnections(Set<SubjectConnect> parentConnections) {

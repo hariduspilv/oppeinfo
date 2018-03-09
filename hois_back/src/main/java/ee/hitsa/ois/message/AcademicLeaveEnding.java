@@ -5,15 +5,18 @@ import java.time.LocalDate;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.util.DateUtils;
 
-public class AcademicLeaveEnding {
+public class AcademicLeaveEnding extends StudentMessage {
 
-    private LocalDate endDate;
+    private final LocalDate endDate;
 
     public AcademicLeaveEnding() {
+        endDate = null;
     }
 
     public AcademicLeaveEnding(DirectiveStudent directiveStudent) {
-        this.endDate = DateUtils.periodEnd(directiveStudent);
+        super(directiveStudent.getStudent());
+
+        endDate = DateUtils.periodEnd(directiveStudent);
     }
 
     public String getAkPuhkuseLoppemiseKuupaev() {

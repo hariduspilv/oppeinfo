@@ -81,7 +81,7 @@ public class EkisClient {
         Answer result = SoapUtil.withExceptionHandler(ctx, () -> {
             return port.registerPracticeContract(request.getQguid(), request.getEhisId(),
                     request.getOisId(),
-                    request.getManager(), request.getStIdCode(),
+                    request.getManager(), optional(request.getStIdCode()),
                     request.getStFirstNames(), request.getStLastName(),
                     request.getStEmail(), request.getStCurricula(),
                     request.getStForm(), request.getStCourse(),

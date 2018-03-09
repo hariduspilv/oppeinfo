@@ -38,6 +38,7 @@ public class MidtermTaskDto {
     @Max(100)
     private Short thresholdPercentage;
     private LocalDate taskDate;
+    private Long moodleGradeItemId;
     private Boolean canBeDeleted;
     private Boolean studentResultIsText;
 
@@ -126,4 +127,12 @@ public class MidtermTaskDto {
     public void setTaskDate(LocalDate taskDate) {
         this.taskDate = taskDate;
     }
+
+    public Long getMoodleGradeItemId() {
+        return moodleGradeItemId;
+    }
+    public void setMoodleGradeItemId(Long moodleGradeItemId) {
+        this.moodleGradeItemId = moodleGradeItemId;
+    }
+    
 }

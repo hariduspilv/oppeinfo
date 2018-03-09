@@ -9,6 +9,7 @@ public class MidtermTaskStudentDto {
     private String name;
     private Boolean studentResultCanBeChanged;
     private Long studentId;
+    private Boolean isMoodleRegistered;
 
     public static MidtermTaskStudentDto of(DeclarationSubject declarationSubject) {
         MidtermTaskStudentDto dto = new MidtermTaskStudentDto();
@@ -16,6 +17,7 @@ public class MidtermTaskStudentDto {
         dto.setName(declarationSubject.getDeclaration().getStudent().getPerson().getFullname());
         dto.setStudentResultCanBeChanged(Boolean.valueOf(MidtermTaskUtil.studentResultCanBeChanged(declarationSubject)));
         dto.setStudentId(EntityUtil.getId(declarationSubject.getDeclaration().getStudent()));
+        dto.setIsMoodleRegistered(declarationSubject.getIsMoodleRegistered());
         return dto;
     }
 
@@ -67,4 +69,12 @@ public class MidtermTaskStudentDto {
     public void setName(String name) {
         this.name = name;
     }
+
+    public Boolean getIsMoodleRegistered() {
+        return isMoodleRegistered;
+    }
+    public void setIsMoodleRegistered(Boolean isMoodleRegistered) {
+        this.isMoodleRegistered = isMoodleRegistered;
+    }
+    
 }

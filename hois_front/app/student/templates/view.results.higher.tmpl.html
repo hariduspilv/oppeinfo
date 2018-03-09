@@ -55,14 +55,17 @@
     <div ng-controller="StudentViewResultsHigherController as controller" flex="90" ng-cloak>
       <md-content>
         <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection">
-          <md-nav-item md-nav-click="loadCurriculumFulfillment()" name="student.curriculumFulfillment">
+          <md-nav-item md-nav-click="changeResultsCurrentNavItem('student.curriculumFulfillment')" name="student.curriculumFulfillment">
             {{'student.result.curriculumFulfillment' | translate}}
           </md-nav-item>
-          <md-nav-item md-nav-click="loadStudyYearResults()" name="student.inOrderOfStudyPeriod">
+          <md-nav-item md-nav-click="changeResultsCurrentNavItem('student.inOrderOfStudyPeriod')" name="student.inOrderOfStudyPeriod">
             {{'student.result.inOrderOfStudyPeriod' | translate}}
           </md-nav-item>
-          <md-nav-item md-nav-click="loadModuleThemeResults()" name="student.inOrderOfPassing">
+          <md-nav-item md-nav-click="changeResultsCurrentNavItem('student.inOrderOfPassing')" name="student.inOrderOfPassing">
             {{'student.result.inOrderOfPassing' | translate}}
+          </md-nav-item>
+          <md-nav-item ng-if="canChangeStudentModules" md-nav-click="changeResultsCurrentNavItem('student.changeModules')" name="student.changeModules">
+            {{'student.result.changeModules' | translate}}
           </md-nav-item>
         </md-nav-bar>
         <div layout-margin>
@@ -74,6 +77,9 @@
           </div>
           <div ng-show="resultsCurrentNavItem === 'student.inOrderOfPassing'">
             <div ng-include="'student/templates/view.results.higher.orderofpassing.tmpl.html'"></div>
+          </div>
+          <div ng-if="canChangeStudentModules" ng-show="resultsCurrentNavItem === 'student.changeModules'">
+            <div ng-include="'student/templates/change.modules.tmpl.html'"></div>
           </div>
         </div>
       </md-content>

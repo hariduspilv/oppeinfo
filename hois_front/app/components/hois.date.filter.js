@@ -37,4 +37,8 @@ angular.module('hitsaOis').filter('hoisDate', function ($filter) {
   return function (input) {
     return $filter('date')(input, 'HH:mm');
   };
+}).filter('hoisYear', function ($filter) {
+  return function (input) {
+    return $filter('date')(input, 'yyyy');
+  };
 });

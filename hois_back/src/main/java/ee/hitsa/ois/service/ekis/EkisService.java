@@ -186,7 +186,13 @@ public class EkisService {
 
         Student student = contract.getStudent();
         Person person = student.getPerson();
-        request.setStIdCode(person.getIdcode());
+        String idcode = null;
+        if(StringUtils.hasText(person.getIdcode())) {
+            idcode = person.getIdcode();
+        } else if(person.getBirthdate() != null) {
+            idcode = DateUtils.date(person.getBirthdate());
+        }
+        request.setStIdCode(idcode);
         request.setStFirstNames(person.getFirstname());
         request.setStLastName(person.getLastname());
         request.setStEmail(student.getEmail());

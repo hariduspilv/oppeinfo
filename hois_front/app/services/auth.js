@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $rootScope) {
+  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $rootScope, USER_CONFIRM_RIGHTS) {
     var JWT_TOKEN_HEADER = 'Authorization';
     var authService = {};
     var roleMapper = Classifier.valuemapper({role: 'ROLL'});
@@ -115,6 +115,10 @@ angular.module('hitsaOis')
       return false;
     };
 
+    authService.isValidRolePermission = function (roleCode, objectCode, permCode) {
+      return permCode !== 'OIGUS_K' || USER_CONFIRM_RIGHTS.indexOf(objectCode) !== -1;
+    };
+
     return authService;
   })
   .factory('AuthInterceptor', function ($rootScope, $q, AUTH_EVENTS) {
@@ -205,7 +209,9 @@ angular.module('hitsaOis')
     '/timetable/generalTimetableByRoom/:schoolId?',
     '/timetable/group/:schoolId/:groupId/:weekIndex?',
     '/timetable/teacher/:schoolId/:teacherId/:weekIndex?',
-    '/timetable/room/:schoolId/:roomId/:weekIndex?'
+    '/timetable/room/:schoolId/:roomId/:weekIndex?',
+    '/studyMaterial/:schoolId/vocational/:journalId/view',
+    '/studyMaterial/:schoolId/higher/:subjectStudyPeriodId/view'
   ])
   .service('Session', function () {
     this.school = {};

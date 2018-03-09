@@ -35,6 +35,7 @@ public class Journal extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
     private LocalDate endDate;
+    private Long moodleCourseId;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
@@ -121,6 +122,14 @@ public class Journal extends BaseEntityWithId {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public Long getMoodleCourseId() {
+        return moodleCourseId;
+    }
+
+    public void setMoodleCourseId(Long moodleCourseId) {
+        this.moodleCourseId = moodleCourseId;
     }
 
     public List<JournalTeacher> getJournalTeachers() {

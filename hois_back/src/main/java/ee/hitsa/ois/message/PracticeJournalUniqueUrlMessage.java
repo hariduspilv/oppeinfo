@@ -1,15 +1,22 @@
 package ee.hitsa.ois.message;
 
-public class PracticeJournalUniqueUrlMessage {
+import ee.hitsa.ois.domain.student.Student;
 
-    private String url;
+public class PracticeJournalUniqueUrlMessage extends StudentMessage {
+
+    private final String url;
+
+    public PracticeJournalUniqueUrlMessage() {
+        url = null;
+    }
+
+    public PracticeJournalUniqueUrlMessage(Student student, String url) {
+        super(student);
+
+        this.url = url;
+    }
 
     public String getUrl() {
         return url;
     }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
 }

@@ -433,6 +433,7 @@ public class FinalExamVocationalProtocolService extends AbstractProtocolService 
             throw new ValidationFailedException("finalExamProtocol.messages.gradeNotSelectedForAllStudents");
         }
 
+        sendStudentResultMessages(confirmedProtocol);
         return confirmedProtocol;
     }
 }

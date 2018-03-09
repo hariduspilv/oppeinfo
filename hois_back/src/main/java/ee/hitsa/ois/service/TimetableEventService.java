@@ -38,6 +38,8 @@ import ee.hitsa.ois.domain.timetable.TimetableEventRoom;
 import ee.hitsa.ois.domain.timetable.TimetableEventTeacher;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.TimetableEventRepeat;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -220,6 +222,7 @@ public class TimetableEventService {
                         resultAsLocalDateTime(r, 5).toLocalDate(), resultAsLocalDateTime(r, 5).toLocalTime(), resultAsLocalDateTime(r, 6).toLocalTime(),
                         resultAsBoolean(r, 7), resultAsBoolean(r, 8), resultAsLong(r, 9)), eventResult);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList);
+        setShowStudyMaterials(eventResultList);
         eventResultList = filterTimetableSingleEvents(eventResultList);
         
         GeneralTimetableCurriculumDto generalTimetableCurriculum = getGeneralTimetableCurriculum(command.getStudentGroups().get(0));
@@ -245,6 +248,7 @@ public class TimetableEventService {
                         resultAsLocalDateTime(r, 5).toLocalDate(), resultAsLocalDateTime(r, 5).toLocalTime(), resultAsLocalDateTime(r, 6).toLocalTime(),
                         resultAsBoolean(r, 7), resultAsBoolean(r, 8), resultAsLong(r, 9)), eventResult);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList);
+        setShowStudyMaterials(eventResultList);
         eventResultList = filterTimetableSingleEvents(eventResultList);
 
         GeneralTimetableDto generalTimetable = getGeneralTimetable(eventResultList);
@@ -273,6 +277,7 @@ public class TimetableEventService {
                         resultAsLocalDateTime(r, 5).toLocalDate(), resultAsLocalDateTime(r, 5).toLocalTime(), resultAsLocalDateTime(r, 6).toLocalTime(),
                         resultAsBoolean(r, 7), resultAsBoolean(r, 8), resultAsLong(r, 9)), eventResult);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList);
+        setShowStudyMaterials(eventResultList);
         eventResultList = filterTimetableSingleEvents(eventResultList);
 
         GeneralTimetableDto generalTimetable = getGeneralTimetable(eventResultList);
@@ -301,6 +306,7 @@ public class TimetableEventService {
                         resultAsLocalDateTime(r, 5).toLocalDate(), resultAsLocalDateTime(r, 5).toLocalTime(), resultAsLocalDateTime(r, 6).toLocalTime(),
                         resultAsBoolean(r, 7), resultAsBoolean(r, 8), resultAsLong(r, 9)), eventResult);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList);
+        setShowStudyMaterials(eventResultList);
         eventResultList = filterTimetableSingleEvents(eventResultList);
         
         GeneralTimetableDto generalTimetable = getGeneralTimetable(eventResultList);
@@ -489,6 +495,25 @@ public class TimetableEventService {
             }
         }
     }
+    
+    private void setShowStudyMaterials(List<TimetableEventSearchDto> timetableEventTimes) {
+        List<Long> timetableEventTimeIds = StreamUtil.toMappedList(r -> r.getId(), timetableEventTimes);
+        if (!timetableEventTimeIds.isEmpty()) {
+            HoisUserDetails user = null;
+            Principal principal = SecurityContextHolder.getContext().getAuthentication();
+            if (!(principal instanceof AnonymousAuthenticationToken)) {
+                user = HoisUserDetails.fromPrincipal(SecurityContextHolder.getContext().getAuthentication());
+            }
+            
+            Map<Long, List<ResultObject>> studyMaterialsByTimetableEventTime = getStudyMaterialsByTimetableEventTime(user, timetableEventTimeIds);
+            
+            for (TimetableEventSearchDto dto : timetableEventTimes) {
+                dto.setShowStudyMaterials(studyMaterialsByTimetableEventTime.get(dto.getId()) != null
+                        && studyMaterialsByTimetableEventTime.get(dto.getId()).size() > 0 ? Boolean.TRUE
+                                : Boolean.FALSE);
+            }
+        }
+    }
 
     public Page<TimetableEventSearchDto> search(TimetableEventSearchCommand criteria, Pageable pageable, Long schoolId) {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria, schoolId).sort(pageable);
@@ -507,6 +532,7 @@ public class TimetableEventService {
                     resultAsLocalDateTime(r, 4).toLocalTime(), resultAsBoolean(r, 5), resultAsBoolean(r, 6), resultAsLong(r, 7));
         });
         setRoomsTeachersAndGroupsForSearchDto(result.getContent());
+        setShowStudyMaterials(result.getContent());
         return result;
     }
     
@@ -527,6 +553,7 @@ public class TimetableEventService {
                         resultAsLocalDateTime(r, 5).toLocalDate(), resultAsLocalDateTime(r, 5).toLocalTime(),
                         resultAsLocalDateTime(r, 6).toLocalTime(), resultAsBoolean(r, 7), resultAsBoolean(r, 8), resultAsLong(r, 9)), eventResult);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList);
+        setShowStudyMaterials(eventResultList);
         return eventResultList;
     }
 
@@ -583,6 +610,32 @@ public class TimetableEventService {
         List<?> queryResult = qb.select("tem.id, sg.id as studentGroupId, sg.code", em).getResultList();
         List<ResultObject> resultObjects = StreamUtil
                 .toMappedList(r -> new ResultObject(resultAsLong(r, 0), resultAsLong(r, 1), resultAsString(r, 2)), queryResult);
+        return resultObjects.stream().collect(Collectors.groupingBy(r -> r.getTimetableEventId()));
+    }
+    
+    private Map<Long, List<ResultObject>> getStudyMaterialsByTimetableEventTime(HoisUserDetails user, List<Long> tetIds) {
+        String from = "from timetable_event_time tem" + 
+                " inner join timetable_event te on tem.timetable_event_id = te.id" + 
+                " inner join timetable_object tobj on te.timetable_object_id = tobj.id" + 
+                " left join journal j on tobj.journal_id = j.id" + 
+                " left join subject_study_period ssp on tobj.subject_study_period_id = ssp.id" + 
+                " inner join study_material_connect smc on j.id = smc.journal_id or ssp.id = smc.subject_study_period_id" + 
+                " inner join study_material sm on smc.study_material_id = sm.id";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        
+        qb.requiredCriteria("tem.id in (:tetIds)", "tetIds", tetIds);
+
+        if (user != null) {
+            if (user.isStudent()) {
+                qb.optionalCriteria("sm.is_visible_to_students = :isVisibleToStudents", "isVisibleToStudents", Boolean.TRUE);
+            }
+        } else {
+            qb.optionalCriteria("sm.is_public = :isPublic", "isPublic", Boolean.TRUE);
+        }
+        
+        List<?> queryResult = qb.select("tem.id, sm.id as studyMaterialId", em).getResultList();
+        List<ResultObject> resultObjects = StreamUtil
+                .toMappedList(r -> new ResultObject(resultAsLong(r, 0), resultAsLong(r, 1)), queryResult);
         return resultObjects.stream().collect(Collectors.groupingBy(r -> r.getTimetableEventId()));
     }
     
@@ -650,6 +703,11 @@ public class TimetableEventService {
         private Long objectId;
         private String firstValue;
         private String secondValue;
+        
+        public ResultObject(Long tetId, Long objectId) {
+            this.timetableEventId = tetId;
+            this.objectId = objectId;
+        }
 
         public ResultObject(Long tetId, Long objectId, String firstValue) {
             this.timetableEventId = tetId;

@@ -41,6 +41,7 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
+import ee.hitsa.ois.web.dto.moodle.EnrollResult;
 import ee.hitsa.ois.web.dto.timetable.JournalDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
@@ -99,6 +100,36 @@ public class JournalController {
     public void saveEndDate(HoisUserDetails user, @WithEntity Journal journal, @RequestBody JournalEndDateCommand command) {
         JournalUtil.asssertCanConfirm(user, journal);
         journalService.saveEndDate(journal, command);
+    }
+
+    @PutMapping("/{id:\\d+}/moodle/courseLink")
+    public void moodleCourseLink(HoisUserDetails user, @WithEntity Journal journal, @RequestBody Long courseId) {
+        JournalUtil.asssertCanChange(user, journal);
+        journalService.saveMoodleCourseLink(user, journal, courseId);
+    }
+
+    @PostMapping("/{id:\\d+}/moodle/enrollStudents")
+    public EnrollResult moodleEnrollStudents(HoisUserDetails user, @WithEntity Journal journal) {
+        JournalUtil.asssertCanChange(user, journal);
+        return journalService.moodleEnrollStudents(user, journal);
+    }
+
+    @PostMapping("/{id:\\d+}/moodle/importGradeItems")
+    public void moodleImportGradeItems(HoisUserDetails user, @WithEntity Journal journal) {
+        JournalUtil.asssertCanChange(user, journal);
+        journalService.moodleImportGradeItems(user, journal);
+    }
+
+    @PostMapping("/{id:\\d+}/moodle/importAllGrades")
+    public void moodleImportAllGrades(HoisUserDetails user, @WithEntity Journal journal) {
+        JournalUtil.asssertCanChange(user, journal);
+        journalService.moodleImportAllGrades(user, journal);
+    }
+
+    @PostMapping("/{id:\\d+}/moodle/importMissingGrades")
+    public void moodleImportMissingGrades(HoisUserDetails user, @WithEntity Journal journal) {
+        JournalUtil.asssertCanChange(user, journal);
+        journalService.moodleImportMissingGrades(user, journal);
     }
 
     @GetMapping("/{id:\\d+}/journalEntry")

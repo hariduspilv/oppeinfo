@@ -170,8 +170,8 @@
                   {{lessonTime.subjectCode}}/{{getCapacityTypeValue(lessonTime.capacityType)}}
                 </span>
                 <br>
-                <span ng-if="lessonTime.id && lessonTime.rooms">{{getRoomCodes(lessonTime.rooms)}}</span>
-                <span ng-if="lessonTime.id && !lessonTime.rooms" ng-style="boldAndRed(lessonTime.rooms)">?</span>
+                <span ng-if="lessonTime.id && lessonTime.rooms && lessonTime.rooms.length > 0">{{getRoomCodes(lessonTime.rooms)}}</span>
+                <span ng-if="lessonTime.id && (!lessonTime.rooms || lessonTime.rooms.length === 0)" ng-style="boldAndRed(lessonTime.rooms)">?</span>
                 <span ng-if="!lessonTime.id">&nbsp;</span>
               </div>
             </td>

@@ -94,4 +94,9 @@ public class DeclarationControllerStudentTests {
         // delete
         declarationService.delete(testConfigurationService.getHoisUserDetails(), em.getReference(Declaration.class, id));
     }
+    
+    @Test
+    public void isDeclarationPeriod() {
+        basicTest(ENDPOINT + "/isDeclarationPeriod");
+    }
 }

@@ -39,7 +39,8 @@
           studentGroups: event.studentGroups,
           public: event.publicEvent,
           journalId: event.journalId,
-          subjectStudyPeriodId: event.subjectStudyPeriodId
+          subjectStudyPeriodId: event.subjectStudyPeriodId,
+          showStudyMaterials: event.showStudyMaterials
         });
       }
     }

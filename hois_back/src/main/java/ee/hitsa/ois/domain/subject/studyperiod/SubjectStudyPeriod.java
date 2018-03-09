@@ -32,6 +32,7 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
     private StudyPeriod studyPeriod;
     
     private String addInfo;
+    private Long moodleCourseId;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier declarationType;
@@ -130,6 +131,14 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public Long getMoodleCourseId() {
+        return moodleCourseId;
+    }
+
+    public void setMoodleCourseId(Long moodleCourseId) {
+        this.moodleCourseId = moodleCourseId;
     }
 
     public Classifier getDeclarationType() {

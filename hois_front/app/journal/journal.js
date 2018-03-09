@@ -34,4 +34,11 @@ angular.module('hitsaOis').controller('JournalController', function ($scope, $ro
       $scope.journalForm.$setPristine();
     });
   };
+
+  $scope.saveMoodleCourseId = function() {
+    QueryUtils.endpoint('/journals/' + entity.id + '/moodle/courseLink').update($scope.journal.moodleCourseId, function() {
+      message.info('main.messages.create.success');
+      $scope.journalForm.$setPristine();
+    }).$promise.catch(angular.noop);
+  };
 });

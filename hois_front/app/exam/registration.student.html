@@ -1,0 +1,48 @@
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="s.code,{{currentLanguage()==='en' ? 's.nameEn' : 's.nameEt'}}">{{'exam.subject' | translate}}</th>
+            <th md-column>{{'exam.teacher' | translate}}</th>
+            <th md-column md-order-by="sm.{{currentLanguageNameField()}}">{{'exam.assessment' | translate}}</th>
+            <th md-column md-order-by="tp.{{currentLanguageNameField()}}">{{'exam.type' | translate}}</th>
+            <th md-column md-order-by="te.start">{{'exam.date' | translate}}</th>
+            <th md-column>{{'exam.room' | translate}}</th>
+            <th md-column md-order-by="deadline">{{'exam.deadline' | translate}}</th>
+            <th md-column>{{'exam.addInfo' | translate}}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
+            <td md-cell>
+              <div ng-repeat="it in row.teachers">
+                {{it}}
+              </div>
+            </td>
+            <td md-cell>{{currentLanguageNameField(row.assessment)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.type)}}</td>
+            <td md-cell>{{row.start | hoisDateTime}}</td>
+            <td md-cell>
+              <div ng-repeat="it in row.rooms">
+                {{it}}
+              </div>
+            </td>
+            <td md-cell>{{row.deadline | hoisDate}}</td>
+            <td md-cell>{{row.addInfo}}</td>
+            <td>
+              <md-button ng-if="row.registered" md-no-ink class="md-primary change-button" ng-click="register(row)">{{'exam.register' | translate}}</md-button>
+              <md-button ng-if="!row.registered" md-no-ink class="md-primary change-button" ng-click="unregister(row)">{{'exam.unregister' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

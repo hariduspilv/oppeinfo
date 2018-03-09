@@ -402,6 +402,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
                 throw new ValidationFailedException("moduleProtocol.messages.gradeNotSelectedForAllStudents");
             }
         }
+        sendStudentResultMessages(confirmedProtocol);
         return confirmedProtocol;
     }
 

@@ -23,6 +23,8 @@ public class JournalStudent extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private Student student;
+    
+    private Boolean isMoodleRegistered;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_student_id", nullable = false, updatable = false, insertable = false)
@@ -48,6 +50,14 @@ public class JournalStudent extends BaseEntityWithId {
 
     public void setStudent(Student student) {
         this.student = student;
+    }
+
+    public Boolean getIsMoodleRegistered() {
+        return isMoodleRegistered;
+    }
+
+    public void setIsMoodleRegistered(Boolean isMoodleRegistered) {
+        this.isMoodleRegistered = isMoodleRegistered;
     }
 
     public Set<JournalEntryStudent> getJournalEntryStudents() {

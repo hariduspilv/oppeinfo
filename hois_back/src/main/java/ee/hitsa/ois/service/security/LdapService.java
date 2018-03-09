@@ -33,7 +33,22 @@ public class LdapService {
     public String getIdCode(Long schoolId, String username, String password) {
         SchoolLdapParams params = schoolLdapParams(schoolId);
 
+        log.debug("http.proxyHost: " + System.getProperty("http.proxyHost"));
+        log.debug("http.proxyPort: " + System.getProperty("http.proxyPort"));
+        log.debug("https.proxyHost: " + System.getProperty("https.proxyHost"));
+        log.debug("https.proxyPort: " + System.getProperty("https.proxyPort"));
+        
         Hashtable<String, String> env = new Hashtable<>();
+        if (System.getProperty("https.proxyHost") != null && System.getProperty("https.proxyPort") != null) {
+            env.put("java.naming.ldap.factory.socket", "ee.hitsa.ois.service.security.CustomSocketFactory");          
+            CustomSocketFactory.setTunnelHost(System.getProperty("https.proxyHost"));
+            CustomSocketFactory.setTunnelPort(Integer.parseInt(System.getProperty("https.proxyPort")));
+            CustomSocketFactory.setIsSecured(true);
+        } else if (System.getProperty("http.proxyHost") != null && System.getProperty("http.proxyPort") != null) {
+            env.put("java.naming.ldap.factory.socket", "ee.hitsa.ois.service.security.CustomSocketFactory");          
+            CustomSocketFactory.setTunnelHost(System.getProperty("http.proxyHost"));
+            CustomSocketFactory.setTunnelPort(Integer.parseInt(System.getProperty("http.proxyPort")));
+        }
         env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(Context.PROVIDER_URL, "ldaps://" + params.getUrl() + ":" + params.getPort());
         env.put(Context.SECURITY_AUTHENTICATION, "simple");

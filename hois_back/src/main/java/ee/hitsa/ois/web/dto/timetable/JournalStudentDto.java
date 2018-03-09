@@ -13,6 +13,7 @@ public class JournalStudentDto {
     private String fullname;
     private String studentGroup;
     private String curriculum;
+    private Boolean isMoodleRegistered;
     private Boolean canEdit;
 
     public static JournalStudentDto of(Student student) {
@@ -33,6 +34,7 @@ public class JournalStudentDto {
     public static JournalStudentDto of(JournalStudent journalStudent) {
         JournalStudentDto dto = of(journalStudent.getStudent());
         dto.setId(journalStudent.getId());
+        dto.setIsMoodleRegistered(journalStudent.getIsMoodleRegistered());
         return dto;
     }
 
@@ -74,6 +76,14 @@ public class JournalStudentDto {
 
     public void setCurriculum(String curriculum) {
         this.curriculum = curriculum;
+    }
+
+    public Boolean getIsMoodleRegistered() {
+        return isMoodleRegistered;
+    }
+
+    public void setIsMoodleRegistered(Boolean isMoodleRegistered) {
+        this.isMoodleRegistered = isMoodleRegistered;
     }
 
     public Boolean getCanEdit() {

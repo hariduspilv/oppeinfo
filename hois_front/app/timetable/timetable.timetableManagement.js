@@ -54,8 +54,21 @@ angular.module('hitsaOis').controller('TimetableManagementController',
     $scope.$watch('criteria.studyYear', function () {
       if ($scope.criteria.studyYear !== undefined && $scope.allStudyPeriods) {
         filterStudyPeriods();
+        if (!studyPeriodBelongsToStudyYear($scope.criteria.studyPeriod)) {
+          $scope.criteria.studyPeriod = null;
+        }
       }
     });
+
+    function studyPeriodBelongsToStudyYear(studyPeriodId) {
+      for (var i = 0; i < $scope.formState.studyPeriods.length; i++) {
+        var studyPeriod = $scope.formState.studyPeriods[i];
+        if (studyPeriod.id === studyPeriodId) {
+          return true;
+        }
+      }
+      return false;
+    } 
 
     $scope.copyTimetable = function (rowId) {
       QueryUtils.endpoint(baseUrl + '/getPossibleTargetsForCopy').query({id: rowId}).$promise.then(function (possibleTargets) {

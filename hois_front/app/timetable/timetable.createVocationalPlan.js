@@ -15,10 +15,10 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     QueryUtils.endpoint(baseUrl + '/:id/createVocationalPlan').search({
       id: $scope.timetableId
     }).$promise.then(function (result) {
-      initializeData(result, $route.current.params.groupId);
+      initializeData(result, $route.current.params.groupId, null);
     });
 
-    function initializeData(result, selectedGroupId) {
+    function initializeData(result, selectedGroupId, selectedGroups) {
       $scope.plan = result;
       $scope.plan.selectAll = true;
       $scope.plan.journals.sort(function (a, b) {
@@ -27,7 +27,18 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       Classifier.setSelectedCodes($scope.plan.studentGroups, $scope.plan.studentGroups.map(function (obj) {
         return obj.code;
       }));
-      $scope.plan.currentStudentGroups = $scope.plan.studentGroups;
+      if (selectedGroups) {
+        $scope.plan.currentStudentGroups = selectedGroups;
+
+        var selectedGroupCodes = selectedGroups.map(function(it) { return it.code;});
+        $scope.plan.studentGroups.forEach(function (studentGroup) {
+          if (selectedGroupCodes.indexOf(studentGroup.code) === -1) {
+            studentGroup._selected = false;
+          }
+        });
+      } else {
+        $scope.plan.currentStudentGroups = $scope.plan.studentGroups;
+      }
       setTeachersForStudentGroups($scope.plan.studentGroupCapacities, $scope.plan.studentGroups, $scope.plan.journals);
       $scope.plan.datesForTimetable = [];
       var beginning = new Date($scope.plan.startDate);
@@ -325,7 +336,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
           QueryUtils.endpoint(baseUrl + '/deleteVocationalEvent').save({
             timetableEventId: toDelete
           }).$promise.then(function (result) {
-            initializeData(result, currGroupId);
+            initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
             dialogScope.cancel();
           });
         };
@@ -343,7 +354,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
           }, [])
         };
         QueryUtils.endpoint(baseUrl + '/saveVocationalEventRoomsAndTimes').save(query).$promise.then(function (result) {
-          initializeData(result, currGroupId);
+          initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
         });
       });
     };
@@ -369,7 +380,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         capacityType: params.capacityType
       };
       QueryUtils.endpoint(baseUrl + '/saveVocationalEvent').save(query).$promise.then(function (result) {
-        initializeData(result, currGroupId);
+        initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
       });
     };
 

@@ -14,10 +14,15 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.protocol.Protocol;
+import ee.hitsa.ois.domain.protocol.ProtocolHdata;
+import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.domain.student.StudentRepresentativeApplication;
+import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.service.MessageTemplateService.HoisReflectivePropertyAccessor;
 
 public class MessageTemplateTests {
@@ -27,9 +32,10 @@ public class MessageTemplateTests {
     @Test
     public void academicLeaveEnding() {
         DirectiveStudent ds = new DirectiveStudent();
+        ds.setStudent(student());
         ds.setEndDate(LocalDate.now());
         AcademicLeaveEnding m = new AcademicLeaveEnding(ds);
-        mergeTemplate("Teie akadeemiline puhkus lõpeb  #{ak_puhkuse_loppemise_kuupaev}", m);
+        mergeTemplate("(#{oppuri_nimi} #{oppuri_isikukood}), Teie akadeemiline puhkus lõpeb  #{ak_puhkuse_loppemise_kuupaev}", m);
     }
 
     @Test
@@ -45,9 +51,8 @@ public class MessageTemplateTests {
 
     @Test
     public void practiceJournalUniqueUrlMessage() {
-        PracticeJournalUniqueUrlMessage m = new PracticeJournalUniqueUrlMessage();
-        m.setUrl("unique url");
-        mergeTemplate("Praktika päevikule ligipääsemiseks unikaalne url sisu #{url}", m);
+        PracticeJournalUniqueUrlMessage m = new PracticeJournalUniqueUrlMessage(student(), "unique url");
+        mergeTemplate("Õppuri (#{oppuri_nimi} #{oppuri_isikukood}) praktika päevikule ligipääsemiseks unikaalne url: #{url}", m);
     }
 
     @Test
@@ -115,6 +120,25 @@ public class MessageTemplateTests {
         app.setRejectReason("Reject reason");
         StudentRepresentativeApplicationRejectedMessage m = new StudentRepresentativeApplicationRejectedMessage(app);
         mergeTemplate("Teie avaldus õppuri ( #{oppuri_nimi} #{oppuri_isikukood} ) andmete nägemiseks on tagasi lükatud järgmisel põhjusel: #{pohjendus}", m);
+    }
+
+    @Test
+    public void studentResultMessage() {
+        ProtocolStudent ps = new ProtocolStudent();
+        ps.setStudent(student());
+        Protocol p = new Protocol();
+        p.setIsVocational(Boolean.FALSE);
+        ProtocolHdata data = new ProtocolHdata();
+        SubjectStudyPeriod ssp = new SubjectStudyPeriod();
+        Subject s = new Subject();
+        s.setCode("KOOD");
+        s.setNameEt("NIMI");
+        ssp.setSubject(s);
+        data.setSubjectStudyPeriod(ssp);
+        p.setProtocolHdata(data);
+        ps.setProtocol(p);
+        StudentResultMessage m = new StudentResultMessage(ps);
+        mergeTemplate("Õppur ( #{oppuri_nimi} #{oppuri_isikukood} ) on saanud tulemuse #{oppeaine_kood} #{oppeaine_nimetus}", m);
     }
 
     private static Student student() {

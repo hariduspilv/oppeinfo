@@ -37,7 +37,7 @@ public class SaisApplicationDto {
     public static SaisApplicationDto of(SaisApplication saisApplication) {
         SaisApplicationDto dto = EntityUtil.bindToDto(saisApplication, new SaisApplicationDto(), "graduatedSchools", "grades", "otherData");
         dto.setSaisAdmissionCode(saisApplication.getSaisAdmission().getCode());
-        dto.getGraduatedSchools().addAll(StreamUtil.toMappedList(SaisApplicationGraduatedSchoolDto::of, saisApplication.getGraduatedSchools()));
+        dto.getGraduatedSchools().addAll(StreamUtil.toMappedList(SaisApplicationGraduatedSchoolDto::new, saisApplication.getGraduatedSchools()));
         dto.getGrades().addAll(StreamUtil.toMappedList(SaisApplicationGradeDto::of, saisApplication.getGrades()));
         dto.getOtherData().addAll(StreamUtil.toMappedList(SaisApplicationOtherDataDto::of, saisApplication.getOtherData()));
         dto.setIsHigher(Boolean.valueOf(SaisAdmissionUtil.isHigher(saisApplication.getSaisAdmission())));

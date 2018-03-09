@@ -130,6 +130,16 @@
           </md-input-container>
         </div>
 
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
+            <label>{{'student.previousSchoolName' | translate}}</label>
+            <hois-value value="student.previousSchoolName"></hois-value>
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.previousSchoolEndDate' | translate}}</label>
+            <hois-value value="student.previousSchoolEndDate | hoisYear"></hois-value>
+          </md-input-container>
+        </div>
       </hois-collapsable>
     </div>
 
@@ -212,9 +222,12 @@
     <div>
       <hois-collapsable label="('student.representatives' | translate)">
 
-        <md-button ng-if="student.userCanAddRepresentative && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR')" 
-          ng-click="editRepresentative()" class="md-raised">{{'student.representative.add' | translate}}</md-button>
-        <br><br>
+        <md-button ng-if="student.userCanAddRepresentative" ng-click="editRepresentative()" class="md-raised">
+          {{'student.representative.add' | translate}}
+        </md-button>
+
+        <br>
+        <br>
 
         <md-table-container>
           <table md-table md-progress="representatives.$promise" class="secondary-table">
@@ -273,8 +286,43 @@
       </hois-collapsable>
     </div>
 
-    <div>
+    <div ng-if="student.isVocational===false">
       <hois-collapsable label="('student.foreignStudy' | translate)">
+
+        <md-table-container>
+          <table md-table md-progress="foreignstudies.$promise" class="secondary-table">
+            <thead md-head md-order="foreignstudiesCriteria.order" md-on-reorder="loadForeignstudies">
+              <tr md-row>
+                <th md-column md-order-by="1">{{'student.foreignstudy.school' | translate}}</th>
+                <th md-column md-order-by="country.{{currentLanguageNameField()}}">{{'student.foreignstudy.country' | translate}}</th>
+                <th md-column md-order-by="3">{{'student.foreignstudy.startDate' | translate}}</th>
+                <th md-column md-order-by="4">{{'student.foreignstudy.endDate' | translate}}</th>
+                <th md-column md-order-by="purpose.{{currentLanguageNameField()}}">{{'student.foreignstudy.purpose' | translate}}</th>
+                <th md-column md-order-by="programme.{{currentLanguageNameField()}}">{{'student.foreignstudy.programme' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in foreignstudies.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{::row.school}}</td>
+                <td md-cell>
+                  <hois-classifier-value ng-model="row.country" main-classifier-code="RIIK"></hois-classifier-value>
+                </td>
+                <td md-cell>{{::row.startDate | hoisDate}}</td>
+                <td md-cell>{{::row.endDate | hoisDate}}</td>
+                <td md-cell>
+                  <hois-classifier-value ng-model="row.abroadPurpose" main-classifier-code="VALISOPE_EESMARK"></hois-classifier-value>
+                </td>
+                <td md-cell>
+                  <hois-classifier-value ng-model="row.abroadProgramme" main-classifier-code="VALISKOOL_PROGRAMM"></hois-classifier-value>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+        <md-table-pagination ng-if="foreignstudies.totalElements > foreignstudiesCriteria.size" md-limit="foreignstudiesCriteria.size" md-limit-options="[10, 20, 50]"
+                             md-page="foreignstudiesCriteria.page" md-total="{{foreignstudies.totalElements}}" md-on-paginate="loadForeignstudies"
+                             md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+
       </hois-collapsable>
     </div>
 

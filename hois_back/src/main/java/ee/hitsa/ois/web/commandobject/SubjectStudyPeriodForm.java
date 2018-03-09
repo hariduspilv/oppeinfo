@@ -27,6 +27,8 @@ public class SubjectStudyPeriodForm  extends VersionedCommand {
     @Required
     @ClassifierRestriction(MainClassCode.PAEVIK_GRUPI_JAOTUS)
     private String groupProportion;
+    
+    private Long moodleCourseId;
 
     public List<SubjectStudyPeriodTeacherForm> getTeachers() {
         return teachers != null ? teachers : (teachers = new ArrayList<>());
@@ -83,4 +85,13 @@ public class SubjectStudyPeriodForm  extends VersionedCommand {
     public void setGroupProportion(String groupProportion) {
         this.groupProportion = groupProportion;
     }
+
+    public Long getMoodleCourseId() {
+        return moodleCourseId;
+    }
+
+    public void setMoodleCourseId(Long moodleCourseId) {
+        this.moodleCourseId = moodleCourseId;
+    }
+    
 }

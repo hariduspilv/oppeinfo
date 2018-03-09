@@ -57,11 +57,19 @@
                                 <span ng-if="event.public">{{currentLanguageNameField(event)}}</span>
                                 <span ng-if="!event.public">{{'timetable.timetableEvent.occupied' | translate}}</span>
                             </div>
-                            <md-button ng-if="auth != null && event.public && event.journalId" ng-href="/#/studyMaterial/vocational/{{event.journalId}}/view" 
+                            <md-button ng-if="auth != null && event.showStudyMaterials && event.public && event.journalId" ng-href="/#/studyMaterial/vocational/{{event.journalId}}/view" 
                                 class="studyMaterialsIcon md-icon-button" aria-label="materials">
                                 <md-icon md-font-set="material-icons">folder</md-icon>
                             </md-button>
-                            <md-button ng-if="auth != null && event.public && event.subjectStudyPeriodId" ng-href="/#/studyMaterial/higher/{{event.subjectStudyPeriodId}}/view" 
+                            <md-button ng-if="auth != null && event.showStudyMaterials && event.public && event.subjectStudyPeriodId" ng-href="/#/studyMaterial/higher/{{event.subjectStudyPeriodId}}/view" 
+                                class="studyMaterialsIcon md-icon-button" aria-label="materials">
+                                <md-icon md-font-set="material-icons">folder</md-icon>
+                            </md-button>
+                            <md-button ng-if="auth == null && event.showStudyMaterials && event.public && event.journalId" ng-href="/#/studyMaterial/{{::schoolId}}/vocational/{{event.journalId}}/view"
+                                class="studyMaterialsIcon md-icon-button" aria-label="materials">
+                                <md-icon md-font-set="material-icons">folder</md-icon>
+                            </md-button>
+                            <md-button ng-if="auth == null && event.showStudyMaterials && event.public && event.subjectStudyPeriodId" ng-href="/#/studyMaterial/{{::schoolId}}/higher/{{event.subjectStudyPeriodId}}/view"
                                 class="studyMaterialsIcon md-icon-button" aria-label="materials">
                                 <md-icon md-font-set="material-icons">folder</md-icon>
                             </md-button>

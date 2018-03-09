@@ -15,6 +15,7 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodExamStudent;
 
 @Entity
 public class ProtocolStudent extends BaseEntityWithId {
@@ -44,6 +45,9 @@ public class ProtocolStudent extends BaseEntityWithId {
 
     @Size(max = 255)
     private String addInfo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private SubjectStudyPeriodExamStudent subjectStudyPeriodExamStudent;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "protocol_student_id", nullable = false, updatable = false)
@@ -103,6 +107,14 @@ public class ProtocolStudent extends BaseEntityWithId {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public SubjectStudyPeriodExamStudent getSubjectStudyPeriodExamStudent() {
+        return subjectStudyPeriodExamStudent;
+    }
+
+    public void setSubjectStudyPeriodExamStudent(SubjectStudyPeriodExamStudent subjectStudyPeriodExamStudent) {
+        this.subjectStudyPeriodExamStudent = subjectStudyPeriodExamStudent;
     }
 
     public List<ProtocolStudentHistory> getProtocolStudentHistories() {

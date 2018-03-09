@@ -27,6 +27,7 @@ public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermT
         ssp.setSubject(AutocompleteResult.of(subjectStudyPeriod.getSubject()));
         ssp.setStudyPeriod(AutocompleteResult.of(subjectStudyPeriod.getStudyPeriod()));
         ssp.setIsPracticeSubject(subjectStudyPeriod.getSubject().getIsPractice());
+        ssp.setMoodleCourseId(subjectStudyPeriod.getMoodleCourseId());
 
         dto.setSubjectStudyPeriod(ssp);
         dto.setAssessment(getAssessmentValue(subjectStudyPeriod));

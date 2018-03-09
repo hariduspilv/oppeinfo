@@ -3,6 +3,7 @@ package ee.hitsa.ois.service.curriculum;
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -43,7 +44,7 @@ public class CurriculumSearchService {
     @SuppressWarnings("unchecked")
     public Page<CurriculumSearchDto> search(HoisUserDetails user, CurriculumSearchCommand criteria, Pageable pageable) {
         if(!CurriculumUtil.canView(user)) {
-            criteria.getStatus().add(CurriculumStatus.OPPEKAVA_STAATUS_K.name());
+            criteria.setStatus(Collections.singletonList(CurriculumStatus.OPPEKAVA_STAATUS_K.name()));
         }
         return JpaQueryUtil.query(CurriculumSearchDto.class, Curriculum.class, (root, query, cb) -> {
             ((CriteriaQuery<CurriculumSearchDto>)query).select(cb.construct(CurriculumSearchDto.class,

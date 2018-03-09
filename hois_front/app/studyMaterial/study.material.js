@@ -108,5 +108,49 @@
           });
         };
 
-      }]);
+      }]).controller('StudyMaterialSubjectStudyPeriodPublicController', ['$scope', '$route', 'QueryUtils', 'oisFileService',
+    'dialogService', 'message', 'Classifier', '$q', function ($scope, $route, QueryUtils, oisFileService,
+      dialogService, message, Classifier, $q) {
+      $scope.subjectStudyPeriod = $route.current.locals.subjectStudyPeriod;
+      $scope.teachers = $scope.subjectStudyPeriod.teachers.map($scope.currentLanguageNameField).join(', ');
+      $scope.getFileUrl = oisFileService.getUrl;
+
+      var clMapper = Classifier.valuemapper({
+        typeCode: 'OPPEMATERJAL'
+      });
+
+      function loadMaterials() {
+        $scope.materials = QueryUtils.endpoint('/public/studyMaterial/subjectStudyPeriod/' + $scope.subjectStudyPeriod.id + '/materials').query();
+        $scope.materials.$promise.then(function (materials) {
+          $q.all(clMapper.promises).then(function () {
+            clMapper.objectmapper(materials);
+          });
+        });
+      }
+
+      loadMaterials();
+
+    }]).controller('StudyMaterialJournalPublicController', ['$scope', '$route', 'QueryUtils', 'oisFileService',
+    'dialogService', 'message', 'Classifier', '$q', function ($scope, $route, QueryUtils, oisFileService,
+      dialogService, message, Classifier, $q) {
+      $scope.journal = $route.current.locals.journal;
+      $scope.teachers = $scope.journal.teachers.map($scope.currentLanguageNameField).join(', ');
+      $scope.getFileUrl = oisFileService.getUrl;
+
+      var clMapper = Classifier.valuemapper({
+        typeCode: 'OPPEMATERJAL'
+      });
+
+      function loadMaterials() {
+        $scope.materials = QueryUtils.endpoint('/public/studyMaterial/journal/' + $scope.journal.id + '/materials').query();
+        $scope.materials.$promise.then(function (materials) {
+          $q.all(clMapper.promises).then(function () {
+            clMapper.objectmapper(materials);
+          });
+        });
+      }
+
+      loadMaterials();
+
+    }]);
 }());

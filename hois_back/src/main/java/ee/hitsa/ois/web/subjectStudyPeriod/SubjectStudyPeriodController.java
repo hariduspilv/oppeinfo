@@ -55,7 +55,7 @@ public class SubjectStudyPeriodController {
     @PostMapping
     public SubjectStudyPeriodDto create(@Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
-        return get(user, subjectStudyPeriodService.create(form));
+        return get(user, subjectStudyPeriodService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")
@@ -63,7 +63,7 @@ public class SubjectStudyPeriodController {
             @WithVersionedEntity(versionRequestBody = true) SubjectStudyPeriod subjectStudyPeriod, 
             @Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user) {
         SubjectStudyPeriodUtil.assertCanUpdate(user, subjectStudyPeriod);
-        return get(user, subjectStudyPeriodService.update(subjectStudyPeriod, form));
+        return get(user, subjectStudyPeriodService.update(user, subjectStudyPeriod, form));
     }
 
     @DeleteMapping("/{id:\\d+}")

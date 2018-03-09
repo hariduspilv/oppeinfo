@@ -243,21 +243,23 @@ public abstract class EntityUtil {
      * @param newIds
      * @param newValueFactory
      * @param newIdExtractor
+     * @return true if something was added/removed
      */
-    public static <SV, ID, NV> void bindEntityCollection(Collection<SV> storedValues, Function<SV, ID> idExtractor, Collection<NV> newValues, Function<NV, ID> newIdExtractor, Function<NV, SV> newValueFactory) {
+    public static <SV, ID, NV> boolean bindEntityCollection(Collection<SV> storedValues, Function<SV, ID> idExtractor, Collection<NV> newValues, Function<NV, ID> newIdExtractor, Function<NV, SV> newValueFactory) {
         Set<ID> storedIds = StreamUtil.toMappedSet(idExtractor, storedValues);
-
+        boolean modified = false;
         if(newValues != null) {
             for(NV newValue : newValues) {
                 ID id = newIdExtractor.apply(newValue);
                 if(!storedIds.remove(id)) {
                     storedValues.add(newValueFactory.apply(newValue));
+                    modified = true;
                 }
             }
         }
 
         // remove possible leftovers
-        storedValues.removeIf(t -> storedIds.contains(idExtractor.apply(t)));
+        return storedValues.removeIf(t -> storedIds.contains(idExtractor.apply(t))) || modified;
     }
 
     /**

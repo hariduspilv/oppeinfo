@@ -25,6 +25,7 @@ public class JournalEntryDto extends VersionedCommand  {
     private String content;
     private String homework;
     private LocalDate homeworkDuedate;
+    private Long moodleGradeItemId;
     private List<String> journalEntryCapacityTypes = new ArrayList<>();
     private List<JournalEntryStudentDto> journalEntryStudents = new ArrayList<>();
 
@@ -113,6 +114,14 @@ public class JournalEntryDto extends VersionedCommand  {
 
     public void setHomeworkDuedate(LocalDate homeworkDuedate) {
         this.homeworkDuedate = homeworkDuedate;
+    }
+
+    public Long getMoodleGradeItemId() {
+        return moodleGradeItemId;
+    }
+
+    public void setMoodleGradeItemId(Long moodleGradeItemId) {
+        this.moodleGradeItemId = moodleGradeItemId;
     }
 
     public List<String> getJournalEntryCapacityTypes() {

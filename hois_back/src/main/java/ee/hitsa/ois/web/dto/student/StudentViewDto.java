@@ -39,6 +39,8 @@ public class StudentViewDto extends StudentForm {
     private String finSpecific;
     private String studyCompany;
     private String boardingSchool;
+    private String previousSchoolName;
+    private LocalDate  previousSchoolEndDate;
     private Boolean isVocational;
     private Boolean userCanEditStudent;
     private Boolean userCanAddRepresentative;
@@ -198,6 +200,22 @@ public class StudentViewDto extends StudentForm {
 
     public void setBoardingSchool(String boardingSchool) {
         this.boardingSchool = boardingSchool;
+    }
+
+    public String getPreviousSchoolName() {
+        return previousSchoolName;
+    }
+
+    public void setPreviousSchoolName(String previousSchoolName) {
+        this.previousSchoolName = previousSchoolName;
+    }
+
+    public LocalDate getPreviousSchoolEndDate() {
+        return previousSchoolEndDate;
+    }
+
+    public void setPreviousSchoolEndDate(LocalDate previousSchoolEndDate) {
+        this.previousSchoolEndDate = previousSchoolEndDate;
     }
 
     public Boolean getIsVocational() {

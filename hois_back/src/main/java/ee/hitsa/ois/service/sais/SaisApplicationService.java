@@ -779,10 +779,10 @@ public class SaisApplicationService {
         SaisApplicationGraduatedSchool graduated = new SaisApplicationGraduatedSchool();
         graduated.setName(education.getInstitutionName());
         if(education.getStudyBeginDate() != null) {
-            graduated.setStartDate(DateUtils.toLocalDateTime(education.getStudyBeginDate()));
+            graduated.setStartDate(DateUtils.toLocalDate(education.getStudyBeginDate()));
         }
         if(education.getStudyEndDate() != null) {
-            graduated.setEndDate(DateUtils.toLocalDateTime(education.getStudyEndDate()));
+            graduated.setEndDate(DateUtils.toLocalDate(education.getStudyEndDate()));
         }
         graduated.setRegCode(education.getInstitutionRegNr() != null ? education.getInstitutionRegNr().toString() : "");
         graduated.setIsAbroad(education.getInstitutionCountry() == null || "EST".equals(classifierValue(education.getInstitutionCountry())) ? Boolean.FALSE : Boolean.TRUE);

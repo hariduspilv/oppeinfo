@@ -3,8 +3,6 @@ package ee.hitsa.ois.domain.student;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -15,8 +13,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.validation.constraints.Size;
+import javax.persistence.OneToOne;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -52,12 +49,13 @@ public class StudentVocationalResult {
     @ManyToOne(fetch = FetchType.LAZY)
     private ApelSchool apelSchool;
     
-    @Size(max = 3)
     @Column(name = "grade")
     private String gradeValue;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier grade;
+    
+    private Short gradeMark;
     
     @Required
     private BigDecimal credits;
@@ -70,10 +68,6 @@ public class StudentVocationalResult {
     
     @ManyToOne(fetch = FetchType.LAZY)
     private StudyYear studyYear;
-
-    public Student getStudent() {
-        return student;
-    }
     
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -82,8 +76,9 @@ public class StudentVocationalResult {
     @LastModifiedDate
     private LocalDateTime changed;
     
-    @OneToMany(mappedBy="studentVocationalResult", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<StudentVocationalResultOmodule> changedModules = new ArrayList<>();
+    @OneToOne(mappedBy="studentVocationalResult", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(nullable = false, updatable = false)
+    private StudentVocationalResultOmodule changedModule;
     
     public Long getId() {
         return id;
@@ -91,6 +86,10 @@ public class StudentVocationalResult {
 
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    public Student getStudent() {
+        return student;
     }
 
     public void setStudent(Student student) {
@@ -153,6 +152,14 @@ public class StudentVocationalResult {
     public void setGrade(Classifier grade) {
         this.grade = grade;
     }
+    
+    public Short getGradeMark() {
+        return gradeMark;
+    }
+
+    public void setGradeMark(Short gradeMark) {
+        this.gradeMark = gradeMark;
+    }
 
     public BigDecimal getCredits() {
         return credits;
@@ -210,12 +217,12 @@ public class StudentVocationalResult {
         this.changed = changed;
     }
 
-    public List<StudentVocationalResultOmodule> getChangedModules() {
-        return changedModules;
+    public StudentVocationalResultOmodule getChangedModule() {
+        return changedModule;
     }
 
-    public void setChangedModules(List<StudentVocationalResultOmodule> changedModules) {
-        this.changedModules = changedModules;
+    public void setChangedModule(StudentVocationalResultOmodule changedModule) {
+        this.changedModule = changedModule;
     }
     
 }

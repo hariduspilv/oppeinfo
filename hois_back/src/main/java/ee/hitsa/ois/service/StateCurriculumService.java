@@ -6,6 +6,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -79,11 +80,10 @@ public class StateCurriculumService {
      * StateCurriculumSearchDto can also be simplified: iscedClass and large constructor can be removed
      */
     public Page<StateCurriculumSearchDto> search(HoisUserDetails user, StateCurriculumSearchCommand criteria, Pageable pageable) {
-        
         if(!StateCurriculumUtil.hasPermissionToView(user)) {
-            criteria.getStatus().add(CurriculumStatus.OPPEKAVA_STAATUS_K.name());
+            criteria.setStatus(Collections.singletonList(CurriculumStatus.OPPEKAVA_STAATUS_K.name()));
         }
-        
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(FROM).sort(pageable);
 
         String fieldName = Language.EN.equals(criteria.getLang()) ? "sc.name_en" : "sc.name_et";

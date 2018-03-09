@@ -47,11 +47,12 @@ import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
+import ee.hitsa.ois.web.dto.student.StudentForeignstudyDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherResultDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalConnectedEntity;
-import ee.hitsa.ois.web.dto.student.StudentVocationalModuleResultDto;
+import ee.hitsa.ois.web.dto.student.StudentModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 
 @RestController
@@ -146,6 +147,12 @@ public class StudentController {
         return studentService.directives(user, student, pageable);
     }
 
+    @GetMapping("/{id:\\d+}/foreignstudies")
+    public Page<StudentForeignstudyDto> foreignstudies(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
+        assertCanView(user, student);
+        return studentService.foreignstudies(user, student, pageable);
+    }
+
     @GetMapping("/{id:\\d+}/subjects")
     public List<AutocompleteResult> subjects(HoisUserDetails user, @WithEntity Student student) {
         assertCanView(user, student);
@@ -177,7 +184,7 @@ public class StudentController {
     }
     
     @GetMapping("/{id:\\d+}/vocationalChangeableModules")
-    public List<StudentVocationalModuleResultDto> changeableModules(HoisUserDetails user, @WithEntity Student student) {
+    public List<StudentModuleResultDto> vocationalChangeableModules(HoisUserDetails user, @WithEntity Student student) {
         assertIsSchoolAdmin(user);
         return studentService.vocationalChangeableModules(student.getId());
     }
@@ -189,12 +196,33 @@ public class StudentController {
     }
     
     @PostMapping("/{id:\\d+}/changeVocationalCurriculumModules")
-    public List<StudentVocationalModuleResultDto> changeVocationalCurriculumModules(HoisUserDetails user, @WithEntity Student student, @Valid @RequestBody StudentModuleListChangeForm form) {
+    public List<StudentModuleResultDto> changeVocationalCurriculumModules(HoisUserDetails user, @WithEntity Student student, @Valid @RequestBody StudentModuleListChangeForm form) {
         if(!StudentUtil.isActive(student) || !UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) {
             throw new AssertionFailedException("User cannot edit student data");
         }
-        studentService.changeVocationalCurriculumModules(student, form);
-        return changeableModules(user, student);
+        studentService.changeVocationalCurriculumVersionModules(student, form);
+        return vocationalChangeableModules(user, student);
+    }
+    
+    @GetMapping("/{id:\\d+}/higherChangeableModules")
+    public List<StudentModuleResultDto> higherChangeableModules(HoisUserDetails user, @WithEntity Student student) {
+        assertIsSchoolAdmin(user);
+        return studentService.higherChangeableModules(student.getId());
+    }
+    
+    @GetMapping("/{id:\\d+}/higherCurriculumModules")
+    public List<AutocompleteResult> higherCurriculumModulesForSelection(HoisUserDetails user, @WithEntity Student student) {
+        assertIsSchoolAdmin(user);
+        return studentService.higherCurriculumModulesForSelection(student.getCurriculumVersion().getId());
+    }
+    
+    @PostMapping("/{id:\\d+}/changeHigherCurriculumModules")
+    public List<StudentModuleResultDto> changeHigherCurriculumModules(HoisUserDetails user, @WithEntity Student student, @Valid @RequestBody StudentModuleListChangeForm form) {
+        if(!StudentUtil.isActive(student) || !UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) {
+            throw new AssertionFailedException("User cannot edit student data");
+        }
+        studentService.changeHigherCurriculumVersionModules(student, form);
+        return higherChangeableModules(user, student);
     }
 
     private static void assertCanView(HoisUserDetails user, Student student) {

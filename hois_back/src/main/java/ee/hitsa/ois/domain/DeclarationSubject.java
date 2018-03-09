@@ -28,6 +28,7 @@ public class DeclarationSubject extends BaseEntityWithId {
     private CurriculumVersionHigherModule module;
     
     private Boolean isOptional;
+    private Boolean isMoodleRegistered;
     
     @OneToMany(mappedBy = "declarationSubject", fetch = FetchType.LAZY)
     private Set<MidtermTaskStudentResult> midtermTaskStudentResults;
@@ -62,4 +63,11 @@ public class DeclarationSubject extends BaseEntityWithId {
     public void setIsOptional(Boolean isOptional) {
         this.isOptional = isOptional;
     }
+    public Boolean getIsMoodleRegistered() {
+        return isMoodleRegistered;
+    }
+    public void setIsMoodleRegistered(Boolean isMoodleRegistered) {
+        this.isMoodleRegistered = isMoodleRegistered;
+    }
+    
 }

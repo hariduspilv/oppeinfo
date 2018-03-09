@@ -29,6 +29,7 @@
             <th md-column>{{'midtermTask.student' | translate}}</th>
             <th md-column ng-repeat="midtermTask in record.midtermTasks">
               {{getMidtermTaskHeader(midtermTask)}}
+              <span ng-if="midtermTask.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span>
             </th>
             <th md-column>{{'midtermTask.finalGrade' | translate}}</th>
             <th md-column>{{'midtermTask.protocols' | translate}}</th>
@@ -38,15 +39,20 @@
         <tbody md-body>
           <tr md-row ng-repeat="student in record.students | orderBy: 'name'" ng-class-odd="'odd'" ng-class-even="'even'">
             <ng-form name="midtermTaskUnitForm">
-              <td md-cell>{{student.name}}</td>
+              <td md-cell>
+                {{student.name}}
+                <span ng-if="student.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
+              </td>
               <td md-cell ng-repeat="result in record.studentResults | filter: filterStudentResults(student)">
                 <md-input-container ng-if="result.isText">
                   <input ng-model="result.pointsTxt" type="text" md-maxlength="10"
-                  aria-label="{{'midtermTask.pointsTxt' | translate}}" ng-disabled="!student.studentResultCanBeChanged">
+                  aria-label="{{'midtermTask.pointsTxt' | translate}}" 
+                  ng-disabled="!student.studentResultCanBeChanged || moodleTasks[result.midtermTask]">
                 </md-input-container>
                 <md-input-container ng-if="!result.isText">
                   <input ng-model="result.points" type="number" min="0" max="{{result.maxPoints}}" pattern="^\d+(\.\d{1,2})?$"
-                  aria-label="{{'midtermTask.points' | translate}}" ng-disabled="!student.studentResultCanBeChanged">
+                  aria-label="{{'midtermTask.points' | translate}}" 
+                  ng-disabled="!student.studentResultCanBeChanged || moodleTasks[result.midtermTask]">
                 </md-input-container>
               </td>
               <td md-cell>

@@ -111,7 +111,7 @@
     </div>
   </div>
 
-  <div ng-show="formState.noDeclaration && !formState.isDeclarationPeriod && !formState.declarationPeriodEnd">
+  <div ng-show="formState.noDeclaration && !formState.isDeclarationPeriod && !formState.declarationPeriodStart && !formState.declarationPeriodEnd">
     <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
       <div md-colors="{color: 'accent'}">
         <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
@@ -121,12 +121,22 @@
   </div>
 
   <div ng-show="formState.noDeclaration && !formState.isDeclarationPeriod && formState.declarationPeriodEnd">
-      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-        <div md-colors="{color: 'accent'}">
-          <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
-          <span>{{'declaration.declarationPeriodHasEnded' | translate}} {{formState.declarationPeriodEnd | hoisDate}}</span>
-        </div>
-      </md-whiteframe>
-    </div>
+    <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+      <div md-colors="{color: 'accent'}">
+        <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+        <span>{{'declaration.declarationPeriodHasEnded' | translate}} {{formState.declarationPeriodEnd | hoisDate}}</span>
+      </div>
+    </md-whiteframe>
+  </div>
+
+  <div ng-show="formState.noDeclaration && !formState.isDeclarationPeriod && formState.declarationPeriodStart">
+    <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+      <div md-colors="{color: 'accent'}">
+        <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+        <span>{{'declaration.declarationPeriodHasNotStarted' | translate}} {{formState.declarationPeriodStart | hoisDate}}</span>
+      </div>
+    </md-whiteframe>
+  </div>
+
 </div>
 

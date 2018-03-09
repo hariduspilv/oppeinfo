@@ -25,6 +25,7 @@ public class MidtermTask extends BaseEntityWithId {
     private BigDecimal maxPoints;
     private Boolean threshold;
     private LocalDate taskDate;
+    private Long moodleGradeItemId;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(updatable = false, nullable = false)
@@ -103,6 +104,14 @@ public class MidtermTask extends BaseEntityWithId {
 
     public void setTaskDate(LocalDate taskDate) {
         this.taskDate = taskDate;
+    }
+
+    public Long getMoodleGradeItemId() {
+        return moodleGradeItemId;
+    }
+
+    public void setMoodleGradeItemId(Long moodleGradeItemId) {
+        this.moodleGradeItemId = moodleGradeItemId;
     }
 
     public SubjectStudyPeriod getSubjectStudyPeriod() {

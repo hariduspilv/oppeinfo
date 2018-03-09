@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,7 @@ import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodMidtermTaskForm;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodSearchCommand;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodMidtermTaskDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
+import ee.hitsa.ois.web.dto.moodle.EnrollResult;
 
 @RestController
 @RequestMapping("/midtermTasks")
@@ -87,4 +89,29 @@ public class MidtermTaskController {
         midtermTaskService.updateStudentsResults(form, subjectStudyPeriod);
         return getStudentsResults(user, subjectStudyPeriod);
     }
+    
+    @PostMapping("/{id:\\d+}/moodle/enrollStudents")
+    public EnrollResult moodleEnrollStudents(HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
+        MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
+        return midtermTaskService.moodleEnrollStudents(user, subjectStudyPeriod);
+    }
+
+    @PostMapping("/{id:\\d+}/moodle/importGradeItems")
+    public void moodleImportGradeItems(HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
+        MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
+        midtermTaskService.moodleImportGradeItems(user, subjectStudyPeriod);
+    }
+
+    @PostMapping("/{id:\\d+}/moodle/importAllGrades")
+    public void moodleImportAllGrades(HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
+        MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
+        midtermTaskService.moodleImportAllGrades(user, subjectStudyPeriod);
+    }
+
+    @PostMapping("/{id:\\d+}/moodle/importMissingGrades")
+    public void moodleImportMissingGrades(HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
+        MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
+        midtermTaskService.moodleImportMissingGrades(user, subjectStudyPeriod);
+    }
+
 }

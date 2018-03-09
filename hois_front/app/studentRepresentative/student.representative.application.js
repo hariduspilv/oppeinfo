@@ -13,9 +13,13 @@ angular.module('hitsaOis').controller('StudentRepresentativeApplicationSearchCon
       $scope.formState.status = $scope.criteria.status;
     };
 
+    var acceptEndpoint = QueryUtils.endpoint('/studentrepresentatives/applications/accept');
     $scope.accept = function(row) {
-      dialogService.confirmDialog({prompt: 'student.representative.application.confirm'}, function() {
-        QueryUtils.endpoint('/studentrepresentatives/applications/accept').update({id: row.id, version: row.version}).$promise.then(refreshApplications);
+      dialogService.confirmDialog({prompt: 'student.representative.application.confirm', student: row.studentFullname, representative: row.fullname}, function() {
+        acceptEndpoint.update({id: row.id, version: row.version}).$promise.then(function() {
+          message.info('student.representative.application.accepted');
+          refreshApplications();
+        }).catch(angular.noop);
       });
     };
 
@@ -33,8 +37,9 @@ angular.module('hitsaOis').controller('StudentRepresentativeApplicationSearchCon
             var data = $scope.record;
             QueryUtils.endpoint('/studentrepresentatives/applications/decline').update(data).$promise.then(function() {
               $mdDialog.hide();
+              message.info('student.representative.application.declined');
               refreshApplications();
-            });
+            }).catch(angular.noop);
           };
           $scope.cancel = $mdDialog.hide;
         },
@@ -71,8 +76,8 @@ angular.module('hitsaOis').controller('StudentRepresentativeApplicationSearchCon
 
       QueryUtils.endpoint('/studentrepresentatives/applications').save($scope.record).$promise.then(function() {
         message.info('student.representative.application.applied');
-        $location.url('#/');
-      });
+        $location.url('/?_noback');
+      }).catch(angular.noop);
     };
   }
 ]);

@@ -11,6 +11,7 @@ import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
+import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class JournalXlsDto extends JournalDto {
@@ -18,6 +19,7 @@ public class JournalXlsDto extends JournalDto {
     private List<JournalEntryDto> journalEntries = new ArrayList<>();
     private List<JournalStudentDto> journalStudents = new ArrayList<>();
     private List<JournalEntryByDateXlsDto> journalEntriesByDate = new ArrayList<>();
+    private List<JournalEntryByDateXlsDto> journalEndResults = new ArrayList<>();
 
     public static JournalXlsDto of(Journal journal) {
         JournalDto journalDto = JournalDto.of(journal);
@@ -26,27 +28,40 @@ public class JournalXlsDto extends JournalDto {
 
         for (JournalEntry entry : journal.getJournalEntries()) {
             dto.getJournalEntries().add(EntityUtil.bindToDto(entry, new JournalEntryDto()));
+            
+            if (!entry.getEntryType().getCode().equals(JournalEntryType.SISSEKANNE_L.name())) {
+                JournalEntryByDateXlsDto journalEntryByDateDto = EntityUtil.bindToDto(entry,
+                        new JournalEntryByDateXlsDto());
 
-            JournalEntryByDateXlsDto journalEntryByDateDto = EntityUtil.bindToDto(entry,
-                    new JournalEntryByDateXlsDto());
-
-            for (JournalEntryStudent journalEntryStudent : entry.getJournalEntryStudents()) {
-                if (journalEntryStudent.getGrade() != null) {
-                    journalEntryByDateDto.getJournalStudentGrade().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
-                            journalEntryStudent.getGrade().getValue());
+                for (JournalEntryStudent journalEntryStudent : entry.getJournalEntryStudents()) {
+                    if (journalEntryStudent.getGrade() != null) {
+                        journalEntryByDateDto.getJournalStudentGrade().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
+                                journalEntryStudent.getGrade().getValue());
+                    }
+    
+                    if (journalEntryStudent.getAbsence() != null) {
+                        journalEntryByDateDto.getJournalStudentAbsence().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
+                                journalEntryStudent.getAbsence().getValue());
+                    }
+                    
+                    if(journalEntryStudent.getAddInfo() != null) {
+                        journalEntryByDateDto.getJournalStudentAddInfo().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
+                                journalEntryStudent.getAddInfo());
+                    }
                 }
-
-                if (journalEntryStudent.getAbsence() != null) {
-                    journalEntryByDateDto.getJournalStudentAbsence().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
-                            journalEntryStudent.getAbsence().getValue());
-                }
+                dto.getJournalEntriesByDate().add(journalEntryByDateDto);
+            } else {
+                JournalEntryByDateXlsDto journalEndResult = EntityUtil.bindToDto(entry,
+                        new JournalEntryByDateXlsDto());
                 
-                if(journalEntryStudent.getAddInfo() != null) {
-                    journalEntryByDateDto.getJournalStudentAddInfo().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
-                            journalEntryStudent.getAddInfo());
+                for (JournalEntryStudent journalEntryStudent : entry.getJournalEntryStudents()) {
+                    if (journalEntryStudent.getGrade() != null) {
+                        journalEndResult.getJournalStudentGrade().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
+                                journalEntryStudent.getGrade().getValue());
+                    }
                 }
+                dto.getJournalEndResults().add(journalEndResult);
             }
-            dto.getJournalEntriesByDate().add(journalEntryByDateDto);
         }
 
         Collections.sort(dto.getJournalEntries(),
@@ -90,4 +105,12 @@ public class JournalXlsDto extends JournalDto {
         this.journalEntriesByDate = journalEntriesByDate;
     }
 
+    public List<JournalEntryByDateXlsDto> getJournalEndResults() {
+        return journalEndResults;
+    }
+
+    public void setJournalEndResults(List<JournalEntryByDateXlsDto> journalEndResults) {
+        this.journalEndResults = journalEndResults;
+    }
+    
 }

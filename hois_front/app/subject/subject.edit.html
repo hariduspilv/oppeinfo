@@ -85,10 +85,9 @@
     <hois-autocomplete ng-model="subject.mandatoryPrerequisiteSubjects" label="subject.mandatoryPrerequisiteSubjects" method="subjects" multiple></hois-autocomplete>
     <hois-autocomplete ng-model="subject.recommendedPrerequisiteSubjects" label="subject.recommendedPrerequisiteSubjects" method="subjects" multiple></hois-autocomplete>
     <hois-autocomplete ng-model="subject.substituteSubjects" label="subject.substituteSubjects" method="subjects" multiple></hois-autocomplete>
-    <br>
     <md-input-container flex>
       <label>{{'subject.linkDepartment' | translate}}</label>
-      <hois-school-department-select ng-model="subject.schoolDepartment.id"></hois-school-department-select>
+      <hois-select ng-model="subject.schoolDepartment.id" values="departments"></hois-select>
     </md-input-container>
 
     <br>
@@ -105,12 +104,12 @@
 
     <!-- info tund -->
     <h3>{{'subject.subjectIsPrerequisite' | translate}}</h3>
-    <div ng-repeat="it in subject.primarySubjects">
-      <a ng-href="#/subject/{{it.id}}/edit">{{currentLanguageNameField(it)}}</a>
+    <div ng-repeat="row in subject.primarySubjects | orderBy: currentLanguageNameField()">
+      <a ng-href="#/subject/{{row.id}}/edit">{{currentLanguageNameField(row)}}</a>
     </div>
     <h3>{{'subject.belongsCurriculum' | translate}}</h3>
-    <div ng-repeat="curriculumVersion in subject.curriculumVersions">
-      <span>{{currentLanguageNameField(curriculumVersion) }}</span>
+    <div ng-repeat="row in subject.curriculumVersions | orderBy: currentLanguageNameField()">
+      <span>{{currentLanguageNameField(row) }}</span>
     </div>
     <hois-created-modified object="subject"></hois-created-modified>
     <div layout="row">

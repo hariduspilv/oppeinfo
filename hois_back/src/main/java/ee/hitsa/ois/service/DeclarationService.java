@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -357,12 +358,12 @@ public class DeclarationService {
     public List<DeclarationSubjectDto> getCurriculumSubjectOptions(Declaration declaration) {
         Long studyPeriod = EntityUtil.getId(declaration.getStudyPeriod());
         Student student = declaration.getStudent();
-        Long CurriculumVersion = EntityUtil.getId(student.getCurriculumVersion());
+        Long curriculumVersion = EntityUtil.getId(student.getCurriculumVersion());
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECT_FROM);
 
         qb.requiredCriteria("cvhm.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
-                CurriculumVersion);
+                curriculumVersion);
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriod);
 
         List<?> result = qb.select(SUBJECT_CURRICULUM_SELECT, em).getResultList();
@@ -437,32 +438,37 @@ public class DeclarationService {
         qb.requiredCriteria("sp.id = :studyPeriodId", "studyPeriodId", currentStudyPeriod);
         qb.requiredCriteria("spe.event_type_code = :eventTypeCode", "eventTypeCode", DECLARATION_PERIOD_EVENT_TYPE);
 
-        List<?> result = qb.select("spe.id", em).getResultList();
+        List<?> result = qb.select("spe.id", em).setMaxResults(1).getResultList();
         if (result.isEmpty()) {
             return null;
         }
-        return StudyPeriodEventDto.of(em.getReference(StudyPeriodEvent.class,  resultAsLong(result.get(0), 1)));
+        return StudyPeriodEventDto.of(em.getReference(StudyPeriodEvent.class,  resultAsLong(result.get(0), 0)));
     }
     
-    public boolean isDeclarationPeriod(Long schoolId) {
-        StudyPeriodEventDto declarationPeriod = getCurrentStudyPeriodDeclarationPeriod(schoolId);
-        if (declarationPeriod == null) {
-            return false;
-        }
+    public Map<String, ?> isDeclarationPeriod(HoisUserDetails user) {
+        StudyPeriodEventDto declarationPeriod = getCurrentStudyPeriodDeclarationPeriod(user.getSchoolId());
         
-        LocalDateTime currentTime = LocalDateTime.now();
-        if (currentTime.isAfter(declarationPeriod.getStart()) && currentTime.isBefore(declarationPeriod.getEnd())) {
-            return true;
+        Boolean isDeclarationPeriod = Boolean.FALSE;
+        Map<String, Object> data = new HashMap<>();
+        if (declarationPeriod != null) {
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime periodStart = declarationPeriod.getStart();
+            LocalDateTime periodEnd = declarationPeriod.getEnd() != null ? declarationPeriod.getEnd() : null;
+            
+            if (now.isAfter(periodStart) && periodEnd == null) {
+                isDeclarationPeriod = Boolean.TRUE;
+            } else if (now.isAfter(periodStart) && periodEnd != null && now.isBefore(periodEnd)) {
+                isDeclarationPeriod = Boolean.TRUE;
+            }
+            
+            if (periodStart != null && now.isBefore(periodStart)) {
+                data.put("declarationPeriodStart", periodStart);
+            } else if (periodEnd != null && now.isAfter(periodEnd)) {
+                data.put("declarationPeriodEnd", periodEnd);
+            }
         }
-        return false;
-    }
-    
-    public LocalDateTime getDeclarationPeriodEndDate(Long schoolId) {
-        StudyPeriodEventDto declarationPeriod = getCurrentStudyPeriodDeclarationPeriod(schoolId);
-        if (declarationPeriod == null) {
-            return null;
-        }
-        return declarationPeriod.getEnd();
+        data.put("isDeclarationPeriod", isDeclarationPeriod);
+        return data;
     }
 
     private void setAreSubjectsDeclaredRepeatedy(Collection<DeclarationSubjectDto> subjects, Long declarationId) {

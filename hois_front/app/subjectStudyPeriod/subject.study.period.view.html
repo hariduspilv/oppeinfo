@@ -45,6 +45,12 @@
                 <label>{{'subjectStudyPeriod.declaration' | translate}}</label>
                 <hois-classifier-value ng-model="record.declarationType" main-classifier-code="DEKLARATSIOON"></hois-classifier-value>
             </md-input-container>
+            <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'moodle.courseId' | translate}}</label>
+                    <hois-value value="record.moodleCourseId"></hois-value>
+                </md-input-container>
+            </div>
         </div>
         <div layout="row">
             <md-button class="md-primary md-raised" ng-if="isAuthorized(['ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA', 'ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK'])"

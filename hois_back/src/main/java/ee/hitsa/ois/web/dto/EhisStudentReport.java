@@ -9,6 +9,7 @@ import ee.hitsa.ois.domain.apelapplication.ApelApplicationRecord;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 
 public class EhisStudentReport {
@@ -97,7 +98,7 @@ public class EhisStudentReport {
 
             public StudyRecord(ApelApplicationRecord record) {
                 isFormalLearning = record.getIsFormalLearning();
-                // TODO
+                // TODO real value
                 credits = BigDecimal.ZERO;
             }
 
@@ -147,7 +148,10 @@ public class EhisStudentReport {
     public static class CurriculaFulfilment extends EhisStudentReport {
         private final BigDecimal percentage;
         private final BigDecimal points;
-
+        // TODO
+        /*
+vi. Eelmine periood – märge, kas saadeti andmed eelmise või jooksva perioodi seisuga.
+         */
         public CurriculaFulfilment(Student student, WsEhisStudentLog log) {
             fill(student, log);
 
@@ -169,12 +173,25 @@ public class EhisStudentReport {
     public static class ForeignStudy extends EhisStudentReport {
         private final LocalDate fromDate;
         private final LocalDate toDate;
+        private final String abroadPurpose;
+        private final BigDecimal points;
+        private final LocalDate nominalStudyEnd;
+        private final String schoolName;
+        private final String country;
+        private final String abroadProgramme;
 
         public ForeignStudy(DirectiveStudent ds, WsEhisStudentLog log) {
             fill(ds.getStudent(), log);
 
             fromDate = DateUtils.periodStart(ds);
             toDate = DateUtils.periodEnd(ds);
+            abroadPurpose = EntityUtil.getCode(ds.getAbroadPurpose());
+            // TODO currently no way to find
+            points = new BigDecimal(50);
+            nominalStudyEnd = ds.getNominalStudyEnd();
+            schoolName = Boolean.TRUE.equals(ds.getIsAbroad()) ? ds.getAbroadSchool() : ds.getEhisSchool().getNameEt();
+            country = EntityUtil.getCode(ds.getCountry());
+            abroadProgramme = EntityUtil.getCode(ds.getAbroadProgramme());
         }
 
         public LocalDate getFromDate() {
@@ -183,6 +200,30 @@ public class EhisStudentReport {
 
         public LocalDate getToDate() {
             return toDate;
+        }
+
+        public String getAbroadPurpose() {
+            return abroadPurpose;
+        }
+
+        public BigDecimal getPoints() {
+            return points;
+        }
+
+        public LocalDate getNominalStudyEnd() {
+            return nominalStudyEnd;
+        }
+
+        public String getSchoolName() {
+            return schoolName;
+        }
+
+        public String getCountry() {
+            return country;
+        }
+
+        public String getAbroadProgramme() {
+            return abroadProgramme;
         }
     }
 }

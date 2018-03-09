@@ -1308,6 +1308,26 @@ label.required::after {
     height: 32px!important;
 }
 
+.md-chips {
+  font-size: 13px;
+}
+
+md-chips-wrap {
+  background: #F5F5F5;
+  margin-bottom: 10px;
+}
+
+
+.md-chips .md-chip-input-container {
+  min-width: 300px;
+}
+
+@media (max-width: 800px) {
+  .md-chips .md-chip-input-container {
+    width: 100%;
+  }
+}
+
 .timetable-drag {
   width: 55px;
   height: 30px;

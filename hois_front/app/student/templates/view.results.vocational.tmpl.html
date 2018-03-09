@@ -51,19 +51,19 @@
     <div ng-controller="StudentViewResultsVocationalController as controller" flex="90" ng-cloak>
       <md-content>
         <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection">
-          <md-nav-item md-nav-click="loadCurriculumFulfillment()" name="student.curriculumFulfillment">
+          <md-nav-item md-nav-click="changeResultsCurrentNavItem('student.curriculumFulfillment')" name="student.curriculumFulfillment">
             {{'student.result.curriculumFulfillment' | translate}}
           </md-nav-item>
-          <md-nav-item md-nav-click="loadStudyYearResults()" name="student.inOrderOfStudyYear">
+          <md-nav-item md-nav-click="changeResultsCurrentNavItem('student.inOrderOfStudyYear')" name="student.inOrderOfStudyYear">
             {{'student.result.inOrderOfStudyYear' | translate}}
           </md-nav-item>
-          <md-nav-item md-nav-click="loadModuleThemeResults()" name="student.inOrderOfPassing">
+          <md-nav-item md-nav-click="changeResultsCurrentNavItem('student.inOrderOfPassing')" name="student.inOrderOfPassing">
             {{'student.result.inOrderOfPassing' | translate}}
           </md-nav-item>
-          <md-nav-item ng-if="canWatchStudentConnectedEntities" md-nav-click="loadJournalsAndProtocols()" name="student.journalsAndProtocols">
+          <md-nav-item ng-if="canWatchStudentConnectedEntities" md-nav-click="changeResultsCurrentNavItem('student.journalsAndProtocols')" name="student.journalsAndProtocols">
             {{'student.result.journalsAndProtocols' | translate}}
           </md-nav-item>
-          <md-nav-item ng-if="canChangeStudentModules" md-nav-click="loadChangeableModules()" name="student.changeModules">
+          <md-nav-item ng-if="canChangeStudentModules" md-nav-click="changeResultsCurrentNavItem('student.changeModules')" name="student.changeModules">
             {{'student.result.changeModules' | translate}}
           </md-nav-item>
         </md-nav-bar>
@@ -81,7 +81,7 @@
             <div ng-include="'student/templates/journals.and.protocols.tmpl.html'"></div>
           </div>
           <div ng-if="canChangeStudentModules" ng-show="resultsCurrentNavItem === 'student.changeModules'">
-            <div ng-include="'student/templates/change.modules.vocational.tmpl.html'"></div>
+            <div ng-include="'student/templates/change.modules.tmpl.html'"></div>
           </div>
         </div>
       </md-content>

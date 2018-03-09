@@ -19,6 +19,7 @@ public class JournalEntryByDateDto {
     private String teacher;
     private Long curriculumModuleOutcomes;
     private Long outcomeOrderNr;
+    private Long moodleGradeItemId;
     
     // Key is JournalStudent ID
     private Map<Long, List<JournalEntryStudentResultDto>> journalStudentResults = new HashMap<>();
@@ -85,6 +86,14 @@ public class JournalEntryByDateDto {
 
     public void setOutcomeOrderNr(Long outcomeOrderNr) {
         this.outcomeOrderNr = outcomeOrderNr;
+    }
+
+    public Long getMoodleGradeItemId() {
+        return moodleGradeItemId;
+    }
+
+    public void setMoodleGradeItemId(Long moodleGradeItemId) {
+        this.moodleGradeItemId = moodleGradeItemId;
     }
 
     public Map<Long, List<JournalEntryStudentResultDto>> getJournalStudentResults() {

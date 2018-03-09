@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
@@ -20,6 +21,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +50,7 @@ import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.exception.EntityRemoveException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.JournalRepository;
 import ee.hitsa.ois.repository.LessonPlanModuleRepository;
@@ -311,12 +314,26 @@ public class LessonPlanService {
 
     public Journal saveJournal(Journal journal, LessonPlanJournalForm form, HoisUserDetails user) {
         EntityUtil.setUsername(user.getUsername(), em);
-        EntityUtil.bindToEntity(form, journal, classifierRepository, "journalCapacityTypes", "journalTeachers", "journalOccupationModuleThemes", "groups", "journalRooms");
 
         List<JournalCapacityType> capacityTypes = journal.getJournalCapacityTypes();
-        if(capacityTypes == null) {
+        if(capacityTypes != null) {
+            // try to delete capacity types first to catch foreign reference errors
+            List<String> formJournalCapacityTypes = form.getJournalCapacityTypes();
+            capacityTypes.removeIf(type -> !formJournalCapacityTypes.contains(EntityUtil.getCode(type.getCapacityType())));
+            try {
+                em.flush();
+            } catch (PersistenceException e) {
+                Throwable cause = e.getCause();
+                if(cause instanceof ConstraintViolationException) {
+                    throw new EntityRemoveException("lessonplan.journal.capacityTypeReferenced", cause);
+                }
+                throw e;
+            }
+        } else {
             journal.setJournalCapacityTypes(capacityTypes = new ArrayList<>());
         }
+
+        EntityUtil.bindToEntity(form, journal, classifierRepository, "journalCapacityTypes", "journalTeachers", "journalOccupationModuleThemes", "groups", "journalRooms");
         EntityUtil.bindEntityCollection(capacityTypes, c -> EntityUtil.getCode(c.getCapacityType()), form.getJournalCapacityTypes(), ct -> {
             JournalCapacityType jct = new JournalCapacityType();
             jct.setJournal(journal);

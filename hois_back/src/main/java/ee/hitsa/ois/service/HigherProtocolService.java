@@ -214,7 +214,15 @@ public class HigherProtocolService extends AbstractProtocolService {
 
     public Protocol confirm(HoisUserDetails user, Protocol protocol) {
         setConfirmation(user, protocol);
-        return EntityUtil.save(protocol, em);
+        protocol = EntityUtil.save(protocol, em);
+        
+        for (ProtocolStudent protocolStudent : protocol.getProtocolStudents()) {
+            if (protocolStudent.getGrade() == null) {
+                throw new ValidationFailedException("higherProtocol.message.gradeNotSelectedForAllStudents");
+            }
+        }
+        sendStudentResultMessages(protocol);
+        return protocol;
     }
 
     public Protocol saveAndConfirm(HoisUserDetails user, Protocol protocol, HigherProtocolSaveForm form) {

@@ -295,8 +295,8 @@ public class ContractService {
     }
 
     private void sendUniqueUrlEmailToEnterpriseSupervisor(HoisUserDetails user, Contract contract) {
-        PracticeJournalUniqueUrlMessage data = new PracticeJournalUniqueUrlMessage();
-        data.setUrl(getPracticeJournalSupervisorUrl(contract));
+        String url = getPracticeJournalSupervisorUrl(contract);
+        PracticeJournalUniqueUrlMessage data = new PracticeJournalUniqueUrlMessage(contract.getStudent(), url);
         automaticMessageService.sendMessageToEnterprise(contract.getEnterprise(), em.getReference(School.class, user.getSchoolId()), MessageType.TEATE_LIIK_PRAKTIKA_URL, data);
     }
 

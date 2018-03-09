@@ -83,7 +83,17 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
       });
     });
 
-    $scope.outcomes = $scope.protocol.protocolVdata.outcomes;
+    setOutcomes($scope.protocol.protocolVdata.outcomes);
+  }
+
+  function setOutcomes(outcomes) {
+    var orderNr = 0;
+    outcomes.forEach(function (outcome) {
+      if (outcome.orderNr === null) {
+        outcome.orderNr = orderNr++;
+      }
+    });
+    $scope.outcomes =outcomes;
   }
 
   function sortResultsByGradeInserted(results) {

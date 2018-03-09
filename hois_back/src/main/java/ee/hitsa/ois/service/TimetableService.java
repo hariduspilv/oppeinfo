@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,6 +46,7 @@ import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
@@ -58,9 +60,12 @@ import ee.hitsa.ois.domain.timetable.TimetableEventTeacher;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.domain.timetable.TimetableObject;
 import ee.hitsa.ois.domain.timetable.TimetableObjectStudentGroup;
+import ee.hitsa.ois.enums.DeclarationStatus;
+import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.TimetableEventRepeat;
 import ee.hitsa.ois.enums.TimetableStatus;
 import ee.hitsa.ois.enums.TimetableType;
+import ee.hitsa.ois.message.TimetableChanged;
 import ee.hitsa.ois.repository.TimetableObjectRepository;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -71,6 +76,7 @@ import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.TimetableCopyForm;
 import ee.hitsa.ois.web.commandobject.TimetableRoomAndTimeForm;
@@ -104,8 +110,11 @@ import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
 @Service
 public class TimetableService {
     private static final long LESSON_LENGTH = 45;
+
     @Autowired
     private AutocompleteService autocompleteService;
+    @Autowired
+    private AutomaticMessageService automaticMessageService;
     @Autowired
     private StudyYearService studyYearService;
     @Autowired
@@ -218,6 +227,7 @@ public class TimetableService {
                         resultAsString(r, 5), resultAsLong(r, 4)), data);
         if (!timetableEventTimes.isEmpty()) {
             timetableEventTimes = addRoomsListToEvents(timetableEventTimes);
+            timetableEventTimes = addTeachersListToEvents(timetableEventTimes);
         }
 
         Map<Long, List<TimetableEventDto>> eventsBySubjectStudyPeriods = timetableEventTimes.stream()
@@ -303,6 +313,7 @@ public class TimetableService {
         LessonTime lessonTime = em.getReference(LessonTime.class, form.getLessonTime());
         TimetableEvent timetableEvent = saveVocationalTimetableEvent(timetableObject, lessonTime, form);
         saveVocationalTimetableEventTime(timetableEvent, journal);
+        sendTimetableChangesMessages(timetableObject);
         return EntityUtil.save(timetable, em);
     }
 
@@ -448,6 +459,7 @@ public class TimetableService {
             TimetableObject timetableObject = getTimetableObjectForHigher(form, timetable, studentGroupId);
             TimetableEvent timetableEvent = saveHigherTimetableEvent(timetableObject, form);
             saveHigherTimetableEventTimes(timetable, timetableEvent, form);
+            sendTimetableChangesMessages(timetableObject);
         }
         return EntityUtil.save(timetable, em);
     }
@@ -456,7 +468,7 @@ public class TimetableService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period ssp"
                 + " inner join subject_study_period_student_group sspsg on sspsg.subject_study_period_id = ssp.id");
         qb.requiredCriteria("ssp.id = :subjectStudyPeriodId", "subjectStudyPeriodId", subjectStudyPeriodId);
-        List<?> data = qb.select("sspsg.student_group_id", em).getResultList();
+        List<?> data = qb.select("distinct sspsg.student_group_id", em).getResultList();
         return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
     }
 
@@ -648,23 +660,31 @@ public class TimetableService {
             EntityUtil.setUsername(user.getUsername(), em);
             TimetableEventTime timetableEventTime = em.getReference(TimetableEventTime.class, form.getTimetableEventId());
             TimetableEvent timetableEvent = timetableEventTime.getTimetableEvent();
+            boolean modified = !Objects.equals(timetableEvent.getStart().toLocalTime(), form.getStartTime());
+            if(!modified && !Objects.equals(timetableEvent.getEnd().toLocalTime(), form.getEndTime())) {
+                modified = true;
+            }
             for(TimetableEventTime currentTime : timetableEvent.getTimetableEventTimes()) {
                 List<TimetableEventRoom> oldRooms = currentTime.getTimetableEventRooms();
-                EntityUtil.bindEntityCollection(oldRooms, r -> EntityUtil.getId(r.getRoom()), form.getRooms(),
+                if(EntityUtil.bindEntityCollection(oldRooms, r -> EntityUtil.getId(r.getRoom()), form.getRooms(),
                         RoomDto::getId, dto -> {
                             TimetableEventRoom timetableEventRoom = new TimetableEventRoom();
                             timetableEventRoom.setRoom(em.getReference(Room.class, dto.getId()));
                             timetableEventRoom.setTimetableEventTime(timetableEventTime);
                             return timetableEventRoom;
-                        });
+                        })) {
+                    modified = true;
+                }
                 List<TimetableEventTeacher> oldTeachers = currentTime.getTimetableEventTeachers();
-                EntityUtil.bindEntityCollection(oldTeachers, r -> EntityUtil.getId(r.getTeacher()), form.getTeachers(),
+                if(EntityUtil.bindEntityCollection(oldTeachers, r -> EntityUtil.getId(r.getTeacher()), form.getTeachers(),
                         r -> r, id -> {
                             TimetableEventTeacher timetableEventTeacher = new TimetableEventTeacher();
                             timetableEventTeacher.setTeacher(em.getReference(Teacher.class, id));
                             timetableEventTeacher.setTimetableEventTime(timetableEventTime);
                             return timetableEventTeacher;
-                        });
+                        })) {
+                    modified = true;
+                }
                 currentTime.setStart(currentTime.getStart().withHour(form.getStartTime().getHour())
                         .withMinute(form.getStartTime().getMinute()));
                 currentTime.setEnd(currentTime.getEnd().withHour(form.getEndTime().getHour())
@@ -673,7 +693,11 @@ public class TimetableService {
             timetableEvent.setStart(timetableEventTime.getStart());
             timetableEvent.setEnd(timetableEventTime.getEnd());
             Timetable timetable = timetableEvent.getTimetableObject().getTimetable();
-            return EntityUtil.save(timetable, em);
+            timetable = EntityUtil.save(timetable, em);
+            if(modified) {
+                sendTimetableChangesMessages(timetableEvent.getTimetableObject());
+            }
+            return timetable;
         }
         return null;
     }
@@ -684,6 +708,7 @@ public class TimetableService {
         Timetable timetable = timetableEvent.getTimetableObject().getTimetable();
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(timetableEvent, em);
+        sendTimetableChangesMessages(timetableEvent.getTimetableObject());
         return timetable;
     }
 
@@ -1026,7 +1051,7 @@ public class TimetableService {
         
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriodId);
 
-        String select = "sspsg.student_group_id as student_group_id, sspc.capacity_type_code, sspc.hours, s.code, s.name_et, ssp.id as subject_study_period_id";
+        String select = "distinct sspsg.student_group_id as student_group_id, sspc.capacity_type_code, sspc.hours, s.code, s.name_et, ssp.id as subject_study_period_id";
         List<?> data = qb.select(select, em).getResultList();
         List<HigherTimetableStudentGroupCapacityDto> capacities = StreamUtil
                 .toMappedList(
@@ -1419,6 +1444,39 @@ public class TimetableService {
             start = weekEnd.plusDays(1);
         }
         return weeks;
+    }
+
+    private void sendTimetableChangesMessages(TimetableObject object) {
+        Timetable timetable = object.getTimetable();
+        if(ClassifierUtil.equals(TimetableStatus.TUNNIPLAAN_STAATUS_P, timetable.getStatus())) {
+            // send automatic messages about timetable change
+            List<Student> students;
+            Subject subject = null;
+            String journalName = null;
+            if(Boolean.TRUE.equals(timetable.getIsHigher())) {
+                // send message only to students who have declared this subject
+                students = em.createQuery("select ds.declaration.student from DeclarationSubject ds where ds.declaration.status.code=?1 and ds.subjectStudyPeriod.id = ?2", Student.class)
+                    .setParameter(1, DeclarationStatus.OPINGUKAVA_STAATUS_K.name())
+                    .setParameter(2, EntityUtil.getId(object.getSubjectStudyPeriod()))
+                    .getResultList();
+                Set<Long> studentGroups = StreamUtil.toMappedSet(r -> EntityUtil.getId(r.getStudentGroup()), object.getTimetableObjectStudentGroups());
+                if(!studentGroups.isEmpty()) {
+                    // filter by student group id
+                    students = StreamUtil.toFilteredList(r -> studentGroups.contains(EntityUtil.getId(r.getStudentGroup())), students);
+                }
+                subject = object.getSubjectStudyPeriod().getSubject();
+            } else {
+                Journal journal = object.getJournal();
+                students = StreamUtil.toMappedList(r -> r.getStudent(), journal.getJournalStudents());
+                journalName = journal.getNameEt();
+            }
+            for(Student student : students) {
+                if(StudentUtil.isActive(student)) {
+                    TimetableChanged msg = new TimetableChanged(student, subject, journalName);
+                    automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_MUUD_TUNNIPL, student, msg);
+                }
+            }
+        }
     }
 
     private static class AllocatedLessons {

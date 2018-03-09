@@ -39,6 +39,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
   function entityToForm(entity) {
     $scope.journal = entity;
+    $scope.moodleCourseId = entity.moodleCourseId;
     loadJournalEntries();
     loadJournalStudents($scope.showAllStudentsModel);
   }
@@ -70,6 +71,10 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     $scope.loadJournalEntries();
   }
 
+  function reloadEntriesAndStudents() {
+    entityToForm(entity);
+  }
+
   $scope.searchStudent = function () {
     dialogService.showDialog('journal/journal.searchStudent.dialog.html', function (dialogScope) {
       dialogScope.selectedStudents = [];
@@ -80,6 +85,32 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         message.info('journal.messages.studentSuccesfullyAdded');
         loadJournalStudents($scope.showAllStudentsModel);
       });
+    });
+  };
+
+  $scope.enrollStudents = function () {
+    QueryUtils.endpoint('/journals/' + entity.id + '/moodle/enrollStudents').save(null, function (moodleResponse) {
+      dialogService.showDialog('components/moodle.enroll.dialog.html', function (dialogScope) {
+        dialogScope.moodleResponse = moodleResponse;
+      }, reloadEntriesAndStudents, reloadEntriesAndStudents);
+    });
+  };
+  $scope.importGradeItems = function () {
+    QueryUtils.endpoint('/journals/' + entity.id + '/moodle/importGradeItems').save(null, function () {
+      message.info('moodle.messages.gradeItemsImported');
+      reloadEntriesAndStudents();
+    });
+  };
+  $scope.importAllGrades = function () {
+    QueryUtils.endpoint('/journals/' + entity.id + '/moodle/importAllGrades').save(null, function () {
+      message.info('moodle.messages.allGradesImported');
+      reloadEntriesAndStudents();
+    });
+  };
+  $scope.importMissingGrades = function () {
+    QueryUtils.endpoint('/journals/' + entity.id + '/moodle/importMissingGrades').save(null, function () {
+      message.info('moodle.messages.missingGradesImported');
+      reloadEntriesAndStudents();
     });
   };
 
@@ -159,7 +190,19 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   function showEntryDialog(editEntity) {
     dialogService.showDialog('journal/journal.addEntry.dialog.html', function (dialogScope) {
 
-      dialogScope.$watch('journalEntry.entryDate', function(){
+      dialogScope.$watch('journalEntry.entryType', function() {
+        if (dialogScope.journalEntry.entryType === 'SISSEKANNE_L') {
+          if ($scope.journal.isDistinctiveAssessment) {
+            dialogScope.filterGrades = ['KUTSEHINDAMINE_X', 'KUTSEHINDAMINE_A', 'KUTSEHINDAMINE_MA'];
+          } else {
+            dialogScope.filterGrades = ['KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_2', 'KUTSEHINDAMINE_3', 'KUTSEHINDAMINE_4', 'KUTSEHINDAMINE_5'];
+          }
+        } else {
+          dialogScope.filterGrades = [];
+        }
+      });
+
+      dialogScope.entryDateChanged = function () {
         if(!dialogScope.journalEntry.entryDate) {
           setHasAcceptedAbsence(null);
           return;
@@ -167,13 +210,27 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         QueryUtils.endpoint('/journals/' + entity.id + '/studentsWithAcceptedAbsence')
         .query({entryDate: dialogScope.journalEntry.entryDate}).$promise.then(function(response){
           setHasAcceptedAbsence(response);
+          dialogScope.previousEntryDate = dialogScope.journalEntry.entryDate;
         });
-      });
+      };
 
       function setHasAcceptedAbsence(absences) {
-
-        dialogScope.journalStudents.forEach(function(js){
+        dialogScope.journalStudents.forEach(function(js) {
           js.hasAcceptedAbsence = absences !== null && ArrayUtils.contains(absences, js.id);
+
+          if (!dialogScope.journalEntryStudents[js.id]) {
+            dialogScope.journalEntryStudents[js.id] = {};
+          } 
+          
+          if (js.hasAcceptedAbsence) {
+            dialogScope.journalEntryStudents[js.id].excused = true;
+            dialogScope.journalEntryStudentAbsenceChanged(dialogScope.journalEntryStudents, js, dialogScope.journalEntryStudents[js.id].excused, 'PUUDUMINE_V');
+          } else {
+            dialogScope.journalEntryStudents[js.id].excused = false;
+            if (dialogScope.journalEntryStudents[js.id].absence === 'PUUDUMINE_V') {
+              dialogScope.journalEntryStudentAbsenceChanged(dialogScope.journalEntryStudents, js, null, null);
+            }
+          }
         });
       }
 
@@ -210,25 +267,47 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         angular.extend(dialogScope.journalEntry, editEntity);
         dialogScope.entryDateCalendar = dialogScope.journalEntry.entryDate;
         editEntity.journalEntryStudents.forEach(function (it) {
-          setAbsenceCheckboxValue(it);
           dialogScope.journalEntryStudents[it.journalStudent] = it;
           DataUtils.convertStringToDates(it.journalEntryStudentHistories, ["gradeInserted"]);
           classifierMapper.objectmapper(it.journalEntryStudentHistories);
+          setAbsenceCheckboxValue(it);
+          setEditEntityhasAcceptedAbsence(it.journalStudent, it.absence);
         });
+        dialogScope.savedJournalEntryStudents = angular.copy(dialogScope.journalEntryStudents);        
         editEntity.journalEntryCapacityTypes.forEach(function (it) {
           dialogScope.selectedCapacityTypes[it] = true;
         });
         dialogScope.canDeleteEntries = canDeleteEntries();
+      } else {
+        if (dialogScope.journalStudents) {
+          dialogScope.journalStudents.forEach(function (js) {
+            js.hasAcceptedAbsence = false;
+          });
+        }
+      }
+
+      function setEditEntityhasAcceptedAbsence(studentId, absenceCode) {
+        for (var i = 0; i < dialogScope.journalStudents.length; i++) {
+          if (dialogScope.journalStudents[i].id === studentId) {
+            dialogScope.journalStudents[i].hasAcceptedAbsence = absenceCode === 'PUUDUMINE_V' ? true : false; 
+          }
+        }
       }
 
       setForbiddenTypes(dialogScope, editEntity);
 
       function changeAbsenceCheckboxValues(journalEntryStudents, row, absence) {
         switch (absence) {
+          case "PUUDUMINE_V":
+            journalEntryStudents[row.id].withoutReason = false;
+            journalEntryStudents[row.id].late = false;
+          break;
           case "PUUDUMINE_H":
+            journalEntryStudents[row.id].excused = false;
             journalEntryStudents[row.id].withoutReason = false;
             break;
           case "PUUDUMINE_P":
+            journalEntryStudents[row.id].excused = false;
             journalEntryStudents[row.id].late = false;
             break;
         }

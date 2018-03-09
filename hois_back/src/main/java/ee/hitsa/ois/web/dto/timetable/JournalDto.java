@@ -2,14 +2,14 @@ package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.VocationalGradeType;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -22,9 +22,9 @@ public class JournalDto {
     private String studyYear;
     private LocalDate studyYearEndDate;
     private String nameEt;
-    private Set<String> studentGroups = new HashSet<>();
+    private List<String> studentGroups = new ArrayList<>();
     private List<String> journalTeachers = new ArrayList<>();
-    private Set<AutocompleteResult> curriculumModules = new HashSet<>();
+    private List<AutocompleteResult> curriculumModules = new ArrayList<>();
     private List<JournalModuleDescriptionDto> moduleDescriptions = new ArrayList<>();
     private Integer plannedHours;
     private Integer usedHours;
@@ -34,6 +34,8 @@ public class JournalDto {
     private Boolean hasJournalStudents;
     private List<AutocompleteResult> journalRooms = new ArrayList<>();
     private Boolean moduleOutcomesAsEntries;
+    private Boolean isDistinctiveAssessment;
+    private Long moodleCourseId;
     
     private Boolean canBeConfirmed;
     private Boolean canBeUnconfirmed;
@@ -50,6 +52,9 @@ public class JournalDto {
             JournalModuleDescriptionDto moduleDescription = EntityUtil.bindToDto(theme.getCurriculumVersionOccupationModuleTheme(), new JournalModuleDescriptionDto());
             dto.moduleDescriptions.add(moduleDescription);
         }
+        dto.setStudentGroups(dto.getStudentGroups().stream().distinct().collect(Collectors.toList()));
+        dto.setCurriculumModules(dto.getCurriculumModules().stream().distinct().collect(Collectors.toList()));
+        
         for (JournalTeacher teacher : journal.getJournalTeachers()) {
             dto.getJournalTeachers().add(PersonUtil.fullname(teacher.getTeacher().getPerson()));
         }
@@ -61,6 +66,7 @@ public class JournalDto {
 
         dto.setPlannedHours(Integer.valueOf(journal.getJournalCapacities().stream().mapToInt(it -> it.getHours() == null ? 0 : it.getHours().intValue()).sum()));
         dto.setUsedHours(Integer.valueOf(journal.getJournalEntries().stream().mapToInt(it -> it.getLessons() == null ? 0 : it.getLessons().intValue()).sum()));
+        dto.setIsDistinctiveAssessment(Boolean.valueOf(VocationalGradeType.KUTSEHINDAMISVIIS_E.name().equals(journal.getAssessment().getCode())));
         return dto;
     }
 
@@ -96,11 +102,11 @@ public class JournalDto {
         this.nameEt = nameEt;
     }
 
-    public Set<String> getStudentGroups() {
+    public List<String> getStudentGroups() {
         return studentGroups;
     }
 
-    public void setStudentGroups(Set<String> studentGroups) {
+    public void setStudentGroups(List<String> studentGroups) {
         this.studentGroups = studentGroups;
     }
 
@@ -112,11 +118,11 @@ public class JournalDto {
         this.journalTeachers = journalTeachers;
     }
 
-    public Set<AutocompleteResult> getCurriculumModules() {
+    public List<AutocompleteResult> getCurriculumModules() {
         return curriculumModules;
     }
 
-    public void setCurriculumModules(Set<AutocompleteResult> curriculumModules) {
+    public void setCurriculumModules(List<AutocompleteResult> curriculumModules) {
         this.curriculumModules = curriculumModules;
     }
 
@@ -182,6 +188,22 @@ public class JournalDto {
 
     public void setModuleOutcomesAsEntries(Boolean moduleOutcomesAsEntries) {
         this.moduleOutcomesAsEntries = moduleOutcomesAsEntries;
+    }
+
+    public Boolean getIsDistinctiveAssessment() {
+        return isDistinctiveAssessment;
+    }
+
+    public void setIsDistinctiveAssessment(Boolean isDistinctiveAssessment) {
+        this.isDistinctiveAssessment = isDistinctiveAssessment;
+    }
+
+    public Long getMoodleCourseId() {
+        return moodleCourseId;
+    }
+
+    public void setMoodleCourseId(Long moodleCourseId) {
+        this.moodleCourseId = moodleCourseId;
     }
 
     public Boolean getCanBeConfirmed() {

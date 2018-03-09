@@ -21,6 +21,7 @@ public class ScholarshipApplicationDto {
     private String email;
     @Size(max = 100)
     private String phone;
+    private String address;
     @Required
     @Size(max = 50)
     private String bankAccount;
@@ -79,6 +80,14 @@ public class ScholarshipApplicationDto {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getBankAccount() {

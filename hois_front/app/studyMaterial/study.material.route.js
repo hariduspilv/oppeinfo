@@ -139,5 +139,27 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           return QueryUtils.endpoint('/studyMaterial/journal/' + $route.current.params.journalId).get().$promise;
         }
       }
+    })
+    .when('/studyMaterial/:schoolId/higher/:subjectStudyPeriodId/view', {
+      templateUrl: 'studyMaterial/study.material.subjectStudyPeriod.view.html',
+      controller: 'StudyMaterialSubjectStudyPeriodPublicController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        subjectStudyPeriod: function (QueryUtils, $route) {
+          return QueryUtils.endpoint('/public/studyMaterial/subjectStudyPeriod/' + $route.current.params.subjectStudyPeriodId).get().$promise;
+        }
+      }
+    })
+    .when('/studyMaterial/:schoolId/vocational/:journalId/view', {
+      templateUrl: 'studyMaterial/study.material.journal.view.html',
+      controller: 'StudyMaterialJournalPublicController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        journal: function (QueryUtils, $route) {
+          return QueryUtils.endpoint('/public/studyMaterial/journal/' + $route.current.params.journalId).get().$promise;
+        }
+      }
     });
 }]);

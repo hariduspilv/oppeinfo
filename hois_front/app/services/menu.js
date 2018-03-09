@@ -562,7 +562,7 @@ angular.module('hitsaOis')
         type: 'toggle',
         pages: [
           {
-            name: 'main.menu.practiceAndGraduation.practiceJournal',
+            name: 'main.menu.practiceAndGraduation.practiceJournals',
             url: '/practiceJournals?_menu'
           },
           {
@@ -687,7 +687,7 @@ angular.module('hitsaOis')
             }
           },
           {
-            name: 'main.menu.myStudyInformation.practiceJournal',
+            name: 'main.menu.myStudyInformation.practiceJournals',
             url: '/practiceJournals?_menu'
           },
           {
@@ -1026,7 +1026,7 @@ angular.module('hitsaOis')
     };
     return self;
 
-    function _canAccess(section, roles) {
+    function _canAccess(section, roles, authenticatedUser) {
       var hasAccess = false;
       var uri = section.url.replace(/(\?_menu)$/, '');
       var routes = $route.routes;
@@ -1041,7 +1041,9 @@ angular.module('hitsaOis')
       }
       if (rights && rights.hasOwnProperty('data')) {
         rights = rights.data.authorizedRoles;
-        if (rights.lastIndexOf('') !== -1) {
+        if(angular.isFunction(rights)) {
+          hasAccess = rights(authenticatedUser, roles);
+        } else if (rights.lastIndexOf('') !== -1) {
           hasAccess = true;
         } else {
           for (var i = 0; i < rights.length; i++) {
@@ -1083,7 +1085,7 @@ angular.module('hitsaOis')
     }
 
     function addLinkItem(section, roles, authenticatedUser) {
-      if (!_canAccess(section, roles) || !section.url) {
+      if (!_canAccess(section, roles, authenticatedUser) || !section.url) {
         return;
       }
       if (!studyLevelMatch(section, authenticatedUser)) {
@@ -1098,7 +1100,7 @@ angular.module('hitsaOis')
     }
 
     function addSubmenuItem(pages, section, roles, authenticatedUser) {
-      if (!_canAccess(section, roles) || !section.url) {
+      if (!_canAccess(section, roles, authenticatedUser) || !section.url) {
         return;
       }
       if (!studyLevelMatch(section, authenticatedUser)) {

@@ -124,6 +124,7 @@ public class EhisStudentService extends EhisService {
                         vota.setAinepunkte(sorm.getCredits() != null ? sorm.getCredits().toString() : null);
                         ApelSchool apelSchool = sorm.getApelSchool();
                         vota.setOppeasutuseNimi(apelSchool != null ? apelSchool.getNameEt() : null);
+                        vota.setOrigSooritAeg(date(sorm.getGradeDate()));
                         vota.setKlRiik(apelSchool != null ? ehisValue(apelSchool.getCountry()) : null);
                         votaRecords.getVOTA().add(vota);
                     }

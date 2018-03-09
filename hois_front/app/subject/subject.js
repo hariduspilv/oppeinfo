@@ -70,7 +70,7 @@ angular.module('hitsaOis')
             });
           } else {
             $scope.subject.$save().then(function (response) {
-              $location.path('/subject/' + response.id + '/edit');
+              $location.url('/subject/' + response.id + '/edit?_noback');
               message.info('main.messages.create.success');
             });
           }
@@ -109,7 +109,7 @@ angular.module('hitsaOis')
         dialogService.confirmDialog({prompt: 'subject.deleteconfirm'}, function () {
           $scope.subject.$delete().then(function () {
             message.info('main.messages.delete.success');
-            $location.path('/subject');
+            $location.url('/subject?_noback');
           });
         });
       };

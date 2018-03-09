@@ -63,7 +63,10 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in record.midtermTasks" ng-class-odd="'odd'" ng-class-even="'even'" ng-if="record.canBeEdited">
             <ng-form name="midtermTaskUnitForm">
-              <td md-cell>{{$index + 1}}</td>
+              <td md-cell>
+                {{$index + 1}}
+                <span ng-if="row.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span>
+              </td>
               <td md-cell>
                 <md-input-container>
                   <input ng-model="row.nameEt" type="text" md-maxlength="255" required
@@ -91,7 +94,8 @@
               <td md-cell>
                 <md-input-container>
                   <input ng-model="row.maxPoints" type="number" min="0" max="999" required
-                  aria-label="{{'midtermTask.maxPoints' | translate}}" pattern="^\d+(\.\d{1})?$">
+                  aria-label="{{'midtermTask.maxPoints' | translate}}" pattern="^\d+(\.\d{1})?$"
+                  ng-disabled="row.moodleGradeItemId">
                 </md-input-container>
               </td>
               <td md-cell>
@@ -107,13 +111,14 @@
               </td>
               <td md-cell>
                 <md-checkbox ng-model="row.threshold" ng-change="clearThresholdPercentage(row)"
-                        aria-label="{{currentLanguageNameField(row)}} {{'midtermTask.threshold' | translate}}">
+                  aria-label="{{currentLanguageNameField(row)}} {{'midtermTask.threshold' | translate}}"
+                  ng-disabled="row.moodleGradeItemId">
                 </md-checkbox>
               </td>
               <td md-cell>
                 <md-input-container>
                   <input ng-model="row.thresholdPercentage" type="number" min="0" max="100"
-                  ng-disabled="!row.threshold" ng-required="row.threshold"
+                  ng-disabled="!row.threshold || row.moodleGradeItemId" ng-required="row.threshold"
                   aria-label="{{'midtermTask.thresholdPercentage' | translate}}" pattern="^\d+$">
                 </md-input-container>
               </td>

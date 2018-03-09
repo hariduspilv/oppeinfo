@@ -227,6 +227,7 @@ public class ScholarshipService {
         ScholarshipStudentDto studentDto = ScholarshipStudentDto.of(student, getStudentCurriculumCompletion(student));
         result.put("studentInfo", studentDto);
         ScholarshipApplicationDto studentSubmitData = ScholarshipApplicationDto.of(application);
+        studentSubmitData.setAddress(studentDto.getAddress());
         if (application == null) {
             studentSubmitData.setPhone(studentDto.getPhone());
             studentSubmitData.setEmail(studentDto.getEmail());
@@ -268,11 +269,8 @@ public class ScholarshipService {
         application.setStudent(student);
         application.setStudentGroup(student.getStudentGroup());
         refreshCompletionWithApplication(application);
+        refreshAddressWithApplication(application);
         application.setCurriculumVersion(student.getCurriculumVersion());
-        Person person = student.getPerson();
-        application.setAddress(person.getAddress());
-        application.setAddressAds(person.getAddressAds());
-        application.setAddressAdsOid(person.getAddressAdsOid());
         application = bindApplicationFormToApplication(application, form);
         return EntityUtil.save(application, em);
     }
@@ -308,6 +306,13 @@ public class ScholarshipService {
             application.setLastPeriodMark(BigDecimal.ZERO);
         }
     }
+    
+    private void refreshAddressWithApplication(ScholarshipApplication application) {
+        Person person = application.getStudent().getPerson();
+        application.setAddress(person.getAddress());
+        application.setAddressAds(person.getAddressAds());
+        application.setAddressAdsOid(person.getAddressAdsOid());
+    }
 
     public ScholarshipApplication updateApplication(HoisUserDetails user, ScholarshipStudentApplicationForm form,
             ScholarshipApplication application) {
@@ -318,6 +323,7 @@ public class ScholarshipService {
             return application;
         }
         refreshCompletionWithApplication(application);
+        refreshAddressWithApplication(application);
         bindApplicationFormToApplication(application, form);
         return EntityUtil.save(application, em);
     }

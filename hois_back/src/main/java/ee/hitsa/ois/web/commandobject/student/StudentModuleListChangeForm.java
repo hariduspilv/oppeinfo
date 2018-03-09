@@ -11,14 +11,14 @@ public class StudentModuleListChangeForm {
     
     @Required
     @Valid
-    private List<StudentVocationalResultModuleChangeForm> vocationalModules;
+    private List<StudentResultModuleChangeForm> modules;
 
-    public List<StudentVocationalResultModuleChangeForm> getVocationalModules() {
-        return vocationalModules;
+    public List<StudentResultModuleChangeForm> getModules() {
+        return modules;
     }
 
-    public void setVocationalModules(List<StudentVocationalResultModuleChangeForm> vocationalModules) {
-        this.vocationalModules = vocationalModules;
+    public void setModules(List<StudentResultModuleChangeForm> modules) {
+        this.modules = modules;
     }
-
+    
 }

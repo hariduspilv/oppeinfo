@@ -37,7 +37,7 @@
               <md-input-container flex="20">
                 <label>{{'journal.entry.selectDate' | translate}}</label>
                 <hois-select ng-model="entryDateSelect" values="lessonPlanDates"
-                ng-change="entryDateCalendar = undefined;journalEntry.entryDate = entryDateSelect"
+                ng-change="entryDateCalendar = undefined;journalEntry.entryDate = entryDateSelect; entryDateChanged(entryDateSelect)"
                 ng-required="journalEntry.entryType === 'SISSEKANNE_T' && entryDateCalendar === undefined"></hois-select>
               </md-input-container>
               <div layout="row" layout-align="center" style="padding-top:8px" flex="5">
@@ -46,7 +46,7 @@
               <md-input-container flex="25">
                 <label>{{'journal.entry.selectFromCalendar' | translate}}</label>
                 <md-datepicker ng-model="entryDateCalendar" md-open-on-focus
-                ng-change="entryDateSelect = undefined;journalEntry.entryDate = entryDateCalendar"
+                ng-change="entryDateSelect = undefined;journalEntry.entryDate = entryDateCalendar; entryDateChanged(entryDateCalendar)"
                 ng-required="journalEntry.entryType === 'SISSEKANNE_T' && entryDateSelect === undefined"></md-datepicker>
               </md-input-container>
               <md-input-container flex="20" flex-offset="5">
@@ -120,8 +120,9 @@
                       </span>
                       &nbsp;
                       <md-input-container>
-                        <hois-select ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" value-property="code"
-                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" aria-label="grade" ng-disabled="!row.canEdit"></hois-select>
+                        <hois-select ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" value-property="code" filter-values="filterGrades"
+                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" aria-label="grade" 
+                          ng-disabled="!row.canEdit || (journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')"></hois-select>
                       </md-input-container>
                     </td>
                     <td md-cell>

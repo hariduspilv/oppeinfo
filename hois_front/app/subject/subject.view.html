@@ -107,12 +107,12 @@
         <input ng-model="publicUrl" type="text" readonly>
       </md-input-container>
       <h3>{{'subject.subjectIsPrerequisite' | translate}}</h3>
-      <div ng-repeat="it in subject.primarySubjects">
-        <a ng-href="#/subject/{{it.id}}">{{currentLanguageNameField(it)}}</a>
+      <div ng-repeat="row in subject.primarySubjects | orderBy: currentLanguageNameField()">
+        <a ng-href="#/subject/{{row.id}}">{{currentLanguageNameField(row)}}</a>
       </div>
       <h3>{{'subject.belongsCurriculum' | translate}}</h3>
-      <div ng-repeat="curriculumVersion in subject.curriculumVersions">
-        <span>{{currentLanguageNameField(curriculumVersion) }}</span>
+      <div ng-repeat="row in subject.curriculumVersions | orderBy: currentLanguageNameField()">
+        <span>{{currentLanguageNameField(row)}}</span>
       </div>
       <hois-created-modified object="subject"></hois-created-modified>
       <div layout="row">

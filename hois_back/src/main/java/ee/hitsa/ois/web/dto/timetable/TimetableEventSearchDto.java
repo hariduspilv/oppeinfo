@@ -21,6 +21,7 @@ public class TimetableEventSearchDto {
     private Boolean singleEvent;
     private Boolean publicEvent;
     private Long timetableId;
+    private Boolean showStudyMaterials; 
 
     public TimetableEventSearchDto(Long id, Long journalId, Long subjectStudyPeriodId,String nameEt, String nameEn, LocalDate date, 
             LocalTime timeStart, LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent, Long timetableId) {
@@ -156,6 +157,14 @@ public class TimetableEventSearchDto {
 
     public void setTimetableId(Long timetableId) {
         this.timetableId = timetableId;
+    }
+
+    public Boolean getShowStudyMaterials() {
+        return showStudyMaterials;
+    }
+
+    public void setShowStudyMaterials(Boolean showStudyMaterials) {
+        this.showStudyMaterials = showStudyMaterials;
     }
     
 }

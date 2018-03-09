@@ -68,8 +68,9 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
     }
 
     public HoisUserDetails getHoisUserDetails(User user) {
-        List<String> userRoles = em.createQuery("select ('ROLE_' || u.permission || '_' || u.object) from UserRights u where u.user.id = ?1", String.class)
-                .setParameter(1, user.getId()).getResultList();
+        List<String> userRoles = em.createQuery("select ('ROLE_' || u.permission.code || '_' || u.object.code) from UserRights u where u.user.id = ?1", String.class)
+                .setParameter(1, user.getId())
+                .getResultList();
         return new HoisUserDetails(user, userRoles);
     }
 

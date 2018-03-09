@@ -99,16 +99,7 @@ public class DeclarationController {
     
     @GetMapping("/isDeclarationPeriod")
     public Map<String, ?> isDeclarationPeriod(HoisUserDetails user) {
-        Long schoolId = user.getSchoolId();
-        Boolean isDeclarationPeriod = Boolean.valueOf(declarationService.isDeclarationPeriod(schoolId));
-        
-        Map<String, Object> data = new HashMap<>();
-        data.put("isDeclarationPeriod", isDeclarationPeriod);
-        
-        if (Boolean.FALSE.equals(isDeclarationPeriod)) {
-            data.put("declarationPeriodEnd", declarationService.getDeclarationPeriodEndDate(schoolId));
-        }
-        return data;
+        return declarationService.isDeclarationPeriod(user);
     }
 
     /**

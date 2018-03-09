@@ -52,7 +52,7 @@ public class SubjectDto extends SubjectForm {
         dto.setCurriculumVersions(StreamUtil.toMappedSet(AutocompleteResult::of, curriculumVersions));
 
         dto.setPrimarySubjects(
-                subject.getParentConnections().stream()
+                StreamUtil.nullSafeSet(subject.getParentConnections()).stream()
                         .filter(it -> ClassifierUtil.equals(SubjectConnection.AINESEOS_EK, it.getConnection()))
                         .map(it -> AutocompleteResult.of(it.getPrimarySubject()))
                         .collect(Collectors.toSet()));

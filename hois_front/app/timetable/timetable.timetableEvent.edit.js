@@ -90,7 +90,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       if ($scope.timetableEvent.rooms.some(function (room) {
           return room.id === $scope.timetableEvent.room.id;
         })) {
-        message.error('timetable.timetableEvent.duplicateRoom');
+        message.error('timetable.timetableEvent.duplicateroom');
         return;
       }
       $scope.timetableEvent.rooms.push($scope.timetableEvent.room);

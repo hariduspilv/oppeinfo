@@ -164,7 +164,11 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
 
         QueryUtils.endpoint('/declarations/isDeclarationPeriod').search().$promise.then(function(response){
           $scope.formState.isDeclarationPeriod = response.isDeclarationPeriod;
-          $scope.formState.declarationPeriodEnd = response.declarationPeriodEnd;
+          if (response.declarationPeriodStart) {
+            $scope.formState.declarationPeriodStart = response.declarationPeriodStart;
+          } else if (response.declarationPeriodEnd) {
+            $scope.formState.declarationPeriodEnd = response.declarationPeriodEnd;
+          }
 
           if ($scope.formState.isDeclarationPeriod) {
             QueryUtils.endpoint('/declarations/canCreate').search().$promise.then(function(response){

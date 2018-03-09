@@ -10,11 +10,12 @@ import ee.hitsa.ois.message.StudentRepresentativeApplicationAccepted;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationCreated;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationRejectedMessage;
 import ee.hitsa.ois.message.StudentResultMessage;
+import ee.hitsa.ois.message.TimetableChanged;
 
 public enum MessageType {
 
     TEATE_LIIK_UUS_KK(StudentDirectiveCreated.class),
-    TEATE_LIIK_MUUD_TUNNIPL(null),
+    TEATE_LIIK_MUUD_TUNNIPL(TimetableChanged.class),
     TEATE_LIIK_AP_LOPP(AcademicLeaveEnding.class),
     TEATE_LIIK_AV_KINNIT(ConfirmationNeededMessage.class),
     TEATE_LIIK_AV_OPPURI_ANDMED(StudentRepresentativeApplicationCreated.class),

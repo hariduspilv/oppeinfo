@@ -21,6 +21,7 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
     private String groupProportion;
     private List<Long> studentGroups;
     private List<AutocompleteResult> studentGroupObjects;
+    private Long moodleCourseId;
 
     public List<AutocompleteResult> getStudentGroupObjects() {
         return studentGroupObjects;
@@ -100,6 +101,14 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
 
     public void setGroupProportion(String groupProportion) {
         this.groupProportion = groupProportion;
+    }
+
+    public Long getMoodleCourseId() {
+        return moodleCourseId;
+    }
+
+    public void setMoodleCourseId(Long moodleCourseId) {
+        this.moodleCourseId = moodleCourseId;
     }
 
     public static SubjectStudyPeriodDto of(SubjectStudyPeriod subjectStudyPeriod) {

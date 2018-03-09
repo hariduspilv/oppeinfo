@@ -106,9 +106,14 @@
                   <br>
                   <span style=";{{currentEvent.rooms.length !== 0 ? '' : 'color:red;font-weight: bold;'}}">{{currentEvent.rooms.length !== 0 ? getRoomCodes(currentEvent.rooms) : "?"}}</span>
                 </div>
+                <!--
                 <div ng-if="!getEventsForLesson($index, lessonTime, group)" ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" index-value="{{$index}}"
                   drop-fn="saveEvent(data)" id="{{group.id + '-' + $index}}" class="timetable-drop" title="{{getTeacherLesson($index, lessonTime, group, true).join(', ')}}">
                   {{getTeacherLesson($index, lessonTime, group, false).join(", ")}}
+                </div>
+                -->
+                <div ng-if="!getEventsForLesson($index, lessonTime, group)" ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" index-value="{{$index}}"
+                  drop-fn="saveEvent(data)" id="{{group.id + '-' + $index}}" class="timetable-drop">
                 </div>
               </span>
             </td>
