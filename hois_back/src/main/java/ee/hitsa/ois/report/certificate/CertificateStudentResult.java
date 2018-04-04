@@ -1,8 +1,8 @@
 package ee.hitsa.ois.report.certificate;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.util.DateUtils;
@@ -22,7 +22,7 @@ public class CertificateStudentResult {
     private String gradeValue;
     private String gradeName;
     private String date;
-    private Set<String> teachers;
+    private List<String> teachers;
     private String assessedBy;
 
     public static CertificateStudentResult of(StudentHigherSubjectResultDto dto) {
@@ -42,15 +42,15 @@ public class CertificateStudentResult {
     public static CertificateStudentResult of(StudentVocationalResultModuleThemeDto dto, Map<String, Classifier> vocationalGrades) {
         CertificateStudentResult result = new CertificateStudentResult();
 
-        result.setTheme(dto.getTheme().getNameEt());
-        result.setModule(dto.getModule().getNameEt());
+        result.setTheme(dto.getTheme() != null ? dto.getTheme().getNameEt() : null);
+        result.setModule(dto.getModule() != null ? dto.getModule().getNameEt() : null);
         result.setHours(dto.getCredits());
 
         Classifier grade = vocationalGrades.get(dto.getGrade());
-        result.setGradeName(grade.getNameEt());
-        result.setGradeValue(grade.getValue());
+        result.setGradeName(grade != null ? grade.getNameEt() : null);
+        result.setGradeValue(grade != null ? grade.getValue() : null);
         result.setDate(DateUtils.date(dto.getDate()));
-        result.setTeachers(StreamUtil.toMappedSet(AutocompleteResult::getNameEt, dto.getTeachers()));
+        result.setTeachers(StreamUtil.toMappedList(AutocompleteResult::getNameEt, dto.getTeachers()));
         return result;
     }
 
@@ -117,11 +117,11 @@ public class CertificateStudentResult {
         this.date = date;
     }
 
-    public Set<String> getTeachers() {
+    public List<String> getTeachers() {
         return teachers;
     }
 
-    public void setTeachers(Set<String> teachers) {
+    public void setTeachers(List<String> teachers) {
         this.teachers = teachers;
     }
 }

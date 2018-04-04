@@ -1,6 +1,8 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,10 +12,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,17 +28,24 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.BuildingForm;
 import ee.hitsa.ois.web.commandobject.RoomForm;
+import ee.hitsa.ois.web.commandobject.RoomForm.RoomEquipmentCommand;
 import ee.hitsa.ois.web.commandobject.RoomSearchCommand;
 import ee.hitsa.ois.web.dto.RoomSearchDto;
 
 @Transactional
 @Service
 public class BuildingService {
+    private static final String LIST_SELECT =
+            "b.id b_id, b.name b_name, b.code b_code, b.address b_address"
+            + ", r.id r_id, r.name r_name, r.code r_code, r.seats, r.is_study";
+    private static final String LIST_FROM =
+            "from building b left join room r on r.building_id = b.id";
 
     @Autowired
     private EntityManager em;
@@ -81,30 +86,41 @@ public class BuildingService {
         EntityUtil.deleteEntity(building, em);
     }
 
-    @SuppressWarnings("unchecked")
     public Page<RoomSearchDto> searchRooms(Long schoolId, RoomSearchCommand criteria, Pageable pageable) {
-        Page<Object[]> data = JpaQueryUtil.query(Object[].class, Building.class, (root, query, cb) -> {
-            Join<Object, Object> rooms = root.join("rooms", JoinType.LEFT);
-            ((CriteriaQuery<Object[]>)query).select(cb.array(root, rooms));
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(LIST_FROM).sort(pageable);
 
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+        qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
 
-            propertyContains(() -> rooms.get("name"), cb, criteria.getName(), filters::add);
-            propertyContains(() -> rooms.get("code"), cb, criteria.getCode(), filters::add);
-            propertyContains(() -> root.get("name"), cb, criteria.getBuildingName(), filters::add);
-            propertyContains(() -> root.get("code"), cb, criteria.getBuildingCode(), filters::add);
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable, em);
-
+        qb.optionalContains("b.name", "buildingName", criteria.getBuildingName());
+        qb.optionalContains("b.code", "buildingCode", criteria.getBuildingCode());
+        qb.optionalContains("r.name", "roomName", criteria.getName());
+        qb.optionalContains("r.code", "roomCode", criteria.getCode());
+        
+        Page<Object> result = JpaQueryUtil.pagingResult(qb, LIST_SELECT, em, pageable);
         // load room equipment with single query
-        List<Long> roomIds = StreamUtil.toMappedList(r -> ((Room)r[1]).getId(), data.getContent().stream().filter(r -> r[1] != null));
-        Map<Long, List<RoomEquipment>> equipment = JpaQueryUtil.loadRelationChilds(RoomEquipment.class, roomIds, em, "room", "id").stream().collect(Collectors.groupingBy(re -> EntityUtil.getId(re.getRoom())));
-
-        return data.map(r -> RoomSearchDto.of((Building)r[0], (Room)r[1], equipment.get(EntityUtil.getNullableId((Room)r[1]))));
+        List<Long> roomIds = StreamUtil.toMappedList(r -> resultAsLong(r, 4), 
+                result.getContent().stream().filter(r -> resultAsLong(r, 4) != null));
+        Map<Long, List<RoomEquipment>> equipment = JpaQueryUtil.loadRelationChilds(
+                RoomEquipment.class, roomIds, em, "room", "id").stream()
+                .collect(Collectors.groupingBy(re -> EntityUtil.getId(re.getRoom())));
+        return result.map(r -> {
+            RoomSearchDto dto = new RoomSearchDto();
+            dto.setBuilding(resultAsLong(r, 0));
+            dto.setBuildingName(resultAsString(r, 1));
+            dto.setBuildingCode(resultAsString(r, 2));
+            dto.setBuildingAddress(resultAsString(r, 3));
+            dto.setId(resultAsLong(r, 4));
+            dto.setName(resultAsString(r, 5));
+            dto.setCode(resultAsString(r, 6));
+            dto.setSeats(resultAsLong(r, 7));
+            dto.setIsStudy(resultAsBoolean(r, 8));
+            dto.setRoomEquipment(StreamUtil.toMappedList(
+                    re -> EntityUtil.bindToDto(re, new RoomEquipmentCommand()), 
+                    equipment.get(resultAsLong(r, 4))));
+            return dto;
+        });
     }
-
+    
     /**
      * Create new room
      *

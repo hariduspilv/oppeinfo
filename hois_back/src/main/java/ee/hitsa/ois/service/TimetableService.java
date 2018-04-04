@@ -125,8 +125,11 @@ public class TimetableService {
     private TimetableObjectRepository timetableObjectRepository;
 
     private static final List<String> PUBLIC_TIMETABLES = EnumUtil.toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P);
-    private static final List<String> ADMIN_AND_TEACHER_TIMETABLES = EnumUtil
+    private static final List<String> TEACHER_TIMETABLES = EnumUtil
             .toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P, TimetableStatus.TUNNIPLAAN_STAATUS_K);
+    private static final List<String> ADMIN_TIMETABLES = EnumUtil.toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P,
+            TimetableStatus.TUNNIPLAAN_STAATUS_K, TimetableStatus.TUNNIPLAAN_STAATUS_A,
+            TimetableStatus.TUNNIPLAAN_STAATUS_S);
 
     public TimetableDto get(HoisUserDetails user, Timetable timetable) {
         TimetableDto dto = new TimetableDto();
@@ -207,10 +210,10 @@ public class TimetableService {
     private List<SubjectTeacherPairDto> getPlannedLessonsForHigherTimetableSsp(Timetable timetable,
             List<SubjectTeacherPairDto> pairs) {
         String from = "from timetable_event_time tet"
-                + " inner join timetable_event te on tet.timetable_event_id = te.id"
-                + " inner join timetable_object too on te.timetable_object_id = too.id"
-                + " inner join subject_study_period ssp on ssp.id = too.subject_study_period_id"
-                + " inner join subject s on s.id = ssp.subject_id";
+                + " join timetable_event te on tet.timetable_event_id = te.id"
+                + " join timetable_object too on te.timetable_object_id = too.id"
+                + " join subject_study_period ssp on ssp.id = too.subject_study_period_id"
+                + " join subject s on s.id = ssp.subject_id";
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("too.timetable_id = :timetableId", "timetableId", EntityUtil.getId(timetable));
@@ -245,12 +248,12 @@ public class TimetableService {
     private List<HigherTimetableStudentGroupDto> getPlannedLessonsForHigherTimetable(Timetable timetable,
             List<HigherTimetableStudentGroupDto> studentGroups) {
         String from = "from timetable_event_time tet"
-                + " inner join timetable_event te on tet.timetable_event_id = te.id"
-                + " inner join timetable_object too on te.timetable_object_id = too.id"
-                + " inner join timetable_object_student_group tosg on tosg.timetable_object_id = too.id"
-                + " inner join student_group sg on sg.id = tosg.student_group_id"
-                + " inner join subject_study_period ssp on ssp.id = too.subject_study_period_id"
-                + " inner join subject s on s.id = ssp.subject_id";
+                + " join timetable_event te on tet.timetable_event_id = te.id"
+                + " join timetable_object too on te.timetable_object_id = too.id"
+                + " join timetable_object_student_group tosg on tosg.timetable_object_id = too.id"
+                + " join student_group sg on sg.id = tosg.student_group_id"
+                + " join subject_study_period ssp on ssp.id = too.subject_study_period_id"
+                + " join subject s on s.id = ssp.subject_id";
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("too.timetable_id = :timetableId", "timetableId", EntityUtil.getId(timetable));
@@ -319,9 +322,9 @@ public class TimetableService {
 
     private List<TimetableEventDto> addTeachersListToEvents(List<TimetableEventDto> timetableEvents) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event_teacher tett"
-                + " inner join timetable_event_time tet on tet.id = tett.timetable_event_time_id"
-                + " inner join teacher t on t.id = tett.teacher_id"
-                + " inner join person p on p.id = t.person_id");
+                + " join timetable_event_time tet on tet.id = tett.timetable_event_time_id"
+                + " join teacher t on t.id = tett.teacher_id"
+                + " join person p on p.id = t.person_id");
 
         qb.requiredCriteria("tet.id in (:timetableEventIds)", "timetableEventIds",
                 timetableEvents.stream().map(r -> r.getId()).collect(Collectors.toSet()));
@@ -343,9 +346,9 @@ public class TimetableService {
 
     private Map<Long, List<AutocompleteResult>> getTeachersForSubjectStudyPeriods(Set<Long> subjectStudyPeriods) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period ssp"
-                + " inner join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id"
-                + " inner join teacher t on t.id = sspt.teacher_id"
-                + " inner join person p on p.id = t.person_id");
+                + " join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id"
+                + " join teacher t on t.id = sspt.teacher_id"
+                + " join person p on p.id = t.person_id");
         
         qb.requiredCriteria("ssp.id in (:sspIds)", "sspIds", subjectStudyPeriods);
         
@@ -384,7 +387,7 @@ public class TimetableService {
                 copyObject.setTimetable(copyTimetable);
                 copyTimetable.getTimetableObjects().add(copyObject);
             }
-            List<Long> tosgIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudentGroup()), originalObject.getTimetableObjectStudentGroups());
+            List<Long> tosgIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudentGroup()), copyObject.getTimetableObjectStudentGroups());
             for(TimetableObjectStudentGroup tosg : originalObject.getTimetableObjectStudentGroups()) {
                 if(!tosgIds.contains(EntityUtil.getId(tosg))) {
                     TimetableObjectStudentGroup copyTosg = new TimetableObjectStudentGroup();
@@ -466,7 +469,7 @@ public class TimetableService {
 
     private List<Long> getAllStudentGroupsForSubjectStudyPeriod(Long subjectStudyPeriodId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period ssp"
-                + " inner join subject_study_period_student_group sspsg on sspsg.subject_study_period_id = ssp.id");
+                + " join subject_study_period_student_group sspsg on sspsg.subject_study_period_id = ssp.id");
         qb.requiredCriteria("ssp.id = :subjectStudyPeriodId", "subjectStudyPeriodId", subjectStudyPeriodId);
         List<?> data = qb.select("distinct sspsg.student_group_id", em).getResultList();
         return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
@@ -576,7 +579,7 @@ public class TimetableService {
         boolean isPair = Boolean.TRUE.equals(form.isSubjectTeacherPair());
         String from = "from timetable_object too";
         if(!isPair) {
-            from += " inner join timetable_object_student_group tosg on tosg.timetable_object_id = too.id";
+            from += " join timetable_object_student_group tosg on tosg.timetable_object_id = too.id";
         }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
@@ -916,13 +919,13 @@ public class TimetableService {
     }
 
     private List<?> getVocationalStudentGroupsUnformatted(Timetable timetable, Long journalId) {
-        String from = "from lesson_plan lp" + " inner join curriculum_version cv on cv.id = lp.curriculum_version_id"
-                + " inner join curriculum c on c.id = cv.curriculum_id"
-                + " inner join student_group sg on sg.id = lp.student_group_id";
+        String from = "from lesson_plan lp" + " join curriculum_version cv on cv.id = lp.curriculum_version_id"
+                + " join curriculum c on c.id = cv.curriculum_id"
+                + " join student_group sg on sg.id = lp.student_group_id";
         if (journalId != null) {
-            from += " inner join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id"
-                    + " inner join journal_omodule_theme jot on jot.lesson_plan_module_id = lpm.id"
-                    + " inner join journal j on j.id = jot.journal_id";
+            from += " join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id"
+                    + " join journal_omodule_theme jot on jot.lesson_plan_module_id = lpm.id"
+                    + " join journal j on j.id = jot.journal_id";
         }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from).sort(new Sort(Direction.ASC, "student_group_code"));
         qb.requiredCriteria("lp.school_id = :schoolId", "schoolId", EntityUtil.getId(timetable.getSchool()));
@@ -946,8 +949,8 @@ public class TimetableService {
     }
 
     private List<HigherTimetableStudentGroupDto> getHigherStudentGroups(Timetable timetable) {
-        String from = "from student_group sg inner join subject_study_period_student_group sspsg on sspsg.student_group_id = sg.id"
-                + " inner join subject_study_period ssp on ssp.id = sspsg.subject_study_period_id";
+        String from = "from student_group sg join subject_study_period_student_group sspsg on sspsg.student_group_id = sg.id"
+                + " join subject_study_period ssp on ssp.id = sspsg.subject_study_period_id";
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from).sort(new Sort(Direction.ASC, "sg.code"));
         qb.requiredCriteria("ssp.study_period_id = :subjectStudyPeriod", "subjectStudyPeriod",
                 EntityUtil.getId(timetable.getStudyPeriod()));
@@ -959,9 +962,9 @@ public class TimetableService {
     }
     
     private List<TimetableCurriculumDto> getHigherStudentGroupsByCurriculum(Timetable timetable) {
-        String from = "from student_group sg inner join subject_study_period_student_group sspsg on sspsg.student_group_id = sg.id"
-                + " inner join subject_study_period ssp on ssp.id = sspsg.subject_study_period_id"
-                + " inner join curriculum c on c.id = sg.curriculum_id";
+        String from = "from student_group sg join subject_study_period_student_group sspsg on sspsg.student_group_id = sg.id"
+                + " join subject_study_period ssp on ssp.id = sspsg.subject_study_period_id"
+                + " join curriculum c on c.id = sg.curriculum_id";
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from).sort(new Sort(Direction.ASC, "sg.code"));
         qb.requiredCriteria("ssp.study_period_id = :subjectStudyPeriod", "subjectStudyPeriod",
                 EntityUtil.getId(timetable.getStudyPeriod()));
@@ -1011,10 +1014,10 @@ public class TimetableService {
 
     private List<SubjectTeacherPairDto> getPairsforTimetable(Timetable timetable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt"
-                + " inner join subject_study_period ssp on ssp.id = sspt.subject_study_period_id"
-                + " inner join subject s on s.id = ssp.subject_id"
-                + " inner join teacher tea on tea.id = sspt.teacher_id"
-                + " inner join person p on p.id = tea.person_id");
+                + " join subject_study_period ssp on ssp.id = sspt.subject_study_period_id"
+                + " join subject s on s.id = ssp.subject_id"
+                + " join teacher tea on tea.id = sspt.teacher_id"
+                + " join person p on p.id = tea.person_id");
 
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId",
                 EntityUtil.getId(timetable.getStudyPeriod()));
@@ -1034,9 +1037,9 @@ public class TimetableService {
     private List<HigherTimetableStudentGroupCapacityDto> getCapacitiesForHigherPlanning(Timetable timetable, List<Long> studentGroupIds, List<Long> subjectStudyPeriodIds) {
         Long studyPeriodId = EntityUtil.getId(timetable.getStudyPeriod());
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_capacity sspc "
-                + " inner join subject_study_period ssp on ssp.id = sspc.subject_study_period_id "
+                + " join subject_study_period ssp on ssp.id = sspc.subject_study_period_id "
                 + " left join subject_study_period_student_group sspsg on sspsg.subject_study_period_id = ssp.id"
-                + " inner join subject s on s.id = ssp.subject_id");
+                + " join subject s on s.id = ssp.subject_id");
         if(studentGroupIds.isEmpty() && subjectStudyPeriodIds.isEmpty()) {
             return new ArrayList<>();
         }
@@ -1079,8 +1082,8 @@ public class TimetableService {
 
     private Map<String, Long> getPlannedTotalsForHigherStudentGroups(Long timetableId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event_time tet"
-                + " inner join timetable_event te on te.id = tet.timetable_event_id"
-                + " inner join timetable_object too on too.id = te.timetable_object_id"
+                + " join timetable_event te on te.id = tet.timetable_event_id"
+                + " join timetable_object too on too.id = te.timetable_object_id"
                 + " left join timetable_object_student_group tosg on tosg.timetable_object_id = too.id"
                 + " left join student_group sg on sg.id = tosg.student_group_id");
         
@@ -1097,11 +1100,11 @@ public class TimetableService {
             Timetable timetable) {
         Integer currentWeekNr = timetable.getStudyPeriod().getWeekNrForDate(timetable.getStartDate());
         //TODO: query might be too slow
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j" + " inner join journal_capacity jc on jc.journal_id = j.id"
-                + " inner join (select distinct ot.lesson_plan_module_id, journal_id from journal_omodule_theme ot) jot on jot.journal_id = j.id"
-                + " inner join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id"
-                + " inner join lesson_plan lp on lp.id = lpm.lesson_plan_id"
-                + " inner join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j" + " join journal_capacity jc on jc.journal_id = j.id"
+                + " join (select distinct ot.lesson_plan_module_id, journal_id from journal_omodule_theme ot) jot on jot.journal_id = j.id"
+                + " join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id"
+                + " join lesson_plan lp on lp.id = lpm.lesson_plan_id"
+                + " join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id");
 
         qb.requiredCriteria("lp.study_year_id = :studyYearId", "studyYearId",
                 EntityUtil.getId(timetable.getStudyPeriod().getStudyYear()));
@@ -1148,9 +1151,9 @@ public class TimetableService {
 
     private Map<Long, Map<String, AllocatedLessons>> getAllocatedLessonsForByJournalAndCapacity(
             Timetable timetable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event te inner join timetable_object too"
-                + " on too.id = te.timetable_object_id and too.journal_id is not null inner join timetable_object_student_group tsog"
-                + " on tsog.timetable_object_id = too.id inner join timetable t on t.id = too.timetable_id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event te join timetable_object too"
+                + " on too.id = te.timetable_object_id and too.journal_id is not null join timetable_object_student_group tsog"
+                + " on tsog.timetable_object_id = too.id join timetable t on t.id = too.timetable_id");
 
         qb.requiredCriteria("t.study_period_id = :studyPeriodId", "studyPeriodId", EntityUtil.getId(timetable.getStudyPeriod()));
         String groupBy = "too.journal_id, tsog.student_group_id, te.capacity_type_code";
@@ -1168,9 +1171,9 @@ public class TimetableService {
     }
 
     private List<TimetableJournalDto> getJournalsForPlanning(List<Long> studentGroupIds, Timetable timetable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j inner join journal_omodule_theme jot on jot.journal_id = j.id"
-                + " inner join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id"
-                + " inner join lesson_plan lp on lp.id = lpm.lesson_plan_id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j join journal_omodule_theme jot on jot.journal_id = j.id"
+                + " join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id"
+                + " join lesson_plan lp on lp.id = lpm.lesson_plan_id");
 
         qb.requiredCriteria("lp.study_year_id = :studyYearId", "studyYearId",
                 EntityUtil.getId(timetable.getStudyPeriod().getStudyYear()));
@@ -1184,7 +1187,7 @@ public class TimetableService {
             // load teachers
             // TODO add order by teacher name
             qb = new JpaNativeQueryBuilder(
-                    "from journal_teacher jt inner join teacher t on t.id = jt.teacher_id inner join person p on p.id = t.person_id");
+                    "from journal_teacher jt join teacher t on t.id = jt.teacher_id join person p on p.id = t.person_id");
             qb.requiredCriteria("jt.journal_id in (:journalIds)", "journalIds",
                     StreamUtil.toMappedList(TimetableJournalDto::getId, journals));
             select = "jt.journal_id, p.firstName, p.lastName, t.id as teacher_id";
@@ -1208,8 +1211,8 @@ public class TimetableService {
 
     List<LessonTimeDto> getLessonTimesForPlanning(Timetable timetable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from lesson_time lt"
-                + " inner join lesson_time_building_group ltbg on ltbg.id = lt.lesson_time_building_group_id"
-                + " inner join lesson_time_building ltb on ltb.lesson_time_building_group_id = ltbg.id");
+                + " join lesson_time_building_group ltbg on ltbg.id = lt.lesson_time_building_group_id"
+                + " join lesson_time_building ltb on ltb.lesson_time_building_group_id = ltbg.id");
 
         qb.requiredCriteria("lt.school_id = :schoolId", "schoolId", EntityUtil.getId(timetable.getSchool()));
         qb.requiredCriteria("ltbg.valid_from <= :timetableStartDate", "timetableStartDate", timetable.getStartDate());
@@ -1231,10 +1234,10 @@ public class TimetableService {
     }
 
     List<TimetableEventDto> getPlannedLessonsForVocationalTimetable(Timetable timetable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event te" + " inner join timetable_object too on too.id = te.timetable_object_id"
-                + " inner join timetable_object_student_group tosg on tosg.timetable_object_id = too.id"
-                + " inner join timetable_event_time tet on tet.timetable_event_id = te.id"
-                + " inner join journal j on j.id = too.journal_id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event te" + " join timetable_object too on too.id = te.timetable_object_id"
+                + " join timetable_object_student_group tosg on tosg.timetable_object_id = too.id"
+                + " join timetable_event_time tet on tet.timetable_event_id = te.id"
+                + " join journal j on j.id = too.journal_id");
 
         qb.requiredCriteria("too.timetable_id = :timetableId", "timetableId", EntityUtil.getId(timetable));
 
@@ -1255,8 +1258,8 @@ public class TimetableService {
     }
 
     private List<TimetableEventDto> addRoomsListToEvents(List<TimetableEventDto> result) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event_room ter inner join timetable_event_time tet on tet.id = ter.timetable_event_time_id"
-                + " inner join room r on r.id = ter.room_id inner join building b on b.id = r.building_id").sort("r.code");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event_room ter join timetable_event_time tet on tet.id = ter.timetable_event_time_id"
+                + " join room r on r.id = ter.room_id join building b on b.id = r.building_id").sort("r.code");
 
         qb.requiredCriteria("tet.id in (:timetableEventIds)", "timetableEventIds",
                 result.stream().map(r -> r.getId()).collect(Collectors.toSet()));
@@ -1289,37 +1292,6 @@ public class TimetableService {
         return result;
     }
 
-    /*
-    public List<GeneralTimetableDto> generalTimetables(Long schoolId) {
-        StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
-        if (studyYear == null) {
-            return null;
-        }
-
-        Query q = em.createNativeQuery("select tt.id, tt.start_date, tt.end_date, tt.study_period_id, sp.name_et, sp.name_en"
-                + " from timetable tt" + " join study_period sp on tt.study_period_id=sp.id"
-                + " where tt.school_id=?1 and sp.study_year_id=?2 and tt.status_code in (:shownStatusCodes)"
-                + " order by 2");
-        q.setParameter(1, schoolId);
-        q.setParameter(2, studyYear.getId());
-        
-        HoisUserDetails user = null;
-        Principal principal = SecurityContextHolder.getContext().getAuthentication();
-        if (!(principal instanceof AnonymousAuthenticationToken)) {
-            user = HoisUserDetails.fromPrincipal(SecurityContextHolder.getContext().getAuthentication());
-        }
-
-        if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher())) {
-            q.setParameter("shownStatusCodes", ADMIN_AND_TEACHER_TIMETABLES);
-        } else {
-            q.setParameter("shownStatusCodes", PUBLIC_TIMETABLES);
-        }
-
-        List<?> data = q.getResultList();
-        return StreamUtil.toMappedList(r -> new GeneralTimetableDto((Object[]) r), data);
-    }
-    */
-
     public List<GroupTimetableDto> groupTimetables(Long schoolId) {
         StudyYear current = studyYearService.getCurrentStudyYear(schoolId);
         if (current == null) {
@@ -1327,26 +1299,15 @@ public class TimetableService {
         }
         
         Query q = em.createNativeQuery("select distinct sg.id, sg.code from student_group sg"
-                + " inner join timetable_object_student_group tosg on sg.id=tosg.student_group_id"
-                + " inner join timetable_object tobj on tosg.timetable_object_id=tobj.id"
-                + " inner join timetable tt on tobj.timetable_id=tt.id"
-                + " inner join study_period sp on tt.study_period_id=sp.id"
-                + " inner join study_year sy on sp.study_year_id = sy.id"
+                + " join timetable_object_student_group tosg on sg.id=tosg.student_group_id"
+                + " join timetable_object tobj on tosg.timetable_object_id=tobj.id"
+                + " join timetable tt on tobj.timetable_id=tt.id"
+                + " join study_period sp on tt.study_period_id=sp.id"
+                + " join study_year sy on sp.study_year_id = sy.id"
                 + " where tt.school_id=?1 and sy.id=?2 and tt.status_code in (:shownStatusCodes) order by 2");
         q.setParameter(1, schoolId);
         q.setParameter(2, current);
-        
-        HoisUserDetails user = null;
-        Principal principal = SecurityContextHolder.getContext().getAuthentication();
-        if (!(principal instanceof AnonymousAuthenticationToken)) {
-            user = HoisUserDetails.fromPrincipal(SecurityContextHolder.getContext().getAuthentication());
-        }
-
-        if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher())) {
-            q.setParameter("shownStatusCodes", ADMIN_AND_TEACHER_TIMETABLES);
-        } else {
-            q.setParameter("shownStatusCodes", PUBLIC_TIMETABLES);
-        }
+        q.setParameter("shownStatusCodes", shownStatusCodes());
         
         List<?> data = q.getResultList();
         return StreamUtil.toMappedList(r -> new GroupTimetableDto((Object[]) r), data);
@@ -1359,34 +1320,30 @@ public class TimetableService {
         }
         
         Query q = em.createNativeQuery("select distinct t.id, p.firstname, p.lastname from teacher t"
-                + " inner join person p on t.person_id = p.id"
-                + " inner join journal_teacher jt on t.id = jt.teacher_id"
-                + " inner join journal j on jt.journal_id = j.id"
-                + " inner join timetable_object tobj on j.id = tobj.journal_id"
-                + " inner join timetable tt on tt.id = tobj.timetable_id"
+                + " join person p on t.person_id = p.id"
+                + " join journal_teacher jt on t.id = jt.teacher_id"
+                + " join journal j on jt.journal_id = j.id"
+                + " join timetable_object tobj on j.id = tobj.journal_id"
+                + " join timetable tt on tt.id = tobj.timetable_id"
                 + " where tt.school_id=?1 and tt.status_code in (:shownStatusCodes)"
                 + " union"
                 + " select distinct t.id, p.firstname, p.lastname from teacher t"
-                + " inner join person p on t.person_id = p.id"
-                + " inner join subject_study_period_teacher sspp on sspp.teacher_id=t.id"
-                + " inner join subject_study_period ssp on ssp.id=sspp.subject_study_period_id"
-                + " inner join timetable_object tobj on tobj.subject_study_period_id=ssp.id"
-                + " inner join timetable tt on tt.id=tobj.timetable_id"
+                + " join person p on t.person_id = p.id"
+                + " join subject_study_period_teacher sspp on sspp.teacher_id=t.id"
+                + " join subject_study_period ssp on ssp.id=sspp.subject_study_period_id"
+                + " join timetable_object tobj on tobj.subject_study_period_id=ssp.id"
+                + " join timetable tt on tt.id=tobj.timetable_id"
                 + " where tt.school_id=?1 and tt.status_code in (:shownStatusCodes)"
+                + " union"
+                + " select distinct t.id, p.firstname, p.lastname  from timetable_event te"
+                + " join timetable_event_time tet on te.id = tet.timetable_event_id"
+                + " join timetable_event_teacher teta on tet.id = teta.timetable_event_time_id"
+                + " join teacher t on teta.teacher_id = t.id"
+                + " join person p on t.person_id = p.id and te.timetable_object_id is null"
+                + " where te.school_id=?1 and te.timetable_object_id is null"
                 + " order by lastname");
         q.setParameter(1, schoolId);
-        
-        HoisUserDetails user = null;
-        Principal principal = SecurityContextHolder.getContext().getAuthentication();
-        if (!(principal instanceof AnonymousAuthenticationToken)) {
-            user = HoisUserDetails.fromPrincipal(SecurityContextHolder.getContext().getAuthentication());
-        }
-
-        if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher())) {
-            q.setParameter("shownStatusCodes", ADMIN_AND_TEACHER_TIMETABLES);
-        } else {
-            q.setParameter("shownStatusCodes", PUBLIC_TIMETABLES);
-        }
+        q.setParameter("shownStatusCodes", shownStatusCodes());
         
         List<?> data = q.getResultList();
         return StreamUtil.toMappedList(r -> new TeacherTimetableDto((Object[])r), data);
@@ -1399,29 +1356,30 @@ public class TimetableService {
         }
         
         Query q = em.createNativeQuery("select distinct r.id, r.code from room r"
-                + " inner join timetable_event_room ter on r.id=ter.room_id"
-                + " inner join timetable_event_time tet on ter.timetable_event_time_id=tet.id"
-                + " inner join timetable_event te on tet.timetable_event_id=te.id"
-                + " inner join timetable_object tobj on te.timetable_object_id=tobj.id"
-                + " inner join timetable tt on tobj.timetable_id=tt.id"
-                + " where tt.school_id=?1 and tt.status_code in (:shownStatusCodes)"
+                + " join timetable_event_room ter on r.id=ter.room_id"
+                + " join timetable_event_time tet on ter.timetable_event_time_id=tet.id"
+                + " join timetable_event te on tet.timetable_event_id=te.id"
+                + " left join timetable_object tobj on te.timetable_object_id=tobj.id"
+                + " left join timetable tt on tobj.timetable_id=tt.id"
+                + " where te.school_id=?1 and (tt.status_code in (:shownStatusCodes) or te.timetable_object_id is null)"
                 + " order by r.code");
         q.setParameter(1, schoolId);
-        
-        HoisUserDetails user = null;
-        Principal principal = SecurityContextHolder.getContext().getAuthentication();
-        if (!(principal instanceof AnonymousAuthenticationToken)) {
-            user = HoisUserDetails.fromPrincipal(SecurityContextHolder.getContext().getAuthentication());
-        }
-
-        if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher())) {
-            q.setParameter("shownStatusCodes", ADMIN_AND_TEACHER_TIMETABLES);
-        } else {
-            q.setParameter("shownStatusCodes", PUBLIC_TIMETABLES);
-        }
+        q.setParameter("shownStatusCodes", shownStatusCodes());
         
         List<?> data = q.getResultList();
         return StreamUtil.toMappedList(r -> new RoomTimetableDto((Object[])r), data);
+    }
+    
+    List<String> shownStatusCodes() {
+        HoisUserDetails user = userFromPrincipal();
+        if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher())) {
+            if (user.isMainAdmin() || user.isSchoolAdmin()) {
+                return ADMIN_TIMETABLES;
+            } else if ( user.isTeacher()) {
+                return TEACHER_TIMETABLES;
+            }
+        }
+        return PUBLIC_TIMETABLES;
     }
     
     public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(Long schoolId) {
@@ -1477,6 +1435,14 @@ public class TimetableService {
                 }
             }
         }
+    }
+
+    static HoisUserDetails userFromPrincipal() {
+        Principal principal = SecurityContextHolder.getContext().getAuthentication();
+        if (principal != null && !(principal instanceof AnonymousAuthenticationToken)) {
+            return HoisUserDetails.fromPrincipal(principal);
+        }
+        return null;
     }
 
     private static class AllocatedLessons {

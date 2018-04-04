@@ -1,18 +1,18 @@
 <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
-    <md-nav-item md-nav-href="#/teachers/{{::teacher.id}}/edit" name="teacher.data">
+    <md-nav-item md-nav-href="#/teachers/{{::teacher.id}}/edit?_noback" name="teacher.data">
         {{'teacher.data' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id && teacher.isVocational" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation" name="teacher.continuingEducation">
+    <md-nav-item ng-if="teacher.id && teacher.isVocational" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation?_noback" name="teacher.continuingEducation">
         {{'teacher.continuingEducation.label' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/qualification" name="teacher.qualification">
+    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/qualification?_noback" name="teacher.qualification">
         {{'teacher.qualification.qualification' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id && teacher.isHigher && isHigher" md-nav-href="#/teachers/{{::teacher.id}}/mobility" name="teacher.mobility">
+    <md-nav-item ng-if="teacher.id && teacher.isHigher && isHigher" md-nav-href="#/teachers/{{::teacher.id}}/mobility?_noback" name="teacher.mobility">
         {{'teacher.mobility.mobility' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence" name="teacher.rtipAbsence">
+    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence?_noback" name="teacher.rtipAbsence">
         {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
 </md-nav-bar>
 
 <md-content class="md-padding">
-    <form name="mobilityForm" class="nomargin">
+    <form name="mobilityForm" class="nomargin" novalidate>
         <md-button ng-click="newTeacherMobility()" class="md-raised">{{'teacher.mobility.add' | translate}}</md-button>
         <div ng-repeat="mobility in teacherMobility.mobilities  | orderBy: '-id'">
             <hois-collapsable label="('teacher.mobility.mobility' | translate)">
@@ -38,7 +38,12 @@
                         </md-input-container>
                         <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-sm="0">
                             <label>{{'teacher.mobility.school' | translate}}</label>
-                            <textarea ng-model="mobility.school" md-maxlength="255" max-rows="2" md-select-on-focus required></textarea>
+                            <textarea ng-model="mobility.school" name="mobility[{{$index}}].school" md-maxlength="255" max-rows="2" md-select-on-focus required></textarea>
+                            <div ng-messages="mobilityForm['mobility['+$index+'].school'].$error">
+                              <div ng-message="md-maxlength">
+                                {{'main.messages.error.maxlength' | translate}}
+                              </div>
+                            </div>
                         </md-input-container>
                         <md-button ng-click="deleteMobility(mobility)" class="md-raised" flex-sm="100" flex-offset="5" flex-offset-sm="0">{{'main.button.delete' | translate}}
                         </md-button>
@@ -46,9 +51,10 @@
                 </div>
             </hois-collapsable>
         </div>
-        <md-button ng-click="updateTeacherMobility()" class="md-raised md-primary" ng-if="teacherMobility.mobilities.length > 0">{{'main.button.save' | translate}}
-        </md-button>
     </form>
 </md-content>
 
-<md-button ng-href="#/teachers" class="md-raised">{{'main.button.back' | translate}}</md-button>
+<md-button ng-click="updateTeacherMobility()" class="md-raised md-primary" ng-if="teacherMobility.mobilities.length > 0">
+  {{'main.button.save' | translate}}
+</md-button>
+<md-button ng-click="back('#/teachers', mobilityForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>

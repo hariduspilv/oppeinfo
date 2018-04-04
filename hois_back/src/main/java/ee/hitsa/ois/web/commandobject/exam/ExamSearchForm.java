@@ -7,8 +7,8 @@ public class ExamSearchForm {
     private Long studyPeriod;
     private LocalDate from;
     private LocalDate thru;
-    private String subject;
-    private String teacher;
+    private Long subject;
+    private Long teacher;
 
     public Long getStudyPeriod() {
         return studyPeriod;
@@ -34,19 +34,19 @@ public class ExamSearchForm {
         this.thru = thru;
     }
 
-    public String getSubject() {
+    public Long getSubject() {
         return subject;
     }
 
-    public void setSubject(String subject) {
+    public void setSubject(Long subject) {
         this.subject = subject;
     }
 
-    public String getTeacher() {
+    public Long getTeacher() {
         return teacher;
     }
 
-    public void setTeacher(String teacher) {
+    public void setTeacher(Long teacher) {
         this.teacher = teacher;
     }
 }

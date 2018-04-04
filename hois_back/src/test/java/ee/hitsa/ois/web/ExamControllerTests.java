@@ -65,7 +65,21 @@ public class ExamControllerTests {
     @Test
     public void examsForRegistration() {
         testConfigurationService.userToRole(Role.ROLL_T, restTemplate);
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/exams/forregistration", Object.class);
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/exams/forregistration?studyPeriod=1", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void studentsForRegistration() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/exams/studentsforregistration?subjectStudyPeriod=1", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void subjectStudyPeriods() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/exams/subjectstudyperiods?studyPeriod=1", Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }

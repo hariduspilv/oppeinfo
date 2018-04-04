@@ -11,35 +11,34 @@
 
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'exam.subject' | translate}}</label>
-            <input ng-model="criteria.subject" type="text">
+            <hois-select ng-model="criteria.subject" type="subject" criteria="{withCredits: false}"></hois-select>
           </md-input-container>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset="0" flex-offset-xs="0" flex-offset-sm="0">
-            <label>{{'exam.date' | translate}}</label>
-            <input type="hidden">
-          </md-input-container>
-          <div flex>
-            <md-input-container>
-              <label>{{'main.from' | translate}}</label>
-              <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"></md-datepicker>
-            </md-input-container>
-            <md-input-container>
-              <label>{{'main.thru' | translate}}</label>
-              <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
-            </md-input-container>
+          <div layout="column" flex="45" flex-sm="100" flex-xs="100">
+            <div layout="row" layout-sm="column" layout-xs="column" >
+              <md-input-container flex-sm="100" flex-xs="100">
+                <label>{{'main.from' | translate}}</label>
+                <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"></md-datepicker>
+              </md-input-container>
+              <md-input-container flex-sm="100" flex-xs="100">
+                <label>{{'main.thru' | translate}}</label>
+                <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+              </md-input-container>
+            </div>
           </div>
 
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="auth.isAdmin()">
             <label class="textInput">{{'exam.teacher' | translate}}</label>
-            <input ng-model="criteria.teacher" type="text">
+            <hois-select ng-model="criteria.teacher" type="teacher" criteria="{higher: true}"></hois-select>
           </md-input-container>
         </div>
 
         <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="formState.canAdd" ng-href="#/exams/new">{{'main.button.create' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -54,10 +53,9 @@
           <tr md-row>
             <th md-column md-order-by="s.code,{{currentLanguage()==='en' ? 's.nameEn' : 's.nameEt'}}">{{'exam.subject' | translate}}</th>
             <th md-column>{{'exam.teacher' | translate}}</th>
-            <th md-column md-order-by="te.start">{{'exam.date' | translate}}</th>
-            <th md-column md-order-by="9">{{'exam.start' | translate}}</th>
+            <th md-column md-order-by="te.start">{{'exam.when' | translate}}</th>
             <th md-column md-order-by="tp.{{currentLanguageNameField()}}">{{'exam.type' | translate}}</th>
-            <th md-column md-order-by="7">{{'exam.studentCount' | translate}}</th>
+            <th md-column md-order-by="7" md-numeric>{{'exam.studentCount' | translate}}</th>
             <th></th>
           </tr>
         </thead>
@@ -67,15 +65,14 @@
               <a md-class="md-primary change-button" ng-href="#/exams/{{::row.id}}/view">{{currentLanguageNameField(row.subject)}}</a>
             </td>
             <td md-cell>
-              <div ng-repeat="it in row.teachers">
+              <div ng-repeat="it in row.teacherNames">
                 {{it}}
               </div>
             </td>
-            <td md-cell>{{row.start | hoisDate}}</td>
-            <td md-cell>{{row.start | hoisTime}}</td>
+            <td md-cell>{{row.start | hoisDateTimeMin}}</td>
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>
             <td md-cell>{{::row.studentCount}}</td>
-            <td>
+            <td md-cell>
               <md-button ng-if="row.userCanEdit" md-no-ink class="md-primary change-button" ng-href="#/exams/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>

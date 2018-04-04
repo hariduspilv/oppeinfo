@@ -45,8 +45,8 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="curriculumVersion.code">{{'report.studentstatistics.curriculum' | translate}}</th>
-            <th md-column ng-repeat="cl in formState.resultDef">{{currentLanguageNameField(cl)}}</th>
-            <th md-column>{{'report.studentstatistics.total' | translate}}</th>
+            <th md-column md-numeric ng-repeat="cl in formState.resultDef">{{currentLanguageNameField(cl)}}</th>
+            <th md-column md-numeric>{{'report.studentstatistics.total' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>

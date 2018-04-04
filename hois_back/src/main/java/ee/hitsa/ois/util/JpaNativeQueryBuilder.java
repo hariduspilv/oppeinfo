@@ -183,7 +183,7 @@ public class JpaNativeQueryBuilder {
     }
 
     public Query select(String projection, EntityManager em, Map<String, Object> additionalParameters) {
-        return buildQuery(projection, em, true, additionalParameters);
+        return buildQuery(querySql(projection, true), em, additionalParameters);
     }
 
     public Number count(EntityManager em) {
@@ -191,7 +191,13 @@ public class JpaNativeQueryBuilder {
     }
 
     public Number count(String expression, EntityManager em) {
-        return (Number)buildQuery(expression, em, false, null).getSingleResult();
+        String querySql;
+        if(StringUtils.hasText(groupBy)) {
+            querySql = "select " + Objects.requireNonNull(expression) +" from (" + querySql("1", false) + ") wrapped_count_query";
+        } else {
+            querySql = querySql(expression, false);
+        }
+        return (Number)buildQuery(querySql, em, null).getSingleResult();
     }
 
     public String querySql(String projection, boolean ordered) {
@@ -242,8 +248,8 @@ public class JpaNativeQueryBuilder {
         filter("(" + thruField + " is null or " + thruField + " >= :now)");
     }
 
-    protected Query buildQuery(String projection, EntityManager em, boolean ordered, Map<String, Object> additionalParameters) {
-        Query q = em.createNativeQuery(querySql(projection, ordered));
+    protected Query buildQuery(String querySql, EntityManager em, Map<String, Object> additionalParameters) {
+        Query q = em.createNativeQuery(querySql);
         setQueryParameters(q, additionalParameters);
         return q;
     }

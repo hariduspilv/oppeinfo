@@ -1,5 +1,14 @@
 <div layout-padding>
   <div flex>
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="45" flex-sm="100" flex-xs="100">
+        <label>{{'exam.studyPeriod' | translate}}</label>
+        <hois-select ng-model="criteria.studyPeriod" ng-change="studyPeriodChanged()" values="formState.studyPeriods"></hois-select>
+      </md-input-container>
+    </div>
+
+    <br>
+
     <md-table-container>
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
@@ -8,7 +17,7 @@
             <th md-column>{{'exam.teacher' | translate}}</th>
             <th md-column md-order-by="sm.{{currentLanguageNameField()}}">{{'exam.assessment' | translate}}</th>
             <th md-column md-order-by="tp.{{currentLanguageNameField()}}">{{'exam.type' | translate}}</th>
-            <th md-column md-order-by="te.start">{{'exam.date' | translate}}</th>
+            <th md-column md-order-by="te.start">{{'exam.when' | translate}}</th>
             <th md-column>{{'exam.room' | translate}}</th>
             <th md-column md-order-by="deadline">{{'exam.deadline' | translate}}</th>
             <th md-column>{{'exam.addInfo' | translate}}</th>
@@ -19,23 +28,23 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
             <td md-cell>
-              <div ng-repeat="it in row.teachers">
+              <div ng-repeat="it in row.teacherNames">
                 {{it}}
               </div>
             </td>
             <td md-cell>{{currentLanguageNameField(row.assessment)}}</td>
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>
-            <td md-cell>{{row.start | hoisDateTime}}</td>
+            <td md-cell>{{row.start | hoisDateTimeMin}}</td>
             <td md-cell>
               <div ng-repeat="it in row.rooms">
                 {{it}}
               </div>
             </td>
-            <td md-cell>{{row.deadline | hoisDate}}</td>
+            <td md-cell>{{row.deadline | hoisDateTimeMin}}</td>
             <td md-cell>{{row.addInfo}}</td>
-            <td>
-              <md-button ng-if="row.registered" md-no-ink class="md-primary change-button" ng-click="register(row)">{{'exam.register' | translate}}</md-button>
-              <md-button ng-if="!row.registered" md-no-ink class="md-primary change-button" ng-click="unregister(row)">{{'exam.unregister' | translate}}</md-button>
+            <td md-cell>
+              <md-button ng-if="!row.registered && row.canChange" md-no-ink class="md-primary change-button" ng-click="register(row)">{{'exam.register' | translate}}</md-button>
+              <md-button ng-if="row.registered && row.canChange" md-no-ink class="md-primary change-button" ng-click="unregister(row)">{{'exam.unregister' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

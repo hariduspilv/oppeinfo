@@ -7,15 +7,17 @@ public class AuthenticatedSchool implements Serializable {
     private Long id;
     private boolean vocational;
     private boolean higher;
+    private boolean doctoral;
     private String ehisSchool;
 
     public AuthenticatedSchool() {
     }
 
-    public AuthenticatedSchool(Long id, boolean higher, boolean vocational, String ehisSchool) {
+    public AuthenticatedSchool(Long id, boolean higher, boolean vocational, boolean doctoral, String ehisSchool) {
         this.id = id;
         this.higher = higher;
         this.vocational = vocational;
+        this.doctoral = doctoral;
         this.ehisSchool = ehisSchool;
     }
 
@@ -41,6 +43,14 @@ public class AuthenticatedSchool implements Serializable {
 
     public void setHigher(boolean higher) {
         this.higher = higher;
+    }
+
+    public boolean isDoctoral() {
+        return doctoral;
+    }
+
+    public void setDoctoral(boolean doctoral) {
+        this.doctoral = doctoral;
     }
 
     public String getEhisSchool() {

@@ -103,6 +103,12 @@
       <md-button class="md-raised" ng-href="#/subjectStudyPeriods/{{subjectStudyPeriodId}}/midtermTasks"
       ng-hide="record.subjectStudyPeriod.isPracticeSubject">{{'midtermTask.add' | translate}}</md-button>
   </div>
+  <div layout="row" ng-if="moodleCourseId">
+      <md-button class="md-raised" ng-click="enrollStudents()">{{'moodle.enrollStudents' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="importGradeItems()">{{'moodle.importGradeItems' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="importAllGrades()">{{'moodle.importAllGrades' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="importMissingGrades()">{{'moodle.importMissingGrades' | translate}}</md-button>
+  </div>
 </div>
 
 

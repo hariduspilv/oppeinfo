@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import org.assertj.core.util.Lists;
 import org.assertj.core.util.Sets;
 import org.junit.After;
 import org.junit.Assert;
@@ -694,7 +695,7 @@ public class CurriculumControllerTests {
         dto.setCredits(BigDecimal.ONE);
         dto.setOccupations(Sets.newLinkedHashSet("OSAKUTSE_10498104", "KUTSE_10463859"));
         dto.setCompetences(Sets.newLinkedHashSet("KOMPETENTS_4", "KOMPETENTS_13"));
-        dto.setOutcomes(Sets.newLinkedHashSet(getCurriculumModuleOutcomeDto(), getCurriculumModuleOutcomeDto()));
+        dto.setOutcomes(Lists.newArrayList(getCurriculumModuleOutcomeDto(), getCurriculumModuleOutcomeDto()));
         return dto;
     }
 

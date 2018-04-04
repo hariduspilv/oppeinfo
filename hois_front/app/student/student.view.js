@@ -559,21 +559,12 @@ function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGrad
         });
       }
     });
-  }]).controller('StudentViewTimetableController', ['$scope', '$route', 'QueryUtils', 'GeneralTimetableUtils', function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
-    $scope.generalTimetableUtils = new GeneralTimetableUtils();
+  }]).controller('StudentViewTimetableController', ['$scope', '$route', 'QueryUtils', function ($scope, $route, QueryUtils) {
     $scope.studentId = ($route.current.locals.auth.isStudent() ? $route.current.locals.auth.student : $route.current.params.id);
     $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
     $scope.typeId = $scope.studentId;
     $scope.currentNavItem = 'student.timetable';
     $scope.auth = $route.current.locals.auth;
-    
-    $scope.schoolId =  $scope.auth.school.id;
-
-    QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
-      $scope.weeks = weeks;
-      var shownWeekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-      $scope.shownWeek = $scope.weeks[shownWeekIndex];
-    });
 
   }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'QueryUtils', function ($location, $route, $scope, message, QueryUtils) {
     var id = $route.current.params.id;

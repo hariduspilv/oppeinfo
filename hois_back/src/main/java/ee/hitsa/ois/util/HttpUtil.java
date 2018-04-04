@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.http.HttpHeaders;
@@ -67,6 +68,11 @@ public abstract class HttpUtil {
 
     private static String toValidFilename(String filename) {
         return INVALID_FILENAME_SYMBOLS.matcher(filename).replaceAll("");
+    }
+
+    public static String getIpAddress(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-FORWARDED-FOR");
+        return forwarded != null ? forwarded : request.getRemoteAddr();
     }
 
     public static class CreatedResponse extends ResponseEntity<Map<String, ?>> {

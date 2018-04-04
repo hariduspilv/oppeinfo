@@ -7,7 +7,6 @@ angular.module('hitsaOis')
     $scope.loadData();
     DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
     $scope.auth = $route.current.locals.auth;
-    $scope.backUrlRef = "sent";
 
     $scope.showReceivers = function(row, bool) {
         var name = "";
@@ -31,8 +30,6 @@ angular.module('hitsaOis')
     $scope.loadData();
     DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
     $scope.auth = $route.current.locals.auth;
-
-    $scope.backUrlRef = "automaticSent";
 
     $scope.showReceivers = function(row, bool) {
         var name = "";
@@ -67,21 +64,7 @@ angular.module('hitsaOis')
     var id = $route.current.params.id;
 
     var backUrl = $route.current.params.backUrl;
-    $scope.formState = {};
-
-    switch(backUrl) {
-        case "received":
-            $scope.formState.backUrl = "#/messages/received";
-            $scope.isSent = false;
-            break;
-        case "automaticSent":
-            $scope.formState.backUrl = "#/messages/automatic/sent";
-            $scope.isSent = true;
-            break;
-        default:
-            $scope.isSent = true;
-            $scope.formState.backUrl = "#/messages/sent";
-    }
+    $scope.isSent = backUrl !== 'received';
 
     function afterLoad() {
         DataUtils.convertStringToDates($scope.record, ['inserted']);
@@ -157,52 +140,36 @@ angular.module('hitsaOis')
     var Endpoint = QueryUtils.endpoint(baseUrl);
     $scope.record = new Endpoint();
     $scope.auth = $route.current.locals.auth;
-
-    var backUrl = $route.current.params.backUrl;
     $scope.formState = {};
 
-    switch(backUrl) {
-        case "received":
-            $scope.formState.backUrl = "#/messages/received";
-            break;
-        case "automaticSent":
-            $scope.formState.backUrl = "#/messages/automatic/sent";
-            break;
-        default:
-            $scope.formState.backUrl = "#/messages/sent";
-    }
-
-    // $scope.targetGroups = ["ROLL_O", "ROLL_T", "ROLL_L", "ROLL_P"];
-    $scope.targetGroups = [];
     if($scope.auth.isAdmin()) {
-        $scope.targetGroups = ["ROLL_O", "ROLL_T", "ROLL_L", "ROLL_P"];
+        $scope.targetGroups = ['ROLL_O', 'ROLL_T', 'ROLL_L', 'ROLL_P'];
     } else  if($scope.auth.isTeacher()) {
-        $scope.targetGroups = ["ROLL_T", "ROLL_L"];
+        $scope.targetGroups = ['ROLL_T', 'ROLL_L'];
     } else  if ($scope.auth.isParent() || $scope.auth.isStudent()) {
-        $scope.targetGroups = ["ROLL_O"];
-        $scope.targetGroup = "ROLL_O";
+        $scope.targetGroups = ['ROLL_O'];
+    } else {
+        $scope.targetGroups = [];
+    }
+    if($scope.targetGroups.length === 1) {
+        $scope.targetGroup = $scope.targetGroups[0];
     }
     $scope.receivers = [];
-
     $scope.studyForm = [];
     $scope.studentGroup = [];
     $scope.curriculum = [];
     $scope.studyGroupStudentsParents = [];
 
     function getStudentGroups() {
-        QueryUtils.endpoint('/studentgroups').search({curriculums: $scope.curriculum, studyForm: $scope.studyForm, size: 1000, sort: 'code'}).$promise.then(function(response){
-            $scope.studentGroups = response.content.map(function(sg){
-                return {
-                    id: sg.id,
-                    nameEt: sg.code,
-                    nameEn: sg.code
-                };
-            });
-            var studentGroupIds = response.content.map(function(sg){return sg.id;});
-            $scope.studentGroup = $scope.studentGroup.filter(function(sg){return studentGroupIds.indexOf(sg) !== -1;});
+      QueryUtils.endpoint(baseUrl + '/studentgroups').query({curriculums: $scope.curriculum, studyForm: $scope.studyForm}).$promise.then(function(response) {
+        $scope.studentGroups = response.map(function(sg) {
+          return { id: sg.id, nameEt: sg.code, nameEn: sg.code };
         });
+        var studentGroupIds = response.map(function(sg){return sg.id;});
+        $scope.studentGroup = $scope.studentGroup.filter(function(sg){return studentGroupIds.indexOf(sg) !== -1;});
+     });
     }
-    if(ArrayUtils.includes($scope.targetGroups, "ROLL_T")) {
+    if($scope.targetGroups.indexOf('ROLL_T') !== -1) {
         getStudentGroups();
     }
 
@@ -242,20 +209,35 @@ angular.module('hitsaOis')
         return $scope.receivers.filter(function (r){return r.personId === personId;}).length > 0;
     }
 
+    function isStudent(receiver) {
+      return receiver.role.length === 1 && receiver.role[0] === 'ROLL_T';
+    }
+
     $scope.removeReceiver = function(receiver) {
         ArrayUtils.remove($scope.receivers, receiver);
-        if(receiver.role.length === 1 && receiver.role[0] === 'ROLL_T') {
+        if(isStudent(receiver)) {
+            // student, remove also his/her representative(s)
             $scope.receivers = $scope.receivers.filter(function(r){return r.studentId !== receiver.studentId;});
         }
     };
 
     function getStudents(query) {
-        query.size = 1000;
-        $resource(config.apiUrl + "/" + baseUrl + "/students", query).query().$promise.then(function(response){
-            //TODO: array.map is not needed anymore
-            var list = studentListToReceiverOption(response).filter(function(s){return !isPersonAdded(s.personId);});
-            $scope.receivers = $scope.receivers.concat(list);
+      query.size = 1000;
+      $resource(config.apiUrl + "/" + baseUrl + "/students", query).query().$promise.then(function(response) {
+        var list = studentListToReceiverOption(response).filter(function(s) {
+          var existing = $scope.receivers.filter(function(r) { return r.personId === s.personId;} );
+          if(!existing.length) {
+            return true;
+          }
+          var receiver = existing[0];
+          if(isStudent(receiver)) {
+            // group add overrides autocomplete add
+            receiver.addedWithAutocomplete = false;
+          }
+          return false;
         });
+        $scope.receivers = $scope.receivers.concat(list);
+      });
     }
 
     function studentListToReceiverOption(response) {
@@ -308,7 +290,7 @@ angular.module('hitsaOis')
     };
 
     function includesOrEmpty(array, item) {
-        return array.length === 0 || ArrayUtils.includes(array, item);
+        return array.length === 0 || array.indexOf(item) !== -1;
     }
 
     function anyFilterApplied() {
@@ -376,10 +358,11 @@ angular.module('hitsaOis')
                 personId: p.personId,
                 idcode: p.idcode,
                 fullname: p.fullname,
-                role: ["ROLL_L"],
+                role: ['ROLL_L'],
                 studentGroup: p.studentGroup,
                 curriculum: p.curriculum,
-                addedWithAutocomplete: addedWithAutocomplete
+                addedWithAutocomplete: addedWithAutocomplete,
+                hideLearning: true
             };
         });
         return list;
@@ -405,9 +388,8 @@ angular.module('hitsaOis')
         $scope.receivers = $scope.receivers.filter(function (r){return r.addedWithAutocomplete;});
     }
 
+    var lookup = QueryUtils.endpoint('/message/persons');
     $scope.querySearch = function (text) {
-        var url = '/message/persons';
-        var lookup = QueryUtils.endpoint(url);
         var deferred = $q.defer();
         lookup.query({
             role: $scope.targetGroup,
@@ -426,7 +408,7 @@ angular.module('hitsaOis')
         }
         function afterSend() {
             message.info('message.messageSent');
-            $location.path($scope.formState.backUrl.substring(1));
+            $rootScope.back('#/messages/sent');
         }
         $scope.record.receivers = $scope.receivers.map(function(r){return r.personId;});
         $scope.record.$save(afterSend);

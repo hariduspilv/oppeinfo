@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.net.URLEncoder;
 import java.security.Principal;
 import java.util.Date;
 import java.util.Map;
@@ -57,6 +58,8 @@ public class AuthenticationController {
     private LdapService ldapService;
     @Autowired
     private UserService userService;
+    @Value("${hois.idlogin.redirect}")
+    private String idloginRedirect;
     @Value("${hois.frontend.baseUrl}")
     private String frontendBaseUrl;
 
@@ -67,7 +70,8 @@ public class AuthenticationController {
 
     @CrossOrigin
     @RequestMapping("/idlogin")
-    public String idlogin(HttpServletRequest request, HttpServletResponse response, Principal principal) {
+    public void idlogin(HttpServletRequest request, HttpServletResponse response, Principal principal) 
+            throws Exception {
         String token = "";
         if (principal != null) {
             token = Jwts.builder()
@@ -78,9 +82,8 @@ public class AuthenticationController {
                     .compact();
             addJwtHeader(response, token);
         }
-        return "<form id='id_form' method='get' action='" + getIdRedirectUrl(request.getHeader(HttpHeaders.REFERER)) 
-                + "#/?_code=" + token + "'></form>"
-                + "<script>document.getElementById('id_form').submit();</script>";
+        response.sendRedirect(idloginRedirect + "?token=" + token 
+                + "&redirect=" + URLEncoder.encode(getIdRedirectUrl(request.getHeader(HttpHeaders.REFERER)) , "UTF-8"));
     }
 
     private String getIdRedirectUrl(String referer) {

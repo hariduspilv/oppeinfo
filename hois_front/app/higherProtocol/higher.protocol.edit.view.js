@@ -13,6 +13,8 @@ angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$sco
 
   var midtermTaskUtil = new MidtermTaskUtil();
 
+  var forbiddenGrades = ['KORGHINDAMINE_MI'];
+
   function getEmptyStudentResult(student, midtermTask) {
     return {
             midtermTask: midtermTask.id,
@@ -130,8 +132,10 @@ angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$sco
   }
 
   function filterGrades() {
-    $scope.grades = $scope.grades.filter(function(grade){
-      return ArrayUtils.contains($scope.record.possibleGrades, grade.code);
+    $scope.grades = $scope.grades.filter(function(it) {
+      if (!$route.current.locals.isView) {
+        return forbiddenGrades.indexOf(it.code) === -1;
+      }
     });
   }
 

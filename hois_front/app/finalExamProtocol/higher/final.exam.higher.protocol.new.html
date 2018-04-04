@@ -5,22 +5,17 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="100" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'finalExamProtocol.studyPeriod' | translate}}</label>
-            <hois-select ng-model="formState.studyPeriod" values="studyPeriods" ng-change="studyPeriodChange()" required autofocus></hois-select>
+            <hois-select ng-model="formState.studyPeriod" values="studyPeriods" ng-change="studyPeriodChanged()" required autofocus></hois-select>
           </md-input-container>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex flex-sm="100">
             <label class="textInput">{{'finalExamProtocol.subject' | translate}}</label>
-            <hois-select ng-model="formState.subject" values="formState.subjects" ng-change="subjectChange()"
-              required></hois-select>
+            <md-select ng-model="formState.subject" ng-change="subjectChanged()" required>
+              <md-option ng-repeat="subject in formState.subjects" ng-value="subject">{{currentLanguageNameField(subject)}}</md-option>
+            </md-select>
           </md-input-container>
-        </div>
-        <br>
-        <div layout="row">
-          <label flex="10" flex-sm="30" flex-xs="30" class="common-label">{{'finalExamProtocol.type' | translate}}</label>
-          <hois-classifier-radio layout="row" ng-model="formState.protocolType" model-value-attr="code" main-classifier-code="PROTOKOLLI_LIIK"
-            required ng-disabled="formState.readOnly" class="md-primary" required></hois-classifier-radio>
         </div>
 
         <br/>
@@ -45,7 +40,7 @@
                 <tr md-row md-select="row.studentId" ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>{{row.fullname}}</td>
                   <td md-cell>{{row.idcode}}</td>
-                  <td md-cell>{{row.curriculumCode}}</td>
+                  <td md-cell>{{currentLanguageNameField(row.curriculum)}}</td>
                 </tr>
               </tbody>
             </table>

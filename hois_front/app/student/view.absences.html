@@ -11,7 +11,7 @@
             <th md-column md-order-by="validFrom">{{'student.absence.validFrom' | translate}}</th>
             <th md-column md-order-by="validThru">{{'student.absence.validThru' | translate}}</th>
             <th md-column md-order-by="cause">{{'student.absence.cause' | translate}}</th>
-            <th md-column md-order-by="isAccepted">{{'student.absence.isAccepted' | translate}}</th>
+            <th md-column md-order-by="isAccepted, isRejected">{{'student.absence.status' | translate}}</th>
             <th></th>
           </tr>
         </thead>
@@ -20,7 +20,11 @@
             <td md-cell>{{::row.validFrom | hoisDate}}</td>
             <td md-cell>{{::row.validThru | hoisDate}}</td>
             <td md-cell>{{::row.cause}}</td>
-            <td md-cell>{{row.isAccepted ? 'main.yes' : 'main.no' | translate}}</td>
+            <td md-cell>
+              <span ng-if="row.isAccepted">{{'student.absence.isAccepted' | translate}}</span>
+              <span ng-if="row.isRejected">{{'student.absence.isRejected' | translate}}</span>
+              <span ng-if="!row.isAccepted && !row.isRejected">{{'student.absence.isNotAccepted' | translate}}</span>
+            </td>
             <td md-cell>
               <md-button md-no-ink ng-click="editAbsence(row)" class="md-primary change-button" ng-if="row.userCanEdit">{{'main.button.change' | translate}}</md-button>
             </td>

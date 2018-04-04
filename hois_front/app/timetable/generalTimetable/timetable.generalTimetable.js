@@ -92,12 +92,6 @@
       $scope.schoolId = $scope.auth == null ? $route.current.params.schoolId : $scope.auth.school.id;
       var groupTimetablesEndpoint = '/timetables/group/' + $scope.schoolId;
 
-      QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
-        $scope.weeks = weeks;
-        var shownWeekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-        $scope.shownWeek = $scope.weeks[shownWeekIndex];
-      });
-
       QueryUtils.endpoint(groupTimetablesEndpoint).query().$promise.then(function (result) {
         $scope.groupTimetables = result;
       });
@@ -114,12 +108,6 @@
 
       $scope.schoolId = $scope.auth == null ? $route.current.params.schoolId : $scope.auth.school.id;
       var teacherPeriodTimetablesEndpoint = '/timetables/teacher/' + $scope.schoolId;
-
-      QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
-        $scope.weeks = weeks;
-        var shownWeekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-        $scope.shownWeek = $scope.weeks[shownWeekIndex];
-      });
 
       QueryUtils.endpoint(teacherPeriodTimetablesEndpoint).query().$promise.then(function (result) {
         $scope.timetablesByTeachers = result;

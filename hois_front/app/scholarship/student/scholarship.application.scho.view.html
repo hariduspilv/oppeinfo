@@ -62,23 +62,27 @@
 
     <div class="form-readonly ois-form-layout-padding">
       <div layout="row" flex>
-        <md-input-container flex="45">
+        <md-input-container flex="45" ng-if="!isNumber(application.saisPoints)">
           <label class="textInput">{{'stipend.averageMark' | translate}}</label>
-          <hois-value value="studentInfo.averageMark"></hois-value>
+          <hois-value value="application.averageMark"></hois-value>
+        </md-input-container>
+        <md-input-container flex="45" ng-if="isNumber(application.saisPoints)">
+          <label class="textInput">{{'stipend.saisPoints' | translate}}</label>
+          <hois-value value="application.saisPoints"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label>{{'stipend.lastPeriodMark' | translate}}</label>
-          <hois-value value="studentInfo.lastPeriodMark"></hois-value>
+          <hois-value value="application.lastPeriodMark"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
-          <hois-value value="studentInfo.curriculumCompletion"></hois-value>
+          <hois-value value="application.curriculumCompletion"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label class="textInput">{{'stipend.credits' | translate}}</label>
-          <hois-value value="studentInfo.credits"></hois-value>
+          <hois-value value="application.credits"></hois-value>
         </md-input-container>
       </div>
     </div>
@@ -87,13 +91,13 @@
       <div layout="row" flex>
         <md-input-container flex="45" flex-md="100" flex-sm="100" flex-xs="100">
           <label>{{'stipend.student.bankAccount' | translate}}</label>
-          <hois-value value="studentSubmitData.bankAccount"></hois-value>
+          <hois-value value="application.bankAccount"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" flex>
         <md-input-container flex="100" flex-md="100" flex-sm="100" flex-xs="100">
           <label>{{'stipend.student.professionalAchievements' | translate}}</label>
-          <hois-value value="studentSubmitData.addInfo"></hois-value>
+          <hois-value value="application.addInfo"></hois-value>
         </md-input-container>
       </div>
       <br/>

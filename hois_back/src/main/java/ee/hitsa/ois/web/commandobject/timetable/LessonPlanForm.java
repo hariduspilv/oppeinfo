@@ -42,7 +42,6 @@ public class LessonPlanForm extends VersionedCommand {
 
     public static class LessonPlanModuleForm {
 
-        @NotNull
         private Long id;
         private EntityConnectionCommand teacher;
         @Valid

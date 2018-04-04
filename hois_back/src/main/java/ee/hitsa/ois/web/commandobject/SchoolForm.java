@@ -42,7 +42,7 @@ public class SchoolForm extends VersionedCommand {
     @Size(max = 255)
     private String adUrl;
     @Min(0)
-    @Max(65535)
+    @Max(32767)
     private Long adPort;
     @Size(max = 255)
     private String adDomain;

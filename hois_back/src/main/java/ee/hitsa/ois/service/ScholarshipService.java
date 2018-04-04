@@ -1,12 +1,15 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,10 +17,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,19 +46,25 @@ import ee.hitsa.ois.domain.scholarship.ScholarshipTermStudyForm;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTermStudyLoad;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
+import ee.hitsa.ois.enums.Absence;
+import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.Priority;
 import ee.hitsa.ois.enums.ScholarshipStatus;
 import ee.hitsa.ois.enums.ScholarshipType;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshiApplicationRejectionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationListSubmitForm;
@@ -64,24 +75,33 @@ import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipTermForm;
 import ee.hitsa.ois.web.dto.ScholarshipTermApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationSearchDto;
-import ee.hitsa.ois.web.dto.scholarship.ScholarshipStudentDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipStudentRejectionDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermApplicationDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermStudentDto;
-import ee.hitsa.ois.web.dto.student.StudentHigherResultDto;
 
 @Transactional
 @Service
 public class ScholarshipService {
 
+    private static final int SAIS_POINTS_MONTHS = 6;
+    private static final int RESULT_PERIOD_MONTHS = 5;
+    private static final String STUDENT_JOURNAL_RESULTS = " from journal_entry_student jes"
+            + " join journal_entry je on je.id = jes.journal_entry_id"
+            + " join journal_student js on js.id = jes.journal_student_id"
+            + " join classifier grade on grade.code = jes.grade_code"
+            + " where js.student_id = ?1 and grade.value ~ '^[0-9]' and jes.grade_inserted between ?2 and ?3"
+            + " and je.entry_type_code in ?4";
+    
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private EntityManager em;
     @Autowired
-    private StudentResultHigherService studentResultHigherService;
+    private StudentService studentService;
+    @Autowired
+    private StudyYearService studyYearService;
     
     /**
      * Create scholarship term
@@ -190,20 +210,55 @@ public class ScholarshipService {
     }
 
     public List<ScholarshipTermStudentDto> availableStipends(Long studentId) {
+        return availableStipends(studentId, Boolean.FALSE);
+    }
+
+    public List<ScholarshipTermStudentDto> availableDrGrants(Long studentId) {
+        return availableStipends(studentId, Boolean.TRUE);
+    }
+    
+    public List<ScholarshipTermStudentDto> scholarshipTermStudentDtos(Long studentId) {
+        return scholarshipTermStudentDtos(studentStipends(studentId, Boolean.FALSE));
+    }
+
+    public List<ScholarshipTermStudentDto> drGrantTermStudentDtos(Long studentId) {
+        return scholarshipTermStudentDtos(studentStipends(studentId, Boolean.TRUE));
+    }
+
+    private List<ScholarshipTermStudentDto> availableStipends(Long studentId, Boolean drGrants) {
         Student student = em.getReference(Student.class, studentId);
-        List<ScholarshipTerm> result = em.createQuery(
+        TypedQuery<ScholarshipTerm> query = em.createQuery(
                 "SELECT st FROM ScholarshipTerm st JOIN st.scholarshipTermCurriculums stc WHERE stc.curriculum.id = (?1) and"
                         + " st.isOpen = true and st.school.id = (?2) and ((st.applicationStart <= (?3) and st.applicationEnd >= (?3))"
-                        + " or st.applicationStart is null and st.applicationEnd is null)",
-                ScholarshipTerm.class).setParameter(1, EntityUtil.getId(student.getCurriculumVersion().getCurriculum()))
-                .setParameter(2, EntityUtil.getId(student.getSchool())).setParameter(3, LocalDate.now())
-                .getResultList();
+                        + " or st.applicationStart is null and st.applicationEnd is null)"
+                        + (Boolean.TRUE.equals(drGrants) ? " and st.type.code = ?4" : 
+                            (Boolean.FALSE.equals(drGrants) ? " and st.type.code != ?4" : "")), 
+                        ScholarshipTerm.class)
+                .setParameter(1, EntityUtil.getId(student.getCurriculumVersion().getCurriculum()))
+                .setParameter(2, EntityUtil.getId(student.getSchool()))
+                .setParameter(3, LocalDate.now());
+        if (drGrants != null) {
+            query = query.setParameter(4, ScholarshipType.STIPTOETUS_DOKTOR.name());
+        }
+        List<ScholarshipTerm> result = query.getResultList();
         result.removeIf(it -> !studentCompliesTerm(student, it));
         return StreamUtil.toMappedList(st -> ScholarshipTermStudentDto.of(st), result);
     }
 
-    public List<ScholarshipTermStudentDto> scholarshipTermStudentDtos(Long studentId) {
-        List<ScholarshipApplication> stipends = studentStipends(studentId);
+    private List<ScholarshipApplication> studentStipends(Long studentId, Boolean drGrants) {
+        TypedQuery<ScholarshipApplication> query = em.createQuery("SELECT sa FROM ScholarshipApplication sa"
+                + " WHERE sa.student.id = (?1)"
+                + (Boolean.TRUE.equals(drGrants) ? " and sa.scholarshipTerm.type.code = ?2" : 
+                    (Boolean.FALSE.equals(drGrants) ? " and sa.scholarshipTerm.type.code != ?2" : "")),
+                ScholarshipApplication.class)
+                .setParameter(1, studentId);
+        if (drGrants != null) {
+            query = query.setParameter(2, ScholarshipType.STIPTOETUS_DOKTOR.name());
+        }
+        return query.getResultList();
+    }
+
+    private static List<ScholarshipTermStudentDto> scholarshipTermStudentDtos(List<ScholarshipApplication> stipends) {
         return StreamUtil.toMappedList(sa -> {
             ScholarshipTermStudentDto dto = ScholarshipTermStudentDto.of(sa.getScholarshipTerm());
             dto.setStatus(EntityUtil.getCode(sa.getStatus()));
@@ -214,42 +269,51 @@ public class ScholarshipService {
         }, stipends);
     }
 
-    private List<ScholarshipApplication> studentStipends(Long studentId) {
-        return em.createQuery("SELECT sa FROM ScholarshipApplication sa WHERE sa.student.id = (?1)",
-                ScholarshipApplication.class).setParameter(1, studentId).getResultList();
-    }
-
     public Map<String, Object> getStudentApplicationView(HoisUserDetails user, ScholarshipTerm term) {
         Map<String, Object> result = new HashMap<>();
-        Student student = em.getReference(Student.class, user.getStudentId());
-        ScholarshipApplication application = getApplicationForTermAndStudent(term, student);
         result.put("stipend", ScholarshipTermApplicationDto.of(term));
-        ScholarshipStudentDto studentDto = ScholarshipStudentDto.of(student, getStudentCurriculumCompletion(student));
-        result.put("studentInfo", studentDto);
-        ScholarshipApplicationDto studentSubmitData = ScholarshipApplicationDto.of(application);
-        studentSubmitData.setAddress(studentDto.getAddress());
-        if (application == null) {
-            studentSubmitData.setPhone(studentDto.getPhone());
-            studentSubmitData.setEmail(studentDto.getEmail());
-        }
-        List<ScholarshipApplication> prevApplications = studentStipends(user.getStudentId());
-        if (!prevApplications.isEmpty()) {
-            prevApplications = prevApplications.stream().filter(a -> a.getBankAccount() != null)
-                    .sorted(Comparator.comparing(a -> a.getInserted(), Comparator.reverseOrder()))
-                    .collect(Collectors.toList());
-            if (!prevApplications.isEmpty()) {
-                studentSubmitData.setBankAccount(prevApplications.get(0).getBankAccount());
-            }
-        }
-        result.put("studentSubmitData", studentSubmitData);
+        result.put("application", getStudentApplicationDto(user, term));
         return result;
     }
 
-    public Map<String, Object> getApplicationView(ScholarshipApplication application) {
+    public ScholarshipApplicationDto getStudentApplicationDto(HoisUserDetails user, ScholarshipTerm term) {
+        Student student = em.getReference(Student.class, user.getStudentId());
+        ScholarshipApplication application = getApplicationForTermAndStudent(term, student);
+        ScholarshipApplicationDto applicationDto = application == null ? 
+                getApplicationDto(student, term) : getApplicationDto(application);
+        applicationDto.setAddress(student.getPerson().getAddress());
+        StudentResults results = getStudentResults(term, student);
+        BigDecimal credits = results.getCredits();
+        applicationDto.setCredits(credits);
+        applicationDto.setAverageMark(results.getAverageMark());
+        applicationDto.setLastPeriodMark(results.getLastPeriodMark());
+        applicationDto.setCurriculumCompletion(getCurriculumCompletion(credits, student));
+        if (application == null) {
+            applicationDto.setPhone(student.getPerson().getPhone());
+            applicationDto.setEmail(student.getEmail());
+        }
+        List<ScholarshipApplication> prevApplications = studentStipends(user.getStudentId(), null);
+        if (!prevApplications.isEmpty()) {
+            prevApplications = prevApplications.stream()
+                    .filter(a -> a.getBankAccount() != null)
+                    .sorted(Comparator.comparing(a -> a.getInserted(), Comparator.reverseOrder()))
+                    .collect(Collectors.toList());
+            if (!prevApplications.isEmpty()) {
+                applicationDto.setBankAccount(prevApplications.get(0).getBankAccount());
+            }
+        }
+        return applicationDto;
+    }
+
+    public Map<String, Object> getApplicationView(HoisUserDetails user, ScholarshipApplication application) {
+        Student student = application.getStudent();
+        if (user.isStudent()) {
+            UserUtil.throwAccessDeniedIf(!user.getStudentId().equals(EntityUtil.getId(student)), 
+                    "Student can only view his or her own application");
+        }
         Map<String, Object> result = new HashMap<>();
         result.put("stipend", ScholarshipTermApplicationDto.of(application.getScholarshipTerm()));
-        result.put("studentInfo", ScholarshipStudentDto.of(application, getStudentCurriculumCompletion(application.getStudent())));
-        result.put("studentSubmitData", ScholarshipApplicationDto.of(application));
+        result.put("application", getApplicationDto(application));
         return result;
     }
 
@@ -276,38 +340,144 @@ public class ScholarshipService {
     }
 
     private void refreshCompletionWithApplication(ScholarshipApplication application) {
-        StudentCurriculumCompletion completion = getStudentCurriculumCompletion(application.getStudent());
         ScholarshipTerm term = application.getScholarshipTerm();
-        if(completion != null) {
-            application.setCredits(completion.getCredits());
-        } else {
-            application.setCredits(BigDecimal.ZERO);
-        }
+        Student student = application.getStudent();
+        StudentResults results = getStudentResults(term, student);
+        
+        application.setCredits(results.getCredits());
+        
+        application.setCurriculumCompletion(term.getCurriculumCompletion() == null ? null : 
+            getCurriculumCompletion(results.getCredits(), student));
+        application.setAverageMark(term.getAverageMark() == null ? null : 
+            useSaisPoints(term, student) ? getSaisPoints(student) : results.getAverageMark());
+        application.setLastPeriodMark(term.getLastPeriodMark() == null ? null : results.getLastPeriodMark());
+        application.setAbsences(term.getMaxAbsences() == null ? null : results.getAbsences());
+    }
 
-        if (term.getCurriculumCompletion() != null && completion != null) {
-            application.setCurriculumCompletion(BigDecimal.ONE);
-        } else if (term.getCurriculumCompletion() != null) {
-            application.setCurriculumCompletion(BigDecimal.ZERO);
+    private StudentResults getHigherResults(Student student) {
+        StudentResults results = new StudentResults();
+        BigDecimal credits = getCredits(student);
+        results.setCredits(credits);
+        Long schoolId = EntityUtil.getId(student.getSchool());
+        results.setAverageMark(getAverageGrade(student, studyYearService.getCurrentStudyPeriod(schoolId), credits));
+        results.setLastPeriodMark(getAverageGrade(student, studyYearService.getPreviousStudyPeriod(schoolId), credits));
+        return results;
+    }
+
+    private StudentResults getVocationalResults(Student student) {
+        StudentResults results = new StudentResults();
+        BigDecimal credits = studentService.vocationalTotalCreditsOnCurrentCurriculum(student);
+        results.setCredits(credits == null ? BigDecimal.ZERO : credits);
+        LocalDateTime currentTime = LocalDateTime.now();
+        results.setAverageMark(getAverageGrade(student, currentTime));
+        results.setLastPeriodMark(getAverageGrade(student, currentTime.minusMonths(RESULT_PERIOD_MONTHS)));
+        results.setAbsences(getAbsences(student, currentTime));
+        return results;
+    }
+
+    private StudentResults getStudentResults(ScholarshipTerm term, Student student) {
+        Classifier termType = term.getType();
+        if (termType.isHigher()) {
+            return getHigherResults(student);
+        } else if (termType.isVocational()) {
+            return getVocationalResults(student);
         }
-        if (term.getAverageMark() != null && completion != null) {
-            application.setAverageMark(completion.getAverageMark());
-        } else if (term.getAverageMark() != null) {
-            application.setAverageMark(BigDecimal.ZERO);
-        }
-        if (term.getMaxAbsences() != null && completion != null) {
-            // TODO: replace with real absences
-            application.setAbsences(Long.valueOf(0L));
-        } else if (term.getMaxAbsences() != null) {
-            application.setAbsences(Long.valueOf(0L));
-        }
-        if (term.getLastPeriodMark() != null && completion != null) {
-            application.setLastPeriodMark(completion.getAverageMarkLastStudyPeriod());
-        } else if (term.getLastPeriodMark() != null) {
-            application.setLastPeriodMark(BigDecimal.ZERO);
-        }
+        throw new AssertionFailedException("Scholarship term type must be higher or vocational");
+    }
+
+    private BigDecimal getAverageGrade(Student student, LocalDateTime periodEnd) {
+        LocalDateTime truncatedPeriodEnd = DateUtils.startOfMonth(periodEnd);
+        return getAverageGrade(student, getResultPeriodStart(truncatedPeriodEnd), truncatedPeriodEnd);
+    }
+
+    private Long getAbsences(Student student, LocalDateTime periodEnd) {
+        LocalDateTime truncatedPeriodEnd = DateUtils.startOfMonth(periodEnd);
+        return getAbsences(student, getResultPeriodStart(truncatedPeriodEnd), truncatedPeriodEnd);
+    }
+
+    private BigDecimal getAverageGrade(Student student, LocalDateTime periodStart, LocalDateTime periodEnd) {
+        Number result = (Number) em.createNativeQuery("select avg(grade_value) as avg_grade from ("
+                    + "select CAST(grade.value AS integer) as grade_value"
+                    + " from student_vocational_result svr"
+                    + " join classifier grade on grade.code = grade_code"
+                    + " where svr.student_id = ?1 and grade.value ~ '^[0-9]' and svr.grade_date between ?2 and ?3"
+                + " union"
+                    + " select CAST(g.grade_value AS integer) as grade_value"
+                    + " from (select js.journal_id, jes.grade_inserted, grade.value as grade_value"
+                        + STUDENT_JOURNAL_RESULTS + ") g"
+                    + " join (select je.journal_id, max(jes.grade_inserted) as max_grade_inserted"
+                        + STUDENT_JOURNAL_RESULTS + " group by je.journal_id) lg"
+                    + " on g.journal_id = lg.journal_id and g.grade_inserted = lg.max_grade_inserted"
+                + ") results")
+                .setParameter(1, EntityUtil.getId(student))
+                .setParameter(2, JpaQueryUtil.parameterAsTimestamp(periodStart))
+                .setParameter(3, JpaQueryUtil.parameterAsTimestamp(periodEnd))
+                .setParameter(4, EnumUtil.toNameList(JournalEntryType.SISSEKANNE_O, JournalEntryType.SISSEKANNE_R,
+                        JournalEntryType.SISSEKANNE_L))
+                .getSingleResult();
+        return result == null ? null : BigDecimal.valueOf(result.doubleValue());
+    }
+
+    private BigDecimal getAverageGrade(Student student, Long studyPeriodId, BigDecimal credits) {
+        Number result = (Number) em.createNativeQuery("select sum(grade_mark * credits) as weighted_grade_sum"
+                + " from student_higher_result shr"
+                + " where shr.student_id = ?1 and shr.study_period_id = ?2")
+                .setParameter(1, EntityUtil.getId(student))
+                .setParameter(2, studyPeriodId)
+                .getSingleResult();
+        return result == null ? null : BigDecimal.valueOf(result.doubleValue()).divide(credits, 3, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal getCredits(Student student) {
+        Number result = (Number) em.createNativeQuery("select sum(credits) as total_credits"
+                + " from student_higher_result shr"
+                + " where shr.student_id = ?1")
+                .setParameter(1, EntityUtil.getId(student))
+                .getSingleResult();
+        return result == null ? BigDecimal.ZERO : BigDecimal.valueOf(result.doubleValue());
+    }
+
+    private static boolean useSaisPoints(ScholarshipTerm term, Student student) {
+        return term.getType().isHigher() && student.getStudyStart() != null && 
+                LocalDate.now().minusMonths(SAIS_POINTS_MONTHS).isBefore(student.getStudyStart());
     }
     
-    private void refreshAddressWithApplication(ScholarshipApplication application) {
+    private BigDecimal getSaisPoints(Student student) {
+        List<?> result = em.createNativeQuery("select sa.points"
+                + " from directive_student ds"
+                + " join sais_application sa on sa.id = ds.sais_application_id"
+                + " where ds.canceled = false and ds.student_id = ?1")
+                .setParameter(1, EntityUtil.getId(student))
+                .setMaxResults(1)
+                .getResultList();
+        return result.isEmpty() ? null : BigDecimal.valueOf(((Number) result.get(0)).doubleValue());
+    }
+
+    private Long getAbsences(Student student, LocalDateTime periodStart, LocalDateTime periodEnd) {
+        Number result = (Number) em.createNativeQuery("select sum(1) as absences"
+                + " from journal_entry_student jes"
+                + " join journal_student js on js.id = jes.journal_student_id"
+                + " join journal_entry je on je.id = jes.journal_entry_id"
+                + " where js.student_id = ?1 and jes.absence_code = ?2"
+                + " and je.entry_date between ?3 and ?4")
+                .setParameter(1, EntityUtil.getId(student))
+                .setParameter(2, Absence.PUUDUMINE_P.name())
+                .setParameter(3, JpaQueryUtil.parameterAsTimestamp(periodStart))
+                .setParameter(4, JpaQueryUtil.parameterAsTimestamp(periodEnd))
+                .getSingleResult();
+        return result == null ? Long.valueOf(0) : Long.valueOf(result.longValue());
+    }
+
+    private static LocalDateTime getResultPeriodStart(LocalDateTime periodEnd) {
+        LocalDateTime periodStart = periodEnd.minusMonths(RESULT_PERIOD_MONTHS);
+        int endMonth = periodEnd.getMonthValue();
+        if (endMonth >= 9 || endMonth <= (RESULT_PERIOD_MONTHS - 4)) {
+            periodStart = periodStart.minusMonths(2); // skip July and August
+        }
+        return periodStart;
+    }
+    
+    private static void refreshAddressWithApplication(ScholarshipApplication application) {
         Person person = application.getStudent().getPerson();
         application.setAddress(person.getAddress());
         application.setAddressAds(person.getAddressAds());
@@ -363,8 +533,23 @@ public class ScholarshipService {
         return result.isEmpty() ? null : result.get(0);
     }
 
-    public ScholarshipApplicationDto getStudentApplicationDto(ScholarshipApplication application) {
-        return ScholarshipApplicationDto.of(application);
+    private ScholarshipApplicationDto getApplicationDto(Student student, ScholarshipTerm term) {
+        ScholarshipApplicationDto dto = new ScholarshipApplicationDto();
+        dto.setFiles(new ArrayList<>());
+        dto.setCanApply(Boolean.TRUE);
+        if (useSaisPoints(term, student)) {
+            dto.setSaisPoints(getSaisPoints(student));
+        }
+        return dto;
+    }
+
+    public ScholarshipApplicationDto getApplicationDto(ScholarshipApplication application) {
+        ScholarshipApplicationDto dto = ScholarshipApplicationDto.of(application);
+        Student student = application.getStudent();
+        if (useSaisPoints(application.getScholarshipTerm(), student)) {
+            dto.setSaisPoints(getSaisPoints(student));
+        }
+        return dto;
     }
 
     public ScholarshipApplication apply(HoisUserDetails user, ScholarshipApplication application) {
@@ -393,64 +578,116 @@ public class ScholarshipService {
 
     private List<ScholarshipApplicationSearchDto> applicationsForCommand(ScholarshipApplicationSearchCommand command, HoisUserDetails user) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                "from scholarship_application sa" + " inner join scholarship_term st on st.id = sa.scholarship_term_id"
-                        + " left join scholarship_term_course stc on stc.scholarship_term_id = st.id"
-                        + " left join scholarship_term_curriculum stcu on stcu.scholarship_term_id = st.id"
-                        + " inner join student s on s.id = sa.student_id" + " inner join person p on p.id = s.person_id"
-                        + " inner join student_group sg on sg.id = sa.student_group_id"
-                        + " inner join curriculum c on c.id = sg.curriculum_id");
+                "from scholarship_application sa" 
+                        + " join scholarship_term st on st.id = sa.scholarship_term_id"
+                        + " join student s on s.id = sa.student_id" 
+                        + " join person p on p.id = s.person_id"
+                        + " join student_group sg on sg.id = sa.student_group_id"
+                        + " join curriculum c on c.id = sg.curriculum_id");
 
         qb.requiredCriteria("st.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalContains("st.name_et", "nameEt", command.getNameEt());
         qb.optionalCriteria("st.type_code = :typeCode", "typeCode", command.getType());
         qb.optionalCriteria("sa.status_code = :status", "status", command.getStatus());
         qb.optionalCriteria("st.study_period_id = :studyPeriod", "studyPeriod", command.getStudyPeriod());
-        qb.optionalCriteria("stc.course_code in (:courseCodes)", "courseCodes", command.getCourses());
-        qb.optionalCriteria("stcu.curriculum_id in (:curriculumIds)", "curriculumIds", command.getCurriculum());
+        qb.optionalCriteria("sa.scholarship_term_id in (select scholarship_term_id from scholarship_term_course where " 
+                + "course_code in (:courseCodes))", "courseCodes", command.getCourses());
+        qb.optionalCriteria("sa.scholarship_term_id in (select scholarship_term_id from scholarship_term_curriculum where "
+                + "curriculum_id in (:curriculumIds))", "curriculumIds", command.getCurriculum());
         qb.optionalContains(Arrays.asList("sg.code"), "studentGroup", command.getStudentGroup());
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname"), "personName", command.getStudentName());
 
         qb.requiredCriteria("sa.status_code != :compositionStatus", "compositionStatus",
                 ScholarshipStatus.STIPTOETUS_STAATUS_K);
 
-        String select = "distinct sa.id as application_id, st.type_code, st.id as term_id, st.name_et, c.code, s.id as student_id"
+        String select = "sa.id as application_id, st.type_code, st.id as term_id, st.name_et, c.code, s.id as student_id"
                 + ", p.firstname, p.lastname, p.idcode, sa.average_mark, sa.last_period_mark , sa.curriculum_completion"
-                + ", st.is_teacher_confirm, sa.status_code, sa.compensation_reason_code, sa.compensation_frequency_code, sa.credits, sa.reject_comment";
+                + ", st.is_teacher_confirm, sa.status_code, sa.compensation_reason_code, sa.compensation_frequency_code"
+                + ", sa.credits, sa.absences, sa.reject_comment"
+                + ", (select case when s.study_start > date(now()) - interval '" + SAIS_POINTS_MONTHS + " months'"
+                + " then sais.points else null end"
+                + " from directive_student ds"
+                + " join sais_application sais on sais.id = ds.sais_application_id"
+                + " where ds.canceled = false and ds.student_id = s.id) as sais_points";
         List<?> data = qb.select(select, em).getResultList();
-        return StreamUtil.toMappedList(r -> new ScholarshipApplicationSearchDto(r), data);
+        return StreamUtil.toMappedList(r -> {
+            ScholarshipApplicationSearchDto dto = new ScholarshipApplicationSearchDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setType(resultAsString(r, 1));
+            dto.setTerm(resultAsLong(r, 2));
+            dto.setTermNameEt(resultAsString(r, 3));
+            dto.setCurriculumCode(resultAsString(r, 4));
+            dto.setStudentId(resultAsLong(r, 5));
+            dto.setStudentName(PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7)));
+            dto.setFirstName(resultAsString(r, 6));
+            dto.setLastName(resultAsString(r, 7));
+            dto.setIdcode(resultAsString(r, 8));
+            dto.setAverageMark(resultAsDecimal(r, 9));
+            dto.setLastPeriodMark(resultAsDecimal(r, 10));
+            dto.setCurriculumCompletion(resultAsDecimal(r, 11));
+            dto.setIsTeacherConfirm(resultAsBoolean(r, 12));
+            dto.setStatus(resultAsString(r, 13));
+            dto.setCompensationReason(resultAsString(r, 14));
+            dto.setCompensationFrequency(resultAsString(r, 15));
+            dto.setCredits(resultAsDecimal(r, 16));
+            dto.setAbsences(resultAsLong(r, 17));
+            dto.setRejectComment(resultAsString(r, 18));
+            dto.setSaisPoints(resultAsDecimal(r, 19));
+            return dto;
+        }, data);
     }
 
-    public HttpStatus acceptApplications(ScholarshipApplicationListSubmitForm form, HoisUserDetails user) {
-        List<ScholarshipApplication> result = getApplications(StreamUtil.toMappedList(a -> a.getId(), form.getApplications()));
-        result.removeIf(a -> EntityUtil.getId(a.getScholarshipTerm().getSchool()).longValue() != user.getSchoolId().longValue());
+    public HttpStatus acceptApplications(HoisUserDetails user, List<Long> applicationIds) {
+        List<ScholarshipApplication> result = getApplications(applicationIds);
+        result.removeIf(a -> !UserUtil.isSameSchool(user, a.getScholarshipTerm().getSchool()));
         updateApplicationStatuses(result, ScholarshipStatus.STIPTOETUS_STAATUS_A);
         return HttpStatus.OK;
     }
 
     public HttpStatus annulApplications(ScholarshipApplicationListSubmitForm form, HoisUserDetails user) {
-        List<ScholarshipApplication> result = getApplications(StreamUtil.toMappedList(a -> a.getId(), form.getApplications()));
+        List<ScholarshipApplication> result = getApplications(form);
         result = setRejectionComments(form, result);
-        result.removeIf(a -> EntityUtil.getId(a.getScholarshipTerm().getSchool()).longValue() != user.getSchoolId().longValue());
+        result.removeIf(a -> !UserUtil.isSameSchool(user, a.getScholarshipTerm().getSchool()));
         updateApplicationStatuses(result, ScholarshipStatus.STIPTOETUS_STAATUS_T);
         return HttpStatus.OK;
     }
 
     public HttpStatus rejectApplications(ScholarshipApplicationListSubmitForm form, HoisUserDetails user) {
-        List<ScholarshipApplication> result = getApplications(StreamUtil.toMappedList(a -> a.getId(), form.getApplications()));
+        List<ScholarshipApplication> result = getApplications(form);
         result = setRejectionComments(form, result);
-        result.removeIf(a -> EntityUtil.getId(a.getScholarshipTerm().getSchool()).longValue() != user.getSchoolId().longValue());
+        result.removeIf(a -> !UserUtil.isSameSchool(user, a.getScholarshipTerm().getSchool()));
         updateApplicationStatuses(result, ScholarshipStatus.STIPTOETUS_STAATUS_L);
         return HttpStatus.OK;
     }
-    
-    private StudentCurriculumCompletion getStudentCurriculumCompletion(Student student) {
-        List<StudentCurriculumCompletion> result = em.createQuery("SELECT scc FROM StudentCurriculumCompletion scc WHERE scc.student.id = (?1)",
-                StudentCurriculumCompletion.class).setParameter(1, EntityUtil.getId(student)).setMaxResults(1).getResultList();
-        return result.isEmpty() ? null : result.get(0);
-    }
-    
 
-    
+    public HttpStatus refreshResults(HoisUserDetails user, List<Long> applicationIds) {
+        List<ScholarshipApplication> applications = getApplications(applicationIds);
+        checkAccess(user, applications);
+        for (ScholarshipApplication application : applications) {
+            refreshCompletionWithApplication(application);
+            EntityUtil.save(application, em);
+        }
+        return HttpStatus.OK;
+    }
+
+    public Map<Long, Boolean> checkComplies(HoisUserDetails user, List<Long> applicationIds) {
+        List<ScholarshipApplication> applications = getApplications(applicationIds);
+        checkAccess(user, applications);
+        Map<Long, Boolean> result = new HashMap<>();
+        for (ScholarshipApplication application : applications) {
+            result.put(EntityUtil.getId(application), Boolean.valueOf(
+                    studentCompliesTerm(application.getStudent(), application.getScholarshipTerm())));
+        }
+        return result;
+    }
+
+    private static void checkAccess(HoisUserDetails user, List<ScholarshipApplication> applications) {
+        for (ScholarshipApplication application : applications) {
+            UserUtil.throwAccessDeniedIf(!UserUtil.isSameSchool(user, application.getScholarshipTerm().getSchool()), 
+                    "User has no right to edit these applications");
+        }
+    }
+
     private static List<ScholarshipApplication> setRejectionComments(ScholarshipApplicationListSubmitForm form,
             List<ScholarshipApplication> applications) {
         Map<Long, ScholarshipApplication> applicationMap = StreamUtil.toMap(a -> EntityUtil.getId(a), applications);
@@ -464,6 +701,10 @@ public class ScholarshipService {
     private List<ScholarshipApplication> getApplications(List<Long> applications) {
         return em.createQuery("SELECT sa FROM ScholarshipApplication sa WHERE sa.id in (?1)",
                 ScholarshipApplication.class).setParameter(1, applications).getResultList();
+    }
+
+    private List<ScholarshipApplication> getApplications(ScholarshipApplicationListSubmitForm form) {
+        return getApplications(StreamUtil.toMappedList(ScholarshiApplicationRejectionForm::getId, form.getApplications()));
     }
 
     private void updateApplicationStatuses(List<ScholarshipApplication> entities, ScholarshipStatus status) {
@@ -484,7 +725,6 @@ public class ScholarshipService {
     }
 
     private boolean studentCompliesTerm(Student student, ScholarshipTerm term) {
-        StudentCurriculumCompletion completion = getStudentCurriculumCompletion(student);
         if (Boolean.FALSE.equals(term.getIsAcademicLeave()) && ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_A, student.getStatus())) {
             return false;
         }
@@ -524,46 +764,47 @@ public class ScholarshipService {
                 && term.getLastPeriodMarkPriority() == null && term.getMaxAbsencesPriority() == null) {
             return true;
         }
-        if(completion == null) {
-            return false;
+        StudentResults results = getStudentResults(term, student);
+        if (term.getAverageMark() != null) {
+            if (results.getAverageMark() == null || results.getAverageMark().compareTo(term.getAverageMark()) < 0) {
+                return false;
+            }
         }
-        if (term.getAverageMark() != null && completion.getAverageMark().compareTo(term.getAverageMark()) == 1) {
-            return false;
+        if (term.getLastPeriodMark() != null) {
+            if (results.getLastPeriodMark() == null || results.getLastPeriodMark().compareTo(term.getLastPeriodMark()) < 0) {
+                return false;
+            }
         }
-        if (term.getLastPeriodMark() != null
-                && completion.getAverageMarkLastStudyPeriod().compareTo(term.getLastPeriodMark()) == 1) {
-            return false;
+        if (term.getCurriculumCompletion() != null) {
+            if (getCurriculumCompletion(results.getCredits(), student).compareTo(term.getCurriculumCompletion()) < 0) {
+                return false;
+            }
         }
-        if (term.getCurriculumCompletion() != null
-                && curriculumCompletion(student).compareTo(term.getCurriculumCompletion()) == 1) {
-            return false;
+        if (term.getMaxAbsences() != null) {
+            if (results.getAbsences() != null && results.getAbsences().compareTo(term.getMaxAbsences()) > 0) {
+                return false;
+            }
         }
         return true;
     }
 
-    private BigDecimal curriculumCompletion(Student student) {
-        if (Boolean.TRUE.equals(student.getCurriculumVersion().getCurriculum().getHigher())) {
-            StudentHigherResultDto results = studentResultHigherService.higherResults(student);
-            return results.getCreditsSubmittedConsidered().divide(results.getCreditsSubmitted(), 1,
-                    BigDecimal.ROUND_HALF_UP);
-        }
-        //TODO: missing curriculumCompletion for higher = false students
-        return new BigDecimal(100);
-    }
-
-    private static final Map<Function<ScholarshipTerm, Classifier>, Function<ScholarshipApplicationSearchDto, BigDecimal>> COMPARATOR = new HashMap<>();
+    private static final Map<Function<ScholarshipTerm, Classifier>, Comparator<ScholarshipApplicationSearchDto>> COMPARATOR = new HashMap<>();
     static {
-        COMPARATOR.put(ScholarshipTerm::getAverageMarkPriority, ScholarshipApplicationSearchDto::getAverageMark);
-        COMPARATOR.put(ScholarshipTerm::getCurriculumCompletionPriority, ScholarshipApplicationSearchDto::getCurriculumCompletion);
-        COMPARATOR.put(ScholarshipTerm::getLastPeriodMarkPriority, ScholarshipApplicationSearchDto::getLastPeriodMark);
+        COMPARATOR.put(ScholarshipTerm::getAverageMarkPriority, Comparator.comparing(
+                ScholarshipApplicationSearchDto::getAverageMark, Comparator.nullsLast(Comparator.reverseOrder())));
+        COMPARATOR.put(ScholarshipTerm::getLastPeriodMarkPriority, Comparator.comparing(
+                ScholarshipApplicationSearchDto::getLastPeriodMark, Comparator.nullsLast(Comparator.reverseOrder())));
+        COMPARATOR.put(ScholarshipTerm::getCurriculumCompletionPriority, Comparator.comparing(
+                ScholarshipApplicationSearchDto::getCurriculumCompletion, Comparator.nullsLast(Comparator.reverseOrder())));
+        COMPARATOR.put(ScholarshipTerm::getMaxAbsencesPriority, Comparator.comparing(
+                ScholarshipApplicationSearchDto::getAbsences, Comparator.nullsLast(Comparator.naturalOrder())));
     }
 
     private static Comparator<ScholarshipApplicationSearchDto> comparatorForTerm(ScholarshipTerm term) {
-        //TODO: missing for absences
-        List<Function<ScholarshipApplicationSearchDto, BigDecimal>> comparators = new ArrayList<>(Collections.nCopies(Priority.values().length, null));
-        for(Map.Entry<Function<ScholarshipTerm, Classifier>, Function<ScholarshipApplicationSearchDto, BigDecimal>> me : COMPARATOR.entrySet()) {
+        List<Comparator<ScholarshipApplicationSearchDto>> comparators = new ArrayList<>(Collections.nCopies(Priority.values().length, null));
+        for (Entry<Function<ScholarshipTerm, Classifier>, Comparator<ScholarshipApplicationSearchDto>> me : COMPARATOR.entrySet()) {
             Classifier priority = me.getKey().apply(term);
-            if(priority != null) {
+            if (priority != null) {
                 comparators.set(Priority.valueOf(EntityUtil.getCode(priority)).ordinal(), me.getValue());
             }
         }
@@ -575,11 +816,11 @@ public class ScholarshipService {
         }
 
         Comparator<ScholarshipApplicationSearchDto> comparator = null;
-        for(Function<ScholarshipApplicationSearchDto, BigDecimal> c : comparators) {
-            if(comparator == null) {
-                comparator = Comparator.comparing(c, Comparator.reverseOrder());
+        for (Comparator<ScholarshipApplicationSearchDto> c : comparators) {
+            if (comparator == null) {
+                comparator = c;
             } else {
-                comparator = comparator.thenComparing(c, Comparator.reverseOrder());
+                comparator = comparator.thenComparing(c);
             }
         }
         return comparator;
@@ -589,5 +830,47 @@ public class ScholarshipService {
         if(!term.getIsOpen().booleanValue() && term.getScholarshipApplications().isEmpty()) {
             EntityUtil.deleteEntity(term, em);
         }
+    }
+
+    private static BigDecimal getCurriculumCompletion(BigDecimal credits, Student student) {
+        BigDecimal curriculumCredits = student.getCurriculumVersion().getCurriculum().getCredits();
+        return credits.multiply(BigDecimal.valueOf(100))
+                .divide(curriculumCredits, 0, RoundingMode.HALF_UP);
+    }
+    
+    private static class StudentResults {
+        private BigDecimal averageMark;
+        private BigDecimal lastPeriodMark;
+        private BigDecimal credits;
+        private Long absences;
+        
+        public BigDecimal getAverageMark() {
+            return averageMark;
+        }
+        public void setAverageMark(BigDecimal averageMark) {
+            this.averageMark = averageMark;
+        }
+        
+        public BigDecimal getLastPeriodMark() {
+            return lastPeriodMark;
+        }
+        public void setLastPeriodMark(BigDecimal lastPeriodMark) {
+            this.lastPeriodMark = lastPeriodMark;
+        }
+        
+        public BigDecimal getCredits() {
+            return credits;
+        }
+        public void setCredits(BigDecimal credits) {
+            this.credits = credits;
+        }
+        
+        public Long getAbsences() {
+            return absences;
+        }
+        public void setAbsences(Long absences) {
+            this.absences = absences;
+        }
+        
     }
 }

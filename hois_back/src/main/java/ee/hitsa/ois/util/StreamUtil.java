@@ -3,6 +3,7 @@ package ee.hitsa.ois.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -127,5 +128,15 @@ public abstract class StreamUtil {
 
     public static <T> Set<T> nullSafeSet(Set<T> data) {
         return data != null ? data : Collections.emptySet();
+    }
+
+    /**
+     * Comparator for nullsafe compare. Keyextractor can return null
+     *
+     * @param keyExtractor
+     * @return
+     */
+    public static <T, U extends Comparable<? super U>> Comparator<T> comparingWithNullsLast(Function<? super T, ? extends U> keyExtractor) {
+        return Comparator.comparing(keyExtractor, Comparator.nullsLast(Comparator.naturalOrder()));
     }
 }

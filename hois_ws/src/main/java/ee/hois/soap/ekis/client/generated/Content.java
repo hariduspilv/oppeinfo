@@ -33,6 +33,9 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="kudos" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="degree" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="eap" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="stip_type" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="stip_name" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="stip_amount" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -58,7 +61,10 @@ import javax.xml.bind.annotation.XmlType;
     "lang",
     "kudos",
     "degree",
-    "eap"
+    "eap",
+    "stipType",
+    "stipName",
+    "stipAmount"
 })
 public class Content {
 
@@ -94,6 +100,12 @@ public class Content {
     protected String degree;
     @XmlElement(required = true)
     protected String eap;
+    @XmlElement(name = "stip_type", required = true)
+    protected String stipType;
+    @XmlElement(name = "stip_name", required = true)
+    protected String stipName;
+    @XmlElement(name = "stip_amount", required = true)
+    protected String stipAmount;
 
     /**
      * Gets the value of the idCode property.
@@ -477,6 +489,78 @@ public class Content {
      */
     public void setEap(String value) {
         this.eap = value;
+    }
+
+    /**
+     * Gets the value of the stipType property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getStipType() {
+        return stipType;
+    }
+
+    /**
+     * Sets the value of the stipType property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setStipType(String value) {
+        this.stipType = value;
+    }
+
+    /**
+     * Gets the value of the stipName property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getStipName() {
+        return stipName;
+    }
+
+    /**
+     * Sets the value of the stipName property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setStipName(String value) {
+        this.stipName = value;
+    }
+
+    /**
+     * Gets the value of the stipAmount property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getStipAmount() {
+        return stipAmount;
+    }
+
+    /**
+     * Sets the value of the stipAmount property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setStipAmount(String value) {
+        this.stipAmount = value;
     }
 
 }

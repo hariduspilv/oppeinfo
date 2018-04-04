@@ -82,14 +82,14 @@ public class DeclarationService {
     private static final String DECLARATION_SELECT = " distinct d.id as d_id, s.id as sId, "
             + "p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code as cv_code, "
             + "sg.id as sgId, sg.code as sg_code, d.inserted, d.status_code, d.confirm_date, "
-            + "sp.id, sp.name_et, sp.name_en ";
+            + "sp.id, sp.name_et, sp.name_en, status.name_et as status_name_et, status.name_en as status_name_en ";
     private static final String DECLARATION_FROM = "from declaration d "
-            + "left join student s on s.id = d.student_id "
-            + "left join person p on p.id = s.person_id "
-            + "left join student_group sg on sg.id = s.student_group_id "
-            + "left join curriculum_version cv on cv.id = s.curriculum_version_id "
-            + "left join classifier status on status.code = d.status_code "
-            + "left join study_period sp on sp.id = d.study_period_id ";
+            + "join student s on s.id = d.student_id "
+            + "join person p on p.id = s.person_id "
+            + "join curriculum_version cv on cv.id = s.curriculum_version_id "
+            + "join classifier status on status.code = d.status_code "
+            + "join study_period sp on sp.id = d.study_period_id "
+            + "left join student_group sg on sg.id = s.student_group_id ";
 
     private static final String SUBJECT_FROM = "from subject_study_period ssp left join subject s on s.id = ssp.subject_id "
             + "left join curriculum_version_hmodule_subject cvhms on cvhms.subject_id = s.id "

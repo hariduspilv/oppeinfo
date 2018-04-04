@@ -5,13 +5,13 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -189,14 +189,10 @@ public class CurriculumService {
 
                     Map<Long, Set<Long>> yearCapacities = data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
                             Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toSet())));
-                    List<Long> changedYears = new ArrayList<>();
-                    for(int i = Math.min(oldStudyYears, newStudyYears)+1, cnt = Math.max(oldStudyYears, newStudyYears);i <= cnt;i++) {
-                        changedYears.add(Long.valueOf((short)i));
-                    }
-
+                    List<Long> studyYears = StreamUtil.toMappedList(r -> r, IntStream.rangeClosed(1, newStudyYears).mapToObj(i -> Long.valueOf(i)));
                     for(Map.Entry<Long, Set<Long>> cvo : yearCapacities.entrySet()) {
                         CurriculumVersionOccupationModule cvom = em.getReference(CurriculumVersionOccupationModule.class, cvo.getKey());
-                        for(Long studyYearNumber : changedYears) {
+                        for(Long studyYearNumber : studyYears) {
                             if(!cvo.getValue().contains(studyYearNumber)) {
                                 CurriculumVersionOccupationModuleYearCapacity cvomyc = new CurriculumVersionOccupationModuleYearCapacity();
                                 cvomyc.setModule(cvom);

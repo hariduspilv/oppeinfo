@@ -190,7 +190,7 @@
           </div>
         </hois-collapsable>
       </div>
-      <md-button ng-if="teacher.canEdit && auth.isTeacher()" ng-href="#/teachers/{{teacher.id}}/editmydata" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+      <md-button ng-if="teacher.canEdit && auth.isTeacher()" ng-href="#/teachers/{{teacher.id}}/editmydata?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
     </md-content>
   </md-tab>
   <md-tab label="{{'teacher.continuingEducation.continuingEducation' | translate}}" ng-if="teacher.teacherContinuingEducations.length > 0 && teacher.isVocational">
@@ -215,7 +215,7 @@
   </md-tab>
 </md-tabs>
 <div layout="row" layout-margin ng-if="!auth.isTeacher()" >
-  <md-button ng-if="!isShowingRtipTab && teacher.canEdit" ng-href="#/teachers/{{teacher.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+  <md-button ng-if="!isShowingRtipTab && teacher.canEdit" ng-href="#/teachers/{{teacher.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
   <md-button ng-if="isShowingRtipTab && teacher.canEdit" ng-click="updateData()" class="md-raised md-primary">{{'teacher.rtipAbsence.updateData' | translate}}</md-button>
   <md-button ng-click="back('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>

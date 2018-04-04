@@ -15,17 +15,19 @@ public final class PracticeJournalUserRights {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRAKTIKAPAEVIK)){
             return false;
         }
+        return isBeforeDaysAfterCanEdit(endDate);
+    }
+    
+    private static boolean isBeforeDaysAfterCanEdit(LocalDate endDate) {
         return LocalDate.now().isBefore(endDate.plusDays(DAYS_AFTER_END_CAN_EDIT));
     }
-
+    
     public static boolean canAddEntries(HoisUserDetails user, PracticeJournalSearchDto dto) {
-        if(!canEdit(user, dto.getEndDate())) {
+        if(user.isStudent()) {
+            return Boolean.TRUE.equals(dto.getCanStudentAddEntries()) && isBeforeDaysAfterCanEdit(dto.getEndDate());
+        } else if(!canEdit(user, dto.getEndDate())) {
             return false;
-        } else if(user.isTeacher()) {
-            return Boolean.TRUE.equals(dto.getCanTeacherAddEntries());
-        } else if(user.isStudent()) {
-            return Boolean.TRUE.equals(dto.getCanStudentAddEntries());
-        } else if(user.isSchoolAdmin()) {
+        } else if(user.isSchoolAdmin() || user.isTeacher()) {
             return true;
         }
         return false;

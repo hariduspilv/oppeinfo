@@ -85,7 +85,11 @@ public class SchoolService {
         }
         // XXX data duplication
         school.setNameEt(school.getEhisSchool().getNameEt());
-        return SchoolDto.ofWithLogo(EntityUtil.save(school, em));
+
+        school = EntityUtil.save(school, em);
+        em.flush();
+
+        return SchoolDto.ofWithLogo(school);
     }
 
     public Page<SchoolDto> search(SchoolSearchCommand searchCommand, Pageable pageable) {
@@ -135,9 +139,12 @@ public class SchoolService {
             "case when exists(select 1 from classifier c inner join school_study_level ssl on ssl.school_id = :school and ssl.study_level_code = c.code and c.value ~ '^[5-9].*$') " +
                     "then true else false end as higher, " +
             "case when exists(select 1 from classifier c inner join school_study_level ssl on ssl.school_id = :school and ssl.study_level_code = c.code and c.value ~ '^[0-4].*$') " +
-                    "then true else false end as vocational", em).getSingleResult();
+                    "then true else false end as vocational, " +
+            "case when exists(select 1 from classifier c inner join school_study_level ssl on ssl.school_id = :school and ssl.study_level_code = c.code and c.value ~ '^7.*$') " +
+                    "then true else false end as doctoral", em).getSingleResult();
 
-        return new SchoolType(resultAsBoolean(type, 0).booleanValue(), resultAsBoolean(type, 1).booleanValue());
+        return new SchoolType(resultAsBoolean(type, 0).booleanValue(), resultAsBoolean(type, 1).booleanValue(),
+                resultAsBoolean(type, 2).booleanValue());
     }
     
     /**
@@ -152,10 +159,12 @@ public class SchoolService {
     public static class SchoolType {
         private final boolean higher;
         private final boolean vocational;
+        private final boolean doctoral;
 
-        public SchoolType(boolean higher, boolean vocational) {
+        public SchoolType(boolean higher, boolean vocational, boolean doctoral) {
             this.higher = higher;
             this.vocational = vocational;
+            this.doctoral = doctoral;
         }
 
         public boolean isHigher() {
@@ -165,5 +174,10 @@ public class SchoolService {
         public boolean isVocational() {
             return vocational;
         }
+
+        public boolean isDoctoral() {
+            return doctoral;
+        }
+        
     }
 }

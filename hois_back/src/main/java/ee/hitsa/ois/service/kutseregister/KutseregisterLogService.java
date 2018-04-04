@@ -94,7 +94,12 @@ public class KutseregisterLogService {
      */
     public QfLogDto get(HoisUserDetails user, Long id, String messageType) {
         WsQfLog logentry = em.getReference(WsQfLog.class, id);
-        UserUtil.assertIsSchoolAdmin(user, logentry.getSchool());
+        School school = logentry.getSchool();
+        if(school == null) {
+            UserUtil.assertIsMainAdmin(user);
+        } else {
+            UserUtil.assertIsSchoolAdmin(user, school);
+        }
         QfLogDto dto = new QfLogDto(null, messageType, null, null, null, null);
         dto.setRequest(logentry.getRequest());
         dto.setResponse(logentry.getResponse());

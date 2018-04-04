@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.enums.Absence;
@@ -44,7 +45,7 @@ public class StudentAbsenceService {
     private StudyYearService studyYearService;
 
     private static final String SELECT = "sa.id as absenceId, s.id as studentId, p.firstname, p.lastname, sa.valid_from, "
-            + "sa.valid_thru, sa.is_accepted, sa.cause, sa.inserted_by, sa.changed_by ";
+            + "sa.valid_thru, sa.is_accepted, sa.is_rejected, sa.cause, sa.inserted_by, sa.accepted_by, sa.changed_by ";
     private static final String FROM =
               "from student_absence sa "
             + "join student s on s.id = sa.student_id "
@@ -78,6 +79,12 @@ public class StudentAbsenceService {
         qb.optionalContains("sg.code", "studentGroupCode", criteria.getStudentGroupCode());
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getStudentName());
         qb.optionalCriteria("sa.is_accepted = :isAccepted", "isAccepted", criteria.getIsAccepted());
+        
+        if (Boolean.TRUE.equals(criteria.getIsRejected())) {
+            qb.optionalCriteria("(sa.is_rejected = :isRejected or (sa.is_rejected is null and sa.is_accepted != :isRejected))", "isRejected", Boolean.TRUE);
+        } else if (Boolean.FALSE.equals(criteria.getIsRejected())){
+            qb.optionalCriteria("sa.is_rejected = :isRejected", "isRejected", Boolean.FALSE);
+        }
         qb.optionalCriteria(FILTER_BY_STUDY_PERIOD, "studyPeriod", criteria.getStudyPeriod());
         qb.requiredCriteria(FILTER_BY_STUDY_YEAR, "studyYear", criteria.getStudyYear());
         
@@ -86,11 +93,11 @@ public class StudentAbsenceService {
         }
 
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, SELECT, em, pageable);
-        boolean hasPermissionToAccept = StudentAbsenceUtil.hasPermissionToAccept(user);
-        return results.map(r -> rowToDto(hasPermissionToAccept, r));
+        boolean hasPermissionToChangeStatus = StudentAbsenceUtil.hasPermissionToChangeStatus(user);
+        return results.map(r -> rowToDto(hasPermissionToChangeStatus, r));
     }
     
-    private static StudentAbsenceDto rowToDto(boolean hasPermissionToAccept,  Object[] row) {
+    private static StudentAbsenceDto rowToDto(boolean hasPermissionToChangeStatus,  Object[] row) {
         StudentAbsenceDto dto = new StudentAbsenceDto();
         dto.setId(resultAsLong(row, 0));
         String fullname = PersonUtil.fullname(resultAsString(row, 2), resultAsString(row, 3));
@@ -98,18 +105,28 @@ public class StudentAbsenceService {
         dto.setValidFrom(resultAsLocalDate(row, 4));
         dto.setValidThru(resultAsLocalDate(row, 5));
         dto.setIsAccepted(resultAsBoolean(row, 6));
-        dto.setCause(resultAsString(row, 7));
-        dto.setApplicant(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(row, 8)));
-        if(Boolean.TRUE.equals(dto.getIsAccepted())) {
-            dto.setAcceptor(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(row, 9)));
+        dto.setIsRejected(resultAsBoolean(row, 7));
+        dto.setCause(resultAsString(row, 8));
+        dto.setApplicant(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(row, 9)));
+        if(Boolean.TRUE.equals(dto.getIsAccepted()) || Boolean.TRUE.equals(dto.getIsRejected())) {
+            dto.setAcceptor(resultAsString(row, 10) != null ? resultAsString(row, 10)
+                    : PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(row, 11)));
         }
-        dto.setCanAccept(Boolean.valueOf(hasPermissionToAccept && Boolean.FALSE.equals(dto.getIsAccepted())));
+        dto.setCanChangeStatus(Boolean.valueOf(hasPermissionToChangeStatus && Boolean.FALSE.equals(dto.getIsAccepted())
+                && (dto.getIsRejected() != null ? Boolean.FALSE.equals(dto.getIsRejected()) : true)));
         return dto;
     }
 
-    public StudentAbsence accept(StudentAbsence studentAbsence) {
+    public StudentAbsence accept(HoisUserDetails user, StudentAbsence studentAbsence) {
         updateJournalEntryStudents(studentAbsence);
         studentAbsence.setIsAccepted(Boolean.TRUE);
+        studentAbsence.setAcceptedBy(PersonUtil.fullname(em.getReference(Person.class, user.getPersonId())));
+        return EntityUtil.save(studentAbsence, em);
+    }
+    
+    public StudentAbsence reject(HoisUserDetails user, StudentAbsence studentAbsence) {
+        studentAbsence.setIsRejected(Boolean.TRUE);
+        studentAbsence.setAcceptedBy(PersonUtil.fullname(em.getReference(Person.class, user.getPersonId())));
         return EntityUtil.save(studentAbsence, em);
     }
 

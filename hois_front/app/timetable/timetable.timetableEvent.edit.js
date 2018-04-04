@@ -2,6 +2,7 @@
 
 angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService',
   function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService) {
+    $scope.auth = $route.current.locals.auth;
     var baseUrl = '/timetableevents';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
@@ -19,6 +20,11 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       $scope.timetableEvent.$promise.then(afterLoad);
     } else {
       $scope.timetableEvent = new Endpoint();
+
+      if ($scope.auth.isTeacher()) {
+        $scope.timetableEvent.teachers = [];
+        $scope.timetableEvent.teachers.push({id:$scope.auth.teacher, nameEt: $scope.auth.fullname, nameEn: $scope.auth.fullname, nameRu: $scope.auth.fullname});
+      }
     }
 
     $scope.save = function () {

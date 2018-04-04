@@ -20,6 +20,7 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
     private String grade;
     private String gradeValue;
     private String practiceResult;
+    private Long studentId;
     private AutocompleteResult student;
     @Size(max = 255)
     private String addInfo;
@@ -64,6 +65,14 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
 
     public void setGrade(String grade) {
         this.grade = grade;
+    }
+    
+    public Long getStudentId() {
+        return studentId;
+    }
+
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
     }
 
     public AutocompleteResult getStudent() {

@@ -70,7 +70,7 @@ public class LdapService {
         NamingEnumeration<SearchResult> answer = null;
         try {
             SearchControls ctls = new SearchControls();
-            ctls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
+            ctls.setSearchScope(SearchControls.SUBTREE_SCOPE);
             String[] attrIDs = { params.getIdcodeAttribute() };
             ctls.setReturningAttributes(attrIDs);
 

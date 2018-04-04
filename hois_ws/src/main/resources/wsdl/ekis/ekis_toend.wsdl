@@ -30,6 +30,9 @@
 					<xsd:element name="kudos" type="xsd:string"/>
 					<xsd:element name="degree" type="xsd:string"/>
 					<xsd:element name="eap" type="xsd:string"/>
+					<xsd:element name="stip_type" type="xsd:string"/>
+					<xsd:element name="stip_name" type="xsd:string"/>
+					<xsd:element name="stip_amount" type="xsd:string"/>
 				</xsd:sequence>
 			</xsd:complexType>
 			<xsd:complexType name="contentArray">

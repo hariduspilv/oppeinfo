@@ -152,6 +152,7 @@ public class StudentService {
 
     public Student save(HoisUserDetails user, Student student, StudentForm form) {
         Person p = EntityUtil.bindToEntity(form.getPerson(), student.getPerson(), classifierRepository);
+        PersonUtil.conditionalClean(p);
         EntityUtil.save(p, em);
 
         if(!UserUtil.isSchoolAdmin(user, student.getSchool())) {
@@ -196,15 +197,17 @@ public class StudentService {
         StudentAbsence absence = new StudentAbsence();
         absence.setStudent(student);
 
-        Page<StudentAbsenceDto> data = JpaQueryUtil.pagingResult(qb, "sa.id, sa.is_accepted, sa.valid_from, sa.valid_thru, sa.cause, sa.version", em, pageable).map(r -> {
+        Page<StudentAbsenceDto> data = JpaQueryUtil.pagingResult(qb, "sa.id, sa.is_accepted, sa.is_rejected, sa.valid_from, sa.valid_thru, sa.cause, sa.version", em, pageable).map(r -> {
             StudentAbsenceDto dto = new StudentAbsenceDto();
             dto.setId(resultAsLong(r, 0));
             dto.setIsAccepted(resultAsBoolean(r, 1));
-            dto.setValidFrom(resultAsLocalDate(r, 2));
-            dto.setValidThru(resultAsLocalDate(r, 3));
-            dto.setCause(resultAsString(r, 4));
-            dto.setVersion(resultAsLong(r, 5));
-            absence.setIsAccepted(dto.getIsAccepted()); // for validation
+            dto.setIsRejected(resultAsBoolean(r, 2));
+            dto.setValidFrom(resultAsLocalDate(r, 3));
+            dto.setValidThru(resultAsLocalDate(r, 4));
+            dto.setCause(resultAsString(r, 5));
+            dto.setVersion(resultAsLong(r, 6));
+            absence.setIsAccepted(dto.getIsAccepted());
+            absence.setIsRejected(dto.getIsRejected() != null ? dto.getIsRejected() : Boolean.FALSE);
             dto.setUserCanEdit(Boolean.valueOf(StudentAbsenceUtil.canEdit(user, absence)));
             return dto;
         });
@@ -233,6 +236,7 @@ public class StudentService {
         StudentAbsence absence = new StudentAbsence();
         absence.setStudent(student);
         absence.setIsAccepted(Boolean.FALSE);
+        absence.setIsRejected(Boolean.FALSE);
         absence = save(absence, form);
         if(user.isRepresentative()) {
             // send message to school admins, if absence is created by parent/representative
@@ -402,7 +406,7 @@ public class StudentService {
         return dto;
     }
     
-    private BigDecimal vocationalTotalCreditsOnCurrentCurriculum(Student student) {
+    public BigDecimal vocationalTotalCreditsOnCurrentCurriculum(Student student) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from (select distinct on (cm.id) cm.id, svr.credits from student_vocational_result svr " 
                         + "inner join curriculum_version_omodule cvo on cvo.id = svr.curriculum_version_omodule_id "

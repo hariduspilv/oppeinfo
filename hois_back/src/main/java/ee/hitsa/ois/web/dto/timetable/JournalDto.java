@@ -15,6 +15,7 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.studymaterial.JournalLessonHoursDto;
 
 public class JournalDto {
 
@@ -26,8 +27,7 @@ public class JournalDto {
     private List<String> journalTeachers = new ArrayList<>();
     private List<AutocompleteResult> curriculumModules = new ArrayList<>();
     private List<JournalModuleDescriptionDto> moduleDescriptions = new ArrayList<>();
-    private Integer plannedHours;
-    private Integer usedHours;
+    private JournalLessonHoursDto lessonHours;
     @ClassifierRestriction(MainClassCode.PAEVIK_STAATUS)
     private String status;
     private LocalDate endDate;
@@ -63,9 +63,8 @@ public class JournalDto {
 
         dto.setHasJournalStudents(Boolean.valueOf(!journal.getJournalStudents().isEmpty()));
         dto.setModuleOutcomesAsEntries(journal.getAddModuleOutcomes());
-
-        dto.setPlannedHours(Integer.valueOf(journal.getJournalCapacities().stream().mapToInt(it -> it.getHours() == null ? 0 : it.getHours().intValue()).sum()));
-        dto.setUsedHours(Integer.valueOf(journal.getJournalEntries().stream().mapToInt(it -> it.getLessons() == null ? 0 : it.getLessons().intValue()).sum()));
+        
+        dto.setLessonHours(JournalLessonHoursDto.of(journal));
         dto.setIsDistinctiveAssessment(Boolean.valueOf(VocationalGradeType.KUTSEHINDAMISVIIS_E.name().equals(journal.getAssessment().getCode())));
         return dto;
     }
@@ -125,21 +124,13 @@ public class JournalDto {
     public void setCurriculumModules(List<AutocompleteResult> curriculumModules) {
         this.curriculumModules = curriculumModules;
     }
-
-    public Integer getPlannedHours() {
-        return plannedHours;
+    
+    public JournalLessonHoursDto getLessonHours() {
+        return lessonHours;
     }
 
-    public void setPlannedHours(Integer plannedHours) {
-        this.plannedHours = plannedHours;
-    }
-
-    public Integer getUsedHours() {
-        return usedHours;
-    }
-
-    public void setUsedHours(Integer usedHours) {
-        this.usedHours = usedHours;
+    public void setLessonHours(JournalLessonHoursDto lessonHours) {
+        this.lessonHours = lessonHours;
     }
 
     public String getStatus() {

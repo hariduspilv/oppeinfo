@@ -19,8 +19,10 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     });
 
     function initializeData(result, selectedGroupId, selectedGroups) {
+      var displayPeriodLessons = $scope.plan.displayPeriodLessons ? $scope.plan.displayPeriodLessons : false;
       $scope.plan = result;
       $scope.plan.selectAll = true;
+      $scope.plan.displayPeriodLessons = displayPeriodLessons;
       $scope.plan.journals.sort(function (a, b) {
         return a.id - b.id;
       });
@@ -34,6 +36,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         $scope.plan.studentGroups.forEach(function (studentGroup) {
           if (selectedGroupCodes.indexOf(studentGroup.code) === -1) {
             studentGroup._selected = false;
+            $scope.plan.selectAll = false;
           }
         });
       } else {
@@ -127,7 +130,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       setCapacities();
     });
 
-    $scope.$watch('plan.selectAll', function () {
+    $scope.selectAllChanged = function () {
       if (angular.isDefined($scope.plan.selectAll)) {
         if ($scope.plan.selectAll) {
           Classifier.setSelectedCodes($scope.plan.studentGroups, $scope.plan.studentGroups.map(function (obj) {
@@ -138,7 +141,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         }
         $scope.updateGroups();
       }
-    });
+    };
 
     function setCapacities() {
       if (angular.isDefined($scope.plan.selectedGroup)) {
@@ -397,7 +400,17 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       $scope.plan.currentStudentGroups = $scope.plan.studentGroups.filter(function (t) {
         return selectedCodes.indexOf(t.code) !== -1;
       });
+      updateSelectAll();
     };
+
+    function updateSelectAll() {
+      $scope.plan.selectAll = true;
+      $scope.plan.studentGroups.forEach(function (studentGroup) {
+        if (!studentGroup._selected) {
+          $scope.plan.selectAll = false;
+        }
+      });
+    }
 
     function setTeachersForStudentGroups(capacities, groups, journals) {
       if (angular.isArray(capacities) && angular.isArray(groups)) {

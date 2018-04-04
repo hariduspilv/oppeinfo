@@ -7,6 +7,8 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,6 +35,7 @@ import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanCreatedJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchDto;
@@ -90,31 +93,37 @@ public class LessonPlanController {
         return lessonPlanService.searchFormData(user.getSchoolId());
     }
 
-    @PostMapping("/journals")
-    public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody LessonPlanJournalForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return HttpUtil.created(lessonPlanService.createJournal(user, form));
+    @GetMapping("/journals/new")
+    public LessonPlanJournalDto newJournal(HoisUserDetails user, @RequestParam("lessonPlan") Long lessonPlanId,
+            @RequestParam("occupationModule") Long occupationModuleId, 
+            @RequestParam(value = "lessonPlanModule", required = false) Long lessonPlanModuleId) {
+        return lessonPlanService.newJournal(user, lessonPlanId, occupationModuleId, lessonPlanModuleId);
     }
 
-    @GetMapping("/journals/new")
-    public LessonPlanJournalDto newJournal(HoisUserDetails user, @RequestParam("lessonPlanModule") Long lessonPlanModuleId) {
-        return lessonPlanService.newJournal(user, lessonPlanModuleId);
+    @PostMapping("/journals")
+    public ResponseEntity<LessonPlanCreatedJournalDto> create(HoisUserDetails user, 
+            @Valid @RequestBody LessonPlanJournalForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return new ResponseEntity<>(lessonPlanService.createJournal(user, form), HttpStatus.CREATED);
     }
 
     @GetMapping("/journals/{id:\\d+}")
-    public LessonPlanJournalDto getJournal(HoisUserDetails user, @WithEntity Journal journal, @RequestParam("lessonPlanModule") Long lessonPlanModuleId) {
+    public LessonPlanJournalDto getJournal(HoisUserDetails user, @WithEntity Journal journal, 
+            @RequestParam("lessonPlanModule") Long lessonPlanModuleId) {
         UserUtil.assertSameSchool(user, journal.getSchool());
         return lessonPlanService.getJournal(journal, lessonPlanModuleId);
     }
 
     @PutMapping("/journals/{id:\\d+}")
-    public LessonPlanJournalDto saveJournal(HoisUserDetails user, @WithEntity Journal journal, @Valid @RequestBody LessonPlanJournalForm form) {
+    public LessonPlanJournalDto saveJournal(HoisUserDetails user, @WithEntity Journal journal, 
+            @Valid @RequestBody LessonPlanJournalForm form) {
         UserUtil.assertIsSchoolAdmin(user, journal.getSchool());
         return getJournal(user, lessonPlanService.saveJournal(journal, form, user), form.getLessonPlanModuleId());
     }
 
     @DeleteMapping("/journals/{id:\\d+}")
-    public void deleteJournal(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Journal journal, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void deleteJournal(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Journal journal, 
+            @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, journal.getSchool());
         lessonPlanService.deleteJournal(user, journal);
     }

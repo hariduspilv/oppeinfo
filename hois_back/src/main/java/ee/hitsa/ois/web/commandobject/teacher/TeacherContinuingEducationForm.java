@@ -2,6 +2,8 @@ package ee.hitsa.ois.web.commandobject.teacher;
 
 import java.time.LocalDate;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.enums.MainClassCode;
@@ -27,6 +29,8 @@ public class TeacherContinuingEducationForm extends VersionedCommand {
     private LocalDate  diplomaDate;
     private String diplomaNr;
     @NotNull
+    @Min(0)
+    @Max(9999)
     private Short capacity;
     private String otherSchool;
     @NotNull

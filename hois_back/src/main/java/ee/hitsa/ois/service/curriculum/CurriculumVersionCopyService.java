@@ -1,9 +1,11 @@
 package ee.hitsa.ois.service.curriculum;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -27,7 +29,9 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleThemeCapa
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionSpeciality;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 
 @Transactional
 @Service
@@ -56,7 +60,7 @@ public class CurriculumVersionCopyService {
             Set<CurriculumVersionOccupationModule> occupationModules) {
         if(!CollectionUtils.isEmpty(occupationModules)) {
             newCurriculumVersion.setOccupationModules(new HashSet<>());
-            
+
             for(CurriculumVersionOccupationModule copied : occupationModules) {
                 CurriculumVersionOccupationModule newModule = new CurriculumVersionOccupationModule();
                 BeanUtils.copyProperties(copied, newModule, "id", "created", "createdBy", "changed", "changedBy",
@@ -93,17 +97,30 @@ public class CurriculumVersionCopyService {
             Set<CurriculumVersionOccupationModuleYearCapacity> yearCapacities) {
 
         if(!CollectionUtils.isEmpty(yearCapacities)) {
-            newModule.setYearCapacities(new HashSet<>());
-            
+            int studyYears = CurriculumUtil.studyYears(newModule.getCurriculumVersion().getCurriculum());
+            Set<CurriculumVersionOccupationModuleYearCapacity> newYearCapacities = new HashSet<>();
+            Set<Short> copiedStudyYears = StreamUtil.toMappedSet(r -> r, IntStream.rangeClosed(1, studyYears).mapToObj(i -> Short.valueOf((short)i)));
+
+            // copy year capacities to new module, ignoring wrong study years and adding missing ones
             for(CurriculumVersionOccupationModuleYearCapacity copied : yearCapacities) {
-                CurriculumVersionOccupationModuleYearCapacity newYearCapacity = 
-                        new CurriculumVersionOccupationModuleYearCapacity();
-                newYearCapacity.setModule(newModule);
-                newYearCapacity.setStudyYearNumber(copied.getStudyYearNumber());
-                newYearCapacity.setCredits(copied.getCredits());
-                
-                newModule.getYearCapacities().add(newYearCapacity);
+                Short copiedStudyYear = copied.getStudyYearNumber();
+                if(copiedStudyYears.remove(copiedStudyYear)) {
+                    CurriculumVersionOccupationModuleYearCapacity newYearCapacity = new CurriculumVersionOccupationModuleYearCapacity();
+                    newYearCapacity.setStudyYearNumber(copiedStudyYear);
+                    newYearCapacity.setModule(newModule);
+                    newYearCapacity.setCredits(copied.getCredits());
+                    newYearCapacities.add(newYearCapacity);
+                }
             }
+
+            for(Short studyYear : copiedStudyYears) {
+                CurriculumVersionOccupationModuleYearCapacity newYearCapacity = new CurriculumVersionOccupationModuleYearCapacity();
+                newYearCapacity.setModule(newModule);
+                newYearCapacity.setStudyYearNumber(studyYear);
+                newYearCapacity.setCredits(BigDecimal.ZERO);
+                newYearCapacities.add(newYearCapacity);
+            }
+            newModule.setYearCapacities(newYearCapacities);
         }
     }
 

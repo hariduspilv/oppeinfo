@@ -24,31 +24,30 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
       STIPTOETUS_MUU: 'scholarship/student/scholarship.application.scho.edit.html',
       STIPTOETUS_TULEMUS: 'scholarship/student/scholarship.application.scho.edit.html'
     };
-    $scope.studentSubmitData = {};
+    $scope.application = {};
     var baseUrl = '/scholarships';
     $scope.editable = true;
     var id = $route.current.params.id;
     QueryUtils.endpoint(baseUrl + '/' + id + '/application').get({}, function (result) {
       $scope.stipend = result.stipend;
-      $scope.studentInfo = result.studentInfo;
       $scope.templateName = templateMap[result.stipend.type];
       if (result.stipend.type === 'STIPTOETUS_ERI') {
-        calculateSumsForFamilyBlock($scope.studentSubmitData.family);
+        calculateSumsForFamilyBlock($scope.application.family);
       }
-      if(!result.studentSubmitData.compensationFrequency) {
-        result.studentSubmitData.compensationFrequency = 'STIPTOETUS_HYVITAMINE_1';
+      if(!result.application.compensationFrequency) {
+        result.application.compensationFrequency = 'STIPTOETUS_HYVITAMINE_1';
       }
-      afterLoad(result.studentSubmitData);
+      afterLoad(result.application);
     });
 
     $scope.openAddFileDialog = function () {
       dialogService.showDialog('components/file.add.dialog.html', function (dialogScope) {
-        dialogScope.addedFiles = $scope.studentSubmitData.files;
+        dialogScope.addedFiles = $scope.application.files;
       }, function (submittedDialogScope) {
         var data = submittedDialogScope.data;
         oisFileService.getFromLfFile(data.file[0], function (file) {
           data.oisFile = file;
-          $scope.studentSubmitData.files.push(data);
+          $scope.application.files.push(data);
         });
         //message.info('stipend.messages.filesWillBeAddedOnSubmit');
       });
@@ -65,11 +64,11 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
 
     $scope.getUrl = oisFileService.getUrl;
     $scope.removeFromArray = ArrayUtils.remove;
-
+    $scope.isNumber = angular.isNumber;
 
     function formIsValid(form) {
       form.$setSubmitted();
-      if ($scope.studentSubmitData.family && $scope.studentSubmitData.family.length > $scope.studentSubmitData.familyMembersAdult) {
+      if ($scope.application.family && $scope.application.family.length > $scope.application.familyMembersAdult) {
         message.error('stipend.family.deleteRows');
         return false;
       }
@@ -82,7 +81,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
 
     function afterLoad(result) {
       result.canApply = (result.id === null || result.status === 'STIPTOETUS_STAATUS_K' || result.status === 'STIPTOETUS_STAATUS_T');
-      $scope.studentSubmitData = result;
+      $scope.application = result;
     }
 
     $scope.apply = function (form) {
@@ -102,8 +101,8 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
       if (!formIsValid(form)) {
         return;
       }
-      if ($scope.studentSubmitData.id) {
-        QueryUtils.endpoint(baseUrl + '/' + id + '/application').update($scope.studentSubmitData, function (result) {
+      if ($scope.application.id) {
+        QueryUtils.endpoint(baseUrl + '/' + id + '/application').update($scope.application, function (result) {
           if (callBack) {
             callBack(result);
           } else {
@@ -112,7 +111,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
           }
         });
       } else {
-        QueryUtils.endpoint(baseUrl + '/' + id + '/application').save($scope.studentSubmitData, function (result) {
+        QueryUtils.endpoint(baseUrl + '/' + id + '/application').save($scope.application, function (result) {
           if (callBack) {
             callBack(result);
           } else {
@@ -124,10 +123,10 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
     };
 
     $scope.addFamilyMember = function () {
-      if (!angular.isArray($scope.studentSubmitData.family)) {
-        $scope.studentSubmitData.family = [];
+      if (!angular.isArray($scope.application.family)) {
+        $scope.application.family = [];
       }
-      if ($scope.studentSubmitData.family.length < $scope.studentSubmitData.familyMembersAdult) {
+      if ($scope.application.family.length < $scope.application.familyMembersAdult) {
         dialogService.showDialog('scholarship/student/scholarship.family.addMember.html', function () {}, function (submittedDialogScope) {
           var member = submittedDialogScope.member;
           submittedDialogScope.member.sum = [member.netSalary, member.pension, member.stateBenefit, member.otherIncome, member.unemployedBenefit].reduce(function (a, b) {
@@ -136,7 +135,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
             }
             return a + b;
           }, 0);
-          $scope.studentSubmitData.family.push(submittedDialogScope.member);
+          $scope.application.family.push(submittedDialogScope.member);
         });
       } else {
         message.error('stipend.family.errorWithMembers');
@@ -156,6 +155,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
     };
 
     $scope.getUrl = oisFileService.getUrl;
+    $scope.isNumber = angular.isNumber;
     $scope.editable = false;
     var baseUrl = '/scholarships';
     var id = $route.current.params.id;
@@ -164,13 +164,12 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
     function loadApplication() {
       QueryUtils.endpoint(baseUrl + '/application/' + id).get({}, function (result) {
         $scope.stipend = result.stipend;
-        $scope.studentInfo = result.studentInfo;
-        $scope.studentSubmitData = result.studentSubmitData;
+        $scope.application = result.application;
         $scope.templateName = templateMap[result.stipend.type];
         if (result.stipend.type === 'STIPTOETUS_ERI') {
-          calculateSumsForFamilyBlock($scope.studentSubmitData.family);
+          calculateSumsForFamilyBlock($scope.application.family);
         }
-        $scope.canManage = AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS') && result.studentSubmitData.status !== 'STIPTOETUS_STAATUS_A';
+        $scope.canManage = AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS') && result.application.status !== 'STIPTOETUS_STAATUS_A';
       });
     }
     loadApplication();

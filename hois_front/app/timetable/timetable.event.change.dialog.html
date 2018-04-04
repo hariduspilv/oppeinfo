@@ -14,7 +14,8 @@
         <div layout="column">
           <div flex="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="row" flex="70">
-              <hois-autocomplete flex ng-model="lesson.eventRoom" method="rooms" label="lessonplan.event.room" additional-query-params="{buildingIds: lesson.buildingIds}"></hois-autocomplete>
+              <hois-autocomplete flex ng-model="lesson.eventRoom" method="rooms" label="lessonplan.event.room" 
+                additional-query-params="{buildingIds: lesson.buildingIds, isStudy: true}"></hois-autocomplete>
             </div>
             <div layout="column" class="common-label" flex="65" ng-repeat="room in lesson.eventRooms">
               <div layout="row" flex layout-align="start center">

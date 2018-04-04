@@ -1,10 +1,14 @@
 package ee.hitsa.ois.service.ekis;
 
 import java.lang.invoke.MethodHandles;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -60,6 +64,13 @@ import ee.hois.soap.ekis.client.generated.Content;
 public class EkisService {
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    // we want to send always dot as decimal separator
+    private static final DecimalFormatSymbols MONEY_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.ROOT);
+    static {
+        MONEY_FORMAT_SYMBOLS.setDecimalSeparator('.');
+    }
+    // format class is not thread-safe
+    private static final ThreadLocal<DecimalFormat> MONEY_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("0.00", MONEY_FORMAT_SYMBOLS));
 
     // XXX we send 0 as missing wd_id value
     private static final int MISSING_WD_ID = 0;
@@ -242,6 +253,7 @@ public class EkisService {
     private static Content studentForRegisterDirective(DirectiveType directiveType, DirectiveStudent ds) {
         Content content = new Content();
         Person person = ds.getPerson();
+        Student student = ds.getStudent();
 
         String idcode = null;
         if(StringUtils.hasText(person.getIdcode())) {
@@ -257,58 +269,69 @@ public class EkisService {
         case KASKKIRI_AKAD:
             content.setStartDate(periodStart(ds));
             content.setEndDate(periodEnd(ds));
-            content.setReason(value(ds.getReason()));
+            content.setReason(name(ds.getReason()));
             break;
         case KASKKIRI_AKADK:
             content.setEndDate(date(ds.getStartDate()));
             break;
         case KASKKIRI_EKSMAT:
-            content.setReason(value(ds.getReason()));
+            content.setReason(name(ds.getReason()));
             break;
         case KASKKIRI_ENNIST:
             // only student group is edited, take other values from student
-            Student student = ds.getStudent();
-            content.setLoad(value(student.getStudyLoad()));
-            content.setForm(value(student.getStudyForm()));
+            content.setLoad(name(student.getStudyLoad()));
+            content.setForm(name(student.getStudyForm()));
             content.setCurricula(curriculum(student));
             content.setGroup(studentGroup(ds));
-            content.setFinsource(value(student.getFin()));
-            content.setLang(value(student.getLanguage()));
+            content.setFinsource(name(student.getFin()));
+            content.setLang(name(student.getLanguage()));
             break;
         case KASKKIRI_FINM:
-            content.setFinsource(value(ds.getFin()));
+            content.setFinsource(name(ds.getFin()));
             break;
         case KASKKIRI_IMMAT:
         case KASKKIRI_IMMATV:
-            content.setLoad(value(ds.getStudyLoad()));
-            content.setForm(value(ds.getStudyForm()));
+            content.setLoad(name(ds.getStudyLoad()));
+            content.setForm(name(ds.getStudyForm()));
             content.setCurricula(curriculum(ds));
             content.setGroup(studentGroup(ds));
-            content.setFinsource(value(ds.getFin()));
-            content.setLang(value(ds.getLanguage()));
+            content.setFinsource(name(ds.getFin()));
+            content.setLang(name(ds.getLanguage()));
             break;
         case KASKKIRI_LOPET:
             content.setCurricula(curriculum(ds));
-            // TODO cum laude, grade
+            // TODO cum laude
+            content.setDegree(name(ds.getCurriculumGrade()));
             break;
         case KASKKIRI_OKAVA:
-            content.setForm(value(ds.getStudyForm()));
+            content.setForm(name(ds.getStudyForm()));
             content.setCurricula(curriculum(ds));
             content.setGroup(studentGroup(ds));
             break;
         case KASKKIRI_OKOORM:
-            content.setLoad(value(ds.getStudyLoad()));
+            content.setLoad(name(ds.getStudyLoad()));
             break;
         case KASKKIRI_OVORM:
-            content.setForm(value(ds.getStudyForm()));
+            content.setForm(name(ds.getStudyForm()));
             content.setGroup(studentGroup(ds));
             break;
         case KASKKIRI_STIPTOET:
+            // take curriculum and load from student
+            // TODO study year
+            content.setLoad(name(student.getStudyLoad()));
+            content.setCurricula(curriculum(student));
             content.setStartDate(date(ds.getStartDate()));
             content.setEndDate(date(ds.getEndDate()));
+            content.setStipType(value(ds.getDirective().getScholarshipType()));
+            content.setStipName(name(ds.getDirective().getScholarshipType()));
+            content.setStipAmount(money(ds.getAmountPaid()));
             break;
         case KASKKIRI_STIPTOETL:
-            content.setReason(value(ds.getReason()));
+            content.setStartDate(date(ds.getStartDate()));
+            content.setEndDate(date(ds.getEndDate()));
+            content.setReason(name(ds.getReason()));
+            content.setStipType(value(ds.getDirective().getScholarshipType()));
+            content.setStipName(name(ds.getDirective().getScholarshipType()));
             break;
         case KASKKIRI_VALIS:
             content.setStartDate(periodStart(ds));
@@ -368,6 +391,14 @@ public class EkisService {
             // ignore
         }
         return 0;
+    }
+
+    private static String money(BigDecimal amount) {
+        return amount != null ? MONEY_FORMAT.get().format(amount) : null;
+    }
+
+    private static String name(Translatable object) {
+        return object != null ? object.getNameEt() : null;
     }
 
     private static String periodStart(DirectiveStudent ds) {

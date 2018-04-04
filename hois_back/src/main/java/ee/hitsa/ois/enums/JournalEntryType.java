@@ -6,5 +6,6 @@ public enum JournalEntryType {
     SISSEKANNE_I,
     SISSEKANNE_H,
     SISSEKANNE_L,
-    SISSEKANNE_O
+    SISSEKANNE_O,
+    SISSEKANNE_R
 }

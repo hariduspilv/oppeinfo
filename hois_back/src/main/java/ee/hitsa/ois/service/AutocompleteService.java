@@ -125,6 +125,11 @@ public class AutocompleteService {
         qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains("r.code",  "code", lookup.getName());
         qb.optionalCriteria("b.id in (:buildingIds)", "buildingIds", lookup.getBuildingIds());
+        
+        if(Boolean.TRUE.equals(lookup.getIsStudy())) {
+            qb.filter("r.is_study = true");
+        }
+        
         qb.sort("r.code");
 
         List<?> data = qb.select("r.id, r.code, r.seats", em).getResultList();
@@ -661,6 +666,7 @@ public class AutocompleteService {
 
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"),  "name", lookup.getName());
+        qb.optionalCriteria("t.is_higher = :higher", "higher", lookup.getHigher());
         if(Boolean.TRUE.equals(lookup.getValid())) {
             qb.filter("t.is_active = true");
         }

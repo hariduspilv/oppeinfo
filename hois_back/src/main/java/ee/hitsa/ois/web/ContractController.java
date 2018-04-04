@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -99,10 +100,15 @@ public class ContractController {
                 .stream().flatMap(it -> it.getSubjects().stream()).collect(Collectors.toList());
     }
 
+    @GetMapping("/checkForEkis/{id:\\d+}")
+    public Map<String, ?> checkForEkis(HoisUserDetails user, @PathVariable("id") Long contractId) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return contractService.checkForEkis(user, contractId);
+    }
+
     @PostMapping("/sendToEkis/{id:\\d+}")
     public ContractDto sendToEkis(HoisUserDetails user, @WithEntity Contract contract) {
         UserUtil.assertIsSchoolAdmin(user);
         return get(user, contractService.sendToEkis(user, contract));
     }
-
 }

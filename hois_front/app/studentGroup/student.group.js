@@ -132,11 +132,22 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       }
     };
 
+    $scope.validThruChanged = function() {
+      var thru = $scope.record.validThru;
+      if(thru) {
+        if(typeof $scope.record.validThru === 'string') {
+          thru = moment(thru, "YYYY-MM-DD'T'hh:mm:ss.SSS'Z'");
+        }
+      }
+      $scope.formState.canAddStudents = !thru || moment().isSameOrBefore(thru, 'day');
+    };
+
     function afterLoad() {
       $scope.formState.students = clMapper.objectmapper($scope.record.members);
       $scope.formState.selectedStudents = angular.copy($scope.formState.students);
       $scope.formState.readonly = $scope.record.id && $scope.formState.students && $scope.formState.students.length > 0;
       $scope.curriculumChanged();
+      $scope.validThruChanged();
       $scope.record.members.forEach(function(it, i) { it.rowno = i + 1; });
     }
 

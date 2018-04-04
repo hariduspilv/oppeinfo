@@ -105,13 +105,18 @@
               </ul>
             </li>
           </ul>
-
-          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="md-caption">Versioon 0.6.6/20180309</span></div>
-          <div style="margin-bottom: 8px;" flex layout="row"  ng-show="state.currentUser">
-            <a style="font-size: 13px; margin: 10px;"  href="https://kratt.edu.ee" target="_blank" rel="noopener">Kratt</a>
+          <div flex layout="row" layout-align="center">
+            <a class="sidenav-link" href="mailto:tahvel@hitsa.ee">tahvel@hitsa.ee</a>
+          </div>
+          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="md-caption">Versioon 0.6.7/20180404</span></div>
+          <div flex layout="row" ng-show="state.currentUser">
+            <a class="sidenav-link" href="https://kratt.edu.ee" target="_blank" rel="noopener">Kratt</a>
           </div>
           <div flex layout="row" ng-show="state.currentUser">
-            <a style="font-size: 13px; margin: 10px;" ng-href="/#/studentrepresentatives/applications/new?_menu">{{'home.represantiveApplication' | translate}}</a>
+            <a class="sidenav-link" ng-href="/#/studentrepresentatives/applications/new?_menu">{{'home.represantiveApplication' | translate}}</a>
+          </div>
+          <div flex layout="row" layout-align="center">
+            <img class="eu_logo" src="images/eu_logo_ja_lipp.jpg"/>
           </div>
         </md-content>
       </md-sidenav>
@@ -309,13 +314,14 @@
   <script src="services/auth.js"></script>
   <script src="services/data.utils.js"></script>
   <script src="services/dialog.service.js"></script>
+  <script src="services/ekis.service.js"></script>
   <script src="services/error.js"></script>
+  <script src="services/form.utils.js"></script>
   <script src="services/inaadress.service.js"></script>
   <script src="services/menu.js"></script>
   <script src="services/message.js"></script>
   <script src="services/ois.file.service.js"></script>
   <script src="services/query.utils.js"></script>
-  <script src="services/ekis.service.js"></script>
 
   <script src="school/school.js"></script>
   <script src="school/school.department.js"></script>

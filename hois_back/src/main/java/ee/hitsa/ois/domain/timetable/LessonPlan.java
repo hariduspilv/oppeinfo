@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.timetable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -30,7 +31,7 @@ public class LessonPlan extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
     @OneToMany(mappedBy = "lessonPlan", cascade = CascadeType.ALL)
-    private List<LessonPlanModule> lessonPlanModules;
+    private List<LessonPlanModule> lessonPlanModules = new ArrayList<>();
 
     public StudyYear getStudyYear() {
         return studyYear;

@@ -31,6 +31,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.ScholarshipType;
 import ee.hitsa.ois.service.DirectiveService;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
@@ -208,6 +209,9 @@ public class DirectiveControllerTests {
         directiveStudent.setIdcode(person.getIdcode());
         directiveStudent.setFirstname(person.getFirstname());
         directiveStudent.setLastname(person.getLastname());
+        directiveStudent.setBirthdate(person.getBirthdate());
+        directiveStudent.setSex(EntityUtil.getCode(person.getSex()));
+        directiveStudent.setCitizenship(EntityUtil.getCode(person.getCitizenship()));
         form.setStudents(Arrays.asList(directiveStudent));
         ResponseEntity<DirectiveDto> responseEntity = restTemplate.postForEntity(uriBuilder.build().toUriString(), form, DirectiveDto.class);
         Assert.assertNotNull(responseEntity);

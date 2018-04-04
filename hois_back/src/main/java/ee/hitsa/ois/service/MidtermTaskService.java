@@ -1,20 +1,13 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -33,10 +26,8 @@ import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.repository.MidtermTaskRepository;
 import ee.hitsa.ois.repository.MidtermTaskStudentResultRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
-import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.MidtermTaskUtil;
-import ee.hitsa.ois.util.MoodleUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.MidtermTaskUpdateForm;
@@ -46,10 +37,6 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.MidtermTaskDto;
 import ee.hitsa.ois.web.dto.MidtermTaskStudentResultDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
-import ee.hitsa.ois.web.dto.moodle.EnrollResult;
-import ee.hois.moodle.EnrollResponse;
-import ee.hois.moodle.Grade;
-import ee.hois.moodle.GradeItem;
 
 @Transactional
 @Service
@@ -63,8 +50,6 @@ public class MidtermTaskService {
     private MidtermTaskStudentResultRepository midtermTaskStudentResultRepository;
     @Autowired
     private MidtermTaskRepository midtermTaskRepository;
-    @Autowired
-    private MoodleService moodleService;
 
     public void updateMidtermTasks(SubjectStudyPeriod subjectStudyPeriod, MidtermTaskUpdateForm form) {
         EntityUtil.bindEntityCollection(subjectStudyPeriod.getMidtermTasks(), MidtermTask::getId, 
@@ -212,170 +197,6 @@ public class MidtermTaskService {
             studentResult.setPointsTxt(null);
             MidtermTaskUtil.checkStudentResultsPoints(studentResult);
         }
-    }
-    
-    public EnrollResult moodleEnrollStudents(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {
-        List<String> academicianIds = getTeachersIdcodes(subjectStudyPeriod);
-        List<String> studentIds = StreamUtil.toMappedList(ds -> ds.getDeclaration().getStudent().getPerson().getIdcode(), 
-                subjectStudyPeriod.getDeclarationSubjects().stream().filter(ds -> ds.getIsMoodleRegistered() != Boolean.TRUE));
-        if (studentIds.isEmpty()) {
-            return MoodleUtil.createEmptyEnrollResult();
-        }
-        EnrollResponse response = moodleService.enrollStudents(user, subjectStudyPeriod.getMoodleCourseId(), academicianIds, studentIds);
-        Map<String, DeclarationSubject> studentMap = getMoodleMappedStudents(subjectStudyPeriod);
-        EntityUtil.setUsername(user.getUsername(), em);
-        for (String enrolledUser : response.getEnrolled()) {
-            studentMap.get(enrolledUser).setIsMoodleRegistered(Boolean.TRUE);
-        }
-        EnrollResult result = new EnrollResult();
-        result.setEnrolled(response.getEnrolled().size());
-        result.setFailed(StreamUtil.toMappedList(
-                u -> PersonUtil.fullname(studentMap.get(u).getDeclaration().getStudent().getPerson()), 
-                response.getFailed()));
-        result.setMissingUser(StreamUtil.toMappedList(
-                u -> PersonUtil.fullname(studentMap.get(u).getDeclaration().getStudent().getPerson()), 
-                response.getMissingUser()));
-        return result;
-    }
-
-    public List<GradeItem> moodleImportGradeItems(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {
-        List<String> academicianIds = getTeachersIdcodes(subjectStudyPeriod);
-        Map<Long, MidtermTask> taskMap = getMoodleMappedTasks(subjectStudyPeriod);
-        List<GradeItem> items = moodleService.getGradeItems(user, subjectStudyPeriod.getMoodleCourseId(), academicianIds);
-        List<MidtermTask> newEntries = new ArrayList<>();
-        EntityUtil.setUsername(user.getUsername(), em);
-        for (GradeItem item : items) {
-            MidtermTask task = taskMap.get(item.getId());
-            if (task == null) {
-                task = new MidtermTask();
-                task.setSubjectStudyPeriod(subjectStudyPeriod);
-                task.setPercentage((short) 0);
-                task.setMoodleGradeItemId(item.getId());
-                newEntries.add(task);
-            }
-            task.setNameEt(item.getName());
-            task.setDescriptionEt(item.getName());
-            task.setMaxPoints(BigDecimal.valueOf(item.getMax()));
-            if (item.getPass() != 0.0) {
-                task.setThreshold(Boolean.TRUE);
-                task.setThresholdPercentage((short) (item.getPass() * 100 / item.getMax()));
-            }
-        }
-        for (MidtermTask task : newEntries) {
-            subjectStudyPeriod.getMidtermTasks().add(task);
-        }
-        EntityUtil.save(subjectStudyPeriod, em);
-        return items;
-    }
-
-    public void moodleImportAllGrades(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {
-        List<GradeItem> gradeItems = moodleImportGradeItems(user, subjectStudyPeriod);
-        moodleImportGrades(user, subjectStudyPeriod, 
-                StreamUtil.toMappedList(ds -> ds.getDeclaration().getStudent().getPerson().getIdcode(), 
-                        subjectStudyPeriod.getDeclarationSubjects().stream().filter(ds -> ds.getIsMoodleRegistered() == Boolean.TRUE)), 
-                StreamUtil.toMappedList(GradeItem::getId, gradeItems));
-    }
-    
-    public void moodleImportMissingGrades(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {
-        List<GradeItem> gradeItems = moodleImportGradeItems(user, subjectStudyPeriod);
-        moodleImportGrades(user, subjectStudyPeriod, 
-                getStudentsWithMissingGrades(subjectStudyPeriod, gradeItems), 
-                getTasksWithMissingGrades(subjectStudyPeriod, gradeItems));
-    }
-
-    private void moodleImportGrades(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod,
-            List<String> studentIds, List<Long> gradeItemIds) {
-        List<String> academicianIds = getTeachersIdcodes(subjectStudyPeriod);
-        Map<Long, MidtermTask> taskMap = getMoodleMappedTasks(subjectStudyPeriod);
-        Map<String, DeclarationSubject> studentMap = getMoodleMappedStudents(subjectStudyPeriod);
-        Map<Long, Map<String, MidtermTaskStudentResult>> entryStudentMap = getMoodleMappedEntriesStudents(subjectStudyPeriod);
-        Map<Long, List<Grade>> grades = moodleService.getGradesByItemId(user, subjectStudyPeriod.getMoodleCourseId(), academicianIds, 
-                gradeItemIds, studentIds);
-        EntityUtil.setUsername(user.getUsername(), em);
-        for (Entry<Long, List<Grade>> moodleEntry : grades.entrySet()) {
-            MidtermTask task = taskMap.get(moodleEntry.getKey());
-            Map<String, MidtermTaskStudentResult> gradeMap = entryStudentMap.get(moodleEntry.getKey());
-            List<MidtermTaskStudentResult> newGrades = new ArrayList<>();
-            for (Grade grade : moodleEntry.getValue()) {
-                MidtermTaskStudentResult midtermTaskStudentResult = gradeMap.get(grade.getStudent());
-                if (midtermTaskStudentResult == null) {
-                    midtermTaskStudentResult = new MidtermTaskStudentResult();
-                    midtermTaskStudentResult.setMidtermTask(task);
-                    midtermTaskStudentResult.setDeclarationSubject(studentMap.get(grade.getStudent()));
-                    newGrades.add(midtermTaskStudentResult);
-                }
-                Object points = grade.getPoints();
-                if (points == null) {
-                    midtermTaskStudentResult.setPoints(null);
-                    midtermTaskStudentResult.setPointsTxt(null);
-                } else {
-                    midtermTaskStudentResult.setPoints(BigDecimal.valueOf(MoodleUtil.pointsToNumber(points).longValue()));
-                    midtermTaskStudentResult.setPointsTxt(points.toString());
-                }
-            }
-            for (MidtermTaskStudentResult midtermTaskStudentResult : newGrades) {
-                task.getStudentResults().add(midtermTaskStudentResult);
-                EntityUtil.save(midtermTaskStudentResult, em);
-            }
-        }
-    }
-    
-    private List<String> getTeachersIdcodes(SubjectStudyPeriod subjectStudyPeriod) {
-        return StreamUtil.toMappedList(sspt -> sspt.getTeacher().getPerson().getIdcode(), 
-                subjectStudyPeriod.getTeachers());
-    }
-
-    private Map<Long, MidtermTask> getMoodleMappedTasks(SubjectStudyPeriod subjectStudyPeriod) {
-        return StreamUtil.toMap(MidtermTask::getMoodleGradeItemId, 
-                subjectStudyPeriod.getMidtermTasks().stream().filter(mt -> mt.getMoodleGradeItemId() != null));
-    }
-
-    private Map<String, DeclarationSubject> getMoodleMappedStudents(SubjectStudyPeriod subjectStudyPeriod) {
-        return StreamUtil.toMap(js -> js.getDeclaration().getStudent().getPerson().getIdcode(), 
-                subjectStudyPeriod.getDeclarationSubjects());
-    }
-
-    private Map<Long, Map<String, MidtermTaskStudentResult>> getMoodleMappedEntriesStudents(SubjectStudyPeriod subjectStudyPeriod) {
-        return StreamUtil.toMap(MidtermTask::getMoodleGradeItemId, 
-                mt -> StreamUtil.toMap(mtsr -> mtsr.getDeclarationSubject().getDeclaration().getStudent().getPerson().getIdcode(), 
-                        mt.getStudentResults()),
-                subjectStudyPeriod.getMidtermTasks().stream().filter(mt -> mt.getMoodleGradeItemId() != null));
-    }
-
-    private List<String> getStudentsWithMissingGrades(SubjectStudyPeriod subjectStudyPeriod, List<GradeItem> gradeItems) {
-        Query q = em.createNativeQuery("select p.idcode"
-                + " from (select id, declaration_id from declaration_subject where subject_study_period_id = ?1 and is_moodle_registered = true) ds"
-                + " left join (select declaration_subject_id, points from midterm_task_student_result where midterm_task_id in ("
-                + " select id from midterm_task where moodle_grade_item_id in (?2)))"
-                + " mtsr on mtsr.declaration_subject_id = ds.id"
-                + " inner join declaration d on d.id = ds.declaration_id"
-                + " inner join student s on s.id = d.student_id"
-                + " inner join person p on p.id = s.person_id"
-                + " group by p.idcode"
-                + " having count(mtsr.points) < ?3");
-        q.setParameter(1, EntityUtil.getId(subjectStudyPeriod));
-        q.setParameter(2, StreamUtil.toMappedList(GradeItem::getId, gradeItems));
-        q.setParameter(3, gradeItems.size());
-        List<?> result = q.getResultList();
-        return StreamUtil.toMappedList(r -> resultAsString(r, 0), result);
-    }
-
-    private List<Long> getTasksWithMissingGrades(SubjectStudyPeriod subjectStudyPeriod, List<GradeItem> gradeItems) {
-        Query q = em.createNativeQuery("select count(*) from declaration_subject"
-                + " where subject_study_period_id = ?1 and is_moodle_registered = true");
-        q.setParameter(1, EntityUtil.getId(subjectStudyPeriod));
-        Number moodleStudents = (Number) q.getSingleResult();
-        q = em.createNativeQuery("select mt.moodle_grade_item_id"
-                + " from (select id, moodle_grade_item_id from midterm_task where subject_study_period_id = ?1"
-                + " and moodle_grade_item_id in (?2)) mt"
-                + " left join midterm_task_student_result mtsr on mtsr.midterm_task_id = mt.id"
-                + " group by mt.moodle_grade_item_id"
-                + " having count(mtsr.points) < ?3");
-        q.setParameter(1, EntityUtil.getId(subjectStudyPeriod));
-        q.setParameter(2, StreamUtil.toMappedList(GradeItem::getId, gradeItems));
-        q.setParameter(3, moodleStudents);
-        List<?> result = q.getResultList();
-        return StreamUtil.toMappedList(r -> resultAsLong(r, 0), result);
     }
     
 }

@@ -479,8 +479,11 @@ public class AutocompleteControllerTests {
 
     @Test
     public void teachersList() {
-        String uri = "/autocomplete/teachersList?valid=true";
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/autocomplete/teachersList?valid=true", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        responseEntity = restTemplate.getForEntity("/autocomplete/teachersList?higher=true", Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }

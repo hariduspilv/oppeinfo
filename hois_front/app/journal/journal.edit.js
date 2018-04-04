@@ -12,7 +12,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
   function loadUsedHours() {
     QueryUtils.endpoint('/journals/' + entity.id + '/usedHours').get().$promise.then(function (result) {
-      $scope.journal.usedHours = result.usedHours;
+      $scope.journal.lessonHours = result;
     });
   }
 
@@ -39,7 +39,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
   function entityToForm(entity) {
     $scope.journal = entity;
-    $scope.moodleCourseId = entity.moodleCourseId;
+    $scope.$parent.$parent.moodleCourseId = entity.moodleCourseId;
     loadJournalEntries();
     loadJournalStudents($scope.showAllStudentsModel);
   }
@@ -129,7 +129,9 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     'SISSEKANNE_I': 'lime-100',
     'SISSEKANNE_H': 'pink-50',
     'SISSEKANNE_L': 'pink-300',
-    'SISSEKANNE_O': 'light-blue-50'
+    'SISSEKANNE_O': 'light-blue-50',
+    'SISSEKANNE_P': 'teal-100',
+    'SISSEKANNE_R': 'indigo-100'
   };
   $scope.journalEntryTypes = {};
   Classifier.queryForDropdown({ mainClassCode: 'SISSEKANNE' }, function (result) {
@@ -145,7 +147,8 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   function loadJournalEntryDialogInitialData(dialogScope) {
     dialogScope.journalStudents = entity.journalStudents;
     dialogScope.absenceOptions = {};
-    dialogScope.capacityTypes = Classifier.queryForDropdown({ mainClassCode: 'MAHT' });
+    // MAHT_l = loeng and it's is_vocational value is false
+    dialogScope.capacityTypes = Classifier.queryForDropdown({ mainClassCode: 'MAHT', filterValues: 'MAHT_l' });
     dialogScope.lessonPlanDates = $scope.formState.lessonInfo.lessonPlanDates.map(function (it) {
       var value = $filter('hoisDate')(it);
       return { nameEt: value, nameEn: value, id: it };
@@ -399,11 +402,11 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     loadJournalStudents(show);
   };
 
-  var ConfirmEndpoint = QueryUtils.endpoint('/journals/confirm/');
-  var UnconfirmEndpoint = QueryUtils.endpoint('/journals/unconfirm/');
+  var ConfirmEndpoint = QueryUtils.endpoint('/journals/confirm');
+  var UnconfirmEndpoint = QueryUtils.endpoint('/journals/unconfirm');
 
   function confirm() {
-    new ConfirmEndpoint($scope.journal).$update().then(function (response) {
+    new ConfirmEndpoint().$update({id: $scope.journal.id}).then(function (response) {
       message.info('journal.messages.confirmed');
       $scope.journal.canBeConfirmed = response.canBeConfirmed;
       $scope.journal.canBeUnconfirmed = response.canBeUnconfirmed;
@@ -428,7 +431,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
   $scope.unconfirm = function() {
     dialogService.confirmDialog({ prompt: 'journal.prompt.unconfirm' }, function () {
-      new UnconfirmEndpoint($scope.journal).$update().then(function (response) {
+      new UnconfirmEndpoint().$update({id: $scope.journal.id}).then(function (response) {
         message.info('journal.messages.unconfirmed');
         $scope.journal.canBeConfirmed = response.canBeConfirmed;
         $scope.journal.canBeUnconfirmed = response.canBeUnconfirmed;

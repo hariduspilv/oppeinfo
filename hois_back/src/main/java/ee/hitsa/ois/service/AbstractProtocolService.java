@@ -1,9 +1,15 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+
 import java.time.LocalDate;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -17,15 +23,24 @@ import ee.hitsa.ois.message.StudentResultMessage;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.ProtocolUtil;
+import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ProtocolStudentForm;
+import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolCommitteeSelectDto;
 
+@Transactional
 public class AbstractProtocolService {
+    
+    private static final Pattern GRADE_PATTERN = Pattern.compile("[0-5]");
 
     @Autowired
     private AutomaticMessageService automaticMessageService;
     @Autowired
     protected EntityManager em;
 
+    @org.springframework.transaction.annotation.Transactional
     public void delete(HoisUserDetails user, Protocol protocol) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(protocol, em);
@@ -84,5 +99,45 @@ public class AbstractProtocolService {
             StudentResultMessage msg = new StudentResultMessage(protocolStudent);
             automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OA_TULEMUS, protocolStudent.getStudent(), msg);
         }
+    }
+    
+    public List<FinalExamVocationalProtocolCommitteeSelectDto> committeesForSelection(HoisUserDetails user, LocalDate finalDate) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from committee c"
+                + " left join committee_member cm on c.id = cm.committee_id"
+                + " left join teacher t on t.id = cm.teacher_id left join person p on p.id = t.person_id ");
+
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalCriteria("c.valid_from <= :finalExamDate", "finalExamDate", finalDate);
+        qb.optionalCriteria("c.valid_thru >= :finalExamDate", "finalExamDate", finalDate);
+        qb.groupBy(" c.id ");
+
+        List<?> committees = qb.select("distinct c.id,"
+                + " array_to_string(array_agg(case when cm.is_external"
+                + " then cm.member_name"
+                + " else p.firstname || ' ' || p.lastname end), ', ') as members", em).getResultList();
+
+        return StreamUtil.toMappedList(r -> {
+            FinalExamVocationalProtocolCommitteeSelectDto dto = new FinalExamVocationalProtocolCommitteeSelectDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setMembers(resultAsString(r, 1));
+            return dto;
+        }, committees);
+    }
+    
+    protected static Short getHigherGradeMark(Classifier grade) {
+        Short gradeMark = null;
+        String gradeValue = grade.getValue();
+        if(GRADE_PATTERN.matcher(gradeValue).matches()) {
+            gradeMark = Short.valueOf(gradeValue);
+        }
+        return gradeMark;
+    }
+    
+    public void removeStudent(HoisUserDetails user, ProtocolStudent student) {
+        if (!ProtocolUtil.studentCanBeDeleted(student)) {
+            throw new ValidationFailedException("finalExamProtocol.messages.cantRemoveStudent");
+        }
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(student, em);
     }
 }

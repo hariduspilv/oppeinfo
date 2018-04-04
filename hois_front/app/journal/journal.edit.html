@@ -32,7 +32,7 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-repeat="row in journal.journalStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-repeat="row in journal.journalStudents" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
               <a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}
               <span ng-if="row.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
@@ -85,6 +85,12 @@
       <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
       <a ng-href="{{excel(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
     </div>
+    <div layout="row" ng-if="$parent.$parent.moodleCourseId">
+      <md-button class="md-raised" ng-click="enrollStudents()">{{'moodle.enrollStudents' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="importGradeItems()">{{'moodle.importGradeItems' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="importAllGrades()">{{'moodle.importAllGrades' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="importMissingGrades()">{{'moodle.importMissingGrades' | translate}}</md-button>
+    </div>
   </div>
 </div>
 <div layout-padding>
@@ -93,11 +99,13 @@
       <div flex="10">
         <h2>{{'journal.entries' | translate}}</h2>
       </div>
-      <div layout="row" layout-align="start end" layout-sm="column" layout-xs="column" flex="40">
+      <div layout="row" layout-align="start end" layout-sm="column" layout-xs="column" flex="60">
         <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_T')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_T'])}}</span>
         <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_E')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_E'])}}</span>
         <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_I')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_I'])}}</span>
         <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_H')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_H'])}}</span>
+        <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_P')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_P'])}}</span>
+        <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_R')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_R'])}}</span>
         <span ng-if="journal.moduleOutcomesAsEntries" class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_O')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_O'])}}</span>
         <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_L')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}</span>
       </div>
@@ -106,6 +114,7 @@
       <table md-table md-progress="journalEntries.$promise">
         <thead md-head md-order="journalEntriesCriteria.order" md-on-reorder="loadJournalEntries">
           <tr md-row>
+            <th md-column> </th>
             <th md-column>{{'journal.entry.date' | translate}}</th>
             <th md-column>{{'journal.entry.content' | translate}}</th>
             <th md-column>{{'journal.entry.homework' | translate}}</th>
@@ -115,6 +124,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in journalEntries.content" md-auto-select ng-click="editJournalEntry(row.id)" ng-class-odd="'odd'"
             ng-class-even="'even'" md-colors="{background: getEntryColor(row.entryType)}">
+            <td md-cell><span ng-if="row.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span> </td>
             <td md-cell>{{row.entryDate ? (row.entryDate | hoisDate) : '-'}}</td>
             <td md-cell>{{row.content}}</td>
             <td md-cell>{{row.homework ? row.homework : '-'}}</td>

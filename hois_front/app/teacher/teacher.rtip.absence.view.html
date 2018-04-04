@@ -39,7 +39,5 @@
 
 <div layout="row" layout-margin ng-if="!auth.isTeacher() && rtipPage">
   <md-button ng-if="teacher.canEdit" ng-click="updateData()" class="md-raised md-primary">{{'teacher.rtipAbsence.updateData' | translate}}</md-button>
-  <md-button ng-href="#/teachers" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  <md-button ng-click="back('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>
-
-  

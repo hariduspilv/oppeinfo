@@ -73,6 +73,8 @@ public class ContractService {
     @Autowired
     private EntityManager em;
     @Autowired
+    private MessageTemplateService messageTemplateService;
+    @Autowired
     private StudyYearService studyYearService;
     @Autowired
     private Validator validator;
@@ -116,6 +118,14 @@ public class ContractService {
             + "subject.outcomes_et as subject_outcomes_et, subject.outcomes_en as subject_outcomes_en, "
             + "subject.credits as subject_credits";
 
+    /**
+     * Search contracts.
+     *
+     * @param user
+     * @param command
+     * @param pageable
+     * @return
+     */
     public Page<ContractSearchDto> search(HoisUserDetails user, ContractSearchCommand command, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
         qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
@@ -126,7 +136,7 @@ public class ContractService {
         qb.optionalCriteria("contract.end_date <= :endThru", "endThru", command.getEndThru());
         qb.optionalContains(Arrays.asList("student_person.firstname", "student_person.lastname",
                 "student_person.firstname || ' ' || student_person.lastname"), "name", command.getStudentName());
-        qb.optionalCriteria("curriculum_version_omodule.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", command.getCurriculumVersion());
+        qb.optionalCriteria("student.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", command.getCurriculumVersion());
         qb.optionalCriteria("student.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
         qb.optionalContains("enterprise.name", "enterpriseName", command.getEnterpriseName());
         qb.optionalContains("enterprise.contact_person_name", "enterpriseContactPersonName", command.getEnterpriseContactPersonName());
@@ -229,10 +239,22 @@ public class ContractService {
         return modulesById.values();
     }
 
+    /**
+     * Get contract record.
+     *
+     * @param contract
+     * @return
+     */
     public ContractDto get(Contract contract) {
         return ContractDto.of(contract);
     }
 
+    /**
+     * Create new contract.
+     *
+     * @param contractForm
+     * @return
+     */
     public Contract create(ContractForm contractForm) {
         Contract contract = new Contract();
         setContractStatus(contract, ContractStatus.LEPING_STAATUS_S);
@@ -240,6 +262,13 @@ public class ContractService {
         return save(contract, contractForm);
     }
 
+    /**
+     * Save contract.
+     *
+     * @param contract
+     * @param contractForm
+     * @return
+     */
     public Contract save(Contract contract, ContractForm contractForm) {
         assertValidationRules(contractForm);
 
@@ -255,6 +284,12 @@ public class ContractService {
         return EntityUtil.save(changedContract, em);
     }
 
+    /**
+     * Delete contract and related practice journal(s).
+     *
+     * @param user
+     * @param contract
+     */
     public void delete(HoisUserDetails user, Contract contract) {
         EntityUtil.setUsername(user.getUsername(), em);
         // delete also practice journal(s)
@@ -267,6 +302,30 @@ public class ContractService {
         EntityUtil.deleteEntity(contract, em);
     }
 
+    /**
+     * Check if preconditions are ok for sending contract to EKIS
+     *
+     * @param user
+     * @param contractId
+     * @return
+     */
+    public Map<String, ?> checkForEkis(HoisUserDetails user, Long contractId) {
+        // is there automatic message template for practice url?
+        Map<String, Object> status = new HashMap<>();
+        MessageType msgType = MessageType.TEATE_LIIK_PRAKTIKA_URL;
+        status.put("templateExists",
+                Boolean.valueOf(messageTemplateService.findValidTemplate(msgType, user.getSchoolId()) != null));
+        status.put("templateName", em.getReference(Classifier.class, msgType.name()).getNameEt());
+        return status;
+    }
+
+    /**
+     * Send practice contract to EKIS.
+     *
+     * @param user
+     * @param contract
+     * @return
+     */
     public Contract sendToEkis(HoisUserDetails user, Contract contract) {
         EntityUtil.save(createPracticeJournal(contract, user.getSchoolId()), em);
         contract = EntityUtil.save(contract, em);
@@ -278,6 +337,15 @@ public class ContractService {
         return contract;
     }
 
+    /**
+     * EKIS has confirmed practice contract.
+     *
+     * @param contractId
+     * @param contractNr
+     * @param confirmDate
+     * @param wdId
+     * @return
+     */
     public Contract confirmedByEkis(long contractId, String contractNr, LocalDate confirmDate, long wdId) {
         Contract contract = findContract(contractId, wdId);
         contract.setContractNr(contractNr);
@@ -286,6 +354,11 @@ public class ContractService {
         return EntityUtil.save(contract, em);
     }
 
+    /**
+     * Mark contract as ended.
+     *
+     * @param contractId
+     */
     public void endContract(Long contractId) {
         Contract contract = em.getReference(Contract.class, contractId);
         if(contract.getEndDate() != null && contract.getEndDate().isBefore(LocalDate.now())) {

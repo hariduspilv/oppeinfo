@@ -10,6 +10,7 @@ public class JournalEntryTableDto {
     private String content;
     private String homework;
     private LocalDate homeworkDuedate;
+    private Long moodleGradeItemId;
 
     public Long getId() {
         return id;
@@ -57,6 +58,14 @@ public class JournalEntryTableDto {
 
     public void setHomeworkDuedate(LocalDate homeworkDuedate) {
         this.homeworkDuedate = homeworkDuedate;
+    }
+
+    public Long getMoodleGradeItemId() {
+        return moodleGradeItemId;
+    }
+
+    public void setMoodleGradeItemId(Long moodleGradeItemId) {
+        this.moodleGradeItemId = moodleGradeItemId;
     }
 
 }

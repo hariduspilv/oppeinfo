@@ -5,9 +5,9 @@ import java.util.List;
 public class TimetableByGroupDto extends TimetableByDto{
     private final GeneralTimetableCurriculumDto generalTimetableCurriculum;
     
-    public TimetableByGroupDto(GeneralTimetableDto generalTimetable, List<TimetableEventSearchDto> timetableEvents,
+    public TimetableByGroupDto(String studyPeriods, List<TimetableEventSearchDto> timetableEvents,
             GeneralTimetableCurriculumDto generalTimetableCurriculum) {
-        super(generalTimetable, timetableEvents);
+        super(studyPeriods, timetableEvents);
         this.generalTimetableCurriculum = generalTimetableCurriculum;
     }
     

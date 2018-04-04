@@ -44,12 +44,12 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="name">{{'building.name' | translate}}</th>
-            <th md-column md-order-by="code">{{'building.code' | translate}}</th>
-            <th md-column md-order-by="address">{{'building.address' | translate}}</th>
-            <th md-column md-order-by="rooms.name">{{'room.name' | translate}}</th>
-            <th md-column md-order-by="rooms.code">{{'room.code' | translate}}</th>
-            <th md-column md-numeric md-order-by="rooms.seats">{{'room.seats' | translate}}</th>
+            <th md-column md-order-by="b.name">{{'building.name' | translate}}</th>
+            <th md-column md-order-by="b.code">{{'building.code' | translate}}</th>
+            <th md-column md-order-by="b.address">{{'building.address' | translate}}</th>
+            <th md-column md-order-by="r.name">{{'room.name' | translate}}</th>
+            <th md-column md-order-by="r.code">{{'room.code' | translate}}</th>
+            <th md-column md-numeric md-order-by="r.seats">{{'room.seats' | translate}}</th>
             <th md-column>{{'room.isStudyInTable' | translate}}</th>
             <th md-column>{{'room.equipment' | translate}}</th>
             <th md-column></th>

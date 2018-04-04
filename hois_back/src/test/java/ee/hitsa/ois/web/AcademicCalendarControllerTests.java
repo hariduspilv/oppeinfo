@@ -38,7 +38,7 @@ public class AcademicCalendarControllerTests {
 
     @Test
     public void academicCalendar() {
-        String uri = UriComponentsBuilder.fromUriString("/academicCalendar").build().toUriString();
+        String uri = UriComponentsBuilder.fromUriString("/academicCalendar/9").build().toUriString();
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

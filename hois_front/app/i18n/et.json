@@ -92,13 +92,14 @@
         "integer": "Peab olema täisarv!",
         "estonianIdcode": "Isikukood ei vasta standardile",
         "configuration": {
-          "missingAutomaticMessageTemplate": "Süsteemis on puudu automaatse teate mall {{template}}"
+          "missingAutomaticMessageTemplate": "Süsteemis on puudu kehtiv automaatse teate mall \"{{template}}\""
         },
         "nopermission": "Vajalikud õigused puuduvad",
         "mobileIdSignFailed": "Allkirjastamine ebaõnnestus",
+        "max": "Maksimaalne väärtus {{max}}",
         "maxlength": "Tekst liiga pikk",
-        "InvalidEstonianIdCode": "Isikukood ei vasta standardile",
-        "invalidMoodleCourse": "Vale Moodle kursuse ID"
+        "min": "Minimaalne väärtus {{min}}",
+        "InvalidEstonianIdCode": "Isikukood ei vasta standardile"
       },
       "form-has-errors": "Vormil on vigu",
       "record": {
@@ -171,6 +172,7 @@
     "hour": "tund",
     "period": "Periood",
     "date": "Kuupäev",
+    "time": "Kellaaeg",
     "abroadStudies": "Välisõpingud",
     "educationInstitution": "Õppeasutus",
     "country": "Riik",
@@ -203,7 +205,8 @@
         "scholarships": "Stipendiumid",
         "drGrants": "Doktoranditoetus",
         "grantApplications": "Õppetoetuste taotlused",
-        "scholarshipApplications": "Stipendiumite taotlused"
+        "scholarshipApplications": "Stipendiumite taotlused",
+        "drGrantApplications": "Doktoranditoetuste taotlused"
       },
       "applications": {
         "label": "Avaldused",
@@ -305,7 +308,8 @@
         "studentstatistics": "Õppurite statistika",
         "studentstatisticsbyperiod": "Õppurite statistika perioodis",
         "teachersloadhigher": "Õpetaja koormus (kõrg)",
-        "teachersloadvocational": "Õpetaja koormus (kutse)"
+        "teachersloadvocational": "Õpetaja koormus (kutse)",
+        "vota": "VÕTA statistika"
       },
       "graduation": {
         "label": "Lõpetamine",
@@ -361,7 +365,6 @@
           "vocational": "Õppematerjalid (kutse)"
         },
         "examTimes": "Eksamite ajad",
-        "exams": "Eksamid",
         "absences": "Puudumistõendid",
         "loads": "Planeeritud koormused",
         "students": "Õppurid",
@@ -498,18 +501,51 @@
   },
   "exam": {
     "addInfo": "Lisainfo",
+    "addStudent": "Lisa õppur",
     "assessment": "Hindamisviis",
     "date": "Eksami kuupäev",
     "deadline": "Registreerimise tähtaeg",
+    "deadlineTime": "Kuni",
+    "name": "Sündmuse nimetus",
     "register": "Registreeri",
     "room": "Toimumise ruum",
-    "start": "Eksami algus",
+    "places": "Kohtade arv",
+    "selectSubjectStudyPeriod": "Õppeaine valik",
     "studentCount": "Registreerunuid",
     "studyPeriod": "Õppeperiood",
     "subject": "Õppeaine",
+    "subjectTeacher": "Aine-õppejõu paar",
     "teacher": "Õpetaja",
-    "type": "Eksami liik",
-    "unregister": "Tühista"
+    "time": "Eksami kellaaeg",
+    "type": "Soorituse liik",
+    "unregister": "Tühista",
+    "when": "Toimumise aeg",
+    "message": {
+      "deadline": "Eksamiks registreerimise aeg on möödas",
+      "deadlineafterstart": "Registreerimise tähtaeg peale eksami algust",
+      "deadlinecannotshortened": "Registreerimise tähtaega ei saa lühendada",
+      "deleteconfirm": "Kas oled kindel, et soovid eksamiaja kustutada?",
+      "deletestudentconfirm": "Kas oled kindel, et soovid õppuri registreerimist tühistada?",
+      "editingdateexceed": "Eksamit ei saa enam muuta",
+      "places": "Eksami kohad on täis",
+      "registerconfirmation": "Kas oled kindel, et soovid {{exam}} registreeruda?",
+      "registered": "Oled eksamile registreeritud",
+      "registeredstudentexists": "Eksamile on registreeritud õppureid",
+      "startinpast": "Eksami kuupäev on minevikus",
+      "startafterend": "Eksami alguse kellaaeg on peale lõppu",
+      "studentalreadyregistered": "Õppur on juba registreeritud eksamile",
+      "studenthasgrade": "Õppuril on juba tulemus olemas",
+      "studentnotregistered": "Õppur ei ole eksamile registreeritud",
+      "subjectnotdeclared": "Õppuril pole antud õppeaine deklareeritud",
+      "unregisterconfirmation": "Kas oled kindel, et soovid {{exam}} registreerumist tühistada?",
+      "unregistered": "Eksamile registreerimine tühistatud"
+    },
+    "student": {
+      "curriculum": "Õppekava",
+      "fullname": "Õppur",
+      "registered": "Registreerimise kuupäev",
+      "studentGroup": "Õpperühm"
+    }
   },
   "generalTimetable": {
     "curriculum": "Õppekava",
@@ -631,7 +667,10 @@
     "absence": {
       "cause": "Puudumise põhjus",
       "deleteconfirm": "Kas oled kindel, et soovid puudumistõendi kustutada?",
+      "status": "Staatus",
       "isAccepted": "Aktsepteeritud",
+      "isRejected": "Tagasi Lükatud",
+      "isNotAccepted": "Aktsepteerimata",
       "validFrom": "Puudumine alates",
       "validThru": "Puudumine kuni"
     },
@@ -947,6 +986,7 @@
     "confirmDateThru": "Kinnitamise kp kuni",
     "confirmDuringTest": "Kinnita käskkiri",
     "confirmconfirm": "Kas kinnitada käskkiri?",
+    "confirmconfirmTemplateMissing": "Kas kinnitada käskkiri? Süsteemis on puudu kehtiv automaatse teate mall \"{{template}}\"",
     "confirmed": "Käskkiri kinnitatud",
     "create": "Koosta käskkiri",
     "deleteconfirm": "Kas oled kindel, et soovid käskkirja kustutada?",
@@ -954,6 +994,7 @@
     "directiveNr": "Dokumendi number",
     "duplicatecancel": "Tühistamise käskkiri on juba olemas",
     "ekisconfirm": "Kas oled kindel, et soovid käskkirja kinnitamisele saata?",
+    "ekisconfirmTemplateMissing": "Kas oled kindel, et soovid käskkirja kinnitamisele saata? Süsteemis on puudu kehtiv automaatse teate mall \"{{template}}\"",
     "ekisdeleteconfirm": "Kas kustutada õppurid käskkirjalt ja saata käskkiri kinnitamisele?",
     "headline": "Pealkiri",
     "inserted": "Koostamise kuupäev",
@@ -1109,7 +1150,7 @@
     "event": {
       "studyPeriod": "Õppeperiood",
       "studentGroups": "Õpperühm",
-      "name": "Sündmuse nimi",
+      "name": "Sündmuse nimetus",
       "teachers": "Õpetajad",
       "otherTeacher": "Muu õpetaja",
       "room": "Ruum",
@@ -2072,10 +2113,11 @@
   "studentGroup": {
     "label": "Õpperühm",
     "addStudents": "Lisa õppurid",
+    "cannotaddstudents": "Õppureid ei saa lisada kehtetusse õpperühma",
     "code": "Tähis",
     "course": "Õppeaasta (kursus)",
     "curriculum": "Õppekava",
-    "curriculumRequired": "Õppekava *",
+    "curriculumRequired": "Õppekava",
     "curriculumVersion": "Õppekava versioon",
     "curriculumVersionBoth": "Õppekava versioon / Rakenduskava",
     "curriculumVersionHigher": "Õppekava versioon",
@@ -2314,7 +2356,7 @@
       "displayPeriodLessons": "Kuva perioodi tunnid"
     },
     "timetableEvent": {
-      "name": "Sündmuse nimi",
+      "name": "Sündmuse nimetus",
       "isRepeat": "Korduvsündmus",
       "weekAmount": "Nädalate arv",
       "repetition": "Kordus",
@@ -2348,7 +2390,8 @@
     "studentGroups": "Õpperühm(ad)",
     "teachers": "Õpetaja(d)",
     "modules": "Moodul(id)",
-    "plannedAndEnteredCapacities": "Planeeritud ja sissekantud tundide arv",
+    "plannedAndEnteredLessonsCount": "Planeeritud ja sissekantud tundide arv",
+    "capacitiesPlannedAndEnteredLessonsCount": "Õppetöö liikide planeeritud ja sissekantud tundide arv",
     "confirmAllJournals": "Kinnita kõik päevikud",
     "addSelectedStudents": "Lisa valitud õppurid päevikusse",
     "searchForOtherStudent": "Otsi muu õppur",
@@ -2445,7 +2488,7 @@
     "messages": {
       "studentSuccesfullyAdded": "Õppurid edukalt lisatud",
       "confirmed": "Mooduli protokoll edukalt kinnitatud",
-      "gradeNotSelectedForAllStudents": "Mooduli protokoll kinnitamine ebaõnnestus - vähemalt ühel õpilasel on hinne määramata",
+      "gradeNotSelectedForAllStudents": "Mooduli protokolli kinnitamine ebaõnnestus - vähemalt ühel õpilasel on hinne määramata",
       "cantRemoveStudent": "Õppuri eemaldamine ei ole lubatud",
       "calculated": "Mooduli hinne on arvutatud",
       "deleted": "Protokoll on kustutatud"
@@ -2476,10 +2519,17 @@
       "allGradesImported": "Kõik Moodle hinded imporditud",
       "missingGradesImported": "Puuduvad Moodle hinded imporditud"
     },
+    "error": {
+      "invalidMoodleCourse": "Vale Moodle kursuse ID",
+      "noStudentsToEnroll": "Pole kedagi registreerida",
+      "noMissingGrades": "Puuduvaid hindeid ei ole",
+      "valid_academician_missing": "Õpetaja pole Moodle kursuse õpetaja"
+    },
     "enroll": {
       "enrolled": "Registreerimine õnnestus",
       "failed": "Registreerimine ebaõnnestus",
-      "missingUser": "Puudub Moodle konto"
+      "missingUser": "puudub Moodle konto",
+      "missingIdcode": "puudub Eesti isikukood"
     }
   },
   "higherProtocol": {
@@ -2502,7 +2552,7 @@
     "finalGrade": "Lõpphinne",
     "insertedDate": "Loomise kp",
     "message": {
-      "gradeNotSelectedForAllStudents": "Mooduli protokoll kinnitamine ebaõnnestus - vähemalt ühel õpilasel on hinne määramata",
+      "gradeNotSelectedForAllStudents": "Protokolli kinnitamine ebaõnnestus - vähemalt ühel õpilasel on hinne määramata",
       "confirmed": "Protokoll on kinnitatud",
       "savedAndConfirmed": "Protokoll on salvestatud ja kinnitatud",
       "calculated": "Lõpphinne on arvutatud"
@@ -2602,16 +2652,21 @@
     "absenceFrom": "Puudumine alates",
     "absenceThru" : "Puudumine kuni",
     "accept": "Aktsepteeri",
+    "reject": "Lükka tagasi",
     "accepted": "Tõend aktsepteeritud",
+    "rejected": "Tõend tagasi lükatud",
     "applicant": "Puudumistõendi esitaja",
     "curriculumVersion": "Õppekava",
     "isAccepted": "Aktsepteeritud",
     "isNotAccepted": "Aktsepteerimata",
+    "isRejected": "Tagasi lükatud",
     "status": "Puudumistõendi staatus",
     "student": "Õppur",
     "studentGroup": "Õpperühm",
     "studyPeriod": "Õppeperiood",
     "studyYear": "Õppeaasta",
+    "acceptConfirm": "Kas oled kindel, et soovid tõendi aktsepteerida?",
+    "rejectConfirm": "Kas oled kindel, et soovid tõendi tagasi lükata?",
     "youHaveUnacceptedAbsences": "Teil on aktsepteerimata puudumistõendeid."
   },
   "declaration": {
@@ -2727,12 +2782,25 @@
       "subjectcode": "Õppeaine kood",
       "subject": "Õppeaine",
       "teacher": "Õpetaja nimi"
+    },
+    "vota": {
+      "acceptedAbroadCredits": "Rahuldatud<br>ainepunktide arv<br>(Välismaa ülikool)",
+      "acceptedCredits": "Rahuldatud<br>ainepunktide<br>arv kokku",
+      "acceptedLocalCredits": "Rahuldatud<br>ainepunktide arv<br>(Eesti ülikool)",
+      "applicationCount": "VÕTA<br>taotluste arv",
+      "curriculum": "Õppekava",
+      "studyPeriod": "Õppeperiood",
+      "studyYear": "Õppeaasta",
+      "totalAbroadCredits": "Taotletud<br>ainepunktide arv<br>(Välismaa ülikool)",
+      "totalCredits": "Taotletud<br>ainepunktide<br>arv kokku",
+      "totalLocalCredits": "Taotletud<br>ainepunktide arv<br>(Eesti ülikool)"
     }
   },
   "contract": {
     "startFrom": "Alguskuupäev alates",
     "startThru": "Alguskuupäev kuni",
     "ekisconfirm": "Kas oled kindel, et soovid saata EKISesse?",
+    "ekisconfirmTemplateMissing": "Kas oled kindel, et soovid saata EKISesse? Süsteemis on puudu kehtiv automaatse teate mall \"{{template}}\"",
     "endFrom": "Lõpukuupäev alates",
     "endThru": "Lõpukuupäev kuni",
     "validity": "Lepingu kehtivus",
@@ -3076,7 +3144,7 @@
     "implementationPlan": "Rakenduskava",
     "studentGroup": "Õpperühm",
     "create": "Loo protokoll",
-    "inserted": "Koostamise kuupäev",
+    "inserted": "Koostamise kp",
     "studyLevel": "Õppetase",
     "studyPeriod": "Õppeperiood",
     "assessment":"Hindamisviis",
@@ -3093,9 +3161,9 @@
     "member": "Liige",
     "id": "Jrk. nr.",
     "grade": "Hinne",
-    "finalGrade": "Lõpphinne",
     "occupationAndCertificateNr": "Kutse ja kutsetunnistuse number",
     "type": "Protokolli liik",
+    "addStudents": "Lisa õppurid",
     "mobileSign": {
       "instructions": "Toimige palun telefonile ilmuvate juhiste kohaselt. Enne PIN-koodi sisestamist veenduge, et telefoni ekraanil olev kontrollkood on sama, mis allpool näidatud."
     },
@@ -3135,6 +3203,7 @@
     "courses": "Õppeaasta",
     "averageMark": "Keskmine hinne",
     "averageMarkShort": "Kesk.",
+    "saisPoints": "SAISi avalduse punktide arv",
     "priority": "Prioriteet",
     "lastPeriodMark": "Eelmise perioodi keskmine hinne",
     "curriculumCompletion": "Õppekava täidetuse protsent",
@@ -3172,6 +3241,7 @@
       "averageMark": "Kesk. hinne",
       "lastPeriodMark": "Eel. per. kesk.",
       "curriculumCompletion": "Õppek. täidetus",
+      "absences": "Puudumised",
       "maxAbsences": "Puudumised",
       "isTeacherConfirm": "Rühmajuh. kinnitamine",
       "apply": "Taotle",

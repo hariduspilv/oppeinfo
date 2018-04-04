@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalEntryController', function ($scope, $route, $location, dialogService, oisFileService, QueryUtils, message, DataUtils, ArrayUtils) {
+angular.module('hitsaOis').controller('PracticeJournalEntryController', function ($scope, $route, $location, dialogService, oisFileService, QueryUtils, message, DataUtils, ArrayUtils, Classifier) {
   $scope.auth = $route.current.locals.auth;
   $scope.removeFromArray = ArrayUtils.remove;
   $scope.practiceJournal = {
@@ -21,6 +21,9 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
 
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
     $scope.practiceJournal = entity;
+    
+    var gradesClassCode = $scope.practiceJournal.subject ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
+    $scope.grades = Classifier.queryForDropdown({ mainClassCode: gradesClassCode });
   }
 
   var entity = $route.current.locals.entity;

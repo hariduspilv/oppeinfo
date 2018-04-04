@@ -19,7 +19,6 @@ public class PracticeJournalSearchDto {
     private LocalDateTime studentLastEntryDate;
     private Boolean canEdit;
     private Boolean canStudentAddEntries;
-    private Boolean canTeacherAddEntries;
     private Boolean canAddEntries;
     private AutocompleteResult subject;
 
@@ -133,14 +132,6 @@ public class PracticeJournalSearchDto {
 
     public void setCanStudentAddEntries(Boolean canStudentAddEntries) {
         this.canStudentAddEntries = canStudentAddEntries;
-    }
-
-    public Boolean getCanTeacherAddEntries() {
-        return canTeacherAddEntries;
-    }
-
-    public void setCanTeacherAddEntries(Boolean canTeacherAddEntries) {
-        this.canTeacherAddEntries = canTeacherAddEntries;
     }
 
     public AutocompleteResult getSubject() {

@@ -91,4 +91,15 @@ public abstract class PersonUtil {
     public static List<String> sorted(Stream<Person> stream) {
         return stream.sorted(PersonUtil.SORT).map(PersonUtil::fullname).collect(Collectors.toList());
     }
+    
+    /**
+     * Removes some values if necessary
+     * @param person
+     */
+    public static void conditionalClean(Person person) {
+        if (!ClassifierUtil.isEstonia(person.getResidenceCountry())) {
+            person.setAddressAds(null);
+            person.setAddressAdsOid(null);
+        }
+    }
 }

@@ -1,0 +1,57 @@
+<!doctype html> <html> <head> <meta charset="utf-8"> <title>HOIS2 ID-Login</title> </head> <body> <div id="message"></div> <script>var BASE_URL = 'hois_back';
+var JWT_TOKEN_HEADER = 'Authorization';
+function showError(msg) {
+  document.getElementById("message").innerHTML = msg;
+}
+function clearError() {
+  document.getElementById("message").innerHTML = '';
+}
+function loginFailed() {
+  console.error('Login failed!');
+  showError('Sisselogimine ebaõnnestus!');
+}
+function loginSuccess() {
+  window.location = getSearchParam('redirect');
+}
+function doHttpGet(path, header, resolve, reject) {
+  var request = new XMLHttpRequest();
+  request.open("GET", BASE_URL + path);
+  if (header) {
+    request.setRequestHeader(header.name, header.value);
+  }
+  request.onreadystatechange = function () {
+    if(request.readyState === XMLHttpRequest.DONE) {
+      if(request.status === 200) {
+        resolve(JSON.parse(request.responseText));
+      } else {
+        reject();
+      }
+    }
+  };
+  request.send();
+}
+function parse_query_string(query) {
+  var vars = query.split("&");
+  var query_string = {};
+  for (var i = 0; i < vars.length; i++) {
+    var pair = vars[i].split("=");
+    // If first entry with this name
+    if (typeof query_string[pair[0]] === "undefined") {
+      query_string[pair[0]] = decodeURIComponent(pair[1]);
+      // If second entry with this name
+    } else if (typeof query_string[pair[0]] === "string") {
+      var arr = [query_string[pair[0]], decodeURIComponent(pair[1])];
+      query_string[pair[0]] = arr;
+      // If third or later entry with this name
+    } else {
+      query_string[pair[0]].push(decodeURIComponent(pair[1]));
+    }
+  }
+  return query_string;
+}
+function getSearchParam(name) {
+  // in future should be: return new URL(window.location.href).searchParams.get(name);
+  return parse_query_string(window.location.search.substring(1))[name];
+}
+var jwt_token = getSearchParam('token');
+doHttpGet('/user', {name: JWT_TOKEN_HEADER, value: 'Bearer ' + jwt_token}, loginSuccess, loginFailed);</script> </body> </html>

@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -50,19 +49,16 @@ import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.JournalStatus;
-import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.JournalRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
-import ee.hitsa.ois.util.MoodleUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
@@ -74,7 +70,7 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalEntryStudentForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
-import ee.hitsa.ois.web.dto.moodle.EnrollResult;
+import ee.hitsa.ois.web.dto.studymaterial.JournalLessonHoursDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
@@ -92,9 +88,6 @@ import ee.hitsa.ois.web.dto.timetable.StudentJournalStudyDto;
 import ee.hitsa.ois.web.dto.timetable.StudentJournalStudyListDto;
 import ee.hitsa.ois.web.dto.timetable.StudentJournalTaskDto;
 import ee.hitsa.ois.web.dto.timetable.StudentJournalTaskListDto;
-import ee.hois.moodle.EnrollResponse;
-import ee.hois.moodle.Grade;
-import ee.hois.moodle.GradeItem;
 
 @Transactional
 @Service
@@ -107,8 +100,6 @@ public class JournalService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
-    private ClassifierService classifierService;
-    @Autowired
     private EntityManager em;
     @Autowired
     private Validator validator;
@@ -116,8 +107,6 @@ public class JournalService {
     private XlsService xlsService;
     @Autowired
     private StudyYearService studyYearService;
-    @Autowired
-    private MoodleService moodleService;
     
     private static final List<String> journalAbsenceCodes = EnumUtil.toNameList(Absence.PUUDUMINE_P, Absence.PUUDUMINE_H);
     private static final List<String> testEntryTypeCodes = EnumUtil.toNameList(JournalEntryType.SISSEKANNE_H, JournalEntryType.SISSEKANNE_L,
@@ -298,11 +287,11 @@ public class JournalService {
                             );
             filters.add(cb.exists(studentGroupsQuery));
 
+            // who has no positive result in given module
             Journal journal = journalRepository.findOne(journalId);
             Set<Long> modules = StreamUtil.toMappedSet(t -> EntityUtil.getId(
                     t.getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule()), journal.getJournalOccupationModuleThemes());
             
-            // kellel puudub vastavas moodulis positiivne tulemus.
             Subquery<Long> protocolStudentsQuery = query.subquery(Long.class);
             Root<Protocol> protocolRoot = protocolStudentsQuery.from(Protocol.class);
             Join<Object, Object> protocolStudentsJoin = protocolRoot.join("protocolStudents", JoinType.LEFT);
@@ -321,178 +310,6 @@ public class JournalService {
             journal.setEndDate(command.getEndDate());
         }
         return EntityUtil.save(journal, em);
-    }
-
-    public Journal saveMoodleCourseLink(HoisUserDetails user, Journal journal, Long courseId) {
-        if (!moodleService.courseLinkPossible(user, courseId, getTeachersIdcodes(journal))) {
-            throw new ValidationFailedException("main.messages.error.invalidMoodleCourse");
-        }
-        journal.setMoodleCourseId(courseId);
-        EntityUtil.setUsername(user.getUsername(), em);
-        return EntityUtil.save(journal, em);
-    }
-
-    public EnrollResult moodleEnrollStudents(HoisUserDetails user, Journal journal) {
-        List<String> academicianIds = getTeachersIdcodes(journal);
-        List<String> studentIds = StreamUtil.toMappedList(js -> js.getStudent().getPerson().getIdcode(), 
-                journal.getJournalStudents().stream().filter(js -> js.getIsMoodleRegistered() != Boolean.TRUE));
-        if (studentIds.isEmpty()) {
-            return MoodleUtil.createEmptyEnrollResult();
-        }
-        EnrollResponse response = moodleService.enrollStudents(user, journal.getMoodleCourseId(), academicianIds, studentIds);
-        Map<String, JournalStudent> studentMap = getMoodleMappedStudents(journal);
-        EntityUtil.setUsername(user.getUsername(), em);
-        for (String enrolledUser : response.getEnrolled()) {
-            studentMap.get(enrolledUser).setIsMoodleRegistered(Boolean.TRUE);
-        }
-        EnrollResult result = new EnrollResult();
-        result.setEnrolled(response.getEnrolled().size());
-        result.setFailed(StreamUtil.toMappedList(
-                u -> PersonUtil.fullname(studentMap.get(u).getStudent().getPerson()), 
-                response.getFailed()));
-        result.setMissingUser(StreamUtil.toMappedList(
-                u -> PersonUtil.fullname(studentMap.get(u).getStudent().getPerson()), 
-                response.getMissingUser()));
-        return result;
-    }
-
-    public List<GradeItem> moodleImportGradeItems(HoisUserDetails user, Journal journal) {
-        List<String> academicianIds = getTeachersIdcodes(journal);
-        Map<Long, JournalEntry> entryMap = getMoodleMappedEntries(journal);
-        List<GradeItem> items = moodleService.getGradeItems(user, journal.getMoodleCourseId(), academicianIds);
-        List<JournalEntry> newEntries = new ArrayList<>();
-        ClassifierCache classifiers = new ClassifierCache(classifierService);
-        EntityUtil.setUsername(user.getUsername(), em);
-        for (GradeItem item : items) {
-            JournalEntry entry = entryMap.get(item.getId());
-            if (entry == null) {
-                entry = new JournalEntry();
-                entry.setMoodleGradeItemId(item.getId());
-                newEntries.add(entry);
-            }
-            entry.setEntryType(classifiers.getByCode(
-                    MoodleUtil.gradeItemTypeToJournalEntryType(item.getType()).name(), 
-                    MainClassCode.SISSEKANNE));
-            entry.setNameEt(item.getName());
-        }
-        for (JournalEntry entry : newEntries) {
-            journal.getJournalEntries().add(entry);
-        }
-        EntityUtil.save(journal, em);
-        return items;
-    }
-
-    public void moodleImportAllGrades(HoisUserDetails user, Journal journal) {
-        List<GradeItem> gradeItems = moodleImportGradeItems(user, journal);
-        moodleImportGrades(user, journal, 
-                StreamUtil.toMappedList(js -> js.getStudent().getPerson().getIdcode(), 
-                        journal.getJournalStudents().stream().filter(js -> js.getIsMoodleRegistered() == Boolean.TRUE)), 
-                StreamUtil.toMappedList(GradeItem::getId, gradeItems), 
-                StreamUtil.toMap(GradeItem::getId, gradeItems));
-    }
-    
-    public void moodleImportMissingGrades(HoisUserDetails user, Journal journal) {
-        List<GradeItem> gradeItems = moodleImportGradeItems(user, journal);
-        moodleImportGrades(user, journal, 
-                getStudentsWithMissingGrades(journal, gradeItems), 
-                getEntriesWithMissingGrades(journal, gradeItems), 
-                StreamUtil.toMap(GradeItem::getId, gradeItems));
-    }
-
-    private void moodleImportGrades(HoisUserDetails user, Journal journal,
-            List<String> studentIds, List<Long> gradeItemIds, Map<Long, GradeItem> gradeItemMap) {
-        List<String> academicianIds = getTeachersIdcodes(journal);
-        Map<Long, JournalEntry> entryMap = getMoodleMappedEntries(journal);
-        Map<String, JournalStudent> studentMap = getMoodleMappedStudents(journal);
-        Map<Long, Map<String, JournalEntryStudent>> entryStudentMap = getMoodleMappedEntriesStudents(journal);
-        Map<Long, List<Grade>> grades = moodleService.getGradesByItemId(user, journal.getMoodleCourseId(), academicianIds, 
-                gradeItemIds, studentIds);
-        ClassifierCache classifiers = new ClassifierCache(classifierService);
-        EntityUtil.setUsername(user.getUsername(), em);
-        for (Entry<Long, List<Grade>> moodleEntry : grades.entrySet()) {
-            JournalEntry journalEntry = entryMap.get(moodleEntry.getKey());
-            Map<String, JournalEntryStudent> gradeMap = entryStudentMap.get(moodleEntry.getKey());
-            List<JournalEntryStudent> newGrades = new ArrayList<>();
-            for (Grade grade : moodleEntry.getValue()) {
-                JournalEntryStudent journalEntryStudent = gradeMap.get(grade.getStudent());
-                if (journalEntryStudent == null) {
-                    journalEntryStudent = new JournalEntryStudent();
-                    journalEntryStudent.setJournalStudent(studentMap.get(grade.getStudent()));
-                    newGrades.add(journalEntryStudent);
-                }
-                Object points = grade.getPoints();
-                if (points == null) {
-                    journalEntryStudent.setGrade(null);
-                    journalEntryStudent.setAddInfo(null);
-                } else {
-                    GradeItem gradeItem = gradeItemMap.get(moodleEntry.getKey());
-                    journalEntryStudent.setGrade(classifiers.getByCode(
-                            MoodleUtil.pointsToGrade(points, gradeItem.getMax().longValue()).name(), 
-                            MainClassCode.KUTSEHINDAMINE));
-                    journalEntryStudent.setAddInfo(points.toString());
-                }
-            }
-            for (JournalEntryStudent journalEntryStudent : newGrades) {
-                journalEntry.getJournalEntryStudents().add(journalEntryStudent);
-            }
-        }
-        EntityUtil.save(journal, em);
-    }
-    
-    private List<String> getTeachersIdcodes(Journal journal) {
-        return StreamUtil.toMappedList(jt -> jt.getTeacher().getPerson().getIdcode(), 
-                journal.getJournalTeachers());
-    }
-
-    private Map<Long, JournalEntry> getMoodleMappedEntries(Journal journal) {
-        return StreamUtil.toMap(JournalEntry::getMoodleGradeItemId, 
-                journal.getJournalEntries().stream().filter(je -> je.getMoodleGradeItemId() != null));
-    }
-
-    private Map<String, JournalStudent> getMoodleMappedStudents(Journal journal) {
-        return StreamUtil.toMap(js -> js.getStudent().getPerson().getIdcode(), 
-                journal.getJournalStudents());
-    }
-
-    private Map<Long, Map<String, JournalEntryStudent>> getMoodleMappedEntriesStudents(Journal journal) {
-        return StreamUtil.toMap(JournalEntry::getMoodleGradeItemId, 
-                je -> StreamUtil.toMap(jes -> jes.getJournalStudent().getStudent().getPerson().getIdcode(), 
-                        je.getJournalEntryStudents()),
-                journal.getJournalEntries().stream().filter(je -> je.getMoodleGradeItemId() != null));
-    }
-
-    private List<String> getStudentsWithMissingGrades(Journal journal, List<GradeItem> gradeItems) {
-        Query q = em.createNativeQuery("select p.idcode"
-                + " from (select id, student_id from journal_student where journal_id = ?1 and is_moodle_registered = true) js"
-                + " left join (select journal_student_id, grade_code from journal_entry_student where journal_entry_id in ("
-                + " select id from journal_entry where moodle_grade_item_id in (?2)))"
-                + " jes on jes.journal_student_id = js.id"
-                + " inner join student s on s.id = js.student_id"
-                + " inner join person p on p.id = s.person_id"
-                + " group by p.idcode"
-                + " having count(jes.grade_code) < ?3");
-        q.setParameter(1, EntityUtil.getId(journal));
-        q.setParameter(2, StreamUtil.toMappedList(GradeItem::getId, gradeItems));
-        q.setParameter(3, gradeItems.size());
-        List<?> result = q.getResultList();
-        return StreamUtil.toMappedList(r -> resultAsString(r, 0), result);
-    }
-
-    private List<Long> getEntriesWithMissingGrades(Journal journal, List<GradeItem> gradeItems) {
-        Query q = em.createNativeQuery("select count(*) from journal_student"
-                + " where journal_id = ?1 and is_moodle_registered = true");
-        q.setParameter(1, EntityUtil.getId(journal));
-        Number moodleStudents = (Number) q.getSingleResult();
-        q = em.createNativeQuery("select je.moodle_grade_item_id"
-                + " from (select id, moodle_grade_item_id from journal_entry where journal_id = ?1 and moodle_grade_item_id in (?2)) je"
-                + " left join journal_entry_student jes on jes.journal_entry_id = je.id"
-                + " group by je.moodle_grade_item_id"
-                + " having count(jes.grade_code) < ?3");
-        q.setParameter(1, EntityUtil.getId(journal));
-        q.setParameter(2, StreamUtil.toMappedList(GradeItem::getId, gradeItems));
-        q.setParameter(3, moodleStudents);
-        List<?> result = q.getResultList();
-        return StreamUtil.toMappedList(r -> resultAsLong(r, 0), result);
     }
 
     public Journal addStudentsToJournal(Journal journal, JournalStudentsCommand command) {
@@ -630,7 +447,7 @@ public class JournalService {
         jeQb.requiredCriteria("je.journal_id=:journalId", "journalId", journalId);
 
         return JpaQueryUtil.pagingResult(jeQb,
-                "je.id, je.entry_type_code, je.entry_date, je.content, je.homework, je.homework_duedate, cmo.order_nr", em,
+                "je.id, je.entry_type_code, je.entry_date, je.content, je.homework, je.homework_duedate, je.moodle_grade_item_id, cmo.order_nr", em,
                 pageable).map(r -> {
                     JournalEntryTableDto dto = new JournalEntryTableDto();
                     dto.setId(resultAsLong(r, 0));
@@ -639,6 +456,7 @@ public class JournalService {
                     dto.setContent(resultAsString(r, 3));
                     dto.setHomework(resultAsString(r, 4));
                     dto.setHomeworkDuedate(resultAsLocalDate(r, 5));
+                    dto.setMoodleGradeItemId(resultAsLong(r, 6));
                     return dto;
                 });
     }
@@ -666,6 +484,7 @@ public class JournalService {
             journalEntryByDateDto.setEntryDate(journalEntry.getEntryDate());
             if (journalEntry.getCurriculumModuleOutcomes() != null) {
                 if (journalEntry.getCurriculumModuleOutcomes().getOrderNr() != null) {
+                    journalEntryByDateDto.setCurriculumModule(EntityUtil.getId(journalEntry.getCurriculumModuleOutcomes().getCurriculumModule()));
                     journalEntryByDateDto.setOutcomeOrderNr(journalEntry.getCurriculumModuleOutcomes().getOrderNr());
                 } else {
                     journalEntryByDateDto.setOutcomeOrderNr(Long.valueOf(outcomeWithoutOrderNr++));
@@ -686,8 +505,22 @@ public class JournalService {
             result.add(journalEntryByDateDto);
         }
         
-        // order outcome entries by order
-        Collections.sort(result, Comparator.comparing(JournalEntryByDateDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
+        // order outcomes by curriculum module id and their order nr and then give outcomes from different modules a unique outcome order nr
+        Collections.sort(result,Comparator.comparing(JournalEntryByDateDto::getCurriculumModule, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(JournalEntryByDateDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
+        List<Long> orderNrs = new ArrayList<>();
+        for (int i = 0; i < result.size(); i++) {
+            Long entryOrderNr = result.get(i) != null && result.get(i).getOutcomeOrderNr() != null ? result.get(i).getOutcomeOrderNr() : null;
+            if (entryOrderNr != null) {
+                if (!orderNrs.contains(entryOrderNr)) {
+                    orderNrs.add(entryOrderNr);
+                } else {
+                    Long newOrderNr = Long.valueOf(orderNrs.stream().max(Comparator.comparing(nr -> nr)).get().longValue() + 1);
+                    result.get(i).setOutcomeOrderNr(newOrderNr);
+                    orderNrs.add(newOrderNr);
+                }
+            }
+        }
 
         // order entries by entry date
         Collections.sort(result, Comparator.comparing(JournalEntryByDateDto::getEntryDate, Comparator.nullsLast(Comparator.naturalOrder())));
@@ -705,13 +538,20 @@ public class JournalService {
     }
 
     public List<JournalStudentDto> journalStudents(Journal journal, Boolean allStudents) {
-        return journal.getJournalStudents().stream()
+        List<JournalStudent> students = journal.getJournalStudents().stream()
                 .filter(jt -> Boolean.TRUE.equals(allStudents) || StudentUtil.isStudying(jt.getStudent()))
-                .map(JournalStudentDto::of).collect(Collectors.toList());
+                .collect(Collectors.toList());
+        students.sort(Comparator
+                .comparing(js -> ((JournalStudent) js).getStudent().getStudentGroup() != null ? ((JournalStudent) js).getStudent().getStudentGroup().getCode(): null, 
+                        Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(js -> ((JournalStudent) js).getStudent().getPerson().getLastname(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(Comparator.comparing(js -> ((JournalStudent) js).getStudent().getPerson().getFirstname(), String.CASE_INSENSITIVE_ORDER)));
+        
+        return students.stream().map(JournalStudentDto::of).collect(Collectors.toList());
     }
     
-    public Map<String, Integer> usedHours(Journal journal) {
-        return Collections.singletonMap("usedHours", Integer.valueOf(journal.getJournalEntries().stream().mapToInt(it -> it.getLessons() == null ? 0 : it.getLessons().intValue()).sum()));
+    public JournalLessonHoursDto usedHours(Journal journal) {
+        return JournalLessonHoursDto.of(journal);
     }
 
     public byte[] journalAsExcel(Journal journal) {
@@ -966,4 +806,5 @@ public class JournalService {
         
         return Integer.valueOf(q.executeUpdate());
     }
+
 }

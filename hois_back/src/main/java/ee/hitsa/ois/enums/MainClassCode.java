@@ -72,6 +72,7 @@ public enum MainClassCode {
     SAIS_AVALDUSESTAATUS,
     SEADMED,
     SISSEKANNE,
+    SOORITUS,
     SPETSKUTSE,
     SUGU,
     SYNDMUS,

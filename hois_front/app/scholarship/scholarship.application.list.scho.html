@@ -86,19 +86,24 @@
               </md-checkbox>
             </md-input-container>
           </td>
-          <td md-cell>-</td>
+          <td md-cell>{{$index + 1}}</td>
           <td md-cell>{{currentLanguageNameField(application.type)}}</td>
           <td md-cell>
             <a href="#/scholarships/applications/{{application.id}}">{{application.termNameEt}}</a>
           </td>
           <td md-cell>{{application.curriculumCode ? application.curriculumCode : '-'}}</td>
           <td md-cell>
-            <a href="#/students/{{application.studentId}}/main">{{application.studentName ? application.studentName : '-'}}</a>
+            <a href="#/students/{{application.studentId}}/main" ng-style="application.nonCompliant ? {color: 'red'} : {}">
+              {{application.studentName ? application.studentName : '-'}}
+            </a>
           </td>
           <td md-cell>{{application.idcode ? application.idcode : '-'}}</td>
-          <td md-cell>{{application.averageMark ? application.averageMark : '-'}}</td>
+          <td md-cell>
+            {{isNumber(application.saisPoints) ? application.saisPoints : application.averageMark ? application.averageMark : '-'}}
+            <span class="scholarship-sais" ng-show="isNumber(application.saisPoints)"> S</span>
+          </td>
           <td md-cell>{{application.lastPeriodMark ? application.lastPeriodMark : '-'}}</td>
-          <td md-cell>{{application.credits ? application.curriculumCompletion : '-'}}</td>
+          <td md-cell>{{isNumber(application.credits) ? application.credits : '-'}}</td>
           <td md-cell>{{currentLanguageNameField(application.status)}}
             <md-tooltip ng-if="['STIPTOETUS_STAATUS_L', 'STIPTOETUS_STAATUS_T'].indexOf(application.status.code) !== -1  && application.rejectComment">{{application.rejectComment}}</md-tooltip>
           </td>

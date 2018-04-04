@@ -135,7 +135,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
     return {handle: function(params) {
       if(params.busy) {
         requests++;
-        if(requests === 1) {
+        if(requests === 1 && !busyShowing) {
           var parentEl = angular.element(document.body);
           $mdDialog.show({
             parent: parentEl,

@@ -22,11 +22,13 @@ import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
+import ee.hitsa.ois.web.commandobject.report.VotaCommand;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
 import ee.hitsa.ois.web.dto.report.StudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.TeacherLoadDto;
+import ee.hitsa.ois.web.dto.report.VotaDto;
 
 @RestController
 @RequestMapping("/reports")
@@ -93,5 +95,11 @@ public class ReportController {
     public Page<TeacherLoadDto> teacherLoadVocational(HoisUserDetails user, @Valid TeacherLoadCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
         return reportService.teacherLoadVocational(user.getSchoolId(), criteria, pageable);
+    }
+
+    @GetMapping("/vota")
+    public Page<VotaDto> vota(HoisUserDetails user, @Valid VotaCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return reportService.vota(user.getSchoolId(), criteria, pageable);
     }
 }

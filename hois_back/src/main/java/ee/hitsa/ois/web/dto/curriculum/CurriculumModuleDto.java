@@ -1,11 +1,13 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -32,7 +34,7 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
     public static CurriculumModuleDto of(CurriculumModule module) {
         CurriculumModuleDto dto = EntityUtil.bindToDto
                 (module, new CurriculumModuleDto(), "outcomes", "occupations", "competences");
-        dto.setOutcomes(StreamUtil.toMappedSet(CurriculumModuleOutcomeDto::of, module.getOutcomes()));
+        dto.setOutcomes(getOrderedOutcomes(module));
         dto.setOccupations(StreamUtil.toMappedSet(o -> EntityUtil.getNullableCode(o.getOccupation()), module.getOccupations()));
         dto.setCompetences(StreamUtil.toMappedSet(c -> EntityUtil.getNullableCode(c.getCompetence()), module.getCompetences()));
         dto.setAddedToImplementationPlan(Boolean.valueOf(!CollectionUtils.isEmpty(module.getCurriculumVersionOccupationModules())));
@@ -58,12 +60,17 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
         dto.setNameEn(module.getNameEn());
         dto.setCredits(module.getCredits());
         dto.setType(ClassifierSelection.of(module.getModule()));
-        dto.setOutcomes(StreamUtil.toMappedSet(CurriculumModuleOutcomeDto::of, module.getOutcomes()));
+        dto.setOutcomes(getOrderedOutcomes(module));
         dto.setAssessmentsEt(module.getAssessmentsEt());
         dto.setStudyPeriod(module.getCurriculum().getStudyPeriod());
         return dto;
     }
 
+    private static List<CurriculumModuleOutcomeDto> getOrderedOutcomes(CurriculumModule module) {
+        return StreamUtil.toMappedList(CurriculumModuleOutcomeDto::of, module.getOutcomes().stream()
+                .sorted(StreamUtil.comparingWithNullsLast(CurriculumModuleOutcome::getOrderNr)));
+    }
+    
     public Boolean getAddedToImplementationPlan() {
         return addedToImplementationPlan;
     }

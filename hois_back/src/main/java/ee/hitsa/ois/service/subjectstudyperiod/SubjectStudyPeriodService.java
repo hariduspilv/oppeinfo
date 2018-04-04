@@ -18,7 +18,8 @@ import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.service.MoodleService;
+import ee.hitsa.ois.service.moodle.MoodleContext;
+import ee.hitsa.ois.service.moodle.MoodleService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -39,24 +40,22 @@ public class SubjectStudyPeriodService {
     @Autowired
     private MoodleService moodleService;
 
-    public SubjectStudyPeriod create(HoisUserDetails user, SubjectStudyPeriodForm form) {
+    public SubjectStudyPeriod create(SubjectStudyPeriodForm form, MoodleContext context) {
         SubjectStudyPeriod subjectStudyPeriod = new SubjectStudyPeriod();
         subjectStudyPeriod.setSubject(em.getReference(Subject.class, form.getSubject()));
         subjectStudyPeriod.setStudyPeriod(em.getReference(StudyPeriod.class, form.getStudyPeriod()));
-        return update(user, subjectStudyPeriod, form);
+        return update(subjectStudyPeriod, form, context);
     }
 
-    public SubjectStudyPeriod update(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod, SubjectStudyPeriodForm form) {
-        if (form.getMoodleCourseId() != null) {
-            if (!moodleService.courseLinkPossible(user, form.getMoodleCourseId(), getTeachersIdcodes(subjectStudyPeriod))) {
-                throw new ValidationFailedException("main.messages.error.invalidMoodleCourse");
-            }
-        }
+    public SubjectStudyPeriod update(SubjectStudyPeriod subjectStudyPeriod, SubjectStudyPeriodForm form,
+            MoodleContext context) {
         EntityUtil.bindToEntity(form, subjectStudyPeriod, classifierRepository, "subject", "studyPeriod", "teachers",
                 "studentGroups");
         updateSubjectStudyPeriodTeachers(subjectStudyPeriod, form);
         updateStudentGroups(subjectStudyPeriod, form.getStudentGroups());
-        
+        if (subjectStudyPeriod.getMoodleCourseId() != null) {
+            moodleService.validateMoodleCourseId(context, subjectStudyPeriod, subjectStudyPeriod.getMoodleCourseId());
+        }
         subjectStudyPeriod = EntityUtil.save(subjectStudyPeriod, em);
         subjectStudyPeriodDeclarationService.addToDeclarations(subjectStudyPeriod);
         return subjectStudyPeriod;
@@ -96,11 +95,6 @@ public class SubjectStudyPeriodService {
         }
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(subjectStudyPeriod, em);
-    }
-
-    private List<String> getTeachersIdcodes(SubjectStudyPeriod subjectStudyPeriod) {
-        return StreamUtil.toMappedList(sspt -> sspt.getTeacher().getPerson().getIdcode(), 
-                subjectStudyPeriod.getTeachers());
     }
 
 }

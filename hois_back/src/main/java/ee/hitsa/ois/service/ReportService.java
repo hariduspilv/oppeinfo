@@ -1,10 +1,14 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +30,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -38,12 +43,15 @@ import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
+import ee.hitsa.ois.web.commandobject.report.VotaCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
 import ee.hitsa.ois.web.dto.report.StudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.TeacherLoadDto;
+import ee.hitsa.ois.web.dto.report.VotaDto;
 
 @Transactional
 @Service
@@ -245,6 +253,7 @@ public class ReportService {
 
     @SuppressWarnings("unused")
     public Page<CurriculumSubjectsDto> curriculumSubjects(Long schoolId, CurriculumSubjectsCommand criteria, Pageable pageable) {
+        // TODO not implemented yet
         return null;
     }
 
@@ -254,6 +263,77 @@ public class ReportService {
 
     public Page<TeacherLoadDto> teacherLoadHigher(Long schoolId, TeacherLoadCommand criteria, Pageable pageable) {
         return teacherLoad(schoolId, criteria, pageable, true);
+    }
+
+    public Page<VotaDto> vota(Long schoolId, VotaCommand criteria, Pageable pageable) {
+        // curriculum versions for given study year/period
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_version cv " +
+                "join curriculum c on cv.curriculum_id = c.id " +
+                "join study_period sp on (cv.valid_from is null or cv.valid_from <= sp.end_date) and (cv.valid_thru is null or cv.valid_thru >= sp.start_date) " +
+                "join study_year sy on sp.study_year_id = sy.id " +
+                "join classifier syc on sy.year_code = syc.code").sort("sp.start_date", "sp.id", "cv.code");
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("sy.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("sp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
+        qb.optionalCriteria("sp.id = :studyPeriodId", "studyPeriodId", criteria.getStudyPeriod());
+
+        Set<Long> cvIds = new HashSet<>();
+        Set<StudyPeriod> studyPeriods = new HashSet<>();
+        Map<Long, Map<Long, VotaDto>> dtosByPeriodAndCurriculum = new HashMap<>();
+        Page<VotaDto> result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.id as sp_id, sp.name_et as sp_name_et, sp.name_en as sp_name_en, cv.id, cv.code, c.name_et as c_name_et, c.name_en as c_name_en, sp.start_date, sp.end_date", em, pageable)
+                .map(r -> {
+                    VotaDto dto = new VotaDto();
+                    dto.setStudyYear(new AutocompleteResult(null, resultAsString(r, 0), resultAsString(r, 1)));
+                    Long studyPeriodId = resultAsLong(r, 2);
+                    dto.setStudyPeriod(new AutocompleteResult(studyPeriodId, resultAsString(r, 3), resultAsString(r, 4)));
+                    String cvCode = resultAsString(r, 6);
+                    dto.setCurriculum(new AutocompleteResult(null, CurriculumUtil.versionName(cvCode, resultAsString(r, 7)), CurriculumUtil.versionName(cvCode, resultAsString(r, 8))));
+                    Long cvId = resultAsLong(r, 5);
+                    dtosByPeriodAndCurriculum.computeIfAbsent(studyPeriodId, id -> new HashMap<>()).put(cvId, dto);
+                    cvIds.add(cvId);
+                    studyPeriods.add(new StudyPeriod(studyPeriodId, resultAsLocalDate(r, 9), resultAsLocalDate(r, 10)));
+                    return dto;
+                });
+
+        List<VotaDto> dtos = result.getContent();
+        if(!dtos.isEmpty()) {
+            LocalDateTime start = DateUtils.firstMomentOfDay(studyPeriods.stream().map(StudyPeriod::getStart).min(Comparator.naturalOrder()).get());
+            LocalDateTime end = DateUtils.lastMomentOfDay(studyPeriods.stream().map(StudyPeriod::getEnd).max(Comparator.naturalOrder()).get());
+            // formal learnings for given curriculum versions and date period
+            qb = new JpaNativeQueryBuilder("from apel_application_formal_subject_or_module aafsm " +
+                    "join apel_application_record aar on aafsm.apel_application_record_id = aar.id " +
+                    "join apel_application aa on aar.apel_application_id = aa.id " +
+                    "left join apel_school aps on aafsm.apel_school_id = aps.id " +
+                    "left join curriculum_version_omodule cvo on aafsm.curriculum_version_omodule_id = cvo.id " +
+                    "left join curriculum_version_hmodule cvh on aafsm.curriculum_version_hmodule_id = cvh.id");
+            qb.requiredCriteria("aa.inserted >= :start", "start", start);
+            qb.requiredCriteria("aa.inserted <= :end", "end", end);
+            qb.requiredCriteria("(cvo.curriculum_version_id in (:cv) or cvh.curriculum_version_id in (:cv))", "cv", cvIds);
+
+            List<?> data = qb.select("aa.id, aa.inserted, case when aafsm.is_my_school then 'RIIK_EST' else aps.country_code end, aafsm.transfer, aa.confirmed, aafsm.credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id)", em).getResultList();
+            // TODO update numbers, match by inserted date (study period) and curriculum version id
+            for(Object r : data) {
+                VotaDto dto = findVota(resultAsLocalDate(r, 1), resultAsLong(r, 6), studyPeriods, dtosByPeriodAndCurriculum);
+            }
+
+            // informal learnings for given curriculum versions and date period
+            qb = new JpaNativeQueryBuilder("from apel_application_informal_subject_or_module aaism " +
+                    "join apel_application_record aar on aaism.apel_application_record_id = aar.id " +
+                    "join apel_application aa on aar.apel_application_id = aa.id " +
+                    "left join curriculum_version_omodule cvo on aaism.curriculum_version_omodule_id = cvo.id " +
+                    "left join curriculum_version_hmodule cvh on aaism.curriculum_version_hmodule_id = cvh.id");
+            qb.requiredCriteria("aa.inserted >= :start", "start", start);
+            qb.requiredCriteria("aa.inserted <= :end", "end", end);
+            qb.requiredCriteria("(cvo.curriculum_version_id in (:cv) or cvh.curriculum_version_id in (:cv))", "cv", cvIds);
+
+            data = qb.select("aa.id, aa.inserted, aaism.transfer, aa.confirmed, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id)", em).getResultList();
+            // TODO update numbers, match by inserted date (study period) and curriculum version id
+            for(Object r : data) {
+                VotaDto dto = findVota(resultAsLocalDate(r, 1), resultAsLong(r, 4), studyPeriods, dtosByPeriodAndCurriculum);
+            }
+        }
+
+        return result;
     }
 
     private Page<TeacherLoadDto> teacherLoad(Long schoolId, TeacherLoadCommand criteria, Pageable pageable, boolean higher) {
@@ -341,7 +421,7 @@ public class ReportService {
             qb.requiredCriteria("t.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
 
             qb.groupBy("tete.teacher_id, t.study_period_id");
-            List<?> actualLoad = qb.select("tete.teacher_id, t.study_period_id, sum(te.lessons)", em).getResultList();
+            List<?> actualLoad = qb.select("tete.teacher_id, t.study_period_id, coalesce(sum(te.lessons), 0)", em).getResultList();
             actualLoad.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), () -> actualLoadHours, Collectors.toMap(r -> resultAsLong(r, 1), r -> resultAsLong(r, 2))));
         }
 
@@ -401,6 +481,50 @@ public class ReportService {
             Long curriculumId = resultAsLong(r, 0);
             StudentStatisticsDto dto = curriculums.get(curriculumId);
             dto.getResult().put("count", resultAsLong(r, 1));
+        }
+    }
+
+    private static VotaDto findVota(LocalDate inserted, Long cvId, Set<StudyPeriod> studyPeriods, Map<Long, Map<Long, VotaDto>> dtosByPeriodAndCurriculum) {
+        // study period by inserted date
+        StudyPeriod sp = studyPeriods.stream().filter(r -> !r.getStart().isAfter(inserted) && !r.getEnd().isBefore(inserted)).findAny().orElse(null);
+        if(sp == null) {
+            return null;
+        }
+        return dtosByPeriodAndCurriculum.get(sp.getId()).get(cvId);
+    }
+
+    private static class StudyPeriod {
+
+        private final Long id;
+        private final LocalDate start;
+        private final LocalDate end;
+
+        public StudyPeriod(Long id, LocalDate start, LocalDate end) {
+            this.id = id;
+            this.start = start;
+            this.end = end;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public LocalDate getStart() {
+            return start;
+        }
+
+        public LocalDate getEnd() {
+            return end;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return (o instanceof StudyPeriod) && id.equals(((StudyPeriod)o).getId());
+        }
+
+        @Override
+        public int hashCode() {
+            return id.hashCode();
         }
     }
 }

@@ -10,7 +10,7 @@ public class CertificateReportSession {
 
     public CertificateReportSession(StudyPeriodEvent event) {
         start = DateUtils.date(event.getStart().toLocalDate());
-        end = DateUtils.date(event.getEnd().toLocalDate());
+        end = event.getEnd() != null ? DateUtils.date(event.getEnd().toLocalDate()) : null;
     }
 
     public String getStart() {

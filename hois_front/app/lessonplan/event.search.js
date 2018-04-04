@@ -1,10 +1,11 @@
 'use strict';
 
 angular.module('hitsaOis').controller('LessonplanEventSearchController',
-  function ($scope, message, QueryUtils, USER_ROLES, AuthService) {
+  function ($scope, $route, message, QueryUtils, USER_ROLES, AuthService) {
     var beforeColon = /^[^:]+/;
     var afterColon = /:(.*)/;
     var beforeT = /.+?(?=T)/;
+    $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS);
     $scope.formState = {};
     var baseUrl = '/timetableevents';
@@ -40,5 +41,20 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       var day = date.getDate();
       var dateString = '' + year + '-' + month + '-' + day;
       return new Date(dateString + ' ' + time) > new Date();
+    };
+
+    $scope.allowedToEdit = function (teachers) {
+      if ($scope.auth.isAdmin()) {
+        return true;
+      }
+
+      if ($scope.auth.isTeacher()) {
+        for (var i = 0; i < teachers.length; i++) {
+          if (teachers[i].id === $scope.auth.teacher) {
+            return true;
+          }
+        }
+      }
+      return false;
     };
   });

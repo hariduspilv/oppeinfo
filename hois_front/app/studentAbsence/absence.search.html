@@ -36,10 +36,11 @@
           </md-input-container>
           <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'absence.status' | translate}}</label>
-            <md-select ng-model="criteria.isAccepted">
+            <md-select ng-model="criteria.status" ng-change="statusChanged()">
               <md-option ng-value="null"></md-option>
-              <md-option ng-value="true">{{ 'absence.isAccepted' | translate }}</md-option>
-              <md-option ng-value="false">{{ 'absence.isNotAccepted' | translate }}</md-option>
+              <md-option ng-value="'accepted'">{{ 'absence.isAccepted' | translate }}</md-option>
+              <md-option ng-value="'isNotAccepted'">{{ 'absence.isNotAccepted' | translate }}</md-option>
+              <md-option ng-value="'rejected'">{{ 'absence.isRejected' | translate }}</md-option>
             </md-select>
           </md-input-container>
         </div>
@@ -60,8 +61,8 @@
             <th md-column md-order-by="sa.valid_thru">{{'absence.absenceThru' | translate}}</th>
             <th md-column md-order-by="sa.cause">{{'absence.absenceCause' | translate}}</th>
             <th md-column md-order-by="sa.inserted_by">{{'absence.applicant' | translate}}</th>
-            <th md-column md-order-by="sa.is_accepted">{{'absence.isAccepted' | translate}}</th>
-            <th md-column md-order-by="sa.changed_by">{{'absence.absenceAcceptor' | translate}}</th>
+            <th md-column md-order-by="sa.is_accepted, sa.is_rejected">{{'absence.status' | translate}}</th>
+            <th md-column>{{'absence.absenceAcceptor' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
@@ -74,10 +75,17 @@
             <td md-cell>{{row.validThru | hoisDate}}</td>
             <td md-cell>{{::row.cause}}</td>
             <td md-cell>{{::row.applicant}}</td>
-            <td md-cell>{{row.isAccepted ? 'main.yes' : 'main.no' | translate}}</td>
+            <td md-cell>
+              <span ng-if="row.isAccepted">{{'absence.isAccepted' | translate}}</span>
+              <span ng-if="row.isRejected">{{'absence.isRejected' | translate}}</span>
+              <span ng-if="!row.isAccepted && !row.isRejected">{{'absence.isNotAccepted' | translate}}</span>
+            </td>
             <td md-cell>{{row.acceptor}}</td>
             <td md-cell>
-              <md-button ng-if="row.canAccept" md-no-ink class="md-primary change-button" ng-click="accept(row)">{{'absence.accept' | translate}}</md-button>
+              <span ng-if="row.canChangeStatus">
+                <md-button md-no-ink class="md-primary change-button" ng-click="accept(row)">{{'absence.accept' | translate}}</md-button>
+                <md-button md-no-ink class="md-primary change-button" ng-click="reject(row)">{{'absence.reject' | translate}}</md-button>
+              </span>
             </td>
           </tr>
         </tbody>

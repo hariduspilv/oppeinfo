@@ -53,7 +53,7 @@ angular.module('hitsaOis')
               if (!scope.ngModel) {
                 scope.ngModel = time.toDate();
               } else {
-                var old = moment(scope.ngModel);
+                var old = moment(scope.ngModel, typeof scope.ngModel === 'string' && scope.ngModel.length === 5 ? timeFormat : undefined);
                 old.hours(time.hours());
                 old.minutes(time.minutes());
                 scope.ngModel = old.toDate();

@@ -5,13 +5,25 @@
       <hois-value value="protocol.protocolNr"></hois-value>
     </md-input-container>
     <md-input-container flex flex-sm="100" flex-xs="100">
-      <label>{{'finalExamProtocol.inserted' | translate}} / {{'moduleProtocol.confirmDate' | translate}}</label>
-      <hois-value value="protocol.inserted | hoisDate"></hois-value>
+      <label>{{'finalExamProtocol.status' | translate}}</label>
+      <hois-value value="currentLanguageNameField(protocol.status)"></hois-value>
     </md-input-container>
     <md-input-container flex flex-sm="100" flex-xs="100">
-      <label>{{'finalExamProtocol.studyLevel' | translate}}</label>
+      <label>{{'finalExamProtocol.studyPeriod' | translate}}</label>
       <hois-value value=""></hois-value>
     </md-input-container>
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{'finalExamProtocol.inserted' | translate}} / {{'moduleProtocol.confirmDate' | translate}}</label>
+      <hois-value ng-if="protocol.confirmDate" value="(protocol.inserted | hoisDate).concat(' / ').concat(protocol.confirmDate | hoisDate)"></hois-value>
+      <hois-value ng-if="!protocol.confirmDate" value="protocol.inserted | hoisDate"></hois-value>
+    </md-input-container>
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{'finalExamProtocol.confirmer' | translate}}</label>
+      <hois-value value="protocol.confirmer"></hois-value>
+    </md-input-container>
+  </div>
+
+<!--
     <md-input-container flex flex-sm="100" flex-xs="100">
       <label>{{'finalExamProtocol.subject' | translate}}</label>
       <hois-value value=""></hois-value>
@@ -20,19 +32,9 @@
       <label>{{'finalExamProtocol.subjectEt' | translate}}</label>
       <hois-value value=""></hois-value>
     </md-input-container>
-    <md-input-container flex flex-sm="100" flex-xs="100">
-      <label>{{'finalExamProtocol.studyPeriod' | translate}}</label>
-      <hois-value value=""></hois-value>
-    </md-input-container>
-  </div>
+  -->
 
   <div layout="row" layout-sm="column" layout-xs="column">
-    <md-input-container flex flex-sm="100" flex-xs="100">
-      <label>{{'finalExamProtocol.status' | translate}}</label>
-      <hois-value value="currentLanguageNameField(protocol.status)"></hois-value>
-    </md-input-container>
-    <md-input-container flex flex-sm="100" flex-xs="100">
-    </md-input-container>
     <md-input-container flex flex-sm="100" flex-xs="100">
       <label>{{'finalExamProtocol.teacher' | translate}}</label>
       <hois-value value=""></hois-value>
@@ -47,22 +49,14 @@
     </md-input-container>
     <md-input-container flex flex-sm="100" flex-xs="100">
       <label>{{'finalExamProtocol.assessment' | translate}}</label>
-      <hois-classifier-value ng-model="" main-classifier-code="KORGHINDAMISVIIS"></hois-classifier-value>
+      <hois-classifier-value main-classifier-code="KORGHINDAMISVIIS"></hois-classifier-value>
     </md-input-container>
   </div>
 
+
+  <md-input-container flex flex-sm="100" flex-xs="100">
+    <label>{{'finalExamProtocol.studyLevel' | translate}}</label>
+    <hois-value value="currentLanguageNameField(protocol.studyLevel)"></hois-value>
+  </md-input-container>
   <br>
-
-  <div ng-if="protocol.finalExam.date" layout="row" layout-sm="column" layout-xs="column">
-    <md-input-container flex flex-sm="100" flex-xs="100">
-      <label>{{'finalExamProtocol.finalExamDate' | translate}}</label>
-      <hois-value value="protocol.finalExamDate"></hois-value>
-    </md-input-container>
-  </div>
-  <div ng-if="protocol.finalExam.committee" layout="row" layout-sm="column" layout-xs="column">
-    <md-input-container flex flex-sm="100" flex-xs="100">
-      <label>{{'finalExamProtocol.teacher' | translate}}</label>
-      <hois-value value="protocol.teacher"></hois-value>
-    </md-input-container>
-  </div>
 </div>

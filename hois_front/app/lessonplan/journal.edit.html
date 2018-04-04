@@ -96,7 +96,7 @@
           </div>
 
           <div layout="row" flex="100">
-            <hois-autocomplete flex ng-model="formState.room" method="rooms" label="lessonplan.room"></hois-autocomplete>
+            <hois-autocomplete flex ng-model="formState.room" method="rooms" additional-query-params="{isStudy: true}" label="lessonplan.room"></hois-autocomplete>
           </div>
           <div layout="column" class="common-label" flex="95" ng-repeat="room in record.journalRooms">
             <div layout="row" flex layout-align="start center">

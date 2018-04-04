@@ -2,6 +2,7 @@ package ee.hitsa.ois.service.security;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -81,24 +82,30 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
 
         School school = user.getSchool();
         AuthenticatedSchool authenticatedSchool = null;
-        if(school != null) {
+        if (school != null) {
             SchoolService.SchoolType type = schoolService.schoolType(school.getId());
-            authenticatedSchool = new AuthenticatedSchool(school.getId(), type.isHigher(), type.isVocational(), EntityUtil.getCode(school.getEhisSchool()));
-            if(user.getStudent() != null) {
-                List<?> isHigher = em.createNativeQuery("select c.is_higher "
+            authenticatedSchool = new AuthenticatedSchool(school.getId(), type.isHigher(), type.isVocational(),
+                    type.isDoctoral(), EntityUtil.getCode(school.getEhisSchool()));
+            if (user.getStudent() != null) {
+                List<?> result = em.createNativeQuery("select c.is_higher, level.value "
                         + "from student s "
                         + "join curriculum_version cv on s.curriculum_version_id = cv.id "
                         + "join curriculum c on c.id = cv.curriculum_id "
+                        + "join classifier level on level.code = c.orig_study_level_code "
                         + "where s.id = ?1"
                         + "").setParameter(1, user.getStudent()).setMaxResults(1).getResultList();
-                  Boolean higher = resultAsBoolean(isHigher.get(0), 0);
-                  authenticatedUser.setVocational(Boolean.valueOf(Boolean.FALSE.equals(higher)));
-                  authenticatedUser.setHigher(Boolean.valueOf(Boolean.TRUE.equals(higher)));
-              } else {
+                Object row = result.get(0);
+                Boolean higher = resultAsBoolean(row, 0);
+                String studyLevel = resultAsString(row, 1);
+                authenticatedUser.setVocational(Boolean.valueOf(Boolean.FALSE.equals(higher)));
+                authenticatedUser.setHigher(Boolean.valueOf(Boolean.TRUE.equals(higher)));
+                authenticatedUser.setDoctoral(Boolean.valueOf(studyLevel.startsWith("7")));
+            } else {
                 // take values from school
                 authenticatedUser.setVocational(Boolean.valueOf(type.isVocational()));
                 authenticatedUser.setHigher(Boolean.valueOf(type.isHigher()));
-              }
+                authenticatedUser.setDoctoral(Boolean.valueOf(type.isDoctoral()));
+            }
         }
         authenticatedUser.setSchool(authenticatedSchool);
         authenticatedUser.setAuthorizedRoles(userDetails.getAuthorities());

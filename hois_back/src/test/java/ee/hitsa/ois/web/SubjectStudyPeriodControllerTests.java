@@ -1,7 +1,11 @@
 package ee.hitsa.ois.web;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.persistence.EntityManager;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -20,6 +24,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.DeclarationType;
 import ee.hitsa.ois.enums.GroupProportion;
 import ee.hitsa.ois.enums.Role;
@@ -33,15 +38,32 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherDto;
 public class SubjectStudyPeriodControllerTests {
 
     private static final String BASE_URL = "/subjectStudyPeriods";
+    private static final Role ROLE = Role.ROLL_A;
 
     @Autowired
     private TestRestTemplate restTemplate;
     @Autowired
     private TestConfigurationService testConfigurationService;
+    @Autowired
+    private EntityManager em;
 
+    private Long schoolId;
+    private Long subjectId;
+    
     @Before
     public void setUp() {
-        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
+        if (schoolId == null) {
+            List<School> userSchools = testConfigurationService.personSchools(ROLE);
+            Assert.assertFalse(userSchools.isEmpty());
+            Object result = em.createNativeQuery("select s.id, s.school_id"
+                    + " from subject s"
+                    + " where s.school_id in (?1)")
+                .setParameter(1, userSchools)
+                .setMaxResults(1).getResultList().get(0);
+            subjectId = resultAsLong(result, 0);
+            schoolId = resultAsLong(result, 1);
+        }
+        testConfigurationService.userToRoleInSchool(ROLE, schoolId, restTemplate);
     }
 
     @After
@@ -193,10 +215,10 @@ public class SubjectStudyPeriodControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
     
-    private static SubjectStudyPeriodForm getForm() {
+    private SubjectStudyPeriodForm getForm() {
         SubjectStudyPeriodForm form = new SubjectStudyPeriodForm();
         form.setStudyPeriod(Long.valueOf(4));
-        form.setSubject(Long.valueOf(50));
+        form.setSubject(subjectId);
         form.setGroupProportion(GroupProportion.PAEVIK_GRUPI_JAOTUS_1.name());
         form.setDeclarationType(DeclarationType.DEKLARATSIOON_EI.name());
         

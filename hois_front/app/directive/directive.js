@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'resourceErrorHandler', 'Classifier', 'Curriculum', 'DataUtils', 'QueryUtils', 'Session',
-  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, resourceErrorHandler, Classifier, Curriculum, DataUtils, QueryUtils, Session) {
+angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'resourceErrorHandler', 'Classifier', 'Curriculum', 'DataUtils', 'FormUtils', 'QueryUtils', 'Session',
+  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, resourceErrorHandler, Classifier, Curriculum, DataUtils, FormUtils, QueryUtils, Session) {
     var id = $route.current.params.id;
     var canceledDirective = $route.current.params.canceledDirective;
     var baseUrl = '/directives';
@@ -148,15 +148,6 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       resourceErrorHandler.responseError(response, $scope.directiveForm).catch(angular.noop);
     }
 
-    function formIsValid() {
-      $scope.directiveForm.$setSubmitted();
-      if(!$scope.directiveForm.$valid) {
-        message.error('main.messages.form-has-errors');
-        return false;
-      }
-      return true;
-    }
-
     function beforeSave() {
       if($scope.record.type === 'KASKKIRI_TYHIST') {
         $scope.record.selectedStudents = $scope.formState.selectedStudents.map(function(it) { return it.student;});
@@ -180,28 +171,25 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     $scope.update = function() {
       clearErrors();
-      if(!formIsValid()) {
-        return;
-      }
-
-      beforeSave();
-      if($scope.record.id) {
-        $scope.record.$update2().then(afterLoad).then(message.updateSuccess).catch(displayFormErrors);
-      }else{
-        $scope.record.$save2().then(function() {
-          message.info('main.messages.create.success');
-          $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
-        }).catch(displayFormErrors);
-      }
+      FormUtils.withValidForm($scope.directiveForm, function() {
+        beforeSave();
+        if($scope.record.id) {
+          $scope.record.$update2().then(function(record) {
+            afterLoad(record);
+            $scope.directiveForm.$setPristine();
+            message.updateSuccess();
+          }).catch(displayFormErrors);
+        }else{
+          $scope.record.$save2().then(function() {
+            message.info('main.messages.create.success');
+            $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
+          }).catch(displayFormErrors);
+        }
+      });
     };
 
     $scope.delete = function() {
-      dialogService.confirmDialog({prompt: 'directive.deleteconfirm'}, function() {
-        $scope.record.$delete().then(function() {
-          message.info('main.messages.delete.success');
-          $location.url(baseUrl + '?_noback');
-        }).catch(angular.noop);
-      });
+      FormUtils.deleteRecord($scope.record, baseUrl + '?_noback', {prompt: 'directive.deleteconfirm'});
     };
 
     $scope.directiveTypeChanged = function() {
@@ -361,6 +349,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       } else if(idcode !== row._idcode) {
         row._found = false;
         if(!row._foreign && idcode && ctrl) {
+          row.birthdate = undefined;
+          row.sex = undefined;
           ctrl.$serverError = ctrl.$serverError || [];
           ctrl.$serverError.push({code: 'InvalidEstonianIdCode'});
           ctrl.$setValidity('serverside', false);
@@ -414,39 +404,43 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     $scope.sendToConfirm = function(ekis) {
       clearErrors();
       $scope.directiveForm.directiveCoordinator.$setValidity('required', !!$scope.record.directiveCoordinator);
-      if(!formIsValid()) {
-        return;
-      }
+      FormUtils.withValidForm($scope.directiveForm, function() {
+        var deletedInvalid = false;
+        function sendToConfirm() {
+          // save first
+          beforeSave();
+          $scope.record.$update2().then(function(record) {
+            afterLoad(record);
+            $scope.directiveForm.$setPristine();
 
-      var deletedInvalid = false;
-      function sendToConfirm() {
-        // save first
-        beforeSave();
-        $scope.record.$update2().then(afterLoad).then(function() {
-          QueryUtils.endpoint(baseUrl + '/sendtoconfirm/' + $scope.record.id + '?ekis=' + ekis, {put: {method: 'PUT'}}).put().$promise.then(function(response) {
-            var invalidStudents = response ? response.invalidStudents : undefined;
-            if(invalidStudents && invalidStudents.length > 0) {
-              if(!deletedInvalid) {
-                // invalid students on directive, ask confirmation for delete
-                dialogService.showDialog('directive/invalid.student.delete.dialog.html', function(scope) {
-                  scope.students = invalidStudents;
-                }, function() {
-                  // remove invalid students and do the whole process again
-                  invalidStudents.forEach(function(it) {
-                    $scope.deleteStudent(it.idcode);
+            QueryUtils.endpoint(baseUrl + '/sendtoconfirm/' + $scope.record.id + '?ekis=' + ekis, {put: {method: 'PUT'}}).put().$promise.then(function(response) {
+              var invalidStudents = response ? response.invalidStudents : undefined;
+              if(invalidStudents && invalidStudents.length > 0) {
+                if(!deletedInvalid) {
+                  // invalid students on directive, ask confirmation for delete
+                  dialogService.showDialog('directive/invalid.student.delete.dialog.html', function(scope) {
+                    scope.students = invalidStudents;
+                  }, function() {
+                    // remove invalid students and do the whole process again
+                    invalidStudents.forEach(function(it) {
+                      $scope.deleteStudent(it.idcode);
+                    });
+                    deletedInvalid = true;
+                    sendToConfirm();
                   });
-                  deletedInvalid = true;
-                  sendToConfirm();
-                });
+                }
+              } else {
+                message.info('directive.sentToConfirm');
+                $location.url(baseUrl + '/' + $scope.record.id + '/view?_noback');
               }
-            } else {
-              message.info('directive.sentToConfirm');
-              $location.url(baseUrl + '/' + $scope.record.id + '/view?_noback');
-            }
+            }).catch(displayFormErrors);
           }).catch(displayFormErrors);
-        }).catch(displayFormErrors);
-      }
-      dialogService.confirmDialog({prompt: 'directive.ekisconfirm'}, sendToConfirm);
+        }
+        QueryUtils.endpoint(baseUrl + '/checkForConfirm').get({id: $scope.record.id}).$promise.then(function(check) {
+          var template = (check.templateName || []).join('", "');
+          dialogService.confirmDialog({prompt: (check.templateExists ? 'directive.ekisconfirm' : 'directive.ekisconfirmTemplateMissing'), template: template}, sendToConfirm);
+        }).catch(angular.noop);
+      });
     };
   }
 ]).controller('DirectiveViewController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'Session',
@@ -473,16 +467,19 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     // for testing only
     $scope.confirmDirective = function() {
-      dialogService.confirmDialog({prompt: 'directive.confirmconfirm'}, function() {
-        QueryUtils.endpoint(baseUrl + '/confirm').update($scope.record).$promise.then(function() {
-          message.info('directive.confirmed');
-          $route.reload();
+      QueryUtils.endpoint(baseUrl + '/checkForConfirm').get({id: $scope.record.id}).$promise.then(function(check) {
+        var template = (check.templateName || []).join('", "');
+        dialogService.confirmDialog({prompt: (check.templateExists ? 'directive.confirmconfirm' : 'directive.confirmconfirmTemplateMissing'), template: template}, function() {
+          QueryUtils.endpoint(baseUrl + '/confirm').update($scope.record).$promise.then(function() {
+            message.info('directive.confirmed');
+            $route.reload();
+          }).catch(angular.noop);
         });
-      });
+      }).catch(angular.noop);
     };
   }
-]).controller('DirectiveListController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', 'Session',
-  function ($q, $route, $scope, Classifier, QueryUtils, Session) {
+]).controller('DirectiveListController', ['$q', '$scope', 'Classifier', 'QueryUtils', 'Session',
+  function ($q, $scope, Classifier, QueryUtils, Session) {
 
     $scope.formState = {excludedTypes: ['KASKKIRI_KYLALIS'], school: Session.school || {}};
     if(!$scope.formState.school.higher) {
@@ -491,14 +488,9 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $scope.formState.excludedTypes.push('KASKKIRI_VALIS');
     }
 
-    var clMapping = $route.current.locals.clMapping;
-    var clMapper = clMapping ? Classifier.valuemapper(clMapping) : undefined;
-    QueryUtils.createQueryForm($scope, $route.current.locals.url, $route.current.locals.params, clMapper ? clMapper.objectmapper : undefined);
+    var clMapper = Classifier.valuemapper({type: 'KASKKIRI', status: 'KASKKIRI_STAATUS'});
+    QueryUtils.createQueryForm($scope, '/directives', {order: '-inserted'}, clMapper.objectmapper);
 
-    if(clMapper) {
-      $q.all(clMapper.promises).then($scope.loadData);
-    } else {
-      $scope.loadData();
-    }
+    $q.all(clMapper.promises).then($scope.loadData);
   }
 ]);

@@ -5,6 +5,7 @@ angular.module('hitsaOis').controller('FinalExamHigherProtocolNewController', fu
 
   $scope.auth = $route.current.locals.auth;
   $scope.formState = {
+    protocolType: 'PROTOKOLLI_LIIK_P',
     selectedStudents: [],
     subjects: []
   };
@@ -23,13 +24,13 @@ angular.module('hitsaOis').controller('FinalExamHigherProtocolNewController', fu
     getStudyPeriodSubjects();
   });
 
-  $scope.studyPeriodChange = function () {
+  $scope.studyPeriodChanged = function () {
     $scope.formState.subject = undefined;
     getStudyPeriodSubjects();
   };
 
-  $scope.subjectChange = function () {
-    var query = QueryUtils.endpoint(endpoint + '/subject/' + $scope.formState.subject).get();
+  $scope.subjectChanged = function () {
+    var query = QueryUtils.endpoint(endpoint + '/subject/' + $scope.formState.subject.subjectStudyPeriod).get();
     $scope.tabledata = {
       $promise: query.$promise
     };
@@ -42,19 +43,8 @@ angular.module('hitsaOis').controller('FinalExamHigherProtocolNewController', fu
           $scope.formState.selectedStudents.push(it.studentId);
         }
       });
-      if (result.teacher && !$scope.formState.teacher) {
-        $scope.formState.teacher = result.teacher.id;
-      }
     });
   };
-
-  function getSubjectStudyPeriod(subjectId) {
-    for (var i = 0; $scope.formState.subjects.length; i++) {
-      if ($scope.formState.subjects[i].id === subjectId) {
-        return $scope.formState.subjects[i].subjectStudyPeriod;
-      }
-    }
-  }
 
   var FinalExamProtocolEndpoint = QueryUtils.endpoint(endpoint);
   $scope.submit = function () {
@@ -64,8 +54,8 @@ angular.module('hitsaOis').controller('FinalExamHigherProtocolNewController', fu
     }
 
     var entity = {};
-    entity.subject = $scope.formState.subject;
-    entity.subjectStudyPeriod = getSubjectStudyPeriod($scope.formState.subject);
+    entity.subject = $scope.formState.subject.id;
+    entity.subjectStudyPeriod = $scope.formState.subject.subjectStudyPeriod;
     entity.protocolType = $scope.formState.protocolType;
     entity.protocolStudents = $scope.formState.selectedStudents.map(function (it) {
       return {
@@ -79,5 +69,4 @@ angular.module('hitsaOis').controller('FinalExamHigherProtocolNewController', fu
         $location.path(endpoint + '/' + result.id + '/edit');
       });
   };
-
 });

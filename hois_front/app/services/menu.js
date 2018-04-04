@@ -140,7 +140,7 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.study.examTimes',
-            url: '/examTimes',
+            url: '/examTimes?_menu',
             studyLevel: {
               higher: true
             }
@@ -260,6 +260,10 @@ angular.module('hitsaOis')
             studyLevel: {
               higher: true
             }
+          },
+          {
+            name: 'main.menu.reports.vota',
+            url: "/reports/vota?_menu"
           }
         ]
       });
@@ -294,14 +298,14 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.graduation.finalExamProtocolsHigher',
-            url: "/finalExamHigherProtocols",
+            url: "/finalExamHigherProtocols?_menu",
             studyLevel: {
               higher: true
             }
           },
           {
             name: 'main.menu.graduation.finalExamProtocolsVocational',
-            url: "/finalExamVocationalProtocols",
+            url: "/finalExamVocationalProtocols?_menu",
             studyLevel: {
               vocational: true
             }
@@ -494,8 +498,8 @@ angular.module('hitsaOis')
         type: 'toggle',
         pages: [
           {
-            name: 'main.menu.study.exams',
-            url: "/examTimes",
+            name: 'main.menu.study.examTimes',
+            url: "/examTimes?_menu",
             studyLevel: {
               higher: true
             }
@@ -628,6 +632,10 @@ angular.module('hitsaOis')
             url: "/occupationstandard?_menu"
           },
           {
+            name: 'main.menu.dataexchange.kutseregisterLogs',
+            url: "/kutseregister/logs?_menu"
+          },
+          {
             name: 'main.menu.mainData.users',
             url: "/persons?_menu"
           },
@@ -703,7 +711,7 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.myStudyInformation.examRegistration',
-            url: '/examRegistration',
+            url: '/examRegistration?_menu',
             studyLevel: {
               higher: true
             }
@@ -887,7 +895,17 @@ angular.module('hitsaOis')
             },
             {
               name: 'main.menu.scholarships.drGrants',
-              url: "/scholarships?_menu"
+              url: "/scholarships?_menu",
+              studyLevel: {
+                doctoral: true
+              }
+            },
+            {
+              name: 'main.menu.scholarships.drGrantApplications',
+              url: "/scholarships/applications/drGrants?_menu",
+              studyLevel: {
+                doctoral: true
+              }
             }
           ]
         });
@@ -905,12 +923,18 @@ angular.module('hitsaOis')
         result.push({
           name: 'main.menu.scholarships.drGrants',
           type: 'link',
-          url: "/scholarships?_menu"
+          url: "/scholarships?_menu",
+          studyLevel: {
+            doctoral: true
+          }
         });
         result.push({
-          name: 'main.menu.scholarships.grantApplications',
+          name: 'main.menu.scholarships.drGrantApplications',
           type: 'link',
-          url: "/scholarships/applications/grants?_menu"
+          url: "/scholarships/applications/drGrants?_menu",
+          studyLevel: {
+            doctoral: true
+          }
         });
       } else {
         result.push({
@@ -938,7 +962,10 @@ angular.module('hitsaOis')
         result.push({
           name: 'main.menu.scholarships.drGrants',
           type: 'link',
-          url: "/scholarships/myData/drGrants?_menu"
+          url: "/scholarships/myData/drGrants?_menu",
+          studyLevel: {
+            doctoral: true
+          }
         });
       } else {
         result.push({
@@ -958,6 +985,12 @@ angular.module('hitsaOis')
         self.selectSection(null);
         self.selectPage(null, null);
         return;
+      }
+      if (path === '/messages/received') {
+          var page = {name: 'message.messages', type: 'link', url: path};
+          self.selectSection(page);
+          self.selectPage(page, page);
+          return;
       }
       var matchPage = function(section, page) {
         if (page.url.replace(/(\?_menu)$/, '') === path) {
@@ -1064,7 +1097,8 @@ angular.module('hitsaOis')
     function studyLevelMatch(section, authenticatedUser) {
         if(angular.isDefined(section.studyLevel) && angular.isDefined(authenticatedUser.school) && authenticatedUser.school !== null) {
             return authenticatedUser.higher && section.studyLevel.higher ||
-            authenticatedUser.vocational && section.studyLevel.vocational;
+              authenticatedUser.vocational && section.studyLevel.vocational ||
+              authenticatedUser.doctoral && section.studyLevel.doctoral;
         }
         return true;
     }

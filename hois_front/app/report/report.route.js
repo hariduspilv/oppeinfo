@@ -10,7 +10,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING]
       },
       resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); }
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); }
       }
     }).when('/reports/students/statistics', {
       templateUrl: 'report/student.statistics.html',
@@ -20,18 +21,20 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING]
       },
       resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); }
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); }
       }
     }).when('/reports/students/statistics/byperiod', {
-        templateUrl: 'report/student.statistics.byperiod.html',
-        controller: 'ReportStudentStatisticsByperiodController',
-        controllerAs: 'controller',
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING]
-        },
-        resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
-        }
+      templateUrl: 'report/student.statistics.byperiod.html',
+      controller: 'ReportStudentStatisticsByperiodController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING]
+      },
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); }
+      }
     }).when('/reports/curriculums/completion', {
       templateUrl: 'report/curriculums.completion.html',
       controller: 'ReportCurriculumsCompletionController',
@@ -40,6 +43,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING]
       },
       resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
         translationLoaded: function($translate) { return $translate.onReady(); }
       }
     }).when('/reports/teachers/load/higher', {
@@ -49,6 +53,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING]
       },
       resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
         translationLoaded: function($translate) { return $translate.onReady(); }
       }
     }).when('/reports/teachers/load/vocational', {
@@ -59,6 +64,18 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING]
       },
       resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); }
+      }
+    }).when('/reports/vota', {
+      templateUrl: 'report/vota.html',
+      controller: 'ReportVotaController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING]
+      },
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
         translationLoaded: function($translate) { return $translate.onReady(); }
       }
     });

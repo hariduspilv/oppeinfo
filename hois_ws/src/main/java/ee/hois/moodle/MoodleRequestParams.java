@@ -31,12 +31,24 @@ public class MoodleRequestParams {
         messageBuilder.append("&").append(urlEncode(key)).append("=").append(urlEncode(value));
         keyBuilder.append(value);
     }
-    
+
+    public void appendStudents(List<String> studentIds) {
+        for (String studentId : studentIds) {
+            append("studentIds[]", studentId);
+        }
+    }
+
+    public void appendGradeItems(List<Long> gradeItemIds) {
+        for (Long gradeItemId : gradeItemIds) {
+            append("gradeItemIds[]", String.valueOf(gradeItemId));
+        }
+    }
+
     public String getRequestMessage(Config config) {
         return messageBuilder.toString() + "&key=" + sha256Hex(keyBuilder.toString() + config.getSalt());
     }
     
-    private MessageDigest getDigest() {
+    private static MessageDigest getDigest() {
         try {
             return MessageDigest.getInstance("SHA-256");
         } catch (NoSuchAlgorithmException e) {
@@ -44,7 +56,7 @@ public class MoodleRequestParams {
         }
     }
     
-    private String sha256Hex(final String data) {
+    private static String sha256Hex(final String data) {
         byte[] encodedhash = getDigest().digest(data.getBytes(StandardCharsets.UTF_8));
         StringBuffer hexString = new StringBuffer();
         for (int i = 0; i < encodedhash.length; i++) {

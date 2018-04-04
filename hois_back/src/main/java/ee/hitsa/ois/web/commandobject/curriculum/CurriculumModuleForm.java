@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.commandobject.curriculum;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Set;
 
 import javax.validation.constraints.Max;
@@ -58,7 +59,7 @@ public class CurriculumModuleForm extends VersionedCommand {
     private String assessmentsEn;
     
     @Required
-    private Set<CurriculumModuleOutcomeDto> outcomes;
+    private List<CurriculumModuleOutcomeDto> outcomes;
 
     public String getModule() {
         return module;
@@ -140,11 +141,11 @@ public class CurriculumModuleForm extends VersionedCommand {
         this.competences = competences;
     }
 
-    public Set<CurriculumModuleOutcomeDto> getOutcomes() {
+    public List<CurriculumModuleOutcomeDto> getOutcomes() {
         return outcomes;
     }
 
-    public void setOutcomes(Set<CurriculumModuleOutcomeDto> outcomes) {
+    public void setOutcomes(List<CurriculumModuleOutcomeDto> outcomes) {
         this.outcomes = outcomes;
     }
 

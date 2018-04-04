@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,7 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchStudentsCommand;
@@ -86,8 +89,8 @@ public class StudentGroupService {
         qb.optionalCriteria("sg.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("sg.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
         qb.optionalCriteria("sg.teacher_id in (:teacherIds)", "teacherIds", criteria.getTeachers());
-        qb.optionalCriteria("sg.valid_thru >= :validFrom", "validFrom", criteria.getValidFrom());
-        qb.optionalCriteria("sg.valid_from <= :validThru", "validThru", criteria.getValidThru());
+        qb.optionalCriteria("sg.valid_from >= :validFrom", "validFrom", criteria.getValidFrom());
+        qb.optionalCriteria("sg.valid_thru <= :validThru", "validThru", criteria.getValidThru());
 
         return JpaQueryUtil.pagingResult(qb.select(STUDENT_GROUP_LIST_SELECT, em, Collections.singletonMap("studentStatus", StudentStatus.STUDENT_STATUS_ACTIVE)), pageable, () -> qb.count(em)).map(r -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
@@ -136,7 +139,10 @@ public class StudentGroupService {
      * @return
      */
     public StudentGroupDto save(HoisUserDetails user, StudentGroup studentGroup, StudentGroupForm form) {
-        return get(user, saveInternal(user, studentGroup, form));
+        studentGroup = saveInternal(user, studentGroup, form);
+        em.flush();
+
+        return get(user, studentGroup);
     }
 
     private StudentGroup saveInternal(HoisUserDetails user, StudentGroup studentGroup, StudentGroupForm form) {
@@ -165,14 +171,29 @@ public class StudentGroupService {
         studentGroup = EntityUtil.save(studentGroup, em);
 
         // update student list in group
-        Set<Long> studentIds = new HashSet<>(form.getStudents() != null ? form.getStudents() : Collections.emptyList());
+        Set<Long> studentIds = new HashSet<>(StreamUtil.nullSafeList(form.getStudents()));
         List<Student> added = new ArrayList<>();
-        for(Long studentId : studentIds) {
-            Student student = em.getReference(Student.class, studentId);
-            if(!studentGroup.getId().equals(EntityUtil.getNullableId(student.getStudentGroup()))) {
-                student.setStudentGroup(studentGroup);
-                studentService.saveWithHistory(student);
-                added.add(student);
+        if(!studentIds.isEmpty()) {
+            List<Student> students = em.createQuery("select s from Student s where s.id in (?1)", Student.class)
+                    .setParameter(1, studentIds)
+                    .getResultList();
+
+            if(students.size() != studentIds.size()) {
+                // some students were not found
+                throw new EntityNotFoundException();
+            }
+            boolean canAdd = studentGroup.getValidThru() == null || !LocalDate.now().isAfter(studentGroup.getValidThru());
+            Long studentGroupId = studentGroup.getId();
+            for(Student student : students) {
+                if(!studentGroupId.equals(EntityUtil.getNullableId(student.getStudentGroup()))) {
+                    if(!canAdd) {
+                        throw new ValidationFailedException("studentGroup.cannotaddstudents");
+                    }
+                    UserUtil.assertSameSchool(user, student.getSchool());
+                    student.setStudentGroup(studentGroup);
+                    studentService.saveWithHistory(student);
+                    added.add(student);
+                }
             }
         }
         // update student group for these students which were removed

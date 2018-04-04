@@ -2,9 +2,7 @@ package ee.hitsa.ois.util;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.MidtermTask;
@@ -126,12 +124,5 @@ public abstract class HigherProtocolGradeUtil {
 
     private static boolean isBetween(int x, int lower, int upper) {
         return lower <= x && x <= upper;
-    }
-
-    public static List<String> getPossibleGrades(Protocol protocol) {
-        Boolean isDistinctive = Boolean.valueOf(HigherProtocolGradeUtil.isDistinctive(protocol));
-        return Arrays.stream(HigherAssessment.values())
-                .filter(val -> val.getIsDistinctive() == null || val.getIsDistinctive()
-                .equals(isDistinctive)).map(Enum::name).collect(Collectors.toList());
     }
 }

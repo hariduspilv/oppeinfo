@@ -11,7 +11,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
 				auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPPROTOKOLL]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPMOODULPROTOKOLL]
       }
     })
     .when('/finalExamVocationalProtocols/new', {
@@ -23,7 +23,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
 				auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LOPPROTOKOLL]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LOPMOODULPROTOKOLL]
       }
     })
     .when('/finalExamVocationalProtocols/:id/edit', {
@@ -35,13 +35,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); },
         entity: function(QueryUtils, $route) {
           return QueryUtils.endpoint('/finalExamVocationalProtocols').get({id: $route.current.params.id}).$promise;
-        },
-        isView: function ($route){
-          return false
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LOPPROTOKOLL]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LOPMOODULPROTOKOLL]
       }
     })
     .when('/finalExamVocationalProtocols/:id/view', {
@@ -53,13 +50,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); },
         entity: function(QueryUtils, $route) {
           return QueryUtils.endpoint('/finalExamVocationalProtocols').get({id: $route.current.params.id}).$promise;
-        },
-        isView: function ($route){
-          return true
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPPROTOKOLL]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPMOODULPROTOKOLL]
       }
     });
 }]);

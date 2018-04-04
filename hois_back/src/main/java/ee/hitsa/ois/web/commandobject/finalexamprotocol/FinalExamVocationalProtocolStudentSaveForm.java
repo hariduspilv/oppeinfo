@@ -1,17 +1,19 @@
 package ee.hitsa.ois.web.commandobject.finalexamprotocol;
 
-import ee.hitsa.ois.web.commandobject.ProtocolStudentForm;
+import java.util.List;
 
-public class FinalExamVocationalProtocolStudentSaveForm extends FinalExamProtocolStudentCreateForm implements ProtocolStudentForm {
+import ee.hitsa.ois.web.commandobject.ModuleProtocolStudentSaveForm;
 
-    private String grade;
+public class FinalExamVocationalProtocolStudentSaveForm extends ModuleProtocolStudentSaveForm {
 
-    @Override
-    public String getGrade() {
-        return grade;
+    private List<String> occupations; 
+
+    public List<String> getOccupations() {
+        return occupations;
     }
 
-    public void setGrade(String grade) {
-        this.grade = grade;
+    public void setOccupations(List<String> occupations) {
+        this.occupations = occupations;
     }
+    
 }

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -16,8 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.service.MidtermTaskService;
+import ee.hitsa.ois.service.moodle.MoodleService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.MidtermTaskUtil;
+import ee.hitsa.ois.util.MoodleUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.MidtermTaskUpdateForm;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodMidtermTaskForm;
@@ -32,6 +35,8 @@ public class MidtermTaskController {
 
     @Autowired
     private MidtermTaskService midtermTaskService;
+    @Autowired
+    private MoodleService moodleService;
     
     @GetMapping("/{id:\\d+}")
     public MidtermTaskUpdateForm getMidtermTasks(HoisUserDetails user, 
@@ -91,27 +96,31 @@ public class MidtermTaskController {
     }
     
     @PostMapping("/{id:\\d+}/moodle/enrollStudents")
-    public EnrollResult moodleEnrollStudents(HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
+    public EnrollResult moodleEnrollStudents(HoisUserDetails user, HttpServletRequest request, 
+            @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
-        return midtermTaskService.moodleEnrollStudents(user, subjectStudyPeriod);
+        return moodleService.moodleEnrollStudents(MoodleUtil.createContext(user, request, subjectStudyPeriod), subjectStudyPeriod);
     }
 
     @PostMapping("/{id:\\d+}/moodle/importGradeItems")
-    public void moodleImportGradeItems(HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
+    public void moodleImportGradeItems(HoisUserDetails user, HttpServletRequest request, 
+            @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
-        midtermTaskService.moodleImportGradeItems(user, subjectStudyPeriod);
+        moodleService.moodleImportGradeItems(MoodleUtil.createContext(user, request, subjectStudyPeriod), subjectStudyPeriod);
     }
 
     @PostMapping("/{id:\\d+}/moodle/importAllGrades")
-    public void moodleImportAllGrades(HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
+    public void moodleImportAllGrades(HoisUserDetails user, HttpServletRequest request, 
+            @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
-        midtermTaskService.moodleImportAllGrades(user, subjectStudyPeriod);
+        moodleService.moodleImportAllGrades(MoodleUtil.createContext(user, request, subjectStudyPeriod), subjectStudyPeriod);
     }
 
     @PostMapping("/{id:\\d+}/moodle/importMissingGrades")
-    public void moodleImportMissingGrades(HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
+    public void moodleImportMissingGrades(HoisUserDetails user, HttpServletRequest request, 
+            @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
-        midtermTaskService.moodleImportMissingGrades(user, subjectStudyPeriod);
+        moodleService.moodleImportMissingGrades(MoodleUtil.createContext(user, request, subjectStudyPeriod), subjectStudyPeriod);
     }
 
 }

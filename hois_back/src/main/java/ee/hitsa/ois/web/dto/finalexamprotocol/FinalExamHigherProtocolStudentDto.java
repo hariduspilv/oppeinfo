@@ -11,6 +11,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class FinalExamHigherProtocolStudentDto {
 
+    private Long id;
     private Long studentId;
     private String fullname;
     private String idcode;
@@ -36,6 +37,14 @@ public class FinalExamHigherProtocolStudentDto {
         return dto;
     }
     
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public Long getStudentId() {
         return studentId;
     }

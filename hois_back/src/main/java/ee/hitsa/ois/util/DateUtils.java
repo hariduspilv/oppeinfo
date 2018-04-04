@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -49,6 +50,10 @@ public abstract class DateUtils {
 
     public static LocalDateTime firstMomentOfDay(LocalDateTime dateTime) {
         return firstMomentOfDay(dateTime.toLocalDate());
+    }
+
+    public static LocalDateTime startOfMonth(LocalDateTime dateTime) {
+        return dateTime.truncatedTo(ChronoUnit.DAYS).withDayOfMonth(1);
     }
 
     public static LocalDate periodStart(Period p) {

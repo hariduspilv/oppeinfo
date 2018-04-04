@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
@@ -29,9 +30,11 @@ import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.service.JournalService;
 import ee.hitsa.ois.service.JournalUnconfirmedService;
 import ee.hitsa.ois.service.StudyYearService;
+import ee.hitsa.ois.service.moodle.MoodleService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.JournalUtil;
+import ee.hitsa.ois.util.MoodleUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -42,6 +45,7 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
 import ee.hitsa.ois.web.dto.moodle.EnrollResult;
+import ee.hitsa.ois.web.dto.studymaterial.JournalLessonHoursDto;
 import ee.hitsa.ois.web.dto.timetable.JournalDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
@@ -67,6 +71,8 @@ public class JournalController {
     private EntityManager em;
     @Autowired
     private StudyYearService studyYearService;
+    @Autowired
+    private MoodleService moodleService;
 
     @GetMapping
     public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
@@ -100,36 +106,6 @@ public class JournalController {
     public void saveEndDate(HoisUserDetails user, @WithEntity Journal journal, @RequestBody JournalEndDateCommand command) {
         JournalUtil.asssertCanConfirm(user, journal);
         journalService.saveEndDate(journal, command);
-    }
-
-    @PutMapping("/{id:\\d+}/moodle/courseLink")
-    public void moodleCourseLink(HoisUserDetails user, @WithEntity Journal journal, @RequestBody Long courseId) {
-        JournalUtil.asssertCanChange(user, journal);
-        journalService.saveMoodleCourseLink(user, journal, courseId);
-    }
-
-    @PostMapping("/{id:\\d+}/moodle/enrollStudents")
-    public EnrollResult moodleEnrollStudents(HoisUserDetails user, @WithEntity Journal journal) {
-        JournalUtil.asssertCanChange(user, journal);
-        return journalService.moodleEnrollStudents(user, journal);
-    }
-
-    @PostMapping("/{id:\\d+}/moodle/importGradeItems")
-    public void moodleImportGradeItems(HoisUserDetails user, @WithEntity Journal journal) {
-        JournalUtil.asssertCanChange(user, journal);
-        journalService.moodleImportGradeItems(user, journal);
-    }
-
-    @PostMapping("/{id:\\d+}/moodle/importAllGrades")
-    public void moodleImportAllGrades(HoisUserDetails user, @WithEntity Journal journal) {
-        JournalUtil.asssertCanChange(user, journal);
-        journalService.moodleImportAllGrades(user, journal);
-    }
-
-    @PostMapping("/{id:\\d+}/moodle/importMissingGrades")
-    public void moodleImportMissingGrades(HoisUserDetails user, @WithEntity Journal journal) {
-        JournalUtil.asssertCanChange(user, journal);
-        journalService.moodleImportMissingGrades(user, journal);
     }
 
     @GetMapping("/{id:\\d+}/journalEntry")
@@ -218,7 +194,7 @@ public class JournalController {
     }
     
     @GetMapping("/{id:\\d+}/usedHours")
-    public Map<String, Integer> usedHours(HoisUserDetails user, @WithEntity Journal journal) {
+    public JournalLessonHoursDto usedHours(HoisUserDetails user, @WithEntity Journal journal) {
         JournalUtil.assertCanView(user, journal);
         return journalService.usedHours(journal);
     }
@@ -297,4 +273,35 @@ public class JournalController {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
         return journalService.studentLastResults(user.getSchoolId(), studentId);
     }
+
+    @PutMapping("/{id:\\d+}/moodle/courseLink")
+    public void moodleCourseLink(HoisUserDetails user, HttpServletRequest request, @WithEntity Journal journal, @RequestBody Long courseId) {
+        JournalUtil.asssertCanChange(user, journal);
+        moodleService.saveMoodleCourseLink(MoodleUtil.createContext(user, request, journal), journal, courseId);
+    }
+
+    @PostMapping("/{id:\\d+}/moodle/enrollStudents")
+    public EnrollResult moodleEnrollStudents(HoisUserDetails user, HttpServletRequest request, @WithEntity Journal journal) {
+        JournalUtil.asssertCanChange(user, journal);
+        return moodleService.moodleEnrollStudents(MoodleUtil.createContext(user, request, journal), journal);
+    }
+
+    @PostMapping("/{id:\\d+}/moodle/importGradeItems")
+    public void moodleImportGradeItems(HoisUserDetails user, HttpServletRequest request, @WithEntity Journal journal) {
+        JournalUtil.asssertCanChange(user, journal);
+        moodleService.moodleImportGradeItems(MoodleUtil.createContext(user, request, journal), journal);
+    }
+
+    @PostMapping("/{id:\\d+}/moodle/importAllGrades")
+    public void moodleImportAllGrades(HoisUserDetails user, HttpServletRequest request, @WithEntity Journal journal) {
+        JournalUtil.asssertCanChange(user, journal);
+        moodleService.moodleImportAllGrades(MoodleUtil.createContext(user, request, journal), journal);
+    }
+
+    @PostMapping("/{id:\\d+}/moodle/importMissingGrades")
+    public void moodleImportMissingGrades(HoisUserDetails user, HttpServletRequest request, @WithEntity Journal journal) {
+        JournalUtil.asssertCanChange(user, journal);
+        moodleService.moodleImportMissingGrades(MoodleUtil.createContext(user, request, journal), journal);
+    }
+
 }

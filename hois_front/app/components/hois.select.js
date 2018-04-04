@@ -81,7 +81,7 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
           } else if(attrs.type === 'saisadmissioncode') {
             scope.options = QueryUtils.endpoint('/autocomplete/saisAdmissionCodes').query();
           } else if (attrs.type === 'subject') {
-            scope.options = QueryUtils.endpoint('/autocomplete/subjectsList').query();
+            scope.options = QueryUtils.endpoint('/autocomplete/subjectsList').query(scope.criteria);
           } else if(attrs.type === 'studyperiod') {
             scope.options = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
           } else if(attrs.type === 'apelschool') {

@@ -19,7 +19,7 @@ public class ApelApplicationInformalExperienceForm extends InsertedChangedVersio
     private String placeTime;
     
     @Min(0)
-    @Max(Short.MAX_VALUE)
+    @Max(9999)
     private Short hours;
     
     @Size(max = 255)

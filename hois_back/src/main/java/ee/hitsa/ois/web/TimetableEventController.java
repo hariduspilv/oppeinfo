@@ -51,8 +51,7 @@ public class TimetableEventController {
      */
     @GetMapping("/{id:\\d+}")
     public TimetableSingleEventForm get(HoisUserDetails user, @WithEntity TimetableEventTime eventTime) {
-        UserUtil.assertIsSchoolAdmin(user);
-        //UserUtil.assertIsSchoolAdmin(user, eventTime.getTimetableEvent().getSchool());
+        timetableEventService.isAdminOrIsTeachersEvent(user, eventTime);
         return timetableEventService.get(eventTime);
     }
 
@@ -65,14 +64,20 @@ public class TimetableEventController {
     
     @PostMapping
     public TimetableSingleEventForm create(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(), form.getTeachers());
         return timetableEventService.getTimetableSingleEventForm(timetableEventService.createEvent(form, user.getSchoolId()));
     }
     
     @PutMapping("/{id:\\d+}")
     public TimetableSingleEventForm update(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(), form.getTeachers());
         return timetableEventService.getTimetableSingleEventForm(timetableEventService.updateEvent(form));
+    }
+    
+    @DeleteMapping("/{id:\\d+}")
+    public void deleteEvent(HoisUserDetails user, @WithEntity TimetableEventTime timetableEventTime) {
+        timetableEventService.isAdminOrIsTeachersEvent(user, timetableEventTime);
+        timetableEventService.delete(user, timetableEventTime);
     }
 
     @GetMapping("/timetableSearch")
@@ -112,12 +117,6 @@ public class TimetableEventController {
     public TimetableByStudentDto studentTimetableForWeek(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
         return timetableEventService.studentTimetable(criteria, user.getSchoolId());
-    }
-    
-    @DeleteMapping("/{id:\\d+}")
-    public void deleteEvent(HoisUserDetails user, @WithEntity TimetableEventTime timetableEventTime) {
-        UserUtil.assertIsSchoolAdmin(user);
-        timetableEventService.delete(user, timetableEventTime);
     }
     
     @GetMapping("/timetableByStudent/calendar")

@@ -199,7 +199,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       }
     })
     .when('/scholarships/myData/drGrants', {
-      templateUrl: 'scholarship/student/scholarship.grants.student.html',
+      templateUrl: 'scholarship/student/scholarship.drGrants.student.html',
       controller: 'StudentScholarshipController',
       controllerAs: 'controller',
       resolve: {
@@ -208,6 +208,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         translationLoaded: function ($translate) {
           return $translate.onReady();
+        },
+        drGrant: function () {
+          return true;
         }
       },
       data: {
@@ -245,6 +248,27 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           return {
             allowedStipendTypes: ['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'],
             stipend: false
+          };
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+      }
+    })
+    .when('/scholarships/applications/drGrants', {
+      templateUrl: 'scholarship/scholarship.application.list.drGrants.html',
+      controller: 'ScholarshipApplicationController',
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        },
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
+        params: function () {
+          return {
+            allowedStipendTypes: ['STIPTOETUS_DOKTOR']
           };
         }
       },

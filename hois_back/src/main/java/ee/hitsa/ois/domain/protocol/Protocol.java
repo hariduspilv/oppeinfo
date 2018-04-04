@@ -59,6 +59,8 @@ public class Protocol extends BaseEntityWithId {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(nullable = true)
     private Committee committee;
+    
+    private LocalDate finalDate;
 
     public ProtocolHdata getProtocolHdata() {
         return protocolHdata;
@@ -164,4 +166,13 @@ public class Protocol extends BaseEntityWithId {
     public void setCommittee(Committee committee) {
         this.committee = committee;
     }
+
+    public LocalDate getFinalDate() {
+        return finalDate;
+    }
+
+    public void setFinalDate(LocalDate finalDate) {
+        this.finalDate = finalDate;
+    }
+    
 }

@@ -24,6 +24,7 @@ public class AuthenticatedUser implements Serializable {
     // for student only two flags from curriculum
     private Boolean vocational;
     private Boolean higher;
+    private Boolean doctoral;
     private String fullname;
     private Collection<GrantedAuthority> authorizedRoles;
     private List<UserProjection> users;
@@ -91,6 +92,14 @@ public class AuthenticatedUser implements Serializable {
 
     public void setHigher(Boolean higher) {
         this.higher = higher;
+    }
+
+    public Boolean getDoctoral() {
+        return doctoral;
+    }
+
+    public void setDoctoral(Boolean doctoral) {
+        this.doctoral = doctoral;
     }
 
     public String getFullname() {

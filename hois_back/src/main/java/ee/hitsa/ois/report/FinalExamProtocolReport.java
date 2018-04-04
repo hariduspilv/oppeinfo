@@ -22,8 +22,9 @@ public class FinalExamProtocolReport {
     private final String protocolNr;
     private final String curriculumModule;
     private final BigDecimal credits;
-    private final LocalDate finalExamDate;
+    private final LocalDate finalDate;
     private final String committeeMembers;
+    private final Boolean hasOccupations;
     private final List<FinalExamProtocolStudentReport> protocolStudents;
     private final String confirmedBy;
     private final LocalDate confirmDate;
@@ -41,13 +42,16 @@ public class FinalExamProtocolReport {
         curriculumModule = name(vData.getCurriculumVersionOccupationModule().getCurriculumModule(), lang);
         credits = vData.getCurriculumVersionOccupationModule().getCurriculumModule().getCredits();
         
-        //TODO: no final exam date field
-        finalExamDate = null;
+        finalDate = protocol.getFinalDate();
         committeeMembers = protocol.getProtocolCommitteeMembers().stream()
                 .sorted(Comparator.comparing(pcm -> pcm.getCommitteeMember().getMemberFullname(),
                         String.CASE_INSENSITIVE_ORDER))
                 .map(pcm -> pcm.getCommitteeMember().getMemberFullname())
                 .collect(Collectors.joining(", "));
+        
+        hasOccupations = Boolean.valueOf(!vData.getCurriculumVersionOccupationModule()
+                .getCurriculumModule().getOccupations().isEmpty());
+
         protocolStudents = protocol.getProtocolStudents().stream()
                 .sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getStudent().getPerson(), o2.getStudent().getPerson()))
                 .map(ps -> new FinalExamProtocolStudentReport(ps, lang))
@@ -72,12 +76,16 @@ public class FinalExamProtocolReport {
         return credits;
     }
 
-    public LocalDate getFinalExamDate() {
-        return finalExamDate;
+    public LocalDate getFinalDate() {
+        return finalDate;
     }
 
     public String getCommitteeMembers() {
         return committeeMembers;
+    }
+    
+    public Boolean getHasOccupations() {
+        return hasOccupations;
     }
 
     public List<FinalExamProtocolStudentReport> getProtocolStudents() {

@@ -56,8 +56,10 @@ public class ApplicationServiceTests {
     @Before
     public void setUp() {
         if(student == null) {
-            student = em.createQuery("select s from Student s where s.curriculumVersion.curriculum.origStudyLevel.value like ?1", Student.class)
-                    .setParameter(1, "5%")
+            student = em.createQuery("select s from Student s where s.person.idcode = ?1"
+                    + " and s.curriculumVersion.curriculum.origStudyLevel.value like ?2", Student.class)
+                    .setParameter(1, TestConfiguration.USER_ID)
+                    .setParameter(2, "5%")
                     .setMaxResults(1).getResultList().get(0);
 
             User user = testConfigurationService.userWithRoleInSchool(TestConfiguration.USER_ID, Role.ROLL_A, EntityUtil.getId(student.getSchool()));
@@ -65,8 +67,10 @@ public class ApplicationServiceTests {
         }
 
         if(occupationalStudent == null) {
-            occupationalStudent = em.createQuery("select s from Student s where s.curriculumVersion.curriculum.origStudyLevel.value like ?1", Student.class)
-                    .setParameter(1, "4%")
+            occupationalStudent = em.createQuery("select s from Student s where s.person.idcode = ?1"
+                    + " and s.curriculumVersion.curriculum.origStudyLevel.value like ?2", Student.class)
+                    .setParameter(1, TestConfiguration.USER_ID)
+                    .setParameter(2, "4%")
                     .setMaxResults(1).getResultList().get(0);
         }
     }

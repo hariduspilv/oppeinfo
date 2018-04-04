@@ -35,9 +35,6 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); },
         entity: function(QueryUtils, $route) {
           return QueryUtils.endpoint('/finalExamHigherProtocols').get({id: $route.current.params.id}).$promise;
-        },
-        isView: function ($route){
-          return false
         }
       },
       data: {
@@ -53,9 +50,6 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); },
         entity: function(QueryUtils, $route) {
           return QueryUtils.endpoint('/finalExamHigherProtocols').get({id: $route.current.params.id}).$promise;
-        },
-        isView: function ($route){
-          return true
         }
       },
       data: {

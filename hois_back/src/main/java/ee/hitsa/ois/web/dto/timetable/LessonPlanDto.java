@@ -2,13 +2,17 @@ package ee.hitsa.ois.web.dto.timetable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
@@ -17,6 +21,7 @@ import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
+import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
 import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
@@ -40,7 +45,18 @@ public class LessonPlanDto extends LessonPlanForm {
         dto.setStudentGroupCode(lessonPlan.getStudentGroup().getCode());
         dto.setStudyPeriods(lessonPlan.getStudyYear().getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList()));
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(lessonPlan.getStudyYear());
-        dto.setModules(lessonPlan.getLessonPlanModules().stream().map(r -> LessonPlanModuleDto.of(r, capacityMapper)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+        Set<Long> existingModuleIds = StreamUtil.toMappedSet(
+                m -> EntityUtil.getId(m.getCurriculumVersionOccupationModule()), 
+                lessonPlan.getLessonPlanModules());
+        dto.setModules(Stream.concat(
+                lessonPlan.getLessonPlanModules().stream()
+                    .map(m -> LessonPlanModuleDto.of(m, capacityMapper)), 
+                lessonPlan.getCurriculumVersion().getOccupationModules().stream()
+                    .filter(m -> !existingModuleIds.contains(EntityUtil.getId(m)))
+                    .map(m -> LessonPlanModuleDto.of(m)))
+                .sorted(Comparator.comparing(LessonPlanModuleDto::getTypeOrder, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)))
+                .collect(Collectors.toList()));
         dto.setWeekNrs(dto.getStudyPeriods().stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList()));
         dto.setWeekBeginningDates(dto.getStudyPeriods().stream().flatMap(r -> r.getWeekBeginningDates().stream()).collect(Collectors.toList()));
 
@@ -110,17 +126,49 @@ public class LessonPlanDto extends LessonPlanForm {
         private String nameEt;
         private String nameEn;
         private Integer totalHours;
+        private Long occupationModuleId;
+        private Long typeOrder;
 
         public static LessonPlanModuleDto of(LessonPlanModule lessonPlanModule, LessonPlanCapacityMapper capacityMapper) {
             LessonPlanModuleDto dto = new LessonPlanModuleDto();
             dto.setId(lessonPlanModule.getId());
-            CurriculumModule cm = lessonPlanModule.getCurriculumVersionOccupationModule().getCurriculumModule();
-            dto.setNameEt(cm.getNameEt());
-            dto.setNameEn(cm.getNameEn());
+            setOccupationModuleValues(dto, lessonPlanModule.getCurriculumVersionOccupationModule());
             dto.setTeacher(lessonPlanModule.getTeacher() != null ? AutocompleteResult.of(lessonPlanModule.getTeacher()) : null);
             dto.setJournals(lessonPlanModule.getJournalOccupationModuleThemes().stream().map(r -> r.getJournal()).distinct().map(r -> LessonPlanModuleJournalDto.of(r, capacityMapper)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
             dto.setTotalHours(Integer.valueOf(lessonPlanModule.getCurriculumVersionOccupationModule().getCapacities().stream().mapToInt(CurriculumVersionOccupationModuleCapacity::getHours).sum()));
+            setTypeOrderValue(dto, lessonPlanModule.getCurriculumVersionOccupationModule());
             return dto;
+        }
+
+        public static LessonPlanModuleDto of(CurriculumVersionOccupationModule occupationModule) {
+            LessonPlanModuleDto dto = new LessonPlanModuleDto();
+            setOccupationModuleValues(dto, occupationModule);
+            dto.setJournals(Collections.emptyList());
+            dto.setTotalHours(Integer.valueOf(0));
+            setTypeOrderValue(dto, occupationModule);
+            return dto;
+        }
+
+        private static void setOccupationModuleValues(LessonPlanModuleDto dto, CurriculumVersionOccupationModule occupationModule) {
+            CurriculumModule cm = occupationModule.getCurriculumModule();
+            dto.setNameEt(cm.getNameEt());
+            dto.setNameEn(cm.getNameEn());
+            dto.setOccupationModuleId(EntityUtil.getId(occupationModule));
+        }
+        
+        private static void setTypeOrderValue(LessonPlanModuleDto dto, CurriculumVersionOccupationModule occupationModule) {
+            int orderNr;
+            String moduleCode = EntityUtil.getCode(occupationModule.getCurriculumModule().getModule());
+            if (moduleCode.equals(CurriculumModuleType.KUTSEMOODUL_P.name())) {
+                orderNr = 1;
+            } else if (moduleCode.equals(CurriculumModuleType.KUTSEMOODUL_Y.name())) {
+                orderNr = 2;
+            } else if (moduleCode.equals(CurriculumModuleType.KUTSEMOODUL_V.name())) {
+                orderNr = 3;
+            } else {
+                orderNr = 4;
+            }
+            dto.setTypeOrder(Long.valueOf(orderNr));
         }
 
         public String getNameEt() {
@@ -146,6 +194,23 @@ public class LessonPlanDto extends LessonPlanForm {
         public void setTotalHours(Integer totalHours) {
             this.totalHours = totalHours;
         }
+
+        public Long getOccupationModuleId() {
+            return occupationModuleId;
+        }
+
+        public void setOccupationModuleId(Long occupationModuleId) {
+            this.occupationModuleId = occupationModuleId;
+        }
+
+        public Long getTypeOrder() {
+            return typeOrder;
+        }
+
+        public void setTypeOrder(Long typeOrder) {
+            this.typeOrder = typeOrder;
+        }
+        
     }
 
     public static class LessonPlanModuleJournalDto extends LessonPlanModuleJournalForm {

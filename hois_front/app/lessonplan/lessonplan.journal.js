@@ -3,6 +3,8 @@
 angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
   function ($location, $route, $scope, dialogService, message, Classifier, QueryUtils) {
     var id = $route.current.params.id;
+    var lessonPlan = $route.current.params.lessonPlan;
+    var occupationModule = $route.current.params.occupationModule;
     var lessonPlanModule = $route.current.params.lessonPlanModule;
     var baseUrl = '/lessonplans/journals';
     $scope.formState = {
@@ -13,7 +15,9 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
     };
     $scope.record = QueryUtils.endpoint(baseUrl).get({
       id: id || 'new',
-      lessonPlanModule: lessonPlanModule
+      lessonPlan: lessonPlan,
+      occupationModule: occupationModule,
+      lessonPlanModule: lessonPlanModule ? lessonPlanModule : undefined
     });
     $scope.record.$promise.then(function (result) {
       $scope.formState.capacityTypes.$promise.then(function () {
@@ -83,7 +87,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       } else {
         $scope.record.$save().then(function () {
           message.info('main.messages.create.success');
-          $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback&lessonPlanModule=' + lessonPlanModule);
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback&lessonPlanModule=' + $scope.record.lessonPlanModuleId);
         }).catch(angular.noop);
       }
     };

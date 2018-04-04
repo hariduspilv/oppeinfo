@@ -280,7 +280,7 @@ angular.module('hitsaOis')
       dialogService.confirmDialog({prompt: 'certificate.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.url(baseUrl + '?_noback');
+          $rootScope.back(baseUrl + '?_noback');
         }).catch(angular.noop);
       });
     };

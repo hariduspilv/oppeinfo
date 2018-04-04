@@ -6,6 +6,8 @@ import java.util.Set;
 
 import javax.validation.Valid;
 import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -36,6 +38,8 @@ public class TeacherForm extends VersionedCommand {
     @Size(max = 100)
     private String phone;
     @NotNull
+    @Min(0)
+    @Max(9999)
     private Short scheduleLoad;
     @Size(max = 20)
     private String rtipNr;

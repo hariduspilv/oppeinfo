@@ -15,7 +15,8 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
     $scope.filteredStudyForm = ['OPPEVORM_P', 'OPPEVORM_Q', 'OPPEVORM_S', 'OPPEVORM_MS', 'OPPEVORM_K', 'OPPEVORM_M'];
 
     $scope.formState = {priorities: Classifier.queryForDropdown({mainClassCode: 'PRIORITEET'})};
-    Classifier.queryForDropdown({mainClassCode: 'STIPTOETUS'}).$promise.then(function(result) {
+    var typePromise = Classifier.queryForDropdown({mainClassCode: 'STIPTOETUS'}).$promise;
+    typePromise.then(function(result) {
       $scope.formState.typeMap = Classifier.toMap(result);
     });
     $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
@@ -26,10 +27,12 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
 
     $scope.stipendTypeChanged = function () {
       $scope.templateName = templateMap[$scope.stipend.type];
-      $scope.stipend.nameEt = ($scope.formState.typeMap[$scope.stipend.type] || {}).nameEt;
-      if (angular.isArray($scope.formState.allowedStipendTypes) && $scope.formState.allowedStipendTypes.length === 1) {
-        $scope.formState.typeIsScholarship = (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf($scope.formState.allowedStipendTypes[0]) !== -1);
-      }
+      typePromise.then(function() {
+        $scope.stipend.nameEt = ($scope.formState.typeMap[$scope.stipend.type] || {}).nameEt;
+        if (angular.isArray($scope.formState.allowedStipendTypes) && $scope.formState.allowedStipendTypes.length === 1) {
+          $scope.formState.typeIsScholarship = (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf($scope.formState.allowedStipendTypes[0]) !== -1);
+        }
+      });
     };
 
     function afterLoad(result) {
@@ -62,6 +65,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
         }
       });
       $scope.stipend.courses = ['KURSUS_1', 'KURSUS_2', 'KURSUS_3', 'KURSUS_4'];
+      $scope.missingCurriculums = true;
     }
 
     $scope.update = function () {

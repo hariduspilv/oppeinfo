@@ -18,7 +18,9 @@ public class StudentAbsence extends BaseEntityWithId {
     private LocalDate validFrom;
     private LocalDate validThru;
     private String cause;
+    private String acceptedBy;
     private Boolean isAccepted;
+    private Boolean isRejected;
 
     public Student getStudent() {
         return student;
@@ -51,6 +53,14 @@ public class StudentAbsence extends BaseEntityWithId {
     public void setCause(String cause) {
         this.cause = cause;
     }
+    
+    public String getAcceptedBy() {
+        return acceptedBy;
+    }
+
+    public void setAcceptedBy(String acceptedBy) {
+        this.acceptedBy = acceptedBy;
+    }
 
     public Boolean getIsAccepted() {
         return isAccepted;
@@ -58,5 +68,13 @@ public class StudentAbsence extends BaseEntityWithId {
 
     public void setIsAccepted(Boolean isAccepted) {
         this.isAccepted = isAccepted;
+    }
+    
+    public Boolean getIsRejected() {
+        return isRejected;
+    }
+
+    public void setIsRejected(Boolean isRejected) {
+        this.isRejected = isRejected;
     }
 }

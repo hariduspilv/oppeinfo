@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ContractEditController', function ($scope, $route, QueryUtils, Classifier, message, $location, dialogService, DataUtils) {
+angular.module('hitsaOis').controller('ContractEditController', function ($location, $scope, $route, dialogService, message, Classifier, DataUtils, FormUtils, QueryUtils) {
   var CREDITS_TO_HOURS_MULTIPLIER = 26;
 
   $scope.auth = $route.current.locals.auth;
@@ -23,12 +23,9 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
   function loadEnterprises() {
     $scope.formState.enterprisesById = {};
     return QueryUtils.endpoint('/autocomplete/enterprises').query(function (result) {
-      result.forEach(function (it) {
-        $scope.formState.enterprisesById[it.id] = it;
-      });
+      $scope.formState.enterprisesById = result.reduce(function(acc, item) { acc[item.id] = item; return acc; }, {});
       $scope.formState.enterprises = result;
     });
-
   }
   loadEnterprises();
 
@@ -138,35 +135,32 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
           $scope.contract.enterprise = result.id;
           $scope.enterpriseChanged($scope.contract.enterprise);
         });
-      });
+      }).catch(angular.noop);
     });
   };
 
 
   var ContractEndpoint = QueryUtils.endpoint('/contracts');
   $scope.save = function (success) {
-    $scope.contractForm.$setSubmitted();
-    if(!$scope.contractForm.$valid) {
-      message.error('main.messages.form-has-errors');
-      return;
-    }
-    $scope.contract.isHigher = $scope.formState.isHigher;
-    var contract = new ContractEndpoint($scope.contract);
-    if (angular.isDefined($scope.contract.id)) {
-      contract.$update().then(function () {
-        message.info('main.messages.create.success');
-        entityToForm(contract);
-        if (angular.isFunction(success)) {
-          success();
-        }
-        $scope.contractForm.$setPristine();
-      });
-    } else {
-      contract.$save().then(function () {
-        message.info('main.messages.create.success');
-        $location.url('/contracts/' + contract.id + '/edit?_noback');
-      });
-    }
+    FormUtils.withValidForm($scope.contractForm, function() {
+      $scope.contract.isHigher = $scope.formState.isHigher;
+      var contract = new ContractEndpoint($scope.contract);
+      if (angular.isDefined($scope.contract.id)) {
+        contract.$update().then(function () {
+          message.updateSuccess();
+          entityToForm(contract);
+          if (angular.isFunction(success)) {
+            success();
+          }
+          $scope.contractForm.$setPristine();
+        }).catch(angular.noop);
+      } else {
+        contract.$save().then(function () {
+          message.info('main.messages.create.success');
+          $location.url('/contracts/' + contract.id + '/edit?_noback');
+        }).catch(angular.noop);
+      }
+    });
   };
 
   $scope.delete = function () {
@@ -175,23 +169,21 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
       contract.$delete().then(function () {
         message.info('main.messages.delete.success');
         $location.path('/contracts');
-      });
+      }).catch(angular.noop);
     });
   };
 
   $scope.sendToEkis = function () {
-    $scope.contractForm.$setSubmitted();
-    if(!$scope.contractForm.$valid) {
-      message.error('main.messages.form-has-errors');
-      return;
-    }
-
-    dialogService.confirmDialog({ prompt: 'contract.ekisconfirm' }, function () {
-      $scope.save(function () {
-        var EkisEndpoint = QueryUtils.endpoint('/contracts/sendToEkis/' + $scope.contract.id);
-        new EkisEndpoint().$save().then(function (contract) {
-          message.info('contract.messages.sendToEkis.success');
-          $location.url('/contracts/' + contract.id + '/view?_noback');
+    FormUtils.withValidForm($scope.contractForm, function() {
+      QueryUtils.endpoint('/contracts/checkForEkis').get({id: $scope.contract.id}).$promise.then(function(check) {
+        dialogService.confirmDialog({ prompt: (check.templateExists ? 'contract.ekisconfirm' : 'contract.ekisconfirmTemplateMissing'), template: check.templateName }, function () {
+          $scope.save(function () {
+            var EkisEndpoint = QueryUtils.endpoint('/contracts/sendToEkis/' + $scope.contract.id);
+            new EkisEndpoint().$save().then(function (contract) {
+              message.info('contract.messages.sendToEkis.success');
+              $location.url('/contracts/' + contract.id + '/view?_noback');
+            }).catch(angular.noop);
+          });
         });
       });
     });

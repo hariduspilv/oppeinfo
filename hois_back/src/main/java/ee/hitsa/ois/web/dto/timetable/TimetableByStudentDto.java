@@ -7,9 +7,9 @@ public class TimetableByStudentDto extends TimetableByDto{
     private final String firstname;
     private final String lastname;
     
-    public TimetableByStudentDto(GeneralTimetableDto generalTimetable, List<TimetableEventSearchDto> timetableEvents,
+    public TimetableByStudentDto(String studyPeriods, List<TimetableEventSearchDto> timetableEvents,
             Long studentId, String firstname, String lastname) {
-        super(generalTimetable, timetableEvents);
+        super(studyPeriods, timetableEvents);
         this.studentId = studentId;
         this.firstname = firstname;
         this.lastname = lastname;

@@ -15,11 +15,49 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
   })
   .when('/examRegistration', {
     templateUrl: 'exam/registration.student.html',
-    controller: 'ExamStudentController',
+    controller: 'ExamStudentRegistrationController',
     controllerAs: 'controller',
-    resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+    resolve: {
+      translationLoaded: function($translate) { return $translate.onReady(); }
+    },
     data: {
       authorizedRoles: function(Session) { return Session.roleCode === 'ROLL_T'; }
+    }
+  })
+  .when('/exams/new', {
+    templateUrl: 'exam/edit.html',
+    controller: 'ExamEditController',
+    controllerAs: 'controller',
+    resolve: {
+      translationLoaded: function($translate) { return $translate.onReady(); },
+      auth: function (AuthResolver) { return AuthResolver.resolve(); }
+    },
+    data: {
+      authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_EKSAM]
+    }
+  })
+  .when('/exams/:id/edit', {
+    templateUrl: 'exam/edit.html',
+    controller: 'ExamEditController',
+    controllerAs: 'controller',
+    resolve: {
+      translationLoaded: function($translate) { return $translate.onReady(); },
+      auth: function (AuthResolver) { return AuthResolver.resolve(); }
+    },
+    data: {
+      authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_EKSAM]
+    }
+  })
+  .when('/exams/:id/view', {
+    templateUrl: 'exam/view.html',
+    controller: 'ExamViewController',
+    controllerAs: 'controller',
+    resolve: {
+      translationLoaded: function($translate) { return $translate.onReady(); },
+      auth: function (AuthResolver) { return AuthResolver.resolve(); }
+    },
+    data: {
+      authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_EKSAM]
     }
   });
 }]);

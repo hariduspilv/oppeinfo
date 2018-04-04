@@ -15,12 +15,9 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.cert.CertificateFactory;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -30,130 +27,124 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ee.hois.moodle.dto.EnrollResponse;
+import ee.hois.moodle.dto.ErrorResponse;
+import ee.hois.moodle.dto.Grade;
+import ee.hois.moodle.dto.GradeItem;
+import ee.hois.moodle.dto.GradeItemsResponse;
+import ee.hois.moodle.dto.GradesByItemIdResponse;
+import ee.hois.moodle.dto.MoodleResponse;
 
 public class MoodleClient {
     
     private static final String VALID = "VALID";
 
-    private Cipher cipher;
+    private Cipher cipherInstance;
     private Key salt;
     private IvParameterSpec vector;
-    private Signature signature;
+    private Signature signatureInstance;
     private PrivateKey privateKey;
     private PublicKey publicKey;
     private RestTemplate restTemplate;
-    private ObjectMapper mapper;
+    private ObjectMapper mapperInstance;
 
-    public boolean courseLinkPossible(Config config, String idcode, Long courseId, List<String> academicianIds) {
+    public Boolean courseLinkPossible(Config config, LogContext log, String idcode, Long courseId, 
+            List<String> academicianIds) {
         try {
-            MoodleRequestParams requestParams = new MoodleRequestParams("courseLinkPossible", idcode, courseId, academicianIds);
-            MoodleResponse response = post(config, requestParams);
+            final String method = "courseLinkPossible";
+            log.setQueryName(method);
+            MoodleRequestParams requestParams = new MoodleRequestParams(method, idcode, courseId, academicianIds);
+            String requestMessage = requestParams.getRequestMessage(config);
+            log.setRequest(requestMessage);
+            MoodleResponse response = post(config, requestMessage);
             if (response.getSignature() == null) {
-                return false;
+                log.setResponse(response.getMessage());
+                return Boolean.FALSE;
             }
             String decryptedMessage = decrypt(config, response);
-            return VALID.equals(getMapper().readValue(decryptedMessage, Map.class).get("message"));
+            log.setResponse(decryptedMessage);
+            return Boolean.valueOf(VALID.equals(getMapper().readValue(decryptedMessage, Map.class).get("message")));
+        } catch (MoodleException e) {
+            throw e;
         } catch (Exception e) {
             throw new MoodleException(e);
         }
     }
 
-    public EnrollResponse enrollStudents(Config config, String idcode, Long courseId, List<String> academicianIds, List<String> studentIds) {
+    public EnrollResponse enrollStudents(Config config, LogContext log, String idcode, Long courseId, 
+            List<String> academicianIds, List<String> studentIds) {
         try {
-            MoodleRequestParams requestParams = new MoodleRequestParams("enrollStudents", idcode, courseId, academicianIds);
-            for (String studentId : studentIds) {
-                requestParams.append("studentIds[]", studentId);
+            final String method = "enrollStudents";
+            log.setQueryName(method);
+            MoodleRequestParams requestParams = new MoodleRequestParams(method, idcode, courseId, academicianIds);
+            requestParams.appendStudents(studentIds);
+            String decryptedMessage = post(config, log, requestParams);
+            try {
+                return getMapper().readValue(decryptedMessage, EnrollResponse.class);
+            } catch (@SuppressWarnings("unused") JsonMappingException e) {
+                throw new MoodleException(getMapper().readValue(decryptedMessage, ErrorResponse.class));
             }
-            MoodleResponse response = post(config, requestParams);
-            String decryptedMessage = decrypt(config, response);
-            return getMapper().readValue(decryptedMessage, EnrollResponse.class);
+        } catch (MoodleException e) {
+            throw e;
         } catch (Exception e) {
             throw new MoodleException(e);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public List<String> getEnrolledUsers(Config config, String idcode, Long courseId, List<String> academicianIds) {
+    public List<GradeItem> getGradeItems(Config config, LogContext log, String idcode, Long courseId, 
+            List<String> academicianIds) {
         try {
-            MoodleRequestParams requestParams = new MoodleRequestParams("getEnrolledUsers", idcode, courseId, academicianIds);
-            MoodleResponse response = post(config, requestParams);
-            String decryptedMessage = decrypt(config, response);
-            List<Map<String, String>> responseList = getMapper().readValue(decryptedMessage, List.class);
-            List<String> result = new ArrayList<>();
-            for (Map<String, String> user : responseList) {
-                result.add(user.get("idnumber"));
+            final String method = "getGradeItems";
+            log.setQueryName(method);
+            MoodleRequestParams requestParams = new MoodleRequestParams(method, idcode, courseId, academicianIds);
+            String decryptedMessage = post(config, log, requestParams);
+            try {
+                GradeItemsResponse response = getMapper().readValue(decryptedMessage, GradeItemsResponse.class);
+                return response.getGradeItems();
+            } catch (@SuppressWarnings("unused") JsonMappingException e) {
+                throw new MoodleException(getMapper().readValue(decryptedMessage, ErrorResponse.class));
             }
-            return result;
+        } catch (MoodleException e) {
+            throw e;
         } catch (Exception e) {
             throw new MoodleException(e);
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public List<GradeItem> getGradeItems(Config config, String idcode, Long courseId, List<String> academicianIds) {
+    public Map<Long, List<Grade>> getGradesByItemId(Config config, LogContext log, String idcode, Long courseId, 
+            List<String> academicianIds, List<Long> gradeItemIds, List<String> studentIds) {
         try {
-            MoodleRequestParams requestParams = new MoodleRequestParams("getGradeItems", idcode, courseId, academicianIds);
-            MoodleResponse response = post(config, requestParams);
-            String decryptedMessage = decrypt(config, response);
-            Map<String, List<Map<String, String>>> responseMap = getMapper().readValue(decryptedMessage, Map.class);
-            List<GradeItem> result = new ArrayList<>();
-            for (Map<String, String> itemMap : responseMap.get("gradeitems")) {
-                GradeItem item = new GradeItem();
-                item.setId(Long.parseLong(itemMap.get("id")));
-                item.setType(itemMap.get("itemtype"));
-                item.setName(itemMap.get("itemname"));
-                item.setPass(Double.parseDouble(itemMap.get("gradepass")));
-                item.setMax(Double.parseDouble(itemMap.get("grademax")));
-                result.add(item);
+            final String method = "getGradesByItemId";
+            log.setQueryName(method);
+            MoodleRequestParams requestParams = new MoodleRequestParams(method, idcode, courseId, academicianIds);
+            requestParams.appendGradeItems(gradeItemIds);
+            requestParams.appendStudents(studentIds);
+            String decryptedMessage = post(config, log, requestParams);
+            try {
+                GradesByItemIdResponse response = getMapper().readValue(decryptedMessage, GradesByItemIdResponse.class);
+                return response.getGrades();
+            } catch (@SuppressWarnings("unused") JsonMappingException e) {
+                throw new MoodleException(getMapper().readValue(decryptedMessage, ErrorResponse.class));
             }
-            return result;
-        } catch (Exception e) {
-            throw new MoodleException(e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public Map<Long, List<Grade>> getGradesByItemId(Config config, String idcode, Long courseId, List<String> academicianIds, 
-            List<Long> gradeItemIds, List<String> studentIds) {
-        try {
-            MoodleRequestParams requestParams = new MoodleRequestParams("getGradesByItemId", idcode, courseId, academicianIds);
-            for (Long gradeItemId : gradeItemIds) {
-                requestParams.append("gradeItemIds[]", String.valueOf(gradeItemId));
-            }
-            for (String studentId : studentIds) {
-                requestParams.append("studentIds[]", studentId);
-            }
-            MoodleResponse response = post(config, requestParams);
-            String decryptedMessage = decrypt(config, response);
-            Map<String, Map<String, List<Map<String, Object>>>> responseMap = getMapper().readValue(decryptedMessage, Map.class);
-            Map<Long, List<Grade>> result = new HashMap<>();
-            for (Entry<String, List<Map<String, Object>>> entry : responseMap.get("grades").entrySet()) {
-                List<Grade> grades = new ArrayList<>();
-                for (Map<String, Object> gradeMap : entry.getValue()) {
-                    Grade grade = new Grade();
-                    grade.setPoints(gradeMap.get("points"));
-                    grade.setStudent((String) gradeMap.get("identity"));
-                    grade.setComment((String) gradeMap.get("comment"));
-                    grades.add(grade);
-                }
-                result.put(Long.valueOf(entry.getKey()), grades);
-            }
-            return result;
+        } catch (MoodleException e) {
+            throw e;
         } catch (Exception e) {
             throw new MoodleException(e);
         }
     }
 
     private Cipher getCipher() {
-        if (cipher == null) {
+        if (cipherInstance == null) {
             try {
-                cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                cipherInstance = Cipher.getInstance("AES/CBC/PKCS5Padding");
             } catch (GeneralSecurityException e) {
                 throw new MoodleException(e);
             }
         }
-        return cipher;
+        return cipherInstance;
     }
     
     private Key getSalt(Config config) {
@@ -174,14 +165,14 @@ public class MoodleClient {
     }
     
     private Signature getSignature() {
-        if (signature == null) {
+        if (signatureInstance == null) {
             try {
-                signature = Signature.getInstance("SHA1withRSA");
+                signatureInstance = Signature.getInstance("SHA1withRSA");
             } catch (NoSuchAlgorithmException e) {
                 throw new MoodleException(e);
             }
         }
-        return signature;
+        return signatureInstance;
     }
     
     private PrivateKey getPrivateKey(Config config) {
@@ -217,14 +208,22 @@ public class MoodleClient {
     }
     
     private ObjectMapper getMapper() {
-        if (mapper == null) {
-            mapper = new ObjectMapper();
+        if (mapperInstance == null) {
+            mapperInstance = new ObjectMapper();
         }
-        return mapper;
+        return mapperInstance;
     }
 
-    private MoodleResponse post(Config config, MoodleRequestParams requestParams) throws Exception {
+    private String post(Config config, LogContext log, MoodleRequestParams requestParams) throws Exception {
         String requestMessage = requestParams.getRequestMessage(config);
+        log.setRequest(requestMessage);
+        MoodleResponse response = post(config, requestMessage);
+        String decryptedMessage = decrypt(config, response);
+        log.setResponse(decryptedMessage);
+        return decryptedMessage;
+    }
+
+    private MoodleResponse post(Config config, String requestMessage) throws Exception {
         MoodleRequest request = new MoodleRequest();
         request.setMessage(Base64.getEncoder().encodeToString(
                 crypt(config, Cipher.ENCRYPT_MODE, requestMessage.getBytes(StandardCharsets.UTF_8))));

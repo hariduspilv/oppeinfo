@@ -198,7 +198,7 @@ public class CustomSocketFactory extends SocketFactory {
             replyStr = new String(reply, 0, replyLen);
         }
  
-        if (replyStr.toLowerCase().indexOf("200 connection established") == -1) {
+        if (replyStr.indexOf("200") == -1) {
             throw new IOException("Unable to tunnel through "+ tunnelHost + ":" + tunnelPort+ ".  Proxy returns \""
                     + replyStr + "\"");
         }

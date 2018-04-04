@@ -16,7 +16,7 @@
       <fieldset tabindex="1">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetablePlan.showGroups' | translate}}</legend>
         <div layout="column">
-          <md-checkbox ng-model="plan.selectAll" flex-offset="5">
+          <md-checkbox ng-model="plan.selectAll" flex-offset="5" ng-change="selectAllChanged()">
             {{'timetable.timetablePlan.selectAll' | translate}}
           </md-checkbox>
           <md-grid-list ng-app="app" md-cols="5" md-gutter="1em" md-row-height="36px" flex>

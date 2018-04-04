@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -26,6 +27,7 @@ import ee.hitsa.ois.bdoc.MobileIdSession;
 import ee.hitsa.ois.bdoc.UnsignedBdocContainer;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.protocol.Protocol;
+import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.report.FinalExamProtocolReport;
 import ee.hitsa.ois.service.BdocService;
 import ee.hitsa.ois.service.FinalExamVocationalProtocolService;
@@ -50,6 +52,7 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolCommitteeSelectDto;
 import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolDto;
 import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolOccupationalModuleDto;
+import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolStudentDto;
 
 @RestController
 @RequestMapping("/finalExamVocationalProtocols")
@@ -82,7 +85,7 @@ public class FinalExamVocationalProtocolController {
     public FinalExamVocationalProtocolDto create(HoisUserDetails user,
             @Valid @RequestBody FinalExamVocationalProtocolCreateForm finalExamProtocolCreateForm) {
         FinalExamProtocolUtil.assertIsSchoolAdminOrTeacherResponsible(user, finalExamProtocolCreateForm.getProtocolVdata().getTeacher());
-        return FinalExamVocationalProtocolDto.of(finalExamProtocolService.create(user, finalExamProtocolCreateForm));
+        return finalExamProtocolService.create(user, finalExamProtocolCreateForm);
     }
     
     @PutMapping("/{id:\\d+}")
@@ -122,9 +125,32 @@ public class FinalExamVocationalProtocolController {
     
     @GetMapping("/committees")
     public List<FinalExamVocationalProtocolCommitteeSelectDto> committees(HoisUserDetails user, 
-            @RequestParam(value = "finalExamDate", required = false) LocalDate finalExamDate) {
+            @RequestParam(value = "finalDate", required = false) LocalDate finalDate) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return finalExamProtocolService.committeesForSelection(user, finalExamDate);
+        return finalExamProtocolService.committeesForSelection(user, finalDate);
+    }
+    
+    @GetMapping("/{id:\\d+}/otherStudents")
+    public Collection<FinalExamVocationalProtocolStudentDto> otherStudents(HoisUserDetails user,
+            @WithEntity Protocol protocol) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return finalExamProtocolService.otherStudents(user, protocol);
+    }
+
+    @PostMapping("/{id:\\d+}/addStudents")
+    public FinalExamVocationalProtocolDto addStudents(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
+            @Valid @RequestBody FinalExamVocationalProtocolSaveForm protocolSaveForm) {
+        FinalExamProtocolUtil.assertCanEdit(user, protocol);
+        return get(user, finalExamProtocolService.addStudents(protocol, protocolSaveForm));
+    }
+    
+    @DeleteMapping("/{id:\\d+}/removeStudent/{studentId:\\d+}")
+    public FinalExamVocationalProtocolDto removeStudent(HoisUserDetails user, @WithEntity Protocol protocol,
+            @WithEntity("studentId") ProtocolStudent student) {
+        FinalExamProtocolUtil.assertCanEdit(user, protocol);
+        finalExamProtocolService.removeStudent(user, student);
+        return get(user, protocol);
     }
     
     @PostMapping("/{id:\\d+}/signToConfirm")

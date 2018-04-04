@@ -5,6 +5,9 @@ import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -17,6 +20,11 @@ public class CurriculumModuleOutcome extends BaseEntityWithId {
 
     private String outcomeEt;
     private String outcomeEn;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(insertable = false, updatable = false)
+    private CurriculumModule curriculumModule;
+    
     private Long orderNr;
 
     @OneToMany(mappedBy="curriculumModuleOutcomes", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -44,6 +52,14 @@ public class CurriculumModuleOutcome extends BaseEntityWithId {
 
     public void setOutcomeEn(String outcomeEn) {
         this.outcomeEn = outcomeEn;
+    }
+    
+    public CurriculumModule getCurriculumModule() {
+        return curriculumModule;
+    }
+
+    public void setCurriculumModule(CurriculumModule curriculumModule) {
+        this.curriculumModule = curriculumModule;
     }
 
     public List<ApelApplicationInformalSubjectOrModuleOutcomes> getOutcomes() {

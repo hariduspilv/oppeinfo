@@ -30,32 +30,33 @@
         <div ng-if="timetableEvent.repeat" flex="80">
           <md-input-container flex="50">
             <label>{{'timetable.timetableEvent.weekAmount' | translate}}</label>
-            <input flex="100" ng-model="timetableEvent.weekAmount" type="number" autofocus aria-label="weekamount">
+            <input flex="100" ng-model="timetableEvent.weekAmount" type="number" autofocus aria-label="weekamount" required>
           </md-input-container>
 
           <md-input-container flex="50" flex-offset="5">
             <label>{{'timetable.timetableEvent.repetition' | translate}}</label>
-            <hois-classifier-select flex="100" ng-model="timetableEvent.repeatCode" model-value-attr="code" aria-label="repeatcode" main-classifier-code="TUNNIPLAAN_SYNDMUS_KORDUS">
+            <hois-classifier-select flex="100" ng-model="timetableEvent.repeatCode" model-value-attr="code" aria-label="repeatcode" 
+              filter-values="['TUNNIPLAAN_SYNDMUS_KORDUS_EI']" main-classifier-code="TUNNIPLAAN_SYNDMUS_KORDUS" required>
             </hois-classifier-select>
           </md-input-container>
         </div>
       </div>
 
       <div layout="row" flex="60" flex-sm="100" flex-xs="100">
-        <hois-autocomplete label="timetable.timetableEvent.teacher" ng-model="timetableEvent.teacher" method="teachers" flex></hois-autocomplete>
+        <hois-autocomplete label="timetable.timetableEvent.teacher" ng-model="timetableEvent.teacher" ng-disabled="auth.isTeacher()" method="teachers" flex></hois-autocomplete>
       </div>
       <div layout="column" class="common-label" flex="55" ng-repeat="teacher in timetableEvent.teachers">
         <div layout="row" flex layout-align="start center">
           <div flex="5">&nbsp;</div>
           <div flex="50">{{teacher.nameEt}}</div>
-          <div>
+          <div ng-if="auth.isAdmin()">
             <a ng-click="deleteTeacher(teacher)" class="remove">&times;</a>
           </div>
         </div>
       </div>
 
       <div layout="row" flex="60" flex-sm="100" flex-xs="100">
-        <hois-autocomplete label="timetable.timetableEvent.room" ng-model="timetableEvent.room" method="rooms" flex></hois-autocomplete>
+        <hois-autocomplete label="timetable.timetableEvent.room" ng-model="timetableEvent.room" additional-query-params="{isStudy: true}" method="rooms" flex></hois-autocomplete>
       </div>
       <div layout="column" class="common-label" flex="55" ng-repeat="room in timetableEvent.rooms">
         <div layout="row" flex layout-align="start center">

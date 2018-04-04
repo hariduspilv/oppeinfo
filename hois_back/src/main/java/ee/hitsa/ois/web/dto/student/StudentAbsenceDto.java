@@ -11,8 +11,9 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
 
     private Long id;
     private Boolean isAccepted;
+    private Boolean isRejected;
     private Boolean userCanEdit;
-    private Boolean canAccept;
+    private Boolean canChangeStatus;
     private AutocompleteResult student;
     private String applicant;
     private String acceptor;
@@ -23,8 +24,12 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
         String fullname = PersonUtil.fullname(s.getPerson());
         dto.setStudent(new AutocompleteResult(s.getId(), fullname, fullname));
         dto.setApplicant(PersonUtil.stripIdcodeFromFullnameAndIdcode(studentAbsence.getInsertedBy()));
-        if(Boolean.TRUE.equals(studentAbsence.getIsAccepted())) {
-            dto.setAcceptor(PersonUtil.stripIdcodeFromFullnameAndIdcode(studentAbsence.getChangedBy()));
+        if (studentAbsence.getIsRejected() != null) {
+            dto.setIsRejected(Boolean.FALSE);
+        }
+        if(Boolean.TRUE.equals(studentAbsence.getIsAccepted()) || Boolean.TRUE.equals(studentAbsence.getIsRejected())) {
+            dto.setAcceptor(studentAbsence.getAcceptedBy() != null ? studentAbsence.getAcceptedBy()
+                    : PersonUtil.stripIdcodeFromFullnameAndIdcode(studentAbsence.getChangedBy()));
         }
         return dto;
     }
@@ -43,6 +48,14 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
 
     public void setIsAccepted(Boolean isAccepted) {
         this.isAccepted = isAccepted;
+    }
+
+    public Boolean getIsRejected() {
+        return isRejected;
+    }
+
+    public void setIsRejected(Boolean isRejected) {
+        this.isRejected = isRejected;
     }
 
     public Boolean getUserCanEdit() {
@@ -77,11 +90,12 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
         this.acceptor = acceptor;
     }
 
-    public Boolean getCanAccept() {
-        return canAccept;
+    public Boolean getCanChangeStatus() {
+        return canChangeStatus;
     }
 
-    public void setCanAccept(Boolean canAccept) {
-        this.canAccept = canAccept;
+    public void setCanChangeStatus(Boolean canChangeStatus) {
+        this.canChangeStatus = canChangeStatus;
     }
+    
 }

@@ -104,6 +104,7 @@ public class ContractControllerTests {
         String url = uriBuilder.build().toUriString();
 
         responseEntity = restTemplate.getForEntity(url, ContractSearchDto.class);
+        Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
@@ -113,11 +114,13 @@ public class ContractControllerTests {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
         ContractForm form = new ContractForm();
         ResponseEntity<ContractDto> responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form, ContractDto.class);
+        Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
 
         form = createForm();
 
         responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form, ContractDto.class);
+        Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         contract = responseEntity.getBody();
@@ -159,12 +162,21 @@ public class ContractControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
+    @Test
+    public void checkForEkis() {
+        // contract id is not user for now
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT + "/checkForEkis").pathSegment("1");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 
     @Test
     public void sendToEkis() {
         ContractForm form = createForm();
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
         ResponseEntity<ContractDto> responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form, ContractDto.class);
+        Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         contract = responseEntity.getBody();
 
@@ -174,6 +186,7 @@ public class ContractControllerTests {
 
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT + "/sendToEkis").pathSegment(contract.getId().toString());
         responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form, ContractDto.class);
+        Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         contract = responseEntity.getBody();
 
@@ -181,7 +194,6 @@ public class ContractControllerTests {
 
         practiceJournal = practiceJournalService.findByContractId(contract.getId());
         Assert.assertNotNull(practiceJournal);
-
     }
 
     private void delete() {

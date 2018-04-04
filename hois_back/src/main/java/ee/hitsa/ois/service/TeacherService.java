@@ -425,6 +425,8 @@ public class TeacherService {
      * @return
      */
     public TeacherDto get(HoisUserDetails user, Teacher teacher) {
+        em.flush();
+
         TeacherDto dto = TeacherDto.of(teacher);
         dto.setCanEdit(Boolean.valueOf(TeacherUserRights.canEdit(user, teacher) || TeacherUserRights.canEditAsTeacher(user, teacher)));
         return dto;

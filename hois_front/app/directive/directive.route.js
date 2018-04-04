@@ -21,10 +21,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controller: 'DirectiveListController',
       controllerAs: 'controller',
       resolve: {
-        translationLoaded: function($translate) { return $translate.onReady(); },
-        clMapping: function() { return {type: 'KASKKIRI', status: 'KASKKIRI_STAATUS'}; },
-        params: function() { return {order: '-inserted'}; },
-        url: function() { return '/directives'; }
+        translationLoaded: function($translate) { return $translate.onReady(); }
       },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KASKKIRI]

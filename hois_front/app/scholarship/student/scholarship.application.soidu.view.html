@@ -44,21 +44,21 @@
       <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.student.studentGroup' | translate}}</label>
-          <hois-value value="studentInfo.studentGroupCode"></hois-value>
+          <hois-value value="application.studentGroupCode"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label class="textInput">{{'main.contactNumber' | translate}}</label>
-          <hois-value value="studentSubmitData.phone"></hois-value>
+          <hois-value value="application.phone"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.student.address' | translate}}</label>
-          <hois-value value="studentSubmitData.address"></hois-value>
+          <hois-value value="application.address"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label class="textInput">{{'main.email' | translate}}</label>
-          <hois-value value="studentSubmitData.email"></hois-value>
+          <hois-value value="application.email"></hois-value>
         </md-input-container>
       </div>
     </div>
@@ -69,19 +69,19 @@
             <div layout="row" flex>
               <md-input-container flex>
                 <label>{{'stipend.student.bankAccount' | translate}}</label>
-                <hois-value value="studentSubmitData.bankAccount">
+                <hois-value value="application.bankAccount">
               </md-input-container>
             </div>
             <div layout="row" flex>
               <md-input-container flex>
                 <label class="textInput">{{'stipend.compensationReason' | translate}}</label>
-                <hois-classifier-value ng-model="studentSubmitData.compensationReason" main-classifier-code="STIPTOETUS_HYVITAMINE_POHJUS"></hois-classifier-value>
+                <hois-classifier-value ng-model="application.compensationReason" main-classifier-code="STIPTOETUS_HYVITAMINE_POHJUS"></hois-classifier-value>
               </md-input-container>
             </div>
-            <div layout="row" ng-if="studentSubmitData.compensationReason === 'STIPTOETUS_HYVITAMINE_POHJUS_I'">
+            <div layout="row" ng-if="application.compensationReason === 'STIPTOETUS_HYVITAMINE_POHJUS_I'">
               <md-input-container flex>
                 <label>{{'stipend.routeKm' | translate}}</label>
-                <hois-value value="studentSubmitData.routeKm"></hois-value>
+                <hois-value value="application.routeKm"></hois-value>
               </md-input-container>
             </div>
           </div>
@@ -89,7 +89,7 @@
             <fieldset flex="100" layout="column">
               <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.compensationFrequency' | translate}}</legend>
               <md-input-container>
-                <md-radio-group layout="column" ng-model="studentSubmitData.compensationFrequency" required>
+                <md-radio-group layout="column" ng-model="application.compensationFrequency" required>
                   <md-radio-button flex layout="row" disabled ng-repeat="frequency in compensationFrequencies" value="{{frequency.code}}" aria-label="passedSubject">
                     {{currentLanguageNameField(frequency)}}
                   </md-radio-button>
@@ -98,10 +98,10 @@
             </fieldset>
           </div>
         </div>
-        <div layout="row" flex ng-if="studentSubmitData.compensationReason === 'STIPTOETUS_HYVITAMINE_POHJUS_M'">
+        <div layout="row" flex ng-if="application.compensationReason === 'STIPTOETUS_HYVITAMINE_POHJUS_M'">
           <md-input-container flex="100" flex-md="100" flex-sm="100" flex-xs="100">
             <label>{{'stipend.student.specificReason' | translate}}</label>
-            <hois-value value="studentSubmitData.addInfo"></hois-value>
+            <hois-value value="application.addInfo"></hois-value>
           </md-input-container>
         </div>
         <br/>

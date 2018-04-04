@@ -16,19 +16,20 @@
             <h2 flex>{{'moodle.enroll.enrolled' | translate}}: {{moodleResponse.enrolled}}</h2>
           </div>
           <div layout="row" flex>
-            <h2 flex>{{'moodle.enroll.failed' | translate}}: {{moodleResponse.failed.length}}</h2>
+            <h2 flex>
+              {{'moodle.enroll.failed' | translate}}: 
+              {{moodleResponse.failed.length + moodleResponse.missingUser.length + moodleResponse.missingIdcode.length}}
+            </h2>
           </div>
           <ol>
             <li ng-repeat="user in moodleResponse.failed">
               {{user}}
             </li>
-          </ol>
-          <div layout="row" flex>
-            <h2 flex>{{'moodle.enroll.missingUser' | translate}}: {{moodleResponse.missingUser.length}}</h2>
-          </div>
-          <ol>
             <li ng-repeat="user in moodleResponse.missingUser">
-              {{user}}
+              {{user}} ({{'moodle.enroll.missingUser' | translate}})
+            </li>
+            <li ng-repeat="user in moodleResponse.missingIdcode">
+              {{user}} ({{'moodle.enroll.missingIdcode' | translate}})
             </li>
           </ol>
         </div>

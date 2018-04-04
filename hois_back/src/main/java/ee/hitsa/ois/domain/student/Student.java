@@ -31,6 +31,8 @@ public class Student extends StudentBase {
     private List<StudentRepresentative> representatives;
     @OneToMany(mappedBy = "student")
     private List<JournalStudent> journalStudents;
+    @OneToMany(mappedBy = "student")
+    private List<StudentOccupationCertificate> occupationCertificates;
 
     public Person getPerson() {
         return person;
@@ -87,4 +89,13 @@ public class Student extends StudentBase {
     public void setJournalStudents(List<JournalStudent> journalStudents) {
         this.journalStudents = journalStudents;
     }
+
+    public List<StudentOccupationCertificate> getOccupationCertificates() {
+        return occupationCertificates;
+    }
+
+    public void setOccupationCertificates(List<StudentOccupationCertificate> occupationCertificates) {
+        this.occupationCertificates = occupationCertificates;
+    }
+    
 }

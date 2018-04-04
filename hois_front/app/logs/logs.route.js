@@ -8,6 +8,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
         logType: function() { return 'ekis'; }
       },
       data: {
@@ -19,10 +20,13 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
         logType: function() { return 'kutseregister'; }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER]
+        authorizedRoles: function(Session, authorizedRoles) {
+          return Session.roleCode === 'ROLL_P' || (authorizedRoles || []).indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER) !== -1;
+        }
       }
     }).when('/rtip/logs', {
       templateUrl: 'logs/logs.view.html',
@@ -30,6 +34,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
         logType: function() { return 'rtip'; }
       },
       data: {
@@ -41,6 +46,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
         logType: function() { return 'sais'; }
       },
       data: {

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -55,6 +56,7 @@ import ee.hitsa.ois.exception.SingleMessageWithParamsException;
 import ee.hitsa.ois.message.AcademicLeaveEnding;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.service.ekis.EkisService;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -63,6 +65,7 @@ import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -197,8 +200,6 @@ public class DirectiveConfirmService {
             rowNum++;
         }
 
-        checkAutomaticMessageTemplates(directiveType, directive.getSchool(), allErrors);
-
         if(!allErrors.isEmpty()) {
             throw new ValidationFailedException(allErrors);
         }
@@ -241,6 +242,35 @@ public class DirectiveConfirmService {
         directive.setDirectiveNr(directiveNr);
         directive.setPreamble(preamble);
         return confirm(PersonUtil.fullnameAndIdcode(signerName, signerIdCode), directive, confirmDate);
+    }
+
+    /**
+     * Check if preconditions are ok for confirming directive
+     *
+     * @param user
+     * @param directiveId
+     * @return
+     * @throws ValidationFailedException if something is wrong
+     */
+    public Map<String, ?> checkForConfirm(HoisUserDetails user, Long directiveId) {
+        Directive directive = em.getReference(Directive.class, directiveId);
+        School school = directive.getSchool();
+        UserUtil.assertSameSchool(user, school);
+        List<Error> errors = new ArrayList<>();
+
+        if(!ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())) {
+            // for all other than KASKKIRI_TYHIST TEATE_LIIK_UUS_KK
+            messageTemplateService.requireValidTemplate(MessageType.TEATE_LIIK_UUS_KK, school, errors);
+            if(ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_AKADK)) {
+                // for akad and akadk also send TEATE_LIIK_AP_LOPP
+                messageTemplateService.requireValidTemplate(MessageType.TEATE_LIIK_AP_LOPP, school, errors);
+            }
+        }
+
+        Map<String, Object> status = new HashMap<>();
+        status.put("templateExists", Boolean.valueOf(errors.isEmpty()));
+        status.put("templateName", StreamUtil.toMappedList(r -> r.getParams().values().iterator().next(), errors));
+        return status;
     }
 
     private Directive findDirective(long directiveId, long wdId) {
@@ -542,25 +572,6 @@ public class DirectiveConfirmService {
         // new role for student
         userService.enableUser(student, directiveStudent.getDirective().getConfirmDate());
         return student;
-    }
-
-    /**
-     * Check for automatic message templates existence
-     *
-     * @param directiveType
-     * @param school
-     * @param allErrors
-     */
-    private void checkAutomaticMessageTemplates(DirectiveType directiveType, School school, List<Error> allErrors) {
-        if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
-            return;
-        }
-        // for all other than KASKKIRI_TYHIST TEATE_LIIK_UUS_KK
-        messageTemplateService.requireValidTemplate(MessageType.TEATE_LIIK_UUS_KK, school, allErrors);
-        if(DirectiveType.KASKKIRI_AKAD.equals(directiveType) || DirectiveType.KASKKIRI_AKADK.equals(directiveType)) {
-            // for akad and akadk also send TEATE_LIIK_AP_LOPP
-            messageTemplateService.requireValidTemplate(MessageType.TEATE_LIIK_AP_LOPP, school, allErrors);
-        }
     }
 
     private static void copyDirectiveProperties(DirectiveType directiveType, Object source, Student student) {

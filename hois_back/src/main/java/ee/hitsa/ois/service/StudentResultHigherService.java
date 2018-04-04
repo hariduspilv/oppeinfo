@@ -27,6 +27,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -260,7 +261,7 @@ public class StudentResultHigherService {
             if(Boolean.TRUE.equals(subjectResult.getIsOk())) {
                 BigDecimal credits = subjectResult.getSubject().getCredits();
 
-                if(subjectResult.isDistinctiveAssessment()) {
+                if(HigherAssessment.valueOf(subjectResult.getLastGrade().getGrade()).getIsDistinctive().booleanValue()) {
                     BigDecimal gradeMark = BigDecimal.valueOf(subjectResult.getLastGrade().getGradeMark().longValue());
                     numerator = numerator.add(gradeMark.multiply(credits));
                     denominator = denominator.add(credits);
@@ -327,7 +328,7 @@ public class StudentResultHigherService {
             if(Boolean.TRUE.equals(subjectResult.getIsOk())) {
                 BigDecimal credits = subjectResult.getSubject().getCredits();
 
-                if(subjectResult.isDistinctiveAssessment()) {
+                if(HigherAssessment.valueOf(subjectResult.getLastGrade().getGrade()).getIsDistinctive().booleanValue()) {
                     BigDecimal gradeMark = BigDecimal.valueOf(subjectResult.getLastGrade().getGradeMark().longValue());
                     numerator = numerator.add(gradeMark.multiply(credits));
                     denominator = denominator.add(credits);

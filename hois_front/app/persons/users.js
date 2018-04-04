@@ -51,7 +51,8 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
 
       for (var right in $scope.rights) {
         if (ArrayUtils.contains(rightsForRole, right)) {
-          $scope.rights[right][code] = permissionValue;
+          $scope.rights[right][code] = AuthService.isValidRolePermission($scope.user.role, right, code) ? 
+            permissionValue : false;
         }
       }
     };
@@ -62,7 +63,9 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
       for (var code in $scope.multiSelects) {
         $scope.multiSelects[code] = true;
         for (var right in $scope.rights) {
-          if (ArrayUtils.contains(rightsForRole, right) && !$scope.rights[right][code]) {
+          if (ArrayUtils.contains(rightsForRole, right) && 
+          AuthService.isValidRolePermission($scope.user.role, right, code) && 
+          !$scope.rights[right][code]) {
             $scope.multiSelects[code] = false;
             break;
           }

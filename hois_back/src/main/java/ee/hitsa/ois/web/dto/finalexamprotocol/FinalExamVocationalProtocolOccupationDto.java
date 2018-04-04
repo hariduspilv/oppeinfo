@@ -6,8 +6,14 @@ public class FinalExamVocationalProtocolOccupationDto {
     private String code;
     private String nameEt;
     private String nameEn;
-    private Boolean isOccupationGrant;
     
+    public FinalExamVocationalProtocolOccupationDto(Long id, String code, String nameEt, String nameEn) {
+        this.id = id;
+        this.code = code;
+        this.nameEt = nameEt;
+        this.nameEn = nameEn;
+    }
+
     public Long getId() {
         return id;
     }
@@ -38,14 +44,6 @@ public class FinalExamVocationalProtocolOccupationDto {
     
     public void setNameEn(String nameEn) {
         this.nameEn = nameEn;
-    }
-    
-    public Boolean getIsOccupationGrant() {
-        return isOccupationGrant;
-    }
-    
-    public void setIsOccupationGrant(Boolean isOccupationGrant) {
-        this.isOccupationGrant = isOccupationGrant;
     }
     
 }

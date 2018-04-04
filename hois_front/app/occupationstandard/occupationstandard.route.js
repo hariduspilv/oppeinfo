@@ -8,6 +8,11 @@ angular.module('hitsaOis').config(['$routeProvider', function ($routeProvider) {
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); }
+      },
+      data: {
+        authorizedRoles: function(Session) {
+          return Session.roleCode === 'ROLL_P';
+        }
       }
     });
 }]);

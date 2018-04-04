@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -80,8 +79,6 @@ public class HigherProtocolService extends AbstractProtocolService {
           + "where ph.type_code = '" + ProtocolType.PROTOKOLLI_LIIK_P.name() + "' "
           + "and ph.subject_study_period_id = ds.subject_study_period_id "
           + "and ps.student_id = s.id ) ";
-    
-    private static final Pattern GRADE_PATTERN = Pattern.compile("[0-5]");
 
     @Autowired
     private ProtocolRepository protocolRepository;
@@ -193,7 +190,7 @@ public class HigherProtocolService extends AbstractProtocolService {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
-                        gradeStudent(ps, grade, getGradeMark(grade));
+                        gradeStudent(ps, grade, getHigherGradeMark(grade));
                     } else if (gradeRemoved(dto, ps)) {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
@@ -201,15 +198,6 @@ public class HigherProtocolService extends AbstractProtocolService {
                     }
                     ps.setAddInfo(dto.getAddInfo());
                 });
-    }
-
-    private static Short getGradeMark(Classifier grade) {
-        Short gradeMark = null;
-        String gradeValue = grade.getValue();
-        if(GRADE_PATTERN.matcher(gradeValue).matches()) {
-            gradeMark = Short.valueOf(gradeValue);
-        }
-        return gradeMark;
     }
 
     public Protocol confirm(HoisUserDetails user, Protocol protocol) {

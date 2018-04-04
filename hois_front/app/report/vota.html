@@ -1,0 +1,67 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate>
+        <div layout="row">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'report.teachersload.studyYear' | translate}}</label>
+            <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required autofocus></hois-select>
+          </md-input-container>
+
+          <md-input-container flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'report.teachersload.studyPeriod' | translate}}</label>
+            <hois-select ng-model="criteria.studyPeriod" values="criteria.studyYear ? formState.studyPeriods[criteria.studyYear] : formState.allStudyPeriods"></hois-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column></th>
+            <th md-column>{{'report.vota.studyYear' | translate}}</th>
+            <th md-column>{{'report.vota.studyPeriod' | translate}}</th>
+            <th md-column>{{'report.vota.curriculum' | translate}}</th>
+            <th md-column><span translate="report.vota.applicationCount"></span></th>
+            <th md-column><span translate="report.vota.totalCredits"></span></th>
+            <th md-column><span translate="report.vota.acceptedCredits"></span></th>
+            <th md-column><span translate="report.vota.totalLocalCredits"></span></th>
+            <th md-column><span translate="report.vota.acceptedLocalCredits"></span></th>
+            <th md-column><span translate="report.vota.totalAbroadCredits"></span></th>
+            <th md-column><span translate="report.vota.acceptedAbroadCredits"></span></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content">
+            <td md-cell style="border-top:none"></td>
+            <td md-cell rowspan="{{tabledata.content.length}}" ng-if="$first">{{currentLanguageNameField(row.studyYear)}}</td>
+            <td md-cell rowspan="{{studyPeriodRows($index)}}" ng-if="studyPeriodVisible($index)">{{currentLanguageNameField(row.studyPeriod)}}</td>
+            <td md-cell ng-class-odd="'odd'" ng-class-even="'even'">{{currentLanguageNameField(row.curriculum)}}</td>
+            <td md-cell ng-class-odd="'odd'" ng-class-even="'even'">{{row.applicationCount}}</td>
+            <td md-cell ng-class-odd="'odd'" ng-class-even="'even'">{{row.totalCredits}}</td>
+            <td md-cell ng-class-odd="'odd'" ng-class-even="'even'">{{row.acceptedCredits}}</td>
+            <td md-cell ng-class-odd="'odd'" ng-class-even="'even'">{{row.totalLocalCredits}}</td>
+            <td md-cell ng-class-odd="'odd'" ng-class-even="'even'">{{row.acceptedLocalCredits}}</td>
+            <td md-cell ng-class-odd="'odd'" ng-class-even="'even'">{{row.totalAbroadCredits}}</td>
+            <td md-cell ng-class-odd="'odd'" ng-class-even="'even'">{{row.acceptedAbroadCredits}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

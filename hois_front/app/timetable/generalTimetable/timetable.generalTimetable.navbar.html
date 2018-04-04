@@ -24,9 +24,9 @@
   <md-button class="md-raised" ng-if="auth.isParent()" ng-href="#/timetable/personalGeneralTimetable?_menu" ng-class="{'md-accent': currentNavItem === 'personal'}"
     name="personal">{{'timetable.parentTimetable' | translate}}</md-button>
   <md-button class="md-raised" ng-href="#/timetable/generalTimetableByGroup?_menu" ng-class="{'md-accent': currentNavItem === 'studentGroup'}"
-    name="studentGroup">{{'timetable.teachers' | translate}}</md-button>
+    name="studentGroup">{{'timetable.studentGroups' | translate}}</md-button>
   <md-button class="md-raised" ng-href="#/timetable/generalTimetableByTeacher?_menu" ng-class="{'md-accent': currentNavItem === 'teacher'}"
-    name="teacher">{{'timetable.studentGroups' | translate}}</md-button>
+    name="teacher">{{'timetable.teachers' | translate}}</md-button>
   <md-button class="md-raised" ng-href="#/timetable/generalTimetableByRoom?_menu" ng-class="{'md-accent': currentNavItem === 'room'}"
     name="room">{{'timetable.rooms' | translate}}</md-button>
   <md-button class="md-raised" ng-class="{'md-accent': currentNavItem === 'search'}" ng-href="#/timetable/searchGeneralTimetable?_menu"
@@ -37,9 +37,9 @@
 
 <div hide-gt-xs layout="column" ng-if="auth == null">
   <md-button class="md-raised" ng-href="#/timetable/generalTimetableByGroup?_menu" ng-class="{'md-accent': currentNavItem === 'studentGroup'}"
-    name="studentGroup">{{'timetable.teachers' | translate}}</md-button>
+    name="studentGroup">{{'timetable.studentGroups' | translate}}</md-button>
   <md-button class="md-raised" ng-href="#/timetable/generalTimetableByTeacher?_menu" ng-class="{'md-accent': currentNavItem === 'teacher'}"
-    name="teacher">{{'timetable.studentGroups' | translate}}</md-button>
+    name="teacher">{{'timetable.teachers' | translate}}</md-button>
   <md-button class="md-raised" ng-href="#/timetable/generalTimetableByRoom?_menu" ng-class="{'md-accent': currentNavItem === 'room'}"
     name="room">{{'timetable.rooms' | translate}}</md-button>
 </div>

@@ -33,7 +33,7 @@ public class StudentAbsenceController {
     public StudentAbsenceDto get(HoisUserDetails user, @WithEntity StudentAbsence studentAbsence) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, studentAbsence.getStudent().getSchool());
         StudentAbsenceDto dto = StudentAbsenceDto.of(studentAbsence);
-        dto.setCanAccept(Boolean.valueOf(StudentAbsenceUtil.canAccept(user, studentAbsence)));
+        dto.setCanChangeStatus(Boolean.valueOf(StudentAbsenceUtil.canChangeStatus(user, studentAbsence)));
         return dto;
     }
 
@@ -45,13 +45,19 @@ public class StudentAbsenceController {
 
     @PutMapping("/accept/{id:\\d+}")
     public StudentAbsenceDto accept(HoisUserDetails user, @WithEntity StudentAbsence studentAbsence) {
-        StudentAbsenceUtil.assertCanAccept(user, studentAbsence);
-        return get(user, studentAbsenceService.accept(studentAbsence));
+        StudentAbsenceUtil.assertCanChangeStatus(user, studentAbsence);
+        return get(user, studentAbsenceService.accept(user, studentAbsence));
+    }
+    
+    @PutMapping("/reject/{id:\\d+}")
+    public StudentAbsenceDto reject(HoisUserDetails user, @WithEntity StudentAbsence studentAbsence) {
+        StudentAbsenceUtil.assertCanChangeStatus(user, studentAbsence);
+        return get(user, studentAbsenceService.reject(user, studentAbsence));
     }
 
     @GetMapping("/hasUnaccepted")
     public Map<String, Boolean> hasUnaccepted(HoisUserDetails user) {
-        return Collections.singletonMap("hasUnaccepted", Boolean.valueOf(StudentAbsenceUtil.hasPermissionToAccept(user)
+        return Collections.singletonMap("hasUnaccepted", Boolean.valueOf(StudentAbsenceUtil.hasPermissionToChangeStatus(user)
                 && studentAbsenceService.hasUnaccepted(user)));
     }
 }

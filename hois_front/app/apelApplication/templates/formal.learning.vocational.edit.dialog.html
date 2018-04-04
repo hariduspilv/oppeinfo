@@ -120,7 +120,7 @@
                     method="curriculumversionomodulesandthemes" name="module" label="apel.formalLearnings.transferableModuleEt"
                     md-selected-item-change="moduleChanged(record.newTransferableSubjectOrModule.curriculumVersionOmodule)"
                     additional-query-params="{student: student.id, curriculumModules: false, curriculumVersion: curriculumVersionId, school: auth.school.id}"
-                    ng-model-options="{ debounce: 500 }" required="true">
+                    ng-model-options="{ debounce: 500 }" required>
                   </hois-autocomplete>
 
                   <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">

@@ -1,0 +1,100 @@
+<div layout-padding ng-cloak class="form-readonly">
+  <div flex>
+    <div layout="row">
+      <md-input-container flex="20" flex-sm="100" flex-xs="100">
+        <label class="textInput">{{'exam.studyPeriod' | translate}}</label>
+        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodDto.studyPeriod)"></hois-value>
+      </md-input-container>
+
+      <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <label class="textInput">{{'exam.subjectTeacher' | translate}}</label>
+        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodDto.subject)+ ' - ' + (record.subjectStudyPeriodDto.teacherNames || []).join(', ')"></hois-value>
+      </md-input-container>
+
+      <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <label class="textInput">{{'exam.assessment' | translate}}</label>
+        <hois-classifier-value ng-model="record.subjectStudyPeriodDto.assessment" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
+      </md-input-container>
+    </div>
+
+    <div layout="row" layout-xs="column" flex>
+      <md-input-container flex="15" flex-sm="100" flex-xs="100">
+        <label>{{'exam.type' | translate}}</label>
+        <hois-classifier-value ng-model="record.type" main-classifier-code="SOORITUS"></hois-classifier-value>
+      </md-input-container>
+      <md-input-container flex="65" flex-sm="100" flex-xs="100" flex-offset="10" flex-offset-xs="0" flex-offset-sm="0">
+        <label>{{'exam.name' | translate}}</label>
+        <hois-value value="record.name"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div layout="row" layout-xs="column" flex>
+      <md-input-container flex="15" flex-sm="100" flex-xs="100">
+        <label>{{'exam.date' | translate}}</label>
+        <hois-value value="record.startDate | hoisDate"></hois-value>
+      </md-input-container>
+      <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset="10" flex-offset-xs="0" flex-offset-sm="0">
+        <label>{{'main.start' | translate}}</label>
+        <hois-value value="record.startTime | hoisTime"></hois-value>
+      </md-input-container>
+      <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset="0" flex-offset-xs="0" flex-offset-sm="0">
+        <label>{{'main.end' | translate}}</label>
+        <hois-value value="record.endTime | hoisTime"></hois-value>
+      </md-input-container>
+      <md-input-container flex="40" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <label>{{'exam.room' | translate}}</label>
+        <hois-value value="record.room.nameEt"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div layout="row" layout-xs="column" flex>
+      <md-input-container flex="15" flex-sm="100" flex-xs="100">
+        <label>{{'exam.deadline' | translate}}</label>
+        <hois-value value="record.deadlineDate | hoisDate"></hois-value>
+      </md-input-container>
+      <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset="10" flex-offset-xs="0" flex-offset-sm="0">
+        <label>{{'exam.deadlineTime' | translate}}</label>
+        <hois-value value="record.deadlineTime | hoisTime"></hois-value>
+      </md-input-container>
+      <md-input-container flex="40" flex-sm="100" flex-xs="100" flex-offset="15" flex-offset-xs="0" flex-offset-sm="0">
+        <label>{{'exam.places' | translate}}</label>
+        <hois-value value="record.places"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div layout="row" layout-xs="column" flex>
+      <md-input-container flex="90" flex-sm="100" flex-xs="100">
+        <label>{{'exam.addInfo' | translate}}</label>
+        <hois-value value="record.addInfo"></hois-value>
+      </md-input-container>
+    </div>
+
+    <md-table-container ng-if="record.studentRecords && record.studentRecords.length > 0">
+      <table md-table>
+        <thead md-head md-order="formState.order">
+          <tr md-row>
+            <th md-column>{{'main.rowno' | translate}}</th>
+            <th md-column md-order-by="rowno">{{'exam.student.fullname' | translate}}</th>
+            <th md-column md-order-by="curriculumVersion.{{currentLanguageNameField()}}">{{'exam.student.curriculum' | translate}}</th>
+            <th md-column md-order-by="studentGroup">{{'exam.student.studentGroup' | translate}}</th>
+            <th md-column md-order-by="registered">{{'exam.student.registered' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in record.studentRecords | orderBy: formState.order" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.rowno}}</td>
+            <td md-cell>
+              <a class="md-primary" ng-href="#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>
+            </td>
+            <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+            <td md-cell>{{::row.studentGroup}}</td>
+            <td md-cell>{{row.registered | hoisDate}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+
+    <md-button ng-if="record.id && record.userCanEdit" class="md-primary md-raised" ng-href="#/exams/{{record.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
+    <md-button ng-click="back('#/examTimes')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

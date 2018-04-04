@@ -50,6 +50,7 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.ModuleProtocolGradeUtil;
 import ee.hitsa.ois.util.ModuleProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
@@ -280,7 +281,6 @@ public class ModuleProtocolService extends AbstractProtocolService {
         Protocol protocol = EntityUtil.bindToEntity(form, new Protocol(), "protocolStudents", "protocolVdata");
         protocol.setIsFinal(Boolean.FALSE);
         protocol.setIsVocational(Boolean.TRUE);
-        protocol.setIsVocational(Boolean.TRUE);
         protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
         protocol.setSchool(em.getReference(School.class, user.getSchoolId()));
         protocol.setProtocolNr(generateProtocolNumber());
@@ -337,14 +337,14 @@ public class ModuleProtocolService extends AbstractProtocolService {
         Set<Long> newIds = StreamUtil.toMappedSet(ProtocolStudent::getId, newStudents);
         List<ProtocolStudent> removedStudents = StreamUtil.toFilteredList(oldStudent -> !newIds.contains(oldStudent.getId()), oldStudents);
         for (ProtocolStudent protocolStudent : removedStudents) {
-            if(!ModuleProtocolUtil.studentCanBeDeleted(protocolStudent)) {
+            if(!ProtocolUtil.studentCanBeDeleted(protocolStudent)) {
                 throw new ValidationFailedException("moduleProtocol.messages.cantRemoveStudent");
             }
         }
     }
     
     public void removeStudent(HoisUserDetails user, ProtocolStudent student) {
-        if (!ModuleProtocolUtil.studentCanBeDeleted(student)) {
+        if (!ProtocolUtil.studentCanBeDeleted(student)) {
             throw new ValidationFailedException("moduleProtocol.messages.cantRemoveStudent");
         }
         EntityUtil.setUsername(user.getUsername(), em);

@@ -57,10 +57,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     var periodTypes = Classifier.valuemapper({type: 'OPPEPERIOOD'});
     $scope.eventTypes = {};
     Classifier.queryForDropdown({mainClassCode: 'SYNDMUS'}, function(arrayResult) {
-      arrayResult.forEach(function(classifier) {
-        var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu};
-        $scope.eventTypes[option.code] = option;
-      });
+      $scope.eventTypes = Classifier.toMap(arrayResult);
     });
 
     function afterLoad() {
@@ -266,23 +263,19 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
 
           // calendar event date must be between study period's start and end date
           if ($scope.studyPeriodEvent.studyPeriod) {
-            var studyPeriodEventStart, studyPeriodEventEnd, studyPeriodStart, studyPeriodEnd;
+            var start;
             if ($scope.studyPeriodEvent.start && $scope.studyPeriodEvent.end) {
-              studyPeriodEventStart = $scope.studyPeriodEvent.start.setHours(0, 0, 0);
-              studyPeriodEventEnd = $scope.studyPeriodEvent.end.setHours(0, 0, 0);
-              studyPeriodStart = $scope.studyPeriodEvent.studyPeriod.startDate.setHours(0, 0, 0);
-              studyPeriodEnd = $scope.studyPeriodEvent.studyPeriod.endDate.setHours(0, 0, 0);
+              start = moment($scope.studyPeriodEvent.start).startOf('day');
+              var end = moment($scope.studyPeriodEvent.end).endOf('day');
 
-              if (!(studyPeriodEventStart >= studyPeriodStart && studyPeriodEventEnd <= studyPeriodEnd)) {
+              if (start.isBefore(moment($scope.studyPeriodEvent.studyPeriod.startDate).startOf('day')) || end.isAfter(moment($scope.studyPeriodEvent.studyPeriod.endDate).endOf('day'))) {
                 errors = true;
                 message.error('studyYear.studyPeriod.error.outsideStudyPeriod');
               }
             } else if ($scope.studyPeriodEvent.start) {
-              studyPeriodEventStart = $scope.studyPeriodEvent.start.setHours(0, 0, 0);
-              studyPeriodStart = $scope.studyPeriodEvent.studyPeriod.startDate.setHours(0, 0, 0);
-              studyPeriodEnd = $scope.studyPeriodEvent.studyPeriod.endDate.setHours(0, 0, 0);
+              start = moment($scope.studyPeriodEvent.start).startOf('day');
 
-              if (studyPeriodEventStart < studyPeriodStart || studyPeriodEventStart > studyPeriodEnd) {
+              if (start.isBefore(moment($scope.studyPeriodEvent.studyPeriod.startDate).startOf('day')) || start.isAfter(moment($scope.studyPeriodEvent.studyPeriod.endDate).endOf('day'))) {
                 errors = true;
                 message.error('studyYear.studyPeriod.error.outsideStudyPeriod');
               }
@@ -298,7 +291,6 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
             }
           }
         };
-
       };
 
       var afterSave = function (data) {

@@ -22,6 +22,9 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class LessonPlanJournalForm extends VersionedCommand {
 
     @NotNull
+    private Long lessonPlan;
+    @NotNull
+    private Long occupationModuleId;
     private Long lessonPlanModuleId;
 
     @Required
@@ -45,6 +48,22 @@ public class LessonPlanJournalForm extends VersionedCommand {
     
     private List<AutocompleteResult> journalRooms;
     private Boolean addModuleOutcomes;
+
+    public Long getLessonPlan() {
+        return lessonPlan;
+    }
+
+    public void setLessonPlan(Long lessonPlan) {
+        this.lessonPlan = lessonPlan;
+    }
+
+    public Long getOccupationModuleId() {
+        return occupationModuleId;
+    }
+
+    public void setOccupationModuleId(Long occupationModuleId) {
+        this.occupationModuleId = occupationModuleId;
+    }
 
     public Long getLessonPlanModuleId() {
         return lessonPlanModuleId;

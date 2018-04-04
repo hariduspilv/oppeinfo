@@ -1,0 +1,153 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="examForm" class="nomargin">
+      <div layout="row" class="form-readonly">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" ng-if="!record.id">
+          <label class="textInput">{{'exam.studyPeriod' | translate}}</label>
+          <hois-select ng-model="formState.studyPeriod" ng-change="studyPeriodChanged()" values="formState.studyPeriods" required></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" ng-if="record.id">
+          <label class="textInput">{{'exam.studyPeriod' | translate}}</label>
+          <hois-value value="currentLanguageNameField(formState.subjectStudyPeriod.studyPeriod)"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!record.id">
+          <label class="textInput">{{'exam.subjectTeacher' | translate}}</label>
+          <md-select ng-model="formState.subjectStudyPeriodId" ng-change="subjectStudyPeriodChanged()" aria-label="{{'exam.subjectTeacher' | translate}}" required>
+            <md-option ng-value="row.id" ng-repeat="row in formState.subjectStudyPeriods | orderBy: 'subject.' + currentLanguageNameField()">
+              {{currentLanguageNameField(row.subject)+ ' - ' + (row.teacherNames || []).join(', ')}}
+            </md-option>
+          </md-select>
+        </md-input-container>
+
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="record.id">
+          <label class="textInput">{{'exam.subjectTeacher' | translate}}</label>
+          <hois-value value="currentLanguageNameField(formState.subjectStudyPeriod.subject)+ ' - ' + (formState.subjectStudyPeriod.teacherNames || []).join(', ')"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'exam.assessment' | translate}}</label>
+          <hois-classifier-value ng-model="formState.subjectStudyPeriod.assessment" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
+        </md-input-container>
+      </div>
+
+      <br>
+
+      <div layout="row" class="form-readonly">
+        <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'exam.type' | translate}}</label>
+          <hois-classifier-select ng-model="record.type" ng-disabled="record.students && record.students.length" ng-change="examTypeChanged()" required main-classifier-code="SOORITUS" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+
+        <md-input-container flex="65" flex-sm="100" flex-xs="100" flex-offset="10" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'exam.name' | translate}}</label>
+          <hois-value value="record.name"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+          <label>{{'exam.date' | translate}}</label>
+          <md-datepicker name="startDate" ng-disabled="!formState.allEditable" md-min-date="formState.minDate" ng-model="record.startDate" required></md-datepicker>
+          <div ng-messages="examForm.startDate.$error">
+            <div ng-message="mindate">
+              {{'exam.message.startinpast' | translate}}
+            </div>
+          </div>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'main.start' | translate}}</label>
+          <hois-time required ng-readonly="!formState.allEditable" ng-model="record.startTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'main.end' | translate}}</label>
+          <hois-time required ng-readonly="!formState.allEditable" ng-model="record.endTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+        </md-input-container>
+
+        <hois-autocomplete label="exam.room" ng-model="record.room" method="rooms" required flex="40" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"></hois-autocomplete>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+          <label>{{'exam.deadline' | translate}}</label>
+          <md-datepicker ng-required="record.deadlineTime" md-max-date="record.startDate" ng-model="record.deadlineDate"></md-datepicker>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'exam.deadlineTime' | translate}}</label>
+          <hois-time ng-required="record.deadlineDate" ng-model="record.deadlineTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+        </md-input-container>
+
+        <md-input-container flex="40" flex-sm="100" flex-offset="15" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'exam.places' | translate}}</label>
+          <input ng-model="record.places" name="places" type="number" min="0">
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex="90" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'exam.addInfo' | translate}}</label>
+          <textarea ng-model="record.addInfo" md-maxlength="4000" max-rows="2"></textarea>
+        </md-input-container>
+      </div>
+
+      <md-autocomplete ng-if="record.id" flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0"
+          md-floating-label="{{'exam.addStudent' | translate}}"
+          md-min-length="2"
+          md-items="item in lookupStudents(queryText)"
+          md-item-text="item.fullname"
+          md-search-text="queryText"
+          md-selected-item="formState.selectedStudent"
+          md-selected-item-change="addStudent()"
+          md-no-cache>
+        <md-item-template>
+          <span md-highlight-text="queryText" md-highlight-flags="^i">{{item.fullname}}</span>
+        </md-item-template>
+        <md-not-found>
+          {{'main.messages.error.notFound' | translate}}
+        </md-not-found>
+      </md-autocomplete>
+
+      <br>
+
+      <md-table-container ng-if="record.id">
+        <table md-table class="secondary-table">
+          <thead md-head md-order="formState.order">
+            <tr md-row>
+              <th md-column>{{'main.rowno' | translate}}</th>
+              <th md-column>{{'exam.student.fullname' | translate}}</th>
+              <th md-column md-order-by="curriculumVersion.{{currentLanguageNameField()}}">{{'exam.student.curriculum' | translate}}</th>
+              <th md-column md-order-by="studentGroup">{{'exam.student.studentGroup' | translate}}</th>
+              <th md-column md-order-by="registered">{{'exam.student.registered' | translate}}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in formState.students | orderBy: formState.order" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{::row.rowno}}</td>
+              <td md-cell>
+                <a class="md-primary" ng-href="#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>
+              </td>
+              <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+              <td md-cell>{{::row.studentGroup}}</td>
+              <td md-cell>{{row.registered | hoisDate}}</td>
+              <td md-cell ng-if="!row.grade">
+                <a ng-click="deleteStudent(row)" md-no-ink class="remove">&times;</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+
+      <div layout="row">
+        <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
+        <md-button class="md-raised" ng-if="record.id && formState.canDelete" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button ng-click="back('#/examTimes', examForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+
+    </form>
+  </div>
+</div>

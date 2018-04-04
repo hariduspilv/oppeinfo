@@ -28,6 +28,7 @@ import ee.hitsa.ois.domain.Message;
 import ee.hitsa.ois.domain.MessageReceiver;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.MessageStatus;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
@@ -42,38 +43,34 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.MessageReceiverDto;
 import ee.hitsa.ois.web.dto.MessageSearchDto;
+import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 
 @Transactional
 @Service
 public class MessageService {
 
     private static final String RECEIVED_MESSAGES_FROM =
-            " from message m inner join message_receiver mr on m.id = mr.message_id inner join person p on m.person_id = p.id ";
+            " from message m join message_receiver mr on m.id = mr.message_id join person p on m.person_id = p.id ";
     private static final String RECEIVED_MESSAGES_SELECT =
             " m.id, m.subject, m.content, m.inserted, mr.read is not null as isRead, "
             + "p.firstname, p.lastname, m.person_id";
     private static final String STUDENT_PARENTS_FROM =
               " from student s "
-            + "inner join student_group sg on s.student_group_id = sg.id "
-            + "inner join student_representative sr on s.id = sr.student_id "
-            + "inner join person p on p.id = sr.person_id "
-            + "inner join curriculum c on sg.curriculum_id = c.id";
+            + "join student_group sg on s.student_group_id = sg.id "
+            + "join student_representative sr on s.id = sr.student_id "
+            + "join person p on p.id = sr.person_id "
+            + "join curriculum c on sg.curriculum_id = c.id";
     private static final String STUDENT_PARENTS_SELECT =
             " sg.id as studentGroupId, sg.code as studentGroupCode, "
             + "s.id as studentId, s.study_form_code as studyForm, "
             + "sr.person_id as representativesId, "
             + "p.firstname, p.lastname, p.idcode,"
             + "c.id as curriculumId, c.name_et as curriculumNameEt, c.name_en as curriculumNameEn ";
-    private static final String PERSON_FROM =
-             " from user_ u "
-            + "left outer join person p on u.person_id = p.id "
-            + "left join school s on s.id = u.school_id ";
-    private static final String PERSON_SELECT =
-            " distinct u.id, p.id as personId, p.firstname, p.lastname, p.idcode, u.role_code, u.student_id ";
 
     @Autowired
     private ClassifierRepository classifierRepository;
@@ -154,7 +151,7 @@ public class MessageService {
         if(!user.isMainAdmin()) {
             qb.requiredCriteria("(m.school_id is null OR m.school_id = :schoolId)", "schoolId", user.getSchoolId());
         }
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getSender());
+        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getSender());
         qb.optionalContains("m.subject", "subject", criteria.getSubject());
         qb.optionalCriteria("m.inserted >= :sentFrom", "sentFrom", criteria.getSentFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("m.inserted <= :sentThru", "sentThru", criteria.getSentThru(), DateUtils::lastMomentOfDay);
@@ -170,8 +167,8 @@ public class MessageService {
         }
         qb.filter("mr.read is null");
 
-        Object unreadCount = qb.select("count(*)", em).getSingleResult();
-        return Collections.singletonMap("unread", resultAsLong(unreadCount, 0));
+        Number unreadCount = qb.count(em);
+        return Collections.singletonMap("unread", Long.valueOf(unreadCount.longValue()));
     }
 
     public Message create(HoisUserDetails user, MessageForm form) {
@@ -215,6 +212,20 @@ public class MessageService {
         EntityUtil.save(message, em);
     }
 
+    public List<MessageReceiverDto> getStudentRepresentatives(Student student) {
+        return StreamUtil.toMappedList(r -> {
+            MessageReceiverDto dto = new MessageReceiverDto();
+            dto.setId(student.getId());
+            dto.setPersonId(r.getPerson().getId());
+            dto.setFullname(r.getPerson().getFullname());
+            dto.setStudentGroup(AutocompleteResult.of(student.getStudentGroup()));
+            dto.setCurriculum(AutocompleteResult.of(student.getStudentGroup().getCurriculum()));
+            dto.setRole(Arrays.asList(Role.ROLL_L.name()));
+            return dto;
+        }, student.getRepresentatives().stream()
+                .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible())));
+    }
+
     public List<MessageReceiverDto> getStudentRepresentatives(StudentSearchCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PARENTS_FROM);
         qb.optionalCriteria("sg.id in (:group)", "group", criteria.getStudentGroupId());
@@ -255,14 +266,18 @@ public class MessageService {
      * The only difference between this method and PersonService.search()
      * is that this one does not require wanted person to have school_id
      */
-    public List<MessageReceiverDto> searchAllUsers(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(PERSON_FROM);
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
+    private List<MessageReceiverDto> searchAllUsers(HoisUserDetails user, UsersSearchCommand criteria) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from user_ u join person p on u.person_id = p.id").sort("p.lastname", "p.firstname");
+        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
         if(criteria.getRole() != null && !Role.ROLL_P.name().equals(criteria.getRole()) ) {
-            qb.requiredCriteria("s.id = :schoolId", "schoolId", user.getSchoolId());
+            qb.requiredCriteria("u.school_id = :schoolId", "schoolId", user.getSchoolId());
+        }
+        if(Role.ROLL_T.name().equals(criteria.getRole())) {
+            // students, search only active ones
+            qb.requiredCriteria("exists (select s.id from student s where s.person_id = p.id and s.status_code in (:active))", "active", StudentStatus.STUDENT_STATUS_ACTIVE);
         }
         qb.optionalCriteria("u.role_code = :role", "role", criteria.getRole());
-        List<?> result = qb.select(PERSON_SELECT, em).getResultList();
+        List<?> result = qb.select("distinct u.id, p.id as personId, p.firstname, p.lastname, p.idcode, u.role_code, u.student_id", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             MessageReceiverDto dto = new MessageReceiverDto();
             dto.setPersonId(resultAsLong(r, 1));
@@ -275,6 +290,46 @@ public class MessageService {
     }
 
     /**
+     * Search student groups
+     *
+     * @param user
+     * @param criteria
+     * @return
+     */
+    public List<StudentGroupSearchDto> searchStudentGroups(HoisUserDetails user, StudentGroupSearchCommand criteria) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_group sg join curriculum c on sg.curriculum_id=c.id").sort("code");
+
+        qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalCriteria("c.id in (:curriculums)", "curriculums", criteria.getCurriculums());
+        qb.optionalCriteria("sg.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
+        if(user.isTeacher()) {
+            qb.requiredCriteria("("
+                    // student group teacher
+                    + "sg.teacher_id = :teacherId"
+                    // responsible for module
+                    + " or exists( select lp.id from lesson_plan lp "
+                    + "join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id "
+                    + "where lpm.teacher_id = :teacherId and lp.student_group_id = sg.id)"
+                    // journal teacher
+                    + " or exists( select tosg.id from timetable_object_student_group tosg "
+                    + "join timetable_object too on tosg.timetable_object_id = too.id "
+                    + "join journal_teacher jt on too.journal_id = jt.journal_id "
+                    + "where jt.teacher_id = :teacherId and tosg.student_group_id = sg.id)"
+                    + ")", "teacherId", user.getTeacherId());
+        }
+
+        List<?> data = qb.select("sg.id, sg.code, sg.study_form_code, c.id as curriculum_id, c.name_et, c.name_en", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            StudentGroupSearchDto dto = new StudentGroupSearchDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setCode(resultAsString(r, 1));
+            dto.setStudyForm(resultAsString(r, 2));
+            dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 5)));
+            return dto;
+        }, data);
+    }
+
+    /**
      * Finds following teachers:
      *  - student group teacher
      *  - higher student: teacher, whose subject was declared
@@ -283,8 +338,8 @@ public class MessageService {
      *  note, that student_representative.is_student_visible is considered
      */
     private List<MessageReceiverDto> searchParentsTeachers(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(" from teacher t join person p on p.id = t.person_id ");
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher t join person p on p.id = t.person_id").sort("p.lastname", "p.firstname");
+        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", user.getSchoolId());
         
         qb.requiredCriteria(" (exists(select s.id from student s "
@@ -318,24 +373,33 @@ public class MessageService {
      *  - vocational student: lesson plan teacher
      */
     private List<MessageReceiverDto> searchStudentsTeachers(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(" from teacher t join person p on p.id = t.person_id ");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher t join person p on p.id = t.person_id").sort("p.lastname", "p.firstname");
         qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
 
-        qb.requiredCriteria(" (exists(select s.id from student s "
+        qb.requiredCriteria(" ("
+                // student group teacher
+                + "exists(select s.id from student s "
                 + "join student_group sg on sg.id = s.student_group_id "
                 + "where sg.teacher_id = t.id "
                 + "and s.id = :studentId) "
+                // study period/subject/teacher
                 + "or exists(select d.id "
                 + "from declaration d "
                 + "join declaration_subject ds on ds.declaration_id = d.id "
                 + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id "
                 + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
                 + "where d.student_id = :studentId and sspt.teacher_id = t.id) "
+                // responsible for module
                 + " or exists(select s.id from student s "
                 + "join student_group sg on sg.id = s.student_group_id "
                 + "join lesson_plan lp on lp.student_group_id = sg.id "
                 + "join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id "
-                + "where lpm.teacher_id = t.id and s.id = :studentId) )", "studentId", user.getStudentId());
+                + "where lpm.teacher_id = t.id and s.id = :studentId) "
+                // journal teacher
+                + " or exists(select js.student_id from journal_student js "
+                + "join journal_teacher jt on js.journal_id = jt.journal_id "
+                + "where jt.teacher_id = t.id and js.student_id = :studentId) "
+                + ")", "studentId", user.getStudentId());
 
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", user.getSchoolId());
 
@@ -345,24 +409,31 @@ public class MessageService {
 
     private List<MessageReceiverDto> searchTeachersStudents(HoisUserDetails user, UsersSearchCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(" from student s "
-                + "left join person p on s.person_id = p.id left join student_group sg on sg.id = s.student_group_id "
-                + "left join curriculum c on sg.curriculum_id = c.id ");
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
+                + "join person p on s.person_id = p.id "
+                +" left join student_group sg on sg.id = s.student_group_id "
+                + "left join curriculum c on sg.curriculum_id = c.id ").sort("p.lastname", "p.firstname");
+        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
         qb.requiredCriteria("s.status_code in (:activeStudents)", "activeStudents", StudentStatus.STUDENT_STATUS_ACTIVE);
 
-        qb.requiredCriteria(" (sg.teacher_id = :teacherId "
-                
-                + "or exists( select d.id from declaration d "
+        qb.requiredCriteria(" ("
+                // student group teacher
+                + "sg.teacher_id = :teacherId"
+                // study period/subject/teacher
+                + " or exists( select d.id from declaration d "
                 + "join declaration_subject ds on ds.declaration_id = d.id "
                 + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id "
                 + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
-                + "where sspt.teacher_id = :teacherId and d.student_id = s.id) "
-                
-                + "or exists( select lp.id from lesson_plan lp "
+                + "where sspt.teacher_id = :teacherId and d.student_id = s.id)"
+                // responsible for module
+                + " or exists( select lp.id from lesson_plan lp "
                 + "join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id "
-                + "where lpm.teacher_id = :teacherId "
-                + "and lp.student_group_id = sg.id ) )", "teacherId", user.getTeacherId());
+                + "where lpm.teacher_id = :teacherId and lp.student_group_id = sg.id)"
+                // journal teacher
+                + " or exists(select js.student_id from journal_student js "
+                + "join journal_teacher jt on js.journal_id = jt.journal_id "
+                + "where jt.teacher_id = :teacherId and js.student_id = s.id)"
+                +")", "teacherId", user.getTeacherId());
 
         List<?> result = qb.select(" distinct p.id as studentPersonId, s.id as studentId, "
                 + "p.firstname, p.lastname, p.idcode, "
@@ -387,8 +458,8 @@ public class MessageService {
                 + "join person p on sr.person_id = p.id "
                 + "join student s on s.id = sr.student_id "
                 + "left join student_group sg on sg.id = s.student_group_id "
-                + "left join curriculum c on sg.curriculum_id = c.id ");
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
+                + "left join curriculum c on sg.curriculum_id = c.id ").sort("p.lastname", "p.firstname");
+        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getName());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
         
         qb.requiredCriteria(" (sg.teacher_id = :teacherId "
@@ -434,20 +505,26 @@ public class MessageService {
     }
 
     public List<MessageReceiverDto> getStudents(HoisUserDetails user, StudentSearchCommand criteria, Pageable pageable) {
+        if(user.isTeacher()) {
+            // only active students
+            criteria.setStatus(StudentStatus.STUDENT_STATUS_ACTIVE);
+        }
         List<MessageReceiverDto> students = studentService.search(user, criteria, pageable)
                 .map(MessageReceiverDto::of).getContent();
         List<Long> studentIds = StreamUtil.toMappedList(MessageReceiverDto::getId, students);
-        if(!studentIds.isEmpty()) {
-            List<MessageReceiverDto> parents = studentRepresentatives(studentIds);
-            if(!parents.isEmpty()) {
-                students = new ArrayList<>(students);
-                students.addAll(parents);
-            }
+        List<MessageReceiverDto> parents = studentRepresentatives(studentIds);
+        if(!parents.isEmpty()) {
+            students = new ArrayList<>(students);
+            students.addAll(parents);
         }
         return students;
     }
 
     private List<MessageReceiverDto> studentRepresentatives(List<Long> studentIds) {
+        if(studentIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PARENTS_FROM);
         qb.optionalCriteria("sr.student_id in (:studentIds)", "studentIds", studentIds);
         qb.filter("sr.is_student_visible is true");

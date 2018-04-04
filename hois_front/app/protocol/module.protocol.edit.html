@@ -63,12 +63,12 @@
       </div>
       <br>
       <div layout="row">
-        <md-button class="md-raised" ng-click="calculate()" ng-if="formState.canAddDeleteStudents" ng-disabled="calculateGrades.protocolStudents.length === 0">{{'higherProtocol.calculate' | translate}}</md-button>
+        <md-button ng-if="protocol.canBeEdited" class="md-raised" ng-click="calculate()" ng-disabled="calculateGrades.protocolStudents.length === 0">{{'higherProtocol.calculate' | translate}}</md-button>
       </div>
       <br>
       <div>
-        <md-button class="md-raised md-primary" type="submit" ng-if="formState.canAddDeleteStudents">{{'main.button.save' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="addProtocolStudents()" ng-if="formState.canAddDeleteStudents">{{'moduleProtocol.addStudents' | translate}}</md-button>
+        <md-button ng-if="protocol.canBeEdited" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-if="formState.canAddDeleteStudents" class="md-raised" ng-click="addProtocolStudents()">{{'moduleProtocol.addStudents' | translate}}</md-button>
         <md-button ng-if="formState.canConfirm===true" class="md-primary md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
         <md-button ng-if="protocol.canBeDeleted" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         <md-button class="md-raised" ng-href="#/moduleProtocols">{{'main.button.back' | translate}}</md-button>

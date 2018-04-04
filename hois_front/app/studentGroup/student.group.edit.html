@@ -71,7 +71,7 @@
           </md-input-container>
           <md-input-container flex>
             <label>{{'main.validThru' | translate}}</label>
-			<md-datepicker ng-model="record.validThru" md-min-date="record.validFrom"></md-datepicker>
+			<md-datepicker ng-model="record.validThru" ng-change="validThruChanged()" md-min-date="record.validFrom"></md-datepicker>
           </md-input-container>
         </div>
       </div>
@@ -111,6 +111,6 @@
     <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
     <md-button ng-click="delete()" ng-if="record.id && !(formState.students && formState.students.length > 0)" class="md-raised">{{'main.button.delete' | translate}}</md-button>
     <md-button ng-href="#/studentgroups" class="md-raised">{{'main.button.back' | translate}}</md-button>
-    <md-button ng-click="addStudents()" class="md-raised">{{'studentGroup.addStudents' | translate}}</md-button>
+    <md-button ng-click="addStudents()" ng-if="record.id && formState.canAddStudents" class="md-raised">{{'studentGroup.addStudents' | translate}}</md-button>
   </div>
 </div>

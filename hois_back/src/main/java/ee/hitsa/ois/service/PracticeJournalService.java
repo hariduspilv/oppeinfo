@@ -100,9 +100,6 @@ public class PracticeJournalService {
             + "(select max(pje.inserted) from practice_journal_entry pje where pje.practice_journal_id = pj.id) as student_last_entry_date, "
             + "cvo.id as cvo_id, cv.code as cv_code, cm.name_et as cm_name_et, mcl.name_et as mcl_name_et, cm.name_en as cm_name_en, mcl.name_en as mcl_name_en, "
             + "cvot.id as cvot_id, cvot.name_et as cvot_name_et, length(trim(coalesce(pj.supervisor_opinion, ''))) > 0 as has_supervisor_opinion, "
-            + "exists(select true from protocol_student ps inner join protocol p on p.id = ps.protocol_id inner join protocol_vdata pvd on pvd.protocol_id = p.id "
-                + "where ps.grade_code in (" + OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE.stream().map(StringUtils::quote).collect(Collectors.joining(",")) + ") and pvd.curriculum_version_omodule_id = cvo.id "
-                + "and ps.student_id = student_id) as has_positive_module_grade, "
             + "subject.id as subject_id, subject.name_et as subject_name_et, subject.name_en as subject_name_en";
 
     public Page<PracticeJournalSearchDto> search(HoisUserDetails user, PracticeJournalSearchCommand command,
@@ -135,9 +132,6 @@ public class PracticeJournalService {
 
             dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate())));
 
-            Boolean hasPositiveModuleGrade = resultAsBoolean(r, 24);
-            dto.setCanTeacherAddEntries(Boolean.valueOf(Boolean.FALSE.equals(hasPositiveModuleGrade)));
-
             String studentName = PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 5), studentName, studentName));
             dto.setStudentGroup(resultAsString(r, 8));
@@ -162,7 +156,7 @@ public class PracticeJournalService {
                     dto.setTheme(theme);
                 }
             }
-            AutocompleteResult subject = new AutocompleteResult(resultAsLong(r, 25), resultAsString(r, 26), resultAsString(r, 27));
+            AutocompleteResult subject = new AutocompleteResult(resultAsLong(r, 24), resultAsString(r, 25), resultAsString(r, 26));
             if (subject.getId() != null) {
                 dto.setSubject(subject);
             }

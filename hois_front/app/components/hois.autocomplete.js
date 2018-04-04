@@ -21,7 +21,10 @@ angular.module('hitsaOis')
         label: '@',
         method: '@',
         multiple: '@',
-        required: '=', // todo add chip visuals
+        ngRequired: '=',
+        required: '@', // todo add chip visuals
+        ngDisabled: '=',
+        disabled: '@',
         mdSelectedItemChange: '&?',
         readonly: '=',
         additionalQueryParams: '=',
@@ -32,6 +35,12 @@ angular.module('hitsaOis')
         post: function(scope, element, attrs) {
           var url =  scope.url ? scope.url : '/autocomplete/' + scope.method;
           var lookup = QueryUtils.endpoint(url);
+
+          scope.isRequired = angular.isDefined(scope.required);
+          element.attr('required', scope.isRequired);
+
+          scope.isDisabled = angular.isDefined(scope.disabled);
+          element.attr('disabled', scope.isDisabled);
 
           if (angular.isDefined(attrs.multiple) && !angular.isArray(scope.ngModel)) {
             scope.ngModel = [];

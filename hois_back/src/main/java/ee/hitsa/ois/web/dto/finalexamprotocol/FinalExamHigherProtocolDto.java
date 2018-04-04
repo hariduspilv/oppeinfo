@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.util.EntityUtil;
@@ -13,6 +15,7 @@ import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.CommitteeDto;
 import ee.hitsa.ois.web.dto.SubjectDto;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodMidtermTaskDto;
 
 public class FinalExamHigherProtocolDto extends VersionedCommand {
     
@@ -26,24 +29,33 @@ public class FinalExamHigherProtocolDto extends VersionedCommand {
     private LocalDate confirmed;
     private String confirmedBy;
     private LocalDateTime inserted;
-    private List<FinalExamVocationalProtocolStudentDto> protocolStudents = new ArrayList<>();
+    private List<FinalExamHigherProtocolStudentDto> protocolStudents = new ArrayList<>();
+    private SubjectStudyPeriodMidtermTaskDto subjectStudyPeriodMidtermTaskDto;
     private OisFileViewDto oisFile;
-    private LocalDate finalExamDate;
+    private LocalDate finalDate;
     private CommitteeDto committee;
-    private String committeeChairman;
+    private List<Long> presentCommitteeMembers;
     
     private Boolean canBeEdited;
     private Boolean canBeDeleted;
     
     public static FinalExamHigherProtocolDto of(Protocol protocol) {
         FinalExamHigherProtocolDto dto = EntityUtil.bindToDto(protocol, new FinalExamHigherProtocolDto());
-        dto.setProtocolStudents(StreamUtil.toMappedList(FinalExamVocationalProtocolStudentDto::of, protocol.getProtocolStudents()));
+        dto.setProtocolStudents(StreamUtil.toMappedList(FinalExamHigherProtocolStudentDto::of, protocol.getProtocolStudents()));
+        
         if (protocol.getCommittee() != null) {
             dto.setCommittee(CommitteeDto.of(protocol.getCommittee()));
-            dto.setCommitteeChairman(protocol.getCommittee().getMembers().stream()
-                    .filter(member -> Boolean.TRUE.equals(member.getIsChairman())).findFirst().get()
-                    .getMemberFullname());
         }
+        if (protocol.getProtocolCommitteeMembers() != null) {
+            dto.setPresentCommitteeMembers(protocol.getProtocolCommitteeMembers().stream().map(cm -> cm.getCommitteeMember().getId()).collect(Collectors.toList()));
+        }
+        
+        Set<Long> studentIds = StreamUtil.toMappedSet(ps -> ps.getStudentId(), dto.getProtocolStudents());
+        dto.setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto
+                .ofForProtocol(studentIds, protocol.getProtocolHdata().getSubjectStudyPeriod()));
+        
+        //protocol.getProtocolHdata().getSubjectStudyPeriod().getSubject().
+
         if (protocol.getOisFile() != null) {
             dto.setOisFile(EntityUtil.bindToDto(protocol.getOisFile(), new OisFileViewDto()));
         }
@@ -130,12 +142,24 @@ public class FinalExamHigherProtocolDto extends VersionedCommand {
         this.inserted = inserted;
     }
 
-    public List<FinalExamVocationalProtocolStudentDto> getProtocolStudents() {
+    public List<FinalExamHigherProtocolStudentDto> getProtocolStudents() {
         return protocolStudents;
     }
 
-    public void setProtocolStudents(List<FinalExamVocationalProtocolStudentDto> protocolStudents) {
+    public void setProtocolStudents(List<FinalExamHigherProtocolStudentDto> protocolStudents) {
         this.protocolStudents = protocolStudents;
+    }
+
+    public SubjectStudyPeriodMidtermTaskDto getSubjectStudyPeriodMidtermTaskDto() {
+        return subjectStudyPeriodMidtermTaskDto;
+    }
+
+    public void setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto subjectStudyPeriodMidtermTaskDto) {
+        this.subjectStudyPeriodMidtermTaskDto = subjectStudyPeriodMidtermTaskDto;
+    }
+
+    public void setTeachers(List<String> teachers) {
+        this.teachers = teachers;
     }
 
     public OisFileViewDto getOisFile() {
@@ -146,12 +170,12 @@ public class FinalExamHigherProtocolDto extends VersionedCommand {
         this.oisFile = oisFile;
     }
 
-    public LocalDate getFinalExamDate() {
-        return finalExamDate;
+    public LocalDate getFinalDate() {
+        return finalDate;
     }
 
-    public void setFinalExamDate(LocalDate finalExamDate) {
-        this.finalExamDate = finalExamDate;
+    public void setFinalDate(LocalDate finalDate) {
+        this.finalDate = finalDate;
     }
 
     public CommitteeDto getCommittee() {
@@ -162,12 +186,12 @@ public class FinalExamHigherProtocolDto extends VersionedCommand {
         this.committee = committee;
     }
 
-    public String getCommitteeChairman() {
-        return committeeChairman;
+    public List<Long> getPresentCommitteeMembers() {
+        return presentCommitteeMembers;
     }
 
-    public void setCommitteeChairman(String committeeChairman) {
-        this.committeeChairman = committeeChairman;
+    public void setPresentCommitteeMembers(List<Long> presentCommitteeMembers) {
+        this.presentCommitteeMembers = presentCommitteeMembers;
     }
 
     public Boolean getCanBeEdited() {

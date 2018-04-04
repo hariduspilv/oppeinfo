@@ -9,7 +9,6 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
       DataUtils.convertStringToDates(result, ['validThru', 'validFrom']);
       var now = moment();
       for (var i = 0; i < result.length; i++) {
-        var valid = true;
         var row = result[i];
         row._isValid = (!row.validFrom || moment(row.validFrom).isSameOrBefore(now, 'day')) && (!row.validThru || moment(row.validThru).isSameOrAfter(now, 'day'));
       }

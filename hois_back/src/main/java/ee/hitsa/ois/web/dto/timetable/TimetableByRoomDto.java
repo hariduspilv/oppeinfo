@@ -7,9 +7,9 @@ public class TimetableByRoomDto extends TimetableByDto{
     private final String roomCode;
     private final String buildingCode;
     
-    public TimetableByRoomDto(GeneralTimetableDto generalTimetable, List<TimetableEventSearchDto> timetableEvents,
+    public TimetableByRoomDto(String studyPeriods, List<TimetableEventSearchDto> timetableEvents,
             Long roomId, String roomCode, String buildingCode) {
-        super(generalTimetable, timetableEvents);
+        super(studyPeriods, timetableEvents);
         this.roomId = roomId;
         this.roomCode = roomCode;
         this.buildingCode = buildingCode;

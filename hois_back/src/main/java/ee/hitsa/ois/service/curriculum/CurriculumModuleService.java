@@ -75,7 +75,7 @@ public class CurriculumModuleService {
         });
     }
 
-    private void updateOutcomes(CurriculumModule module, Set<CurriculumModuleOutcomeDto> outcomes) {
+    private void updateOutcomes(CurriculumModule module, List<CurriculumModuleOutcomeDto> outcomes) {
         EntityUtil.bindEntityCollection(module.getOutcomes(), CurriculumModuleOutcome::getId, outcomes, 
                 CurriculumModuleOutcomeDto::getId, this::createOutcome, this::updateOutcome);
     }

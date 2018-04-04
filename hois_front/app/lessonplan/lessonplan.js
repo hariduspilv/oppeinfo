@@ -264,7 +264,10 @@
             _: createTotalsRow($scope)
           }
         };
-        // initialize totals
+        initializeTotals(result);
+      });
+
+      function initializeTotals(result) {
         $scope.formState.capacityTypes.$promise.then(function () {
           result.modules.forEach(function (module) {
             $scope.formState.moduleMap[module.id] = module;
@@ -335,7 +338,7 @@
           $scope.record = result;
           updateCopyOfRecord();
         });
-      });
+      }
 
       $scope.updateTotals = function (journal, capacityType, index) {
         var hours = journal.hours[capacityType];
@@ -410,15 +413,19 @@
       };
 
       $scope.newJournal = function (module) {
-        $location.url(baseUrl + '/journals/new?_noback&lessonPlanModule=' + module.id);
+        $location.url(baseUrl + '/journals/new?lessonPlan=' + id + 
+          '&occupationModule=' + module.occupationModuleId + (module.id ? ('&lessonPlanModule=' + module.id) : ''));
       };
 
       $scope.editJournal = function (journal) {
-        $location.url(baseUrl + '/journals/' + journal.id + '/edit?_noback&lessonPlanModule=' + journal.lessonPlanModule);
+        $location.url(baseUrl + '/journals/' + journal.id + '/edit?lessonPlanModule=' + journal.lessonPlanModule);
       };
 
       $scope.update = function () {
-        $scope.record.$update().then(message.updateSuccess).then(updateCopyOfRecord);
+        $scope.record.$update().then(message.updateSuccess).then(function() {
+          initializeTotals($scope.record);
+          updateCopyOfRecord();
+        });
       };
 
       function updateCopyOfRecord() {

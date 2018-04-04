@@ -3,6 +3,7 @@ package ee.hitsa.ois.util;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -114,9 +115,19 @@ public abstract class OccupationModuleCapacitiesUtil {
 
     // update module year capacities
     public static void updateModuleYearCapacitiesHours(CurriculumVersionOccupationModule occupationModule) {
+        Map<Short, CurriculumVersionOccupationModuleYearCapacity> yearCapacities = StreamUtil.toMap(c -> c.getStudyYearNumber(),
+                occupationModule.getYearCapacities());
+
         int studyYears = CurriculumUtil.studyYears(occupationModule.getCurriculumVersion().getCurriculum());
         for(int year = 1; year <= studyYears; year++) {
-            CurriculumVersionOccupationModuleYearCapacity capacity = getYearCapacity(occupationModule, year);
+            Short studyYear = Short.valueOf((short)year);
+            CurriculumVersionOccupationModuleYearCapacity capacity = yearCapacities.get(studyYear);
+            if(capacity == null) {
+                capacity = new CurriculumVersionOccupationModuleYearCapacity();
+                capacity.setModule(occupationModule);
+                capacity.setStudyYearNumber(studyYear);
+                occupationModule.getYearCapacities().add(capacity);
+            }
             BigDecimal credits = getThemesHours(occupationModule.getThemes(), year);
             capacity.setCredits(credits);
         }
@@ -125,9 +136,5 @@ public abstract class OccupationModuleCapacitiesUtil {
     private static BigDecimal getThemesHours(Set<CurriculumVersionOccupationModuleTheme> themes, int year) {
         return themes.stream().filter(t -> t.getStudyYearNumber() != null && year == t.getStudyYearNumber().intValue())
         .map(t -> t.getCredits()).reduce((t, s) -> s.add(t)).orElse(BigDecimal.ZERO);
-    }
-
-    private static CurriculumVersionOccupationModuleYearCapacity getYearCapacity(CurriculumVersionOccupationModule occupationModule, int year) {
-        return occupationModule.getYearCapacities().stream().filter(c -> c.getStudyYearNumber().intValue() == year).findAny().get();
     }
 }

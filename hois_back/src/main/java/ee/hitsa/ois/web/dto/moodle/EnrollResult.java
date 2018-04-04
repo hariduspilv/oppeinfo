@@ -7,6 +7,7 @@ public class EnrollResult {
     private Integer enrolled;
     private List<String> failed;
     private List<String> missingUser;
+    private List<String> missingIdcode;
     
     public Integer getEnrolled() {
         return enrolled;
@@ -27,6 +28,13 @@ public class EnrollResult {
     }
     public void setMissingUser(List<String> missingUser) {
         this.missingUser = missingUser;
+    }
+    
+    public List<String> getMissingIdcode() {
+        return missingIdcode;
+    }
+    public void setMissingIdcode(List<String> missingIdcode) {
+        this.missingIdcode = missingIdcode;
     }
     
 }

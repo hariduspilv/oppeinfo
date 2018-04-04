@@ -17,6 +17,7 @@ public class JournalEntryByDateDto {
     @ClassifierRestriction(MainClassCode.SISSEKANNE)
     private String entryType;
     private String teacher;
+    private Long curriculumModule;
     private Long curriculumModuleOutcomes;
     private Long outcomeOrderNr;
     private Long moodleGradeItemId;
@@ -70,6 +71,14 @@ public class JournalEntryByDateDto {
 
     public void setTeacher(String teacher) {
         this.teacher = teacher;
+    }
+
+    public Long getCurriculumModule() {
+        return curriculumModule;
+    }
+
+    public void setCurriculumModule(Long curriculumModule) {
+        this.curriculumModule = curriculumModule;
     }
 
     public Long getCurriculumModuleOutcomes() {

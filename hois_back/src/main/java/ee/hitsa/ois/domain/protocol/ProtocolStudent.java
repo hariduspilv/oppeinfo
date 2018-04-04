@@ -1,6 +1,7 @@
 package ee.hitsa.ois.domain.protocol;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -52,6 +53,10 @@ public class ProtocolStudent extends BaseEntityWithId {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "protocol_student_id", nullable = false, updatable = false)
     private List<ProtocolStudentHistory> protocolStudentHistories;
+    
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "protocol_student_id", nullable = false, updatable = false)
+    private List<ProtocolStudentOccupation> protocolStudentOccupations = new ArrayList<>();
 
     public Protocol getProtocol() {
         return protocol;
@@ -124,4 +129,13 @@ public class ProtocolStudent extends BaseEntityWithId {
     public void setProtocolStudentHistories(List<ProtocolStudentHistory> protocolStudentHistories) {
         this.protocolStudentHistories = protocolStudentHistories;
     }
+
+    public List<ProtocolStudentOccupation> getProtocolStudentOccupations() {
+        return protocolStudentOccupations;
+    }
+
+    public void setProtocolStudentOccupations(List<ProtocolStudentOccupation> protocolStudentOccupations) {
+        this.protocolStudentOccupations = protocolStudentOccupations;
+    }
+    
 }

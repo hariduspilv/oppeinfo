@@ -70,59 +70,59 @@
       <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.averageMark' | translate}}</label>
-          <hois-value value="studentInfo.averageMark"></hois-value>
+          <hois-value value="application.averageMark"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label>{{'stipend.lastPeriodMark' | translate}}</label>
-          <hois-value value="studentInfo.lastPeriodMark"></hois-value>
+          <hois-value value="application.lastPeriodMark"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
-          <hois-value value="studentInfo.curriculumCompletion"></hois-value>
+          <hois-value value="application.curriculumCompletion"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label>{{'stipend.maxAbsences' | translate}}</label>
-          <hois-value value="studentInfo.absences"></hois-value>
+          <hois-value value="application.absences"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.student.studentGroup' | translate}}</label>
-          <hois-value value="studentInfo.studentGroupCode"></hois-value>
+          <hois-value value="application.studentGroupCode"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label class="textInput">{{'main.contactNumber' | translate}}</label>
-          <input ng-model="studentSubmitData.phone" type="text" md-maxlength="100">
+          <input ng-model="application.phone" type="text" md-maxlength="100">
         </md-input-container>
       </div>
       <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.student.address' | translate}}</label>
-          <hois-value value="studentSubmitData.address"></hois-value>
+          <hois-value value="application.address"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label class="textInput">{{'main.email' | translate}}</label>
-          <input ng-model="studentSubmitData.email" type="email" md-maxlength="100">
+          <input ng-model="application.email" type="email" md-maxlength="100">
         </md-input-container>
       </div>
     </div>
 
     <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
       <div flex>
-        <form name="studentSubmitDataForm">
+        <form name="applicationForm">
           <div layout="row" flex>
             <md-input-container flex="45" flex-md="100" flex-sm="100" flex-xs="100">
               <label>{{'stipend.student.bankAccount' | translate}}</label>
-              <input type="text" ng-model="studentSubmitData.bankAccount" name="bankAccount" required md-maxlength="50">
+              <input type="text" ng-model="application.bankAccount" name="bankAccount" required md-maxlength="50">
             </md-input-container>
           </div>
 
           <div layout="row" flex>
             <md-input-container flex="100" flex-md="100" flex-sm="100" flex-xs="100">
               <label>{{'stipend.student.grantReason' | translate}}</label>
-              <textarea ng-model="studentSubmitData.addInfo" name="addInfo" md-maxlength="4000"></textarea>
+              <textarea ng-model="application.addInfo" name="addInfo" md-maxlength="4000"></textarea>
             </md-input-container>
           </div>
 
@@ -131,9 +131,9 @@
           <br/>
 
           <div layout="row">
-            <md-button class="md-raised md-primary" ng-if="studentSubmitData.canApply" ng-click="update(studentSubmitDataForm)">{{'main.button.save' | translate}}</md-button>
-            <md-button class="md-raised" ng-if="studentSubmitData.canApply" ng-click="apply(studentSubmitDataForm)">{{'stipend.student.apply' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="back('#/scholarships/myData/grants', studentSubmitDataForm)">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised md-primary" ng-if="application.canApply" ng-click="update(applicationForm)">{{'main.button.save' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="application.canApply" ng-click="apply(applicationForm)">{{'stipend.student.apply' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back('#/scholarships/myData/grants', applicationForm)">{{'main.button.back' | translate}}</md-button>
           </div>
 
         </form>

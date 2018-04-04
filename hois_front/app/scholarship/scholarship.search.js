@@ -22,6 +22,8 @@ angular.module('hitsaOis').controller('ScholarshipSearchController',
       $scope.scholarshipType = "scholarship";
     } else if ($route.current.locals.params.grant) {
       $scope.scholarshipType = "grant";
+    } else if ($route.current.locals.params.scholarshipType) {
+      $scope.scholarshipType = $route.current.locals.params.scholarshipType;
     }
 
     $q.all(promises).then(function () {

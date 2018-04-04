@@ -36,20 +36,6 @@ public abstract class ModuleProtocolUtil {
         return false;
     }
 
-    /**
-     * Student cannot be deleted from the protocol, if he is exmatriculated and has some result
-     */
-    public static boolean studentCanBeDeleted(ProtocolStudent ps) {
-        if(StudentUtil.hasFinished(ps.getStudent()) || StudentUtil.hasQuit(ps.getStudent())) {
-            return !hasGrade(ps);
-        }
-        return true;
-    }
-
-    public static boolean hasGrade(ProtocolStudent ps) {
-        return ps.getGrade() != null;
-    }
-
     public static boolean canDelete(HoisUserDetails user, Protocol protocol) {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
             return false;

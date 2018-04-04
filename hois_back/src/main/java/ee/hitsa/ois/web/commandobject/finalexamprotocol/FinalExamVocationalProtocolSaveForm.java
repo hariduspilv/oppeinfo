@@ -1,15 +1,28 @@
 package ee.hitsa.ois.web.commandobject.finalexamprotocol;
 
+import java.time.LocalDate;
 import java.util.List;
+
+import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class FinalExamVocationalProtocolSaveForm extends VersionedCommand {
 
+    @NotNull
+    private LocalDate finalDate;
     private Long committeeId;
     private List<FinalExamProtocolCommitteeMemberForm> protocolCommitteeMembers;
     private List<FinalExamVocationalProtocolStudentSaveForm> protocolStudents;
     
+    public LocalDate getFinalDate() {
+        return finalDate;
+    }
+
+    public void setFinalDate(LocalDate finalDate) {
+        this.finalDate = finalDate;
+    }
+
     public Long getCommitteeId() {
         return committeeId;
     }

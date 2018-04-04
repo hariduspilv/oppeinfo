@@ -6,7 +6,8 @@ public enum CapacityType {
     MAHT_a("A"),
     MAHT_i("I"),
     MAHT_p("P"),
-    MAHT_l("L");
+    MAHT_l("L"),
+    MAHT_S("S");
 
     private final String id;
 

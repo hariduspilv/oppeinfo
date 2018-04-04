@@ -4,7 +4,7 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
   function ($scope, Classifier, QueryUtils) {
     $scope.equipmentDefs = Classifier.queryForDropdown({mainClassCode: 'SEADMED'});
 
-    QueryUtils.createQueryForm($scope, '/rooms', {order: 'name'}, function(rows) {
+    QueryUtils.createQueryForm($scope, '/rooms', {order: 'b.name'}, function(rows) {
       // set up equipment column
       rows.forEach(function(room) {
         room.equipment = (room.roomEquipment || []).map(function(e) { return {equipment: $scope.equipmentDefs[e.equipment], equipmentCount: e.equipmentCount}; });
@@ -16,8 +16,8 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
       $scope.loadData();
     });
   }
-]).controller('RoomEditController', ['dialogService', 'message', '$location', '$route', '$scope', 'Classifier', 'QueryUtils',
-  function (dialogService, message, $location, $route, $scope, Classifier, QueryUtils) {
+]).controller('RoomEditController', ['message', '$location', '$route', '$scope', 'Classifier', 'FormUtils', 'QueryUtils',
+  function (message, $location, $route, $scope, Classifier, FormUtils, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/rooms';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -60,30 +60,24 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
     };
 
     $scope.update = function() {
-      $scope.roomForm.$setSubmitted();
-      if(!$scope.roomForm.$valid) {
-        message.error('main.messages.form-has-errors');
-        return;
-      }
+      FormUtils.withValidForm($scope.roomForm, function() {
+        $scope.record.roomEquipment = $scope.formState.roomEquipment.map(function(e) {
+          return {equipment: e.equipment.code, equipmentCount: e.equipmentCount};
+        });
 
-      $scope.record.roomEquipment = $scope.formState.roomEquipment.map(function(e) { return {equipment: e.equipment.code, equipmentCount: e.equipmentCount}; });
-      if($scope.record.id) {
-        $scope.record.$update().then(afterLoad).then(message.updateSuccess).catch(angular.noop);
-      } else {
-        $scope.record.$save().then(function() {
-          message.info('main.messages.create.success');
-          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
-        }).catch(angular.noop);
-      }
+        if($scope.record.id) {
+          $scope.record.$update().then(afterLoad).then(message.updateSuccess).catch(angular.noop);
+        } else {
+          $scope.record.$save().then(function() {
+            message.info('main.messages.create.success');
+            $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
+          }).catch(angular.noop);
+        }
+      });
     };
 
     $scope.delete = function() {
-      dialogService.confirmDialog({prompt: 'room.deleteconfirm'}, function() {
-        $scope.record.$delete().then(function() {
-          message.info('main.messages.delete.success');
-          $location.url('/rooms/search');
-        }).catch(angular.noop);
-      });
+      FormUtils.deleteRecord($scope.record, '/rooms/search?_noback', {prompt: 'room.deleteconfirm'});
     };
   }
 ]);

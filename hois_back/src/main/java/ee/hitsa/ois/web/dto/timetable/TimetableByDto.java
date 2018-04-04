@@ -3,17 +3,18 @@ package ee.hitsa.ois.web.dto.timetable;
 import java.util.List;
 
 public class TimetableByDto {
-    private final GeneralTimetableDto generalTimetable;
+    private final String studyPeriods;
     private final List<TimetableEventSearchDto> timetableEvents;
     
-    public TimetableByDto(GeneralTimetableDto generalTimetable, List<TimetableEventSearchDto> timetableEvents) {
-        this.generalTimetable = generalTimetable;
+    public TimetableByDto(String studyPeriods, List<TimetableEventSearchDto> timetableEvents) {
+        this.studyPeriods = studyPeriods;
         this.timetableEvents = timetableEvents;
     }
-    
-    public GeneralTimetableDto getGeneralTimetable() {
-        return generalTimetable;
+
+    public String getStudyPeriods() {
+        return studyPeriods;
     }
+
     public List<TimetableEventSearchDto> getTimetableEvents() {
         return timetableEvents;
     }

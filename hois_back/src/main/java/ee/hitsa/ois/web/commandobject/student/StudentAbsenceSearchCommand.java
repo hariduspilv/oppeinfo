@@ -14,6 +14,7 @@ public class StudentAbsenceSearchCommand {
     private String studentName;
     private Set<Long> curriculumVersions;
     private Boolean isAccepted;
+    private Boolean isRejected;
     @Size(max=255)
     private String studentGroupCode;
 
@@ -47,6 +48,14 @@ public class StudentAbsenceSearchCommand {
 
     public void setIsAccepted(Boolean isAccepted) {
         this.isAccepted = isAccepted;
+    }
+    
+    public Boolean getIsRejected() {
+        return isRejected;
+    }
+
+    public void setIsRejected(Boolean isRejected) {
+        this.isRejected = isRejected;
     }
 
     public String getStudentGroupCode() {

@@ -4,24 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
-import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.FinalExamProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
-import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.web.dto.ModuleProtocolStudentDto;
 
-public class FinalExamVocationalProtocolStudentDto {
+public class FinalExamVocationalProtocolStudentDto extends ModuleProtocolStudentDto {
 
-    private Long studentId;
-    private String fullname;
-    private String idcode;
-    @ClassifierRestriction(MainClassCode.KUTSEHINDAMINE)
-    private String grade;
-    @ClassifierRestriction(MainClassCode.OPPURSTAATUS)
-    private String status;
     private String studentGroup;
-    private List<FinalExamVocationalProtocolCurriculumOccupationDto> curriculumOccupations = new ArrayList<>();
-    private Boolean canBeDeleted;
+    private List<FinalExamVocationalProtocolStudentOccupationDto> curriculumOccupations = new ArrayList<>();
     
     public static FinalExamVocationalProtocolStudentDto of(ProtocolStudent protocolStudent) {
         FinalExamVocationalProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new FinalExamVocationalProtocolStudentDto());
@@ -31,48 +22,19 @@ public class FinalExamVocationalProtocolStudentDto {
         dto.setStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
         dto.setStudentGroup(protocolStudent.getStudent().getStudentGroup().getCode());
         dto.setCanBeDeleted(Boolean.valueOf(FinalExamProtocolUtil.studentCanBeDeleted(protocolStudent)));
+        
+        if (protocolStudent.getProtocolStudentOccupations() != null) {
+            protocolStudent.getProtocolStudentOccupations().forEach(oc -> {
+                dto.getCurriculumOccupations()
+                        .add(new FinalExamVocationalProtocolStudentOccupationDto(
+                                oc.getStudentOccupationCertificate() != null ? oc.getStudentOccupationCertificate().getCertificateNr() : null, 
+                                oc.getOccupation().getCode(),
+                                oc.getPartOccupation() != null ? oc.getPartOccupation().getCode() : null,
+                                oc.getStudentOccupationCertificate() != null ? oc.getStudentOccupationCertificate().getId() : null));
+            });
+        }
 
         return dto;
-    }
-    
-    public Long getStudentId() {
-        return studentId;
-    }
-    
-    public void setStudentId(Long studentId) {
-        this.studentId = studentId;
-    }
-    
-    public String getFullname() {
-        return fullname;
-    }
-    
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
-    }
-    
-    public String getIdcode() {
-        return idcode;
-    }
-    
-    public void setIdcode(String idcode) {
-        this.idcode = idcode;
-    }
-    
-    public String getGrade() {
-        return grade;
-    }
-
-    public void setGrade(String grade) {
-        this.grade = grade;
-    }
-    
-    public String getStatus() {
-        return status;
-    }
-    
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public String getStudentGroup() {
@@ -83,20 +45,12 @@ public class FinalExamVocationalProtocolStudentDto {
         this.studentGroup = studentGroup;
     }
 
-    public List<FinalExamVocationalProtocolCurriculumOccupationDto> getCurriculumOccupations() {
+    public List<FinalExamVocationalProtocolStudentOccupationDto> getCurriculumOccupations() {
         return curriculumOccupations;
     }
 
-    public void setCurriculumOccupations(List<FinalExamVocationalProtocolCurriculumOccupationDto> curriculumOccupations) {
+    public void setCurriculumOccupations(List<FinalExamVocationalProtocolStudentOccupationDto> curriculumOccupations) {
         this.curriculumOccupations = curriculumOccupations;
-    }
-
-    public Boolean getCanBeDeleted() {
-        return canBeDeleted;
-    }
-
-    public void setCanBeDeleted(Boolean canBeDeleted) {
-        this.canBeDeleted = canBeDeleted;
     }
     
 }

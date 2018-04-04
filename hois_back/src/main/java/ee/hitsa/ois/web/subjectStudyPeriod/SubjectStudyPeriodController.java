@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.subjectStudyPeriod;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodSearchService;
 import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodService;
+import ee.hitsa.ois.util.MoodleUtil;
 import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -53,17 +55,19 @@ public class SubjectStudyPeriodController {
     }
 
     @PostMapping
-    public SubjectStudyPeriodDto create(@Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user) {
+    public SubjectStudyPeriodDto create(@Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user, 
+            HttpServletRequest request) {
         UserUtil.assertIsSchoolAdmin(user);
-        return get(user, subjectStudyPeriodService.create(user, form));
+        return get(user, subjectStudyPeriodService.create(form, MoodleUtil.createContext(user, request)));
     }
 
     @PutMapping("/{id:\\d+}")
     public SubjectStudyPeriodDto update(
             @WithVersionedEntity(versionRequestBody = true) SubjectStudyPeriod subjectStudyPeriod, 
-            @Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user) {
+            @Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user, HttpServletRequest request) {
         SubjectStudyPeriodUtil.assertCanUpdate(user, subjectStudyPeriod);
-        return get(user, subjectStudyPeriodService.update(user, subjectStudyPeriod, form));
+        return get(user, subjectStudyPeriodService.update(subjectStudyPeriod, form,
+                MoodleUtil.createContext(user, request, subjectStudyPeriod)));
     }
 
     @DeleteMapping("/{id:\\d+}")
@@ -78,7 +82,7 @@ public class SubjectStudyPeriodController {
         UserUtil.assertIsSchoolAdminOrTeacher(user, teacher.getSchool());
         return AutocompleteResult.of(teacher); 
     }
-        
+    
     @GetMapping("/subject/{id:\\d+}")
     public AutocompleteResult getSubject(HoisUserDetails user, @WithEntity Subject subject) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, subject.getSchool());

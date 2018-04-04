@@ -70,41 +70,41 @@
       <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.averageMark' | translate}}</label>
-          <hois-value value="studentInfo.averageMark"></hois-value>
+          <hois-value value="application.averageMark"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label>{{'stipend.lastPeriodMark' | translate}}</label>
-          <hois-value value="studentInfo.lastPeriodMark"></hois-value>
+          <hois-value value="application.lastPeriodMark"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
-          <hois-value value="studentInfo.curriculumCompletion"></hois-value>
+          <hois-value value="application.curriculumCompletion"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label>{{'stipend.maxAbsences' | translate}}</label>
-          <hois-value value="studentInfo.absences"></hois-value>
+          <hois-value value="application.absences"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.student.studentGroup' | translate}}</label>
-          <hois-value value="studentInfo.studentGroupCode"></hois-value>
+          <hois-value value="application.studentGroupCode"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label class="textInput">{{'main.contactNumber' | translate}}</label>
-          <hois-value value="studentSubmitData.phone"></hois-value>
+          <hois-value value="application.phone"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.student.address' | translate}}</label>
-          <hois-value value="studentSubmitData.address"></hois-value>
+          <hois-value value="application.address"></hois-value>
         </md-input-container>
         <md-input-container flex="50" flex-offset="5">
           <label class="textInput">{{'main.email' | translate}}</label>
-          <hois-value value="studentSubmitData.email"></hois-value>
+          <hois-value value="application.email"></hois-value>
         </md-input-container>
       </div>
     </div>
@@ -114,19 +114,19 @@
         <div layout="row" flex>
           <md-input-container flex="45" flex-md="100" flex-sm="100" flex-xs="100">
             <label>{{'stipend.student.bankAccount' | translate}}</label>
-            <hois-value value="studentSubmitData.bankAccount"></hois-value>
+            <hois-value value="application.bankAccount"></hois-value>
           </md-input-container>
 
           <md-input-container flex="50" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
             <label>{{'stipend.student.bankAccountOwnerName' | translate}}</label>
-            <hois-value value="studentSubmitData.bankAccountOwnerName"></hois-value>
+            <hois-value value="application.bankAccountOwnerName"></hois-value>
           </md-input-container>
         </div>
 
         <div layout="row" flex>
           <md-input-container flex="45" flex-md="100" flex-sm="100" flex-xs="100">
             <label>{{'stipend.student.bankAccountOwnerIdcode' | translate}}</label>
-            <hois-value value="studentSubmitData.bankAccountOwnerIdcode"></hois-value>
+            <hois-value value="application.bankAccountOwnerIdcode"></hois-value>
           </md-input-container>
         </div>
 
@@ -137,18 +137,18 @@
           </md-input-container>
           <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
             <label>{{'main.from' | translate}}</label>
-            <hois-value value="studentSubmitData.scholarshipFrom | hoisDate"></hois-value>
+            <hois-value value="application.scholarshipFrom | hoisDate"></hois-value>
           </md-input-container>
           <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
             <label>{{'main.thru' | translate}}</label>
-            <hois-value value="studentSubmitData.scholarshipThru | hoisDate"></hois-value>
+            <hois-value value="application.scholarshipThru | hoisDate"></hois-value>
           </md-input-container>
         </div>
 
         <div layout="row" flex>
           <md-input-container flex="100" flex-md="100" flex-sm="100" flex-xs="100">
             <label>{{'stipend.student.grantReason' | translate}}</label>
-            <hois-value value="studentSubmitData.addInfo"></hois-value>
+            <hois-value value="application.addInfo"></hois-value>
           </md-input-container>
         </div>
         <div ng-include="'scholarship/student/scholarship.family.table.view.html'"></div>

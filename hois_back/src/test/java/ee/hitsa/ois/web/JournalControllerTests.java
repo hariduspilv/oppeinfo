@@ -1,9 +1,14 @@
 package ee.hitsa.ois.web;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.junit.After;
@@ -24,12 +29,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ee.hitsa.ois.TestConfigurationService;
-import ee.hitsa.ois.domain.timetable.Journal;
-import ee.hitsa.ois.domain.timetable.JournalEntry;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.repository.JournalEntryRepository;
-import ee.hitsa.ois.repository.JournalRepository;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 
 @Transactional
@@ -39,33 +40,40 @@ public class JournalControllerTests {
 
     private static final String ENDPOINT = "/journals";
     private static final Long STUDENT_ID = Long.valueOf(189L); 
+    private static final Role ROLE = Role.ROLL_A;
 
     @Autowired
     private TestRestTemplate restTemplate;
     @Autowired
     private TestConfigurationService testConfigurationService;
     @Autowired
+    private EntityManager em;
+    @Autowired
     private ObjectMapper objectMapper;
-    @Autowired
-    private JournalRepository journalRepository;
-    @Autowired
-    private JournalEntryRepository journalEntryRepository;
 
-
-    private Journal journal;
-    private JournalEntry journalEntry;
-
+    private Long schoolId;
+    private Long journalId;
+    private LocalDate endDate;
+    private Long journalEntryId;
 
     @Before
     public void setUp() {
-        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
         JacksonTester.initFields(this, objectMapper);
-        if(journal == null) {
-            journal = journalRepository.findAll().get(0);
+        if (schoolId == null) {
+            List<School> userSchools = testConfigurationService.personSchools(ROLE);
+            Assert.assertFalse(userSchools.isEmpty());
+            Object result = em.createNativeQuery("select j.id journal_id, j.end_date, je.id as journal_entry_id, j.school_id"
+                    + " from journal j"
+                    + " inner join journal_entry je on je.journal_id = j.id"
+                    + " where j.end_date is not null and j.school_id in (?1)")
+                .setParameter(1, userSchools)
+                .setMaxResults(1).getResultList().get(0);
+            journalId = resultAsLong(result, 0);
+            endDate = resultAsLocalDate(result, 1);
+            journalEntryId = resultAsLong(result, 2);
+            schoolId = resultAsLong(result, 3);
         }
-        if(journalEntry == null) {
-            journalEntry = journalEntryRepository.findAll().get(0);
-        }
+        testConfigurationService.userToRoleInSchool(ROLE, schoolId, restTemplate);
     }
 
     @After
@@ -94,7 +102,7 @@ public class JournalControllerTests {
     @Test
     public void get() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment(journal.getId().toString());
+                .pathSegment(journalId.toString());
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -103,8 +111,8 @@ public class JournalControllerTests {
     @Test
     public void saveEndDate() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment(journal.getId().toString(), "saveEndDate");
-        Map<String, LocalDate> postData = Collections.singletonMap("endDate", journal.getEndDate());
+                .pathSegment(journalId.toString(), "saveEndDate");
+        Map<String, LocalDate> postData = Collections.singletonMap("endDate", endDate);
         ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), postData, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -113,7 +121,7 @@ public class JournalControllerTests {
     @Test
     public void getJournalEntries() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment(journal.getId().toString(), "journalEntry");
+                .pathSegment(journalId.toString(), "journalEntry");
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -122,7 +130,7 @@ public class JournalControllerTests {
     @Test
     public void getJournalEntry() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment(journalEntry.getJournal().getId().toString(), "journalEntry", journalEntry.getId().toString());
+                .pathSegment(journalId.toString(), "journalEntry", journalEntryId.toString());
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -131,7 +139,7 @@ public class JournalControllerTests {
     @Test
     public void getOtherStudents() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment(journal.getId().toString(), "otherStudents");
+                .pathSegment(journalId.toString(), "otherStudents");
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -140,7 +148,7 @@ public class JournalControllerTests {
     @Test
     public void getSuitedStudents() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment(journal.getId().toString(), "suitedStudents");
+                .pathSegment(journalId.toString(), "suitedStudents");
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -149,7 +157,7 @@ public class JournalControllerTests {
     @Test
     public void getJournalStudents() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment(journal.getId().toString(), "journalStudents");
+                .pathSegment(journalId.toString(), "journalStudents");
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -158,7 +166,7 @@ public class JournalControllerTests {
     @Test
     public void getJournalStudentsByDate() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment(journal.getId().toString(), "journalEntriesByDate");
+                .pathSegment(journalId.toString(), "journalEntriesByDate");
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -167,7 +175,7 @@ public class JournalControllerTests {
     @Test
     public void getJournalLessonInfo() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment(journal.getId().toString(), "journalEntry", "lessonInfo");
+                .pathSegment(journalId.toString(), "journalEntry", "lessonInfo");
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -226,7 +234,7 @@ public class JournalControllerTests {
     
     @Test
     public void excel() {
-        String url = ENDPOINT + "/" + EntityUtil.getId(journal) + "/journal.xls";
+        String url = ENDPOINT + "/" + journalId + "/journal.xls";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
         ResponseEntity<?> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Void.class);
         Assert.assertNotNull(responseEntity);

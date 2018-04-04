@@ -5,6 +5,10 @@
   var ROW_HEIGHT = 22;
   var TOP = 50;
 
+  function loadingTimetableEvents(scope, busy) {
+    scope.$root.$emit('backendBusy', {busy: busy});
+  }
+
   function getPreviousAndNextWeek(scope) {
     if (scope.shownWeek) {
       scope.weekIndex = scope.shownWeek.weekNr;
@@ -125,31 +129,22 @@
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.timetableSearch = true;
 
+      $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
+
       $scope.$watch('searchResultEvents', function () {
         if ($scope.searchResultEvents) {
           getDirectRouteParameters($scope, $route, $route.current.params.groupId);
           setWeekCriteria();
           $scope.shownEvents = $scope.searchResultEvents;
 
-          if (!$scope.weeks) {
-            QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
-              $scope.weeks = weeks;
-              if (!$scope.weekIndex) {
-                $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-              }
-              $scope.shownWeek = $scope.weeks[$scope.weekIndex];
-              getPreviousAndNextWeek($scope);
-              showWeekTimetable();
-            });
-          } else {
+          $scope.weeks.$promise.then(function () {
             if (!$scope.weekIndex) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
             }
             $scope.shownWeek = $scope.weeks[$scope.weekIndex];
-
             getPreviousAndNextWeek($scope);
             showWeekTimetable();
-          }
+          });
         }
       });
 
@@ -157,12 +152,14 @@
         changeTimetableParameters($scope, typeId, previousWeekIndex);
         getPreviousAndNextWeek($scope);
         searchTimetableWeek();
+        $scope.$parent.shownWeek = $scope.shownWeek;
       };
       
       $scope.nextWeek = function (typeId, nextWeekIndex) {
         changeTimetableParameters($scope, typeId, nextWeekIndex);
         getPreviousAndNextWeek($scope);
         searchTimetableWeek();
+        $scope.$parent.shownWeek = $scope.shownWeek;
       };
 
       $scope.generateCalendar = function () {
@@ -172,8 +169,8 @@
             teachers: $scope.weekCriteria.teachers,
             studentGroups: $scope.weekCriteria.studentGroups,
             journalOrSubjectId: $scope.weekCriteria.subject,
-            from: $scope.shownWeek.start,
-            thru: $scope.shownWeek.end,
+            from: $scope.weeks[0].start,
+            thru: $scope.weeks[$scope.weeks.length - 1].end,
             lang: $scope.currentLanguage()
           }).$promise.then(function (result) {
             saveCalendar(result);
@@ -190,6 +187,8 @@
       }
 
       function searchTimetableWeek() {
+        $scope.timetableEvents = null;
+        loadingTimetableEvents($scope, true);
         if ($scope.shownWeek) {
           QueryUtils.endpoint('/timetableevents/timetableSearch').query({
               room: $scope.weekCriteria.room,
@@ -200,6 +199,7 @@
               thru: $scope.shownWeek.end
             })
             .$promise.then(function (result) {
+              loadingTimetableEvents($scope, false);
               $scope.shownEvents = result;
               showWeekTimetable();
             });
@@ -222,28 +222,19 @@
       var timetableEventsEndpoint = '/timetableevents/timetableByGroup/' + $scope.schoolId;
       var timetableEventsCalendarEndpoint = '/timetableevents/timetableByGroup/calendar/' + $scope.schoolId;
       
+      $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
+      
       $scope.$watchGroup(['$parent.typeId'], function () {
-        getDirectRouteParameters($scope, $route, $route.current.params.groupId);
+        getDirectRouteParameters($scope, $route, $route.current.params.roomId);
         if ($scope.$parent.typeId) {
-          if (!$scope.weeks) {
-            QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
-              $scope.weeks = weeks;
-              if (!$scope.weekIndex) {
-                $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-              }
-              $scope.shownWeek = $scope.weeks[$scope.weekIndex];
-              getPreviousAndNextWeek($scope);
-              showWeekTimetable();
-            });
-          } else {
+          $scope.weeks.$promise.then(function () {
             if (!$scope.weekIndex) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
             }
             $scope.shownWeek = $scope.weeks[$scope.weekIndex];
-
             getPreviousAndNextWeek($scope);
             showWeekTimetable();
-          }
+          });
         }
       });
 
@@ -275,8 +266,9 @@
           });
         }
       };
-
       function showWeekTimetable() {
+        $scope.timetableEvents = null;
+        loadingTimetableEvents($scope, true);
         if ($scope.shownWeek) {
           QueryUtils.endpoint(timetableEventsEndpoint).search({
               studentGroups: [$scope.$parent.typeId],
@@ -284,7 +276,8 @@
               thru: $scope.shownWeek.end
             })
             .$promise.then(function (result) {
-              $scope.shownTimetable = result.generalTimetable;
+              loadingTimetableEvents($scope, false);
+              $scope.shownStudyPeriods = result.studyPeriods;
               $scope.shownTimetableCurriculum = result.generalTimetableCurriculum;     
               fillTimetable($scope, result.timetableEvents);
             });
@@ -301,28 +294,19 @@
       var timetableEventsEndpoint = '/timetableevents/timetableByTeacher/' + $scope.schoolId;
       var timetableEventsCalendarEndpoint = '/timetableevents/timetableByTeacher/calendar/' + $scope.schoolId;
 
+      $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
+      
       $scope.$watchGroup(['$parent.typeId'], function () {
-        getDirectRouteParameters($scope, $route, $route.current.params.teacherId);
+        getDirectRouteParameters($scope, $route, $route.current.params.roomId);
         if ($scope.$parent.typeId) {
-          if (!$scope.weeks) {
-            QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
-              $scope.weeks = weeks;
-              if (!$scope.weekIndex) {
-                $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-              }
-              $scope.shownWeek = $scope.weeks[$scope.weekIndex];
-              getPreviousAndNextWeek($scope);
-              showWeekTimetable();
-            });
-          } else {
+          $scope.weeks.$promise.then(function () {
             if (!$scope.weekIndex) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
             }
             $scope.shownWeek = $scope.weeks[$scope.weekIndex];
-
             getPreviousAndNextWeek($scope);
             showWeekTimetable();
-          }
+          });
         }
       });
 
@@ -356,6 +340,8 @@
       };
 
       function showWeekTimetable() {
+        $scope.timetableEvents = null;
+        loadingTimetableEvents($scope, true);
         if ($scope.shownWeek) {
           QueryUtils.endpoint(timetableEventsEndpoint).search({
               teachers: [$scope.$parent.typeId],
@@ -363,7 +349,8 @@
               thru: $scope.shownWeek.end
             })
             .$promise.then(function (result) {
-              $scope.shownTimetable = result.generalTimetable;
+              loadingTimetableEvents($scope, false);
+              $scope.shownStudyPeriods = result.studyPeriods;
               $scope.shownTeacher = {
                 firstname: result.firstname,
                 lastname: result.lastname
@@ -383,28 +370,19 @@
       var timetableEventsEndpoint = '/timetableevents/timetableByRoom/' + $scope.schoolId;
       var timetableEventsCalendarEndpoint = '/timetableevents/timetableByRoom/calendar/' + $scope.schoolId;
 
+      $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
+
       $scope.$watchGroup(['$parent.typeId'], function () {
         getDirectRouteParameters($scope, $route, $route.current.params.roomId);
         if ($scope.$parent.typeId) {
-          if (!$scope.weeks) {
-            QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
-              $scope.weeks = weeks;
-              if (!$scope.weekIndex) {
-                $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-              }
-              $scope.shownWeek = $scope.weeks[$scope.weekIndex];
-              getPreviousAndNextWeek($scope);
-              showWeekTimetable();
-            });
-          } else {
+          $scope.weeks.$promise.then(function () {
             if (!$scope.weekIndex) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
             }
             $scope.shownWeek = $scope.weeks[$scope.weekIndex];
-
             getPreviousAndNextWeek($scope);
             showWeekTimetable();
-          }
+          });
         }
       });
 
@@ -438,6 +416,8 @@
       };
 
       function showWeekTimetable() {
+        $scope.timetableEvents = null;
+        loadingTimetableEvents($scope, true);
         if ($scope.shownWeek) {
           QueryUtils.endpoint(timetableEventsEndpoint).search({
               room: $scope.$parent.typeId,
@@ -445,7 +425,8 @@
               thru: $scope.shownWeek.end
             })
             .$promise.then(function (result) {
-              $scope.shownTimetable = result.generalTimetable;
+              loadingTimetableEvents($scope, false);
+              $scope.shownStudyPeriods = result.studyPeriods;
               $scope.shownRoom = {
                 roomCode: result.roomCode,
                 buildingCode: result.buildingCode
@@ -460,30 +441,20 @@
       $scope.timetableType = "student";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
-
       $scope.schoolId = $scope.auth.school.id;
+
+      $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
 
       $scope.$watchGroup(['$parent.typeId'], function () {
         if (($scope.auth.isStudent() || $scope.auth.isParent() || $scope.auth.isAdmin()) && $scope.$parent.typeId) {
-          if (!$scope.weeks) {
-            QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
-              $scope.weeks = weeks;
-              if (!$scope.weekIndex) {
-                $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-              }
-              $scope.shownWeek = $scope.weeks[$scope.weekIndex];
-              getPreviousAndNextWeek($scope);
-              showWeekTimetable();
-            });
-          } else {
+          $scope.weeks.$promise.then(function () {
             if (!$scope.weekIndex) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
             }
             $scope.shownWeek = $scope.weeks[$scope.weekIndex];
-
             getPreviousAndNextWeek($scope);
             showWeekTimetable();
-          }
+          });
         }
       });
 
@@ -519,6 +490,8 @@
       };
 
       function showWeekTimetable() {
+        $scope.timetableEvents = null;
+        loadingTimetableEvents($scope, true);
         if ($scope.shownWeek) {
           QueryUtils.endpoint('/timetableevents/timetableByStudent').search({
             student: $scope.typeId,
@@ -527,7 +500,8 @@
             higher: $scope.auth.higher,
             vocational: $scope.auth.vocational
           }).$promise.then(function (result) {
-            $scope.shownTimetable = result.generalTimetable;
+            loadingTimetableEvents($scope, false);
+            $scope.shownStudyPeriods = result.studyPeriods;
             fillTimetable($scope, result.timetableEvents);
           });
         }

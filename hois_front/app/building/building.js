@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('BuildingEditController', ['dialogService', 'message', '$location', '$route', '$scope', 'QueryUtils',
-  function (dialogService, message, $location, $route, $scope, QueryUtils) {
+angular.module('hitsaOis').controller('BuildingEditController', ['$route', '$scope', 'FormUtils', 'QueryUtils',
+  function ($route, $scope, FormUtils, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/buildings';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -13,29 +13,11 @@ angular.module('hitsaOis').controller('BuildingEditController', ['dialogService'
     }
 
     $scope.update = function() {
-      $scope.buildingForm.$setSubmitted();
-      if(!$scope.buildingForm.$valid) {
-        message.error('main.messages.form-has-errors');
-        return;
-      }
-
-      if($scope.record.id) {
-        $scope.record.$update().then(message.updateSuccess).catch(angular.noop);
-      } else {
-        $scope.record.$save().then(function() {
-          message.info('main.messages.create.success');
-          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
-        }).catch(angular.noop);
-      }
+      FormUtils.saveRecord($scope.buildingForm, $scope.record, baseUrl);
     };
 
     $scope.delete = function() {
-      dialogService.confirmDialog({prompt: 'building.deleteconfirm'}, function() {
-        $scope.record.$delete().then(function() {
-          message.info('main.messages.delete.success');
-          $location.url('/rooms/search');
-        }).catch(angular.noop);
-      });
+      FormUtils.deleteRecord($scope.record, '/rooms/search?_noback', {prompt: 'building.deleteconfirm'});
     };
   }
 ]);

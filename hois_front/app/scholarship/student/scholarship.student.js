@@ -3,15 +3,16 @@
 angular.module('hitsaOis').controller('StudentScholarshipController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'DataUtils', 'ArrayUtils', '$q',
   function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, DataUtils, ArrayUtils, $q) {
     var baseUrl = '/scholarships';
+    var drGrant = $route.current.locals.drGrant;
     var clMapper = Classifier.valuemapper({
       type: 'STIPTOETUS', status: 'STIPTOETUS_STAATUS'
     });
     $q.all(clMapper.promises).then(function () {
-      var available = QueryUtils.endpoint(baseUrl + '/availableStipends').query({}, function (result) {
+      var available = QueryUtils.endpoint(baseUrl + (drGrant ? '/availableDrGrants' : '/availableStipends')).query({}, function (result) {
         clMapper.objectmapper(result);
         $scope.possibleStipends = result;
       }).$promise;
-      var student = QueryUtils.endpoint(baseUrl + '/studentStipends').query({}, function (result) {
+      var student = QueryUtils.endpoint(baseUrl + (drGrant ? '/studentDrGrants' : '/studentStipends')).query({}, function (result) {
         clMapper.objectmapper(result);
         $scope.studentStipends = result;
       }).$promise;

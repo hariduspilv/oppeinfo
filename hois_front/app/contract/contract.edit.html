@@ -1,9 +1,9 @@
 <div class="ois-form-layout-padding" ng-cloak>
   <div flex>
-    <form name="contractForm" ng-submit="save()" layout="column">
+    <form name="contractForm" ng-submit="save()" layout="column" novalidate>
       <div flex>
         <hois-autocomplete ng-model="contract.student" method="students" additional-query-params="{active: true, higher: formState.isHigher}" name="student"
-          label="student.label" required="true"></hois-autocomplete>
+          label="student.label" required></hois-autocomplete>
       </div>
 
       <div ng-if="contract.student && formState.student" class="form-readonly" layout="column">

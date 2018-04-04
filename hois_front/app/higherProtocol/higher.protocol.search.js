@@ -3,6 +3,8 @@
 angular.module('hitsaOis').controller('HigherProtocolSearchController', ['$scope', '$route', '$q', '$timeout', 'QueryUtils', 'DataUtils', 'Classifier', 'message', 'USER_ROLES',
   function ($scope, $route, $q, $timeout, QueryUtils, DataUtils, Classifier, message, USER_ROLES) {
     $scope.auth = $route.current.locals.auth;
+    $scope.search = {};
+    $scope.criteria = {};
     var baseUrl = "/higherProtocols";
 
     var clMapper = Classifier.valuemapper({status: 'PROTOKOLL_STAATUS', protocolType: 'PROTOKOLLI_LIIK'});

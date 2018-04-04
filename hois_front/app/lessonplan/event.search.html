@@ -94,7 +94,7 @@
             <td md-cell><span ng-repeat="group in row.studentGroups">{{::group.code}}{{$last ? "" : ", "}}</span></td>
             <td md-cell>{{::row.singleEvent ? "jah" : "ei"}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-if="canEdit && afterNow(row.date, row.timeStart)" ng-href="#/timetable/timetableEvent/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-if="canEdit && afterNow(row.date, row.timeStart) && allowedToEdit(row.teachers)" ng-href="#/timetable/timetableEvent/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

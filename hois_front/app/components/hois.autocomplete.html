@@ -8,6 +8,7 @@
                  md-item-text="getChipText(item)"
                  md-require-match
                  ng-required="required"
+                 ng-disabled="disabled"
                  md-floating-label="{{label | translate}}">
   <md-item-template>
     <span md-highlight-text="searchText">{{$root.currentLanguageNameField(item)}}</span>

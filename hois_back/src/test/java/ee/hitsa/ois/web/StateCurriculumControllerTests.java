@@ -2,7 +2,6 @@ package ee.hitsa.ois.web;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,12 +25,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
-import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.StateCurriculumRepository;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
 import ee.hitsa.ois.web.dto.StateCurriculumDto;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
@@ -55,11 +52,7 @@ public class StateCurriculumControllerTests {
 
     @Before
     public void setUp() {
-        Role role = Role.ROLL_P;
-        List<School> userSchools = testConfigurationService.personSchools(role);
-        Assert.assertFalse(userSchools.isEmpty());
-
-        testConfigurationService.userToRoleInSchool(role, EntityUtil.getId(userSchools.get(0)), restTemplate);
+        testConfigurationService.userToRole(Role.ROLL_P, restTemplate);
     }
 
     @After

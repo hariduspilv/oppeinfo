@@ -9,8 +9,8 @@ import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JournalUtil;
-import ee.hitsa.ois.util.ModuleProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 
 public class ModuleProtocolStudentDto {
@@ -76,7 +76,7 @@ public class ModuleProtocolStudentDto {
             }
             
         }
-        dto.setCanBeDeleted(Boolean.valueOf(ModuleProtocolUtil.studentCanBeDeleted(protocolStudent)));
+        dto.setCanBeDeleted(Boolean.valueOf(ProtocolUtil.studentCanBeDeleted(protocolStudent)));
         return dto;
     }
 

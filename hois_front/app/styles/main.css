@@ -649,6 +649,15 @@ md-toast.toastError .md-toast-content {
     font-weight: 400;
 }
 
+.eu_logo {
+  margin: 15px 0;
+}
+
+.sidenav-link {
+  font-size: 13px;
+  margin: 10px;
+}
+
 .site-sidenav md-content {
   background: transparent;
 }
@@ -1604,6 +1613,9 @@ md-grid-tile {
 /* Scholarship and grant table border*/
 tr.scholarship-bottom-border td {
   border-bottom:1pt solid red;
+}
+.scholarship-sais {
+  color: red;
 }
 
 

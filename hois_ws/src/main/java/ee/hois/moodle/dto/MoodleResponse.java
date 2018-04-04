@@ -1,4 +1,4 @@
-package ee.hois.moodle;
+package ee.hois.moodle.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

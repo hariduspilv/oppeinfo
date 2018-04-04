@@ -12,7 +12,7 @@ angular.module('hitsaOis').factory('DataUtils',
 
     function convert(object, dateProperties, pattern) {
       if (angular.isArray(object)) {
-        return object.map(function (it) { return convertStringToDates(it, dateProperties); });
+        return object.map(function (it) { return convert(it, dateProperties, pattern); });
       }
 
       for (var i = 0, cnt = dateProperties.length; i < cnt; i++) {

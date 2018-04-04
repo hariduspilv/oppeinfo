@@ -250,8 +250,7 @@
       <div ng-if="!auth.isStudent()" layout="row">
         <md-input-container>
           <label class="textInput">{{'practiceJournal.grade' | translate}}</label>
-          <hois-classifier-select ng-if="practiceJournal.subject" ng-model="practiceJournal.grade" main-classifier-code="KORGHINDAMINE" model-value-attr="code"></hois-classifier-select>
-          <hois-classifier-select ng-if="!practiceJournal.subject" ng-model="practiceJournal.grade" main-classifier-code="KUTSEHINDAMINE" model-value-attr="code"></hois-classifier-select>
+          <hois-select ng-model="practiceJournal.grade" values="grades" show-property="value" value-property="code"></hois-select>
         </md-input-container>
       </div>
 

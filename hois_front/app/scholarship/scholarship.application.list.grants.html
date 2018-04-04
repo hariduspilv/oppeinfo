@@ -76,6 +76,8 @@
             <th md-column ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{'stipend.averageMarkShort' | translate}}</th>
             <th md-column ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{'stipend.student.lastPeriodMark' | translate}}</th>
             <th md-column ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{'stipend.student.curriculumCompletion' | translate}}</th>
+            <!-- only for pohi-->
+            <th md-column ng-if="submittedType === 'STIPTOETUS_POHI'">{{'stipend.student.absences' | translate}}</th>
             <!-- only for soidu -->
             <th md-column ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{'stipend.compensationReason' | translate}}</th>
             <th md-column ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{'stipend.compensationFrequency' | translate}}</th>
@@ -99,13 +101,17 @@
             </td>
             <td md-cell>{{application.curriculumCode ? application.curriculumCode : '-'}}</td>
             <td md-cell>
-              <a href="#/students/{{application.studentId}}/main">{{application.studentName ? application.studentName : '-'}}</a>
+              <a href="#/students/{{application.studentId}}/main" ng-style="application.nonCompliant ? {color: 'red'} : {}">
+                {{application.studentName ? application.studentName : '-'}}
+              </a>
             </td>
             <td md-cell>{{application.idcode ? application.idcode : '-'}}</td>
             <!-- only for pohi and eri-->
             <td md-cell ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{application.averageMark ? application.averageMark : '-'}}</td>
             <td md-cell ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{application.lastPeriodMark ? application.lastPeriodMark : '-'}}</td>
-            <td md-cell ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{application.curriculumCompletion ? application.curriculumCompletion : '-'}}</td>
+            <td md-cell ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{isNumber(application.curriculumCompletion) ? application.curriculumCompletion : '-'}}</td>
+            <!-- only for pohi-->
+            <td md-cell ng-if="submittedType === 'STIPTOETUS_POHI'">{{isNumber(application.absences) ? application.absences : '-'}}</td>
             <!-- only for soidu -->
             <td md-cell ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{application.compensationReason ? currentLanguageNameField(application.compensationReason) : '-'}}</td>
             <td md-cell ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{application.compensationFrequency ? currentLanguageNameField(application.compensationFrequency) : '-'}}</td>

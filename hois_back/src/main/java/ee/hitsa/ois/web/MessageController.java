@@ -1,9 +1,7 @@
 package ee.hitsa.ois.web;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -19,20 +17,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Message;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.service.MessageService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.MessageDto;
 import ee.hitsa.ois.web.dto.MessageReceiverDto;
 import ee.hitsa.ois.web.dto.MessageSearchDto;
+import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 
 @RestController
 @RequestMapping("/message")
@@ -103,19 +100,15 @@ public class MessageController {
         return messageService.getStudents(user, criteria, pageable);
     }
 
+    @GetMapping("/studentgroups")
+    public List<StudentGroupSearchDto> studentGroups(HoisUserDetails user, @Valid StudentGroupSearchCommand criteria) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return messageService.searchStudentGroups(user, criteria);
+    }
+
     @GetMapping("/{studentId:\\d+}/parents")
     public List<MessageReceiverDto> getStudentsParents(HoisUserDetails user, @WithEntity("studentId") Student student) {
         UserUtil.assertSameSchool(user, student.getSchool());
-        return StreamUtil.toMappedList(r -> {
-            MessageReceiverDto dto = new MessageReceiverDto();
-            dto.setId(student.getId());
-            dto.setPersonId(r.getPerson().getId());
-            dto.setFullname(r.getPerson().getFullname());
-            dto.setStudentGroup(AutocompleteResult.of(student.getStudentGroup()));
-            dto.setCurriculum(AutocompleteResult.of(student.getStudentGroup().getCurriculum()));
-            dto.setRole(Arrays.asList(Role.ROLL_L.name()));
-            return dto;
-        }, student.getRepresentatives().stream()
-                .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible())).collect(Collectors.toList()));
+        return messageService.getStudentRepresentatives(student);
     }
 }

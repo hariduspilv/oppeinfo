@@ -55,15 +55,15 @@
           </div>
         </td>
         <td md-cell>
-          <md-datepicker ng-if="!row._found" ng-model="row.birthdate" name="students[{{$index}}].birthdate"></md-datepicker>
-          <hois-value ng-if="row._found" value="row.birthdate | hoisDate" name="students[{{$index}}].birthdate"></hois-value>
+          <md-datepicker ng-if="!row._found && !row.idcode" ng-model="row.birthdate" name="students[{{$index}}].birthdate"></md-datepicker>
+          <hois-value ng-if="row._found || row.idcode" value="row.birthdate | hoisDate" name="students[{{$index}}].birthdate"></hois-value>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].birthdate'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
           </div>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-if="!row._found" ng-model="row.sex" name="students[{{$index}}].sex" model-value-attr="code" main-classifier-code="SUGU" aria-label="{{'directive.student.sex' | translate}}"></hois-classifier-select>
-          <hois-classifier-value ng-if="row._found" ng-model="row.sex" main-classifier-code="SUGU"></hois-classifier-value>
+          <hois-classifier-select ng-if="!row._found && !row.idcode" ng-model="row.sex" name="students[{{$index}}].sex" model-value-attr="code" main-classifier-code="SUGU" aria-label="{{'directive.student.sex' | translate}}"></hois-classifier-select>
+          <hois-classifier-value ng-if="row._found || row.idcode" ng-model="row.sex" main-classifier-code="SUGU"></hois-classifier-value>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].sex'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
           </div>

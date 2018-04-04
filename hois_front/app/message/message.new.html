@@ -93,19 +93,21 @@
                         </p>
                     </td>
                     <td md-cell ng-if="auth.isTeacher()">
-                        {{currentLanguageNameField(receiver.curriculum)}}
+                        <span ng-if="!receiver.hideLearning">{{currentLanguageNameField(receiver.curriculum)}}</span>
                     </td>
                     <td md-cell ng-if="auth.isTeacher()">
-                        {{currentLanguageNameField(receiver.studentGroup)}}
+                        <span ng-if="!receiver.hideLearning">{{currentLanguageNameField(receiver.studentGroup)}}</span>
                     </td>
-                    <td md-cell><md-button class="remove nomargin" ng-click="removeReceiver(receiver)">&times;</md-button></td>
+                    <td md-cell>
+                      <md-button ng-if="receiver.addedWithAutocomplete" ng-click="removeReceiver(receiver)" class="remove nomargin">&times;</md-button>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="send()">{{'main.button.send' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="back(formState.backUrl, messageNewForm, 'message.confirmClose')">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back('#/messages/sent', messageNewForm, 'message.confirmClose')">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
 </div>

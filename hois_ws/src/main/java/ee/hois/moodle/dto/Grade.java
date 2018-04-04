@@ -1,14 +1,21 @@
-package ee.hois.moodle;
+package ee.hois.moodle.dto;
 
+import java.math.BigDecimal;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonIgnoreProperties(ignoreUnknown=true)
 public class Grade {
-    private Object points;
+    private BigDecimal points;
+    @JsonProperty("identity")
     private String student;
     private String comment;
     
-    public Object getPoints() {
+    public BigDecimal getPoints() {
         return points;
     }
-    public void setPoints(Object points) {
+    public void setPoints(BigDecimal points) {
         this.points = points;
     }
     

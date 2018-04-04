@@ -1,38 +1,42 @@
-<legend md-colors="{color: 'primary-800'}" class="md-title-small">
-  {{'stipend.student.familyIncome' | translate}}</legend>
+<fieldset>
+  <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+    {{'stipend.student.familyIncome' | translate}}</legend>
 
-<div layout="row" flex>
-  <md-input-container flex="45">
-    <label>{{'stipend.student.familyMembers' | translate}}</label>
-    <hois-value value="studentSubmitData.familyMembers">
-  </md-input-container>
-  <md-input-container flex="50" flex-offset="5">
-    <label>{{'stipend.student.familyMembersAdult' | translate}}</label>
-    <hois-value value="studentSubmitData.familyMembersAdult">
-  </md-input-container>
-</div>
+  <div class="form-readonly ois-form-layout-padding">
+    <div layout="row" flex>
+      <md-input-container flex="45">
+        <label>{{'stipend.student.familyMembers' | translate}}</label>
+        <hois-value value="application.familyMembers">
+      </md-input-container>
+      <md-input-container flex="50" flex-offset="5">
+        <label>{{'stipend.student.familyMembersAdult' | translate}}</label>
+        <hois-value value="application.familyMembersAdult">
+      </md-input-container>
+    </div>
+  </div>
 
-<table md-table class="secondary-table">
-  <thead md-head>
-    <tr md-row>
-      <th md-column>{{'stipend.family.name' | translate}}</th>
-      <th md-column>{{'stipend.family.netSalary' | translate}}</th>
-      <th md-column>{{'stipend.family.pension' | translate}}</th>
-      <th md-column>{{'stipend.family.stateBenefit' | translate}}</th>
-      <th md-column>{{'stipend.family.otherIncome' | translate}}</th>
-      <th md-column>{{'stipend.family.unemployedBenefit' | translate}}</th>
-      <th md-column>{{'main.sum' | translate}}</th>
-    </tr>
-  </thead>
-  <tbody md-body>
-    <tr md-row ng-repeat="member in studentSubmitData.family" ng-class-odd="'odd'" ng-class-even="'even'">
-      <td md-cell>{{member.name}}</td>
-      <td md-cell>{{member.netSalary ? member.netSalary : '-'}}</td>
-      <td md-cell>{{member.pension ? member.pension : '-'}}</td>
-      <td md-cell>{{member.stateBenefit ? member.stateBenefit : '-'}}</td>
-      <td md-cell>{{member.otherIncome ? member.otherIncome : '-'}}</td>
-      <td md-cell>{{member.unemployedBenefit ? member.unemployedBenefit : '-'}}</td>
-      <td md-cell>{{member.sum ? member.sum : '-'}}</td>
-    </tr>
-  </tbody>
-</table>
+  <table md-table class="secondary-table">
+    <thead md-head>
+      <tr md-row>
+        <th md-column>{{'stipend.family.name' | translate}}</th>
+        <th md-column>{{'stipend.family.netSalary' | translate}}</th>
+        <th md-column>{{'stipend.family.pension' | translate}}</th>
+        <th md-column>{{'stipend.family.stateBenefit' | translate}}</th>
+        <th md-column>{{'stipend.family.otherIncome' | translate}}</th>
+        <th md-column>{{'stipend.family.unemployedBenefit' | translate}}</th>
+        <th md-column>{{'main.sum' | translate}}</th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row ng-repeat="member in application.family" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{member.name}}</td>
+        <td md-cell>{{member.netSalary ? member.netSalary : '-'}}</td>
+        <td md-cell>{{member.pension ? member.pension : '-'}}</td>
+        <td md-cell>{{member.stateBenefit ? member.stateBenefit : '-'}}</td>
+        <td md-cell>{{member.otherIncome ? member.otherIncome : '-'}}</td>
+        <td md-cell>{{member.unemployedBenefit ? member.unemployedBenefit : '-'}}</td>
+        <td md-cell>{{member.sum ? member.sum : '-'}}</td>
+      </tr>
+    </tbody>
+  </table>
+</fieldset>

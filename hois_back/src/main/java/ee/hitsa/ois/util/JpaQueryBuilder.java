@@ -37,17 +37,17 @@ public class JpaQueryBuilder<T> extends JpaNativeQueryBuilder {
     }
 
     public TypedQuery<T> select(EntityManager em) {
-        return buildQuery(alias, em, true, null);
+        return buildQuery(querySql(alias, true), em, null);
     }
 
     @Override
     public Number count(String expression, EntityManager em) {
-        return query(expression, em, false, null, Number.class).getSingleResult();
+        return query(querySql(expression, false), em, null, Number.class).getSingleResult();
     }
 
     @Override
-    protected TypedQuery<T> buildQuery(String projection, EntityManager em, boolean ordered, Map<String, Object> additionalParameters) {
-        return query(projection, em, ordered, additionalParameters, resultClass);
+    protected TypedQuery<T> buildQuery(String querySql, EntityManager em, Map<String, Object> additionalParameters) {
+        return query(querySql, em, additionalParameters, resultClass);
     }
 
     @Override
@@ -61,8 +61,8 @@ public class JpaQueryBuilder<T> extends JpaNativeQueryBuilder {
         return value;
     }
 
-    private <Q> TypedQuery<Q> query(String projection, EntityManager em, boolean ordered, Map<String, Object> additionalParameters, Class<Q> resultType) {
-        TypedQuery<Q> q = em.createQuery(querySql(projection, ordered), resultType);
+    private <Q> TypedQuery<Q> query(String querySql, EntityManager em, Map<String, Object> additionalParameters, Class<Q> resultType) {
+        TypedQuery<Q> q = em.createQuery(querySql, resultType);
         setQueryParameters(q, additionalParameters);
         return q;
     }

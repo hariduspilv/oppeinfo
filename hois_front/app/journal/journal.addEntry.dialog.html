@@ -90,7 +90,7 @@
                   </tr>
                 </thead>
                 <tbody md-body>
-                  <tr md-row ng-repeat="row in journalStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <tr md-row ng-repeat="row in journalStudents" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>
                       <span>{{::row.fullname}}, {{row.studentGroup}}</span>
                     </td>
@@ -137,18 +137,14 @@
             </md-table-container>
           </div>
         </div>
-
-        <span flex></span>
-        <md-dialog-actions layout="row" layout-align="start center">
-          <md-button class="md-raised md-primary" ng-click="submit()">{{'main.button.save' | translate}}</md-button>
-          <md-button ng-if="canDeleteEntries" class="md-raised" ng-click="delete()">{{"main.button.delete" | translate}}</md-button>
-          <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
-        </md-dialog-actions>
       </div>
     </md-dialog-content>
 
-
-
-
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{'main.button.save' | translate}}</md-button>
+      <md-button ng-if="canDeleteEntries" class="md-raised" ng-click="delete()">{{"main.button.delete" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
   </form>
 </md-dialog>

@@ -1,12 +1,10 @@
 package ee.hitsa.ois.web.dto;
 
-import java.util.List;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.HigherProtocolGradeUtil;
 import ee.hitsa.ois.util.HigherProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
@@ -19,9 +17,6 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
     private Boolean canConfirm;
     private String status;
     private SubjectStudyPeriodMidtermTaskDto subjectStudyPeriodMidtermTaskDto;
-    private List<String> possibleGrades;
-    
-
     
     public static HigherProtocolDto ofWithIdOnly(Protocol protocol) {
         HigherProtocolDto dto = new HigherProtocolDto();
@@ -53,20 +48,10 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
         dto.setProtocolStudents(StreamUtil.toMappedSet(HigherProtocolStudentDto::of, 
                 protocol.getProtocolStudents()));
         
-        dto.setPossibleGrades(HigherProtocolGradeUtil.getPossibleGrades(protocol));
-        
         Set<Long> studetnIds = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
         dto.setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto
                 .ofForProtocol(studetnIds, protocol.getProtocolHdata().getSubjectStudyPeriod()));
         return dto;
-    }
-    
-    public List<String> getPossibleGrades() {
-        return possibleGrades;
-    }
-
-    public void setPossibleGrades(List<String> possibleGrades) {
-        this.possibleGrades = possibleGrades;
     }
 
     public String getStatus() {

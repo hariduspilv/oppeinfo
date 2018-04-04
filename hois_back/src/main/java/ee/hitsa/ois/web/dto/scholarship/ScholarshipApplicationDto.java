@@ -2,7 +2,6 @@ package ee.hitsa.ois.web.dto.scholarship;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.constraints.Size;
@@ -17,6 +16,13 @@ import ee.hitsa.ois.validation.Required;
 public class ScholarshipApplicationDto {
 
     private Long id;
+    private BigDecimal credits;
+    private BigDecimal averageMark;
+    private BigDecimal lastPeriodMark;
+    private BigDecimal saisPoints;
+    private BigDecimal curriculumCompletion;
+    private Long absences;
+    private String studentGroupCode;
     @Size(max = 100)
     private String email;
     @Size(max = 100)
@@ -25,10 +31,10 @@ public class ScholarshipApplicationDto {
     @Required
     @Size(max = 50)
     private String bankAccount;
-    @Size(max = 4000)
-    private String addInfo;
     private String bankAccountOwnerIdcode;
     private String bankAccountOwnerName;
+    @Size(max = 4000)
+    private String addInfo;
     private Long familyMembers;
     private Long familyMembersAdult;
     private LocalDate scholarshipFrom;
@@ -43,18 +49,14 @@ public class ScholarshipApplicationDto {
 
     public static ScholarshipApplicationDto of(ScholarshipApplication application) {
         ScholarshipApplicationDto dto = new ScholarshipApplicationDto();
-        if (application != null) {
-            EntityUtil.bindToDto(application, dto, "files", "family");
-            dto.setFiles(
-                    StreamUtil.toMappedList(file -> ScholarshipFileDto.of(file), application.getScholarshipApplicationFiles()));
-            dto.setFamily(StreamUtil.toMappedList(fam -> ScholarshipApplicationFamilyDto.of(fam),
-                    application.getScholarshipApplicationFamilies()));
-            dto.setCanApply(Boolean
-                    .valueOf(ClassifierUtil.equals(ScholarshipStatus.STIPTOETUS_STAATUS_K, application.getStatus())));
-        } else {
-            dto.setFiles(new ArrayList<>());
-            dto.setCanApply(Boolean.TRUE);
-        }
+        EntityUtil.bindToDto(application, dto, "files", "family");
+        dto.setStudentGroupCode(application.getStudentGroup().getCode());
+        dto.setFiles(
+                StreamUtil.toMappedList(file -> ScholarshipFileDto.of(file), application.getScholarshipApplicationFiles()));
+        dto.setFamily(StreamUtil.toMappedList(fam -> ScholarshipApplicationFamilyDto.of(fam),
+                application.getScholarshipApplicationFamilies()));
+        dto.setCanApply(Boolean
+                .valueOf(ClassifierUtil.equals(ScholarshipStatus.STIPTOETUS_STAATUS_K, application.getStatus())));
         return dto;
     }
 
@@ -64,6 +66,62 @@ public class ScholarshipApplicationDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public BigDecimal getCredits() {
+        return credits;
+    }
+
+    public void setCredits(BigDecimal credits) {
+        this.credits = credits;
+    }
+
+    public BigDecimal getAverageMark() {
+        return averageMark;
+    }
+
+    public void setAverageMark(BigDecimal averageMark) {
+        this.averageMark = averageMark;
+    }
+
+    public BigDecimal getLastPeriodMark() {
+        return lastPeriodMark;
+    }
+
+    public void setLastPeriodMark(BigDecimal lastPeriodMark) {
+        this.lastPeriodMark = lastPeriodMark;
+    }
+
+    public BigDecimal getSaisPoints() {
+        return saisPoints;
+    }
+
+    public void setSaisPoints(BigDecimal saisPoints) {
+        this.saisPoints = saisPoints;
+    }
+
+    public BigDecimal getCurriculumCompletion() {
+        return curriculumCompletion;
+    }
+
+    public void setCurriculumCompletion(BigDecimal curriculumCompletion) {
+        this.curriculumCompletion = curriculumCompletion;
+    }
+
+    public Long getAbsences() {
+        return absences;
+    }
+
+    public void setAbsences(Long absences) {
+        this.absences = absences;
+    }
+
+    public String getStudentGroupCode() {
+        return studentGroupCode;
+    }
+
+    public void setStudentGroupCode(String studentGroupCode) {
+        this.studentGroupCode = studentGroupCode;
     }
 
     public String getEmail() {
@@ -98,14 +156,6 @@ public class ScholarshipApplicationDto {
         this.bankAccount = bankAccount;
     }
 
-    public String getAddInfo() {
-        return addInfo;
-    }
-
-    public void setAddInfo(String addInfo) {
-        this.addInfo = addInfo;
-    }
-
     public String getBankAccountOwnerIdcode() {
         return bankAccountOwnerIdcode;
     }
@@ -120,6 +170,14 @@ public class ScholarshipApplicationDto {
 
     public void setBankAccountOwnerName(String bankAccountOwnerName) {
         this.bankAccountOwnerName = bankAccountOwnerName;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
 
     public Long getFamilyMembers() {

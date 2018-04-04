@@ -60,11 +60,11 @@ public class StudentRepresentativeControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/studentrepresentatives/applications");
-        uriBuilder.queryParam("idcode", "3211212");
+        uriBuilder.queryParam("idcode", "3211212"); // invalid idcode is OK
         url = uriBuilder.build().toUriString();
         responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         uriBuilder = UriComponentsBuilder.fromUriString("/studentrepresentatives/applications");
         uriBuilder.queryParam("idcode", "48908209998");

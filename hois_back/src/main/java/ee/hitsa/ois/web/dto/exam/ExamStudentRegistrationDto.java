@@ -5,7 +5,7 @@ import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
-public class ExamRegistrationDto {
+public class ExamStudentRegistrationDto {
 
     private Long id;
     private AutocompleteResult subject;
@@ -17,6 +17,7 @@ public class ExamRegistrationDto {
     private LocalDateTime deadline;
     private String addInfo;
     private Boolean registered;
+    private Boolean canChange;
 
     public Long getId() {
         return id;
@@ -96,5 +97,13 @@ public class ExamRegistrationDto {
 
     public void setRegistered(Boolean registered) {
         this.registered = registered;
+    }
+
+    public Boolean getCanChange() {
+        return canChange;
+    }
+
+    public void setCanChange(Boolean canChange) {
+        this.canChange = canChange;
     }
 }

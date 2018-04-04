@@ -1,11 +1,5 @@
 package ee.hitsa.ois.web.dto;
 
-import java.util.List;
-
-import ee.hitsa.ois.domain.Building;
-import ee.hitsa.ois.domain.Room;
-import ee.hitsa.ois.domain.RoomEquipment;
-
 public class RoomSearchDto extends RoomDto {
 
     private String buildingName;
@@ -36,15 +30,4 @@ public class RoomSearchDto extends RoomDto {
         this.buildingAddress = buildingAddress;
     }
 
-    public static RoomSearchDto of(Building building, Room room, List<RoomEquipment> equipment) {
-        RoomSearchDto dto = new RoomSearchDto();
-        if(room != null) {
-            fill(room, equipment, dto);
-        }
-        dto.setBuilding(building.getId());
-        dto.setBuildingName(building.getName());
-        dto.setBuildingCode(building.getCode());
-        dto.setBuildingAddress(building.getAddress());
-        return dto;
-    }
 }

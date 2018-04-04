@@ -184,4 +184,13 @@ public class FinalExamVocationalProtocolControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
+    
+    @Test
+    public void otherStudents() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(existingProtocol.getId().toString()).pathSegment("otherStudents");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

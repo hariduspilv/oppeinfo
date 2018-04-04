@@ -1,7 +1,7 @@
 <md-tabs md-dynamic-height md-border-bottom>
   <md-tab label="{{'teacher.data' | translate}}">
     <md-content class="md-padding">
-      <form name="teacherForm" role="form" class="form-readonly">
+      <form name="teacherForm" role="form" class="form-readonly" novalidate>
         <div style="padding-top: 1em">
           <div layout="column">
             <div layout="row" layout-sm="column" layout-xs="column">
@@ -38,13 +38,23 @@
               <div flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" class="active">
               <md-input-container flex="100">
                 <label>{{'teacher.person.phone' | translate}}</label>
-                <input ng-model="teacher.person.phone" type="text">
+                <input ng-model="teacher.person.phone" name="personphone" type="text" md-maxlength="100">
+                <div ng-messages="teacherForm.personphone.$error">
+                  <div ng-message="md-maxlength">
+                    {{'main.messages.error.maxlength' | translate}}
+                  </div>
+                </div>
               </md-input-container>
             </div>
             <div flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" class="active">
               <md-input-container>
                 <label>{{'teacher.person.email' | translate}}</label>
-                <input ng-model="teacher.person.email" type="email">
+                <input ng-model="teacher.person.email" name="personemail" type="email" md-maxlength="100">
+                <div ng-messages="teacherForm.personemail.$error">
+                  <div ng-message="md-maxlength">
+                    {{'main.messages.error.maxlength' | translate}}
+                  </div>
+                </div>
               </md-input-container>
               </div>
             </div>

@@ -5,25 +5,25 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', status: 'PROTOKOLL_STAATUS' });
   var studentClMapper = Classifier.valuemapper({ journalResults: 'KUTSEHINDAMINE', status: 'OPPURSTAATUS' });
-  var nonNumberGrades = ['KUTSEHINDAMINE_A', 'KUTSEHINDAMINE_MA', 'KUTSEHINDAMINE_X'];
+  var editForbiddenGrades = ['KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_X'];
+  var viewForbiddenGrades = ['KUTSEHINDAMINE_X'];
   var allGrades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
+  
   $scope.formState = {};
 
   $scope.calculateGrades = {
     protocolStudents: []
   };
 
-  function loadGradesSelect() {
-    allGrades.$promise.then(function (result) {
-      $scope.grades = result.filter(function (it) {
-        if ($scope.protocol.protocolVdata.assessment === 'KUTSEHINDAMISVIIS_M') {
-          return nonNumberGrades.indexOf(it.code) > -1;
-        } else {
-          return nonNumberGrades.indexOf(it.code) === -1;
-        }
-      });
+  allGrades.$promise.then(function (result) {
+    $scope.grades = result.filter(function (it) {
+      if ($route.current.locals.isView) {
+        return viewForbiddenGrades.indexOf(it.code) === -1;
+      } else {
+        return editForbiddenGrades.indexOf(it.code) === -1;
+      }
     });
-  }
+  });
 
   var protocolStudentJournalResults = {};
   function loadJournals() {
@@ -164,7 +164,6 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
       $scope.getUrl = oisFileService.getUrl;
       loadJournals();
       loadOutcomes();
-      loadGradesSelect();
       $scope.formState.canEditConfirmedProtocol = canEditConfirmedProtocol();
       $scope.formState.canChangeConfirmedProtocolGrade = canChangeConfirmedProtocolGrade();
       $scope.formState.canAddDeleteStudents = $scope.protocol.status.code !== 'PROTOKOLL_STAATUS_K' && $scope.protocol.canBeEdited;
@@ -207,13 +206,10 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
 
   if ($route.current.locals.entity) {
     entityToDto($route.current.locals.entity);
-  } else if ($scope.protocol) {
-    loadGradesSelect();
   }
 
   $scope.deleteProtocolStudent = function (protocolStudent) {
     dialogService.confirmDialog({prompt: 'moduleProtocol.prompt.deleteStudent'}, function() {
-      //ArrayUtils.remove($scope.protocol.protocolStudents, protocolStudent);
       var ProtocolStudentEndpoint = QueryUtils.endpoint('/moduleProtocols/' + $scope.protocol.id + '/removeStudent');
       var removedStudent = new ProtocolStudentEndpoint(protocolStudent);
       removedStudent.$delete().then(function (protocol) {

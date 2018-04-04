@@ -1,13 +1,5 @@
 package ee.hitsa.ois.util;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.enums.Permission;
@@ -17,28 +9,16 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
 public class FinalExamProtocolUtil {
-
-    //TODO: could lead to concurrency issues
-    public static String generateProtocolNumber(HoisUserDetails user, EntityManager em) {
-        Long generatedProtocolNr = null;
-        
-        Query q = em.createNativeQuery("select MAX(protocol_nr) from protocol p where p.school_id = ?1");
-        q.setParameter(1, user.getSchoolId());
-        List<?> data = q.getResultList();
-        
-        if (data == null || data.isEmpty()) {
-            generatedProtocolNr = Long.valueOf(1);
-        } else {
-            Long previousProtocolNr = Long.valueOf(resultAsString(q.getSingleResult(), 0).substring(2));
-            int previousNr = previousProtocolNr.intValue();
-            generatedProtocolNr = Long.valueOf(++previousNr);
-        }
-        
-        return DateUtils.shortYear(LocalDate.now()) + String.format("%04d", generatedProtocolNr);
+    
+    private static boolean hasProtocolEditPermission(HoisUserDetails user, Protocol protocol) {
+        PermissionObject object = Boolean.TRUE.equals(protocol.getIsVocational())
+                ? PermissionObject.TEEMAOIGUS_LOPMOODULPROTOKOLL
+                : PermissionObject.TEEMAOIGUS_LOPPROTOKOLL;
+        return UserUtil.hasPermission(user, Permission.OIGUS_M, object);
     }
 
     public static boolean canEdit(HoisUserDetails user, Protocol protocol) {
-        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LOPMOODULPROTOKOLL)) {
+        if(!hasProtocolEditPermission(user, protocol)) {
             return false;
         }
         if(UserUtil.isSchoolAdmin(user, protocol.getSchool())) {
@@ -50,15 +30,15 @@ public class FinalExamProtocolUtil {
         return false;
     }
 
-    public static boolean canEdit(HoisUserDetails user, ProtocolStatus status, Long teacherResponsible) {
-        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LOPMOODULPROTOKOLL)) {
+    public static boolean canEdit(HoisUserDetails user, Protocol protocol, Long teacherResponsible) {
+        if(!hasProtocolEditPermission(user, protocol)) {
             return false;
         }
         if(user.isSchoolAdmin()) {
             return true;
         }
         if(user.isTeacher()) {
-            return ProtocolStatus.PROTOKOLL_STAATUS_S.equals(status) && user.getTeacherId().equals(teacherResponsible);
+            return ProtocolStatus.PROTOKOLL_STAATUS_S.name().equals(EntityUtil.getCode(protocol.getStatus())) && user.getTeacherId().equals(teacherResponsible);
         }
         return false;
     }
@@ -78,6 +58,10 @@ public class FinalExamProtocolUtil {
     }
 
     public static boolean canDelete(HoisUserDetails user, Protocol protocol) {
+        if(!hasProtocolEditPermission(user, protocol)) {
+            return false;
+        }
+        
         return !ProtocolUtil.confirmed(protocol) && allResultsEmpty(protocol) && 
                 (user.isSchoolAdmin() || isTeacherResponsible(user, protocol));
     }
@@ -92,7 +76,7 @@ public class FinalExamProtocolUtil {
     }
 
     public static boolean canCreateHigherProtocol(HoisUserDetails user) {
-        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LOPMOODULPROTOKOLL)) {
+        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LOPPROTOKOLL)) {
             return false;
         }
         return user.isSchoolAdmin() || user.isTeacher();

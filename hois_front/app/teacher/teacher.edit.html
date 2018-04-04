@@ -1,19 +1,19 @@
 <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
-    <md-nav-item md-nav-href="#/teachers/{{::teacher.id}}/edit" name="teacher.data">
+    <md-nav-item md-nav-href="#/teachers/{{::teacher.id}}/edit?_noback" name="teacher.data">
       {{'teacher.data' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id && teacher.isVocational" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation" name="teacher.continuingEducation"
+    <md-nav-item ng-if="teacher.id && teacher.isVocational" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation?_noback" name="teacher.continuingEducation"
       >{{'teacher.continuingEducation.label' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/qualification" name="teacher.qualification">
+    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/qualification?_noback" name="teacher.qualification">
       {{'teacher.qualification.qualification' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id && teacher.isHigher && isHigher" md-nav-href="#/teachers/{{::teacher.id}}/mobility" name="teacher.mobility">
+    <md-nav-item ng-if="teacher.id && teacher.isHigher && isHigher" md-nav-href="#/teachers/{{::teacher.id}}/mobility?_noback" name="teacher.mobility">
       {{'teacher.mobility.mobility' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence" name="teacher.rtipAbsence">
+    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence?_noback" name="teacher.rtipAbsence">
       {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
 </md-nav-bar>
 
 <md-content class="md-padding">
   <div class="ois-form-layout-padding" layout="column" ng-cloak>
-    <form name="teacherForm" role="form" class="nomargin">
+    <form name="teacherForm" role="form" class="nomargin" novalidate>
       <hois-collapsable label="('teacher.data' | translate)">
         <div layout="column" flex>
           <div layout="row" layout-sm="column" layout-xs="column">
@@ -55,15 +55,30 @@
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="25" flex-sm="100" flex-xs="100">
               <label>{{'teacher.person.firstname' | translate}}</label>
-              <input ng-model="teacher.person.firstname" type="text" ng-blur="generateEmail()" required>
+              <input ng-model="teacher.person.firstname" name="firstname" type="text" ng-blur="generateEmail()" required md-maxlength="100">
+              <div ng-messages="teacherForm.firstname.$error">
+                <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+                </div>
+              </div>
             </md-input-container>
             <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.lastname' | translate}}</label>
-              <input ng-model="teacher.person.lastname" type="text" ng-blur="generateEmail()" required>
+              <input ng-model="teacher.person.lastname" name="lastname" type="text" ng-blur="generateEmail()" required md-maxlength="100">
+              <div ng-messages="teacherForm.lastname.$error">
+                <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+                </div>
+              </div>
             </md-input-container>
             <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.nativeLanguage' | translate}}</label>
-              <input ng-model="teacher.person.nativeLanguage" type="text">
+              <input ng-model="teacher.person.nativeLanguage" name="nativeLanguage" type="text" md-maxlength="100">
+              <div ng-messages="teacherForm.nativeLanguage.$error">
+                <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+                </div>
+              </div>
             </md-input-container>
           </div>
 
@@ -74,11 +89,21 @@
             </md-input-container>
             <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.phone' | translate}}</label>
-              <input ng-model="teacher.person.phone" type="text">
+              <input ng-model="teacher.person.phone" name="personphone" type="text" md-maxlength="100">
+              <div ng-messages="teacherForm.personphone.$error">
+                <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+                </div>
+              </div>
             </md-input-container>
             <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.email' | translate}}</label>
-              <input ng-model="teacher.person.email" type="email">
+              <input ng-model="teacher.person.email" name="personemail" type="email" md-maxlength="100">
+              <div ng-messages="teacherForm.personemail.$error">
+                <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+                </div>
+              </div>
             </md-input-container>
           </div>
 
@@ -94,18 +119,36 @@
             </md-input-container>
             <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.phone' | translate}}</label>
-              <input ng-model="teacher.phone" type="text" required>
+              <input ng-model="teacher.phone" name="phone" type="text" required md-maxlength="100">
+              <div ng-messages="teacherForm.phone.$error">
+                <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+                </div>
+              </div>
             </md-input-container>
             <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.email' | translate}}</label>
-              <input ng-model="teacher.email" type="email" required>
+              <input ng-model="teacher.email" name="email" type="email" required md-maxlength="100">
+              <div ng-messages="teacherForm.email.$error">
+                <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+                </div>
+              </div>
             </md-input-container>
           </div>
 
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.scheduleLoad' | translate}}</label>
-              <input ng-model="teacher.scheduleLoad" type="number" required>
+              <input ng-model="teacher.scheduleLoad" name="scheduleLoad" type="number" required min="0" max="9999">
+              <div ng-messages="teacherForm.scheduleLoad.$error">
+                <div ng-message="min">
+                  {{'main.messages.error.min' | translate: {min: 0} }}
+                </div>
+                <div ng-message="max">
+                  {{'main.messages.error.max' | translate: {max: 9999} }}
+                </div>
+              </div>
             </md-input-container>
             <!-- todo: alert or check for need for alert -->
             <div layout="row" flex="70" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" layout-sm="column" layout-xs="column">
@@ -146,14 +189,24 @@
             </div>
             <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.rtipNr' | translate}}</label>
-              <input ng-model="teacher.rtipNr" type="text">
+              <input ng-model="teacher.rtipNr" name="rtipNr" type="text" md-maxlength="20">
+              <div ng-messages="teacherForm.rtipNr.$error">
+                <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+                </div>
+              </div>
             </md-input-container>
           </div>
 
           <div layout="row" layout-sm="column" layout-xs="column" flex>
             <md-input-container flex>
               <label>{{'teacher.addInfo' | translate}}</label>
-              <textarea ng-model="teacher.addInfo" md-maxlength="1000" max-rows="10" dfs md-select-on-focus></textarea>
+              <textarea ng-model="teacher.addInfo" name="addInfo" md-maxlength="1000" max-rows="10" dfs md-select-on-focus></textarea>
+              <div ng-messages="teacherForm.addInfo.$error">
+                <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+                </div>
+              </div>
             </md-input-container>
           </div>
 
@@ -189,7 +242,12 @@
               </md-input-container>
               <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'teacher.teacherPositionEhis.positionSpecificationEt' | translate}}</label>
-                <input ng-model="teacherPositionEhis.positionSpecificationEt" type="text">
+                <input ng-model="teacherPositionEhis.positionSpecificationEt" name="teacherPositionEhis[{{$index}}].positionSpecificationEt" type="text" md-maxlength="255">
+                <div ng-messages="teacherForm['teacherPositionEhis['+$index+'].positionSpecificationEt'].$error">
+                  <div ng-message="md-maxlength">
+                    {{'main.messages.error.maxlength' | translate}}
+                  </div>
+                </div>
               </md-input-container>
             </div>
 
@@ -217,7 +275,15 @@
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container flex="25" flex-sm="100" flex-xs="100">
                 <label>{{'teacher.teacherPositionEhis.load' | translate}}</label>
-                <input ng-model="teacherPositionEhis.load" type="number" required max="5" min="0" step="0.1">
+                <input ng-model="teacherPositionEhis.load" name="teacherPositionEhis[{{$index}}].load" type="number" required max="5" min="0" step="0.1">
+                <div ng-messages="teacherForm['teacherPositionEhis['+$index+'].load'].$error">
+                  <div ng-message="max">
+                    {{'main.messages.error.max' | translate: {max: 5} }}
+                  </div>
+                  <div ng-message="min">
+                    {{'main.messages.error.min' | translate: {min: 0} }}
+                  </div>
+                </div>
               </md-input-container>
               <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <md-checkbox ng-model="teacherPositionEhis.isContractEnded">
@@ -269,11 +335,21 @@
               </md-input-container>
               <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'teacher.teacherPositionEhis.employmentTypeSpecification' | translate}}</label>
-                <input ng-model="teacherPositionEhis.employmentTypeSpecification" type="text">
+                <input ng-model="teacherPositionEhis.employmentTypeSpecification" name="teacherPositionEhis[{{$index}}].employmentTypeSpecification" type="text" md-maxlength="255">
+                <div ng-messages="teacherForm['teacherPositionEhis['+$index+'].employmentTypeSpecification'].$error">
+                  <div ng-message="md-maxlength">
+                    {{'main.messages.error.maxlength' | translate}}
+                  </div>
+                </div>
               </md-input-container>
               <md-input-container flex="10" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'teacher.teacherPositionEhis.employmentCode' | translate}}</label>
-                <input ng-model="teacherPositionEhis.employmentCode" type="text">
+                <input ng-model="teacherPositionEhis.employmentCode" name="teacherPositionEhis[{{$index}}].employmentCode" type="text" md-maxlength="100">
+                <div ng-messages="teacherForm['teacherPositionEhis['+$index+'].employmentCode'].$error">
+                  <div ng-message="md-maxlength">
+                    {{'main.messages.error.maxlength' | translate}}
+                  </div>
+                </div>
               </md-input-container>
             </div>
 
@@ -285,7 +361,12 @@
 
               <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'teacher.teacherPositionEhis.positionSpecificationEn' | translate}}</label>
-                <input ng-model="teacherPositionEhis.positionSpecificationEn" type="text">
+                <input ng-model="teacherPositionEhis.positionSpecificationEn" name="teacherPositionEhis[{{$index}}].positionSpecificationEn" type="text" md-maxlength="255">
+                <div ng-messages="teacherForm['teacherPositionEhis['+$index+'].positionSpecificationEn'].$error">
+                  <div ng-message="md-maxlength">
+                    {{'main.messages.error.maxlength' | translate}}
+                  </div>
+                </div>
               </md-input-container>
               <md-button ng-click="deleteEhisPosition(teacherPositionEhis)" class="md-raised" flex-offset="35" flex-offset-xs="0" flex-offset-sm="0">{{'main.button.delete' | translate}}
               </md-button>
@@ -301,7 +382,7 @@
     </form>
   </div>
   <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-  <md-button ng-href="#/teachers" class="md-raised">{{'main.button.back' | translate}}</md-button>
-  <md-button ng-if="teacher.id" ng-click="sendToEhis()" class="md-raised">{{'main.button.sendToEhis' | translate}}</md-button>
+  <md-button ng-click="back('#/teachers', teacherForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  <md-button ng-if="teacher.id && teacher.teacherPositionEhis && teacher.teacherPositionEhis.length" ng-click="sendToEhis()" class="md-raised">{{'main.button.sendToEhis' | translate}}</md-button>
   <md-button ng-if="teacher.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
 </md-content>

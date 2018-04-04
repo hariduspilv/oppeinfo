@@ -1,8 +1,7 @@
 package ee.hitsa.ois.service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -106,7 +105,7 @@ public class CertificateContentService {
     private List<CertificateStudentResult> getHigherResults(Student student) {
         List<StudentHigherSubjectResultDto> list = studentResultHigherService.positiveHigherResults(student);
         List<CertificateStudentResult> results = StreamUtil.toMappedList(CertificateStudentResult::of, list);
-        Collections.sort(results, Comparator.comparing(CertificateStudentResult::getDate));
+        Collections.sort(results, StreamUtil.comparingWithNullsLast(CertificateStudentResult::getDate));
         return results;
     }
 
@@ -115,7 +114,7 @@ public class CertificateContentService {
                 .stream().filter(r -> OccupationalGrade.isPositive(r.getGrade()));
         Map<String, Classifier> grades = getVocationalGrades();
         List<CertificateStudentResult> results = StreamUtil.toMappedList(r -> CertificateStudentResult.of(r, grades), data);
-        Collections.sort(results, Comparator.comparing(CertificateStudentResult::getDate));
+        Collections.sort(results, StreamUtil.comparingWithNullsLast(CertificateStudentResult::getDate));
         return results;
     }
 
@@ -128,11 +127,12 @@ public class CertificateContentService {
 
     private static void setLastSession(CertificateReport report, StudyYear studyYear, CertificateType type) {
         if(CertificateType.TOEND_LIIK_KONTAKT.equals(type)) {
-            List<StudyPeriodEvent> finishedSessions = 
-                    StreamUtil.toFilteredList(e -> hasFinished(e), currentStudyYearsSessions(studyYear));
+            LocalDateTime now = LocalDateTime.now();
+            List<StudyPeriodEvent> sessions =
+                    StreamUtil.toFilteredList(e -> !e.getStart().isAfter(now), currentStudyYearsSessions(studyYear));
 
-            if(!finishedSessions.isEmpty()) {
-                StudyPeriodEvent lastSession = finishedSessions.get(finishedSessions.size() - 1);
+            if(!sessions.isEmpty()) {
+                StudyPeriodEvent lastSession = sessions.get(sessions.size() - 1);
                 report.setLastSession(new CertificateReportSession(lastSession));
             }
         }
@@ -140,16 +140,12 @@ public class CertificateContentService {
 
     private static List<StudyPeriodEvent> currentStudyYearsSessions(StudyYear studyYear) {
         List<StudyPeriodEvent> sessions = StreamUtil.toFilteredList(e -> isSession(e), studyYear.getStudyPeriodEvents());
-        Collections.sort(sessions, Comparator.comparing(StudyPeriodEvent::getEnd));
+        Collections.sort(sessions, StreamUtil.comparingWithNullsLast(StudyPeriodEvent::getStart));
         return sessions;
     }
 
     private static boolean isSession(StudyPeriodEvent event) {
         return ClassifierUtil.equals(StudyPeriodEventType.SYNDMUS_SESS, event.getEventType());
-    }
-
-    private static boolean hasFinished(StudyPeriodEvent event) {
-        return event.getEnd().toLocalDate().isBefore(LocalDate.now());
     }
 
     private Map<String, Classifier> getVocationalGrades() {
