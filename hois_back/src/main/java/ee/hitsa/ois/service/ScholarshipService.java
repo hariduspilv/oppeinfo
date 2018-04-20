@@ -75,6 +75,7 @@ import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipTermForm;
 import ee.hitsa.ois.web.dto.ScholarshipTermApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationSearchDto;
+import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationStudentDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipStudentRejectionDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermApplicationDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermDto;
@@ -217,12 +218,12 @@ public class ScholarshipService {
         return availableStipends(studentId, Boolean.TRUE);
     }
     
-    public List<ScholarshipTermStudentDto> scholarshipTermStudentDtos(Long studentId) {
-        return scholarshipTermStudentDtos(studentStipends(studentId, Boolean.FALSE));
+    public List<ScholarshipApplicationStudentDto> studentStipends(Long studentId) {
+        return scholarshipApplicationStudentDtos(studentStipends(studentId, Boolean.FALSE));
     }
 
-    public List<ScholarshipTermStudentDto> drGrantTermStudentDtos(Long studentId) {
-        return scholarshipTermStudentDtos(studentStipends(studentId, Boolean.TRUE));
+    public List<ScholarshipApplicationStudentDto> studentDrGrants(Long studentId) {
+        return scholarshipApplicationStudentDtos(studentStipends(studentId, Boolean.TRUE));
     }
 
     private List<ScholarshipTermStudentDto> availableStipends(Long studentId, Boolean drGrants) {
@@ -258,12 +259,19 @@ public class ScholarshipService {
         return query.getResultList();
     }
 
-    private static List<ScholarshipTermStudentDto> scholarshipTermStudentDtos(List<ScholarshipApplication> stipends) {
+    private static List<ScholarshipApplicationStudentDto> scholarshipApplicationStudentDtos(List<ScholarshipApplication> stipends) {
         return StreamUtil.toMappedList(sa -> {
-            ScholarshipTermStudentDto dto = ScholarshipTermStudentDto.of(sa.getScholarshipTerm());
+            ScholarshipApplicationStudentDto dto = new ScholarshipApplicationStudentDto();
+            dto.setId(EntityUtil.getId(sa));
+            ScholarshipTerm term = sa.getScholarshipTerm();
+            dto.setTermId(EntityUtil.getId(term));
+            dto.setType(EntityUtil.getCode(term.getType()));
+            dto.setAverageMark(sa.getAverageMark());
+            dto.setLastPeriodMark(sa.getLastPeriodMark());
+            dto.setCurriculumCompletion(sa.getCurriculumCompletion());
+            dto.setAbsences(sa.getAbsences());
             dto.setStatus(EntityUtil.getCode(sa.getStatus()));
             dto.setDecisionDate(sa.getDecisionDate());
-            dto.setApplicationId(EntityUtil.getId(sa));
             dto.setRejectComment(sa.getRejectComment());
             return dto;
         }, stipends);
@@ -537,7 +545,8 @@ public class ScholarshipService {
         ScholarshipApplicationDto dto = new ScholarshipApplicationDto();
         dto.setFiles(new ArrayList<>());
         dto.setCanApply(Boolean.TRUE);
-        if (useSaisPoints(term, student)) {
+        dto.setUseSaisPoints(Boolean.valueOf(useSaisPoints(term, student)));
+        if (Boolean.TRUE.equals(dto.getUseSaisPoints())) {
             dto.setSaisPoints(getSaisPoints(student));
         }
         return dto;
@@ -546,7 +555,8 @@ public class ScholarshipService {
     public ScholarshipApplicationDto getApplicationDto(ScholarshipApplication application) {
         ScholarshipApplicationDto dto = ScholarshipApplicationDto.of(application);
         Student student = application.getStudent();
-        if (useSaisPoints(application.getScholarshipTerm(), student)) {
+        dto.setUseSaisPoints(Boolean.valueOf(useSaisPoints(application.getScholarshipTerm(), student)));
+        if (Boolean.TRUE.equals(dto.getUseSaisPoints())) {
             dto.setSaisPoints(getSaisPoints(student));
         }
         return dto;
@@ -766,7 +776,8 @@ public class ScholarshipService {
         }
         StudentResults results = getStudentResults(term, student);
         if (term.getAverageMark() != null) {
-            if (results.getAverageMark() == null || results.getAverageMark().compareTo(term.getAverageMark()) < 0) {
+            BigDecimal comparable = useSaisPoints(term, student) ? getSaisPoints(student) : results.getAverageMark();
+            if (comparable == null || comparable.compareTo(term.getAverageMark()) < 0) {
                 return false;
             }
         }
@@ -843,6 +854,8 @@ public class ScholarshipService {
         private BigDecimal lastPeriodMark;
         private BigDecimal credits;
         private Long absences;
+        
+        public StudentResults() {}
         
         public BigDecimal getAverageMark() {
             return averageMark;

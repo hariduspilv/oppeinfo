@@ -43,7 +43,7 @@
                     <div layout="row" layout-sm="column" layout-xs="column">
                         <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
                             <label>{{'teacher.continuingEducation.name' | translate}}</label>
-                            <input ng-model="continuingEducation.nameEt" name="continuingEducation[{{$index}}].nameEt" md-maxlength="1000" type="text" required>
+                            <textarea ng-model="continuingEducation.nameEt" name="continuingEducation[{{$index}}].nameEt" md-maxlength="1000" required></textarea>
                             <div ng-messages="continuingEducationsForm['continuingEducation['+$index+'].nameEt'].$error">
                               <div ng-message="md-maxlength">
                                 {{'main.messages.error.maxlength' | translate}}
@@ -75,7 +75,7 @@
                         </md-input-container>
                         <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                             <label>{{'teacher.continuingEducation.diplomaNr' | translate}}</label>
-                            <textarea ng-model="continuingEducation.diplomaNr" name="continuingEducation[{{$index}}].diplomaNr" md-maxlength="100" max-rows="2" md-select-on-focus></textarea>
+                            <input ng-model="continuingEducation.diplomaNr" name="continuingEducation[{{$index}}].diplomaNr" md-maxlength="100" type="text" md-select-on-focus>
                             <div ng-messages="continuingEducationsForm['continuingEducation['+$index+'].diplomaNr'].$error">
                               <div ng-message="md-maxlength">
                                 {{'main.messages.error.maxlength' | translate}}
@@ -101,10 +101,10 @@
                 <md-button ng-click="deleteContinuingEducation(continuingEducation)" class="md-raised">{{'main.button.delete' | translate}}</md-button>
             </hois-collapsable>
         </div>
+
+        <md-button ng-click="updateContinuingEducations()" class="md-raised md-primary" ng-if="teacherContinuingEducations.continuingEducations.length > 0">
+            {{'main.button.save' | translate}}
+        </md-button>
+        <md-button ng-click="back('#/teachers', continuingEducationsForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </form>
 </md-content>
-
-<md-button ng-click="updateContinuingEducations()" class="md-raised md-primary" ng-if="teacherContinuingEducations.continuingEducations.length > 0">
-  {{'main.button.save' | translate}}
-</md-button>
-<md-button ng-click="back('#/teachers', continuingEducationsForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>

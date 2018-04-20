@@ -44,6 +44,7 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
+import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.moodle.EnrollResult;
 import ee.hitsa.ois.web.dto.studymaterial.JournalLessonHoursDto;
 import ee.hitsa.ois.web.dto.timetable.JournalDto;
@@ -205,11 +206,17 @@ public class JournalController {
         JournalUtil.assertCanView(user, journal);
         return journalService.journalStudentsWithAcceptedAbsence(journal, command.getEntryDate());
     }
+    
+    @GetMapping("/studentJournalStudyYears")
+    public List<StudyYearSearchDto> studentJournalStudyYears(HoisUserDetails user, @RequestParam("studentId") Long studentId) {
+        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        return journalService.studentJournalStudyYears(studentId);
+    }
 
     @GetMapping("/studentJournals")
-    public List<StudentJournalDto> studentJournals(HoisUserDetails user,  @RequestParam("studentId") Long studentId) {
+    public List<StudentJournalDto> studentJournals(HoisUserDetails user, @RequestParam("studentId") Long studentId, @RequestParam("studyYearId") Long studyYearId) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
-        return journalService.studentJournals(studentId);
+        return journalService.studentJournals(studentId, studyYearId);
     }
 
     @GetMapping("/studentJournalTasks")

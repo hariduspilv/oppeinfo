@@ -58,27 +58,28 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column>{{'journal.studentGroups' | translate}}</th>
-            <th md-column md-order-by="{{currentLanguageNameField()}}">{{'journal.label' | translate}}</th>
-            <th md-column>{{'journal.teachers' | translate}}</th>
-            <th md-column>{{'journal.modules' | translate}}</th>
+            <th md-column md-order-by="2">{{'journal.studentGroups' | translate}}</th>
+            <th md-column md-order-by="3">{{'journal.label' | translate}}</th>
+            <th md-column md-order-by="4">{{'journal.teachers' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage() === 'et' ? 5 : 6}}">{{'journal.modules' | translate}}</th>
             <th md-column>{{'journal.plannedAndEnteredLessonsCount' | translate}}</th>
-            <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'main.status' | translate}}</th>
-            <th md-column>{{'curriculum.code' | translate}}</th>
+            <th md-column md-order-by="7">{{'main.status' | translate}}</th>
+            <th md-column md-order-by="8">{{'curriculum.code' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{row.studentGroups.join(", ")}}</td>
+            <td md-cell>{{row.studentGroups}}</td>
             <td md-cell>
-              <a ng-href="/#/journal/{{::row.id}}/view">{{row.nameEt}}</a>
+              <a ng-if="!row.canEdit" ng-href="/#/journal/{{::row.id}}/view">{{row.nameEt}}</a>
+              <a ng-if="row.canEdit" ng-href="/#/journal/{{::row.id}}/edit">{{row.nameEt}}</a>
             </td>
-            <td md-cell>{{row.teachers.join(", ")}}</td>
-            <td md-cell>{{showModuleNames(row.modules)}}</td>
+            <td md-cell>{{row.teachers}}</td>
+            <td md-cell>{{currentLanguageNameField(row.modules)}}</td>
             <td md-cell>{{row.plannedHours}}/{{row.usedHours}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
-            <td md-cell>{{row.curriculums.join(", ")}}</td>
+            <td md-cell>{{row.curriculums}}</td>
             <td md-cell>
               <md-button ng-if="row.canEdit" md-no-ink class="md-primary change-button" ng-href="#/journal/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>

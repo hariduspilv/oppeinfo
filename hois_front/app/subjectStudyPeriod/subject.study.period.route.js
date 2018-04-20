@@ -7,8 +7,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodSearchController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); },
-            auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK]
@@ -18,7 +18,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodEditController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK]
@@ -28,7 +29,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodViewController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK]
@@ -38,7 +40,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodEditController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK]
@@ -48,8 +51,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodStudentGroupSearchController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); },
-            auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
@@ -59,7 +62,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodStudentGroupEditController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
@@ -69,7 +73,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodStudentGroupEditController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
@@ -79,7 +84,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodStudentGroupViewController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
@@ -89,8 +95,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodTeacherSearchController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); },
-            auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
@@ -100,7 +106,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodTeacherEditController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
@@ -110,7 +117,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodTeacherEditController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
@@ -121,7 +129,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodTeacherViewController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
@@ -132,7 +141,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodSubjectSearchController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
@@ -142,7 +152,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodSubjectEditController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
@@ -152,7 +163,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodSubjectEditController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
@@ -162,7 +174,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodSubjectViewController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]

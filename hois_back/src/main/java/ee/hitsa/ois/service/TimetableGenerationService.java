@@ -271,23 +271,34 @@ public class TimetableGenerationService {
     }
 
     private Map<Long, String> getTeachersIntoMapById(Set<Long> teachers) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                "from teacher t" + " inner join person p on p.id = t.person_id");
-
-        qb.requiredCriteria("t.id in (:teacherIds)", "teacherIds", teachers);
-
-        List<?> data = qb.select("t.id, p.firstname, p.lastname", em).getResultList();
-
-        return StreamUtil.toMap(r -> resultAsLong(r, 0),
-                r -> PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)), data);
+        if (!teachers.isEmpty()) {
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
+                    "from teacher t" + " inner join person p on p.id = t.person_id");
+            
+            qb.requiredCriteria("t.id in (:teacherIds)", "teacherIds", teachers);
+            
+            List<?> data = qb.select("t.id, p.firstname, p.lastname", em).getResultList();
+            
+            return StreamUtil.toMap(r -> resultAsLong(r, 0),
+                    r -> PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)), data);
+        }
+        return new HashMap<>();
     }
 
     private Map<String, Object> getSheetData(Timetable timetable) {
         List<TimetableEventDto> events = timetableService.getPlannedLessonsForVocationalTimetable(timetable);
 
         List<LessonTimeExcel> lessonTimesForExcel = getLessonTimesForExcel(timetable);
+        
+        
+        /*TODO: Find a better way to not have duplicate keys. Ignore lessontimes that are valid but are not the latest?
         Map<String, LessonTimeExcel> lessonTimesMapped = StreamUtil
                 .toMap(lt -> lt.getDay().getDayOfWeek().name() + lt.getLessonNr(), lessonTimesForExcel);
+                */
+        Map<String, LessonTimeExcel> lessonTimesMapped = new HashMap<>();
+        for (LessonTimeExcel lt : lessonTimesForExcel) {
+            lessonTimesMapped.put(lt.getDay().getDayOfWeek().name() + lt.getLessonNr(), lt);
+        }
 
         Set<TimetableStudentGroupDto> studentGroups = new HashSet<>(timetableService.getVocationalStudentGroups(timetable));
         Map<Long, TimetablePlanExcelCell> lessonsByGroups = StreamUtil.toMap(dto -> dto.getId(),
@@ -335,7 +346,7 @@ public class TimetableGenerationService {
                         + event.getTeachers().stream().map(t -> teachersByIds.get(t)).collect(Collectors.joining(", "));
             }
             
-            if (index == groupLessons.getDisplayValues().size() - 1) {
+            if (!groupLessons.getDisplayValues().isEmpty() && index == groupLessons.getDisplayValues().size() - 1) {
                 TimetablePlanExcelCell previous = groupLessons.getDisplayValues().get(index);
                 String previousString = previous.getName();
                 previousString += "\n" + groupResult;

@@ -45,6 +45,8 @@ import ee.hitsa.ois.domain.timetable.JournalRoom;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
+import ee.hitsa.ois.domain.timetable.TimetableObject;
+import ee.hitsa.ois.domain.timetable.TimetableObjectStudentGroup;
 import ee.hitsa.ois.enums.GroupProportion;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.JournalStatus;
@@ -253,7 +255,6 @@ public class LessonPlanService {
         Map<String, Object> data = new HashMap<>();
         data.put("studyYears", autocompleteService.studyYears(schoolId));
         StudentGroupAutocompleteCommand studentGroupLookup = new StudentGroupAutocompleteCommand();
-        studentGroupLookup.setValid(Boolean.TRUE);
         studentGroupLookup.setHigher(Boolean.FALSE);
         data.put("studentGroups", autocompleteService.studentGroups(schoolId, studentGroupLookup));
         data.put("studentGroupMapping", studentgroupsWithLessonPlans(schoolId));
@@ -432,6 +433,8 @@ public class LessonPlanService {
             return jmt;
         });
         
+        setTimetableObjectStudentGroups(journal, form, lessonPlanModule);
+        
         if (Boolean.TRUE.equals(form.getAddModuleOutcomes())) {
             List<Long> curriculumVersionOmoduleThemeIds = form.getJournalOccupationModuleThemes();
             if (form.getGroups() != null) {
@@ -450,6 +453,39 @@ public class LessonPlanService {
     
     public Journal saveJournal(Journal journal, LessonPlanJournalForm form, HoisUserDetails user) {
         return saveJournal(journal, form, user, em.getReference(LessonPlanModule.class, form.getLessonPlanModuleId()));
+    }
+    
+    private void setTimetableObjectStudentGroups(Journal journal, LessonPlanJournalForm form, LessonPlanModule lessonPlanModule) {
+     // Remove previously connected groups from timetable objects
+        Set<Long> connectedGroups = StreamUtil.toMappedSet(LessonPlanGroupForm::getStudentGroup, form.getGroups());
+        connectedGroups.add(EntityUtil.getId(lessonPlanModule.getLessonPlan().getStudentGroup()));
+        List<TimetableObjectStudentGroup> leftOverTimetableGroups = em.createQuery(
+                "select tosg from TimetableObjectStudentGroup tosg join tosg.timetableObject to where to.journal.id = ?1 and tosg.studentGroup.id not in ?2",
+                TimetableObjectStudentGroup.class)
+                .setParameter(1, EntityUtil.getId(journal))
+                .setParameter(2, connectedGroups)
+                .getResultList();
+        
+        for (TimetableObjectStudentGroup group : leftOverTimetableGroups) {
+            em.remove(group);
+            em.flush();
+        }
+        
+        // Add student groups to existing timetable objects
+        List<TimetableObject> timetableObjects = em.createQuery("select to from TimetableObject to where to.journal.id = ?1", TimetableObject.class)
+                .setParameter(1, EntityUtil.getId(journal))
+                .getResultList();
+        for (TimetableObject object : timetableObjects) {
+            List<Long> groups = StreamUtil.toMappedList(tosg -> EntityUtil.getId(tosg.getStudentGroup()), object.getTimetableObjectStudentGroups());
+            for (Long connectedGroup : connectedGroups) {
+                if (!groups.contains(connectedGroup)) {
+                    TimetableObjectStudentGroup tosg = new TimetableObjectStudentGroup();
+                    tosg.setTimetableObject(object);
+                    tosg.setStudentGroup(em.getReference(StudentGroup.class, connectedGroup));
+                    object.getTimetableObjectStudentGroups().add(tosg);
+                }
+            }
+        }
     }
     
     private void addJournalOutcomeEntries(Journal journal, List<Long> curriculumVersionOmoduleThemeIds) {
@@ -514,19 +550,19 @@ public class LessonPlanService {
     }
     
     private void removePreviouslyConnectedGroupThemsOutcomeEntries(Journal journal, Map<Long, JournalEntry> oldEntries) {
-        Query q = em.createNativeQuery("select jes.id from journal_entry_student jes "
-                + "inner join journal_entry je on je.id = jes.journal_entry_id "
+        Query q = em.createNativeQuery("select je.id from journal_entry je "
+                + "join journal_entry_student jes on je.id=jes.journal_entry_id "
                 + "where je.entry_type_code = 'SISSEKANNE_O' and je.journal_id = ?1 and jes.journal_entry_id in (?2)");
         q.setParameter(1, journal.getId());
         q.setParameter(2, StreamUtil.toMappedList(e -> e.getId(), oldEntries.values()));
         
         List<?> data = q.getResultList();
-        if (!data.isEmpty()) {
-            throw new ValidationFailedException("lessonplan.journal.outcomesReferenced");
-        }
-        
+        Set<Long> referencedEntries = StreamUtil.toMappedSet(d -> resultAsLong(d, 0), data);
+
         oldEntries.forEach((id, entry) -> {
-            journal.getJournalEntries().remove(entry);
+            if (!referencedEntries.contains(EntityUtil.getId(entry))) {
+                journal.getJournalEntries().remove(entry);
+            }
         });
     }
 

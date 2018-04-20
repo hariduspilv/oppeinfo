@@ -339,4 +339,10 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     });
   };
 
+  $scope.periodTypeChanged = function() {
+    $scope.application.startDate = undefined;
+    $scope.application.endDate = undefined;
+    $scope.application.studyPeriodStart = undefined;
+    $scope.application.studyPeriodEnd = undefined;
+  };
 });

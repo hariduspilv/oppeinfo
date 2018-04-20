@@ -5,7 +5,7 @@
   </md-input-container>
 </div>
 
-<div ng-show="!application.isPeriod" layout="row" layout-xs="column">
+<div ng-show="!application.isPeriod" layout="row" layout-sm="column" layout-xs="column">
   <md-input-container  flex>
     <label>{{labelStart | translate}}</label>
     <hois-value value="application.startDate | hoisDate"></hois-value>
@@ -17,7 +17,7 @@
   </md-input-container>
 </div>
 
-<div ng-show="application.isPeriod" layout="row" layout-xs="column">
+<div ng-show="application.isPeriod" layout="row" layout-sm="column" layout-xs="column">
   <md-input-container  flex>
     <label>{{labelStart | translate}}</label>
     <hois-value value="studyPeriodView(application.studyPeriodStart)"></hois-value>

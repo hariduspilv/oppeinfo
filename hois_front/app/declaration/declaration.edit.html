@@ -46,11 +46,77 @@
         <hois-value value="declaration.confirmer"></hois-value>
     </md-input-container>
   </div>
-  <div layout="row" layout-xs="column">
+  <div ng-show="declaration.canBeSetConfirmed" layout="row" layout-xs="column">
     <md-button class="md-raised" ng-click="openAddCurriculumSubject()">{{'declaration.addCurriculumSubject' | translate}}</md-button>
     <md-button class="md-raised" ng-click="openAddExtraCurriculumSubject()">{{'declaration.addExtraCurriculumSubject' | translate}}</md-button>
   </div>
   <br>
+
+  <fieldset ng-show="addCurriculumSubjectForm">
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'declaration.addingCurriculumSubject' | translate}}</legend>
+    <span ng-if="tabledata.content.length === 0">
+      {{'declaration.noSuitableCurriculumSubjects' | translate}}
+    </span>
+    <span ng-if="tabledata.content.length > 0">
+      <md-table-container>
+        <table md-table md-progress="tabledata.$promise" class="secondary-table">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th md-column md-order-by="{{'cvhm.' + currentLanguageNameField()}}">{{'declaration.module' | translate}}</th>
+              <th md-column md-order-by="{{'s.' + currentLanguageNameField()}}">{{'declaration.subject' | translate}}</th>
+              <th md-column>{{'declaration.teacher' | translate}}</th>
+              <th md-column md-order-by="s.credits">{{'declaration.eap' | translate}}</th>
+              <th md-column md-order-by="c.value">{{'declaration.assessment' | translate}}</th>
+              <th md-column md-order-by="cvhms.is_optional">{{'declaration.isRequired' | translate}}</th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr ng-repeat="subject in tabledata.content">
+              <td md-cell>{{currentLanguageNameField(subject.module)}}</td>
+              <td md-cell>{{currentLanguageNameField(subject.subject)}}({{subject.subject.code}})</td>
+              <td md-cell>
+                <table>
+                  <tr ng-repeat="teacher in subject.teachers | orderBy">
+                    <td>{{teacher}}</td>
+                  </tr>
+                </table>
+              </td>
+              <td md-cell>{{subject.subject.credits}}</td>
+              <td md-cell>{{subject.subject.assessment}}</td>
+              <td md-cell>{{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
+              <td md-cell>
+                <a href="" ng-click="addCurriculumSubject(subject)">{{'declaration.addSubject' | translate}}</a>
+              </td>
+            </tr>
+            <tr ng-repeat-end>
+              <td colspan="6"></td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+        md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }"
+        md-page-select></md-table-pagination>
+    </span>
+  </fieldset>
+
+  <fieldset ng-show="addExtraCurriculumSubjectForm">
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'declaration.addingExtraCurriculumSubject' | translate}}</legend>
+    <form name="extraCurriculumForm" ng-cloak>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <md-select ng-model="subject" required aria-label="{{'declaration.addingExtraCurriculumSubject' | translate}}">
+          <md-option ng-value="subject" ng-repeat="subject in subjects |
+                orderBy: 'subject.' + currentLanguageNameField()">
+            {{currentLanguageNameField(subject.subject)}}({{subject.subject.code}}) - {{subject.teachers.join(', ')}}
+          </md-option>
+        </md-select>
+      </div>
+      <md-button class="md-raised md-primary" ng-click="addExtraCurriculumSubject()">{{"main.button.add" | translate}}</md-button>
+    </form>
+  </fieldset>
+  <br>
+
   <md-table-container>
     <table md-table>
       <thead md-head>

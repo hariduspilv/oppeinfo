@@ -10,39 +10,32 @@
             </md-input-container>
         </div>
 
-        <div layout="row" layout-md="column" layout-sm="column" layout-xs="column">
-            <!--md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-              <label>{{'application.insertionDate' | translate}}</label>
-            </md-input-container-->
-            <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex>
+            <md-input-container>
               <label>{{'application.insertionDateA' | translate}}</label>
               <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
             </md-input-container>
 
-              <div layout="column" flex="20" flex-md="100" flex-sm="100" flex-xs="100" layout-align="start end" layout-align-md="start start" layout-align-xs="start start" layout-align-sm="start start">
-                  <md-input-container flex>
-                    <label>{{'application.insertionDateK' | translate}}</label>
-                    <md-datepicker ng-model="criteria.insertedThru"></md-datepicker>
-                  </md-input-container>
-              </div>
-
+            <md-input-container>
+              <label>{{'application.insertionDateK' | translate}}</label>
+              <md-datepicker ng-model="criteria.insertedThru"></md-datepicker>
+            </md-input-container>
+          </div>
         </div>
 
-        <div layout="row" layout-md="column" layout-sm="column" layout-xs="column">
-            <!--md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-              <label>{{'application.submissionDate' | translate}}</label>
-            </md-input-container-->
-            <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex>
+            <md-input-container>
               <label>{{'application.submissionDateA' | translate}}</label>
               <md-datepicker ng-model="criteria.submittedFrom"></md-datepicker>
             </md-input-container>
 
-            <div layout="column" flex="20" flex-md="100" flex-sm="100" flex-xs="100" layout-align="start end" layout-align-md="start start" layout-align-xs="start start" layout-align-sm="start start">
-              <md-input-container flex>
-                <label>{{'application.submissionDateK' | translate}}</label>
-                <md-datepicker ng-model="criteria.submittedThru"></md-datepicker>
-              </md-input-container>
-            </div>
+            <md-input-container>
+              <label>{{'application.submissionDateK' | translate}}</label>
+              <md-datepicker ng-model="criteria.submittedThru"></md-datepicker>
+            </md-input-container>
+          </div>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column"  >

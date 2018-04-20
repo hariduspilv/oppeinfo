@@ -10,8 +10,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controllerAs: 'controller',
       data: authorizedRoles,
       resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
     }).when('/students/:id/results', {
       templateUrl: 'student/view.results.html',
@@ -28,8 +28,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controllerAs: 'controller',
       data: authorizedRoles,
       resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
     }).when('/students/:id/timetable', {
       templateUrl: 'student/view.timetable.html',
@@ -37,8 +37,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controllerAs: 'controller',
       data: authorizedRoles,
       resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
     }).when('/students/:id/edit', {
       templateUrl: 'student/edit.main.html',
@@ -46,8 +46,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controllerAs: 'controller',
       data: authorizedRoles,
       resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
     }).when('/students/:id/absences', {
       templateUrl: 'student/view.absences.html',
@@ -55,8 +55,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controllerAs: 'controller',
       data: authorizedRoles,
       resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
     }).when('/students', {
       templateUrl: 'student/list.html',
@@ -78,8 +78,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controllerAs: 'controller',
       data: authorizedRoles,
       resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
     }).when('/students/myResults', {
       templateUrl: 'student/view.results.html',
@@ -87,8 +87,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controllerAs: 'controller',
       data: authorizedRoles,
       resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
     }).when('/students/journals', {
       templateUrl: 'student/student.journal.list.html',

@@ -1,6 +1,96 @@
 (function () {
   'use strict';
 
+
+    function fixedColumnTable($timeout) {
+        return {
+            restrict: 'A',
+            scope: {
+                fixedColumns: "@"
+            },
+            link: function (scope, element) {
+                var container = element[0];
+
+                function activate() {
+                    applyClasses('thead tr', 'cross', 'th');
+                    applyClasses('tbody tr', 'fixed-cell', 'td');
+
+                    var topHeaders = [].concat.apply([], container.querySelectorAll('thead th'));
+                    var leftHeaders = [].concat.apply([], container.querySelectorAll('tbody td.fixed-cell'));
+                    var crossHeaders = [].concat.apply([], container.querySelectorAll('thead th.cross'));
+
+                    container.addEventListener('scroll', function () {
+                        var x = container.scrollLeft;
+                        var y = container.scrollTop;
+
+                        //Update the left header positions when the container is scrolled
+
+
+                        leftHeaders.forEach(function (leftHeader) {
+                            leftHeader.style.transform = translate(x, 0);
+                        });
+
+                        //Update the top header positions when the container is scrolled
+                        topHeaders.forEach(function (topHeader) {
+                          topHeader.style.transform = translate(0, y);
+                        });
+
+                        //Update headers that are part of the header and the left column
+                        crossHeaders.forEach(function (crossHeader) {
+                            crossHeader.style.transform = translate(x, y);
+                        });
+
+                    });
+
+                    function translate(x, y) {
+                        return 'translate(' + x + 'px, ' + y + 'px)';
+                    }
+
+                    function applyClasses(selector, newClass, cell) {
+                        var arrayItems = [].concat.apply([], container.querySelectorAll(selector));
+                        var currentElement;
+                        var colspan;
+                        var rowElement;
+
+                        arrayItems.forEach(function (row, i) {
+                          rowElement = angular.element(row);
+                          //console.log(rowElement+" "+rowElement.hasClass("fix"));
+                          //if(!currentElement.hasClass("notfixed"))
+                          var numFixedColumns = scope.fixedColumns;
+                          for (var j = 0; j < numFixedColumns; j++) {
+                                currentElement = angular.element(row).find(cell)[j];
+                                //console.log(currentElement.classList.contains("fix"));
+                                if(currentElement!== undefined && (!rowElement.hasClass("fix") || rowElement.hasClass("fix") && currentElement.classList.contains("fix")))
+                                {
+                                  currentElement.classList.add(newClass);
+                                  if (currentElement.hasAttribute('colspan')) {
+                                    colspan = currentElement.getAttribute('colspan');
+                                    numFixedColumns -= (parseInt(colspan) - 1);
+                                  }
+                                }
+                          }
+                        });
+                    }
+                }
+
+                $timeout(function () {
+                  activate();
+                  /*console.log(angular.element(document.getElementsByClassName("container")).children().hasClass("journalTable"));
+                  console.log(angular.element(document.getElementsByClassName("container")).children()[0].tBodies[0].rows.length);*/
+                }, 0);
+
+                scope.$on('refreshFixedColumns', function() {
+                    $timeout(function () {
+                        activate();
+                        container.scrollLeft = 0;
+                    }, 0);
+                });
+            }
+        };
+    }
+
+  angular.module('hitsaOis').directive('fixedColumnTable', fixedColumnTable);
+
   function rowSum(row) {
     return row.reduce(function (sum, item) {
       if (item !== null && isFinite(item) && item > 0) {
@@ -9,6 +99,7 @@
       return sum;
     }, 0);
   }
+
 
   function createTotalsRow(scope) {
     var row = [];
@@ -89,7 +180,7 @@
     totals.__ = rowSum(totals._._);
   }
 
-  angular.module('hitsaOis').controller('LessonplanSearchController', 
+  angular.module('hitsaOis').controller('LessonplanSearchController',
     function ($location, $mdDialog, $route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService) {
       $scope.canEdit = AuthService.isAuthorized([USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
         USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA]);
@@ -126,9 +217,43 @@
         });
       };
 
-      function filterStudentGroups(existing) {
+      function validStudentGroups(studyYear, groups) {
+        var validGroups = [];
+        var syStart = studyYear.startDate;
+        var syEnd = studyYear.endDate;
+
+        for (var i = 0; i < groups.length; i++) {
+          if (isValidStudentGroup(syStart, syEnd, groups[i].validFrom, groups[i].validThru, validGroups) && validGroups.indexOf(groups[i].id) === -1) {
+            validGroups.push(groups[i].id);
+          }
+        }
+        return validGroups;
+      }
+
+      function isValidStudentGroup(studyYearStart, studyYearEnd, validFrom, validThru) {
+        var valid = false;
+        if (!validFrom && validThru && moment(validThru).isSameOrAfter(studyYearStart)) {
+          valid = true;
+        } else if (!validThru && validFrom && moment(validFrom).isSameOrBefore(studyYearEnd)) {
+          valid = true;
+        } else if (validFrom && moment(validFrom).isBetween(studyYearStart, studyYearEnd, null, [])) {
+          valid = true;
+        } else if (validThru && moment(validThru).isBetween(studyYearStart, studyYearEnd, null, [])) {
+          valid = true;
+        } else if (validFrom && validThru && moment(studyYearStart).isBetween(validFrom, validThru, null, [])) {
+          valid = true;
+        } else if (validFrom && validThru && moment(studyYearEnd).isBetween(validFrom, validThru, null, [])) {
+          valid = true;
+        }  else if (!validFrom && !validThru) {
+          valid = true;
+        }
+
+        return valid;
+      }
+
+      function filterStudentGroups(existing, valid) {
         return function (it) {
-          return existing.indexOf(it.id) === -1;
+          return existing.indexOf(it.id) === -1 && valid.indexOf(it.id) !== -1;
         };
       }
 
@@ -150,7 +275,8 @@
         for (var i = 0, cnt = studyYears.length; i < cnt; i++) {
           var syid = studyYears[i].id;
           var existing = existingplans[syid] || [];
-          studentgroups[syid] = allstudentgroups.filter(filterStudentGroups(existing));
+          var valid = validStudentGroups(studyYears[i], allstudentgroups);
+          studentgroups[syid] = allstudentgroups.filter(filterStudentGroups(existing, valid));
         }
         $scope.formState.studentGroups = allstudentgroups;
         $scope.formState.studentGroupMap = studentgroups;
@@ -159,7 +285,7 @@
 
       QueryUtils.createQueryForm($scope, baseUrl, {});
     }
-  ).controller('LessonplanTeacherSearchController', 
+  ).controller('LessonplanTeacherSearchController',
     function ($route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService) {
       $scope.canEdit = AuthService.isAuthorized([USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
         USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA]);
@@ -188,11 +314,18 @@
 
       QueryUtils.createQueryForm($scope, baseUrl, {});
     }
-  ).controller('LessonplanEditController', ['$location', '$mdDialog', '$route', '$scope', 'message', 'Classifier', 'QueryUtils', 'dialogService',
+  ).controller('LessonplanEditController', ['$location', '$mdDialog', '$route', '$scope', '$window','message', 'Classifier', 'QueryUtils', 'dialogService',
 
-    function ($location, $mdDialog, $route, $scope, message, Classifier, QueryUtils, dialogService) {
+    function ($location, $mdDialog, $route, $scope,  $window,message, Classifier, QueryUtils, dialogService) {
       var id = $route.current.params.id;
       var baseUrl = '/lessonplans';
+
+      $scope.setHeight = function() {
+        var windowHeight = $(window).innerHeight();
+        windowHeight= windowHeight-150;
+        $route.windowHeight = windowHeight;
+     };
+
       $scope.formState = {
         capacityTypes: Classifier.queryForDropdown({
           mainClassCode: 'MAHT'
@@ -235,6 +368,7 @@
       }
 
       var copyOfRecord;
+      QueryUtils.loadingWheel($scope, true);
       QueryUtils.endpoint(baseUrl).get({
         id: id
       }).$promise.then(function (result) {
@@ -265,7 +399,38 @@
           }
         };
         initializeTotals(result);
+        QueryUtils.loadingWheel($scope, false);
+        //refreshFixedColumns();
+        fixedColumnTable.$inject = ['$timeout'];
+        //console.log(window.screen.height);
+        $scope.windowWidth = $window.innerWidth;
+
+
+        //console.log(angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].clientHeight);
+        angular.element(document.getElementsByClassName("container")).css('height', $window.innerHeight-250 + 'px');
+        $scope.$broadcast('refreshFixedColumns');
       });
+
+
+
+      $scope.finished = function () {
+
+        var tb;
+        tb = angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].clientHeight+250+18;
+        /*console.log(document.getElementById('ng-repeat-table-test').getBoundingClientRect());
+        console.log("x: "+angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].clientHeight+"_"+tb);
+        console.log("x: "+angular.element(document.getElementsByClassName("lessonplan"))[0].offsetHeight+"_"+tb);
+        console.log("x: "+angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].offsetHeight+"_"+tb);
+        */angular.element(document.getElementsByClassName("container")).css('height', (tb > $window.innerHeight ? $window.innerHeight : tb) -250 + 'px');
+        $scope.tb=tb;
+      };
+
+
+      angular.element($window).bind('resize', function(){
+        $scope.windowWidth = $window.innerWidth;
+        console.log("22:"+$scope.tb+" "+ $window.innerHeight);
+        angular.element(document.getElementsByClassName("container")).css('height', ($scope.tb > $window.innerHeight ? $window.innerHeight : $scope.tb)-250 + 'px');
+     });
 
       function initializeTotals(result) {
         $scope.formState.capacityTypes.$promise.then(function () {
@@ -413,7 +578,7 @@
       };
 
       $scope.newJournal = function (module) {
-        $location.url(baseUrl + '/journals/new?lessonPlan=' + id + 
+        $location.url(baseUrl + '/journals/new?lessonPlan=' + id +
           '&occupationModule=' + module.occupationModuleId + (module.id ? ('&lessonPlanModule=' + module.id) : ''));
       };
 
@@ -425,6 +590,7 @@
         $scope.record.$update().then(message.updateSuccess).then(function() {
           initializeTotals($scope.record);
           updateCopyOfRecord();
+          $scope.$broadcast('refreshFixedColumns');
         });
       };
 

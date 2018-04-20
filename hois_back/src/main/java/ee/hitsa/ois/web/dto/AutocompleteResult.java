@@ -83,7 +83,7 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     }
 
     public static AutocompleteResult of(Building building) {
-        String name = building.getName();
+        String name = building.getCode() + " - " + building.getName();
         return new AutocompleteResult(building.getId(), name, name);
     }
 

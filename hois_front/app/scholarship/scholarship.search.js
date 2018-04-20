@@ -1,7 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ScholarshipSearchController', 
-  function ($scope, $location, $q, $route, $timeout, dialogService, message, Classifier, QueryUtils, DataUtils, USER_ROLES, AuthService) {
+angular.module('hitsaOis').controller('ScholarshipSearchController', ['$scope', '$q', '$route', '$timeout', 'message', 'Classifier', 
+    'QueryUtils', 'DataUtils', 'USER_ROLES', 'AuthService', 'ScholarshipUtils',
+  function ($scope, $q, $route, $timeout, message, Classifier, QueryUtils, DataUtils, USER_ROLES, AuthService,
+      ScholarshipUtils) {
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS);
     var baseUrl = '/scholarships';
     var clMapper = Classifier.valuemapper({type: 'STIPTOETUS'});
@@ -36,20 +38,8 @@ angular.module('hitsaOis').controller('ScholarshipSearchController',
       $timeout($scope.loadData);
     });
 
-    $scope.changeStipend = function (row) {
-      var messageText;
-      if (['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU', 'STIPTOETUS_DOKTOR'].indexOf(row.type.code) !== -1) {
-        messageText = 'stipend.confirmations.grantIsPublishedChange';
-      } else {
-        messageText = 'stipend.confirmations.scholarshipIsPublishedChange';
-      }
-      if (row.isOpen) {
-        dialogService.confirmDialog({prompt: messageText}, function () {
-          $location.url(baseUrl + '/' + row.id + '/edit');
-        });
-      } else {
-        $location.url(baseUrl + '/' + row.id + '/edit');
-      }
+    $scope.changeStipend = function(row) {
+      ScholarshipUtils.changeStipend(row.id, row.type.code, row.isOpen);
     };
   }
-);
+]);

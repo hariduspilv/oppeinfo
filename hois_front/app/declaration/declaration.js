@@ -8,6 +8,8 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
   var id = $route.current.params.id;
   $scope.formState = {};
   $scope.auth = $route.current.locals.auth;
+  $scope.addCurriculumSubjectForm = false;
+  $scope.addExtraCurriculumSubjectFrom = false;
 
   if($scope.auth.isStudent() && !angular.isDefined(id)) {
     QueryUtils.endpoint('/declarations/hasPrevious').search().$promise.then(function(response){
@@ -45,83 +47,72 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
     new SubjectEndpoint(subject).$delete().then(function(){
       message.info('declaration.message.subjectRemoved');
       ArrayUtils.remove($scope.declaration.subjects, subject);
+      $scope.loadData();
+    });
+  };
+
+  QueryUtils.createQueryForm($scope, '/declarations/subjects/' + id);
+  $scope.afterLoadData = function (resultData) {
+    $scope.tabledata.content = resultData.content;
+    $scope.tabledata.totalElements = resultData.totalElements;
+  };
+  $scope.criteria = { order: 'cvhm.' + $scope.currentLanguageNameField(), size: 10, page: 1};
+
+  $scope.openAddCurriculumSubject = function () {
+    $scope.addCurriculumSubject = true;
+    $scope.addExtraCurriculumSubject = false;
+    $scope.loadData();
+  };
+
+  $scope.addCurriculumSubject = function(subject) {
+    var newSubject = new SubjectEndpoint({
+      subjectStudyPeriod: subject.subjectStudyPeriod,
+      declaration: $scope.declaration.id,
+      curriculumVersionHigherModule: subject.module.id,
+      isOptional: subject.isOptional
+    });
+    newSubject.$save().then(function(response){
+      message.info('declaration.message.subjectAdded');
+      response.newlyAdded = true;
+      $scope.declaration.subjects.push(response);
+      $scope.loadData();
     });
   };
 
   $scope.openAddCurriculumSubject = function () {
-    var DialogController = function (scope) {
-
-      scope.subjects = QueryUtils.endpoint('/declarations/subjects/' + $scope.declaration.id).query();
-      scope.modules = QueryUtils.endpoint('/declarations/modules/' + $scope.declaration.id).query();
-
-      scope.filterSubjectsByModule = function(moduleId) {
-        return function(subject) {
-          return moduleId === subject.module.id;
-        };
-      };
-
-      scope.filterNotAdded = function(subject) {
-        return !angular.isDefined($scope.declaration.subjects.find(function(el){
-          return el.subject.id === subject.subject.id;
-        }));
-      };
-
-      scope.addSubject = function(subject) {
-        var newSubject = new SubjectEndpoint({
-          subjectStudyPeriod: subject.subjectStudyPeriod,
-          declaration: $scope.declaration.id,
-          curriculumVersionHigherModule: subject.module.id,
-          isOptional: subject.isOptional
-        });
-        newSubject.$save().then(function(response){
-          message.info('declaration.message.subjectAdded');
-          response.newlyAdded = true;
-          $scope.declaration.subjects.push(response);
-        });
-      };
-    };
-
-    dialogService.showDialog('declaration/curriculum.subject.add.dialog.html', DialogController,
-      function () {
-      });
+    $scope.addCurriculumSubjectForm = true;
+    $scope.addExtraCurriculumSubjectForm = false;
+    $scope.loadData();
   };
 
+  function getExtraCurriculumSubjectsOptions() {
+    $scope.subjects = QueryUtils.endpoint('/declarations/subjects/extracurriculum/' + id).query();
+  } 
+
   $scope.openAddExtraCurriculumSubject = function() {
-      var DialogController = function (scope) {
+    $scope.addCurriculumSubjectForm = false;
+    $scope.addExtraCurriculumSubjectForm = true;
+    getExtraCurriculumSubjectsOptions();
+  };
 
-        function getSubjects() {
-          scope.subjects = QueryUtils.endpoint('/declarations/subjects/extracurriculum/' + $scope.declaration.id).query();
-        }
-        getSubjects();
-
-        $scope.getTeachers = function(subject) {
-          return subject.teachers.join(', ');
-        };
-
-        scope.addSubject = function() {
-          scope.dialogForm.$setSubmitted();
-          if(!scope.subject) {
-            return;
-          }
-          var newSubject = new SubjectEndpoint({
-            subjectStudyPeriod: scope.subject.subjectStudyPeriod,
-            declaration: $scope.declaration.id,
-            curriculumVersionHigherModule: scope.subject.module.id,
-            isOptional: true
-          });
-          newSubject.$save().then(function(response){
-            message.info('declaration.message.subjectAdded');
-            response.newlyAdded = true;
-            $scope.declaration.subjects.push(response);
-            getSubjects();
-            scope.subject = undefined;
-          });
-        };
-      };
-
-      dialogService.showDialog('declaration/extracurriculum.subject.add.dialog.html', DialogController,
-        function () {
-      });
+  $scope.addExtraCurriculumSubject = function() {
+    $scope.extraCurriculumForm.$setSubmitted();
+    if(!$scope.subject) {
+      return;
+    }
+    var newSubject = new SubjectEndpoint({
+      subjectStudyPeriod: $scope.subject.subjectStudyPeriod,
+      declaration: $scope.declaration.id,
+      curriculumVersionHigherModule: $scope.subject.module !== null ? $scope.subject.module.id : null,
+      isOptional: true
+    });
+    newSubject.$save().then(function(response){
+      message.info('declaration.message.subjectAdded');
+      response.newlyAdded = true;
+      $scope.declaration.subjects.push(response);
+      getExtraCurriculumSubjectsOptions();
+      $scope.subject = undefined;
+    });
   };
 
   $scope.hasPrerequisites = function(subject) {
@@ -295,20 +286,29 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('DeclarationNewController', ['$scope', 'QueryUtils', 'message', '$location',
-  function ($scope, QueryUtils, message, $location) {
+]).controller('DeclarationNewController', ['$scope', '$location', 'FormUtils', 'QueryUtils', 'message',
+  function ($scope, $location, FormUtils, QueryUtils, message) {
 
+    function validStudyPeriod() {
+      var valid = !!$scope.studyPeriod.id;
+      if(!valid) {
+        message.error('studyYear.studyPeriod.missingCurrent');
+      }
+      return valid;
+    }
     $scope.studyPeriod = QueryUtils.endpoint('/declarations/currentStudyPeriod').search();
+    $scope.studyPeriod.$promise.then(validStudyPeriod);
 
     $scope.save = function() {
-      $scope.declarationNewForm.$setSubmitted();
-      if(!$scope.declarationNewForm.$valid) {
-        return;
-      }
-      var Endpoint = QueryUtils.endpoint('/declarations/create/' + $scope.student.id);
-      new Endpoint().$save().then(function(response){
-        message.info('main.messages.create.success');
-        $location.url("/declarations/" + response.id + "/edit?_noback");
+      FormUtils.withValidForm($scope.declarationNewForm, function() {
+        if(!validStudyPeriod()) {
+          return;
+        }
+        var Endpoint = QueryUtils.endpoint('/declarations/create/' + $scope.student.id);
+        new Endpoint().$save().then(function(response){
+          message.info('main.messages.create.success');
+          $location.url("/declarations/" + response.id + "/edit?_noback");
+        }).catch(angular.noop);
       });
     };
   }

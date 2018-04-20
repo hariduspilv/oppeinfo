@@ -57,10 +57,13 @@ public class StudentGroupService {
     private static final String STUDENT_GROUP_LIST_SELECT =
             "sg.id, sg.code, sg.study_form_code, sg.course, curriculum.id as curriculum_id, "+
             "curriculum.name_et, curriculum.name_en, sg.valid_from, sg.valid_thru, "+
-            "(select count(*) from student s where s.student_group_id=sg.id and s.status_code in (:studentStatus))";
+            "(select count(*) from student s where s.student_group_id=sg.id and s.status_code in (:studentStatus)), p.firstname, p.lastname";
     private static final String STUDENT_GROUP_LIST_FROM =
-            "from student_group sg inner join curriculum curriculum on sg.curriculum_id=curriculum.id "+
-            "inner join classifier study_form on sg.study_form_code=study_form.code";
+            "from student_group sg " +
+            "join curriculum curriculum on sg.curriculum_id=curriculum.id "+
+            "join classifier study_form on sg.study_form_code=study_form.code " +
+            "left join teacher t on sg.teacher_id=t.id " +
+            "left join person p on t.person_id=p.id";
 
     @Autowired
     private ClassifierRepository classifierRepository;
@@ -102,6 +105,7 @@ public class StudentGroupService {
             dto.setValidFrom(resultAsLocalDate(r, 7));
             dto.setValidThru(resultAsLocalDate(r, 8));
             dto.setStudentCount(resultAsLong(r, 9));
+            dto.setTeacher(PersonUtil.fullname(resultAsString(r, 10), resultAsString(r, 11)));
             return dto;
         });
     }

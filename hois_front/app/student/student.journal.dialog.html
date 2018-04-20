@@ -1,74 +1,79 @@
 <md-dialog aria-label="student journal dialog" flex="60" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
     <md-toolbar>
-        <div class="md-toolbar-tools">
-            <h2>
-                <hois-classifier-value ng-model="journal.yearCode" main-classifier-code="OPPEAASTA" style="display:inline-block"></hois-classifier-value> 
-                <span>{{'student.journal.studyYear' | translate}}</span>
-                <span>{{$parent.currentLanguageNameField(journal)}}</span>
-            </h2>
-        </div>
+      <div class="md-toolbar-tools">
+        <h2>
+          <hois-classifier-value ng-model="journal.yearCode" main-classifier-code="OPPEAASTA" style="display:inline-block"></hois-classifier-value>
+          <span>{{'student.journal.studyYear' | translate}}</span>
+          <span>{{$parent.currentLanguageNameField(journal)}}</span>
+        </h2>
+      </div>
     </md-toolbar>
-    
-    <br>
-    <span style="padding-left:1%; padding-right: 1%;">
-        <md-dialog-content>
-            <md-table-container>
-                <table md-table md-progress="journal.$promise">
-                    <thead md-head>
-                        <tr md-row>
-                            <th md-column>{{'student.journal.entry.date' | translate}}</th>
-                            <th md-column>{{'student.journal.entry.content' | translate}}</th>
-                            <th md-column>{{'student.journal.entry.grade' | translate}}</th>
-                            <th md-column>{{'student.journal.entry.gradeAddInfo' | translate}}</th>
-                            <th md-column>{{'student.journal.entry.homework' | translate}}</th>
-                            <th md-column>{{'student.journal.entry.homeworkDuedate' | translate}}</th>
-                        </tr>
-                    </thead>
-                    <tbody md-body>
-                        <tr md-row ng-repeat="row in journal.journalEntries " ng-class-odd="'odd'" ng-class-even="'even'" md-colors="{background: getEntryColor(row.entryType)}">
-                            <td md-cell>{{row.entryDate ? (row.entryDate | hoisDate) : '-'}}</td>
-                            <td md-cell>{{row.content}}</td>
-                            <td md-cell>
-                                <span>
-                                    <span>{{row.gradeValue}}</span>
-                                    <md-tooltip md-direction="bottom" style="height: auto;">
-                                        <div>{{row.gradeInserted | hoisDateTime}}</div>
-                                    </md-tooltip>
-                                </span>
-                                <span ng-repeat="previousGrade in row.previousResults track by $index">
-                                    <span>{{$first ? '/' : ''}}</span>
-                                    <span>
-                                        <span>{{previousGrade.gradeValue}} </span>
-                                        <md-tooltip md-direction="bottom" style="height: auto;">
-                                            <div>{{previousGrade.gradeInserted | hoisDateTime}}</div>
-                                        </md-tooltip>
-                                    </span>
-                                    <span>{{$last ? '' : '/'}}</span>
-                                </span>
-                            </td>
-                            <td md-cell>{{row.addInfo}}</td>
-                            <td md-cell>{{row.homework ? row.homework : '-'}}</td>
-                            <td md-cell>{{row.homeworkDueDate ? (row.homeworkDueDate | hoisDate) : '-' }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </md-table-container>     
-            <br>
-            <div layout="row">
-                <div layout="row" layout-align="end" layout-sm="column" layout-xs="column" flex="100">
-                    <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_T')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_T'])}}</span>
-                    <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_E')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_E'])}}</span>
-                    <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_I')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_I'])}}</span>
-                    <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_H')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_H'])}}</span>
-                    <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_P')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_P'])}}</span>
-                    <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_R')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_R'])}}</span>
-                    <span ng-show="journal.moduleOutcomesAsEntries" class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_O')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_O'])}}</span>
-                    <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_L')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}</span>
-                </div>
+
+    <md-dialog-content>
+      <div class="md-dialog-content">
+        <div flex>
+          <md-table-container>
+            <table md-table md-progress="journal.$promise">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'student.journal.entry.date' | translate}}</th>
+                  <th md-column>{{'student.journal.entry.content' | translate}}</th>
+                  <th md-column>{{'student.journal.entry.grade' | translate}}</th>
+                  <th md-column>{{'student.journal.entry.gradeAddInfo' | translate}}</th>
+                  <th md-column>{{'student.journal.entry.homework' | translate}}</th>
+                  <th md-column>{{'student.journal.entry.homeworkDuedate' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in journal.journalEntries " ng-class-odd="'odd'" ng-class-even="'even'" md-colors="{background: getEntryColor(row.entryType.code)}">
+                  <td md-cell>{{row.entryDate ? (row.entryDate | hoisDate) : '-'}}</td>
+                  <td md-cell>{{row.content}}</td>
+                  <td md-cell>
+                    <span>
+                      <span>{{row.gradeValue}}</span>
+                      <md-tooltip md-direction="bottom" style="height: auto;">
+                        <div>{{row.gradeInserted | hoisDateTime}}</div>
+                      </md-tooltip>
+                    </span>
+                    <span ng-repeat="previousGrade in row.previousResults track by $index">
+                      <span>{{$first ? '/' : ''}}</span>
+                      <span>
+                        <span>{{previousGrade.gradeValue}} </span>
+                        <md-tooltip md-direction="bottom" style="height: auto;">
+                          <div>{{previousGrade.gradeInserted | hoisDateTime}}</div>
+                        </md-tooltip>
+                      </span>
+                      <span>{{$last ? '' : '/'}}</span>
+                    </span>
+                  </td>
+                  <td md-cell>{{row.addInfo}}</td>
+                  <td md-cell>{{row.homework ? row.homework : '-'}}</td>
+                  <td md-cell>{{row.homeworkDueDate ? (row.homeworkDueDate | hoisDate) : '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+          <br>
+          <div layout="row">
+            <div layout="row" layout-align="end" layout-sm="column" layout-xs="column" flex="100">
+              <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_T')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_T'])}}</span>
+              <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_E')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_E'])}}</span>
+              <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_I')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_I'])}}</span>
+              <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_H')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_H'])}}</span>
+              <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_P')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_P'])}}</span>
+              <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_R')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_R'])}}</span>
+              <span ng-show="journal.moduleOutcomesAsEntries" class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_O')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_O'])}}</span>
+              <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_L')}">{{$parent.currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}</span>
             </div>
-        </md-dialog-content>
-        <md-dialog-actions layout="row" layout-align="start center">
-            <md-button ng-click="close()" class="md-raised">{{'main.button.close' | translate}}</md-button>
-        </md-dialog-actions>
-    </span>
+          </div>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button ng-click="close()" class="md-raised">{{'main.button.close' | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
 </md-dialog>

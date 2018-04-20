@@ -3,7 +3,9 @@
 angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService', 'ArrayUtils',
   function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService, ArrayUtils) {
     $scope.isArray = angular.isArray;
-    $scope.journalColors = ['#ffff00', '#9fff80', '#ff99cc', '#E8DAEF', '#85C1E9', '#D1F2EB', '#ABEBC6', '#F9E79F', '#FAD7A0', '#EDBB99', '#D5DBDB', '#D5D8DC'];
+    $scope.journalColors = ['#ffff00', '#9fff80', '#ff99cc', '#E8DAEF', '#85C1E9', '#D1F2EB',
+     '#ABEBC6', '#F9E79F', '#FAD7A0', '#EDBB99', '#D5DBDB', '#64B5F6','#B0BEC5', '#80CBC4',
+     '#FCD4F5', '#AFBAF7', '#FFF59D', '#66BB6A', '#E6EE9C', '#9FA8DA', '#EF9A9A'];
     $scope.plan = {};
     $scope.timetableId = $route.current.params.id;
     $scope.weekday = ["daySun", "dayMon", "dayTue", "dayWed", "dayThu", "dayFri", "daySat"];
@@ -12,16 +14,20 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     });
     var baseUrl = '/timetables';
     $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
+    QueryUtils.loadingWheel($scope, true);
     QueryUtils.endpoint(baseUrl + '/:id/createVocationalPlan').search({
       id: $scope.timetableId
     }).$promise.then(function (result) {
       initializeData(result, $route.current.params.groupId, null);
+      QueryUtils.loadingWheel($scope, false);
     });
 
     function initializeData(result, selectedGroupId, selectedGroups) {
       var displayPeriodLessons = $scope.plan.displayPeriodLessons ? $scope.plan.displayPeriodLessons : false;
+      //console.log(selectedGroupId);
+      //console.log(selectedGroups);
       $scope.plan = result;
-      $scope.plan.selectAll = true;
+      $scope.plan.selectAll = false;//selectedGroups==null ? falsetrue;
       $scope.plan.displayPeriodLessons = displayPeriodLessons;
       $scope.plan.journals.sort(function (a, b) {
         return a.id - b.id;
@@ -41,6 +47,14 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         });
       } else {
         $scope.plan.currentStudentGroups = $scope.plan.studentGroups;
+        $scope.plan.currentStudentGroups.forEach(function (studentGroup) {
+          //console.log(typeof(studentGroup.id)+" "+typeof(selectedGroupId));
+          if (studentGroup.id !== Number(selectedGroupId)) {
+            //console.log(studentGroup.id+" "+selectedGroupId);
+            studentGroup._selected = false;
+            $scope.plan.selectAll = false;
+          }
+        });
       }
       setTeachersForStudentGroups($scope.plan.studentGroupCapacities, $scope.plan.studentGroups, $scope.plan.journals);
       $scope.plan.datesForTimetable = [];
@@ -124,6 +138,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       $scope.plan.plannedLessonsByGroup = plannedLessonsByGroup;
       $scope.plan.selectedGroup = selectedGroupId;
       setCapacities();
+      $scope.updateGroups();
     }
 
     $scope.$watch('plan.selectedGroup', function () {
@@ -157,7 +172,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         $scope.plan.currentCapacitiesGrouped = groupBy($scope.plan.currentCapacities, "journal");
         if (angular.isDefined($scope.plan.journals)) {
           $scope.plan.journals.forEach(function (item, index) {
-            item.color = $scope.journalColors[index];
+            item.color = $scope.journalColors[index % 19];
           });
           $scope.plan.currentJournals = $scope.plan.journals.filter(function (t) {
             return currentCapacities.indexOf(t.id) !== -1;
@@ -258,12 +273,16 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
             if (!angular.isArray(currLesson.teachers)) {
               currLesson.teachers = [];
             }
-            currLesson.currentTeacherIds = currLesson.journalObject.teachers.filter(function (teacher) {
-              return currLesson.teachers.indexOf(teacher.id) !== -1;
-            });
-            currLesson.currentTeachers = currLesson.currentTeacherIds.map(function (teacher) {
-              return teacher.nameEt;
-            });
+            if (currLesson.journalObject && currLesson.journalObject.teachers)
+            {
+              currLesson.currentTeacherIds = currLesson.journalObject.teachers.filter(function (teacher) {
+                return currLesson.teachers.indexOf(teacher.id) !== -1;
+              });
+
+              currLesson.currentTeachers = currLesson.currentTeacherIds.map(function (teacher) {
+                return teacher.nameEt;
+              });
+            }
           });
           return groupLessons;
         }

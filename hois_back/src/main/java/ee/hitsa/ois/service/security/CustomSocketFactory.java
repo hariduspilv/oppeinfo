@@ -2,8 +2,6 @@
 package ee.hitsa.ois.service.security;
 
 import javax.net.SocketFactory;
-import javax.net.ssl.HandshakeCompletedEvent;
-import javax.net.ssl.HandshakeCompletedListener;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -91,7 +89,7 @@ public class CustomSocketFactory extends SocketFactory {
      * @return Socket object.
      * @throws IOException
      */
-    private Socket localCreateSocket(String host, int port) throws IOException {
+    private static Socket localCreateSocket(String host, int port) throws IOException {
         Socket tunnel = new Socket(tunnelHost, tunnelPort);
         doTunnelHandshake(tunnel, host, port);
         //If LDAPS is used, tunnel has to be overlayed with SSL socket
@@ -103,17 +101,12 @@ public class CustomSocketFactory extends SocketFactory {
             socket = (SSLSocket) factory.createSocket(tunnel, host, port, true);
  
             //Register a callback for handshaking completion event
-            socket.addHandshakeCompletedListener(
-                    new HandshakeCompletedListener() {
-                        public void handshakeCompleted(
-                                HandshakeCompletedEvent event) {
-                            log.debug("Handshake finished!");
-                            log.debug("\t CipherSuite:" + event.getCipherSuite());
-                            log.debug("\t SessionId " + event.getSession());
-                            log.debug("\t PeerHost " + event.getSession().getPeerHost());
-                        }
-                    }
-            );
+            socket.addHandshakeCompletedListener(event -> {
+                log.debug("Handshake finished!");
+                log.debug("\t CipherSuite:" + event.getCipherSuite());
+                log.debug("\t SessionId " + event.getSession());
+                log.debug("\t PeerHost " + event.getSession().getPeerHost());
+            });
  
             socket.startHandshake();
             return socket;
@@ -144,8 +137,8 @@ public class CustomSocketFactory extends SocketFactory {
      *
      * @throws IOException
      */
-    @SuppressWarnings("unused")
-    private void doTunnelHandshake(Socket tunnel, String host, int port)
+    @SuppressWarnings("resource")
+    private static void doTunnelHandshake(Socket tunnel, String host, int port)
             throws IOException {
         OutputStream out = tunnel.getOutputStream();
         String msg = "CONNECT " + host + ":" + port + " HTTP/1.0\n"
@@ -154,7 +147,7 @@ public class CustomSocketFactory extends SocketFactory {
         try {
             //We really do want ASCII7 -- the http protocol doesn't change with locale.
             b = msg.getBytes("ASCII7");
-        } catch (UnsupportedEncodingException ignored) {
+        } catch (@SuppressWarnings("unused") UnsupportedEncodingException ignored) {
             //If ASCII7 isn't there, something serious is wrong, but Paranoia Is Good (tm)
             b = msg.getBytes();
         }
@@ -168,7 +161,6 @@ public class CustomSocketFactory extends SocketFactory {
         boolean headerDone = false;     /* Done on first newline */
  
         InputStream in = tunnel.getInputStream();
-        boolean error = false;
  
         while (newlinesSeen < 2) {
             int i = in.read();
@@ -194,7 +186,7 @@ public class CustomSocketFactory extends SocketFactory {
         try {
             replyStr = new String(reply, 0, replyLen, "ASCII7");
             log.debug(replyStr);
-        } catch (UnsupportedEncodingException ignored) {
+        } catch (@SuppressWarnings("unused") UnsupportedEncodingException ignored) {
             replyStr = new String(reply, 0, replyLen);
         }
  

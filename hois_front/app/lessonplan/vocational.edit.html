@@ -1,18 +1,19 @@
-<div ng-cloak class="ois-form-layout-padding" style="overflow: scroll">
+<div ng-cloak class="ois-form-layout-padding">
   <div layout="column">
     <div flex="30" class="md-title">
       <hois-classifier-value ng-model="record.studyYearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
       <span>{{'lessonplan.studentGroup' | translate}} {{record.studentGroupCode}}</span>
     </div>
+    <br>
     <div flex layout="row">
       <div flex="50" layout="row" layout-align="start center">
-        <div flex="20">
           <md-checkbox ng-model="record.isUsable">
             {{'lessonplan.isUsable' | translate}}
           </md-checkbox>
-        </div>
+          <md-checkbox ng-model="formState.showWeeks">{{'lessonplan.showWeeks' | translate}}</md-checkbox>
+          <md-checkbox ng-model="formState.showTotals">{{'lessonplan.showTotals' | translate}}</md-checkbox>
       </div>
-      <div flex="70" layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
+      <div flex="50" layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
         <span ng-repeat="c in formState.capacityTypes">
           <span ng-if="!$first">|</span>
           {{::c.value.toUpperCase()}} - {{currentLanguageNameField(c)}}
@@ -20,118 +21,145 @@
       </div>
     </div>
   </div>
-  <table class="lessonplan">
-    <!-- table header -->
-    <tr>
-      <td>&nbsp;</td>
-      <td colspan="2">{{'lessonplan.total' | translate}}</td>
-      <td colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods">{{currentLanguageNameField(sp)}} ({{sp.startDate | hoisDayMonth}}-{{sp.endDate | hoisDayMonth}})</td>
-    </tr>
-    <tr>
-      <td colspan="3">
-        <md-checkbox ng-model="formState.showWeeks">{{'lessonplan.showWeeks' | translate}}</md-checkbox>
-        <md-checkbox ng-model="formState.showTotals">{{'lessonplan.showTotals' | translate}}</md-checkbox>
-      </td>
-      <td ng-repeat="w in formState.weekNrs track by $index" class="center" ng-style="{ background: true ? getLegendByWeek(w) : 'white' }"
-        title="{{formState.weekBeginningDates[$index] | hoisDate}}">{{w}}</td>
-    </tr>
-    <!-- modules -->
-    <tbody ng-repeat="module in record.modules">
-      <tr>
-        <td colspan="{{::formState.weekNrs.length+3}}">
-          <div flex layout="row">
-            <div flex="30">
-              <span md-colors="{color: 'primary-800'}" class="bold">{{currentLanguageNameField(module)}}</span>&nbsp;&nbsp;
+
+    <div class="container" fixed-column-table fixed-columns="3">
+      <table class="lessonplan" id="ng-repeat-table-test">
+        <!-- table header -->
+        <thead>
+          <tr>
+            <th colspan="3">{{'lessonplan.total' | translate}}</th>
+            <th colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods">{{currentLanguageNameField(sp)}} ({{sp.startDate | hoisDayMonth}}-{{sp.endDate | hoisDayMonth}})</th>
+          </tr>
+          <tr ng-if="formState.showWeeks">
+            <th colspan="3">
+            </th>
+            <th ng-repeat="w in formState.weekNrs track by $index" class="center" ng-style="{ background: true ? getLegendByWeek(w) : 'white' }"
+              title="{{formState.weekBeginningDates[$index] | hoisDate}}">{{w}}</th>
+          </tr>
+        </thead>
+        <!-- modules -->
+        <tbody>
+          <tr ng-repeat-start="module in record.modules">
+            <td colspan="3" style="border-top:1px solid #aaa">
+              <span class="hois-collapse-header">{{currentLanguageNameField(module)}}</span>&nbsp;&nbsp;
               <a class="md-primary" ng-click="newJournal(module)">{{'lessonplan.addjournal' | translate}}</a>
-            </div>
-            <div flex="70">
-              <hois-autocomplete label="{{'lessonplan.responsibleformodule' | translate}}" ng-model="module.teacher" method="teachers"></hois-autocomplete>
-            </div>
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="{{::formState.weekNrs.length+3}}">{{'lessonplan.modulehours' | translate}}: {{::module.totalHours}}</td>
-      </tr>
-      <tr ng-repeat-start="journal in module.journals">
-        <td colspan="{{::formState.weekNrs.length+3}}">
-          <span class="bold">{{::journal.nameEt}}:</span>&nbsp;
-          <span ng-repeat="theme in journal.themes">
-            <span ng-if="!$first">,&nbsp;</span>{{::theme.nameEt}}&nbsp;{{::theme.credits}}&nbsp;{{'lessonplan.credits' | translate}} 
-            &nbsp;(<span ng-repeat="(hourCap, hourCount) in theme.hours">{{::getCapacityByCode(hourCap).value.toUpperCase()}}{{hourCount}}{{$last ? "" : "/"}}</span>)</span>
-        </td>
-      </tr>
-      <tr ng-repeat="ct in getCapacityTypes(journal.hours)">
-        <td rowspan="{{::keys(journal.hours).length+1}}" ng-if="$first">
-          <div>
-            <span style="float:left">
-              <span ng-repeat="teacher in journal.teachers">
-                <br ng-if="!$first"> {{teacher.teacher.nameEt}}
-              </span>
-            </span>
-            <span style="float:right">
-              <a class="md-primary change-button" ng-click="editJournal(journal)">{{'main.button.change' | translate}}</a>
-            </span>
-          </div>
-          <div ng-if="journal.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
-            <label>{{'lessonplan.journal.groupProportion' | translate}}</label>
-            <hois-classifier-value ng-model="journal.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
-          </div>
-        </td>
-        <td class="center">{{ct.value.toUpperCase()}}</td>
-        <td class="center" ng-style="{ color: formState.journalTotals[journal.id][ct.code] !== journal.requiredLessons[ct.code] ? 'red' : 'black' }"
-         title="{{'lessonplan.planned' | translate }} {{journal.requiredLessons[ct.code]}}">{{formState.journalTotals[journal.id][ct.code]}}</td>
-        <td ng-if="formState.showWeeks" ng-repeat="h in journal.hours[ct.code] track by $index" class="center">
-          <input type="text" ng-model="journal.hours[ct.code][$index]" ng-change="updateTotals(journal, ct.code, $index)">
-        </td>
-        <td ng-if="!formState.showWeeks" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods track by $index"
-          class="center">
-          <input type="text" ng-model="journal.spHours[ct.code][$index]" ng-change="updateLessonCountByStudyPeriod(journal, ct.code, $index)">
-        </td>
-      </tr>
-      <tr ng-repeat-end>
-        <td>{{'lessonplan.total' | translate}}</td>
-        <td class="center">{{formState.journalTotals[journal.id].__}}</td>
-        <td ng-if="formState.showWeeks" ng-repeat="w in formState.weekNrs track by $index" class="center">{{formState.journalTotals[journal.id]._[$index]}}</td>
-        <td ng-if="!formState.showWeeks" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods track by $index"
-          class="center">{{formState.journalTotals[journal.id]._spTotals[$index]}}</td>
-      </tr>
-      <!-- module totals -->
-      <tr ng-show="formState.showTotals" ng-repeat="ct in getCapacityTypes(formState.moduleTotals[module.id])">
-        <td rowspan="{{keys(formState.moduleTotals[module.id]).length}}" ng-if="$first">
-          {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.moduleTotal' | translate}}
-        </td>
-        <td>{{ct.value.toUpperCase()}}</td>
-        <td class="center">{{formState.moduleTotals[module.id]._[ct.code]}}</td>
-        <td ng-repeat="h in formState.moduleTotals[module.id][ct.code] track by $index" class="center">{{h}}</td>
-      </tr>
-      <tr ng-show="formState.showTotals">
-        <td>{{'lessonplan.total' | translate}}</td>
-        <td class="center">{{formState.moduleTotals[module.id].__}}</td>
-        <td ng-repeat="h in formState.moduleTotals[module.id]._._ track by $index" class="center">{{h}}</td>
-      </tr>
-    </tbody>
-    <!-- grand totals -->
-    <tbody md-colors="{background: 'background-200'}">
-      <tr ng-repeat="ct in getCapacityTypes(formState.grandTotals)">
-        <td rowspan="{{keys(formState.grandTotals).length+1}}" ng-if="$first">
-          {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.grandTotal' | translate}}
-        </td>
-        <td class="center">{{ct.value.toUpperCase()}}</td>
-        <td class="center">{{formState.grandTotals._[ct.code]}}</td>
-        <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals[ct.code] track by $index" class="center">{{h}}</td>
-        <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
-          class="center">{{formState.capGrandTotalsSp[ct.code][$index]}}</td>
-      </tr>
-      <tr>
-        <td>{{'lessonplan.total' | translate}}</td>
-        <td class="center">{{formState.grandTotals.__}}</td>
-        <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index" class="center">{{h}}</td>
-        <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
-          class="center">{{formState.grandTotalsSp[$index]}}</td>
-      </tr>
-    </tbody>
-  </table>
+            </td>
+            <td colspan="{{::formState.weekNrs.length}}" style="border-top:1px solid #aaa">
+              <div flex layout="row">
+                <div flex="10">
+                  &nbsp;
+                </div>
+                <div flex="70">
+                  <hois-autocomplete label="{{'lessonplan.responsibleformodule' | translate}}" ng-model="module.teacher" method="teachers"></hois-autocomplete>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="3">{{'lessonplan.modulehours' | translate}}: {{::module.totalHours}}</td>
+            <td colspan="{{::formState.weekNrs.length}}"></td>
+          </tr>
+          <tr ng-repeat-start="journal in module.journals">
+            <td colspan="3"><span class="bold">{{::journal.nameEt}}</span>&nbsp;</td>
+            <td colspan="{{::formState.weekNrs.length}}">
+              <span ng-repeat="theme in journal.themes">
+                <span ng-if="!$first">,&nbsp;</span>{{::theme.nameEt}}&nbsp;{{::theme.credits}}&nbsp;{{'lessonplan.credits' | translate}}
+                &nbsp;(<span ng-repeat="(hourCap, hourCount) in theme.hours">{{::getCapacityByCode(hourCap).value.toUpperCase()}}{{hourCount}}{{$last ? "" : "/"}}</span>)</span>
+            </td>
+          </tr>
+          <tr ng-repeat="ct in getCapacityTypes(journal.hours)" class="fix">
+            <td rowspan="{{::keys(journal.hours).length+1}}" ng-if="$first" class="fix">
+              <div>
+                <span style="float:left">
+                  <span ng-repeat="teacher in journal.teachers">
+                    <br ng-if="!$first"> {{teacher.teacher.nameEt}}
+                  </span>
+                </span>
+                <span style="float:right">
+                  <a class="md-primary change-button" ng-click="editJournal(journal)">{{'main.button.change' | translate}}</a>
+                </span>
+              </div>
+              <div ng-if="journal.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
+                <label>{{'lessonplan.journal.groupProportion' | translate}}</label>
+                <hois-classifier-value ng-model="journal.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
+              </div>
+            </td>
+            <td class="center fix">{{ct.value.toUpperCase()}}</td>
+            <td class="center fix" ng-style="{ color: formState.journalTotals[journal.id][ct.code] !== journal.requiredLessons[ct.code] ? 'red' : 'inherit' }"
+            title="{{'lessonplan.planned' | translate }} {{journal.requiredLessons[ct.code]}}">{{formState.journalTotals[journal.id][ct.code]}}</td>
+            <td ng-if="formState.showWeeks" ng-repeat="h in journal.hours[ct.code] track by $index" class="center">
+              <input type="text" ng-model="journal.hours[ct.code][$index]" ng-change="updateTotals(journal, ct.code, $index)">
+            </td>
+            <td ng-if="!formState.showWeeks" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods track by $index"
+              class="center">
+              <input type="text" ng-model="journal.spHours[ct.code][$index]" ng-change="updateLessonCountByStudyPeriod(journal, ct.code, $index)">
+            </td>
+          </tr>
+          <tr ng-repeat-end class="fix">
+            <td class="fix">{{'lessonplan.total' | translate}}</td>
+            <td class="center fix">{{formState.journalTotals[journal.id].__}}</td>
+            <td ng-if="formState.showWeeks" ng-repeat="w in formState.weekNrs track by $index" class="center">{{formState.journalTotals[journal.id]._[$index]}}</td>
+            <td ng-if="!formState.showWeeks" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods track by $index"
+              class="center">{{formState.journalTotals[journal.id]._spTotals[$index]}}</td>
+          </tr>
+          <!-- module totals -->
+          <tr ng-show="formState.showTotals" ng-repeat="ct in getCapacityTypes(formState.moduleTotals[module.id])" class="fix">
+            <td rowspan="{{keys(formState.moduleTotals[module.id]).length}}" ng-if="$first" class="fix">
+              {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.moduleTotal' | translate}}
+            </td>
+            <td class="fix">{{ct.value.toUpperCase()}}</td>
+            <td class="center fix">{{formState.moduleTotals[module.id]._[ct.code]}}</td>
+            <td ng-repeat="h in formState.moduleTotals[module.id][ct.code] track by $index" class="center">{{h}}</td>
+          </tr>
+          <tr ng-show="formState.showTotals" class="fix">
+            <td class="fix" ng-if="getCapacityTypes(formState.moduleTotals[module.id]).length == 0">&nbsp;</td>
+            <td class="fix">{{'lessonplan.total' | translate}}</td>
+            <td class="center fix">{{formState.moduleTotals[module.id].__}}</td>
+            <td ng-repeat="h in formState.moduleTotals[module.id]._._ track by $index" class="center">{{h}}</td>
+          </tr>
+          <tr ng-repeat-end> </tr>
+          <tr ng-repeat-end class="fix"></tr>
+          <tr ng-repeat="ct in getCapacityTypes(formState.grandTotals)" md-colors="{background: 'background-200'}" class="fix">
+            <td rowspan="{{keys(formState.grandTotals).length+1}}" ng-if="$first" class="fix">
+                {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.grandTotal' | translate}}
+            </td>
+            <td class="center fix">{{ct.value.toUpperCase()}}</td>
+            <td class="center fix">{{formState.grandTotals._[ct.code]}}</td>
+            <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals[ct.code] track by $index" class="center">{{h}}</td>
+            <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
+              class="center">{{formState.capGrandTotalsSp[ct.code][$index]}}</td>
+          </tr>
+           <tr md-colors="{background: 'background-200'}" class="fix">
+            <td class="fix">{{'lessonplan.total' | translate}}</td>
+            <td class="fix" ng-if="formState.grandTotals && keys(formState.grandTotals).length &lt; 2">&nbsp;</td>
+            <td class="center fix">{{formState.grandTotals.__}}</td>
+            <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index" class="center" ng-init="$last && finished()">{{h}}</td>
+            <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
+                class="center" ng-init="$last && finished()">{{formState.grandTotalsSp[$index]}}</td>
+           </tr>
+        </tbody>
+        <!-- grand totals -->
+        <!--tbody md-colors="{background: 'background-200'}">
+          <tr ng-repeat="ct in getCapacityTypes(formState.grandTotals)">
+            <td rowspan="{{keys(formState.grandTotals).length+1}}" ng-if="$first">
+              {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.grandTotal' | translate}}
+            </td>
+            <td class="center">{{ct.value.toUpperCase()}}</td>
+            <td class="center">{{formState.grandTotals._[ct.code]}}</td>
+            <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals[ct.code] track by $index" class="center">{{h}}</td>
+            <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
+              class="center">{{formState.capGrandTotalsSp[ct.code][$index]}}</td>
+          </tr>
+          <tr>
+            <td>{{'lessonplan.total' | translate}}</td>
+            <td class="center">{{formState.grandTotals.__}}</td>
+            <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index" class="center">{{h}}</td>
+            <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
+              class="center">{{formState.grandTotalsSp[$index]}}</td>
+          </tr>
+        </tbody-->
+    </table>
+  </div>
 </div>
 <div>
   <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>

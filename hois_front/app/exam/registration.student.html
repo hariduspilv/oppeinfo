@@ -20,6 +20,7 @@
             <th md-column md-order-by="te.start">{{'exam.when' | translate}}</th>
             <th md-column>{{'exam.room' | translate}}</th>
             <th md-column md-order-by="deadline">{{'exam.deadline' | translate}}</th>
+            <th md-column>{{'exam.freePlaces' | translate}}</th>
             <th md-column>{{'exam.addInfo' | translate}}</th>
             <th></th>
           </tr>
@@ -41,9 +42,10 @@
               </div>
             </td>
             <td md-cell>{{row.deadline | hoisDateTimeMin}}</td>
+            <td md-cell>{{row.freePlaces}}</td>
             <td md-cell>{{row.addInfo}}</td>
             <td md-cell>
-              <md-button ng-if="!row.registered && row.canChange" md-no-ink class="md-primary change-button" ng-click="register(row)">{{'exam.register' | translate}}</md-button>
+              <md-button ng-if="!row.registered && row.canChange && row.freePlaces" md-no-ink class="md-primary change-button" ng-click="register(row)">{{'exam.register' | translate}}</md-button>
               <md-button ng-if="row.registered && row.canChange" md-no-ink class="md-primary change-button" ng-click="unregister(row)">{{'exam.unregister' | translate}}</md-button>
             </td>
           </tr>

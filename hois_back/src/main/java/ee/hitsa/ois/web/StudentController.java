@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,7 @@ import ee.hitsa.ois.web.dto.student.StudentHigherResultDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalConnectedEntity;
+import ee.hitsa.ois.web.dto.student.StudentVocationalResultByTimeDto;
 import ee.hitsa.ois.web.dto.student.StudentModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 
@@ -169,6 +171,12 @@ public class StudentController {
     public StudentVocationalResultDto vocationalResults(HoisUserDetails user, @WithEntity Student student) {
         assertCanView(user, student);
         return studentService.vocationalResults(student);
+    }
+    
+    @GetMapping("/{id:\\d+}/vocationalResultsByTime")
+    public Collection<StudentVocationalResultByTimeDto> vocationalResultsByTime(HoisUserDetails user, @WithEntity Student student) {
+        assertCanView(user, student);
+        return studentService.vocationalResultsByTimeResults(student);
     }
 
     @GetMapping("/{id:\\d+}/higherResults")

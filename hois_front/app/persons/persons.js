@@ -25,15 +25,22 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
     }
 
     $scope.lookupPerson = function (response) {
-      $location.path(baseUrl + '/' + response.id + '/edit');
-      message.info('person.exists');
+      if (id) {
+        $scope.person.idcode = undefined;
+        message.error('person.exists');
+      } else {
+        $location.path(baseUrl + '/' + response.id + '/edit');
+        message.info('person.exists');
+      }
     };
 
     function clearData() {
-      $scope.person.firstname = '';
-      $scope.person.lastname = '';
-      $scope.person.email = '';
-      $scope.person.phone = '';
+      if (!id) {
+        $scope.person.firstname = '';
+        $scope.person.lastname = '';
+        $scope.person.email = '';
+        $scope.person.phone = '';
+      }
     }
 
     $scope.lookupFailure = function () {

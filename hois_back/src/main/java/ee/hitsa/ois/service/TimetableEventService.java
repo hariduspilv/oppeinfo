@@ -83,7 +83,7 @@ public class TimetableEventService {
         data.put("studentGroups", autocompleteService.studentGroups(schoolId, studentGroupLookup));
         TeacherAutocompleteCommand teacherLookup = new TeacherAutocompleteCommand();
         teacherLookup.setValid(Boolean.TRUE);
-        data.put("teachers", autocompleteService.teachers(schoolId, teacherLookup));
+        data.put("teachers", autocompleteService.teachers(schoolId, teacherLookup, false));
         data.put("singleEvent", Boolean.TRUE);
         return data;
     }
@@ -372,19 +372,23 @@ public class TimetableEventService {
                 + " left join timetable_object tobj on te.timetable_object_id = tobj.id"
                 + " left join (timetable_object_student_group tog"
                 + " join student_group sg on sg.id = tog.student_group_id ) on tobj.id = tog.timetable_object_id"
-                + " left join timetable t on tobj.timetable_id = t.id left join journal j on tobj.journal_id = j.id"
-                + " left join (subject_study_period ssp"
-                + " join subject subj on subj.id = ssp.subject_id) on ssp.id = tobj.subject_study_period_id";
-                
+                + " left join timetable t on tobj.timetable_id = t.id left join journal j on tobj.journal_id = j.id";
+
+        boolean higherstudent = criteria.getStudent() != null && Boolean.TRUE.equals(criteria.getHigher());
+        if(!higherstudent) {
+            from += " left join (subject_study_period ssp join subject subj on subj.id = ssp.subject_id) on ssp.id = tobj.subject_study_period_id";
+        }
         if (criteria.getStudent() != null && Boolean.TRUE.equals(criteria.getVocational())) {
             from += " left join  journal_student js  on js.journal_id=j.id"
                     + " left join student s on s.id=js.student_id";
-        } else if (criteria.getStudent() != null && Boolean.TRUE.equals(criteria.getHigher())) {
+        } else if (higherstudent) {
+            from += " left join subject_study_period_exam sspe on sspe.timetable_event_id = te.id";
+            from += " left join (subject_study_period ssp join subject subj on subj.id = ssp.subject_id) on (ssp.id = tobj.subject_study_period_id or ssp.id = sspe.subject_study_period_id)";
             from += " left join declaration_subject decls on decls.subject_study_period_id=ssp.id"
                     + " left join declaration decl on decls.declaration_id=decl.id"
                     + " left join student s on decl.student_id=s.id";
         }
-        
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.optionalContains("te.name", "eventName", criteria.getName());
@@ -397,7 +401,11 @@ public class TimetableEventService {
         qb.optionalCriteria("s.id = :student", "student", criteria.getStudent());
         qb.requiredCriteria("(te.school_id = :schoolId or t.school_id = :schoolId)", "schoolId", schoolId);
         qb.requiredCriteria("(te.timetable_object_id is null or t.status_code in (:shownStatusCodes))", "shownStatusCodes", timetableService.shownStatusCodes());
-        
+
+        if(higherstudent) {
+            qb.filter("(sspe.id is null or exists(select 1 from subject_study_period_exam_student sspes where sspes.declaration_subject_id = decls.id and sspes.subject_study_period_exam_id = sspe.id))");
+        }
+
         if(Boolean.TRUE.equals(criteria.getSingleEvent())) {
             qb.filter("tobj.id is null");
         } else if (Boolean.FALSE.equals(criteria.getSingleEvent())){
@@ -485,6 +493,9 @@ public class TimetableEventService {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria, schoolId).sort(pageable);
         String select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(te.name, j.name_et, subj.name_en) as name_en,"
                     + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId";
+        // do not show exams, they are managed thru separate UI
+        qb.filter("not exists(select 1 from subject_study_period_exam sspe2 where sspe2.timetable_event_id = tet.timetable_event_id)");
+
         Page<TimetableEventSearchDto> result = JpaQueryUtil.pagingResult(qb, select, em, pageable).map(r -> {
             return new TimetableEventSearchDto(resultAsLong(r, 0), null, null, resultAsString(r, 1), resultAsString(r, 2),
                     resultAsLocalDateTime(r, 3).toLocalDate(), resultAsLocalDateTime(r, 3).toLocalTime(),

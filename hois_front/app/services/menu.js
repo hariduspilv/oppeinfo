@@ -5,7 +5,7 @@ angular.module('hitsaOis')
 
     var sections = [];
 
-    function getAdminSections(authenticatedUser) {
+    function getAdminSections() {
       sections.push({
         name: 'main.menu.academicCalendar.label',
         type: 'link',
@@ -88,16 +88,33 @@ angular.module('hitsaOis')
             url: '/certificate?_menu'
           },
           {
+            name: 'main.menu.scholarships.grantApplications',
+            url: "/scholarships/applications/grants?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.scholarships.scholarshipApplications',
+            url: "/scholarships/applications/scholarships?_menu",
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.scholarships.drGrantApplications',
+            url: "/scholarships/applications/drGrants?_menu",
+            studyLevel: {
+              doctoral: true
+            }
+          },
+          {
             name: 'main.menu.documents.practiceContracts',
             url: "/contracts?_menu"
           },
           {
             name: 'main.menu.documents.representativeApplications',
             url: "/studentrepresentatives/applications?_menu",
-          },
-          {
-            name: 'main.menu.documents.apel',
-            url: "/apelApplication?_menu"
           }
         ]
       });
@@ -158,6 +175,10 @@ angular.module('hitsaOis')
             studyLevel: {
               higher: true
             }
+          },
+          {
+            name: 'main.menu.documents.apel',
+            url: "/apelApplication?_menu"
           }
         ]
       });
@@ -224,8 +245,6 @@ angular.module('hitsaOis')
           }
         ]
       });
-
-      sections = sections.concat(getScholarshipSectionForAdmin(authenticatedUser));
 
       sections.push({
         name: 'main.menu.reports.label',
@@ -418,6 +437,27 @@ angular.module('hitsaOis')
             url: "/generalmessages?_menu"
           },
           {
+            name: 'main.menu.scholarships.grants',
+            url: "/scholarships/grants?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.scholarships.scholarships',
+            url: "/scholarships/scholarships?_menu",
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.scholarships.drGrants',
+            url: "/scholarships?_menu",
+            studyLevel: {
+              doctoral: true
+            }
+          },
+          {
             name: 'main.menu.settings.messageTemplates',
             url: "/messageTemplate?_menu"
           },
@@ -445,6 +485,10 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.settings.apelSchools',
             url: "/apelSchools?_menu"
+          },
+          {
+            name: 'main.menu.settings.studentGroupYearTransfer',
+            url: "/studentGroupYearTransfer?_menu"
           }
         ]
       });
@@ -870,87 +914,6 @@ angular.module('hitsaOis')
     var self;
     var menu = [];
 
-    function getScholarshipSectionForAdmin(authenticatedUser) {
-      var result = [];
-      if(authenticatedUser.higher && authenticatedUser.vocational) {
-        result.push({
-          name: 'main.menu.scholarships.label',
-          type: 'toggle',
-          pages: [
-            {
-              name: 'main.menu.scholarships.grants',
-              url: "/scholarships/grants?_menu"
-            },
-            {
-              name: 'main.menu.scholarships.grantApplications',
-              url: "/scholarships/applications/grants?_menu"
-            },
-            {
-              name: 'main.menu.scholarships.scholarships',
-              url: "/scholarships/scholarships?_menu"
-            },
-            {
-              name: 'main.menu.scholarships.scholarshipApplications',
-              url: "/scholarships/applications/scholarships?_menu"
-            },
-            {
-              name: 'main.menu.scholarships.drGrants',
-              url: "/scholarships?_menu",
-              studyLevel: {
-                doctoral: true
-              }
-            },
-            {
-              name: 'main.menu.scholarships.drGrantApplications',
-              url: "/scholarships/applications/drGrants?_menu",
-              studyLevel: {
-                doctoral: true
-              }
-            }
-          ]
-        });
-      } else if (authenticatedUser.higher) {
-        result.push({
-          name: 'main.menu.scholarships.scholarships',
-          type: 'link',
-          url: "/scholarships/scholarships?_menu"
-        });
-        result.push({
-          name: 'main.menu.scholarships.scholarshipApplications',
-          type: 'link',
-          url: "/scholarships/applications/scholarships?_menu"
-        });
-        result.push({
-          name: 'main.menu.scholarships.drGrants',
-          type: 'link',
-          url: "/scholarships?_menu",
-          studyLevel: {
-            doctoral: true
-          }
-        });
-        result.push({
-          name: 'main.menu.scholarships.drGrantApplications',
-          type: 'link',
-          url: "/scholarships/applications/drGrants?_menu",
-          studyLevel: {
-            doctoral: true
-          }
-        });
-      } else {
-        result.push({
-          name: 'main.menu.scholarships.grants',
-          type: 'link',
-          url: "/scholarships/grants?_menu"
-        });
-        result.push({
-          name: 'main.menu.scholarships.grantApplications',
-          type: 'link',
-          url: "/scholarships/applications/grants?_menu"
-        });
-      }
-      return result;
-    }
-
     function getScholarshipSectionForStudent(authenticatedUser) {
       var result = [];
       if (authenticatedUser.higher) {
@@ -1153,7 +1116,7 @@ angular.module('hitsaOis')
 
       switch(authenticatedUser.roleCode) {
         case "ROLL_A":
-          getAdminSections(authenticatedUser);
+          getAdminSections();
           break;
         case "ROLL_P":
           getMainAdminSections();

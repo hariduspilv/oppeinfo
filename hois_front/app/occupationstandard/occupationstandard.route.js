@@ -7,7 +7,8 @@ angular.module('hitsaOis').config(['$routeProvider', function ($routeProvider) {
       controller: 'KutseregisterSyncController',
       controllerAs: 'controller',
       resolve: {
-        translationLoaded: function($translate) { return $translate.onReady(); }
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
         authorizedRoles: function(Session) {

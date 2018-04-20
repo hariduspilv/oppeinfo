@@ -1,0 +1,42 @@
+<md-dialog aria-label="students dialog" flex="50">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2 flex>{{"studentGroupYearTransfer.unsuitableStudents" | translate}}</h2>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <div layout="column" flex>
+        <md-table-container>
+          <table md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'studentGroupYearTransfer.studentGroup' | translate}}</th>
+                <th md-column>{{'studentGroupYearTransfer.curriculum' | translate}}</th>
+                <th md-column>{{'studentGroupYearTransfer.course' | translate}}</th>
+                <th md-column>{{'student.name' | translate}}</th>
+                <th md-column>{{'studentGroupYearTransfer.reason' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in students" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{::studentGroup.oldCode}}</td>
+                <td md-cell>{{::studentGroup.curriculumName}}</td>
+                <td md-cell>{{::studentGroup.oldCourse}}</td>
+                <td md-cell>{{::row.name}}</td>
+                <td md-cell>{{::currentLanguageNameField(row.mismatchCode)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row" layout-align="start start">
+    <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

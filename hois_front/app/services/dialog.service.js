@@ -12,6 +12,7 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils', 
   function ($mdDialog, ArrayUtils, message) {
 
     var defaultConfirmDialogOptions = {accept: 'main.yes', cancel: 'main.no'};
+    var defaultMessageDialogOptions = {close: 'main.button.close'};
 
     /**
      * For form validation to work dialog form name must be dialogForm
@@ -49,7 +50,7 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils', 
           }
         },
         templateUrl: templateUrl,
-/*        skipHide: true,*/
+/*      multiple: true,*/
         //clickOutsideToClose: angular.isDefined(config.clickOutsideToClose) ? config.clickOutsideToClose === true : true,
         //dialog general behaviour is that clicking outside should not close dialog
         clickOutsideToClose: false,
@@ -83,7 +84,25 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils', 
         templateUrl: 'components/confirm.dialog.html',
         //dialog general behaviour is that clicking outside should not close dialog
         clickOutsideToClose: false,
-        skipHide: true
+        multiple: true
+      });
+    };
+
+    this.messageDialog = function(options, closecallback) {
+      $mdDialog.show({
+        controller: function($scope) {
+          $scope.messages = angular.extend({}, defaultMessageDialogOptions, options);
+          $scope.close = function() {
+            $mdDialog.hide();
+            if(angular.isFunction(closecallback)) {
+              closecallback();
+            }
+          };
+        },
+        templateUrl: 'components/message.dialog.html',
+        //dialog general behaviour is that clicking outside should not close dialog
+        clickOutsideToClose: false,
+        multiple: true
       });
     };
   }

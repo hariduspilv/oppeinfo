@@ -369,7 +369,8 @@ public class MoodleService {
 
     private static Map<String, JournalStudent> getMoodleMappedStudents(Journal journal) {
         return StreamUtil.toMap(js -> js.getStudent().getPerson().getIdcode(), 
-                journal.getJournalStudents());
+                journal.getJournalStudents().stream()
+                    .filter(js -> js.getStudent().getPerson().getIdcode() != null));
     }
 
     private static Map<String, DeclarationSubject> getMoodleMappedStudents(SubjectStudyPeriod subjectStudyPeriod) {

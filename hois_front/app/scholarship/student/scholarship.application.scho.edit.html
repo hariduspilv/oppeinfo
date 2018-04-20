@@ -62,11 +62,11 @@
 
     <div class="form-readonly ois-form-layout-padding">
       <div layout="row" flex>
-        <md-input-container flex="45" ng-if="!isNumber(application.saisPoints)">
+        <md-input-container flex="45" ng-if="!application.useSaisPoints">
           <label class="textInput">{{'stipend.averageMark' | translate}}</label>
           <hois-value value="application.averageMark"></hois-value>
         </md-input-container>
-        <md-input-container flex="45" ng-if="isNumber(application.saisPoints)">
+        <md-input-container flex="45" ng-if="application.useSaisPoints">
           <label class="textInput">{{'stipend.saisPoints' | translate}}</label>
           <hois-value value="application.saisPoints"></hois-value>
         </md-input-container>

@@ -11,6 +11,7 @@ public class StudentGroupSearchDto {
     private String code;
     private AutocompleteResult curriculum;
     private String studyForm;
+    private String teacher;
     private Integer course;
     private Long studentCount;
     private List<Long> schoolDepartments;
@@ -49,6 +50,14 @@ public class StudentGroupSearchDto {
 
     public void setStudyForm(String studyForm) {
         this.studyForm = studyForm;
+    }
+
+    public String getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(String teacher) {
+        this.teacher = teacher;
     }
 
     public Integer getCourse() {

@@ -28,7 +28,9 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
     $scope.stipendTypeChanged = function () {
       $scope.templateName = templateMap[$scope.stipend.type];
       typePromise.then(function() {
-        $scope.stipend.nameEt = ($scope.formState.typeMap[$scope.stipend.type] || {}).nameEt;
+        if (!$scope.stipend.nameEt) {
+          $scope.stipend.nameEt = ($scope.formState.typeMap[$scope.stipend.type] || {}).nameEt;
+        }
         if (angular.isArray($scope.formState.allowedStipendTypes) && $scope.formState.allowedStipendTypes.length === 1) {
           $scope.formState.typeIsScholarship = (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf($scope.formState.allowedStipendTypes[0]) !== -1);
         }
@@ -137,7 +139,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       dialogService.confirmDialog({prompt: deleteType}, function () {
         QueryUtils.endpoint(baseUrl + '/' + $scope.stipend.id + '/deleteTerm').delete({}, function () {
           $location.url(url + '?_noback');
-        }).catch(angular.noop);
+        }).$promise.catch(angular.noop);
       });
     };
 
@@ -173,8 +175,9 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       return otherValues.indexOf(value.code) === -1;
     };
   }
-]).controller('ScholarshipViewController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'AuthService', 'USER_ROLES',
-  function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, AuthService, USER_ROLES) {
+]).controller('ScholarshipViewController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'AuthService', 'USER_ROLES', 
+    'ScholarshipUtils',
+  function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, AuthService, USER_ROLES, ScholarshipUtils) {
     var templateMap = {
       STIPTOETUS_POHI: 'scholarship/term/scholarship.pohi.view.html',
       STIPTOETUS_ERI: 'scholarship/term/scholarship.eri.view.html',
@@ -214,5 +217,9 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
     if (id) {
       $scope.stipend = Endpoint.get({id: id}, afterLoad);
     }
+
+    $scope.changeStipend = function(stipend) {
+      ScholarshipUtils.changeStipend(stipend.id, stipend.type, stipend.isOpen);
+    };
   }
 ]);

@@ -79,16 +79,10 @@ public class DeclarationController {
         return get(user, currentDeclaration);
     }
 
-    @GetMapping("/modules/{id:\\d+}")
-    public List<AutocompleteResult> getModules(HoisUserDetails user, @WithEntity Declaration declaration) {
-        UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
-        return declarationService.getModules(declaration);
-    }
-
     @GetMapping("/subjects/{id:\\d+}")
-    public List<DeclarationSubjectDto> getCurriculumSubjectOptions(HoisUserDetails user, @WithEntity Declaration declaration) {
+    public Page<DeclarationSubjectDto> getCurriculumSubjectOptions(HoisUserDetails user, @WithEntity Declaration declaration, Pageable pageable) {
         UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
-        return declarationService.getCurriculumSubjectOptions(declaration);
+        return declarationService.getCurriculumSubjectOptions(declaration, pageable);
     }
 
     @GetMapping("/subjects/extracurriculum/{id:\\d+}")

@@ -39,7 +39,8 @@ import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 public class JournalControllerTests {
 
     private static final String ENDPOINT = "/journals";
-    private static final Long STUDENT_ID = Long.valueOf(189L); 
+    private static final Long STUDENT_ID = Long.valueOf(189L);
+    private static final Long STUDY_YEAR_ID = Long.valueOf(36L);
     private static final Role ROLE = Role.ROLL_A;
 
     @Autowired
@@ -187,6 +188,7 @@ public class JournalControllerTests {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
                 .pathSegment("studentJournals");
         uriBuilder.queryParam("studentId", STUDENT_ID);
+        uriBuilder.queryParam("studyYearId", STUDY_YEAR_ID);
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

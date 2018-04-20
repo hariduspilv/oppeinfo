@@ -181,4 +181,19 @@ public class StudyYearService {
             .setMaxResults(1).getResultList();
         return data.isEmpty() ? null : data.get(0);
     }
+
+    /**
+     * Returns previous study year
+     * @param studyYear
+     * @return null if there is no previous study year
+     */
+    public StudyYear getPreviousStudyYear(StudyYear studyYear) {
+        List<StudyYear> data = em.createQuery("select sy from StudyYear sy"
+                + " where sy.school = ?1 and sy.endDate < ?2"
+                + " order by sy.endDate desc", StudyYear.class)
+            .setParameter(1, studyYear.getSchool())
+            .setParameter(2, studyYear.getStartDate())
+            .setMaxResults(1).getResultList();
+        return data.isEmpty() ? null : data.get(0);
+    }
 }

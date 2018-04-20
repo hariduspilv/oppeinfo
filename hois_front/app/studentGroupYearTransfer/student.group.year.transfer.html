@@ -1,0 +1,128 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <div layout="row">
+      <md-input-container flex="20" flex-sm="100" flex-xs="100">
+        <label>{{'studentGroupYearTransfer.studyYear' | translate}}</label>
+        <hois-select ng-model="studyYear" ng-change="studyYearChanged()" values="studyYears" required></hois-select>
+      </md-input-container>
+    </div>
+    <div ng-show="studyYear">
+      <form name="transferForm">
+        <div class="label-with-vertical-margin">
+          {{'studentGroupYearTransfer.conditionsDescription' | translate}}:
+        </div>
+        <div>
+          <md-checkbox ng-model="academicLeave" ng-disabled="calculated" aria-label="{{'studentGroupYearTransfer.academicLeave' | translate}}">
+            {{'studentGroupYearTransfer.academicLeave' | translate}}
+          </md-checkbox>
+        </div>
+        <div layout="row">
+          <md-input-container flex="33" flex-sm="100" flex-xs="100">
+            <label>{{'studentGroupYearTransfer.academicLeaveDays' | translate}}</label>
+            <input type="number" ng-model="academicLeaveDays" min="0" ng-disabled="calculated">
+          </md-input-container>
+        </div>
+        <div>
+          <md-checkbox ng-model="abroadStudies" ng-disabled="calculated" aria-label="{{'studentGroupYearTransfer.abroadStudies' | translate}}">
+            {{'studentGroupYearTransfer.abroadStudies' | translate}}
+          </md-checkbox>
+        </div>
+        <div layout="row">
+          <md-input-container flex="33" flex-sm="100" flex-xs="100">
+            <label>{{'studentGroupYearTransfer.abroadStudiesDays' | translate}}</label>
+            <input type="number" ng-model="abroadStudiesDays" min="0" ng-disabled="calculated">
+          </md-input-container>
+        </div>
+        <div class="label-with-vertical-margin" ng-show="checkGroupValidThru">
+          {{'studentGroupYearTransfer.checkGroupValidThru' | translate}}: {{checkGroupValidThru}}
+        </div>
+        <div layout="row">
+          <md-table-container>
+            <table md-table>
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>
+                    <md-checkbox ng-model="multiSelect" ng-change="multiSelectChanged()" aria-label="multiSelect"></md-checkbox>
+                  </th>
+                  <th md-column>{{'studentGroupYearTransfer.studentGroup' | translate}}</th>
+                  <th md-column>{{'studentGroupYearTransfer.course' | translate}}</th>
+                  <th md-column>{{'studentGroupYearTransfer.newCode' | translate}}</th>
+                  <th md-column>{{'studentGroupYearTransfer.newCourse' | translate}}</th>
+                  <th md-column>{{'studentGroupYearTransfer.curriculum' | translate}}</th>
+                  <th md-column>{{'studentGroupYearTransfer.allStudents' | translate}}</th>
+                  <th md-column>{{'studentGroupYearTransfer.suitableStudents' | translate}}</th>
+                  <th md-column>{{'studentGroupYearTransfer.unsuitableStudents' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in studentGroups" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>
+                    <md-checkbox ng-model="row.selected" ng-if="!row.transfered" ng-change="selectChanged()" aria-label="selected"></md-checkbox>
+                  </td>
+                  <td md-cell>{{::row.oldCode}}</td>
+                  <td md-cell>{{::row.oldCourse}}</td>
+                  <td md-cell>
+                    <md-input-container ng-if="!row.transfered">
+                      <input type="text" ng-model="row.newCode" ng-required="row.selected" aria-label="newCode">
+                    </md-input-container>
+                    <span ng-if="row.transfered">{{row.newCode}}</span>
+                  </td>
+                  <td md-cell>{{::row.newCourse}}</td>
+                  <td md-cell>{{::row.curriculumName}}</td>
+                  <td md-cell>{{::row.relatedStudents}}</td>
+                  <td md-cell>
+                    <a ng-click="viewMatchingStudents(row)">{{row.suitableStudents}}</a>
+                  </td>
+                  <td md-cell>
+                    <a ng-click="viewMismatchingStudents(row)">{{row.unsuitableStudents}}</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </div>
+        <div layout="row">
+          <md-button class="md-raised" ng-show="canTransfer" ng-class="{'md-primary': !calculated}" ng-click="calculate()">
+            {{'main.button.calculate' | translate}}
+          </md-button>
+        </div>
+        <div ng-show="calculated">
+          <div layout="row">
+            <fieldset>
+              <legend>{{'studentGroupYearTransfer.mismatchingStudents' | translate}}</legend>
+              <table md-table class="secondary-table">
+                <thead md-head>
+                  <tr md-row>
+                    <th md-column>{{'student.name' | translate}}</th>
+                    <th md-column>{{'studentGroupYearTransfer.curriculum' | translate}}</th>
+                    <th md-column>{{'studentGroupYearTransfer.reason' | translate}}</th>
+                    <th md-column>{{'studentGroupYearTransfer.course' | translate}}</th>
+                    <th md-column>{{'studentGroupYearTransfer.studentGroup' | translate}}</th>
+                    <th md-column>{{'studentGroupYearTransfer.newGroup' | translate}}</th>
+                  </tr>
+                </thead>
+                <tbody md-body>
+                  <tr md-row ng-repeat="row in mismatchingStudents" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell>{{::row.name}}</td>
+                    <td md-cell>{{::row.group.curriculumName}}</td>
+                    <td md-cell>{{::currentLanguageNameField(row.mismatchCode)}}</td>
+                    <td md-cell>{{::row.group.oldCourse}}</td>
+                    <td md-cell>{{::row.group.oldCode}}</td>
+                    <td md-cell>
+                      <md-input-container>
+                        <hois-select ng-model="row.newGroup" values="studentGroups" show-property="oldCode" required aria-label="newGroup"></hois-select>
+                      </md-input-container>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </fieldset>
+          </div>
+          <div layout="row">
+            <md-button class="md-raised md-primary" ng-click="transfer()">{{'studentGroupYearTransfer.button.transfer' | translate}}</md-button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

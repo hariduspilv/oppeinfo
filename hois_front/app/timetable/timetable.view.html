@@ -9,19 +9,19 @@
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
 
-      <div ng-repeat="curriculum in timetable.curriculums">
-        <table md-table>
-          <thead md-head>
-          <tr md-row>
-            <th md-column>{{currentLanguageNameField(curriculum)}}{{curriculum.curriculumCode}}, {{currentLanguageNameField(curriculum.curriculumStudyLevelCode)}}</th>
-          </tr>
-          </thead>
-          <tbody md-body>
-          <tr md-row ng-repeat="group in curriculum.groups" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a href="#/timetable/{{timetable.id}}/{{timetable.higher ? 'createHigherPlan' : 'createVocationalPlan'}}/{{group.id}}">{{group.code}}</a></td>
-          </tr>
-          </tbody>
-        </table>
+      <div id="tt" ng-repeat="curriculum in timetable.curriculums | orderBy: currentLanguageNameField()" layout="column" flex>
+        <div class="hois-collapse-header even">{{currentLanguageNameField(curriculum)}}{{curriculum.curriculumCode}}, {{currentLanguageNameField(curriculum.curriculumStudyLevelCode)}}</div>
+        <div flex >
+                <md-grid-list ng-app="app" md-cols-xs="1" md-cols-sm="2" md-cols-md="4" md-cols-lg="8" md-cols-gt-lg="8" md-gutter="1em"
+                md-row-height="40px" flex>
+                <md-grid-tile ng-repeat="group in curriculum.groups | orderBy: code" style="text-align: left;">
+                  <!--md-button class="md-button" md-colors="{background: 'background-200'}" ng-click="showTeacherWeek(row.teacherId)">
+                    {{row.lastname}}, {{row.firstname}}
+                  </md-button-->
+                  <a href="#/timetable/{{timetable.id}}/{{timetable.higher ? 'createHigherPlan' : 'createVocationalPlan'}}/{{group.id}}">{{group.code}}</a>
+                </md-grid-tile>
+              </md-grid-list>
+            </div>
       </div>
 
       <div ng-if="timetable.pairs">
@@ -33,7 +33,7 @@
           </tr>
           </thead>
           <tbody md-body>
-          <tr md-row ng-repeat="pair in timetable.pairs" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-repeat="pair in timetable.pairs | orderBy: ['code', currentLanguageNameField()]" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell><a href="#/timetable/{{timetable.id}}/{{timetable.higher ? 'createHigherPlan' : 'createVocationalPlan'}}">{{pair.code}} {{currentLanguageNameField(pair)}} / {{pair.teacherNames}}</a></td>
           </tr>
           </tbody>

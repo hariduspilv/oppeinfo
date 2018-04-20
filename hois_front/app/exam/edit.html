@@ -59,12 +59,22 @@
 
         <md-input-container flex="10" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label>{{'main.start' | translate}}</label>
-          <hois-time required ng-readonly="!formState.allEditable" ng-model="record.startTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+          <hois-time required ng-readonly="!formState.allEditable" ng-model="record.startTime" name="startTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+          <div ng-messages="examForm.startTime.$error">
+            <div ng-message="time">
+              {{'main.messages.error.time' | translate}}
+            </div>
+          </div>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
           <label>{{'main.end' | translate}}</label>
-          <hois-time required ng-readonly="!formState.allEditable" ng-model="record.endTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+          <hois-time required ng-readonly="!formState.allEditable" ng-model="record.endTime" name="endTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+          <div ng-messages="examForm.endTime.$error">
+            <div ng-message="time">
+              {{'main.messages.error.time' | translate}}
+            </div>
+          </div>
         </md-input-container>
 
         <hois-autocomplete label="exam.room" ng-model="record.room" method="rooms" required flex="40" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"></hois-autocomplete>
@@ -78,23 +88,39 @@
 
         <md-input-container flex="10" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label>{{'exam.deadlineTime' | translate}}</label>
-          <hois-time ng-required="record.deadlineDate" ng-model="record.deadlineTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+          <hois-time ng-required="record.deadlineDate" ng-model="record.deadlineTime" name="deadlineTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+          <div ng-messages="examForm.deadlineTime.$error">
+            <div ng-message="time">
+              {{'main.messages.error.time' | translate}}
+            </div>
+          </div>
         </md-input-container>
 
         <md-input-container flex="40" flex-sm="100" flex-offset="15" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'exam.places' | translate}}</label>
           <input ng-model="record.places" name="places" type="number" min="0">
+          <div ng-messages="examForm.places.$error">
+            <div ng-message="min">
+              {{'main.messages.error.min' | translate: {min: 0} }}
+            </div>
+          </div>
         </md-input-container>
       </div>
 
       <div layout="row">
         <md-input-container flex="90" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
           <label>{{'exam.addInfo' | translate}}</label>
-          <textarea ng-model="record.addInfo" md-maxlength="4000" max-rows="2"></textarea>
+          <textarea ng-model="record.addInfo" name="addInfo" md-maxlength="4000" max-rows="2"></textarea>
+          <div ng-messages="examForm.addInfo.$error">
+            <div ng-message="md-maxlength">
+              {{'main.messages.error.maxlength' | translate}}
+            </div>
+          </div>
         </md-input-container>
       </div>
 
       <md-autocomplete ng-if="record.id" flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0"
+          ng-disabled="record.places > 0 && record.students.length >= record.places"
           md-floating-label="{{'exam.addStudent' | translate}}"
           md-min-length="2"
           md-items="item in lookupStudents(queryText)"

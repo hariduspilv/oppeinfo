@@ -36,6 +36,7 @@ import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipStudentApplicationF
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipTermForm;
 import ee.hitsa.ois.web.dto.ScholarshipTermApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationDto;
+import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationStudentDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipStudentRejectionDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermSearchDto;
@@ -185,15 +186,15 @@ public class ScholarshipController {
     }
 
     @GetMapping("/studentStipends")
-    public List<ScholarshipTermStudentDto> studentStipends(HoisUserDetails user) {
+    public List<ScholarshipApplicationStudentDto> studentStipends(HoisUserDetails user) {
         UserUtil.assertIsStudent(user);
-        return scholarshipService.scholarshipTermStudentDtos(user.getStudentId());
+        return scholarshipService.studentStipends(user.getStudentId());
     }
 
     @GetMapping("/studentDrGrants")
-    public List<ScholarshipTermStudentDto> studentDrGrants(HoisUserDetails user) {
+    public List<ScholarshipApplicationStudentDto> studentDrGrants(HoisUserDetails user) {
         UserUtil.assertIsStudent(user);
-        return scholarshipService.drGrantTermStudentDtos(user.getStudentId());
+        return scholarshipService.studentDrGrants(user.getStudentId());
     }
 
     @SuppressWarnings("unused")

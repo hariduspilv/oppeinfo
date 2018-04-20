@@ -1,22 +1,22 @@
-<div ng-if="vocationalResultsPassing.results && vocationalResultsPassing.results.length!=0">
+<div ng-if="vocationalResultsPassing && vocationalResultsPassing.length!=0">
   <md-table-container>
   <table md-table class="secondary-table">
     <thead md-head>
       <tr md-row>
         <th md-column>{{'student.result.moduleTheme' | translate}}</th>
-        <th md-column>{{'student.result.ekap' | translate}}</th>
+        <th md-column></th>
         <th md-column>{{'student.result.grade' | translate}}</th>
         <th md-column>{{'student.result.date' | translate}}</th>
         <th md-column>{{'student.result.teacher' | translate}}</th>
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in vocationalResultsPassing.results" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell><span ng-class="!row.theme ? 'md-body-2 bold' : ''"><span ng-if="!row.theme">M: </span>{{!row.theme ? currentLanguageNameField(row.module) : currentLanguageNameField(row.theme) + " (" +currentLanguageNameField(row.module) + ")"}}</span></td>
-        <td md-cell>{{row.credits}}</td>
-        <td md-cell><span ng-class="!row.theme ? 'md-body-2 bold' : ''">{{row.grade.value}}</span></td>
+      <tr md-row ng-repeat="row in vocationalResultsPassing | orderBy: '-date'" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell><span ng-class="row.isModule ? 'md-body-2 bold' : ''"><span ng-if="row.isModule">M: </span>{{currentLanguageNameField(row.name)}}</span></td>
+        <td md-cell><span ng-if="row.entryType">{{currentLanguageNameField(row.entryType)}}</span></td>
+        <td md-cell><span ng-class="row.isModule ? 'md-body-2 bold' : ''">{{row.grade.value}}</span></td>
         <td md-cell>{{row.date | hoisDate}}</td>
-        <td md-cell>{{displayTeachers(row.teachers)}}</td>
+        <td md-cell>{{row.teachers}}</td>
       </tr>
     </tbody>
   </table>

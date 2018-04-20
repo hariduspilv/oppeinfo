@@ -11,6 +11,7 @@ angular.module('hitsaOis').controller('EhisLogsController', ['$mdDialog', '$scop
     if(school.vocational) {
       $scope.messageTypes.push('laePedagoogid');
     }
+    $scope.messageTypesWithTeacher = ['laeOppejoud', 'laePedagoogid'];
 
     var baseUrl = '/logs/ehis';
     QueryUtils.createQueryForm($scope, baseUrl, {order: '-inserted'});

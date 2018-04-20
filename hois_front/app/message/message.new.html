@@ -75,7 +75,7 @@
                     <tr md-row>
                         <th md-column>{{'message.receiver' | translate}}</th>
                         <th md-column ng-if="auth.isAdmin()">{{'student.idcode' | translate}}</th>
-                        <th md-column ng-if="auth.isAdmin()">{{'message.targetGroup' | translate}}</th>
+                        <th md-column ng-if="auth.isAdmin() || auth.isTeacher()">{{'message.targetGroup' | translate}}</th>
                         <th md-column ng-if="auth.isTeacher()">{{'message.curriculum' | translate}}</th>
                         <th md-column ng-if="auth.isTeacher()">{{'message.studentGroup' | translate}}</th>
                         <th md-column></th>
@@ -87,7 +87,7 @@
                     <td md-cell ng-if="auth.isAdmin()">
                         <span ng-if="receiver.role.length === 1 && receiver.role[0] === 'ROLL_T'">{{receiver.idcode}}</span>
                     </td>
-                    <td md-cell ng-if="auth.isAdmin()">
+                    <td md-cell ng-if="auth.isAdmin() || auth.isTeacher()">
                         <p ng-repeat="role in receiver.role">
                             <hois-classifier-value ng-model="role" main-classifier-code="ROLL"></hois-classifier-value>
                         </p>

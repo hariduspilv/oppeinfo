@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +51,7 @@ import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -75,6 +75,7 @@ import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalConnectedEntity;
 import ee.hitsa.ois.web.dto.student.StudentVocationalModuleDto;
+import ee.hitsa.ois.web.dto.student.StudentVocationalResultByTimeDto;
 import ee.hitsa.ois.web.dto.student.StudentModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
@@ -92,6 +93,9 @@ public class StudentService {
             "inner join classifier status on s.status_code=status.code "+
             "left outer join student_group student_group on s.student_group_id=student_group.id "+
             "left outer join classifier study_form on s.study_form_code=study_form.code";
+    
+    private static final List<String> JOURNAL_RESULT_ENTRY_TYPES = EnumUtil.toNameList(JournalEntryType.SISSEKANNE_L,
+            JournalEntryType.SISSEKANNE_O, JournalEntryType.SISSEKANNE_R, JournalEntryType.SISSEKANNE_H);
 
     @Autowired
     private AutomaticMessageService automaticMessageService;
@@ -442,6 +446,108 @@ public class StudentService {
         }
         return null;
     }
+    
+    public Collection<StudentVocationalResultByTimeDto> vocationalResultsByTimeResults(Student student) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from (select 0 as module, coalesce(je.entry_date,jes.grade_inserted) as kp, j.id, j.name_et, " + 
+                "(select string_agg(tp.firstname||' '||tp.lastname,', ') " + 
+                "from journal_teacher jt " + 
+                "join teacher t on t.id = jt.teacher_id " + 
+                "join person tp on tp.id = T.person_id " + 
+                "where jt.journal_id=j.id) as opetaja, " + 
+                "je.entry_type_code, " +
+                    "(select string_agg(cvot.name_et,', ')||' ('||string_agg(distinct(cm.name_et||' - '||mcl.name_et),',')||')'" +
+                    "from journal_omodule_theme jot " + 
+                        "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id " +
+                        "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id " +
+                        "join curriculum_module cm on cm.id = cvo.curriculum_module_id " +
+                        "join classifier mcl ON mcl.code = cm.module_code " +
+                        "join curriculum_version cv on cv.id = cvo.curriculum_version_id " +
+                    "where jot.journal_id = js.journal_id and cv.id=ss.curriculum_version_id) as my_theme, " + 
+                    "(select string_agg(cvot.name_et,', ')||' ('||string_agg(distinct(coalesce(cm.name_en,cm.name_et)||' - '||coalesce(mcl.name_en,mcl.name_et)),',')||')'" +
+                    "from journal_omodule_theme jot " + 
+                        "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id " +
+                        "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id " +
+                        "join curriculum_module cm on cm.id = cvo.curriculum_module_id " +
+                        "join classifier mcl on mcl.code = cm.module_code " +
+                        "join curriculum_version cv on cv.id = cvo.curriculum_version_id " +
+                    "where jot.journal_id = js.journal_id and cv.id=ss.curriculum_version_id) as my_theme_en, " +
+                    "(select string_agg(cvot.name_et,', ')||' ('||string_agg(distinct(cm.name_et||' - '||mcl.name_et)||'('||cv.code||')',',')||')'" +
+                    "from journal_omodule_theme jot " + 
+                        "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id " +
+                        "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id " +
+                        "join curriculum_module cm on cm.id = cvo.curriculum_module_id " +
+                        "join classifier mcl on mcl.code = cm.module_code " + 
+                        "join curriculum_version cv on cv.id = cvo.curriculum_version_id " +
+                    "where jot.journal_id = js.journal_id and cv.id!=ss.curriculum_version_id) as foreign_theme, " +
+                    "(select string_agg(cvot.name_et,', ')||' ('||string_agg(distinct(coalesce(cm.name_en,cm.name_et)||' - '||coalesce(mcl.name_en,mcl.name_et)),',')||')'" + 
+                    "from journal_omodule_theme jot " + 
+                        "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id " +
+                        "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id " +
+                        "join curriculum_module cm on cm.id = cvo.curriculum_module_id " +
+                        "join classifier mcl on mcl.code = cm.module_code " +
+                        "join curriculum_version cv on cv.id = cvo.curriculum_version_id " +
+                    "where jot.journal_id = js.journal_id and cv.id!=ss.curriculum_version_id) as foreign_theme_en, " +
+                "jes.grade_code, sy.year_code, sy.start_date " +
+                "from " +
+                "journal_student js " +
+                "join journal j on j.id = js.journal_id " +
+                "join journal_entry je on je.journal_id = js.journal_id " +
+                "join journal_entry_student jes on jes.journal_entry_id = je.id and jes.journal_student_id=js.id " + 
+                "join student ss on ss.id=js.student_id " +
+                "join study_year sy on sy.id = j.study_year_id " +
+                "where js.student_id =:studentId and je.entry_type_code in (:entryTypeCodes) " +
+                "union all " +
+                     "select 1 as module, ps.grade_date,pp.id," + 
+                     "cm.name_et||' - '||mcl.name_et ||case when cv.id!=ss.curriculum_version_id then ' ('||cv.code||')' else '' end ," +
+                     "tp.firstname ||' '||tp.lastname as opetaja, null," +
+                     "cm.name_et||' - '||mcl.name_et ||case when cv.id!=ss.curriculum_version_id then ' ('||cv.code||')' else '' end ," +
+                     "coalesce(cm.name_en,cm.name_et)||' - '||coalesce(mcl.name_en,mcl.name_et) ||case when cv.id!=ss.curriculum_version_id then ' ('||cv.code||')' else '' end ," +
+                     "null, null, ps.grade_code, sy.year_code, sy.start_date " + 
+                     "from protocol pp " +
+                     "join protocol_vdata pv on pp.id=pv.protocol_id " +
+                     "join protocol_student ps on pp.id=ps.protocol_id " +
+                     "join curriculum_version_omodule cvo on pv.curriculum_version_omodule_id=cvo.id " +
+                     "join curriculum_module cm on cm.id = cvo.curriculum_module_id " +
+                     "join classifier mcl ON mcl.code = cm.module_code " + 
+                     "join curriculum_version cv on cv.id = cvo.curriculum_version_id " +
+                     "join student ss on ss.id=ps.student_id " +
+                     "left join teacher t on t .id = pv.teacher_id " +
+                     "left join person tp on tp.id = t.person_id " +
+                     "join study_year sy on pv.study_year_id=sy.id " +
+               "where ps.student_id=:studentId) xx " +
+               "where coalesce(grade_code,'x')!='x'");
+        qb.parameter("studentId", EntityUtil.getId(student));
+        qb.parameter("entryTypeCodes", JOURNAL_RESULT_ENTRY_TYPES);
+        
+        qb.sort("kp desc, my_theme");
+        
+        List<?> rows = qb.select("*",em).getResultList();
+        
+        List<StudentVocationalResultByTimeDto> result = new ArrayList<>();
+        for (Object r : rows) {
+            boolean isModule = resultAsLong(r, 0).equals(Long.valueOf(1)) ? true : false;
+            
+            StudentVocationalResultByTimeDto dto = new StudentVocationalResultByTimeDto();
+            if (!isModule) {
+                dto.setJournalName(resultAsString(r, 3));
+                dto.setEntryType(resultAsString(r, 5));
+            }
+            dto.setIsModule(Boolean.valueOf(isModule));
+            
+            boolean studentCurriculumResult = resultAsString(r, 6) != null ? true : false;
+            dto.setName(studentCurriculumResult ? new AutocompleteResult(null, resultAsString(r, 6), resultAsString(r, 7))
+                            : new AutocompleteResult(null, resultAsString(r, 8), resultAsString(r, 9)));
+            
+            dto.setDate(resultAsLocalDate(r, 1));
+            dto.setGrade(resultAsString(r, 10));
+            dto.setTeachers(resultAsString(r, 4));
+
+            dto.setStudyYear(resultAsString(r, 11));
+            dto.setStudyYearStartDate(resultAsLocalDate(r, 12));
+            result.add(dto);
+        }
+        return result;
+    }
 
     public StudentVocationalResultDto vocationalResults(Student student) {
         StudentVocationalResultDto dto = new StudentVocationalResultDto();
@@ -460,7 +566,7 @@ public class StudentService {
         List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
         result.addAll(vocationalResultsThemeResults(student));
         result.addAll(vocationalResultsModuleResults(student));
-        result.sort(Comparator.comparing(StudentVocationalResultModuleThemeDto::getDate).reversed());
+        result.sort(StreamUtil.comparingWithNullsLast(StudentVocationalResultModuleThemeDto::getDate).reversed());
         return result;
     }
     
@@ -517,7 +623,7 @@ public class StudentService {
                 + "inner join journal j on j.id = js.journal_id "
                 + "inner join study_year sy on sy.id = j.study_year_id "
                 + "inner join journal_entry je on je.journal_id = js.journal_id "
-                + "inner join journal_entry_student jes on jes.journal_entry_id = je.id "
+                + "inner join journal_entry_student jes on jes.journal_entry_id = je.id and jes.journal_student_id=js.id "
                 + "inner join journal_teacher jt on jt.journal_id = js.journal_id "
                 + "inner join teacher t on t.id = jt.teacher_id "
                 + "inner join person tp on tp.id = t.person_id "

@@ -64,6 +64,16 @@
     </div>
   </div>
 </div>
+
+<div layout-padding>
+  <div flex>
+    <div layout="row">
+      <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
+      <a ng-href="{{excel(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+    </div>
+  </div>
+</div>
+
 <div ng-controller="JournalEditController as journalEditController">
   <div layout-padding>
     <div flex>
@@ -122,7 +132,7 @@
                   <span ng-if="result.absence.value">/</span>
                   <span>
                     <span ng-class="{journalFinalResult: journalEntry.entryType.code === 'SISSEKANNE_L', 
-                    journalFinalResultBad: journalEntry.entryType.code === 'SISSEKANNE_L' && !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
+                    journalBadResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
                     <md-tooltip ng-if="result.grade.value">
                       {{result.gradeInserted | hoisDate}}
                       <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
@@ -170,7 +180,7 @@
             <tr md-row>
               <th md-column> </th>
               <th md-column>{{'journal.entry.date' | translate}}</th>
-              <th md-column>{{'journal.entry.content' | translate}}</th>
+              <th md-column>{{'journal.entry.nameContent' | translate}}</th>
               <th md-column>{{'journal.entry.homework' | translate}}</th>
               <th md-column>{{'journal.entry.homeworkDuedate' | translate}}</th>
             </tr>
@@ -180,7 +190,11 @@
               ng-class-even="'even'" md-colors="{background: getEntryColor(row.entryType)}">
               <td md-cell><span ng-if="row.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span> </td>
               <td md-cell>{{row.entryDate ? (row.entryDate | hoisDate) : '-'}}</td>
-              <td md-cell>{{row.content}}</td>
+              <td md-cell>
+                <span ng-if="row.nameEt">{{row.nameEt}}</span>
+                <span ng-if="row.nameEt && row.content">/</span>
+                <span ng-if="row.content">{{row.content}}</span>
+              </td>
               <td md-cell>{{row.homework ? row.homework : '-'}}</td>
               <td md-cell>{{row.homeworkDuedate ? (row.homeworkDuedate | hoisDate) : '-' }}</td>
             </tr>

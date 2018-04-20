@@ -1,9 +1,12 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -11,6 +14,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +34,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EnumUtil;
@@ -297,6 +302,8 @@ public class ReportService {
 
         List<VotaDto> dtos = result.getContent();
         if(!dtos.isEmpty()) {
+            Map<VotaDto, VotaStatistics> allStats = new IdentityHashMap<>();
+            List<StudyPeriod> sortedStudyPeriods = studyPeriods.stream().sorted(Comparator.comparing(StudyPeriod::getStart)).collect(Collectors.toList());
             LocalDateTime start = DateUtils.firstMomentOfDay(studyPeriods.stream().map(StudyPeriod::getStart).min(Comparator.naturalOrder()).get());
             LocalDateTime end = DateUtils.lastMomentOfDay(studyPeriods.stream().map(StudyPeriod::getEnd).max(Comparator.naturalOrder()).get());
             // formal learnings for given curriculum versions and date period
@@ -310,10 +317,13 @@ public class ReportService {
             qb.requiredCriteria("aa.inserted <= :end", "end", end);
             qb.requiredCriteria("(cvo.curriculum_version_id in (:cv) or cvh.curriculum_version_id in (:cv))", "cv", cvIds);
 
-            List<?> data = qb.select("aa.id, aa.inserted, case when aafsm.is_my_school then 'RIIK_EST' else aps.country_code end, aafsm.transfer, aa.confirmed, aafsm.credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id)", em).getResultList();
-            // TODO update numbers, match by inserted date (study period) and curriculum version id
+            List<?> data = qb.select("aa.id, aa.inserted, case when aafsm.is_my_school then '"+ClassifierUtil.COUNTRY_ESTONIA+"' else aps.country_code end, aafsm.transfer, aa.confirmed, aafsm.credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id)", em).getResultList();
             for(Object r : data) {
-                VotaDto dto = findVota(resultAsLocalDate(r, 1), resultAsLong(r, 6), studyPeriods, dtosByPeriodAndCurriculum);
+                VotaDto dto = findVota(resultAsLocalDate(r, 1), resultAsLong(r, 6), sortedStudyPeriods, dtosByPeriodAndCurriculum);
+                if(dto != null) {
+                    VotaStatistics stats = allStats.computeIfAbsent(dto, (key) -> new VotaStatistics());
+                    stats.addFormal(r);
+                }
             }
 
             // informal learnings for given curriculum versions and date period
@@ -321,15 +331,25 @@ public class ReportService {
                     "join apel_application_record aar on aaism.apel_application_record_id = aar.id " +
                     "join apel_application aa on aar.apel_application_id = aa.id " +
                     "left join curriculum_version_omodule cvo on aaism.curriculum_version_omodule_id = cvo.id " +
+                    "left join curriculum_version_omodule_theme cvot on aaism.curriculum_version_omodule_theme_id = cvot.id " +
                     "left join curriculum_version_hmodule cvh on aaism.curriculum_version_hmodule_id = cvh.id");
             qb.requiredCriteria("aa.inserted >= :start", "start", start);
             qb.requiredCriteria("aa.inserted <= :end", "end", end);
             qb.requiredCriteria("(cvo.curriculum_version_id in (:cv) or cvh.curriculum_version_id in (:cv))", "cv", cvIds);
 
-            data = qb.select("aa.id, aa.inserted, aaism.transfer, aa.confirmed, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id)", em).getResultList();
-            // TODO update numbers, match by inserted date (study period) and curriculum version id
+            data = qb.select("aa.id, aa.inserted, aaism.transfer, aa.confirmed, coalesce(cvh.total_credits, cvot.credits) as credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id)", em).getResultList();
             for(Object r : data) {
-                VotaDto dto = findVota(resultAsLocalDate(r, 1), resultAsLong(r, 4), studyPeriods, dtosByPeriodAndCurriculum);
+                VotaDto dto = findVota(resultAsLocalDate(r, 1), resultAsLong(r, 5), sortedStudyPeriods, dtosByPeriodAndCurriculum);
+                if(dto != null) {
+                    VotaStatistics stats = allStats.computeIfAbsent(dto, (key) -> new VotaStatistics());
+                    stats.addInformal(r);
+                }
+            }
+
+            // collect final results into dtos
+            for(VotaDto dto : dtos) {
+                VotaStatistics stats = allStats.computeIfAbsent(dto, (key) -> new VotaStatistics());
+                stats.collect(dto);
             }
         }
 
@@ -484,9 +504,10 @@ public class ReportService {
         }
     }
 
-    private static VotaDto findVota(LocalDate inserted, Long cvId, Set<StudyPeriod> studyPeriods, Map<Long, Map<Long, VotaDto>> dtosByPeriodAndCurriculum) {
+    private static VotaDto findVota(LocalDate inserted, Long cvId, List<StudyPeriod> studyPeriods, Map<Long, Map<Long, VotaDto>> dtosByPeriodAndCurriculum) {
         // study period by inserted date
-        StudyPeriod sp = studyPeriods.stream().filter(r -> !r.getStart().isAfter(inserted) && !r.getEnd().isBefore(inserted)).findAny().orElse(null);
+        // first study period which is not ended
+        StudyPeriod sp = studyPeriods.stream().filter(r -> !r.getEnd().isBefore(inserted)).findFirst().orElse(null);
         if(sp == null) {
             return null;
         }
@@ -525,6 +546,72 @@ public class ReportService {
         @Override
         public int hashCode() {
             return id.hashCode();
+        }
+    }
+
+    private static class VotaStatistics {
+
+        private Set<Long> applications = new HashSet<>();
+        private BigDecimal totalCredits = BigDecimal.ZERO;
+        private BigDecimal acceptedCredits = BigDecimal.ZERO;
+        private BigDecimal totalLocalCredits = BigDecimal.ZERO;
+        private BigDecimal acceptedLocalCredits = BigDecimal.ZERO;
+        private BigDecimal totalAbroadCredits = BigDecimal.ZERO;
+        private BigDecimal acceptedAbroadCredits = BigDecimal.ZERO;
+
+        public VotaStatistics() {
+        }
+
+        public void collect(VotaDto dto) {
+            dto.setApplicationCount(Long.valueOf(applications.size()));
+            dto.setTotalCredits(totalCredits);
+            dto.setAcceptedCredits(acceptedCredits);
+            dto.setTotalLocalCredits(totalLocalCredits);
+            dto.setAcceptedLocalCredits(acceptedLocalCredits);
+            dto.setTotalAbroadCredits(totalAbroadCredits);
+            dto.setAcceptedAbroadCredits(acceptedAbroadCredits);
+        }
+
+        public void addInformal(Object r) {
+            Long applicationId = resultAsLong(r, 0);
+            applications.add(applicationId);
+            // FIXME should check confirmed date?
+            boolean accepted = Boolean.TRUE.equals(resultAsBoolean(r, 2));
+            BigDecimal credits = resultAsDecimal(r, 4);
+            if(credits != null) {
+                totalCredits = totalCredits.add(credits);
+                if(accepted) {
+                    acceptedCredits = acceptedCredits.add(credits);
+                }
+                totalLocalCredits = totalLocalCredits.add(credits);
+                if(accepted) {
+                    acceptedLocalCredits = acceptedLocalCredits.add(credits);
+                }
+            }
+        }
+
+        public void addFormal(Object r) {
+            Long applicationId = resultAsLong(r, 0);
+            applications.add(applicationId);
+            String country = resultAsString(r, 2);
+            // FIXME should check confirmed date?
+            boolean accepted = Boolean.TRUE.equals(resultAsBoolean(r, 3));
+            BigDecimal credits = resultAsDecimal(r, 5);
+            totalCredits = totalCredits.add(credits);
+            if(accepted) {
+                acceptedCredits = acceptedCredits.add(credits);
+            }
+            if(ClassifierUtil.COUNTRY_ESTONIA.equals(country)) {
+                totalLocalCredits = totalLocalCredits.add(credits);
+                if(accepted) {
+                    acceptedLocalCredits = acceptedLocalCredits.add(credits);
+                }
+            } else {
+                totalAbroadCredits = totalAbroadCredits.add(credits);
+                if(accepted) {
+                    acceptedAbroadCredits = acceptedAbroadCredits.add(credits);
+                }
+            }
         }
     }
 }

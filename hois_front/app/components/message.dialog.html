@@ -1,0 +1,11 @@
+<md-dialog aria-label="grade add dialog" flex="30" flex-xs="100" ng-cloak>
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <p translate="{{messages.prompt}}" translate-values="{{messages}}"></p>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button ng-click="close()" class="md-raised">{{messages.close | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

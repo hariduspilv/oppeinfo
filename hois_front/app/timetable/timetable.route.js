@@ -196,6 +196,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'timetable/timetable.view.html',
       controller: 'TimetableViewController',
       controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
@@ -204,6 +207,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'timetable/timetable.createVocationalPlan.html',
       controller: 'VocationalTimetablePlanController',
       controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
@@ -212,6 +218,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'timetable/timetable.createHigherPlan.html',
       controller: 'HigherTimetablePlanController',
       controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
@@ -220,6 +229,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'timetable/timetable.createHigherPlan.html',
       controller: 'HigherTimetablePlanController',
       controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }

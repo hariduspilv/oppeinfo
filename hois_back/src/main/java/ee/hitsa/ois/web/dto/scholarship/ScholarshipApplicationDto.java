@@ -13,15 +13,8 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.Required;
 
-public class ScholarshipApplicationDto {
-
-    private Long id;
+public class ScholarshipApplicationDto extends ScholarshipApplicationBaseDto {
     private BigDecimal credits;
-    private BigDecimal averageMark;
-    private BigDecimal lastPeriodMark;
-    private BigDecimal saisPoints;
-    private BigDecimal curriculumCompletion;
-    private Long absences;
     private String studentGroupCode;
     @Size(max = 100)
     private String email;
@@ -41,11 +34,11 @@ public class ScholarshipApplicationDto {
     private LocalDate scholarshipThru;
     private String compensationReason;
     private String compensationFrequency;
-    private String status;
     private BigDecimal routeKm;
     private List<ScholarshipFileDto> files;
     private List<ScholarshipApplicationFamilyDto> family;
     private Boolean canApply;
+    private Boolean useSaisPoints;
 
     public static ScholarshipApplicationDto of(ScholarshipApplication application) {
         ScholarshipApplicationDto dto = new ScholarshipApplicationDto();
@@ -60,60 +53,12 @@ public class ScholarshipApplicationDto {
         return dto;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public BigDecimal getCredits() {
         return credits;
     }
 
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
-    }
-
-    public BigDecimal getAverageMark() {
-        return averageMark;
-    }
-
-    public void setAverageMark(BigDecimal averageMark) {
-        this.averageMark = averageMark;
-    }
-
-    public BigDecimal getLastPeriodMark() {
-        return lastPeriodMark;
-    }
-
-    public void setLastPeriodMark(BigDecimal lastPeriodMark) {
-        this.lastPeriodMark = lastPeriodMark;
-    }
-
-    public BigDecimal getSaisPoints() {
-        return saisPoints;
-    }
-
-    public void setSaisPoints(BigDecimal saisPoints) {
-        this.saisPoints = saisPoints;
-    }
-
-    public BigDecimal getCurriculumCompletion() {
-        return curriculumCompletion;
-    }
-
-    public void setCurriculumCompletion(BigDecimal curriculumCompletion) {
-        this.curriculumCompletion = curriculumCompletion;
-    }
-
-    public Long getAbsences() {
-        return absences;
-    }
-
-    public void setAbsences(Long absences) {
-        this.absences = absences;
     }
 
     public String getStudentGroupCode() {
@@ -228,14 +173,6 @@ public class ScholarshipApplicationDto {
         this.compensationFrequency = compensationFrequency;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public BigDecimal getRouteKm() {
         return routeKm;
     }
@@ -267,4 +204,13 @@ public class ScholarshipApplicationDto {
     public void setCanApply(Boolean canApply) {
         this.canApply = canApply;
     }
+
+    public Boolean getUseSaisPoints() {
+        return useSaisPoints;
+    }
+
+    public void setUseSaisPoints(Boolean useSaisPoints) {
+        this.useSaisPoints = useSaisPoints;
+    }
+    
 }

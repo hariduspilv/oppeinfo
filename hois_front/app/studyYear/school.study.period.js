@@ -7,7 +7,10 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       templateUrl: 'studyYear/study.year.list.html',
       controller: 'StudyYearsListController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEPERIOOD]
       }
@@ -16,7 +19,10 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       templateUrl: 'studyYear/study.year.edit.html',
       controller: 'StudyYearsEditController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEPERIOOD]
       }
@@ -25,7 +31,10 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       templateUrl: 'studyYear/study.year.view.html',
       controller: 'StudyYearsEditController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEPERIOOD]
       }
@@ -34,7 +43,10 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       templateUrl: 'studyYear/study.year.edit.html',
       controller: 'StudyYearsEditController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEPERIOOD]
       }

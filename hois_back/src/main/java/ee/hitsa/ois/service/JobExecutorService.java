@@ -35,7 +35,9 @@ import ee.hitsa.ois.util.EntityUtil;
 public class JobExecutorService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private static final Authentication JOB_AUTHENTICATION = new UsernamePasswordAuthenticationToken("Automatic job", null,
+    private static final Authentication AUTHENTICATION_JOB = new UsernamePasswordAuthenticationToken("Automatic job", null,
+            Collections.singletonList((GrantedAuthority)(() -> "ROLE_JOB")));
+    private static final Authentication AUTHENTICATION_MSG = new UsernamePasswordAuthenticationToken("Automaatne sõnum", null,
             Collections.singletonList((GrantedAuthority)(() -> "ROLE_JOB")));
 
     @Autowired
@@ -58,7 +60,7 @@ public class JobExecutorService {
     public void contractJob() {
         handleJobs(job -> {
             contractService.endContract(EntityUtil.getId(job.getContract()));
-        }, JobType.JOB_PRAKTIKALEPING_KEHTETU);
+        }, AUTHENTICATION_JOB, JobType.JOB_PRAKTIKALEPING_KEHTETU);
     }
 
     /**
@@ -71,11 +73,11 @@ public class JobExecutorService {
             if(ClassifierUtil.oneOf(job.getType(), JobType.JOB_AKAD_KATK, JobType.JOB_AKAD_MINEK)) {
                 jobService.submitEhisSend(job.getDirective(), job.getStudent());
             }
-        }, JobType.JOB_AKAD_KATK, JobType.JOB_AKAD_MINEK, JobType.JOB_AKAD_TULEK, JobType.JOB_VALIS_MINEK, JobType.JOB_VALIS_TULEK);
+        }, AUTHENTICATION_JOB, JobType.JOB_AKAD_KATK, JobType.JOB_AKAD_MINEK, JobType.JOB_AKAD_TULEK, JobType.JOB_VALIS_MINEK, JobType.JOB_VALIS_TULEK);
 
         handleJobs(job -> {
             directiveConfirmService.sendAcademicLeaveEndingMessage(job);
-        }, JobType.JOB_AKAD_LOPP_TEADE);
+        }, AUTHENTICATION_JOB, JobType.JOB_AKAD_LOPP_TEADE);
     }
 
     /**
@@ -85,7 +87,7 @@ public class JobExecutorService {
     public void ehisJob() {
         handleJobs(job -> {
             ehisDirectiveStudentService.updateStudents(job);
-        }, JobType.JOB_EHIS);
+        }, AUTHENTICATION_MSG, JobType.JOB_EHIS);
     }
 
     /**
@@ -95,7 +97,7 @@ public class JobExecutorService {
     public void ekisJob() {
         handleJobs(job -> {
             // XXX do nothing for now
-        }, JobType.JOB_EKIS);
+        }, AUTHENTICATION_MSG, JobType.JOB_EKIS);
     }
 
     /**
@@ -107,7 +109,7 @@ public class JobExecutorService {
             for(School school : rtipService.rtipSchools()) {
                 rtipService.syncSchool(school, null, null);
             }
-        });
+        }, AUTHENTICATION_MSG);
     }
 
     /**
@@ -118,7 +120,7 @@ public class JobExecutorService {
         withAuthentication(() -> {
             LocalDate yesterday = LocalDate.now().minusDays(1);
             kutseregisterService.muutunudKutsestandardid(yesterday);
-        });
+        }, AUTHENTICATION_MSG);
     }
 
     /**
@@ -126,9 +128,10 @@ public class JobExecutorService {
      * If actual handler returns without exception, job is marked as done, otherwise failed (and exception is logged).
      *
      * @param handler
+     * @param authentication
      * @param types
      */
-    private void handleJobs(Consumer<Job> handler, JobType... types) {
+    private void handleJobs(Consumer<Job> handler, Authentication authentication, JobType... types) {
         withAuthentication(() -> {
             for(Job job : jobService.findExecutableJobs(types)) {
                 try {
@@ -139,13 +142,13 @@ public class JobExecutorService {
                     jobService.jobFailed(job);
                 }
             }
-        });
+        }, authentication);
     }
 
-    private static void withAuthentication(Runnable handler) {
+    private static void withAuthentication(Runnable handler, Authentication authentication) {
         // set authentication to get audit log fields filled
         Authentication oldAuthentication = SecurityContextHolder.getContext().getAuthentication();
-        SecurityContextHolder.getContext().setAuthentication(JOB_AUTHENTICATION);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         try {
             handler.run();

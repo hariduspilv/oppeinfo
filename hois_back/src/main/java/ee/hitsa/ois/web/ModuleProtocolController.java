@@ -127,7 +127,7 @@ public class ModuleProtocolController {
     @GetMapping("teachers")
     public List<AutocompleteResult> teachers(HoisUserDetails user) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return autocompleteService.teachers(user.getSchoolId(), new TeacherAutocompleteCommand());
+        return autocompleteService.teachers(user.getSchoolId(), new TeacherAutocompleteCommand(), false);
     }
 
     @GetMapping("occupationModule/{curriculumVersionOccupationModuleId:\\d+}")

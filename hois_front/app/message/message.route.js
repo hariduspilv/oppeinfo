@@ -44,7 +44,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         templateUrl: 'message/message.view.html',
         controller: 'messageViewController',
         controllerAs: 'controller',
-        resolve: {translationLoaded: function($translate) { return $translate.onReady(); }
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: authorized
@@ -53,7 +55,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         templateUrl: 'message/message.respond.html',
         controller: 'messageRespondController',
         controllerAs: 'controller',
-        resolve: {translationLoaded: function($translate) { return $translate.onReady(); }
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: authorized
@@ -63,8 +67,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'messageNewController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); },
-            auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: function(Session, roles) {

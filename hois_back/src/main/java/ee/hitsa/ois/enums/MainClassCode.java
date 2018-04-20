@@ -58,6 +58,7 @@ public enum MainClassCode {
     OPPEKEEL,
     OPPEKOORMUS,
     OPPEPERIOOD,
+    OPPERYHM_EISOBI,
     OPPEVORM,
     OPPURESINDAJA,
     OPPURSTAATUS,

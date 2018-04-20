@@ -6,13 +6,13 @@ angular.module('hitsaOis')
     return {
       template: '<input style="min-width:3em;" class="md-input" type="text">', //placeholder="HH:mm" should be added by component user
       restrict: 'E',
-      require: ['ngModel'],
+      require: 'ngModel',
       replace: true,
       scope: {
         ngModel: '='
       },
       link: {
-        post: function (scope, element /*, attrs */) {
+        post: function (scope, element, attrs, ctrl) {
           var timeFormat = "HH:mm";
 
           scope.$watch("ngModel", function() {
@@ -46,7 +46,8 @@ angular.module('hitsaOis')
           }
 
           function onInputElementEvents(event) {
-            var time = moment(event.target.value, timeFormat, true);
+            var timeStr = event.target.value;
+            var time = moment(timeStr, timeFormat, true);
             /*if(event.target.value !== ngModel.$viewValue)
               updateTime(event.target.value);*/
             if (time.isValid()) {
@@ -59,6 +60,7 @@ angular.module('hitsaOis')
                 scope.ngModel = old.toDate();
               }
             }
+            ctrl.$setValidity('time', timeStr ? time.isValid() : true);
           }
 
           element.unbind('input').unbind('keydown').unbind('change');

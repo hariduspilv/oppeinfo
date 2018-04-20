@@ -148,6 +148,11 @@ html {
   </div>
 </div>
 <script>
+var BASE_URL = 'hois_back';
+var IDCARD_SUBDOMAIN = 'idlogin';
+var JWT_TOKEN_HEADER = 'Authorization';
+var XSRF_TOKEN_HEADER = 'X-XSRF-TOKEN';
+var NOT_MOBILE_ID_USER_ERROR = 301;
 var i18nFields = {
   'et': 'nameEt',
   'en': 'nameEn'
@@ -177,11 +182,6 @@ var i18n = {
   }
 };
 var selectedLanguage = 'et';
-var BASE_URL = 'hois_back';
-var IDCARD_DOMAIN = 'idlogin';
-var NOT_MOBILE_ID_USER_ERROR = 301;
-var JWT_TOKEN_HEADER = 'Authorization';
-var XSRF_TOKEN_HEADER = 'X-XSRF-TOKEN';
 var jwt_token = null;
 function showError(msg) {
   document.getElementById("message").innerHTML = msg;
@@ -242,27 +242,10 @@ function submitUserLogin() {
   return false;
 }
 function getIdCardLoginUrl() {
-  var domain = location.host;
-  var cut = domain.indexOf('.');
-  if (cut > 0) {
-    domain = domain.substring(0, cut);
-  }
-  return location.protocol + '//' + IDCARD_DOMAIN + '.' + domain;
+  return location.protocol + '//' + IDCARD_SUBDOMAIN + '.' + location.host;
 }
 function submitIdCardLogin() {
-  clearError();
-  var request = new XMLHttpRequest();
-  request.open("GET", getIdCardLoginUrl());
-  request.onreadystatechange = function () {
-    if(request.readyState === XMLHttpRequest.DONE) {
-      if(request.status === 200) {
-        finishLogin(JWT_TOKEN_HEADER, request.getResponseHeader(JWT_TOKEN_HEADER));
-      } else {
-        loginFailed();
-      }
-    }
-  };
-  request.send();
+  window.location = getIdCardLoginUrl();
   return false;
 }
 function submitMobileIdLogin() {
@@ -378,7 +361,9 @@ function getSchools() {
     console.error('Cannot get LDAP schools');
   });
 }
-getSchools();
+document.addEventListener("DOMContentLoaded", function() {
+	getSchools();
+});
 </script>
 </body>
 </html>

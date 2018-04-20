@@ -2,8 +2,7 @@ package ee.hitsa.ois.web.dto.scholarship;
 
 import java.math.BigDecimal;
 
-public class ScholarshipApplicationSearchDto {
-    private Long id;
+public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseDto {
     private Long place;
     private String type;
     private Long term;
@@ -14,26 +13,12 @@ public class ScholarshipApplicationSearchDto {
     private String firstName;
     private String lastName;
     private String idcode;
-    private BigDecimal averageMark;
-    private BigDecimal lastPeriodMark;
-    private BigDecimal saisPoints;
-    private BigDecimal curriculumCompletion;
     private BigDecimal credits;
-    private Long absences;
     private Boolean isTeacherConfirm;
-    private String status;
     private String rejectComment;
 
     private String compensationReason;
     private String compensationFrequency;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public Long getPlace() {
         return place;
@@ -115,52 +100,12 @@ public class ScholarshipApplicationSearchDto {
         this.idcode = idcode;
     }
 
-    public BigDecimal getAverageMark() {
-        return averageMark;
-    }
-
-    public void setAverageMark(BigDecimal averageMark) {
-        this.averageMark = averageMark;
-    }
-
-    public BigDecimal getLastPeriodMark() {
-        return lastPeriodMark;
-    }
-
-    public void setLastPeriodMark(BigDecimal lastPeriodMark) {
-        this.lastPeriodMark = lastPeriodMark;
-    }
-
-    public BigDecimal getSaisPoints() {
-        return saisPoints;
-    }
-
-    public void setSaisPoints(BigDecimal saisPoints) {
-        this.saisPoints = saisPoints;
-    }
-
-    public BigDecimal getCurriculumCompletion() {
-        return curriculumCompletion;
-    }
-
-    public void setCurriculumCompletion(BigDecimal curriculumCompletion) {
-        this.curriculumCompletion = curriculumCompletion;
-    }
-
     public Boolean getIsTeacherConfirm() {
         return isTeacherConfirm;
     }
 
     public void setIsTeacherConfirm(Boolean isTeacherConfirm) {
         this.isTeacherConfirm = isTeacherConfirm;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public String getCompensationReason() {
@@ -185,14 +130,6 @@ public class ScholarshipApplicationSearchDto {
 
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
-    }
-
-    public Long getAbsences() {
-        return absences;
-    }
-
-    public void setAbsences(Long absences) {
-        this.absences = absences;
     }
 
     public String getRejectComment() {

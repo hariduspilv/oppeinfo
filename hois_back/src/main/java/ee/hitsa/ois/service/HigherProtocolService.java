@@ -6,9 +6,11 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -28,13 +30,16 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodExamStudent;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.enums.DeclarationStatus;
+import ee.hitsa.ois.enums.ExamType;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.ProtocolType;
 import ee.hitsa.ois.repository.ProtocolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HigherProtocolGradeUtil;
@@ -162,12 +167,32 @@ public class HigherProtocolService extends AbstractProtocolService {
         protocolHData.setProtocol(protocol);
         protocol.setProtocolHdata(protocolHData);
 
+        Map<Long, Long> examRegistrations = new HashMap<>();
+        Set<Long> studentIds = form.getStudents();
+        if(studentIds != null && !studentIds.isEmpty()) {
+            boolean repeating = ClassifierUtil.equals(ProtocolType.PROTOKOLLI_LIIK_K, protocolHData.getType());
+            if(repeating) {
+                List<?> data = em.createNativeQuery("select d.student_id, sspes.id from subject_study_period_exam_student sspes "
+                        + "join subject_study_period_exam sspe on sspes.subject_study_period_exam_id = sspe.id "
+                        + "join declaration_subject ds on sspes.declaration_subject_id = ds.id "
+                        + "join declaration d on ds.declaration_id = d.id "
+                        + "where sspe.type_code = ?1 and ds.subject_study_period_id = ?2 "
+                        + "and not exists (select ps.id from protocol_student ps where ps.subject_study_period_exam_student_id = sspes.id)")
+                    .setParameter(1, ExamType.SOORITUS_K.name())
+                    .setParameter(2, EntityUtil.getId(protocolHData.getSubjectStudyPeriod()))
+                    .getResultList();
+                data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsLong(r, 1), (o, n) -> o, () -> examRegistrations));
+            }
+        }
         protocol.setProtocolStudents(StreamUtil.toMappedList(studentId -> {
             ProtocolStudent protocolStudent =  new ProtocolStudent();
             protocolStudent.setStudent(em.getReference(Student.class, studentId));
             protocolStudent.setProtocol(protocol);
+            // link with exam
+            Long examRegistrationId = examRegistrations.get(studentId);
+            protocolStudent.setSubjectStudyPeriodExamStudent(EntityUtil.getOptionalOne(SubjectStudyPeriodExamStudent.class, examRegistrationId, em));
             return protocolStudent;
-        }, form.getStudents()));
+        }, studentIds));
 
         return HigherProtocolDto.ofWithIdOnly(EntityUtil.save(protocol, em));
     }
@@ -226,10 +251,23 @@ public class HigherProtocolService extends AbstractProtocolService {
 
         List<SubjectStudyPeriod> ssps = em.createQuery("select ssp from SubjectStudyPeriod ssp where ssp.studyPeriod.id = ?1", SubjectStudyPeriod.class)
                 .setParameter(1, studyPeriodId).getResultList();
+        Map<Long, List<String>> allTeachers = new HashMap<>();
+        Set<Long> sspIds = StreamUtil.toMappedSet(SubjectStudyPeriod::getId, ssps);
+        if(!sspIds.isEmpty()) {
+            List<?> data = em.createNativeQuery("select sspt.subject_study_period_id, p.firstname, p.lastname from subject_study_period_teacher sspt "
+                    + "join teacher t on sspt.teacher_id = t.id "
+                    + "join person p on t.person_id = p.id where sspt.subject_study_period_id in (?1) order by p.lastname, p.firstname")
+                .setParameter(1, sspIds)
+                .getResultList();
+            data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), () -> allTeachers,
+                    Collectors.mapping(r -> PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)), Collectors.toList())));
+        }
         return StreamUtil.toMappedList(ssp -> {
             Subject s = ssp.getSubject();
-            String nameEt = SubjectUtil.subjectName(s.getCode(), s.getNameEt(), s.getCredits());
-            String nameEn = SubjectUtil.subjectName(s.getCode(), s.getNameEn(), s.getCredits());
+            List<String> teachers = allTeachers.get(ssp.getId());
+            String teacherNames = teachers != null ? (" - " + String.join(", ", teachers)) : "";
+            String nameEt = SubjectUtil.subjectName(s.getCode(), s.getNameEt(), s.getCredits()) + teacherNames;
+            String nameEn = SubjectUtil.subjectName(s.getCode(), s.getNameEn(), s.getCredits()) + teacherNames;
             return new AutocompleteResult(ssp.getId(), nameEt, nameEn);
         }, ssps);
     }
@@ -242,10 +280,14 @@ public class HigherProtocolService extends AbstractProtocolService {
         qb.requiredCriteria("ds.subject_study_period_id = :subjectStudyPeriodId",
                 "subjectStudyPeriodId", criteria.getSubjectStudyPeriod());
 
-        if(ProtocolType.PROTOKOLLI_LIIK_P.name().equals(criteria.getProtocolType())) {
-            qb.filter(" not " + STUDENT_HAS_BASIC_PROTOCOL);
-        } else {
-            qb.filter(STUDENT_HAS_BASIC_PROTOCOL);
+        boolean repeating = ProtocolType.PROTOKOLLI_LIIK_K.name().equals(criteria.getProtocolType());
+        qb.filter(repeating ? STUDENT_HAS_BASIC_PROTOCOL : (" not " + STUDENT_HAS_BASIC_PROTOCOL));
+        if(repeating) {
+            // student has registration for exam and no other protocol is pointing to same exam
+            qb.filter("exists (select sspes.id from subject_study_period_exam_student sspes "
+                    + "join subject_study_period_exam sspe on sspes.subject_study_period_exam_id = sspe.id "
+                    + "left join protocol_student ps on ps.subject_study_period_exam_student_id = sspes.id "
+                    + "where sspes.declaration_subject_id = ds.id and sspe.type_code = '"+ExamType.SOORITUS_K.name()+"' and ps.id is null)");
         }
 
         List<?> result = qb.select(STUDENT_SELECT, em).getResultList();

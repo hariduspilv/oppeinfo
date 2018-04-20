@@ -114,7 +114,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         QueryUtils.endpoint('/journals/studentJournalTasks/').search({studentId: Session.studentId}).$promise.then(function (result) {
           getTodayAndTomorrowDate();
           sortTasksByDate(result.tasks.reverse());
-          $scope.testTaskTypes = ['SISSEKANNE_H', 'SISSEKANNE_L', 'SISSEKANNE_E', 'SISSEKANNE_I'];
+          $scope.testTaskTypes = ['SISSEKANNE_H', 'SISSEKANNE_L', 'SISSEKANNE_E', 'SISSEKANNE_I', 'SISSEKANNE_P', 'SISSEKANNE_R'];
         });
   
         $scope.studentAbsences = QueryUtils.endpoint('/journals/studentJournalAbsences/').query({studentId: Session.studentId});

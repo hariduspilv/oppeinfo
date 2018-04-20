@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -108,13 +109,12 @@ public class AutocompleteService {
     private PersonRepository personRepository;
 
     public List<AutocompleteResult> buildings(Long schoolId) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from building b");
+        List<?> data = em.createNativeQuery("select b.id, b.code, b.name from building b where b.school_id = ?1 order by b.code, b.name")
+                .setParameter(1, Objects.requireNonNull(schoolId))
+                .getResultList();
 
-        qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
-
-        List<?> data = qb.select("b.id, b.name", em).getResultList();
         return StreamUtil.toMappedList(r -> {
-            String name = resultAsString(r, 1);
+            String name = resultAsString(r, 1) + " - " + resultAsString(r, 2);
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
     }
@@ -538,13 +538,15 @@ public class AutocompleteService {
         qb.optionalContains("sg.code",  "code", lookup.getName());
         qb.sort("sg.code");
 
-        List<?> data = qb.select("sg.id, sg.code, c.id as c_id, cv.id as cv_id, sg.study_form_code, sg.language_code", em).getResultList();
+        List<?> data = qb.select("sg.id, sg.code, c.id as c_id, cv.id as cv_id, sg.study_form_code, sg.language_code, sg.valid_from, sg.valid_thru", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             StudentGroupResult dto = new StudentGroupResult(resultAsLong(r, 0), resultAsString(r, 1));
             dto.setCurriculum(resultAsLong(r, 2));
             dto.setCurriculumVersion(resultAsLong(r, 3));
             dto.setStudyForm(resultAsString(r, 4));
             dto.setLanguage(resultAsString(r, 5));
+            dto.setValidFrom(resultAsLocalDate(r, 6));
+            dto.setValidThru(resultAsLocalDate(r, 7));
             return dto;
         }, data);
     }
@@ -660,7 +662,7 @@ public class AutocompleteService {
         }, data);
     }
 
-    public List<AutocompleteResult> teachers(Long schoolId, TeacherAutocompleteCommand lookup) {
+    public List<AutocompleteResult> teachers(Long schoolId, TeacherAutocompleteCommand lookup, boolean setMaxResults) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from teacher t inner join person p on t.person_id = p.id").sort("p.lastname", "p.firstname");
 
@@ -671,7 +673,9 @@ public class AutocompleteService {
             qb.filter("t.is_active = true");
         }
 
-        List<?> data = qb.select("t.id, p.firstname, p.lastname", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
+        List<?> data = qb.select("t.id, p.firstname, p.lastname", em)
+                .setMaxResults(setMaxResults ? MAX_ITEM_COUNT : Integer.MAX_VALUE).getResultList();
+
         return StreamUtil.toMappedList(r -> {
             String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
             return new AutocompleteResult(resultAsLong(r, 0), name, name);

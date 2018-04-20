@@ -56,7 +56,7 @@
       "checkComplies": "Kontrolli andmeid",
       "status": {
         "approving": "Menetle",
-        "close": "Sulge ÕK",
+        "close": "Muuda õppekava kehtetuks",
         "confirm": "Kinnita",
         "edit": "Sisesta õk"
       },
@@ -99,6 +99,7 @@
         "max": "Maksimaalne väärtus {{max}}",
         "maxlength": "Tekst liiga pikk",
         "min": "Minimaalne väärtus {{min}}",
+        "time": "Vigane kellaaeg",
         "InvalidEstonianIdCode": "Isikukood ei vasta standardile"
       },
       "form-has-errors": "Vormil on vigu",
@@ -256,7 +257,8 @@
         "classifiers": "Klassifikaatorid",
         "users": "Kasutajad",
         "saisClassifiers": "Klassifikaatorid SAISist",
-        "apelSchools": "VÕTA koolid"
+        "apelSchools": "VÕTA koolid",
+        "studentGroupYearTransfer": "Uude aastasse viimine"
       },
       "mainData": {
         "classifiers": "Klassifikaatorid",
@@ -506,6 +508,7 @@
     "date": "Eksami kuupäev",
     "deadline": "Registreerimise tähtaeg",
     "deadlineTime": "Kuni",
+    "freePlaces": "Vabad kohad",
     "name": "Sündmuse nimetus",
     "register": "Registreeri",
     "room": "Toimumise ruum",
@@ -527,6 +530,7 @@
       "deleteconfirm": "Kas oled kindel, et soovid eksamiaja kustutada?",
       "deletestudentconfirm": "Kas oled kindel, et soovid õppuri registreerimist tühistada?",
       "editingdateexceed": "Eksamit ei saa enam muuta",
+      "overbooked": "Kohtade arv ületatud",
       "places": "Eksami kohad on täis",
       "registerconfirmation": "Kas oled kindel, et soovid {{exam}} registreeruda?",
       "registered": "Oled eksamile registreeritud",
@@ -664,6 +668,9 @@
     "studyStart": "Õpingute algus",
     "studyEnd": "Õpingute lõpp",
     "studyLevel": "Õppetase",
+    "error": {
+      "addressRequired": "Aadress on kohustuslik"
+    },
     "absence": {
       "cause": "Puudumise põhjus",
       "deleteconfirm": "Kas oled kindel, et soovid puudumistõendi kustutada?",
@@ -801,9 +808,10 @@
     "journal": {
       "journals": "Päevikud",
       "studyYear": "Õppeaasta",
-      "absences": "puudumisi",
-      "includingAbsencesWithoutReason": "sh põhjuseta puudumisi",
-      "lateForClass": "hilinemisi",
+      "journalName": "Päeviku nimetus",
+      "grades": "Hinded",
+      "absencesIncudlingWithoutReason": "Puudumisi/sh põhjuseta",
+      "lateForClass": "Hilinemisi",
       "entry": {
         "date": "Sissekande kp",
         "content": "Sisu",
@@ -1240,7 +1248,7 @@
     "curricula": "Seotud kutseõppe õppekavad",
     "statusButton": {
       "approving": "Menetle",
-      "close": "Sulge ÕK",
+      "close": "Muuda õppekava kehtetuks",
       "confirm": "Kinnita",
       "edit": "Sisesta õk"
     },
@@ -1618,21 +1626,21 @@
       "higher": {
         "proceed": "Kas oled kindel, et soovid kõrgharidusõppe õppekava salvestada ja menetleda?",
         "verify": "Kas oled kindel, et soovid kõrgharidusõppe õppekava salvestada ja kinnitada?",
-        "close": "Sulgemisel andmeid ei salvestata. Õppekava sulgemisel suletakse ka kõik õppekava versioonid. Kas soovid jätkata?"
+        "close": "Kehtetuks muutmisel ei salvestata. Õppekava kehtetuks muutmisel muudetakse kehtetuks ka kõik õppekava versioonid. Kas soovid jätkata?"
       },
       "vocational": {
         "proceed": "Kas oled kindel, et soovid kutseõppe õppekava salvestada ja menetleda?",
         "verify": "Kas oled kindel, et soovid kutseõppe õppekava salvestada ja kinnitada?",
-        "close": "Sulgemisel andmeid ei salvestata. Õppekava sulgemisel suletakse ka kõik rakenduskavad. Kas soovid jätkata?"
+        "close": "Kehtetuks muutmisel andmeid ei salvestata. Õppekava kehtetuks muutmisel muudetakse kehtetuks ka kõik rakenduskavad. Kas soovid jätkata?"
       },
       "version": {
         "button": {
           "verify": "Kinnita",
-          "close": "Sulge VR"
+          "close": "Muuda õppekava versioon kehtetuks"
         },
         "prompt": {
           "verify": "Kas oled kindel, et soovid õppekava versiooni salvestada ja kinnitada?",
-          "close": "Sulgemisel andmeid ei salvestata. Kas oled kindel, et soovid õppekava versiooni sulgeda?",
+          "close": "Kehtetuks muutmisel andmeid ei salvestata. Kas oled kindel, et soovid õppekava versiooni muuta kehtetuks?",
           "editAccepted": "Õppekava versioon on kinnitatud. Kas soovid jätkata?"
         },
         "success": {
@@ -1643,11 +1651,11 @@
       "implementationPlan": {
         "button": {
           "verify": "Kinnita",
-          "close": "Sulge RK"
+          "close": "Muuda rakenduskava kehtetuks"
         },
         "prompt": {
           "verify": "Kas oled kindel, et soovid rakenduskava salvestada ja kinnitada?",
-          "close": "Sulgemisel andmeid ei salvestata. Kas oled kindel, et soovid rakenduskava sulgeda?",
+          "close": "Kehtetuks muutmisel andmeid ei salvestata. Kas oled kindel, et soovid rakenduskava muuta kehtetuks?",
           "editAccepted": "Rakenduskava on kinnitatud. Kas soovid jätkata?"
         },
         "success": {
@@ -1660,23 +1668,23 @@
       "higher": {
         "proceed": "Kas oled kindel, et soovid kõrgharidusõppe õppekava menetleda?",
         "verify": "Kas oled kindel, et soovid kõrgharidusõppe õppekava kinnitada?",
-        "close": "Õppekava sulgemisel suletakse ka kõik õppekava versioonid. Kas soovid jätkata?"
+        "close": "Õppekava kehtetuks muutmisel muudetakse kehtetuks ka kõik õppekava versioonid. Kas soovid jätkata?"
       },
       "vocational": {
         "proceed": "Kas oled kindel, et soovid kutseõppe õppekava menetleda?",
         "verify": "Kas oled kindel, et soovid kutseõppe õppekava kinnitada?",
-        "close": "Õppekava sulgemisel suletakse ka kõik rakenduskavad. Kas soovid jätkata?"
+        "close": "Õppekava kehtetuks muutmisel muudetakse kehtetuks ka kõik rakenduskavad. Kas soovid jätkata?"
       },
       "version": {
         "prompt": {
           "verify": "Kas oled kindel, et soovid õppekava versiooni kinnitada?",
-          "close": "Kas oled kindel, et soovid õppekava versiooni sulgeda?"
+          "close": "Kas oled kindel, et soovid õppekava versiooni muuta kehtetuks?"
         }
       },
       "implementationPlan": {
         "prompt": {
           "verify": "Kas oled kindel, et soovid rakenduskava kinnitada?",
-          "close": "Kas oled kindel, et soovid rakenduskava sulgeda?"
+          "close": "Kas oled kindel, et soovid rakenduskava muuta kehtetuks?"
         }
       }
     }
@@ -1952,7 +1960,7 @@
     "count": "Materjalide arv",
     "type": "Tüüp",
     "name": "Nimetus",
-    "description": "Kirjeldus",
+    "description": "Kirjeldus õpetaja jaoks",
     "fileorlink": "Fail/Link",
     "link": "Link",
     "journalCount": "Seotud päevikud",
@@ -2137,6 +2145,35 @@
     "studyForm": "Õppevorm",
     "studyLevel": "Õppetase",
     "teacher": "Rühmajuhataja"
+  },
+  "studentGroupYearTransfer": {
+    "studyYear": "Õppeaasta",
+    "conditionsDescription": "Jätta samale kursusele õppurid, kes",
+    "academicLeave": "viibivad uue õppeaasta algusseisuga akadeemilisel puhkusel",
+    "academicLeaveDays": "on akadeemilisel puhkusel viibinud (päeva)",
+    "abroadStudies": "viibivad uue õppeaasta algusseisuga välisõppes",
+    "abroadStudiesDays": "on välisõppes viibinud (päeva)",
+    "checkGroupValidThru": "Kontrolli järgnevate õpperühmade kehtivuse lõppkuupäeva",
+    "studentGroup": "Rühm",
+    "course": "Kursus",
+    "newCode": "Uus rühma tähis",
+    "newCourse": "Uus kursus",
+    "curriculum": "Õppekava",
+    "allStudents": "Seotud õppurid",
+    "suitableStudents": "Sobivad õppurid",
+    "unsuitableStudents": "Mittesobivad õppurid ",
+    "mismatchingStudents": "Rühmaga sidumata õppurid",
+    "reason": "Põhjus",
+    "newGroup": "Uus rühm",
+    "confirm": "Õppurid viiakse üle uude õppeaastasse ja muudetakse nende kursust. Õpperühma saab üle viia uude õppeaastasse üks kord õppeaastas. Kas oled kindel, et soovid jätkata?",
+    "recalculate": "Õpperühmade uude aastasse üle viimiseks vajutada nupule \"Arvuta\", et arvutada õppurite arvud õpperühmades",
+    "button": {
+      "transfer": "Vii uude õppeaastasse"
+    },
+    "error": {
+      "noPreviousStudyYear": "Eelmine õppeaasta puudub",
+      "studentNotActive": "Õpilane ei ole aktiivne"
+    }
   },
   "theme": {
     "name": "Teema nimetus",
@@ -2405,6 +2442,7 @@
     "entries": "Sissekanded",
     "curriculumVersionModuleOrThemeDescription": "Rakenduskava mooduli/teema kirjeldus",
     "studentDeleteconfirm": "Õppuri kustutamisel kustutatakse ka kõik temaga seotud sissekanded. Olete kindel, et soovite õppuri kustutada?",
+    "entryDeleteConfirm": "Kas oled kindel, et soovid sissekannet kustutada?",
     "moduleDescription": "Teema kirjeldus",
     "outcome": "ÕV",
     "finalResult": "Lõpptulemus",
@@ -2423,7 +2461,9 @@
       "startLessonNr": "Algustund",
       "lessons": "Tundide arv",
       "content": "Sisu",
+      "nameContent": "Nimi/Sisu",
       "homework": "Kodutöö",
+      "open": "Ava",
       "homeworkDuedate": "Kodutöö tähtaeg",
       "student": {
         "lateAbsent": "H/P",
@@ -2687,6 +2727,7 @@
     "subject": "Õppeaine",
     "teacher": "Õpetaja",
     "eap_assessment": "EAP/Hindamisviis",
+    "module": "Moodul",
     "module_isRequired": "Moodul/Kohustuslik",
     "prerequisites": "Eeldused",
     "confirm": "Kinnita",
@@ -2697,6 +2738,7 @@
     "assessment": "Hindamisviis",
     "isRequired": "Kohustuslik",
     "addSubject": "Lisa aine õpingukavasse",
+    "noSuitableCurriculumSubjects": "Sobivaid õppekava aineid ei leitud",
     "noCurrentDeclaration": "Käesoleva õppeperioodi õpingukava pole veel lisatud",
     "notDeclarationPeriod": "Õpingukava koostamise periood ei ole veel kätte jõudnud",
     "declarationPeriodHasEnded": "Õpingukava koostamine lõppes",

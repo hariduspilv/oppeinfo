@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.student;
 
+import java.time.LocalDate;
+
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 /**
@@ -11,6 +13,8 @@ public class StudentGroupResult extends AutocompleteResult {
     private Long curriculumVersion;
     private String studyForm;
     private String language;
+    private LocalDate validFrom;
+    private LocalDate validThru;
 
     public StudentGroupResult(Long id, String code) {
         super(id, code, code);
@@ -46,5 +50,21 @@ public class StudentGroupResult extends AutocompleteResult {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public LocalDate getValidFrom() {
+        return validFrom;
+    }
+
+    public void setValidFrom(LocalDate validFrom) {
+        this.validFrom = validFrom;
+    }
+
+    public LocalDate getValidThru() {
+        return validThru;
+    }
+
+    public void setValidThru(LocalDate validThru) {
+        this.validThru = validThru;
     }
 }

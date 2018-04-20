@@ -7,8 +7,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'CommitteeSearchController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); },
-            auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOMISJON]
@@ -19,7 +19,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'CommitteeEditViewController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOMISJON]
@@ -30,7 +31,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'CommitteeEditViewController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOMISJON]
@@ -41,7 +43,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'CommitteeEditViewController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOMISJON]

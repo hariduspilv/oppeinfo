@@ -32,6 +32,7 @@ import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.BuildingForm;
 import ee.hitsa.ois.web.commandobject.RoomForm;
 import ee.hitsa.ois.web.commandobject.RoomForm.RoomEquipmentCommand;
@@ -72,6 +73,9 @@ public class BuildingService {
      */
     public Building save(Building building, BuildingForm form) {
         EntityUtil.bindToEntity(form, building);
+
+        checkUniqueness(building);
+
         return EntityUtil.save(building, em);
     }
 
@@ -149,6 +153,8 @@ public class BuildingService {
             room.setBuilding(building);
         }
 
+        checkUniqueness(room);
+
         List<RoomForm.RoomEquipmentCommand> newRoomEquipment = StreamUtil.nullSafeList(form.getRoomEquipment());
 
         // check for duplicate rows
@@ -188,5 +194,27 @@ public class BuildingService {
     public void delete(HoisUserDetails user, Room room) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(room, em);
+    }
+
+    private void checkUniqueness(Building building) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from building b");
+        qb.requiredCriteria("b.school_id = :schoolId", "schoolId", EntityUtil.getId(building.getSchool()));
+        qb.requiredCriteria("upper(b.code) = :code", "code", building.getCode().toUpperCase());
+        qb.optionalCriteria("b.id != :buildingId", "buildingId", building.getId());
+        requireNoRows(qb);
+    }
+
+    private void checkUniqueness(Room room) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from room r");
+        qb.requiredCriteria("r.building_id = :buildingId", "buildingId", EntityUtil.getId(room.getBuilding()));
+        qb.requiredCriteria("upper(r.code) = :code", "code", room.getCode().toUpperCase());
+        qb.optionalCriteria("r.id != :roomId", "roomId", room.getId());
+        requireNoRows(qb);
+    }
+
+    private void requireNoRows(JpaNativeQueryBuilder qb) {
+        if(!qb.select("1", em).setMaxResults(1).getResultList().isEmpty()) {
+            throw new ValidationFailedException("main.messages.error.unique");
+        }
     }
 }

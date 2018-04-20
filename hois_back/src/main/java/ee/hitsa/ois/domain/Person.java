@@ -3,7 +3,6 @@ package ee.hitsa.ois.domain;
 import java.time.LocalDate;
 import java.util.Set;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
@@ -17,7 +16,6 @@ public class Person extends BaseEntityWithId {
 
     private String firstname;
     private String lastname;
-    @Column(updatable = false)
     private String idcode;
     private String foreignIdcode;
     @ManyToOne(fetch = FetchType.LAZY)

@@ -1199,8 +1199,7 @@ th.bordered[md-column] {
   font-weight: bold;
 }
 
-.journalFinalResultBad {
-  font-weight: bold;
+.journalBadResult {
   color: red;
 }
 
@@ -1216,13 +1215,19 @@ label.required::after {
 {
 	font-size: 12px;
 	border-collapse: collapse;
-	width: 100%;
+	/*width: 100%;*/
 }
 
-.lessonplan  td
+.lessonplan  td, .lessonplan  th
 {
-	border: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
 	padding: 3px;
+}
+
+.lessonplan  th
+{
+  font-weight: normal;
 }
 
 .lessonplan input[type="text"]
@@ -1247,7 +1252,7 @@ label.required::after {
   padding:5px;
 }
 
-.subject-study-period thead tr th {
+.subject-study-period thead tr th, .x_border {
 	border: 1px solid #ccc;
 }
 
@@ -1315,6 +1320,11 @@ label.required::after {
     font-size: 13px!important;
     line-height: 32px!important;
     height: 32px!important;
+}
+
+.label-with-vertical-margin {
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
 .md-chips {
@@ -1640,6 +1650,10 @@ tr.scholarship-bottom-border td {
   padding: 5px;
   border: solid 1px lightgray;
   font-size: 13px;
+}
+
+.journal-entry td{
+  cursor: pointer;
 }
 
 .middle-text {
@@ -2031,4 +2045,98 @@ label.ui-btn {
 
 .noLessonTime {
   background: #eee;
+}
+
+
+.container {
+  width: 100%;
+  overflow: scroll;
+  position: relative;
+  border-top:1px solid #ccc;
+  border-left:1px solid #ccc;
+}
+
+.container table {
+  table-layout: fixed;
+  position: absolute;
+  border-spacing: 0px;
+  border-collapse: separate;
+  /*width: 100%;*/
+}
+
+.container th,
+.container td {
+  min-width:30px;
+  margin: 0;
+}
+
+.container .lessonplan thead tr:nth-child(1) th:nth-child(1) {
+  min-width:180px!important;
+}
+
+.container thead tr:nth-child(1) th:nth-child(1) {
+  margin: 0;
+}
+.container th,
+.fixed-cell {
+  background: #FAFAFA;
+  position: relative;
+  z-index: 10;
+}
+
+.cross {
+  position: relative;
+  z-index: 20!important;
+}
+
+.journalTable
+{
+	font-size: 12px;
+	border-collapse: collapse;
+	/*width: 100%;*/
+}
+
+.journalTable  td, .journalTable  th
+{
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  /*padding: 3px;*/
+}
+
+.journalTable  td:nth-child(n+1), .journalTable  th:nth-child(n+1)
+{
+  text-align:center;
+}
+
+.journalTable  td:first-child, .journalTable  th:first-child
+{
+  text-align:left;
+}
+
+.journalTable  th
+{
+  padding: 5px;
+  max-height: 39px;
+  min-height: 39px;
+}
+
+
+#tt >  div:nth-child(2)
+{
+  font-size: 13px;
+  padding:5px;
+}
+
+#tt > div:first-child
+{
+  padding-left:5px;
+  padding-bottom:5px;
+  padding-right:5px;
+  padding-top:10px;
+  border-bottom: 1px solid #eee;
+}
+
+#showGroups md-checkbox
+{
+  margin-bottom:2px;
 }

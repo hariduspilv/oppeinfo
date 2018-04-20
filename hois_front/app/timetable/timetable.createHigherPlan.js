@@ -5,7 +5,9 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
     var MS_PER_MINUTE = 60000;
     var MS_PER_FITEENMINUTES = MS_PER_MINUTE * 15;
     var CONCURRENT_TOP_MARGIN = 17;
-    $scope.colors = ['#ffff00', '#9fff80', '#ff99cc', '#E8DAEF', '#85C1E9', '#D1F2EB', '#ABEBC6', '#F9E79F', '#FAD7A0', '#EDBB99', '#D5DBDB', '#D5D8DC'];
+    $scope.colors = ['#ffff00', '#9fff80', '#ff99cc', '#E8DAEF', '#85C1E9', '#D1F2EB',
+    '#ABEBC6', '#F9E79F', '#FAD7A0', '#EDBB99', '#D5DBDB', '#64B5F6','#B0BEC5', '#80CBC4',
+    '#BCAAA4', '#7986CB', '#FFF59D', '#66BB6A', '#E6EE9C', '#9FA8DA', '#EF9A9A'];
     $scope.plan = {};
     $scope.timetableId = $route.current.params.id;
     $scope.weekday = ["daySun", "dayMon", "dayTue", "dayWed", "dayThu", "dayFri", "daySat"];
@@ -23,7 +25,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
       $scope.plan.capacitiesGrouped.forEach(function (item, index) {
         $scope.plan.colorsBySubjectStudyPeriods.push({
           subjectStudyPeriod: item[0].subjectStudyPeriod,
-          color: $scope.colors[index]
+          color: $scope.colors[index % 19]
         });
       });
       $scope.plan.currentStudentGroups = $scope.plan.studentGroups;

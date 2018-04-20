@@ -60,6 +60,7 @@
 						<th md-column md-order-by="code">{{'studentGroup.code' | translate}}</th>
 						<th md-column md-order-by="{{currentLanguage()==='en' ? 'curriculum.nameEn' : 'curriculum.nameEt'}}">{{'studentGroup.curriculum' | translate}}</th>
 						<th md-column md-order-by="{{currentLanguage()==='en' ? 'studyForm.nameEn' : 'studyForm.nameEt'}}">{{'studentGroup.studyForm' | translate}}</th>
+						<th md-column md-order-by="12" ng-if="!formState.onlyhigher">{{'studentGroup.teacher' | translate}}</th>
 						<th md-column md-numeric md-order-by="course">{{'studentGroup.course' | translate}}</th>
 						<th md-column md-numeric>{{'studentGroup.studentCount' | translate}}</th>
 						<th md-column md-order-by="validFrom">{{'main.validFrom' | translate}}</th>
@@ -72,6 +73,7 @@
 						<td md-cell><a ng-href="#/studentgroups/{{::row.id}}/view">{{::row.code}}</a></td>
 						<td md-cell>{{currentLanguageNameField(row.curriculum)}}</td>
 						<td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
+						<td md-cell ng-if="!formState.onlyhigher">{{row.teacher}}</td>
 						<td md-cell>{{::row.course}}</td>
 						<td md-cell>{{::row.studentCount}}</td>
 						<td md-cell>{{::row.validFrom | hoisDate}}</td>

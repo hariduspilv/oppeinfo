@@ -88,6 +88,7 @@
       $scope.currentNavItem = "studentGroup";
       $scope.auth = $route.current.locals.auth;
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
+      $scope.typeId = undefined;
 
       $scope.schoolId = $scope.auth == null ? $route.current.params.schoolId : $scope.auth.school.id;
       var groupTimetablesEndpoint = '/timetables/group/' + $scope.schoolId;
@@ -105,6 +106,7 @@
       $scope.currentNavItem = "teacher";
       $scope.auth = $route.current.locals.auth;
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
+      $scope.typeId = undefined;
 
       $scope.schoolId = $scope.auth == null ? $route.current.params.schoolId : $scope.auth.school.id;
       var teacherPeriodTimetablesEndpoint = '/timetables/teacher/' + $scope.schoolId;
@@ -122,6 +124,7 @@
         $scope.currentNavItem = "room";
         $scope.auth = $route.current.locals.auth;
         $scope.generalTimetableUtils = new GeneralTimetableUtils();
+        $scope.typeId = undefined;
 
         $scope.schoolId = $scope.auth == null ? $route.current.params.schoolId : $scope.auth.school.id;
         var roomPeriodTimetablesEndpoint = '/timetables/room/' + $scope.schoolId;

@@ -9,6 +9,8 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     var stipend = $route.current.locals.params.stipend;
     $scope.canManage = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS);
 
+    $scope.selected = {};
+
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
     var clMapper = Classifier.valuemapper({
       status: 'STIPTOETUS_STAATUS',
@@ -21,7 +23,10 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     promises.push($scope.studyPeriods.$promise);
 
     $q.all(promises).then(function () {
-      $scope.criteria.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
+      if ($scope.studyPeriods.length > 0 && !$scope.criteria.studyPeriod) {
+        var currentStudyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods);
+        $scope.criteria.studyPeriod = currentStudyPeriod ? currentStudyPeriod.id : undefined;
+      }
       if (!('_menu' in $route.current.params)) {
         $scope.fromStorage = function (key) {
           return JSON.parse($sessionStorage[key] || '{}');
@@ -65,8 +70,10 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     };
 
     $scope.updateAllApplicationCheckBoxes = function (value) {
-      $scope.applications.forEach(function (it) {
-        it._selected = value;
+      $scope.applications.forEach(function (app, index) {
+        if (index < $scope.allowedCount) {
+          $scope.selected[app.id] = value;
+        }
       });
     };
 
@@ -78,7 +85,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
 
     function chosenApplications() {
       return $scope.applications.filter(function (it) {
-        return it._selected;
+        return $scope.selected[it.id];
       }).map(function (it) {
         return it.id;
       });

@@ -57,12 +57,12 @@
       <tbody md-body>
         <tr md-row ng-repeat="stipend in studentStipends" ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell>
-            <a href="#/scholarships/applications/{{stipend.applicationId}}">{{currentLanguageNameField(stipend.type)}}</a>
+            <a href="#/scholarships/applications/{{stipend.id}}">{{currentLanguageNameField(stipend.type)}}</a>
           </td>
           <td md-cell>{{stipend.averageMark ? stipend.averageMark : '-'}}</td>
           <td md-cell>{{stipend.lastPeriodMark ? stipend.lastPeriodMark : '-'}}</td>
           <td md-cell>{{stipend.curriculumCompletion ? stipend.curriculumCompletion : '-'}}</td>
-          <td md-cell>{{stipend.maxAbsences ? stipend.maxAbsences : '-'}}</td>
+          <td md-cell>{{stipend.absences ? stipend.absences : '-'}}</td>
           <td md-cell>{{stipend.isTeacherConfirm ? 'main.yes' : 'main.no' | translate}}</td>
           <td md-cell>{{currentLanguageNameField(stipend.status)}}
             <md-tooltip ng-if="['STIPTOETUS_STAATUS_L', 'STIPTOETUS_STAATUS_T'].indexOf(stipend.status.code) !== -1  && stipend.rejectComment">{{stipend.rejectComment}}</md-tooltip>
@@ -70,7 +70,7 @@
           <td md-cell>{{stipend.decisionDate ? (stipend.decisionDate | hoisDate) : '-'}}</td>
           <td md-cell>
             <span ng-if="stipend.status.code === 'STIPTOETUS_STAATUS_K' || stipend.status.code === 'STIPTOETUS_STAATUS_T'">
-              <a href="#/scholarships/{{stipend.id}}/application">{{'stipend.student.edit' | translate}}</a>
+              <a href="#/scholarships/{{stipend.termId}}/application">{{'stipend.student.edit' | translate}}</a>
             </span>
           </td>
         </tr>

@@ -99,7 +99,7 @@
           </div>
           <div layout="row">
             <div layout="row">
-              <md-button class="md-raised md-primary" href="#/scholarships/{{stipend.id}}/edit" ng-if="canEdit">{{'main.button.edit' | translate}}</md-button>
+              <md-button class="md-raised md-primary" ng-if="canEdit" ng-click="changeStipend(stipend)">{{'main.button.edit' | translate}}</md-button>
               <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id && canEdit" ng-click="publish()">{{'main.button.publishtoStudents' | translate}}</md-button>
               <md-button class="md-raised" ng-click="back('#/scholarships/', stipendForm)">{{'main.button.back' | translate}}</md-button>
             </div>

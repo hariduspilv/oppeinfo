@@ -101,7 +101,7 @@ public class DeclarationService {
             + "left join teacher t on t.id = sspt.teacher_id left join person p on p.id = t.person_id "
             + "group by ssp2.id) teachers on ssp.id  = teachers.ssp2Id";
 
-    private static final String SUBJECT_CURRICULUM_SELECT = " distinct ssp.id as ssp1Id, s.id as subjectId, "
+    private static final String SUBJECT_CURRICULUM_SELECT = " ssp.id as ssp1Id, s.id as subjectId, "
             + "s.name_et, s.name_en, s.code, s.credits, c.value, cvhm.id as moduleId, "
             + "cvhms.is_optional, array_to_string(teachers.teacher, ', ')";
     
@@ -350,25 +350,25 @@ public class DeclarationService {
         return EntityUtil.save(declaration, em);
     }
 
-    public List<AutocompleteResult> getModules(Declaration declaration) {
-        Student student = declaration.getStudent();
-        return StreamUtil.toMappedList(AutocompleteResult::of, student.getCurriculumVersion().getModules().stream().filter(m -> Boolean.FALSE.equals(m.getMinorSpeciality())));
-    }
-
-    public List<DeclarationSubjectDto> getCurriculumSubjectOptions(Declaration declaration) {
+    public Page<DeclarationSubjectDto> getCurriculumSubjectOptions(Declaration declaration, Pageable pageable) {
         Long studyPeriod = EntityUtil.getId(declaration.getStudyPeriod());
         Student student = declaration.getStudent();
         Long curriculumVersion = EntityUtil.getId(student.getCurriculumVersion());
 
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECT_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECT_FROM).sort(pageable);
 
         qb.requiredCriteria("cvhm.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
                 curriculumVersion);
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriod);
+        qb.requiredCriteria(
+                " not exists "
+                + "(select * from declaration_subject ds "
+                + "join subject_study_period ssp2 on ssp2.id = ds.subject_study_period_id  "
+                + "where ssp2.subject_id = ssp.subject_id and ds.declaration_id = :declarationId)", "declarationId",  
+                EntityUtil.getId(declaration));
 
-        List<?> result = qb.select(SUBJECT_CURRICULUM_SELECT, em).getResultList();
-
-        return subjectsQueryResultToDto(result);
+        Page<Object[]> result = JpaQueryUtil.pagingResult(qb, SUBJECT_CURRICULUM_SELECT, em, pageable);
+        return result.map(this::subjectQueryResultToDto);
     }
 
     public List<DeclarationSubjectDto> getExtraCurriculumSubjectsOptions(Declaration declaration) {
@@ -396,31 +396,31 @@ public class DeclarationService {
                 EntityUtil.getId(declaration));
 
         List<?> result = qb.select(SUBJECT_EXTRACURRICULUM_SELECT, em).getResultList();
-
-        return subjectsQueryResultToDto(result);
+        return StreamUtil.toMappedList(this::subjectQueryResultToDto, result);
     }
 
-    private static List<DeclarationSubjectDto> subjectsQueryResultToDto(List<?> result) {
-        return StreamUtil.toMappedList(r -> {
-            DeclarationSubjectDto dto = new DeclarationSubjectDto();
-            dto.setSubjectStudyPeriod(resultAsLong(r, 0));
+    private DeclarationSubjectDto subjectQueryResultToDto(Object r) {
+        DeclarationSubjectDto dto = new DeclarationSubjectDto();
+        dto.setSubjectStudyPeriod(resultAsLong(r, 0));
 
-            SubjectSearchDto subjectDto = new SubjectSearchDto();
-            subjectDto.setId(resultAsLong(r, 1));
+        SubjectSearchDto subjectDto = new SubjectSearchDto();
+        subjectDto.setId(resultAsLong(r, 1));
 
-            subjectDto.setNameEt(resultAsString(r, 2));
-            subjectDto.setNameEn(resultAsString(r, 3));
-            subjectDto.setCode(resultAsString(r, 4));
-            subjectDto.setCredits(resultAsDecimal(r, 5));
-            subjectDto.setAssessment(resultAsString(r, 6));
-            dto.setSubject(subjectDto);
+        subjectDto.setNameEt(resultAsString(r, 2));
+        subjectDto.setNameEn(resultAsString(r, 3));
+        subjectDto.setCode(resultAsString(r, 4));
+        subjectDto.setCredits(resultAsDecimal(r, 5));
+        subjectDto.setAssessment(resultAsString(r, 6));
+        dto.setSubject(subjectDto);
 
-            dto.setModule(new AutocompleteResult(resultAsLong(r, 7), null, null));
-            dto.setIsOptional(resultAsBoolean(r, 8));
-            dto.setTeachers(Arrays.asList(resultAsString(r, 9).split(", ")));
-
-            return dto;
-        }, result);
+        if (resultAsLong(r, 7) != null) {
+            CurriculumVersionHigherModule curriculum = em.getReference(CurriculumVersionHigherModule.class, resultAsLong(r, 7));
+            dto.setModule(new AutocompleteResult(curriculum.getId(), curriculum.getNameEt(), curriculum.getNameEn()));
+        }
+        dto.setIsOptional(resultAsBoolean(r, 8));
+        dto.setTeachers(Arrays.asList(resultAsString(r, 9).split(", ")));
+        
+        return dto;
     }
 
     public AutocompleteResult getCurrentStudyPeriod(Long schoolId) {

@@ -16,6 +16,7 @@ public class ExamStudentRegistrationDto {
     private List<String> rooms;
     private LocalDateTime deadline;
     private String addInfo;
+    private Long freePlaces;
     private Boolean registered;
     private Boolean canChange;
 
@@ -89,6 +90,14 @@ public class ExamStudentRegistrationDto {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public Long getFreePlaces() {
+        return freePlaces;
+    }
+
+    public void setFreePlaces(Long freePlaces) {
+        this.freePlaces = freePlaces;
     }
 
     public Boolean getRegistered() {

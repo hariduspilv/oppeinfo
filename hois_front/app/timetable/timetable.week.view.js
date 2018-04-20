@@ -2,12 +2,9 @@
   'use strict';
   var TIME_QUOTIENT = 15;
   var DAY_START_TIME = "7:00";
+  var DAY_END_TIME = "23:00";
   var ROW_HEIGHT = 22;
   var TOP = 50;
-
-  function loadingTimetableEvents(scope, busy) {
-    scope.$root.$emit('backendBusy', {busy: busy});
-  }
 
   function getPreviousAndNextWeek(scope) {
     if (scope.shownWeek) {
@@ -15,7 +12,7 @@
 
       scope.previousWeekIndex = scope.weeks[scope.weekIndex - 1] ? scope.weekIndex - 1 : null;
       scope.nextWeekIndex = scope.weeks[scope.weekIndex + 1] ? scope.weekIndex + 1 : null;
-    } 
+    }
   }
 
   function setTimetableEvents(scope, timetableEvents) {
@@ -29,26 +26,105 @@
       var timeFromDayStart = moment.duration(moment(event.timeStart, "HH:mm").diff(moment(DAY_START_TIME, "HH:mm"))).asMinutes();
       var top = ROW_HEIGHT * (timeFromDayStart / TIME_QUOTIENT) + TOP;
 
-      if (moment(event.date).isBetween(moment(scope.shownWeek.start), moment(scope.shownWeek.end), 'day', '[]')) {
-        scope.weekColumns[weekDay].events.push({
-          nameEt: event.nameEt,
-          nameEn: event.nameEn,
-          timeStart: event.timeStart,
-          timeEnd: event.timeEnd,
-          rowHeight: rowHeight,
-          top: top,
-          column: 1,
-          rooms: event.rooms,
-          teachers: event.teachers,
-          studentGroups: event.studentGroups,
-          public: event.publicEvent,
-          journalId: event.journalId,
-          subjectStudyPeriodId: event.subjectStudyPeriodId,
-          showStudyMaterials: event.showStudyMaterials
-        });
+      scope.weekColumns[weekDay].events.push({
+        nameEt: event.nameEt,
+        nameEn: event.nameEn,
+        timeStart: event.timeStart,
+        timeEnd: event.timeEnd,
+        rowHeight: rowHeight,
+        top: top,
+        rooms: event.rooms,
+        id: event.id,
+        maxEl: 1,
+        teachers: event.teachers,
+        studentGroups: event.studentGroups,
+        public: event.publicEvent,
+        journalId: event.journalId,
+        subjectStudyPeriodId: event.subjectStudyPeriodId,
+        showStudyMaterials: event.showStudyMaterials,
+        left:0,
+        width:100
+      });
+    }
+
+    overlappingEvents(scope, timetableEvents);
+  }
+
+  function sortTimetableEventsByDays(scope, timetableEvents) {
+    var eventsByDays = [];
+    for (var i = 0; i < 7; i++) {
+      eventsByDays.push([]);
+    }
+
+    timetableEvents.forEach(function (event) {
+      var weekDay = moment(event.date).isoWeekday() - 1;
+      eventsByDays[weekDay].push(event);
+    });
+    return eventsByDays;
+  }
+
+  function timetableDayMinutes() {
+    var minutes = [];
+    /*var minutesInTimetableDay = moment.duration(moment(DAY_END_TIME, "HH:mm").diff(moment(DAY_START_TIME, "HH:mm"))).asMinutes();
+
+    for (var i = 0; i <= minutesInTimetableDay; i++) {
+      var minute = moment(DAY_START_TIME, "HH:mm").add(i, 'm');
+      var minuteString = moment(minute).format("HH:mm");
+      minutes[minuteString] = [];
+    }*/
+    for(var i=7; i < 23; i++)
+    {
+      for(var j=0; j < 60; j++)
+      {
+        var minuteString=(i < 10 ? "0"+i:i)+":"+(j < 10 ? "0"+j:j);
+        minutes[minuteString] = [];
+      }
+    }
+    return minutes;
+  }
+
+  function overlappingEvents(scope, timetableEvents) {
+    var minutes;
+    var timetableEventsByDays = sortTimetableEventsByDays(scope, timetableEvents);
+    for(var w = 0; w < timetableEventsByDays.length; w++)
+    {
+      minutes = timetableDayMinutes();
+      for (var i = 0; i < timetableEventsByDays[w].length; i++) {
+        var event = timetableEventsByDays[w][i];
+        var eventIsOverTime = moment(event.timeEnd, "HH:mm").add(-1, 'm').format("HH:mm");
+        var eventTakesPlace = false;
+
+        for (var minute in minutes) {
+          if (event.timeStart === minute) {
+            eventTakesPlace = true;
+          } else if (eventIsOverTime === minute) {
+            eventTakesPlace = false;
+          }
+
+          if (eventTakesPlace) {
+            minutes[minute].push(event.id);
+          }
+        }
+      }
+
+      //kui minutid sätitud, vaatame nüüd objektid üle
+      for (var minute in minutes) {
+        for(var x=0; x < minutes[minute].length; x++)
+        {
+          for(var t=0; t < scope.weekColumns[w].events.length; t++)
+          {
+            if(minutes[minute][x]===scope.weekColumns[w].events[t].id && scope.weekColumns[w].events[t].maxEl < minutes[minute].length)
+            {
+              scope.weekColumns[w].events[t].maxEl= minutes[minute].length;
+              scope.weekColumns[w].events[t].left=x*Math.floor(100/minutes[minute].length);
+              scope.weekColumns[w].events[t].width=Math.floor(100/minutes[minute].length);
+            }
+          }
+        }
       }
     }
   }
+
 
   function createTimetableTimeColumn(scope) {
     var timeColumn = [];
@@ -133,7 +209,6 @@
 
       $scope.$watch('searchResultEvents', function () {
         if ($scope.searchResultEvents) {
-          getDirectRouteParameters($scope, $route, $route.current.params.groupId);
           setWeekCriteria();
           $scope.shownEvents = $scope.searchResultEvents;
 
@@ -154,7 +229,7 @@
         searchTimetableWeek();
         $scope.$parent.shownWeek = $scope.shownWeek;
       };
-      
+
       $scope.nextWeek = function (typeId, nextWeekIndex) {
         changeTimetableParameters($scope, typeId, nextWeekIndex);
         getPreviousAndNextWeek($scope);
@@ -188,7 +263,7 @@
 
       function searchTimetableWeek() {
         $scope.timetableEvents = null;
-        loadingTimetableEvents($scope, true);
+        QueryUtils.loadingWheel($scope, true);
         if ($scope.shownWeek) {
           QueryUtils.endpoint('/timetableevents/timetableSearch').query({
               room: $scope.weekCriteria.room,
@@ -199,7 +274,7 @@
               thru: $scope.shownWeek.end
             })
             .$promise.then(function (result) {
-              loadingTimetableEvents($scope, false);
+              QueryUtils.loadingWheel($scope, false);
               $scope.shownEvents = result;
               showWeekTimetable();
             });
@@ -217,16 +292,20 @@
       $scope.timetableType = "group";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
-      
+
       $scope.schoolId = $scope.auth === undefined ? $route.current.params.schoolId : $scope.auth.school.id;
       var timetableEventsEndpoint = '/timetableevents/timetableByGroup/' + $scope.schoolId;
       var timetableEventsCalendarEndpoint = '/timetableevents/timetableByGroup/calendar/' + $scope.schoolId;
-      
+
       $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
-      
+
+      if ($route.current.params.groupId) {
+        getDirectRouteParameters($scope, $route, $route.current.params.groupId);
+      }
+
       $scope.$watchGroup(['$parent.typeId'], function () {
-        getDirectRouteParameters($scope, $route, $route.current.params.roomId);
         if ($scope.$parent.typeId) {
+          $scope.typeId = $scope.$parent.typeId;
           $scope.weeks.$promise.then(function () {
             if (!$scope.weekIndex) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
@@ -243,7 +322,7 @@
         getPreviousAndNextWeek($scope);
         showWeekTimetable();
       };
-      
+
       $scope.nextWeek = function (typeId, nextWeekIndex) {
         changeTimetableParameters($scope, typeId, nextWeekIndex);
         getPreviousAndNextWeek($scope);
@@ -253,7 +332,7 @@
       $scope.emptyParentVariable = function () {
         $scope.$parent.typeId = null;
       };
-      
+
       $scope.generateCalendar = function () {
         if ($scope.shownWeek && $scope.$parent.typeId) {
           QueryUtils.endpoint(timetableEventsCalendarEndpoint).search({
@@ -268,7 +347,7 @@
       };
       function showWeekTimetable() {
         $scope.timetableEvents = null;
-        loadingTimetableEvents($scope, true);
+        QueryUtils.loadingWheel($scope, true);
         if ($scope.shownWeek) {
           QueryUtils.endpoint(timetableEventsEndpoint).search({
               studentGroups: [$scope.$parent.typeId],
@@ -276,9 +355,9 @@
               thru: $scope.shownWeek.end
             })
             .$promise.then(function (result) {
-              loadingTimetableEvents($scope, false);
+              QueryUtils.loadingWheel($scope, false);
               $scope.shownStudyPeriods = result.studyPeriods;
-              $scope.shownTimetableCurriculum = result.generalTimetableCurriculum;     
+              $scope.shownTimetableCurriculum = result.generalTimetableCurriculum;
               fillTimetable($scope, result.timetableEvents);
             });
         }
@@ -296,9 +375,13 @@
 
       $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
       
+      if ($route.current.params.teacherId) {
+        getDirectRouteParameters($scope, $route, $route.current.params.teacherId);
+      }
+
       $scope.$watchGroup(['$parent.typeId'], function () {
-        getDirectRouteParameters($scope, $route, $route.current.params.roomId);
         if ($scope.$parent.typeId) {
+          $scope.typeId = $scope.$parent.typeId;
           $scope.weeks.$promise.then(function () {
             if (!$scope.weekIndex) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
@@ -315,7 +398,7 @@
         getPreviousAndNextWeek($scope);
         showWeekTimetable();
       };
-      
+
       $scope.nextWeek = function (typeId, nextWeekIndex) {
         changeTimetableParameters($scope, typeId, nextWeekIndex);
         getPreviousAndNextWeek($scope);
@@ -341,7 +424,7 @@
 
       function showWeekTimetable() {
         $scope.timetableEvents = null;
-        loadingTimetableEvents($scope, true);
+        QueryUtils.loadingWheel($scope, true);
         if ($scope.shownWeek) {
           QueryUtils.endpoint(timetableEventsEndpoint).search({
               teachers: [$scope.$parent.typeId],
@@ -349,7 +432,7 @@
               thru: $scope.shownWeek.end
             })
             .$promise.then(function (result) {
-              loadingTimetableEvents($scope, false);
+              QueryUtils.loadingWheel($scope, false);
               $scope.shownStudyPeriods = result.studyPeriods;
               $scope.shownTeacher = {
                 firstname: result.firstname,
@@ -372,9 +455,13 @@
 
       $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
 
-      $scope.$watchGroup(['$parent.typeId'], function () {
+      if ($route.current.params.roomId) {
         getDirectRouteParameters($scope, $route, $route.current.params.roomId);
+      }
+
+      $scope.$watchGroup(['$parent.typeId'], function () {
         if ($scope.$parent.typeId) {
+          $scope.typeId = $scope.$parent.typeId;
           $scope.weeks.$promise.then(function () {
             if (!$scope.weekIndex) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
@@ -391,7 +478,7 @@
         getPreviousAndNextWeek($scope);
         showWeekTimetable();
       };
-      
+
       $scope.nextWeek = function (typeId, nextWeekIndex) {
         changeTimetableParameters($scope, typeId, nextWeekIndex);
         getPreviousAndNextWeek($scope);
@@ -417,7 +504,7 @@
 
       function showWeekTimetable() {
         $scope.timetableEvents = null;
-        loadingTimetableEvents($scope, true);
+        QueryUtils.loadingWheel($scope, true);
         if ($scope.shownWeek) {
           QueryUtils.endpoint(timetableEventsEndpoint).search({
               room: $scope.$parent.typeId,
@@ -425,12 +512,12 @@
               thru: $scope.shownWeek.end
             })
             .$promise.then(function (result) {
-              loadingTimetableEvents($scope, false);
+              QueryUtils.loadingWheel($scope, false);
               $scope.shownStudyPeriods = result.studyPeriods;
               $scope.shownRoom = {
                 roomCode: result.roomCode,
                 buildingCode: result.buildingCode
-              };    
+              };
               fillTimetable($scope, result.timetableEvents);
             });
           }
@@ -447,6 +534,7 @@
 
       $scope.$watchGroup(['$parent.typeId'], function () {
         if (($scope.auth.isStudent() || $scope.auth.isParent() || $scope.auth.isAdmin()) && $scope.$parent.typeId) {
+          $scope.typeId = $scope.$parent.typeId;
           $scope.weeks.$promise.then(function () {
             if (!$scope.weekIndex) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
@@ -463,7 +551,7 @@
         getPreviousAndNextWeek($scope);
         showWeekTimetable();
       };
-      
+
       $scope.nextWeek = function (typeId, nextWeekIndex) {
         changeTimetableParameters($scope, typeId, nextWeekIndex);
         getPreviousAndNextWeek($scope);
@@ -491,7 +579,7 @@
 
       function showWeekTimetable() {
         $scope.timetableEvents = null;
-        loadingTimetableEvents($scope, true);
+        QueryUtils.loadingWheel($scope, true);
         if ($scope.shownWeek) {
           QueryUtils.endpoint('/timetableevents/timetableByStudent').search({
             student: $scope.typeId,
@@ -500,7 +588,7 @@
             higher: $scope.auth.higher,
             vocational: $scope.auth.vocational
           }).$promise.then(function (result) {
-            loadingTimetableEvents($scope, false);
+            QueryUtils.loadingWheel($scope, false);
             $scope.shownStudyPeriods = result.studyPeriods;
             fillTimetable($scope, result.timetableEvents);
           });

@@ -130,9 +130,6 @@ public class DeclarationControllerSchoolAdminTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         
-        // get modules 
-        basicTest(ENDPOINT + "/modules/" + id);
-        
         // get curriculum subjects
         basicTest(ENDPOINT + "/subjects/" + id);
         

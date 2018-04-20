@@ -1,14 +1,15 @@
 'use strict';
 
-angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, $filter, QueryUtils, ArrayUtils, DataUtils, Classifier, message, dialogService, VocationalGradeUtil, $q, oisFileService) {
+angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, $filter, $window, QueryUtils, ArrayUtils, DataUtils, Classifier, message, dialogService, VocationalGradeUtil, $q, oisFileService) {
   $scope.gradeUtil = VocationalGradeUtil;
   var classifierMapper = Classifier.valuemapper({ entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE', absence: 'PUUDUMINE' });
 
-  var LESSON_NRS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  var LESSONS = [1, 2, 3, 4, 5];
+  var LESSONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
   $scope.formState = {};
   $scope.showAllStudentsModel = true;
+
+
 
   function loadUsedHours() {
     QueryUtils.endpoint('/journals/' + entity.id + '/usedHours').get().$promise.then(function (result) {
@@ -33,9 +34,36 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
       journalStudentsQueryPromise.then(function (result) {
         $scope.journal.journalStudents = result;
+        $scope.$broadcast('refreshFixedColumns');
+        $scope.windowHeight = $window.innerHeight;
+
       });
     });
   }
+
+    $scope.finished=function ()
+    {
+      var hh, tb;
+
+
+      hh = angular.element(document.getElementsByClassName("journalTable"))[0].clientHeight;
+      tb = angular.element(document.getElementsByClassName("journalTable")).find("tbody")[0].clientHeight;
+      hh=39+tb;
+
+      if($scope.journal.journalStudents && $scope.journal.journalStudents.length > 10)
+      {
+        angular.element(document.getElementsByClassName("container")).css('height', $scope.journal.journalStudents.length*32+39+18+ 'px');
+      }
+      else
+      {
+        angular.element(document.getElementsByClassName("container")).css('height', hh +18+ 'px');
+      }
+
+    };
+
+  angular.element($window).bind('resize', function(){
+    $scope.windowHeight = $window.innerHeight;
+ });
 
   function entityToForm(entity) {
     $scope.journal = entity;
@@ -153,7 +181,6 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       var value = $filter('hoisDate')(it);
       return { nameEt: value, nameEn: value, id: it };
     });
-    dialogScope.startLessonNrs = LESSON_NRS.map(function (it) { return { nameEt: it, nameEn: it, id: it }; });
     dialogScope.journalEntry.startLessonNr = $scope.formState.lessonInfo.startLessonNr;
     dialogScope.lessons = LESSONS.map(function (it) { return { nameEt: it, nameEn: it, id: it }; });
     dialogScope.journalEntry.lessons = $scope.formState.lessonInfo.lessons;
@@ -192,6 +219,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
   function showEntryDialog(editEntity) {
     dialogService.showDialog('journal/journal.addEntry.dialog.html', function (dialogScope) {
+      dialogScope.journal = $scope.journal;
 
       dialogScope.$watch('journalEntry.entryType', function() {
         if (dialogScope.journalEntry.entryType === 'SISSEKANNE_L') {
@@ -223,8 +251,8 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
           if (!dialogScope.journalEntryStudents[js.id]) {
             dialogScope.journalEntryStudents[js.id] = {};
-          } 
-          
+          }
+
           if (js.hasAcceptedAbsence) {
             dialogScope.journalEntryStudents[js.id].excused = true;
             dialogScope.journalEntryStudentAbsenceChanged(dialogScope.journalEntryStudents, js, dialogScope.journalEntryStudents[js.id].excused, 'PUUDUMINE_V');
@@ -262,7 +290,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       dialogScope.forbiddenEntryTypes = [];
 
       function canDeleteEntries() {
-        return dialogScope.journalEntry.entryType !== 'SISSEKANNE_O' && dialogScope.journalEntry.journalEntryStudents.length === 0;
+        return dialogScope.journalEntry.entryType !== 'SISSEKANNE_O';
       }
 
       loadJournalEntryDialogInitialData(dialogScope);
@@ -276,7 +304,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           setAbsenceCheckboxValue(it);
           setEditEntityhasAcceptedAbsence(it.journalStudent, it.absence);
         });
-        dialogScope.savedJournalEntryStudents = angular.copy(dialogScope.journalEntryStudents);        
+        dialogScope.savedJournalEntryStudents = angular.copy(dialogScope.journalEntryStudents);
         editEntity.journalEntryCapacityTypes.forEach(function (it) {
           dialogScope.selectedCapacityTypes[it] = true;
         });
@@ -292,7 +320,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       function setEditEntityhasAcceptedAbsence(studentId, absenceCode) {
         for (var i = 0; i < dialogScope.journalStudents.length; i++) {
           if (dialogScope.journalStudents[i].id === studentId) {
-            dialogScope.journalStudents[i].hasAcceptedAbsence = absenceCode === 'PUUDUMINE_V' ? true : false; 
+            dialogScope.journalStudents[i].hasAcceptedAbsence = absenceCode === 'PUUDUMINE_V' ? true : false;
           }
         }
       }
@@ -345,13 +373,14 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       dialogScope.grades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
 
       dialogScope.delete = function () {
-        new JournalEntryEndpoint(dialogScope.journalEntry).$delete().then(function () {
-          message.info('main.messages.delete.success');
-          loadUsedHours();
-          loadJournalEntries();
-          loadJournalStudents($scope.showAllStudentsModel);
-        }).catch(angular.noop);
-        dialogScope.cancel();
+        dialogService.confirmDialog({prompt: 'journal.entryDeleteConfirm'}, function() {
+          new JournalEntryEndpoint(dialogScope.journalEntry).$delete().then(function () {
+            message.info('main.messages.delete.success');
+            loadUsedHours();
+            loadJournalEntries();
+            loadJournalStudents($scope.showAllStudentsModel);
+          }).catch(angular.noop);
+        });
       };
     }, function (submittedDialogScope) {
       var newEntity = angular.extend({}, submittedDialogScope.journalEntry);
@@ -478,5 +507,6 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       loadMaterials();
     });
   };
+
 
 });

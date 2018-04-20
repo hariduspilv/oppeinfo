@@ -128,7 +128,12 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       });
     };
 
-    return {getQueryParams: getQueryParams, clearQueryParams: clearQueryParams, createQueryForm: createQueryForm, endpoint: endpoint};
+    var loadingWheel = function(scope, busy) {
+      scope.$root.$emit('backendBusy', {busy: busy});
+    };
+
+    return {getQueryParams: getQueryParams, clearQueryParams: clearQueryParams, createQueryForm: createQueryForm,
+      endpoint: endpoint, loadingWheel: loadingWheel};
 }]).factory('busyHandler', ['$mdDialog',
   function ($mdDialog) {
     var requests = 0, busyShowing = false;

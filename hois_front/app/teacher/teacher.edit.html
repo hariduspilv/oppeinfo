@@ -11,7 +11,6 @@
       {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
 </md-nav-bar>
 
-<md-content class="md-padding">
   <div class="ois-form-layout-padding" layout="column" ng-cloak>
     <form name="teacherForm" role="form" class="nomargin" novalidate>
       <hois-collapsable label="('teacher.data' | translate)">
@@ -379,10 +378,9 @@
         </md-button>
       </div>
 
+      <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+      <md-button ng-click="back('#/teachers', teacherForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      <md-button ng-if="teacher.id && teacher.teacherPositionEhis && teacher.teacherPositionEhis.length" ng-click="sendToEhis()" class="md-raised">{{'main.button.sendToEhis' | translate}}</md-button>
+      <md-button ng-if="teacher.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
     </form>
   </div>
-  <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-  <md-button ng-click="back('#/teachers', teacherForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
-  <md-button ng-if="teacher.id && teacher.teacherPositionEhis && teacher.teacherPositionEhis.length" ng-click="sendToEhis()" class="md-raised">{{'main.button.sendToEhis' | translate}}</md-button>
-  <md-button ng-if="teacher.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-</md-content>

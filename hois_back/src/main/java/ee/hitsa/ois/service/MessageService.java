@@ -232,13 +232,12 @@ public class MessageService {
         qb.filter("sr.is_student_visible = true");
         List<?> result = qb.select(STUDENT_PARENTS_SELECT, em).getResultList();
         return StreamUtil.toMappedList(r -> {
-            Long id = resultAsLong(r, 3);
-            String fullname = PersonUtil.fullname(resultAsString(r, 4), resultAsString(r, 5));
             MessageReceiverDto dto = new MessageReceiverDto();
-            dto.setPersonId(id);
-            dto.setFullname(fullname);
-            AutocompleteResult studentGroup = new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 2), resultAsString(r, 2));
-            dto.setStudentGroup(studentGroup);
+            dto.setId(resultAsLong(r, 2));
+            dto.setPersonId(resultAsLong(r, 4));
+            dto.setFullname(PersonUtil.fullname(resultAsString(r, 5), resultAsString(r, 6)));
+            String studentGroupCode = resultAsString(r, 1);
+            dto.setStudentGroup(new AutocompleteResult(resultAsLong(r, 0), studentGroupCode, studentGroupCode));
             return dto;
         }, result);
     }
@@ -272,19 +271,24 @@ public class MessageService {
         if(criteria.getRole() != null && !Role.ROLL_P.name().equals(criteria.getRole()) ) {
             qb.requiredCriteria("u.school_id = :schoolId", "schoolId", user.getSchoolId());
         }
-        if(Role.ROLL_T.name().equals(criteria.getRole())) {
+        String sql = "distinct p.id, p.firstname, p.lastname, p.idcode, u.role_code";
+        boolean isstudent = Role.ROLL_T.name().equals(criteria.getRole());
+        if(isstudent) {
             // students, search only active ones
-            qb.requiredCriteria("exists (select s.id from student s where s.person_id = p.id and s.status_code in (:active))", "active", StudentStatus.STUDENT_STATUS_ACTIVE);
+            qb.requiredCriteria("exists (select s.id from student s where s.id = u.student_id and s.status_code in (:active))", "active", StudentStatus.STUDENT_STATUS_ACTIVE);
+            sql += ", u.student_id";
         }
         qb.optionalCriteria("u.role_code = :role", "role", criteria.getRole());
-        List<?> result = qb.select("distinct u.id, p.id as personId, p.firstname, p.lastname, p.idcode, u.role_code, u.student_id", em).getResultList();
+        List<?> result = qb.select(sql, em).getResultList();
         return StreamUtil.toMappedList(r -> {
             MessageReceiverDto dto = new MessageReceiverDto();
-            dto.setPersonId(resultAsLong(r, 1));
-            dto.setFullname(PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)));
-            dto.setIdcode(resultAsString(r, 4));
-            dto.setRole(Arrays.asList(resultAsString(r, 5)));
-            dto.setId(resultAsLong(r, 6));
+            dto.setPersonId(resultAsLong(r, 0));
+            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setIdcode(resultAsString(r, 3));
+            dto.setRole(Arrays.asList(resultAsString(r, 4)));
+            if(isstudent) {
+                dto.setId(resultAsLong(r, 5));
+            }
             return dto;
         }, result);
     }
@@ -505,10 +509,9 @@ public class MessageService {
     }
 
     public List<MessageReceiverDto> getStudents(HoisUserDetails user, StudentSearchCommand criteria, Pageable pageable) {
-        if(user.isTeacher()) {
-            // only active students
-            criteria.setStatus(StudentStatus.STUDENT_STATUS_ACTIVE);
-        }
+        // only active students
+        criteria.setStatus(StudentStatus.STUDENT_STATUS_ACTIVE);
+
         List<MessageReceiverDto> students = studentService.search(user, criteria, pageable)
                 .map(MessageReceiverDto::of).getContent();
         List<Long> studentIds = StreamUtil.toMappedList(MessageReceiverDto::getId, students);
@@ -532,20 +535,13 @@ public class MessageService {
 
         return StreamUtil.toMappedList(r -> {
             MessageReceiverDto dto = new MessageReceiverDto();
-            Long studentId = resultAsLong(r, 2);
-            String studyForm = resultAsString(r, 3);
-            Long personId = resultAsLong(r, 4);
-
-            String fullname = PersonUtil.fullname(resultAsString(r, 5), resultAsString(r, 6));
-            AutocompleteResult studentGroup = new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 1));
-            AutocompleteResult curriculum = new AutocompleteResult(resultAsLong(r, 8), resultAsString(r, 9), resultAsString(r, 10));
-
-            dto.setId(studentId);
-            dto.setPersonId(personId);
-            dto.setFullname(fullname);
-            dto.setStudentGroup(studentGroup);
-            dto.setCurriculum(curriculum);
-            dto.setStudyForm(studyForm);
+            dto.setId(resultAsLong(r, 2));
+            dto.setPersonId(resultAsLong(r, 4));
+            dto.setFullname(PersonUtil.fullname(resultAsString(r, 5), resultAsString(r, 6)));
+            String studentGroupCode = resultAsString(r, 1);
+            dto.setStudentGroup(new AutocompleteResult(resultAsLong(r, 0), studentGroupCode, studentGroupCode));
+            dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 8), resultAsString(r, 9), resultAsString(r, 10)));
+            dto.setStudyForm(resultAsString(r, 3));
             dto.setRole(Arrays.asList(Role.ROLL_L.name()));
             return dto;
         }, result);

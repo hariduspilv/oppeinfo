@@ -6,6 +6,7 @@ import java.util.List;
 
 public class StudentJournalEntryDto {
     private final Long id;
+    private final Long journalId;
     private final String entryType;
     private final LocalDate entryDate;
     private final String content;
@@ -16,9 +17,10 @@ public class StudentJournalEntryDto {
     private final LocalDate homeworkDueDate;
     private List<StudentJournalEntryPreviousResultDto> previousResults;
 
-    public StudentJournalEntryDto(Long id, String entryType, LocalDate entryDate, String content, String gradeValue,
+    public StudentJournalEntryDto(Long id, Long journalId, String entryType, LocalDate entryDate, String content, String gradeValue,
             LocalDateTime gradeInserted, String addInfo, String homework, LocalDate homeworkDueDate) {
         this.id = id;
+        this.journalId = journalId;
         this.entryType = entryType;
         this.entryDate = entryDate;
         this.content = content;
@@ -31,6 +33,10 @@ public class StudentJournalEntryDto {
 
     public Long getId() {
         return id;
+    }
+    
+    public Long getJournalId() {
+        return journalId;
     }
 
     public String getEntryType() {

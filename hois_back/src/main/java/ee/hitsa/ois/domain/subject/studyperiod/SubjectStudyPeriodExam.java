@@ -20,7 +20,7 @@ public class SubjectStudyPeriodExam extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private SubjectStudyPeriod subjectStudyPeriod;
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(nullable = false, updatable = false)
     private TimetableEvent timetableEvent;
     private LocalDateTime deadline;

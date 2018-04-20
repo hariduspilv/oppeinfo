@@ -6,7 +6,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'lessonplan/vocational.search.html',
       controller: 'LessonplanSearchController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); }},
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [
           USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
@@ -19,7 +22,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'lessonplan/vocational.teacher.search.html',
       controller: 'LessonplanTeacherSearchController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); }},
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [
           USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
@@ -31,7 +37,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'lessonplan/vocational.edit.html',
       controller: 'LessonplanEditController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); }},
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN], currentNavItem: 'lessonplan.vocational'
       }
@@ -40,7 +49,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'lessonplan/vocational.teacher.view.html',
       controller: 'LessonplanTeacherViewController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); }},
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [
           USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
@@ -52,7 +64,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'lessonplan/journal.edit.html',
       controller: 'LessonplanJournalEditController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); }},
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
       }
@@ -61,7 +76,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'lessonplan/journal.edit.html',
       controller: 'LessonplanJournalEditController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); }},
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
       }

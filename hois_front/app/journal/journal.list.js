@@ -22,7 +22,8 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
   };
 
   $scope.criteriaDefer = $q.defer();
-  QueryUtils.createQueryForm($scope, '/journals', {}, clMapper.objectmapper);
+  var order = $scope.currentLanguage() === 'et' ? '2, 5, 3' : '2, 6, 3';
+  QueryUtils.createQueryForm($scope, '/journals', {order: order}, clMapper.objectmapper);
   $scope.$watch('criteria.studyYear', function (studyYearId) {
     if (angular.isNumber(studyYearId)) {
       $q.all(promises).then(function () {
@@ -31,10 +32,6 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
       });
     }
   });
-
-  $scope.showModuleNames = function (modules) {
-    return modules.map(function (it) { return $scope.currentLanguageNameField(it); }).join(", ");
-  };
 
   $scope.$watch("criteria.teacherObject", function (value) {
     $scope.criteria.teacher = angular.isObject(value) ? value.id : value;

@@ -214,7 +214,7 @@
     </md-content>
   </md-tab>
 </md-tabs>
-<div layout="row" layout-margin ng-if="!auth.isTeacher()" >
+<div layout="row" ng-if="!auth.isTeacher()" class="md-padding">
   <md-button ng-if="!isShowingRtipTab && teacher.canEdit" ng-href="#/teachers/{{teacher.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
   <md-button ng-if="isShowingRtipTab && teacher.canEdit" ng-click="updateData()" class="md-raised md-primary">{{'teacher.rtipAbsence.updateData' | translate}}</md-button>
   <md-button ng-click="back('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>

@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -286,11 +285,11 @@ public class StudentResultHigherService {
     }
 
     private void setStudyPeriodResults(StudentHigherResultDto dto) {
-        Set<Long> studyPeriodIds = StreamUtil.toMappedSet(r -> r.getLastGrade().getStudyPeriod(), 
+        Set<Long> studyPeriodIds = StreamUtil.toMappedSet(g -> g.getStudyPeriod(), 
                 dto.getSubjectResults().stream()
-                .filter(r -> r.getLastGrade() != null && 
-                r.getLastGrade().getGradeValue() != null)
-                .collect(Collectors.toSet()));
+                    .filter(r -> r.getLastGrade() != null)
+                    .map(StudentHigherSubjectResultDto::getLastGrade)
+                    .filter(g -> g.getGradeValue() != null && g.getStudyPeriod() != null));
         if(!studyPeriodIds.isEmpty()) {
             List<StudyPeriod> studyPeriods = em.createQuery("select sp from StudyPeriod sp where sp.id in (?1)", StudyPeriod.class)
                     .setParameter(1, studyPeriodIds)
@@ -308,6 +307,7 @@ public class StudentResultHigherService {
     private static List<StudentHigherSubjectResultDto> filterSubjectsByStudyPeriod(
             StudentHigherStudyPeriodResultDto result, List<StudentHigherSubjectResultDto> studyPeriodResults) {
         return StreamUtil.toFilteredList(s -> s.getLastGrade() != null && Boolean.TRUE.equals(s.getIsOk())
+                && s.getLastGrade().getStudyPeriod() != null
                 && s.getLastGrade().getStudyPeriod().equals(result.getStudyPeriod().getId()), studyPeriodResults);
     }
 

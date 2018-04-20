@@ -5,7 +5,11 @@
         <md-input-container flex="45" flex-sm="100">
           <label>{{'person.idcode' | translate}}</label>
           <hois-idcode-lookup ng-model="person.idcode" name="idcode" role="person"
-                              after-lookup="lookupPerson(response)" after-failed-lookup="lookupFailure()" no-lookup="cleanReadOnly()" required ng-disabled="idcodeReadonly"></hois-idcode-lookup>
+            after-lookup="lookupPerson(response)" after-failed-lookup="lookupFailure()" no-lookup="cleanReadOnly()" 
+            required ng-disabled="idcodeReadonly"></hois-idcode-lookup>
+          <ng-messages for="personForm.idcode.$error" role="alert">
+            <ng-message when="estonianIdcode">{{'main.messages.error.estonianIdcode' | translate}}</ng-message>
+          </ng-messages>
         </md-input-container>
         <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label>{{'person.sex' | translate}}</label>

@@ -2,6 +2,7 @@ package ee.hitsa.ois.util;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.StudyYear;
@@ -10,6 +11,7 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
+import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.Permission;
@@ -32,15 +34,40 @@ public abstract class JournalUtil {
     public static boolean hasPermissionToView(HoisUserDetails user, School school) {
         return hasPermissionToView(user) && UserUtil.isSameSchool(user, school);
     }
+    
+    public static boolean teacherIsJournalFiller(HoisUserDetails user, Journal journal) {
+        Map<Long, JournalTeacher> teachers = StreamUtil.toMap(jt -> EntityUtil.getId(jt.getTeacher()), journal.getJournalTeachers());
+        
+        if (teachers != null) {
+            JournalTeacher teacher = teachers.get(user.getTeacherId());
+            if (teacher != null && teacher.getIsFiller().booleanValue()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public static boolean teacherIsJournalConfirmer(HoisUserDetails user, Journal journal) {
+        Map<Long, JournalTeacher> teachers = StreamUtil.toMap(jt -> EntityUtil.getId(jt.getTeacher()), journal.getJournalTeachers());
+        
+        if (teachers != null) {
+            JournalTeacher teacher = teachers.get(user.getTeacherId());
+            if (teacher != null && teacher.getIsConfirmer().booleanValue()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static boolean hasPermissionToChange(HoisUserDetails user, Journal journal) {
         return (UserUtil.isSchoolAdmin(user, journal.getSchool()) || 
-                UserUtil.isTeacher(user, journal.getSchool()) && !confirmed(journal)) &&
+                UserUtil.isTeacher(user, journal.getSchool()) && !confirmed(journal) && teacherIsJournalFiller(user, journal)) &&
                 UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PAEVIK);
     }
 
-    public static boolean hasPermissionToConfirm(HoisUserDetails user, School school) {
-        return (UserUtil.isSchoolAdmin(user, school) || UserUtil.isTeacher(user, school)) &&
+    public static boolean hasPermissionToConfirm(HoisUserDetails user, Journal journal) {
+        return (UserUtil.isSchoolAdmin(user, journal.getSchool()) || 
+                UserUtil.isTeacher(user, journal.getSchool()) && teacherIsJournalConfirmer(user, journal)) &&
                 UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_PAEVIK);
     }
 
@@ -51,14 +78,14 @@ public abstract class JournalUtil {
     }
 
     public static boolean canConfirm(HoisUserDetails user, Journal journal) {
-        return hasPermissionToConfirm(user, journal.getSchool()) && !confirmed(journal);
+        return hasPermissionToConfirm(user, journal) && !confirmed(journal);
     }
 
     /**
      * Teacher cannot unconfirm, that is why check if user is admin repeated
      */
     public static boolean canUnconfirm(HoisUserDetails user, Journal journal) {
-        return hasPermissionToConfirm(user, journal.getSchool()) && UserUtil.isSchoolAdmin(user, journal.getSchool())  && 
+        return hasPermissionToConfirm(user, journal) && UserUtil.isSchoolAdmin(user, journal.getSchool())  && 
                 confirmed(journal);
     }
 

@@ -58,53 +58,56 @@
         scope.nextWeekIndex = scope.weeks[shownWeekIndex + 1] ? shownWeekIndex + 1 : null;
     }
 
-    angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'QueryUtils', '$mdDialog', 'Classifier',
-        function ($scope, $route, QueryUtils, $mdDialog, Classifier) {
+    angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'QueryUtils', '$mdDialog', 'Classifier', 'DataUtils',
+        function ($scope, $route, QueryUtils, $mdDialog, Classifier, DataUtils) {
             $scope.currentNavItem = 'journals';
-
             var studentId = $route.current.locals.auth.student;
+            var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE'});
 
-            QueryUtils.endpoint('/journals/studentJournals/').query({studentId: studentId}).$promise.then(function (result) {
-                getEntryType(result);
-                $scope.journalsByYears = getJournalsSortedByYearCodes(result);
+            QueryUtils.endpoint('/journals/studentJournalStudyYears/').query({studentId: studentId}).$promise.then(function (studyYears) {
+                var currentSy = DataUtils.getCurrentStudyYearOrPeriod(studyYears);
+                var currentSyCode = currentSy ? currentSy.code : null;
+                //DataUtils method sorts studyYears
+                $scope.journalsByYears = getJournalYears(studyYears.reverse(), currentSyCode);
+
+                if (currentSy) {
+                    $scope.getStudyYearJournals(currentSy.id, currentSy.code);
+                }
             });
 
-            function getEntryType(journals) {
-                for (var i = 0; i < journals.length; i++) {
-                    for (var j = 0; j < journals[i].journalEntries.length; j++) {
-                        journals[i].journalEntries[j].entryTypeClassifier = Classifier.get(journals[i].journalEntries[j].entryType);
+            $scope.getStudyYearJournals = function (syId, syCode) {
+                if ($scope.journalsByYears[getJournalYearIndex(syCode)].journals.length === 0) {
+                    QueryUtils.loadingWheel($scope, true);
+                    QueryUtils.endpoint('/journals/studentJournals/').query({studentId: studentId, studyYearId: syId}).$promise.then(function (journals) {
+                        journals.forEach(function (journal) {
+                            journal.journalEntries.forEach(function (entry) {
+                                clMapper.objectmapper(entry);
+                            });
+                            $scope.journalsByYears[getJournalYearIndex(syCode)].journals.push(journal);
+                        });
+                        QueryUtils.loadingWheel($scope, false);
+                    });
+                }
+            };
+
+            function getJournalYearIndex(syCode) {
+                for (var i = 0; $scope.journalsByYears.length; i++) {
+                    if ($scope.journalsByYears[i].yearCode === syCode) {
+                        return i;
                     }
                 }
+                return null;
             }
 
-            function getJournalYearCodes(journals) {
-                var yearCodes = [];
-                for (var i = 0; i < journals.length; i++) {
-                    if (yearCodes.indexOf(journals[i].yearCode) === -1) {
-                        yearCodes.push(journals[i].yearCode);
-                    }
-                }
-                return yearCodes.sort().reverse();
-            }
-
-            function getJournalYears(yearCodes) {
+            function getJournalYears(studyYears, currentSyCode) {
                 var journalYears = [];
-                for (var i = 0; i < yearCodes.length; i++) {
-                    journalYears.push({yearCode: yearCodes[i], journals: [], collapsableOpen: i === 0 ? true : false});
-                }
-                return journalYears;
-            }
-
-            function getJournalsSortedByYearCodes(journals) {
-                var yearCodes = getJournalYearCodes(journals);
-                var journalYears = getJournalYears(yearCodes);
-
-                for (var i = 0; i < journals.length; i++) {
-                    for (var j = 0; j < journalYears.length; j++) {
-                        if (journals[i].yearCode === journalYears[j].yearCode) {
-                            journalYears[j].journals.push(journals[i]);
-                        }
-                    }
+                for (var i = 0; i < studyYears.length; i++) {
+                    journalYears.push({
+                        yearId: studyYears[i].id,
+                        yearCode: studyYears[i].code,
+                        journals: [],
+                        collapsableOpen: studyYears[i].code === currentSyCode ? true : false
+                    });
                 }
                 return journalYears;
             }
