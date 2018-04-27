@@ -11,6 +11,19 @@ html {
     font-weight: bold;
 }
 
+.font14 {
+	font-size: 14pt;
+}
+
+.font12 td {
+	font-size: 12pt;
+}
+
+.header {
+	margin-bottom: 18px;
+	text-align: center;
+}
+
 .reporttable {
     border-collapse: collapse;
     width: 100%;

@@ -5,7 +5,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,9 +15,6 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,12 +34,10 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.domain.teacher.Teacher;
-import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.StudentStatus;
-import ee.hitsa.ois.repository.LessonPlanModuleRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -72,11 +66,7 @@ import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolStudent
 @Service
 public class FinalExamVocationalProtocolService extends AbstractProtocolService {
 
-    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String FINAL_EXAM_CODE = "KUTSEMOODUL_L";
-
-    @Autowired
-    private LessonPlanModuleRepository lessonPlanModuleRepository;
 
     public Page<FinalExamVocationalProtocolSearchDto> search(HoisUserDetails user, FinalExamVocationalProtocolSearchCommand cmd,
             Pageable pageable) {
@@ -129,7 +119,7 @@ public class FinalExamVocationalProtocolService extends AbstractProtocolService 
                     dto.setStatus(resultAsString(r, 2));
                     dto.setInserted(resultAsLocalDate(r, 3));
                     dto.setConfirmDate(resultAsLocalDate(r, 4));
-                    dto.setConfirmer(resultAsString(r, 5));
+                    dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 5)));
                     dto.setCanEdit(Boolean.valueOf(FinalExamProtocolUtil.canEdit(user, em.getReference(Protocol.class, dto.getId()), resultAsLong(r, 6))));
                     dtoById.put(dto.getId(), dto);
                     return dto;
@@ -180,45 +170,6 @@ public class FinalExamVocationalProtocolService extends AbstractProtocolService 
         dto.setCanBeDeleted(Boolean.valueOf(FinalExamProtocolUtil.canDelete(user, protocol)));
         return dto;
     }
-    
-    private void includeCorrectImportedOccupationCertificates(Protocol protocol) {
-        if (!ClassifierUtil.equals(ProtocolStatus.PROTOKOLL_STAATUS_K, protocol.getStatus())) {
-            List<Long> studentIds = StreamUtil.toMappedList(ps -> EntityUtil.getId(ps.getStudent()), protocol.getProtocolStudents());
-            Set<String> occupations = StreamUtil.toMappedSet(o -> EntityUtil.getCode(o.getOccupation()),
-                    protocol.getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule().getOccupations());
-            Map<Long, List<StudentOccupationCertificate>> studentOccupationCertificates = studentOccupationCertificates(studentIds, occupations);
-            Map<Long, Map<Long, ProtocolStudentOccupation>> protocolCertificates =
-                em.createQuery("select pso from ProtocolStudentOccupation pso where pso.protocolStudent.protocol.id = ?1", ProtocolStudentOccupation.class)
-                    .setParameter(1, protocol.getId())
-                    .getResultList().stream().filter(pso -> pso.getStudentOccupationCertificate() != null).collect(Collectors.groupingBy(pso -> EntityUtil.getId(pso.getProtocolStudent()), Collectors.toMap(pso -> EntityUtil.getId(pso.getStudentOccupationCertificate()), v -> v)));
-
-            for(ProtocolStudent ps : protocol.getProtocolStudents()) {
-                Map<Long, ProtocolStudentOccupation> protocolStudentCertificates = protocolCertificates.get(EntityUtil.getId(ps));
-                Map<Long, StudentOccupationCertificate> studentCertificates = StreamUtil.toMap(soc -> EntityUtil.getId(soc), studentOccupationCertificates.get(EntityUtil.getId(ps.getStudent())));
-
-                studentCertificates.forEach((k, v) -> {
-                    if (protocolStudentCertificates == null || !protocolStudentCertificates.keySet().remove(k)) {
-                        // remove manually added occupation certificate before replacing it with imported certificate
-                        removeOccupationAddedToProtocol(ps, EntityUtil.getCode(v.getOccupation()), EntityUtil.getCode(v.getPartOccupation()));
-                        addStudentOccupationCertificateToProtocol(ps, v);
-                    }
-                });
-
-                if(protocolStudentCertificates != null) {
-                    protocolStudentCertificates.values().forEach(v -> {
-                        ps.getProtocolStudentOccupations().removeIf(it -> it.equals(v));
-                    });
-                }
-            }
-        }
-    }
-    
-    private static void removeOccupationAddedToProtocol(ProtocolStudent student, String occupation, String partOccupation) {
-        student.getProtocolStudentOccupations()
-                .removeIf(pso -> occupation.equals(EntityUtil.getCode(pso.getOccupation()))
-                        && partOccupation.equals(EntityUtil.getCode(pso.getPartOccupation()))
-                        && pso.getStudentOccupationCertificate() == null);
-    }
 
     public FinalExamVocationalProtocolDto create(HoisUserDetails user, FinalExamVocationalProtocolCreateForm form) {
         Protocol protocol = EntityUtil.bindToEntity(form, new Protocol(), "protocolStudents", "protocolVdata");
@@ -233,8 +184,7 @@ public class FinalExamVocationalProtocolService extends AbstractProtocolService 
         protocol.setProtocolVdata(protocolVdata);
         
         List<Long> studentIds = StreamUtil.toMappedList(ps -> ps.getStudentId(), form.getProtocolStudents());
-        List<String> occupations = StreamUtil.toMappedList(o -> o.getOccupation().getCode(),
-                protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule().getOccupations());
+        Set<String> occupations = curriculumOccpations(protocol);
         Map<Long, List<StudentOccupationCertificate>> studentOccupationCertificates = studentOccupationCertificates(studentIds, occupations);
 
         protocol.setProtocolStudents(StreamUtil.toMappedList(dto -> {
@@ -250,27 +200,6 @@ public class FinalExamVocationalProtocolService extends AbstractProtocolService 
             return protocolStudent;
         }, form.getProtocolStudents()));
         return FinalExamVocationalProtocolDto.of(EntityUtil.save(protocol, em));
-    }
-    
-    private static void addStudentOccupationCertificateToProtocol(ProtocolStudent protocolStudent, StudentOccupationCertificate ceritificate) {
-        ProtocolStudentOccupation protocolStudentOccupation = new ProtocolStudentOccupation();
-        protocolStudentOccupation.setProtocolStudent(protocolStudent);
-        protocolStudentOccupation.setStudentOccupationCertificate(ceritificate);
-        protocolStudentOccupation.setOccupation(ceritificate.getOccupation());
-        protocolStudentOccupation.setPartOccupation(ceritificate.getPartOccupation());
-        protocolStudent.getProtocolStudentOccupations().add(protocolStudentOccupation);
-    }
-
-    private Map<Long, List<StudentOccupationCertificate>> studentOccupationCertificates(List<Long> studentIds, Collection<String> occupations) {
-        if (!studentIds.isEmpty() && !occupations.isEmpty()) {
-            List<StudentOccupationCertificate> occupationCertificates = em.createQuery("select soc from StudentOccupationCertificate soc"
-                    + " where soc.student.id in (?1) and (soc.occupation.code in (?2) or soc.partOccupation.code in (?2))", StudentOccupationCertificate.class)
-                    .setParameter(1, studentIds)
-                    .setParameter(2, occupations)
-                    .getResultList();
-            return occupationCertificates.stream().collect(Collectors.groupingBy(oc -> EntityUtil.getId(oc.getStudent())));
-        }
-        return new HashMap<>();
     }
 
     private ProtocolVdata protocolVdataFromDto(ProtocolVdataForm vdata) {
@@ -361,23 +290,9 @@ public class FinalExamVocationalProtocolService extends AbstractProtocolService 
         student.getProtocolStudentOccupations().removeIf(it -> currentCertificates.containsValue(it.getId()));
     }
     
-    private static Map<String, Long> currentCertificateCodes(ProtocolStudent student) {
-        Map<String, Long> currentCertificateCodes = new HashMap<>();
-        for(ProtocolStudentOccupation c : student.getProtocolStudentOccupations()) {
-            if (c.getPartOccupation() != null) {
-                currentCertificateCodes.put(EntityUtil.getCode(c.getPartOccupation()), c.getId());
-            } else {
-                currentCertificateCodes.put(EntityUtil.getCode(c.getPartOccupation()), c.getId());
-            }
-        }
-        return currentCertificateCodes;
-    }
-    
     public Collection<FinalExamVocationalProtocolStudentDto> otherStudents(HoisUserDetails user, Protocol protocol) {
-        Map<Long, FinalExamVocationalProtocolStudentDto> result = studentsForSelection(user,
-                EntityUtil.getId(protocol.getProtocolVdata().getCurriculumVersionOccupationModule()), protocol.getId());
-        //TODO: results?
-        return result.values();
+        return studentsForSelection(user,
+                EntityUtil.getId(protocol.getProtocolVdata().getCurriculumVersionOccupationModule()), protocol.getId()).values();
     }
     
     public Protocol addStudents(Protocol protocol, FinalExamVocationalProtocolSaveForm form) {
@@ -448,17 +363,11 @@ public class FinalExamVocationalProtocolService extends AbstractProtocolService 
         return results;
     }
     
-    public FinalExamVocationalProtocolOccupationalModuleDto occupationModule(HoisUserDetails user,
+    public FinalExamVocationalProtocolOccupationalModuleDto occupationModule(HoisUserDetails user, Long studyYearId,
             Long curriculumVersionOccupationModuleId) {
         FinalExamVocationalProtocolOccupationalModuleDto dto = new FinalExamVocationalProtocolOccupationalModuleDto();
         dto.setOccupationModuleStudents(occupationModuleStudents(user, curriculumVersionOccupationModuleId));
-        
-        LessonPlanModule lessonPlanModule = lessonPlanModuleRepository
-                .findFirstByCurriculumVersionOccupationModuleId(curriculumVersionOccupationModuleId);
-        if (lessonPlanModule != null && lessonPlanModule.getTeacher() != null) {
-            dto.setTeacher(AutocompleteResult.of(lessonPlanModule.getTeacher()));
-        }
-
+        dto.setTeacher(lessonPlanModuleTeacher(studyYearId, curriculumVersionOccupationModuleId));
         return dto;
     }
     

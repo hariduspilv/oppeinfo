@@ -74,9 +74,9 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column>{{'lessonplan.event.name' | translate}}</th>
-            <th md-column>{{'lessonplan.event.date' | translate}}</th>
-            <th md-column>{{'lessonplan.event.time' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? 3 : 2}}">{{'lessonplan.event.name' | translate}}</th>
+            <th md-column md-order-by="4">{{'lessonplan.event.date' | translate}}</th>
+            <th md-column md-order-by="cast(tet.start as time), cast(tet.end as time)">{{'lessonplan.event.time' | translate}}</th>
             <th md-column>{{'lessonplan.event.teachers' | translate}}</th>
             <th md-column>{{'lessonplan.event.rooms' | translate}}</th>
             <th md-column>{{'lessonplan.event.studentGroups' | translate}}</th>

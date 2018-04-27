@@ -510,6 +510,8 @@
           <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
           <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
        </div>
+       <a href="{{curriculumPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="curriculum.id">{{'main.button.printGeneral' | translate}}</a>
+       <a href="{{curriculumModulesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="curriculum.id">{{'main.button.printModules' | translate}}</a>
        <md-button class="md-raised md-default" ng-click="back('#/curriculum')">{{'main.button.back' | translate}}</md-button>
      </div>
  </div>

@@ -1,6 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', '$route', '$rootScope', 'message', 'orderByFilter', '$location', 'config', 'MidtermTaskUtil', 'dialogService', 'ArrayUtils', 'Classifier', function ($scope, $sessionStorage, QueryUtils, DataUtils, $route, $rootScope, message, orderBy, $location, config, MidtermTaskUtil, dialogService, ArrayUtils, Classifier) {
+angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$scope', '$sessionStorage', '$filter', 'QueryUtils', 'DataUtils', '$route', '$rootScope', 'message', 'orderByFilter', '$location', 'config', 'MidtermTaskUtil', 'dialogService', 'ArrayUtils', 'Classifier', 
+function ($scope, $sessionStorage, $filter, QueryUtils, DataUtils, $route, $rootScope, message, orderBy, $location, config, MidtermTaskUtil, dialogService, ArrayUtils, Classifier) {
 
   $scope.auth = $route.current.locals.auth;
 
@@ -31,6 +32,7 @@ angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$sco
   };
 
   function afterLoad() {
+    $scope.savedStudents = angular.copy($scope.record.protocolStudents);
 
     $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks = midtermTaskUtil.getSortedMidtermTasks($scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
 
@@ -38,13 +40,61 @@ angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$sco
 
     midtermTaskUtil.sortStudentResults($scope.record.subjectStudyPeriodMidtermTaskDto.studentResults, $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
 
-    $scope.formState = {
-      protocolPdfUrl: config.apiUrl + baseUrl + '/print/' + $scope.record.id + '/protocol.pdf',
-      canCalculate: $scope.record.protocolType === 'PROTOKOLLI_LIIK_P' && $scope.record.canChange && !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject,
-      isConfirmed: $scope.record.status === 'PROTOKOLL_STAATUS_K',
-      canConfirm: $scope.record.canConfirm && allProtocolStudentsGraded()
-    };
+    $scope.formState = {};
+    $scope.formState.protocolPdfUrl = config.apiUrl + baseUrl + '/print/' + $scope.record.id + '/protocol.pdf';
+    $scope.formState.canCalculate = $scope.record.protocolType === 'PROTOKOLLI_LIIK_P' && $scope.record.canChange && !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject;
+    $scope.formState.isConfirmed = $scope.record.status === 'PROTOKOLL_STAATUS_K';
+    $scope.formState.canEditConfirmedProtocol = canEditConfirmedProtocol();
+    $scope.formState.canChangeConfirmedProtocolGrade = canChangeConfirmedProtocolGrade();
+    $scope.formState.canConfirm = $scope.record.status !== 'PROTOKOLL_STAATUS_K' && canConfirm();
   }
+
+  function canChangeConfirmedProtocolGrade() {
+    return canEditConfirmedProtocol() && $scope.record.status === 'PROTOKOLL_STAATUS_K';
+  }
+
+  function canEditConfirmedProtocol() {
+    return ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M') &&
+      ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_K_TEEMAOIGUS_PROTOKOLL");
+  }
+
+  function canConfirm() {
+    return allProtocolStudentsGraded() && allChangedGradesHaveAddInfo() && 
+      ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M') &&
+      $scope.auth.authorizedRoles.indexOf("ROLE_OIGUS_K_TEEMAOIGUS_PROTOKOLL") !== -1;
+  }
+
+  $scope.gradeChanged = function(row) {
+    if (row) {
+      var savedResult = $filter('filter')($scope.savedStudents, {id: row.id}, true)[0];
+      if (savedResult.grade !== row.grade) {
+        $scope.higherProtocolForm.$setSubmitted();
+        row.gradeHasChanged = true;
+      } else {
+        row.gradeHasChanged = false;
+
+        if (!savedResult.addInfo) {
+          row.addInfo = null;
+        } else {
+          row.addInfo = savedResult.addInfo;
+        }
+      }
+    }
+
+    if ($scope.record.status === 'PROTOKOLL_STAATUS_K' && $scope.auth.isAdmin()) {
+      $scope.formState.canConfirm = canConfirm();
+    }
+  };
+
+  $scope.addInfoChanged = function (row) {
+    if (row.addInfo && row.addInfo.charAt(0) === ' ') {
+      row.addInfo = null;
+    }
+    
+    if ($scope.record.status === 'PROTOKOLL_STAATUS_K' && $scope.auth.isAdmin()) {
+      $scope.formState.canConfirm = canConfirm();
+    }
+  };
 
   afterLoad();
 
@@ -61,6 +111,28 @@ angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$sco
       }
     }
     return allGraded;
+  }
+
+  function allChangedGradesHaveAddInfo() {
+    if (!angular.isDefined($scope.record) || !angular.isArray($scope.record.protocolStudents)) {
+      return false;
+    }
+
+    var allHaveAddInfo = true;
+    if ($scope.formState.canEditConfirmedProtocol) {
+      for (var i = 0; i < $scope.record.protocolStudents.length; i++) {
+        if ($scope.record.protocolStudents[i].gradeHasChanged) {
+          var addInfo = $scope.record.protocolStudents[i].addInfo;
+          addInfo = addInfo !== undefined && addInfo !== null ? addInfo.split(' ').join('') : null;
+          
+          if (!addInfo) {
+            allHaveAddInfo = false;
+            break;
+          }
+        }
+      }
+    }
+    return allHaveAddInfo;
   }
 
 
@@ -166,17 +238,6 @@ angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$sco
     });
   };
 
-  $scope.gradeChanged = function(student) {
-    student.changed = true;
-  };
-
   $scope.getMidtermTaskHeader = midtermTaskUtil.getMidtermTaskHeader;
-
-  /**
-   * form.$dirty is required for $rootScope.back() function called on Back button click
-   */
-  $scope.setFormDirty = function() {
-    $scope.higherProtocolStudentForm.$setDirty();
-  };
 
 }]);

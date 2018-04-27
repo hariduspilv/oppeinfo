@@ -88,12 +88,13 @@
   <br>
   <div layout="row">
     <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="declaration.canBeChanged" class="md-raised md-primary" 
-      ng-href="#/declarations/{{declaration.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
+      ng-href="#/declarations/{{declaration.id}}/edit">{{'main.button.change' | translate}}</md-button>
     <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="declaration.canBeSetConfirmed" class="md-raised" 
       ng-click="confirm()">{{'declaration.confirm' | translate}}</md-button>
     <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="declaration.canBeSetUnconfirmed" class="md-raised" 
       ng-click="removeConfirmation()">{{'declaration.removeConfirmation' | translate}}</md-button>
-    <md-button class="md-raised md-default" ng-click="back('#/declarations')">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="!auth.isStudent()" class="md-raised md-default" ng-click="back('#/declarations')">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="auth.isStudent() && !currentDeclarationPage" class="md-raised md-default" ng-click="back('#/declaration/current/view')">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>
 

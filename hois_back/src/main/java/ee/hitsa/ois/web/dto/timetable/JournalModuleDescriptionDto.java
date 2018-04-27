@@ -9,6 +9,8 @@ public class JournalModuleDescriptionDto {
     private String grade3Description;
     private String grade4Description;
     private String grade5Description;
+    private Boolean isModule;
+    private String assessment;
 
 
     public String getNameEt() {
@@ -59,4 +61,17 @@ public class JournalModuleDescriptionDto {
     public void setGrade5Description(String grade5Description) {
         this.grade5Description = grade5Description;
     }
+    public Boolean getIsModule() {
+        return isModule;
+    }
+    public void setIsModule(Boolean isModule) {
+        this.isModule = isModule;
+    }
+    public String getAssessment() {
+        return assessment;
+    }
+    public void setAssessment(String assessment) {
+        this.assessment = assessment;
+    }
+    
 }

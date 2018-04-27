@@ -12,8 +12,9 @@ angular.module('hitsaOis')
         });
       }
 
-      if (angular.isObject(authenticatedUser) && angular.isObject(authenticatedUser.school)) {
-        $rootScope.state.logo = config.apiUrl + '/school/' + authenticatedUser.school.id + '/logo';
+      if (angular.isObject(authenticatedUser) && angular.isObject(authenticatedUser.school) && 
+          authenticatedUser.school.logo) {
+        $rootScope.state.logo = 'data:image/JPEG;base64,' + authenticatedUser.school.logo;
       } else {
         $rootScope.state.logo = '';
       }

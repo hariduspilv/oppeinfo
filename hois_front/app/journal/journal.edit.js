@@ -424,6 +424,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   $scope.moduleDescriptionDialog = function (moduleDescription) {
     dialogService.showDialog('journal/journal.moduleDescription.dialog.html', function (dialogScope) {
       dialogScope.moduleDescription = moduleDescription;
+      dialogScope.isDistinctiveAssessment = moduleDescription.assessment === 'KUTSEHINDAMISVIIS_E' ? true : false;
     });
   };
 

@@ -7,6 +7,7 @@ import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
 public class FinalExamHigherProtocolStudentSaveForm extends HigherProtocolStudentDto {
 
     private List<String> occupations; 
+    private Long curriculumGrade;
 
     public List<String> getOccupations() {
         return occupations;
@@ -15,4 +16,13 @@ public class FinalExamHigherProtocolStudentSaveForm extends HigherProtocolStuden
     public void setOccupations(List<String> occupations) {
         this.occupations = occupations;
     }
+
+    public Long getCurriculumGrade() {
+        return curriculumGrade;
+    }
+
+    public void setCurriculumGrade(Long curriculumGrade) {
+        this.curriculumGrade = curriculumGrade;
+    }
+    
 }

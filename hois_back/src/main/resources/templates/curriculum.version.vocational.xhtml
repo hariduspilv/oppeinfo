@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>{{ "report.curriculumVersion.label" | translate }}</title>
+  <style type="text/css">
+    {% include "styles.css" %}
+
+    tr {
+      page-break-inside: avoid;
+    }
+  </style>
+</head>
+
+<body>
+  <p class="font14" align="center">{{ content.school }}</p>
+  <p class="font14" align="center">{{ content.curriculumName }}</p>
+  <table class="reporttable font12">
+    <tr>
+      <td class="label">{{ "report.curriculumVersion.namesAndCredits" | translate }}</td>
+      <td class="label">{{ "report.curriculumVersion.creditsSum" | translate }}</td>
+      {% for studyYear in content.studyYears %}
+        <td class="label">{{ studyYear }}. {{ "report.curriculumVersion.studyYear" | translate }}</td>
+      {% endfor %}
+    </tr>
+    
+    {% for type in content.moduleTypes %}
+      <tr>
+        <td class="label">
+          {% if type.code == "KUTSEMOODUL_P" %}
+            {{ "report.curriculum.coreModules" | translate }}
+          {% elseif type.code == "KUTSEMOODUL_Y" %}
+            {{ "report.curriculum.generalModules" | translate }}
+          {% elseif type.code == "KUTSEMOODUL_V" %}
+            {{ "report.curriculum.optionalModules" | translate }}
+          {% elseif type.code == "KUTSEMOODUL_L" %}
+            {{ "report.curriculum.graduationModules" | translate }}
+          {% endif %}
+        </td>
+        <td class="label">{{ type.totalCredits }}</td>
+        {% for year in type.studyYearCredits %}
+          <td class="label">{{ year.value }}</td>
+        {% endfor %}
+      </tr>
+
+      {% for module in type.modules %}
+        <tr>
+          <td>{{ module.name }}</td>
+          <td>{{ module.totalCredits }}</td>
+          {% for year in module.studyYearCredits %}
+            <td>{{ year.value }}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    {% endfor %}
+  </table>
+</body>
+
+</html>

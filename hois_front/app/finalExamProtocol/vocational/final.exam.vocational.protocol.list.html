@@ -112,7 +112,7 @@
             <td md-cell>{{row.confirmDate | hoisDate}}</td>
             <td md-cell>{{::row.confirmer}}</td>
             <td md-cell>
-              <md-button ng-if="!row.confirmDate || (row.confirmDate && auth.isAdmin())" md-no-ink class="md-primary change-button" ng-href="#/finalExamVocationalProtocols/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button ng-if="row.canEdit && row.status.code !== 'PROTOKOLL_STAATUS_K'" md-no-ink class="md-primary change-button" ng-href="#/finalExamVocationalProtocols/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

@@ -38,7 +38,7 @@
             {{getMidtermTaskHeader(midtermTask)}}
           </th>
           <th md-column>{{'higherProtocol.finalGrade' | translate}}</th>
-          <th md-column>{{'higherProtocol.comment' | translate}}</th>
+          <th md-column>{{'higherProtocol.changeReason' | translate}}</th>
         </tr>
       </thead>
       <tbody md-body>
@@ -60,8 +60,8 @@
   <br>
 
   <div>
-    <md-button class="md-raised md-primary" ng-href="#/higherProtocols/{{record.id}}/edit" ng-show="record.canChange">{{'main.button.change' | translate}}</md-button>
-    <md-button class="md-raised" ng-click="confirm()" ng-show="formState.canConfirm">{{'main.button.confirm' | translate}}</md-button>
+    <md-button ng-if="formState.canEditConfirmedProtocol" class="md-raised md-primary" ng-href="#/higherProtocols/{{record.id}}/edit">{{'main.button.change' | translate}}</md-button>
+    <md-button ng-show="formState.canConfirm" class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
     <a href="{{formState.protocolPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
     <md-button class="md-raised" ng-click="back('#/higherProtocols/')">{{'main.button.back' | translate}}</md-button>
   </div>

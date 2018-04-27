@@ -27,6 +27,8 @@
       "finish": "Lõpeta",
       "ok": "Ok",
       "print": "Trüki",
+      "printGeneral": "Trüki põhiandmed",
+      "printModules": "Trüki moodulid",
       "view": "Vaata",
       "hide": "Peida",
       "save": "Salvesta",
@@ -207,7 +209,7 @@
         "drGrants": "Doktoranditoetus",
         "grantApplications": "Õppetoetuste taotlused",
         "scholarshipApplications": "Stipendiumite taotlused",
-        "drGrantApplications": "Doktoranditoetuste taotlused"
+        "drGrantApplications": "Doktoranditoet. taotlused"
       },
       "applications": {
         "label": "Avaldused",
@@ -249,9 +251,9 @@
         "schools": "Õppeasutused",
         "departments": "Struktuuriüksused",
         "teacheroccupations": "Õpetaja ametikohad",
-        "documentcoordinators": "Dokumentide kooskõlastajad",
+        "documentcoordinators": "Dok. kooskõlastajad",
         "generalmessages": "Üldteated",
-        "messageTemplates": "Automaatsete teadete mallid",
+        "messageTemplates": "Automaat. teadete mallid",
         "studyLevels": "Õppetasemed",
         "studyYears": "Õppeperioodid",
         "classifiers": "Klassifikaatorid",
@@ -319,10 +321,10 @@
         "thesisTopics": "Lõputöö teemad",
         "thesisProtocols": "Lõp. protokollid",
         "forms": "Blanketid",
-        "documentsPreparation": "Dokumentide ettevalmistamine",
+        "documentsPreparation": "Dok. ettevalmistamine",
         "documentsPrint": "Dokumentide trükk",
-        "finalExamProtocolsHigher": "Lõpueksami protokollid (kõrg)",
-        "finalExamProtocolsVocational": "Lõpueksami protokollid (kutse)"
+        "finalExamProtocolsHigher": "Lõpueks. protokollid (kõrg)",
+        "finalExamProtocolsVocational": "Lõpueks. protokollid (kutse)"
       },
       "student": {
         "label": "Õppurid",
@@ -342,9 +344,9 @@
         "journal": {
           "label": "Päevikud",
           "search": "Päevikute otsing",
-          "journalsHigher": "Päevikud (kõrg)",
           "journalsVocational": "Päevikud (kutse)"
         },
+        "subjectTeacher": "Aine-õppejõu paarid",
         "moduleProtocol": {
           "label": "Moodulite protokollid",
           "search": "Mooduli protokolli otsing"
@@ -465,7 +467,7 @@
         "practiceJournals": "Praktikapäevikud",
         "committees": "Kaitsmiskomisjonid",
         "thesisProtocols": "Lõp. protokollid",
-        "thesisTopics": "Lõputöö teema"
+        "thesisTopics": "Lõputöö teemad"
       }
     }
   },
@@ -1942,7 +1944,9 @@
       "viewModuleData": "Vaata mooduli andmed",
       "moduleName": "Mooduli nimi",
       "moduleCapacity": "Maht",
-      "moduleOK": "Korras?"
+      "moduleOK": "Korras?",
+      "print": "Trüki põhiandmed",
+      "printModules": "Trüki moodulid"
     },
     "messages": {
       "prompt": {
@@ -2207,8 +2211,8 @@
     "validCurriculumVersion": "Kehtiv õppekava",
     "newCurriculumVersion": "Uus õppekava",
     "periodType": "Ajavahemiku liik",
-    "academicLeaveStart": "Akadeemilise puhkuse algus",
-    "academicLeaveEnd": "Akadeemilise puhkuse lõpp",
+    "academicLeaveStart": "Akad. puhkuse algus",
+    "academicLeaveEnd": "Akad. puhkuse lõpp",
     "academicLeaveRevocationDate": "Katkestamise kuupäev",
     "makeApplication": "Koosta avaldus",
     "plannedSubject": "Planeeritav õppeaine",
@@ -2443,7 +2447,8 @@
     "curriculumVersionModuleOrThemeDescription": "Rakenduskava mooduli/teema kirjeldus",
     "studentDeleteconfirm": "Õppuri kustutamisel kustutatakse ka kõik temaga seotud sissekanded. Olete kindel, et soovite õppuri kustutada?",
     "entryDeleteConfirm": "Kas oled kindel, et soovid sissekannet kustutada?",
-    "moduleDescription": "Teema kirjeldus",
+    "moduleDescription": "Mooduli kirjeldus",
+    "themeDescription": "Teema kirjeldus",
     "outcome": "ÕV",
     "finalResult": "Lõpptulemus",
     "showAll": "Näita kõiki",
@@ -2575,7 +2580,7 @@
   "higherProtocol": {
     "add": "Protokolli lisamine",
     "calculate": "Arvuta",
-    "comment": "Märkus",
+    "changeReason": "Muutmise põhjus",
     "confirm": "Kinnita",
     "confirmedDate": "Kinnitamise kp",
     "confirmer": "Kinnitaja",
@@ -2750,6 +2755,7 @@
     "seePrerequisites": "vt eeldused",
     "mandatoryPrerequisiteSubjects": "Kohustuslikud eeldusained",
     "recommendedPrerequisiteSubjects": "Soovituslikud eeldusained",
+    "grade": "Hinne",
     "message": {
       "subjectAdded": "Õppeaine on lisatud õpingukavasse",
       "subjectRemoved": "Õppeaine on õpingukavast kustutatud",
@@ -3162,11 +3168,13 @@
   },
   "finalExamProtocol": {
     "addFinalExamProtocol": "Lõpueksami protokolli koostamine",
+    "changeReason": "Muutmise põhjus",
     "studyYear": "Õppeaasta",
     "teacher": "Õpetaja",
     "curriculumVersion": "Rakenduskava",
     "curriculumVersionModule": "Rakenduskava, moodul",
     "module": "Moodul",
+    "curriculum": "Õppekava",
     "subject": "Õppeaine",
     "subjectEt": "Õppeaine nimetus eesti keeles",
     "subjectEn": "Õppeaine nimetus inglise keeles",
@@ -3203,9 +3211,12 @@
     "member": "Liige",
     "id": "Jrk. nr.",
     "grade": "Hinne",
+    "givenCurriculumGrade": "Antav kraad",
+    "givenOccupation": "Antav kutse",
     "occupationAndCertificateNr": "Kutse ja kutsetunnistuse number",
     "type": "Protokolli liik",
     "addStudents": "Lisa õppurid",
+    "downloadSigned": "Lae allkirjastatud protokoll",
     "mobileSign": {
       "instructions": "Toimige palun telefonile ilmuvate juhiste kohaselt. Enne PIN-koodi sisestamist veenduge, et telefoni ekraanil olev kontrollkood on sama, mis allpool näidatud."
     },

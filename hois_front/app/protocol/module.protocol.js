@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolController', function ($scope, $route, Classifier, $q, ArrayUtils, QueryUtils, message, $location, dialogService, $mdDialog, $window, oisFileService, config, $timeout, $filter) {
+angular.module('hitsaOis').controller('ModuleProtocolController', function ($scope, $route, Classifier, $q, ArrayUtils, ProtocolConfirmationService, QueryUtils, message, $location, dialogService, $mdDialog, $window, oisFileService, config, $timeout, $filter) {
   var endpoint = '/moduleProtocols/';
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', status: 'PROTOKOLL_STAATUS' });
@@ -260,85 +260,16 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     return grade ? grade.value : undefined;
   };
 
-  function signBeforeConfirm() {
-    $window.hwcrypto.getCertificate({ lang: 'en' }).then(function (certificate) {
-      QueryUtils.endpoint('/moduleProtocols/' + $scope.protocol.id + '/signToConfirm').save({
-        version: $scope.protocol.version,
-        protocolStudents: $scope.protocol.protocolStudents,
-        certificate: certificate.hex
-      }, function (result) {
-        $window.hwcrypto.sign(certificate, { type: 'SHA-256', hex: result.digestToSign }, { lang: 'en' }).then(function (signature) {
-          QueryUtils.endpoint('/moduleProtocols/' + $scope.protocol.id + '/signToConfirmFinalize').save({
-            signature: signature.hex,
-            version: result.version
-          }, function (result) {
-            message.info('moduleProtocol.messages.confirmed');
-            entityToDto(result);
-          });
-        });
-      });
-    }).catch(function (reason) {
-      //no_implementation, no_certificates, user_cancel, technical_error
-      if (reason.message === 'user_cancel') {
-        message.error('main.messages.error.idCardSigningCancelled');
-      } else {
-        message.error('main.messages.error.readingIdCardFailed');
-      }
-    });
-  }
-
-  function mobileSignBeforeConfirm() {
-    QueryUtils.endpoint('/moduleProtocols/' + $scope.protocol.id + '/mobileSignToConfirm').save({
-      version: $scope.protocol.version,
-      protocolStudents: $scope.protocol.protocolStudents
-    }, function (result) {
-      if (result.challengeID) {
-        $scope.signVersion = result.version;
-        $mdDialog.show({
-          controller: function ($scope) {
-            $scope.challengeID = result.challengeID;
-          },
-          templateUrl: 'protocol/module.protocol.mobileSign.dialog.html',
-          parent: angular.element(document.body),
-          clickOutsideToClose: false
-        });
-        $scope.mobileIdPolls = 0;
-        $timeout(pollMobileSignStatus, config.mobileIdInitialDelay);
-      } else {
-        message.error('main.messages.error.mobileIdSignFailed');
-      }
-    });
-  }
-
-  function pollMobileSignStatus() {
-    QueryUtils.endpoint('/moduleProtocols/' + $scope.protocol.id + '/mobileSignStatus').get(
-      function (response) {
-        if (response.status === 'SIGNATURE') {
-          $mdDialog.hide();
-          QueryUtils.endpoint('/moduleProtocols/' + $scope.protocol.id + '/mobileSignFinalize').save({
-            version: $scope.signVersion
-          }, function (result) {
-            message.info('moduleProtocol.messages.confirmed');
-            entityToDto(result);
-          });
-        } else if (response.status === 'OUTSTANDING_TRANSACTION') {
-          $scope.mobileIdPolls++;
-          if ($scope.mobileIdPolls < config.mobileIdMaxPolls) {
-            $timeout(pollMobileSignStatus, config.mobileIdPollInterval);
-          }
-        } else {
-          console.log('mobileSignStatus: '+response.status);
-          $mdDialog.hide();
-          message.error('main.messages.error.mobileIdSignFailed');
-        }
-      });
-  }
-  
   $scope.confirm = function () {
+    var data = {
+      version: $scope.protocol.version,
+      protocolStudents: $scope.protocol.protocolStudents,
+    };
+
     if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      signBeforeConfirm();
+      ProtocolConfirmationService.signBeforeConfirm(endpoint + $scope.protocol.id, data, entityToDto);
     } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      mobileSignBeforeConfirm();
+      ProtocolConfirmationService.mobileSignBeforeConfirm(endpoint + $scope.protocol.id, data, entityToDto);
     }
   };
 

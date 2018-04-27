@@ -167,9 +167,9 @@ public class EhisStudentService extends EhisService {
     }
 
     private List<Student> findStudents(Long schoolId) {
-        return em.createQuery("select s from Student s where s.school.id = ?1 and s.status.code = ?2", Student.class)
+        return em.createQuery("select s from Student s where s.school.id = ?1 and s.status.code in ?2", Student.class)
                 .setParameter(1, schoolId)
-                .setParameter(2, StudentStatus.OPPURSTAATUS_O.name())
+                .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
                 .getResultList();
     }
 

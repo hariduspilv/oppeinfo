@@ -79,6 +79,7 @@ import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithLogo;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithYearIdDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.SubjectResult;
 import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolResult;
@@ -704,10 +705,43 @@ public class AutocompleteService {
     /**
      * startDate and endDate required to get current studyPeriod in front end
      */
-    public List<StudyPeriodWithYearDto> studyPeriods(Long schoolId) {
+    public List<StudyPeriodWithYearIdDto> studyPeriods(Long schoolId) {
         List<StudyPeriod> data = em.createQuery("select sp from StudyPeriod sp where sp.studyYear.school.id = ?1", StudyPeriod.class)
                 .setParameter(1, schoolId).getResultList();
-        return StreamUtil.toMappedList(StudyPeriodWithYearDto::of, data);
+        return StreamUtil.toMappedList(StudyPeriodWithYearIdDto::of, data);
+    }
+    
+    public List<StudyPeriodWithYearDto> studyPeriodsWithYear(Long schoolId) {
+        List<?> data = em.createNativeQuery("select sp.id as sp_id, sp.name_et as sp_name_et, sp.name_en as sp_name_en"
+                + ", sp.type_code, sp.start_date as sp_start_date, sp.end_date as sp_end_date, sp.version"
+                + ", c.code, c.name_et as c_name_et, c.name_en as c_name_en, sy.id as sy_id"
+                + ", sy.start_date as sy_start_date, sy.end_date as sy_end_date, 0 as count"
+                + " from study_period sp"
+                + " join study_year sy on sy.id = sp.study_year_id"
+                + " join classifier c on sy.year_code = c.code"
+                + " where sy.school_id = ?1")
+                .setParameter(1, schoolId)
+                .getResultList();
+        return StreamUtil.toMappedList(r -> {
+            StudyPeriodWithYearDto dto = new StudyPeriodWithYearDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setNameEt(resultAsString(r, 1));
+            dto.setNameEn(resultAsString(r, 2));
+            dto.setType(resultAsString(r, 3));
+            dto.setStartDate(resultAsLocalDate(r, 4));
+            dto.setEndDate(resultAsLocalDate(r, 5));
+            dto.setVersion(resultAsLong(r, 6));
+            StudyYearSearchDto yearDto = new StudyYearSearchDto();
+            yearDto.setCode(resultAsString(r, 7));
+            yearDto.setNameEt(resultAsString(r, 8));
+            yearDto.setNameEn(resultAsString(r, 9));
+            yearDto.setId(resultAsLong(r, 10));
+            yearDto.setStartDate(resultAsLocalDate(r, 11));
+            yearDto.setEndDate(resultAsLocalDate(r, 12));
+            yearDto.setCount(resultAsLong(r, 13));
+            dto.setStudyYear(yearDto);
+            return dto;
+        }, data);
     }
 
     public List<StudyYearSearchDto> studyYears(Long schoolId) {

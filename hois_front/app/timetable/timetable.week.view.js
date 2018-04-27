@@ -2,7 +2,6 @@
   'use strict';
   var TIME_QUOTIENT = 15;
   var DAY_START_TIME = "7:00";
-  var DAY_END_TIME = "23:00";
   var ROW_HEIGHT = 22;
   var TOP = 50;
 
@@ -65,13 +64,6 @@
 
   function timetableDayMinutes() {
     var minutes = [];
-    /*var minutesInTimetableDay = moment.duration(moment(DAY_END_TIME, "HH:mm").diff(moment(DAY_START_TIME, "HH:mm"))).asMinutes();
-
-    for (var i = 0; i <= minutesInTimetableDay; i++) {
-      var minute = moment(DAY_START_TIME, "HH:mm").add(i, 'm');
-      var minuteString = moment(minute).format("HH:mm");
-      minutes[minuteString] = [];
-    }*/
     for(var i=7; i < 23; i++)
     {
       for(var j=0; j < 60; j++)
@@ -84,17 +76,16 @@
   }
 
   function overlappingEvents(scope, timetableEvents) {
-    var minutes;
+    var minute, minutes;
     var timetableEventsByDays = sortTimetableEventsByDays(scope, timetableEvents);
-    for(var w = 0; w < timetableEventsByDays.length; w++)
-    {
+    for(var w = 0; w < timetableEventsByDays.length; w++) {
       minutes = timetableDayMinutes();
       for (var i = 0; i < timetableEventsByDays[w].length; i++) {
         var event = timetableEventsByDays[w][i];
         var eventIsOverTime = moment(event.timeEnd, "HH:mm").add(-1, 'm').format("HH:mm");
         var eventTakesPlace = false;
 
-        for (var minute in minutes) {
+        for (minute in minutes) {
           if (event.timeStart === minute) {
             eventTakesPlace = true;
           } else if (eventIsOverTime === minute) {
@@ -108,7 +99,7 @@
       }
 
       //kui minutid sätitud, vaatame nüüd objektid üle
-      for (var minute in minutes) {
+      for (minute in minutes) {
         for(var x=0; x < minutes[minute].length; x++)
         {
           for(var t=0; t < scope.weekColumns[w].events.length; t++)

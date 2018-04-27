@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
@@ -45,12 +48,30 @@ public class JournalDto {
         JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto(), "studyYear", "journalTeachers", "journalStudents", "journalEntries", "journalRooms");
         dto.setStudyYear(EntityUtil.getCode(journal.getStudyYear().getYear()));
         dto.setStudyYearEndDate(journal.getStudyYear().getEndDate());
-        for (JournalOccupationModuleTheme theme : journal.getJournalOccupationModuleThemes()) {
-            dto.getStudentGroups().add(theme.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode());
-            dto.getCurriculumModules().add(AutocompleteResult.of(theme.getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule()));
-
-            JournalModuleDescriptionDto moduleDescription = EntityUtil.bindToDto(theme.getCurriculumVersionOccupationModuleTheme(), new JournalModuleDescriptionDto());
+        
+        if (journal.getJournalOccupationModuleThemes().get(0) != null) {
+            CurriculumVersionOccupationModule cvom = journal.getJournalOccupationModuleThemes().get(0).getCurriculumVersionOccupationModuleTheme().getModule();
+            CurriculumModule module = cvom.getCurriculumModule();
+            JournalModuleDescriptionDto moduleDescription = EntityUtil.bindToDto(cvom, new JournalModuleDescriptionDto());
+            moduleDescription.setNameEt(module.getNameEt());
+            moduleDescription.setNameEn(module.getNameEn());
+            moduleDescription.setIsModule(Boolean.TRUE);
+            moduleDescription.setAssessment(EntityUtil.getCode(cvom.getAssessment()));
             dto.moduleDescriptions.add(moduleDescription);
+        }
+        
+        for (JournalOccupationModuleTheme theme : journal.getJournalOccupationModuleThemes()) {
+            CurriculumVersionOccupationModuleTheme cvomt = theme.getCurriculumVersionOccupationModuleTheme();
+            
+            dto.getStudentGroups().add(theme.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode());
+            dto.getCurriculumModules().add(AutocompleteResult.of(cvomt.getModule().getCurriculumModule()));
+
+            if (cvomt.getAssessment() != null) {
+                JournalModuleDescriptionDto themeDescription = EntityUtil.bindToDto(cvomt, new JournalModuleDescriptionDto());
+                themeDescription.setIsModule(Boolean.FALSE);
+                themeDescription.setAssessment(EntityUtil.getCode(cvomt.getAssessment()));
+                dto.moduleDescriptions.add(themeDescription);
+            }
         }
         dto.setStudentGroups(dto.getStudentGroups().stream().distinct().collect(Collectors.toList()));
         dto.setCurriculumModules(dto.getCurriculumModules().stream().distinct().collect(Collectors.toList()));

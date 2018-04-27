@@ -11,6 +11,15 @@
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex flex-sm="100">
+            <label class="textInput">{{'finalExamProtocol.curriculum' | translate}}</label>
+            <md-select ng-model="formState.curriculum" ng-change="curriculumChanged()" required>
+              <md-option ng-repeat="curriculum in curriculums" ng-value="curriculum.id">{{currentLanguageNameField(curriculum)}}</md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex flex-sm="100">
             <label class="textInput">{{'finalExamProtocol.subject' | translate}}</label>
             <md-select ng-model="formState.subject" ng-change="subjectChanged()" required>
               <md-option ng-repeat="subject in formState.subjects" ng-value="subject">{{currentLanguageNameField(subject)}}</md-option>
@@ -31,16 +40,12 @@
                   <th md-column>
                     <span>{{'student.idcode' | translate}}</span>
                   </th>
-                  <th md-column>
-                    <span>{{'finalExamProtocol.curriculumCode' | translate}}</span>
-                  </th>
                 </tr>
               </thead>
               <tbody md-body>
                 <tr md-row md-select="row.studentId" ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>{{row.fullname}}</td>
                   <td md-cell>{{row.idcode}}</td>
-                  <td md-cell>{{currentLanguageNameField(row.curriculum)}}</td>
                 </tr>
               </tbody>
             </table>

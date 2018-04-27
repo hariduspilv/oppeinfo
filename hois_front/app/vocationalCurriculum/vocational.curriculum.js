@@ -3,6 +3,7 @@
 angular.module('hitsaOis')
   .controller('VocationalCurriculumController', function ($scope, Classifier, dialogService, ClassifierConnect, ArrayUtils,
     message, oisFileService, QueryUtils, $route, DataUtils, $location, Curriculum, $q, config, $rootScope, Session) {
+      var baseUrl = '/curriculum';
       var clMapper = Classifier.valuemapper({occupations: 'KUTSE', partOccupations: 'OSAKUTSE', specialities: 'SPETSKUTSE'});
       $scope.school = $route.current.locals.auth ? $route.current.locals.auth.school : null;
       var id = $route.current.params.id;
@@ -40,7 +41,7 @@ angular.module('hitsaOis')
         mapDtoToModel(curriculum, $scope);
       }
 
-      var CurriculumEndpoint = QueryUtils.endpoint('/curriculum');
+      var CurriculumEndpoint = QueryUtils.endpoint(baseUrl);
       var mapDtoToModel = function(response, scope) {
 
         $scope.formState.strictValidation = false;
@@ -135,6 +136,8 @@ angular.module('hitsaOis')
         occupationsLength: 0
     };
 
+    $scope.curriculumPdfUrl = config.apiUrl + baseUrl + '/print/' + id + '/general.pdf';
+    $scope.curriculumModulesPdfUrl = config.apiUrl + baseUrl + '/print/' + id + '/modules.pdf';
 
     $scope.$watchCollection('curriculum.curriculumOccupations', function() {
         $scope.validation.occupationsLength = $scope.curriculum && $scope.curriculum.curriculumOccupations ? $scope.curriculum.curriculumOccupations.length : 0;

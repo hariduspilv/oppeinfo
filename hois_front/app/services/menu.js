@@ -9,33 +9,39 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.academicCalendar.label',
         type: 'link',
-        url: "/academicCalendar"
+        url: "/academicCalendar",
+        icon: "date_range"
       });
 
       sections.push({
         name: 'main.menu.viewTimetable.label',
         type: 'link',
-        url: "/timetable/generalTimetableByGroup"
+        url: "/timetable/generalTimetableByGroup",
+        icon: "access_time"
       });
 
       sections.push({
         name: 'main.menu.curriculum.label', // todo curricula-vs-curriculums
         type: 'toggle',
+        icon: "format_list_bulleted",
         pages: [
           {
             name: 'main.menu.curriculum.schoolCurriculums',
-            url: "/curriculum?_menu"
+            url: "/curriculum?_menu",
+            icon: "format_list_bulleted"
           },
           {
             name: 'main.menu.curriculum.subjects',
             url: "/subject?_menu",
             studyLevel: {
               higher: true
-            }
+            },
+            icon: "subject"
           },
           {
             name: 'main.menu.curriculum.stateCurriculums',
             url: "/stateCurriculum?_menu",
+            icon: "playlist_add_check",
             studyLevel: {
               vocational: true
             }
@@ -46,18 +52,22 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.student.label',
         type: 'toggle',
+        icon: 'person',
         pages: [
           {
             name: 'main.menu.student.studentInfo',
-            url: '/students?_menu'
+            url: '/students?_menu',
+            icon: 'person'
           },
           {
             name: 'main.menu.student.studentGroups',
-            url: '/studentgroups?_menu'
+            url: '/studentgroups?_menu',
+            icon: "group"
           },
           {
             name: 'main.menu.student.absences',
             url: '/absences?_menu',
+            icon: "announcement",
             studyLevel: {
               vocational: true
             }
@@ -68,28 +78,34 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.teachers.label',
         type: 'link',
-        url: "/teachers?_menu"
+        url: "/teachers?_menu",
+        icon: "supervisor_account"
       });
 
       sections.push({
         name: 'main.menu.documents.label',
         type: 'toggle',
+        icon: "library_books",
         pages: [
           {
             name: 'main.menu.documents.applications',
             url: "/applications?_menu",
+            icon:"font_download"
           },
           {
             name: 'main.menu.documents.directives',
-            url: "/directives?_menu"
+            url: "/directives?_menu",
+            icon:"description"
           },
           {
             name: 'main.menu.documents.certificates',
-            url: '/certificate?_menu'
+            url: '/certificate?_menu',
+            icon:"folder_shared"
           },
           {
             name: 'main.menu.scholarships.grantApplications',
             url: "/scholarships/applications/grants?_menu",
+            icon:"euro_symbol",
             studyLevel: {
               vocational: true
             }
@@ -97,6 +113,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.scholarships.scholarshipApplications',
             url: "/scholarships/applications/scholarships?_menu",
+            icon:"euro_symbol",
             studyLevel: {
               higher: true
             }
@@ -104,17 +121,20 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.scholarships.drGrantApplications',
             url: "/scholarships/applications/drGrants?_menu",
+            icon:"functions",
             studyLevel: {
               doctoral: true
             }
           },
           {
             name: 'main.menu.documents.practiceContracts',
-            url: "/contracts?_menu"
+            url: "/contracts?_menu",
+            icon:"assignment"
           },
           {
             name: 'main.menu.documents.representativeApplications',
             url: "/studentrepresentatives/applications?_menu",
+            icon:"explicit"
           }
         ]
       });
@@ -122,10 +142,12 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.study.label',
         type: 'toggle',
+        icon: "work",
         pages: [
           {
             name: 'main.menu.study.declarations',
             url: "/declarations?_menu",
+            icon:"perm_contact_calendar",
             studyLevel: {
               higher: true
             }
@@ -133,17 +155,20 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.study.journal.journalsVocational',
             url: "/journals?_menu",
+            icon:"chrome_reader_mode",
             studyLevel: {
               vocational: true
             }
           },
           {
             name: 'main.menu.study.practiceJournal.label',
-            url: "/practiceJournals?_menu"
+            url: "/practiceJournals?_menu",
+            icon:"assignment_ind"
           },
           {
             name: 'main.menu.study.material.higher',
             url: "/studyMaterial/higher?_menu",
+            icon:"attach_file",
             studyLevel: {
               higher: true
             }
@@ -151,6 +176,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.study.material.vocational',
             url: "/studyMaterial/vocational?_menu",
+            icon:"attach_file",
             studyLevel: {
               vocational: true
             }
@@ -158,6 +184,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.study.examTimes',
             url: '/examTimes?_menu',
+            icon:"watch",
             studyLevel: {
               higher: true
             }
@@ -165,6 +192,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.study.moduleProtocol.label',
             url: "/moduleProtocols?_menu",
+            icon:"border_color",
             studyLevel: {
               vocational: true
             }
@@ -172,13 +200,15 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.study.protocol.search',
             url: "/higherProtocols?_menu",
+            icon:"create",
             studyLevel: {
               higher: true
             }
           },
           {
             name: 'main.menu.documents.apel',
-            url: "/apelApplication?_menu"
+            url: "/apelApplication?_menu",
+            icon:"transfer_within_a_station"
           }
         ]
       });
@@ -186,10 +216,12 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.studyPreparation.label',
         type: 'toggle',
+        icon: "settings",
         pages: [
           {
             name: 'main.menu.studyPreparation.subjectTeacher',
             url: '/subjectStudyPeriods?_menu',
+            icon:"nature_people",
             studyLevel: {
               higher: true
             }
@@ -197,6 +229,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.studyPreparation.studyYearSchedule.legend',
             url: "/studyYearScheduleLegend?_menu",
+            icon:"event_note",
             studyLevel: {
               vocational: true
             }
@@ -204,6 +237,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.studyPreparation.studyYearSchedule.edit',
             url: "/studyYearSchedule?_menu",
+            icon:"event_available",
             studyLevel: {
               vocational: true
             }
@@ -211,12 +245,14 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.studyPreparation.lessonTime',
             id: 'timetableLessonTimeSearch',
-            url: "/timetable/lessonTime/search?_menu"
+            url: "/timetable/lessonTime/search?_menu",
+            icon:"notifications_active"
           },
           {
             name: 'main.menu.studyPreparation.lessonplans.vocational',
             id: 'timetableLessonTimeSearch',
             url: "/lessonplans/vocational?_menu",
+            icon:"zoom_out_map",
             studyLevel: {
               vocational: true
             }
@@ -224,6 +260,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.studyPreparation.subjectStudyPeriods.plans',
             url: "/subjectStudyPeriodPlans?_menu",
+            icon:"fitness_center",
             studyLevel: {
               higher: true
             }
@@ -231,17 +268,20 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.studyPreparation.subjectStudyPeriods.label',
             url: "/subjectStudyPeriods/studentGroups?_menu",
+            icon:"open_with",
             studyLevel: {
               higher: true
             }
           },
           {
             name: 'main.menu.studyPreparation.timetableManagement.label',
-            url: "/timetable/timetableManagement?_menu"
+            url: "/timetable/timetableManagement?_menu",
+            icon:"update"
           },
           {
             name: 'main.menu.studyPreparation.events.label',
-            url: "/lessonplans/events?_menu"
+            url: "/lessonplans/events?_menu",
+            icon:"star_border"
           }
         ]
       });
@@ -249,26 +289,32 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.reports.label',
         type: 'toggle',
+        icon: "search",
         pages: [
           {
             name: 'main.menu.reports.students',
-            url: "/reports/students/students?_menu"
+            url: "/reports/students/students?_menu",
+            icon:"person"
           },
           {
             name: 'main.menu.reports.studentstatistics',
-            url: "/reports/students/statistics?_menu"
+            url: "/reports/students/statistics?_menu",
+            icon:"blur_circular"
           },
           {
             name: 'main.menu.reports.studentstatisticsbyperiod',
-            url: "/reports/students/statistics/byperiod?_menu"
+            url: "/reports/students/statistics/byperiod?_menu",
+            icon:"equalizer"
           },
           {
             name: 'main.menu.reports.curriculumscompletion',
-            url: "/reports/curriculums/completion?_menu"
+            url: "/reports/curriculums/completion?_menu",
+            icon:"perm_contact_calendar"
           },
           {
             name: 'main.menu.reports.teachersloadvocational',
             url: "/reports/teachers/load/vocational?_menu",
+            icon:"grain",
             studyLevel: {
               vocational: true
             }
@@ -276,13 +322,15 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.reports.teachersloadhigher',
             url: "/reports/teachers/load/higher?_menu",
+            icon:"gradient",
             studyLevel: {
               higher: true
             }
           },
           {
             name: 'main.menu.reports.vota',
-            url: "/reports/vota?_menu"
+            url: "/reports/vota?_menu",
+            icon:"transfer_within_a_station"
           }
         ]
       });
@@ -290,34 +338,42 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.graduation.label',
         type: 'toggle',
+        icon: "school",
         pages: [
           {
             name: 'main.menu.graduation.committees',
-            url: "/committees?_menu"
+            url: "/committees?_menu",
+            icon:"record_voice_over"
           },
           {
             name: 'main.menu.graduation.thesisTopics',
             url: "/thesisTopics",
+            icon:"receipt"
           },
           {
             name: 'main.menu.graduation.thesisProtocols',
             url: "/thesisProtocols",
+            icon:"check_circle"
           },
           {
             name: 'main.menu.graduation.forms',
             url: "/forms",
+            icon:"format_bold"
           },
           {
             name: 'main.menu.graduation.documentsPreparation',
-            url: "/documentsPreparation"
+            url: "/documentsPreparation",
+            icon:"payment"
           },
           {
             name: 'main.menu.graduation.documentsPrint',
-            url: "/documentsPrint"
+            url: "/documentsPrint",
+            icon:"print"
           },
           {
             name: 'main.menu.graduation.finalExamProtocolsHigher',
             url: "/finalExamHigherProtocols?_menu",
+            icon:"create",
             studyLevel: {
               higher: true
             }
@@ -325,6 +381,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.graduation.finalExamProtocolsVocational',
             url: "/finalExamVocationalProtocols?_menu",
+            icon:"border_color",
             studyLevel: {
               vocational: true
             }
@@ -335,11 +392,13 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.dataexchange.label',
         type: 'toggle',
+        icon: "swap_vert",
         pages: [
           {
             name: 'main.menu.dataexchange.teacherinfoExportHigher',
             id: 'teacherinfoExport',
             url: "/ehis/teacher/export/higher?_menu",
+            icon:"account_box",
             studyLevel: {
               higher: true
             }
@@ -348,47 +407,56 @@ angular.module('hitsaOis')
             name: 'main.menu.dataexchange.teacherinfoExportVocational',
             id: 'teacherinfoExport',
             url: "/ehis/teacher/export/vocational?_menu",
+            icon:"account_circle",
             studyLevel: {
               vocational: true
             }
           },
           {
             name: 'main.menu.dataexchange.studentinfoExport',
-            url: "/ehis/student/export?_menu"
+            url: "/ehis/student/export?_menu",
+            icon:"person"
           },
           {
             name: 'main.menu.dataexchange.kutseregister',
             url: "/occupationcertificate/import?_menu",
+            icon:"android",
             studyLevel: {
               vocational: true
             }
           },
           {
             name: 'main.menu.dataexchange.rtip',
-            url: "/rtip/sync?_menu"
+            url: "/rtip/sync?_menu",
+            icon:"weekend"
           },
           {
             name: 'main.menu.dataexchange.ehisLogs',
-            url: "/ehis/logs?_menu"
+            url: "/ehis/logs?_menu",
+            icon:"view_list"
           },
           {
             name: 'main.menu.dataexchange.ekisLogs',
-            url: "/ekis/logs?_menu"
+            url: "/ekis/logs?_menu",
+            icon:"view_stream"
           },
           {
             name: 'main.menu.dataexchange.kutseregisterLogs',
             url: "/kutseregister/logs?_menu",
+            icon:"view_day",
             studyLevel: {
               vocational: true
             }
           },
           {
             name: 'main.menu.dataexchange.rtipLogs',
-            url: "/rtip/logs?_menu"
+            url: "/rtip/logs?_menu",
+            icon:"view_array"
           },
           {
             name: 'main.menu.dataexchange.saisLogs',
-            url: "/sais/logs?_menu"
+            url: "/sais/logs?_menu",
+            icon:"view_module"
           }
         ]
       });
@@ -396,26 +464,31 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.reception.label',
         type: 'toggle',
+        icon: "group_add",
         pages: [
           {
             name: 'main.menu.reception.saisAdmission.label',
             id: 'receptionSaisAdmissionSearch',
-            url: "/reception/saisAdmission/search?_menu"
+            url: "/reception/saisAdmission/search?_menu",
+            icon:"brightness_high"
           },
           {
             name: 'main.menu.reception.saisApplication.label',
             id: 'receptionSaisApplicationSearch',
-            url: "/reception/saisApplication/search?_menu"
+            url: "/reception/saisApplication/search?_menu",
+            icon:"spellcheck"
           },
           {
             name: 'main.menu.reception.saisAdmission.importSais',
             id: 'receptionSaisAdmissionImport',
-            url: "/reception/saisAdmission/import?_menu"
+            url: "/reception/saisAdmission/import?_menu",
+            icon:"brightness_low"
           },
           {
             name: 'main.menu.reception.saisApplication.importSais',
             id: 'receptionSaisApplicationImport',
-            url: "/reception/saisApplication/import?_menu"
+            url: "/reception/saisApplication/import?_menu",
+            icon:"brightness_auto"
           },
         ]
       });
@@ -423,22 +496,27 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.settings.label',
         type: 'toggle',
+        icon: "build",
         pages: [
           {
             name: 'main.menu.settings.studyYears',
-            url: "/school/studyYears"
+            url: "/school/studyYears",
+            icon:"format_align_center"
           },
           {
             name: 'main.menu.settings.studyLevels',
-            url: "/school/studyLevels"
+            url: "/school/studyLevels",
+            icon:"layers"
           },
           {
             name: 'main.menu.settings.generalmessages',
-            url: "/generalmessages?_menu"
+            url: "/generalmessages?_menu",
+            icon:"notifications_none"
           },
           {
             name: 'main.menu.scholarships.grants',
             url: "/scholarships/grants?_menu",
+            icon:"euro_symbol",
             studyLevel: {
               vocational: true
             }
@@ -446,6 +524,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.scholarships.scholarships',
             url: "/scholarships/scholarships?_menu",
+            icon:"euro_symbol",
             studyLevel: {
               higher: true
             }
@@ -453,42 +532,51 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.scholarships.drGrants',
             url: "/scholarships?_menu",
+            icon:"functions",
             studyLevel: {
               doctoral: true
             }
           },
           {
             name: 'main.menu.settings.messageTemplates',
-            url: "/messageTemplate?_menu"
+            url: "/messageTemplate?_menu",
+            icon:"blur_linear"
           },
           {
             name: 'main.menu.settings.documentcoordinators',
-            url: "/directives/coordinators?_menu"
+            url: "/directives/coordinators?_menu",
+            icon:"recent_actors"
           },
           {
             name: 'main.menu.settings.teacheroccupations',
-            url: "/school/teacheroccupations?_menu"
+            url: "/school/teacheroccupations?_menu",
+            icon:"business_center"
           },
           {
             name: 'main.menu.settings.buildings',
-            url: "/rooms/search?_menu"
+            url: "/rooms/search?_menu",
+            icon:"business"
           },
           {
             name: 'main.menu.settings.departments',
-            url: "/school/departments?_menu"
+            url: "/school/departments?_menu",
+            icon:"device_hub"
           },
           {
             name: 'main.menu.settings.users',
             id: 'users',
-            url: "/persons?_menu"
+            url: "/persons?_menu",
+            icon:"wc"
           },
           {
             name: 'main.menu.settings.apelSchools',
-            url: "/apelSchools?_menu"
+            url: "/apelSchools?_menu",
+            icon:"location_city"
           },
           {
             name: 'main.menu.settings.studentGroupYearTransfer',
-            url: "/studentGroupYearTransfer?_menu"
+            url: "/studentGroupYearTransfer?_menu",
+            icon:"sync"
           }
         ]
       });
@@ -499,12 +587,14 @@ angular.module('hitsaOis')
         name: 'main.menu.curriculums.label',
         url: "/curriculum?_menu",
         type: 'link',
+        icon: "format_list_bulleted"
       });
 
       sections.push({
         name: 'main.menu.subjects.label',
         url: "/subject?_menu",
         type: 'link',
+        icon: "subject",
         studyLevel: {
           higher: true
         }
@@ -513,14 +603,17 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.timetableAndEvents.label',
         type: 'toggle',
+        icon: "access_time",
         pages: [
           {
             name: 'main.menu.timetableAndEvents.timetable',
-            url: "/timetable/personalGeneralTimetable?_menu"
+            url: "/timetable/personalGeneralTimetable?_menu",
+            icon: "access_time"
           },
           {
             name: 'main.menu.timetableAndEvents.events',
-            url: "/lessonplans/events?_menu"
+            url: "/lessonplans/events?_menu",
+            icon: "star_border"
           }
         ]
       });
@@ -528,40 +621,46 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.myData.label',
         url: "/teachers/myData",
-        type: 'link'
+        type: 'person_outline'
       });
 
       sections.push({
         name: 'main.menu.academicCalendar.label',
         type: 'link',
-        url: "/academicCalendar"
+        url: "/academicCalendar",
+        icon: "date_range"
       });
 
       sections.push({
         name: 'main.menu.study.label',
         type: 'toggle',
+        icon: "work",
         pages: [
           {
             name: 'main.menu.study.examTimes',
             url: "/examTimes?_menu",
+            icon: "watch",
             studyLevel: {
               higher: true
             }
           },
           {
             name: 'main.menu.study.absences',
-            url: "/absences?_menu"
+            url: "/absences?_menu",
+            icon: "announcement"
           },
           {
             name: 'main.menu.study.journal.journalsVocational',
             url: "/journals?_menu",
+            icon: "chrome_reader_mode",
             studyLevel: {
               vocational: true
             }
           },
           {
-            name: 'main.menu.study.journal.journalsHigher',
+            name: 'main.menu.study.subjectTeacher',
             url: "/subjectStudyPeriods?_menu",
+            icon: "nature_people",
             studyLevel: {
               higher: true
             }
@@ -569,6 +668,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.study.material.higher',
             url: "/studyMaterial/higher?_menu",
+            icon: "attach_file",
             studyLevel: {
               higher: true
             }
@@ -576,6 +676,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.study.material.vocational',
             url: "/studyMaterial/vocational?_menu",
+            icon: "attach_file",
             studyLevel: {
               vocational: true
             }
@@ -586,11 +687,13 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.study.students',
-            url: "/students?_menu"
+            url: "/students?_menu",
+            icon: 'person'
           },
           {
             name: 'main.menu.study.moduleProtocol.label',
             url: "/moduleProtocols?_menu",
+            icon: "border_color",
             studyLevel: {
               vocational: true
             }
@@ -598,6 +701,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.study.protocol.search',
             url: "/higherProtocols?_menu",
+            icon: "create",
             studyLevel: {
               higher: true
             }
@@ -608,26 +712,32 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.practiceAndGraduation.label',
         type: 'toggle',
+        icon: "school",
         pages: [
           {
             name: 'main.menu.practiceAndGraduation.practiceJournals',
-            url: '/practiceJournals?_menu'
+            url: '/practiceJournals?_menu',
+            icon: "assignment_ind"
           },
           {
             name: 'main.menu.practiceAndGraduation.committees',
-            url: '/committees?_menu'
+            url: '/committees?_menu',
+            icon: "record_voice_over"
           },
           {
             name: 'main.menu.practiceAndGraduation.thesisProtocols',
-            url: '/thesisProtocols'
+            url: '/thesisProtocols',
+            icon: "check_circle"
           },
           {
             name: 'main.menu.practiceAndGraduation.thesisTopics',
-            url: '/thesisTopics'
+            url: '/thesisTopics',
+            icon: "receipt"
           },
           {
             name: 'main.menu.graduation.finalExamProtocolsHigher',
             url: "/finalExamHigherProtocols",
+            icon: "create",
             studyLevel: {
               higher: true
             }
@@ -635,6 +745,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.graduation.finalExamProtocolsVocational',
             url: "/finalExamVocationalProtocols",
+            icon: "border_color",
             studyLevel: {
               vocational: true
             }
@@ -647,10 +758,12 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.curriculum.label',
         type: 'toggle',
+        icon: "list",
         pages: [
           {
             name: 'main.menu.curriculum.stateCurriculums',
-            url: "/stateCurriculum?_menu"
+            url: "/stateCurriculum?_menu",
+            icon: "list"
           },
         ]
       });
@@ -689,7 +802,8 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.timetableLink.label',
         type: 'link',
-        url: '/timetable/generalTimetableByGroup?_menu'
+        url: '/timetable/generalTimetableByGroup?_menu',
+        icon: "access_time"
       });
     }
 
@@ -697,7 +811,8 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.curriculums.label',
         url: "/curriculum?_menu",
-        type: 'link'
+        type: 'link',
+        icon: "format_list_bulleted"
       });
 
       sections.push({
@@ -706,49 +821,58 @@ angular.module('hitsaOis')
         type: 'link',
         studyLevel: {
           higher: true
-        }
+        },
+        icon: "subject"
       });
 
       sections.push({
         name: 'main.menu.timetableLink.label',
         type: 'link',
-        url: '/timetable/personalGeneralTimetable?_menu'
+        url: '/timetable/personalGeneralTimetable?_menu',
+        icon: "access_time"
       });
 
       sections.push({
         name: 'main.menu.myData.label',
         url: "/students/myData",
-        type: 'link'
+        type: 'link',
+        icon:"person_outline"
       });
 
       sections.push({
         name: 'main.menu.academicCalendar.label',
         type: 'link',
-        url: "/academicCalendar"
+        url: "/academicCalendar",
+        icon: "date_range"
       });
 
       sections.push({
         name: 'main.menu.myStudyInformation.label',
         type: 'toggle',
+        icon:"work",
         pages: [
           {
             name: 'main.menu.myStudyInformation.journal',
             url: '/students/journals',
+            icon:"chrome_reader_mode",
             studyLevel: {
               vocational: true
             }
           },
           {
             name: 'main.menu.myStudyInformation.practiceJournals',
-            url: '/practiceJournals?_menu'
+            url: '/practiceJournals?_menu',
+            icon:"assignment_ind"
           },
           {
             name: 'main.menu.myStudyInformation.results',
-            url: '/students/myResults'
+            url: '/students/myResults',
+            icon:"timeline"
           },
           {
             name: 'main.menu.myStudyInformation.declaration',
             url: '/declaration/current/view',
+            icon:"perm_contact_calendar",
             studyLevel: {
               higher: true
             }
@@ -756,17 +880,20 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.myStudyInformation.examRegistration',
             url: '/examRegistration?_menu',
+            icon:"border_color",
             studyLevel: {
               higher: true
             }
           },
           {
             name: 'main.menu.myStudyInformation.thesisTopicInput',
-            url: '/thesisTopicInput'
+            url: '/thesisTopicInput',
+            icon:"receipt"
           },
           {
             name: 'main.menu.myStudyInformation.otherStudents',
-            url: '/students?_menu'
+            url: '/students?_menu',
+            icon:"person"
           }
         ]
       });
@@ -776,22 +903,27 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.documents.label',
         type: 'toggle',
+        icon:"library_books",
         pages: [
           {
             name: 'main.menu.documents.applications',
             url: "/applications/student?_menu",
+            icon:"font_download"
           },
           {
             name: 'main.menu.documents.certificates',
-            url: '/certificate?_menu'
+            url: '/certificate?_menu',
+            icon:"folder_shared"
           },
           {
             name: 'main.menu.documents.practiceContracts',
-            url: "/contracts?_menu"
+            url: "/contracts?_menu",
+            icon:"assignment"
           },
           {
             name: 'main.menu.documents.apel',
-            url: "/apelApplication?_menu"
+            url: "/apelApplication?_menu",
+            icon:"transfer_within_a_station"
           }
         ]
       });
@@ -801,21 +933,25 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.curriculum.label', // todo curricula-vs-curriculums
         type: 'toggle',
+        icon: "format_list_bulleted",
         pages: [
           {
             name: 'main.menu.curriculum.schoolCurriculums',
-            url: "/curriculum?_menu"
+            url: "/curriculum?_menu",
+            icon: "format_list_bulleted"
           },
           {
             name: 'main.menu.curriculum.stateCurriculums',
             url: "/stateCurriculum?_menu",
+            icon: "playlist_add_check"
           },
         ]
       });
       sections.push({
         name: 'main.menu.teachers.label',
         type: 'link',
-        url: "/teachers?_menu"
+        url: "/teachers?_menu",
+        icon: "supervisor_account"
       });
     }
 
@@ -824,6 +960,7 @@ angular.module('hitsaOis')
         name: 'main.menu.curriculums.label',
         url: "/curriculum?_menu",
         type: 'link',
+        icon: "format_list_bulleted"
       });
 
       sections.push({
@@ -832,45 +969,53 @@ angular.module('hitsaOis')
         type: 'link',
         studyLevel: {
           higher: true
-        }
+        },
+        icon:"subject"
       });
 
       sections.push({
         name: 'main.menu.timetableLink.label',
         type: 'link',
-        url: '/timetable/personalGeneralTimetable?_menu'
+        url: '/timetable/personalGeneralTimetable?_menu',
+        icon: "access_time"
       });
 
       sections.push({
         name: 'main.menu.studentRepresentative.label',
         type: 'link',
-        url: '/students/myData'
+        url: '/students/myData',
+        icon:"person_outline"
       });
 
       sections.push({
         name: 'main.menu.academicCalendar.label',
         type: 'link',
-        url: "/academicCalendar"
+        url: "/academicCalendar",
+        icon: "date_range"
       });
 
       sections.push({
         name: 'main.menu.studentStudyInformation.label',
         type: 'toggle',
+        icon:"work",
         pages: [
           {
             name: 'main.menu.studentStudyInformation.journal',
             url: '/students/journals',
+            icon:"chrome_reader_mode",
             studyLevel: {
               vocational: true
             }
           },
           {
             name: 'main.menu.studentStudyInformation.practiceJournal',
-            url: "/practiceJournals?_menu"
+            url: "/practiceJournals?_menu",
+            icon:"assignment_ind"
           },
           {
             name: 'main.menu.studentStudyInformation.results',
-            url: '/students/myResults'
+            url: '/students/myResults',
+            icon:"timeline"
           }
         ]
       });
@@ -878,14 +1023,17 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.documents.label',
         type: 'toggle',
+        icon:"library_books",
         pages: [
           {
             name: 'main.menu.documents.applications',
             url: "/applications/student?_menu",
+            icon:"font_download"
           },
           {
             name: 'main.menu.documents.certificates',
-            url: '/certificate?_menu'
+            url: '/certificate?_menu',
+            icon:"folder_shared"
           }
         ]
       });
@@ -895,19 +1043,22 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.academicCalendar.label',
         type: 'link',
-        url: "/academicCalendars"
+        url: "/academicCalendars",
+        icon: "date_range"
       });
 
       sections.push({
         name: 'main.menu.timetableLink.label',
         type: 'link',
-        url: "/timetables"
+        url: "/timetables",
+        icon: "access_time"
       });
 
       sections.push({
         name: 'main.menu.curriculums.label',
         type: 'link',
-        url: "/curriculums?_menu"
+        url: "/curriculums?_menu",
+        icon: "list"
       });
     }
 
@@ -920,12 +1071,14 @@ angular.module('hitsaOis')
         result.push({
           name: 'main.menu.scholarships.scholarships',
           type: 'link',
-          url: "/scholarships/myData/scholarships?_menu"
+          url: "/scholarships/myData/scholarships?_menu",
+          icon:"euro_symbol"
         });
         result.push({
           name: 'main.menu.scholarships.drGrants',
           type: 'link',
           url: "/scholarships/myData/drGrants?_menu",
+          icon:"functions",
           studyLevel: {
             doctoral: true
           }
@@ -934,6 +1087,7 @@ angular.module('hitsaOis')
         result.push({
           name: 'main.menu.scholarships.grants',
           type: 'link',
+          icon:"euro_symbol",
           url: "/scholarships/myData/grants?_menu"
         });
       }
@@ -1076,7 +1230,8 @@ angular.module('hitsaOis')
         menu.push({
           name: section.name,
           type: 'toggle',
-          pages: pages
+          pages: pages,
+          icon: section.icon
         });
       }
     }
@@ -1092,7 +1247,8 @@ angular.module('hitsaOis')
       menu.push({
         name: section.name,
         type: section.type,
-        url: section.url
+        url: section.url,
+        icon: section.icon
       });
     }
 
@@ -1107,7 +1263,8 @@ angular.module('hitsaOis')
       pages.push({
         name: section.name,
         id: section.id,
-        url: section.url
+        url: section.url,
+        icon: section.icon
       });
     }
 

@@ -130,11 +130,11 @@ public class ModuleProtocolController {
         return autocompleteService.teachers(user.getSchoolId(), new TeacherAutocompleteCommand(), false);
     }
 
-    @GetMapping("occupationModule/{curriculumVersionOccupationModuleId:\\d+}")
-    public ModuleProtocolOccupationalModuleDto occupationModule(HoisUserDetails user,
+    @GetMapping("occupationModule/{studyYearId:\\d+}/{curriculumVersionOccupationModuleId:\\d+}")
+    public ModuleProtocolOccupationalModuleDto occupationModule(HoisUserDetails user, @PathVariable Long studyYearId,
             @PathVariable Long curriculumVersionOccupationModuleId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return moduleProtocolService.occupationModule(user, curriculumVersionOccupationModuleId);
+        return moduleProtocolService.occupationModule(user, studyYearId, curriculumVersionOccupationModuleId);
     }
 
     @GetMapping("/{id:\\d+}/otherStudents")

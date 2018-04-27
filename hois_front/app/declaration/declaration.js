@@ -132,7 +132,7 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
 }]).controller('DeclarationViewController', ['$scope', 'dialogService', 'QueryUtils', 'message', 'ArrayUtils', '$route', '$location', function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $location) {
 
   var id = $route.current.params.id;
-
+  $scope.currentDeclarationPage = $location.path() === '/declaration/current/view';
   $scope.auth = $route.current.locals.auth;
   var ConfirmEndPoint = QueryUtils.endpoint('/declarations/confirm');
 

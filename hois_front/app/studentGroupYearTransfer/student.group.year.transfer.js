@@ -118,6 +118,7 @@ angular.module('hitsaOis').controller('StudentGroupYearTransferController', ['$s
           var calculated = result[studentGroup.id];
           if (calculated) {
             studentGroup.logId = calculated.logId;
+            studentGroup.relatedStudents = calculated.suitableStudents + calculated.unsuitableStudents;
             studentGroup.suitableStudents = calculated.suitableStudents;
             studentGroup.unsuitableStudents = calculated.unsuitableStudents;
             calculated.mismatchingStudents.forEach(function(student) {

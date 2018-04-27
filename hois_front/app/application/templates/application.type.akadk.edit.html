@@ -2,38 +2,38 @@
   <div class="form-readonly">
     <md-input-container flex="60" flex-sm="100" flex-xs="100">
       <label>{{'application.reason' | translate}}</label>
-      <hois-classifier-value ng-model="application.academicApplication.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
+      <hois-classifier-value ng-model="application.validAcademicLeave.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
     </md-input-container>
   </div>
 
-  <div ng-show="!application.academicApplication.directiveStudent.isPeriod" layout="row" layout-xs="column" class="form-readonly">
+  <div ng-show="!application.validAcademicLeave.isPeriod" layout="row" layout-xs="column" class="form-readonly">
     <md-input-container  flex="20" flex-sm="100" flex-xs="100">
       <label>{{'application.academicLeaveStart' | translate}}</label>
-      <hois-value value="application.academicApplication.directiveStudent.startDate | hoisDate"></hois-value>
+      <hois-value value="application.validAcademicLeave.startDate | hoisDate"></hois-value>
     </md-input-container>
 
     <md-input-container style="margin-left: 0px" flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
       <label>{{'application.academicLeaveEnd' | translate}}</label>
-      <hois-value value="application.academicApplication.directiveStudent.endDate | hoisDate"></hois-value>
+      <hois-value value="application.validAcademicLeave.endDate | hoisDate"></hois-value>
     </md-input-container>
   </div>
 
-  <div ng-show="application.academicApplication.directiveStudent.isPeriod" layout="row" layout-xs="column">
+  <div ng-show="application.validAcademicLeave.isPeriod" layout="row" layout-xs="column">
     <md-input-container  flex="20" flex-sm="100" flex-xs="100">
       <label>{{'application.academicLeaveStart' | translate}}</label>
-      <hois-select ng-model="application.academicApplication.directiveStudent.studyPeriodStart" values="studyPeriods" disabled></hois-select>
+      <hois-select ng-model="application.validAcademicLeave.studyPeriodStart" values="studyPeriods" disabled></hois-select>
     </md-input-container>
     <md-input-container  flex="20" flex-sm="100" flex-xs="100">
       <label>{{'application.academicLeaveEnd' | translate}}</label>
-      <hois-select ng-model="application.academicApplication.directiveStudent.studyPeriodEnd" values="studyPeriods" disabled></hois-select>
+      <hois-select ng-model="application.validAcademicLeave.studyPeriodEnd" values="studyPeriods" disabled></hois-select>
     </md-input-container>
   </div>
 
   <md-input-container  flex="20" flex-sm="100" flex-xs="100">
     <label>{{'application.academicLeaveRevocationDate' | translate}}</label>
     <md-datepicker ng-model="application.startDate" md-open-on-focus
-      md-min-date="application.academicApplication.directiveStudent.startDate"
-      md-max-date="application.academicApplication.directiveStudent.endDate"
+      md-min-date="application.validAcademicLeave.startDate"
+      md-max-date="application.validAcademicLeave.endDate"
       required></md-datepicker>
   </md-input-container>
 </div>

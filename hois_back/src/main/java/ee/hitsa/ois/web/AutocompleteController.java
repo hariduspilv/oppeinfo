@@ -41,6 +41,7 @@ import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithLogo;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithYearIdDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.SubjectResult;
 import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolResult;
@@ -200,8 +201,13 @@ public class AutocompleteController {
     }
 
     @GetMapping("/studyPeriods")
-    public List<StudyPeriodWithYearDto> studyPeriods(HoisUserDetails user) {
+    public List<StudyPeriodWithYearIdDto> studyPeriods(HoisUserDetails user) {
         return autocompleteService.studyPeriods(user.getSchoolId());
+    }
+
+    @GetMapping("/studyPeriodsWithYear")
+    public List<StudyPeriodWithYearDto> studyPeriodsWithYear(HoisUserDetails user) {
+        return autocompleteService.studyPeriodsWithYear(user.getSchoolId());
     }
 
     @GetMapping("/studyYears")

@@ -39,11 +39,15 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     });
   }
 
+  function studyPeriodDisplay(studyPeriod) {
+    return $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+  }
+
   $scope.studyPeriodView = function (studyPeriodId) {
     if (angular.isArray($scope.studyPeriods) && angular.isNumber(studyPeriodId)) {
       for (var i = 0; i < $scope.studyPeriods.length; i++) {
         if ($scope.studyPeriods[i].id === studyPeriodId) {
-          return $scope.currentLanguageNameField($scope.studyPeriods[i]);
+          return studyPeriodDisplay($scope.studyPeriods[i]);
         }
       }
     }
@@ -126,12 +130,18 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     if ($scope.isCreate) {
       $scope.application.isPeriod = true;
     }
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, loadFormDeferred.resolve);
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({},
+    function (studyPeriods) {
+      studyPeriods.forEach(function (studyPeriod) {
+        studyPeriod.display = studyPeriodDisplay(studyPeriod);
+      });
+      loadFormDeferred.resolve();
+    });
     $scope.curriculumVersion = student.curriculumVersion;
   }
 
   function applicationAkadk(loadFormDeferred) {
-    DataUtils.convertStringToDates($scope.application.academicApplication.directiveStudent, ['startDate', 'endDate']);
+    DataUtils.convertStringToDates($scope.application.validAcademicLeave, ['startDate', 'endDate']);
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, loadFormDeferred.resolve);
   }
 
@@ -209,11 +219,11 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       });
     } else if (type === 'AVALDUS_LIIK_AKADK') {
       if ($scope.isCreate) {
-        QueryUtils.endpoint('/applications/student/' + studentId + '/validAcademicLeave').search(function (academicLeaveApplication) {
-          if (!angular.isObject(academicLeaveApplication) || !angular.isNumber(academicLeaveApplication.id)) {
+        QueryUtils.endpoint('/applications/student/' + studentId + '/validAcademicLeave').search(function (validAcademicLeave) {
+          if (!angular.isObject(validAcademicLeave) || !angular.isNumber(validAcademicLeave.id)) {
             loadFormDeferred.reject('application.messages.academicLeaveApplicationNotfound');
           } else {
-            $scope.application.academicApplication = academicLeaveApplication;
+            $scope.application.validAcademicLeave = validAcademicLeave;
             applicationAkadk(loadFormDeferred);
           }
         });

@@ -5,6 +5,7 @@ import java.util.List;
 
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
@@ -26,10 +27,11 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
         if (application == null) {
             return null;
         }
-        ApelApplicationDto dto = EntityUtil.bindToDto(application, new ApelApplicationDto(), "record", "files");
+        ApelApplicationDto dto = EntityUtil.bindToDto(application, new ApelApplicationDto(), "record", "files", "confirmedBy");
         dto.setRecords(StreamUtil.toMappedList(ApelApplicationRecordDto::of, application.getRecords()));
         dto.setComments(StreamUtil.toMappedList(ApelApplicationCommentDto::of, application.getComments()));
         dto.setFiles(StreamUtil.toMappedList(ApelApplicationFileDto::of, application.getFiles()));
+        dto.setConfirmedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(application.getConfirmedBy()));
         return dto;
     }
 

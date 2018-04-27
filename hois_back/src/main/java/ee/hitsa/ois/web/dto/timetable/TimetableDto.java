@@ -3,13 +3,13 @@ package ee.hitsa.ois.web.dto.timetable;
 import java.time.LocalDate;
 import java.util.List;
 
-import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithYearIdDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 
 public class TimetableDto {
     private Long id;
     private List<StudyYearSearchDto> studyYears;
-    private List<StudyPeriodWithYearDto> studyPeriods;
+    private List<StudyPeriodWithYearIdDto> studyPeriods;
     private Long currentStudyPeriod;
     private String code;
     private LocalDate startDate;
@@ -37,11 +37,11 @@ public class TimetableDto {
         this.studyYears = studyYears;
     }
 
-    public List<StudyPeriodWithYearDto> getStudyPeriods() {
+    public List<StudyPeriodWithYearIdDto> getStudyPeriods() {
         return studyPeriods;
     }
 
-    public void setStudyPeriods(List<StudyPeriodWithYearDto> studyPeriods) {
+    public void setStudyPeriods(List<StudyPeriodWithYearIdDto> studyPeriods) {
         this.studyPeriods = studyPeriods;
     }
 

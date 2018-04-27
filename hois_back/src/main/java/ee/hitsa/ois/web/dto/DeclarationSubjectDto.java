@@ -21,8 +21,8 @@ public class DeclarationSubjectDto extends VersionedCommand {
     private SubjectSearchDto subject;
     private AutocompleteResult module;
     private Boolean isOptional;
-    private Set<AutocompleteResult> mandatoryPrerequisiteSubjects;
-    private Set<AutocompleteResult> recommendedPrerequisiteSubjects;
+    private Set<PrerequisiteSubjectDto> mandatoryPrerequisiteSubjects;
+    private Set<PrerequisiteSubjectDto> recommendedPrerequisiteSubjects;
     private Boolean isDeclaredRepeatedly;
     private Boolean isAssessed;
 
@@ -48,17 +48,19 @@ public class DeclarationSubjectDto extends VersionedCommand {
         subjectDto.setAssessment(subject.getAssessment().getValue());
         dto.setSubject(subjectDto);
         
-        Set<AutocompleteResult> mandatoryPrerequisiteSubjects = new HashSet<>();
-        Set<AutocompleteResult> recommendedPrerequisiteSubjects = new HashSet<>();
+        Set<PrerequisiteSubjectDto> mandatoryPrerequisiteSubjects = new HashSet<>();
+        Set<PrerequisiteSubjectDto> recommendedPrerequisiteSubjects = new HashSet<>();
+        
         for (SubjectConnect connection: subject.getSubjectConnections()) {
-            AutocompleteResult s = AutocompleteResult.of(connection.getConnectSubject());
+            Subject cs = connection.getConnectSubject();
+            PrerequisiteSubjectDto s = new PrerequisiteSubjectDto(cs.getId(), cs.getCode(), cs.getNameEt(), cs.getNameEn(),
+                    cs.getCredits(), cs.getAssessment().getValue(), null);
             String connectionCode = EntityUtil.getCode(connection.getConnection());
             if (SubjectConnection.AINESEOS_EK.name().equals(connectionCode)) {
                 mandatoryPrerequisiteSubjects.add(s);
             } else if (SubjectConnection.AINESEOS_EV.name().equals(connectionCode)) {
                 recommendedPrerequisiteSubjects.add(s);
             }
-
         }
         dto.setMandatoryPrerequisiteSubjects(mandatoryPrerequisiteSubjects);
         dto.setRecommendedPrerequisiteSubjects(recommendedPrerequisiteSubjects);
@@ -83,19 +85,19 @@ public class DeclarationSubjectDto extends VersionedCommand {
         this.isDeclaredRepeatedly = isDeclaredRepeatedly;
     }
 
-    public Set<AutocompleteResult> getMandatoryPrerequisiteSubjects() {
+    public Set<PrerequisiteSubjectDto> getMandatoryPrerequisiteSubjects() {
         return mandatoryPrerequisiteSubjects;
     }
 
-    public void setMandatoryPrerequisiteSubjects(Set<AutocompleteResult> mandatoryPrerequisiteSubjects) {
+    public void setMandatoryPrerequisiteSubjects(Set<PrerequisiteSubjectDto> mandatoryPrerequisiteSubjects) {
         this.mandatoryPrerequisiteSubjects = mandatoryPrerequisiteSubjects;
     }
 
-    public Set<AutocompleteResult> getRecommendedPrerequisiteSubjects() {
+    public Set<PrerequisiteSubjectDto> getRecommendedPrerequisiteSubjects() {
         return recommendedPrerequisiteSubjects;
     }
 
-    public void setRecommendedPrerequisiteSubjects(Set<AutocompleteResult> recommendedPrerequisiteSubjects) {
+    public void setRecommendedPrerequisiteSubjects(Set<PrerequisiteSubjectDto> recommendedPrerequisiteSubjects) {
         this.recommendedPrerequisiteSubjects = recommendedPrerequisiteSubjects;
     }
 

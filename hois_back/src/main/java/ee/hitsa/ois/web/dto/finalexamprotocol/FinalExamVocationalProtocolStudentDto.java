@@ -12,7 +12,7 @@ import ee.hitsa.ois.web.dto.ModuleProtocolStudentDto;
 public class FinalExamVocationalProtocolStudentDto extends ModuleProtocolStudentDto {
 
     private String studentGroup;
-    private List<FinalExamVocationalProtocolStudentOccupationDto> curriculumOccupations = new ArrayList<>();
+    private List<FinalExamProtocolStudentOccupationDto> curriculumOccupations = new ArrayList<>();
     
     public static FinalExamVocationalProtocolStudentDto of(ProtocolStudent protocolStudent) {
         FinalExamVocationalProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new FinalExamVocationalProtocolStudentDto());
@@ -26,7 +26,7 @@ public class FinalExamVocationalProtocolStudentDto extends ModuleProtocolStudent
         if (protocolStudent.getProtocolStudentOccupations() != null) {
             protocolStudent.getProtocolStudentOccupations().forEach(oc -> {
                 dto.getCurriculumOccupations()
-                        .add(new FinalExamVocationalProtocolStudentOccupationDto(
+                        .add(new FinalExamProtocolStudentOccupationDto(
                                 oc.getStudentOccupationCertificate() != null ? oc.getStudentOccupationCertificate().getCertificateNr() : null, 
                                 oc.getOccupation().getCode(),
                                 oc.getPartOccupation() != null ? oc.getPartOccupation().getCode() : null,
@@ -45,11 +45,11 @@ public class FinalExamVocationalProtocolStudentDto extends ModuleProtocolStudent
         this.studentGroup = studentGroup;
     }
 
-    public List<FinalExamVocationalProtocolStudentOccupationDto> getCurriculumOccupations() {
+    public List<FinalExamProtocolStudentOccupationDto> getCurriculumOccupations() {
         return curriculumOccupations;
     }
 
-    public void setCurriculumOccupations(List<FinalExamVocationalProtocolStudentOccupationDto> curriculumOccupations) {
+    public void setCurriculumOccupations(List<FinalExamProtocolStudentOccupationDto> curriculumOccupations) {
         this.curriculumOccupations = curriculumOccupations;
     }
     

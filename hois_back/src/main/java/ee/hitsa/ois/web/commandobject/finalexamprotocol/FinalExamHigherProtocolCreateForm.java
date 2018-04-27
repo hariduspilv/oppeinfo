@@ -12,10 +12,10 @@ public class FinalExamHigherProtocolCreateForm {
     @NotNull
     private Long subjectStudyPeriod;
     @NotNull
-    private Long subject;
-    @NotNull
     @ClassifierRestriction(MainClassCode.PROTOKOLLI_LIIK)
     private String protocolType;
+    @NotNull
+    private Long curriculum;
     
     private List<FinalExamProtocolStudentCreateForm> protocolStudents;
 
@@ -27,14 +27,6 @@ public class FinalExamHigherProtocolCreateForm {
         this.subjectStudyPeriod = subjectStudyPeriod;
     }
 
-    public Long getSubject() {
-        return subject;
-    }
-
-    public void setSubject(Long subject) {
-        this.subject = subject;
-    }
-    
     public String getProtocolType() {
         return protocolType;
     }
@@ -50,4 +42,13 @@ public class FinalExamHigherProtocolCreateForm {
     public void setProtocolStudents(List<FinalExamProtocolStudentCreateForm> protocolStudents) {
         this.protocolStudents = protocolStudents;
     }
+
+    public Long getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(Long curriculum) {
+        this.curriculum = curriculum;
+    }
+    
 }

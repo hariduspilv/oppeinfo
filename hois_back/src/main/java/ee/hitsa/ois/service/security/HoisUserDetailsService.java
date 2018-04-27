@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ee.hitsa.ois.auth.LoginMethod;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.UserSessions;
@@ -86,6 +87,10 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
             SchoolService.SchoolType type = schoolService.schoolType(school.getId());
             authenticatedSchool = new AuthenticatedSchool(school.getId(), type.isHigher(), type.isVocational(),
                     type.isDoctoral(), EntityUtil.getCode(school.getEhisSchool()));
+            OisFile logo = school.getLogo();
+            if (logo != null) {
+                authenticatedSchool.setLogo(logo.getFdata());
+            }
             if (user.getStudent() != null) {
                 List<?> result = em.createNativeQuery("select c.is_higher, level.value "
                         + "from student s "

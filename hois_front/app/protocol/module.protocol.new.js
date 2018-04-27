@@ -19,7 +19,7 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
   };
 
   $scope.curriculumVersionOccupationModuleChange = function () {
-    var query = QueryUtils.endpoint('/moduleProtocols/occupationModule/' + $scope.formState.curriculumVersionOccupationModule).get();
+    var query = QueryUtils.endpoint('/moduleProtocols/occupationModule/' + $scope.formState.studyYear + '/' + $scope.formState.curriculumVersionOccupationModule).get();
     $scope.tabledata = {
       $promise: query.$promise
     };

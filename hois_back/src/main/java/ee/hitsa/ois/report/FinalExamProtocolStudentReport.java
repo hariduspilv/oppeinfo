@@ -17,13 +17,21 @@ public class FinalExamProtocolStudentReport {
     private final String gradeName;
     private final List<String> occupations;
     private final List<String> partOccupations;
+    private final String curriculumGrade;
     
-    public FinalExamProtocolStudentReport(ProtocolStudent student, Language lang) {
-        this.name = PersonUtil.fullname(student.getStudent().getPerson());
-        this.grade = student.getGrade() != null ? student.getGrade().getValue() : null;
-        this.gradeName = student.getGrade() != null ? name(student.getGrade(), lang) : null;
-        this.occupations = StreamUtil.toMappedList(pso -> ClassifierUtil.getNullableNameEt(pso.getOccupation()), student.getProtocolStudentOccupations());
-        this.partOccupations = StreamUtil.toMappedList(pso -> ClassifierUtil.getNullableNameEt(pso.getPartOccupation()), student.getProtocolStudentOccupations());
+    public FinalExamProtocolStudentReport(ProtocolStudent student, Boolean isVocational, Language lang) {
+        name = PersonUtil.fullname(student.getStudent().getPerson());
+        grade = student.getGrade() != null ? student.getGrade().getValue() : null;
+        gradeName = student.getGrade() != null ? name(student.getGrade(), lang) : null;
+        occupations = StreamUtil.toMappedList(pso -> ClassifierUtil.getNullableNameEt(pso.getOccupation()), student.getProtocolStudentOccupations());
+        
+        if (isVocational.booleanValue()) {
+            partOccupations = StreamUtil.toMappedList(pso -> ClassifierUtil.getNullableNameEt(pso.getPartOccupation()), student.getProtocolStudentOccupations());
+            curriculumGrade = null;
+        } else {
+            partOccupations = null;
+            curriculumGrade = student.getCurriculumGrade() != null ? name(student.getCurriculumGrade(), lang) : null;
+        }
     }
 
     public String getName() {
@@ -44,6 +52,10 @@ public class FinalExamProtocolStudentReport {
 
     public List<String> getPartOccupations() {
         return partOccupations;
+    }
+
+    public String getCurriculumGrade() {
+        return curriculumGrade;
     }
     
 }

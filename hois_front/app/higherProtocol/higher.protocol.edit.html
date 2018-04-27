@@ -1,32 +1,35 @@
 <div class="ois-form-layout-padding" ng-cloak>
 
-  <div layout="row" layout-sm="column" layout-xs="column" class="ois-form-layout-padding form-readonly">
-    <md-input-container flex="30" flex-sm="100" flex-xs="100">
-      <label>{{'higherProtocol.subject' | translate}}</label>
-      <hois-value value="currentLanguageNameField(record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.subject)"></hois-value>
-    </md-input-container>
-    <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-      <label>{{'higherProtocol.teacher' | translate}}</label>
-      <hois-value value="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.teachers.join(', ')"></hois-value>
-    </md-input-container>
-    <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-      <label>{{'higherProtocol.studyPeriod' | translate}}</label>
-      <hois-value value="currentLanguageNameField(record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.studyPeriod)"></hois-value>
-    </md-input-container>
-  </div>
-  <div layout="row" layout-sm="column" layout-xs="column" class="ois-form-layout-padding form-readonly">
-    <md-input-container flex="30" flex-sm="100" flex-xs="100">
-      <label>{{'higherProtocol.number' | translate}}</label>
-      <hois-value value="record.protocolNr"></hois-value>
-    </md-input-container>
-    <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-      <label>{{'higherProtocol.type' | translate}}</label>
-      <hois-classifier-value ng-model="record.protocolType" main-classifier-code="PROTOKOLLI_LIIK"></hois-classifier-value>
-    </md-input-container>
-    <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-      <label>{{'higherProtocol.status' | translate}}</label>
-      <hois-classifier-value ng-model="record.status" main-classifier-code="PROTOKOLL_STAATUS"></hois-classifier-value>
-    </md-input-container>
+  <div class="form-readonly">
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.number' | translate}}</label>
+        <hois-value value="record.protocolNr"></hois-value>
+      </md-input-container>
+      <md-input-container flex flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.status' | translate}}</label>
+        <hois-classifier-value ng-model="record.status" main-classifier-code="PROTOKOLL_STAATUS"></hois-classifier-value>
+      </md-input-container>
+      <md-input-container flex flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.studyPeriod' | translate}}</label>
+        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.studyPeriod)"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.type' | translate}}</label>
+        <hois-classifier-value ng-model="record.protocolType" main-classifier-code="PROTOKOLLI_LIIK"></hois-classifier-value>
+      </md-input-container>
+      <md-input-container flex flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.subject' | translate}}</label>
+        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.subject)"></hois-value>
+      </md-input-container>
+      <md-input-container flex flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.teacher' | translate}}</label>
+        <hois-value value="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.teachers.join(', ')"></hois-value>
+      </md-input-container>
+    </div>
   </div>
 
   <form layout="column" name="higherProtocolForm">
@@ -40,7 +43,7 @@
               {{getMidtermTaskHeader(midtermTask)}}
             </th>
             <th md-column>{{'higherProtocol.finalGrade' | translate}}</th>
-            <th md-column>{{'higherProtocol.comment' | translate}}</th>
+            <th md-column ng-if="formState.canChangeConfirmedProtocolGrade">{{'higherProtocol.changeReason' | translate}} {{</th>
           </tr>
         </thead>
         <tbody md-body>
@@ -54,15 +57,16 @@
                 <span ng-if="result.isText">{{result.pointsTxt}}</span>
               </td>
               <td md-cell>
-                <md-input-container>
-                  <hois-select ng-model="student.grade" values="grades" show-property="value" value-property="code" aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-change="setFormDirty()"></hois-select>
-                </md-input-container>
+                <hois-select ng-model="student.grade" values="grades" show-property="value" value-property="code"
+                  aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-change="gradeChanged(student)"></hois-select>
               </td>
-              <td md-cell>
-                <md-input-container>
-                  <input ng-model="student.addInfo" type="text" md-maxlength="255"
-                  aria-label="{{'higherProtocol.comment' | translate}}" ng-required="formState.isConfirmed && student.changed" ng-change="setFormDirty()">
+              <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
+                <md-input-container ng-if="student.gradeHasChanged">
+                  <input ng-model="student.addInfo" aria-label="addInfo" type="text" md-maxlength="255" ng-change="addInfoChanged(student);" required>
                 </md-input-container>
+                <span ng-if="student.addInfo && !student.gradeHasChanged">
+                  {{row.addInfo}}
+                </span>
               </td>
             </ng-form>
           </tr>
@@ -75,8 +79,8 @@
     </div>
     <br>
     <div>
-      <md-button class="md-raised md-primary" ng-click="save()" ng-show="record.canChange">{{'main.button.save' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="saveAndConfirm()" ng-show="formState.canConfirm">{{'main.button.confirm' | translate}}</md-button>
+      <md-button ng-show="record.canChange" class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+      <md-button ng-show="formState.canConfirm" class="md-raised" ng-click="saveAndConfirm()">{{'main.button.confirm' | translate}}</md-button>
       <a href="{{formState.protocolPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
       <md-button class="md-raised" ng-href="#/higherProtocols">{{'main.button.back' | translate}}</md-button>
     </div>

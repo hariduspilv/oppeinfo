@@ -26,13 +26,14 @@ public class HigherProtocolSearchDto {
 
     public static HigherProtocolSearchDto ofWithUserRithts(Protocol protocol, HoisUserDetails user) {
         HigherProtocolSearchDto dto = new HigherProtocolSearchDto();
-        EntityUtil.bindToDto(protocol, dto);
+        EntityUtil.bindToDto(protocol, dto, "confirmer");
         dto.setProtocolType(EntityUtil.getCode(protocol.getProtocolHdata().getType()));
         dto.setInserted(protocol.getInserted().toLocalDate());
         SubjectStudyPeriod subjectStudyPeriod = protocol.getProtocolHdata().getSubjectStudyPeriod();
         dto.setSubject(AutocompleteResult.of(subjectStudyPeriod.getSubject()));
         dto.setTeachers(PersonUtil.sorted(subjectStudyPeriod.getTeachers().stream().map(t -> t.getTeacher().getPerson())));
         dto.setCanChange(Boolean.valueOf(HigherProtocolUtil.canChange(user, protocol)));
+        dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(protocol.getConfirmer()));
         return dto;
     }
 

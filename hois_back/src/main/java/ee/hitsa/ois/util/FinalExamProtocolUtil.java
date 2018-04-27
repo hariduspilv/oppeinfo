@@ -83,7 +83,7 @@ public class FinalExamProtocolUtil {
     }
 
     public static void assertCanCreateHigherProtocol(HoisUserDetails user) {
-        if(canCreateHigherProtocol(user)) {
+        if(!canCreateHigherProtocol(user)) {
             throw new ValidationFailedException("finalExamProtocol.error.noPermissionToCreate");
         }
     }

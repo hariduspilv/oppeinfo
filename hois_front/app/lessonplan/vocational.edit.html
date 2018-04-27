@@ -31,8 +31,7 @@
             <th colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods">{{currentLanguageNameField(sp)}} ({{sp.startDate | hoisDayMonth}}-{{sp.endDate | hoisDayMonth}})</th>
           </tr>
           <tr ng-if="formState.showWeeks">
-            <th colspan="3">
-            </th>
+            <th colspan="3" class="cross">&nbsp;</th>
             <th ng-repeat="w in formState.weekNrs track by $index" class="center" ng-style="{ background: true ? getLegendByWeek(w) : 'white' }"
               title="{{formState.weekBeginningDates[$index] | hoisDate}}">{{w}}</th>
           </tr>
@@ -117,7 +116,7 @@
             <td class="center fix">{{formState.moduleTotals[module.id].__}}</td>
             <td ng-repeat="h in formState.moduleTotals[module.id]._._ track by $index" class="center">{{h}}</td>
           </tr>
-          <tr ng-repeat-end> </tr>
+          <tr ng-repeat-end ng-init="finished()"> </tr>
           <tr ng-repeat-end class="fix"></tr>
           <tr ng-repeat="ct in getCapacityTypes(formState.grandTotals)" md-colors="{background: 'background-200'}" class="fix">
             <td rowspan="{{keys(formState.grandTotals).length+1}}" ng-if="$first" class="fix">
@@ -133,9 +132,9 @@
             <td class="fix">{{'lessonplan.total' | translate}}</td>
             <td class="fix" ng-if="formState.grandTotals && keys(formState.grandTotals).length &lt; 2">&nbsp;</td>
             <td class="center fix">{{formState.grandTotals.__}}</td>
-            <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index" class="center" ng-init="$last && finished()">{{h}}</td>
+            <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index" class="center">{{h}}</td>
             <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
-                class="center" ng-init="$last && finished()">{{formState.grandTotalsSp[$index]}}</td>
+                class="center">{{formState.grandTotalsSp[$index]}}</td>
            </tr>
         </tbody>
         <!-- grand totals -->

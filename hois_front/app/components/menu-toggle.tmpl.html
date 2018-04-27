@@ -2,7 +2,8 @@
            ng-click="toggle()"
            aria-controls="docs-menu-{{section.name | nospace}}"
            aria-expanded="{{isOpen()}}">
-  <div flex layout="row">
+  <div flex layout="row" md-colors="{color: isSelected() ? 'primary-900':'primary-900'}" ng-class="{'active' : isSelected()}" >
+      <md-icon md-font-set="material-icons" class="sm" md-colors="{color: isSelected() ? 'primary-900':'primary-900'}">{{section.icon}}</md-icon>
     {{section.name | translate}}
     <span flex></span>
     <span aria-hidden="true" class="md-toggle-icon"

@@ -17,6 +17,7 @@ import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ import ee.hois.soap.LogContext;
 
 @Transactional(TxType.REQUIRES_NEW)
 @Service
+@Profile("!test")
 public class EhisLogService {
 
     private static final String CURRICULUM_QUERY = "oisOppekava";

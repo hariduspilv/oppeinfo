@@ -2,14 +2,21 @@
 
 <div>
   <div ng-if="timetablesByRooms">
-    <md-grid-list ng-app="app" md-cols-xs="1" md-cols-sm="2" md-cols-md="4" md-cols-lg="8" md-cols-gt-lg="8" md-gutter="1em"
-      md-row-height="40px" flex>
-      <md-grid-tile ng-repeat="row in timetablesByRooms" style="text-align: left;">
-        <md-button class="md-button" md-colors="{background: 'background-200'}" ng-click="showRoomWeek(row.roomId)">
-          {{row.roomCode}}
-        </md-button>
-      </md-grid-tile>
-    </md-grid-list>
+    <div layout="row" layout-sm="column" layout-xs="column" layout-margin>
+      <md-autocomplete flex="45" flex-sm="100" flex-xs="100"
+        md-search-text="searchText"
+        md-min-length="1"
+        md-items="item in getRooms(searchText)" 
+        md-item-text="item.roomCode"
+        md-selected-item-change="showRoomWeek(item.roomId)" 
+        md-floating-label="{{'timetable.search.room' | translate}}"
+        md-require-match
+        md-no-cache>
+        <md-item-template>
+          <span md-highlight-text="searchText">{{item.roomCode}}</span>
+        </md-item-template>
+      </md-autocomplete>
+    </div>
   </div>
 
   <div ng-controller="RoomTimetableViewController">

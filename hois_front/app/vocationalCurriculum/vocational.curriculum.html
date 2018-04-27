@@ -596,6 +596,8 @@
           <md-button class="md-raised md-primary" ng-click="save()" ng-if="curriculum.canChange">{{'main.button.save' | translate}}</md-button>
         </div>
       </div>
+	  <a href="{{curriculumPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="curriculum.id">{{'main.button.printGeneral' | translate}}</a>
+	  <a href="{{curriculumModulesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="curriculum.id">{{'main.button.printModules' | translate}}</a>
       <md-button class="md-raised md-default" ng-click="back('#/curriculum', vocationalCurriculumForm)">{{'main.button.back' | translate}}</md-button>
     </div>
 </div>

@@ -15,20 +15,22 @@
                     applyClasses('thead tr', 'cross', 'th');
                     applyClasses('tbody tr', 'fixed-cell', 'td');
 
-                    var topHeaders = [].concat.apply([], container.querySelectorAll('thead th'));
-                    var leftHeaders = [].concat.apply([], container.querySelectorAll('tbody td.fixed-cell'));
-                    var crossHeaders = [].concat.apply([], container.querySelectorAll('thead th.cross'));
+
+
 
                     container.addEventListener('scroll', function () {
                         var x = container.scrollLeft;
                         var y = container.scrollTop;
 
                         //Update the left header positions when the container is scrolled
-
+                        var leftHeaders = [].concat.apply([], container.querySelectorAll('tbody td.fixed-cell'));
+                        var crossHeaders = [].concat.apply([], container.querySelectorAll('thead th.cross'));
+                        var topHeaders = [].concat.apply([], container.querySelectorAll('thead th'));
 
                         leftHeaders.forEach(function (leftHeader) {
                             leftHeader.style.transform = translate(x, 0);
                         });
+
 
                         //Update the top header positions when the container is scrolled
                         topHeaders.forEach(function (topHeader) {

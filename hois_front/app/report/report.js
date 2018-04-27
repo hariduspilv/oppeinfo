@@ -143,25 +143,31 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
     $scope.formState.allStudyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
     $scope.formState.studyYears.$promise.then(function() {
       $scope.formState.allStudyPeriods.$promise.then(function(studyPeriods) {
+        var sp, sy;
         for(var i = 0;i < studyPeriods.length;i++) {
-          var sp = studyPeriods[i];
-          var sy = $scope.formState.studyPeriods[sp.studyYear];
+          sp = studyPeriods[i];
+          sy = $scope.formState.studyPeriods[sp.studyYear];
           if(!sy) {
             $scope.formState.studyPeriods[sp.studyYear] = sy = [];
           }
           sy.push(sp);
         }
-      });
-
-      if(!$scope.criteria.studyYear) {
-        var sy = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyYears);
-        if(sy) {
-          $scope.criteria.studyYear = sy.id;
+        if(!$scope.criteria.studyYear) {
+          sy = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyYears);
+          if(sy) {
+            $scope.criteria.studyYear = sy.id;
+            if(!$scope.criteria.studyPeriod) {
+              sp = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyPeriods[sy.id] || []);
+              if(sp) {
+                $scope.criteria.studyPeriod = sp.id;
+              }
+            }
+          }
         }
-      }
-      if($scope.criteria.studyYear) {
-        $timeout($scope.loadData);
-      }
+        if($scope.criteria.studyYear) {
+          $timeout($scope.loadData);
+        }
+      });
     });
 
     $scope.studyPeriodRows = function(index) {

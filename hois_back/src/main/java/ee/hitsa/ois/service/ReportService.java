@@ -62,6 +62,8 @@ import ee.hitsa.ois.web.dto.report.VotaDto;
 @Service
 public class ReportService {
 
+    private static final String VOTA_STATUS_CONFIRMED = "VOTA_STAATUS_C";
+
     @Autowired
     private EntityManager em;
     @Autowired
@@ -317,7 +319,7 @@ public class ReportService {
             qb.requiredCriteria("aa.inserted <= :end", "end", end);
             qb.requiredCriteria("(cvo.curriculum_version_id in (:cv) or cvh.curriculum_version_id in (:cv))", "cv", cvIds);
 
-            List<?> data = qb.select("aa.id, aa.inserted, case when aafsm.is_my_school then '"+ClassifierUtil.COUNTRY_ESTONIA+"' else aps.country_code end, aafsm.transfer, aa.confirmed, aafsm.credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id)", em).getResultList();
+            List<?> data = qb.select("aa.id, aa.inserted, case when aafsm.is_my_school then '"+ClassifierUtil.COUNTRY_ESTONIA+"' else aps.country_code end, aafsm.transfer, aa.confirmed, aafsm.credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id), aa.status_code", em).getResultList();
             for(Object r : data) {
                 VotaDto dto = findVota(resultAsLocalDate(r, 1), resultAsLong(r, 6), sortedStudyPeriods, dtosByPeriodAndCurriculum);
                 if(dto != null) {
@@ -337,7 +339,7 @@ public class ReportService {
             qb.requiredCriteria("aa.inserted <= :end", "end", end);
             qb.requiredCriteria("(cvo.curriculum_version_id in (:cv) or cvh.curriculum_version_id in (:cv))", "cv", cvIds);
 
-            data = qb.select("aa.id, aa.inserted, aaism.transfer, aa.confirmed, coalesce(cvh.total_credits, cvot.credits) as credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id)", em).getResultList();
+            data = qb.select("aa.id, aa.inserted, aaism.transfer, aa.confirmed, coalesce(cvh.total_credits, cvot.credits) as credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id), aa.status_code", em).getResultList();
             for(Object r : data) {
                 VotaDto dto = findVota(resultAsLocalDate(r, 1), resultAsLong(r, 5), sortedStudyPeriods, dtosByPeriodAndCurriculum);
                 if(dto != null) {
@@ -576,7 +578,7 @@ public class ReportService {
             Long applicationId = resultAsLong(r, 0);
             applications.add(applicationId);
             // FIXME should check confirmed date?
-            boolean accepted = Boolean.TRUE.equals(resultAsBoolean(r, 2));
+            boolean accepted = Boolean.TRUE.equals(resultAsBoolean(r, 2)) && VOTA_STATUS_CONFIRMED.equals(resultAsString(r, 6));
             BigDecimal credits = resultAsDecimal(r, 4);
             if(credits != null) {
                 totalCredits = totalCredits.add(credits);
@@ -595,7 +597,7 @@ public class ReportService {
             applications.add(applicationId);
             String country = resultAsString(r, 2);
             // FIXME should check confirmed date?
-            boolean accepted = Boolean.TRUE.equals(resultAsBoolean(r, 3));
+            boolean accepted = Boolean.TRUE.equals(resultAsBoolean(r, 3)) && VOTA_STATUS_CONFIRMED.equals(resultAsString(r, 7));
             BigDecimal credits = resultAsDecimal(r, 5);
             totalCredits = totalCredits.add(credits);
             if(accepted) {

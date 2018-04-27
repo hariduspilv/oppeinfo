@@ -24,14 +24,15 @@
       $scope.$watch('teacher', function (newTeacher) {
         $scope.material.teacher = newTeacher ? newTeacher.id : null;
       });
-      $scope.$watch('material.typeCode', function (newTypeCode) {
-        $scope.material.url = newTypeCode === 'OPPEMATERJAL_L' ? 'http://' : null;
-      });
       $scope.$watch('material.isPublic', function (newIsPublic) {
         if (newIsPublic === true) {
           $scope.material.isVisibleToStudents = true;
         }
       });
+
+      $scope.typeCodeChanged = function (typeCode) {
+        $scope.material.url = typeCode === 'OPPEMATERJAL_L' ? 'http://' : null;
+      };
 
       $scope.delete = function () {
         dialogService.confirmDialog({
@@ -100,14 +101,15 @@
         $scope.$watch('teacher', function (newTeacher) {
           $scope.material.teacher = newTeacher ? newTeacher.id : null;
         });
-        $scope.$watch('material.typeCode', function (newTypeCode) {
-          $scope.material.url = newTypeCode === 'OPPEMATERJAL_L' ? 'http://' : null;
-        });
         $scope.$watch('material.isPublic', function (newIsPublic) {
           if (newIsPublic === true) {
             $scope.material.isVisibleToStudents = true;
           }
         });
+
+        $scope.typeCodeChanged = function (typeCode) {
+          $scope.material.url = typeCode === 'OPPEMATERJAL_L' ? 'http://' : null;
+        };
 
         $scope.delete = function () {
           dialogService.confirmDialog({

@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hitsaOis').controller('FinalExamVocationalProtocolEditController', 
-function ($scope, $route, $filter, QueryUtils, Classifier, $q, oisFileService, config, message, dialogService, ArrayUtils, $location, $timeout) {
-  var endpoint = '/finalExamVocationalProtocols/';
+function ($scope, $route, $filter, $timeout, $window, $q, QueryUtils, Classifier, ProtocolConfirmationService, oisFileService, config, message, dialogService, ArrayUtils, $location) {
+  var endpoint = '/finalExamVocationalProtocols';
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
   var studentClMapper = Classifier.valuemapper({ journalResults: 'KUTSEHINDAMINE', status: 'OPPURSTAATUS' });
@@ -79,7 +79,7 @@ function ($scope, $route, $filter, QueryUtils, Classifier, $q, oisFileService, c
       $scope.savedStudents = angular.copy($scope.protocol.protocolStudents);
 
       if ($scope.protocol.finalDate) {
-        $scope.committees = QueryUtils.endpoint(endpoint + 'committees').query({ finalDate: $scope.protocol.finalDate });
+        $scope.committees = QueryUtils.endpoint(endpoint + '/committees').query({ finalDate: $scope.protocol.finalDate });
       }
       if ($scope.protocol.committee) {
         $scope.committeeMembers = $scope.protocol.committee.members;
@@ -98,9 +98,13 @@ function ($scope, $route, $filter, QueryUtils, Classifier, $q, oisFileService, c
         });
       }
       loadProtocolStudentOccupations();
-      $scope.formState.canAddDeleteStudents = $scope.protocol.status.code !== 'PROTOKOLL_STAATUS_K' && $scope.protocol.canBeEdited;
-      $scope.formState.canConfirm = $scope.protocol.status.code !== 'PROTOKOLL_STAATUS_K' && canConfirm();
-      $scope.formState.protocolPdfUrl = config.apiUrl + endpoint + entity.id + '/print/protocol.pdf';
+      $scope.formState = {
+        canEditConfirmedProtocol: canEditConfirmedProtocol(),
+        canAddDeleteStudents: $scope.protocol.status.code !== 'PROTOKOLL_STAATUS_K' && $scope.protocol.canBeEdited,
+        canConfirm: $scope.protocol.status.code !== 'PROTOKOLL_STAATUS_K' && canConfirm(),
+        canChangeConfirmedProtocolGrade: canChangeConfirmedProtocolGrade(),
+        protocolPdfUrl: config.apiUrl + endpoint + '/' + entity.id + '/print/protocol.pdf'
+      };
     });
   }
 
@@ -151,10 +155,10 @@ function ($scope, $route, $filter, QueryUtils, Classifier, $q, oisFileService, c
             partOccupation: curriculumOccupation.partOccupationCode,
           });
         } else if (!curriculumOccupation.partOccupationCode && !occupationResults[curriculumOccupation.occupationCode]) {
-          occupationResults[curriculumOccupation.partOccupationCode] = ({
+          occupationResults[curriculumOccupation.occupationCode] = ({
             id: curriculumOccupation.id,
             occupation: curriculumOccupation.occupationCode,
-            partOccupation: curriculumOccupation.partOccupationCode,
+            partOccupation: null,
             certificateNr: curriculumOccupation.certificateNr
           });
         }
@@ -175,7 +179,7 @@ function ($scope, $route, $filter, QueryUtils, Classifier, $q, oisFileService, c
   }
 
   $scope.selectedFinalExamDateChanged = function () {
-    QueryUtils.endpoint(endpoint + 'committees').query({ finalDate: $scope.protocol.finalDate }).$promise.then(function (committees) {
+    QueryUtils.endpoint(endpoint + '/committees').query({ finalDate: $scope.protocol.finalDate }).$promise.then(function (committees) {
       $scope.committees = committees;
       if ($scope.protocol.committee && !isSelectedCommitteeAvailable()) {
         $scope.protocol.committee = null;
@@ -205,7 +209,7 @@ function ($scope, $route, $filter, QueryUtils, Classifier, $q, oisFileService, c
   
   $scope.deleteProtocolStudent = function (protocolStudent) {
     dialogService.confirmDialog({prompt: 'finalExamProtocol.prompt.deleteStudent'}, function() {
-      var ProtocolStudentEndpoint = QueryUtils.endpoint('/finalExamVocationalProtocols/' + $scope.protocol.id + '/removeStudent');
+      var ProtocolStudentEndpoint = QueryUtils.endpoint(endpoint + '/' + $scope.protocol.id + '/removeStudent');
       var removedStudent = new ProtocolStudentEndpoint(protocolStudent);
       removedStudent.$delete().then(function (protocol) {
           message.info('main.messages.delete.success');
@@ -217,7 +221,7 @@ function ($scope, $route, $filter, QueryUtils, Classifier, $q, oisFileService, c
   $scope.addProtocolStudents = function () {
     dialogService.showDialog('finalExamProtocol/templates/final.exam.protocol.add.student.dialog.html', function (dialogScope) {
       dialogScope.selectedStudents = [];
-      var query = QueryUtils.endpoint(endpoint + $scope.protocol.id + '/otherStudents').query();
+      var query = QueryUtils.endpoint(endpoint + '/' + $scope.protocol.id + '/otherStudents').query();
       dialogScope.tabledata = {
         $promise: query.$promise,
       };
@@ -225,7 +229,7 @@ function ($scope, $route, $filter, QueryUtils, Classifier, $q, oisFileService, c
         dialogScope.tabledata.content = studentClMapper.objectmapper(result);
       });
     }, function (submittedDialogScope) {
-      QueryUtils.endpoint(endpoint + $scope.protocol.id + '/addStudents').save({
+      QueryUtils.endpoint(endpoint + '/' + $scope.protocol.id + '/addStudents').save({
         version: $scope.protocol.version,
         finalDate: $scope.protocol.finalDate,
         protocolStudents: submittedDialogScope.selectedStudents.map(function (it) { return { studentId: it }; })
@@ -247,90 +251,19 @@ function ($scope, $route, $filter, QueryUtils, Classifier, $q, oisFileService, c
     return grade ? grade.value : undefined;
   };
 
-  function signBeforeConfirm() {
-    $window.hwcrypto.getCertificate({ lang: 'en' }).then(function (certificate) {
-      QueryUtils.endpoint(endpoint + $scope.protocol.id + '/signToConfirm').save({
-        version: $scope.protocol.version,
-        finalDate: $scope.protocol.finalDate,
-        committeeId: $scope.protocol.committee,
-        protocolCommitteeMembers: getPresentCommitteeMembers($scope.committeeMembers),
-        protocolStudents: getStudentsWithOccupations($scope.protocol.protocolStudents),
-        certificate: certificate.hex
-      }, function (result) {
-        $window.hwcrypto.sign(certificate, { type: 'SHA-256', hex: result.digestToSign }, { lang: 'en' }).then(function (signature) {
-          QueryUtils.endpoint(endpoint + $scope.protocol.id + '/signToConfirmFinalize').save({
-            signature: signature.hex,
-            version: result.version
-          }, function (result) {
-            message.info('finalExamProtocol.messages.confirmed');
-            entityToDto(result);
-          });
-        });
-      });
-    }).catch(function (reason) {
-      //no_implementation, no_certificates, user_cancel, technical_error
-      if (reason.message === 'user_cancel') {
-        message.error('main.messages.error.idCardSigningCancelled');
-      } else {
-        message.error('main.messages.error.readingIdCardFailed');
-      }
-    });
-  }
-
-  function mobileSignBeforeConfirm() {
-    QueryUtils.endpoint(endpoint + $scope.protocol.id + '/mobileSignToConfirm').save({
+  $scope.confirm = function () {
+    var data = {
       version: $scope.protocol.version,
       finalDate: $scope.protocol.finalDate,
       committeeId: $scope.protocol.committee,
       protocolCommitteeMembers: getPresentCommitteeMembers($scope.committeeMembers),
       protocolStudents: getStudentsWithOccupations($scope.protocol.protocolStudents)
-    }, function (result) {
-      if (result.challengeID) {
-        $scope.signVersion = result.version;
-        $mdDialog.show({
-          controller: function ($scope) {
-            $scope.challengeID = result.challengeID;
-          },
-          templateUrl: 'finalExamProtocol/final.exam.protocol.mobile.sign.dialog.html',
-          parent: angular.element(document.body),
-          clickOutsideToClose: false
-        });
-        $scope.mobileIdPolls = 0;
-        $timeout(pollMobileSignStatus, config.mobileIdInitialDelay);
-      } else {
-        message.error('main.messages.error.mobileIdSignFailed');
-      }
-    }).catch(angular.noop);
-  }
+    };
 
-  function pollMobileSignStatus() {
-    QueryUtils.endpoint(endpoint + $scope.protocol.id + '/mobileSignStatus').get(
-      function (response) {
-        if (response.status === 'SIGNATURE') {
-          $mdDialog.hide();
-          QueryUtils.endpoint(endpoint + $scope.protocol.id + '/mobileSignFinalize').save({
-            version: $scope.signVersion
-          }, function (result) {
-            message.info('finalExamProtocol.messages.confirmed');
-            entityToDto(result);
-          });
-        } else if (response.status === 'OUTSTANDING_TRANSACTION') {
-          $scope.mobileIdPolls++;
-          if ($scope.mobileIdPolls < config.mobileIdMaxPolls) {
-            $timeout(pollMobileSignStatus, config.mobileIdPollInterval);
-          }
-        } else {
-          $mdDialog.hide();
-          message.error('main.messages.error.mobileIdSignFailed');
-        }
-      });
-  }
-  
-  $scope.confirm = function () {
     if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      signBeforeConfirm();
+      ProtocolConfirmationService.signBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, entityToDto);
     } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      mobileSignBeforeConfirm();
+      ProtocolConfirmationService.mobileSignBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, entityToDto);
     }
   };
 

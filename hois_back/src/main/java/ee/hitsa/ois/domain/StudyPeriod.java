@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 import ee.hitsa.ois.util.Translatable;
@@ -28,6 +30,9 @@ public class StudyPeriod extends BaseEntityWithId implements Translatable {
     private Classifier type;
     private LocalDate startDate;
     private LocalDate endDate;
+    
+    @OneToMany(mappedBy="studyPeriod", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudyPeriodEvent> events = new ArrayList<>();
 
     @Transient
     private LocalDate spStart;
@@ -80,6 +85,14 @@ public class StudyPeriod extends BaseEntityWithId implements Translatable {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+    
+    public List<StudyPeriodEvent> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<StudyPeriodEvent> events) {
+        this.events = events;
     }
 
     private short firstWeekNr() {

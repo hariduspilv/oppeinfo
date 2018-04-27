@@ -9,6 +9,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.util.StringUtils;
+
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 
@@ -44,6 +46,9 @@ public abstract class PersonUtil {
     }
 
     public static String fullnameAndIdcode(String fullname, String idcode) {
+        if(!StringUtils.hasText(idcode)) {
+            return fullname;
+        }
         // if format of this string is changed, adjust also IDCODE_PATTERN in this file
         return fullname + " (" + idcode + ")";
     }

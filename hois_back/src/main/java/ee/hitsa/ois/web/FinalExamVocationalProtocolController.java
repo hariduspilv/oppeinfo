@@ -49,7 +49,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EntityMobileSignDto;
 import ee.hitsa.ois.web.dto.EntitySignDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
-import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolCommitteeSelectDto;
+import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamProtocolCommitteeSelectDto;
 import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolDto;
 import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolOccupationalModuleDto;
 import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamVocationalProtocolStudentDto;
@@ -116,15 +116,15 @@ public class FinalExamVocationalProtocolController {
         return finalExamProtocolService.occupationModulesForSelection(user, curriculumVersionId);
     }
     
-    @GetMapping("occupationModule/{curriculumVersionOccupationModuleId:\\d+}")
-    public FinalExamVocationalProtocolOccupationalModuleDto occupationModule(HoisUserDetails user,
+    @GetMapping("occupationModule/{studyYearId:\\d+}/{curriculumVersionOccupationModuleId:\\d+}")
+    public FinalExamVocationalProtocolOccupationalModuleDto occupationModule(HoisUserDetails user, @PathVariable Long studyYearId,
             @PathVariable Long curriculumVersionOccupationModuleId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return finalExamProtocolService.occupationModule(user, curriculumVersionOccupationModuleId);
+        return finalExamProtocolService.occupationModule(user, studyYearId, curriculumVersionOccupationModuleId);
     }
     
     @GetMapping("/committees")
-    public List<FinalExamVocationalProtocolCommitteeSelectDto> committees(HoisUserDetails user, 
+    public List<FinalExamProtocolCommitteeSelectDto> committees(HoisUserDetails user, 
             @RequestParam(value = "finalDate", required = false) LocalDate finalDate) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return finalExamProtocolService.committeesForSelection(user, finalDate);
@@ -164,7 +164,7 @@ public class FinalExamVocationalProtocolController {
 
         UnsignedBdocContainer unsignedBdocContainer = bdocService.createUnsignedBdocContainer("lopueksami_protokoll.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
-                pdfService.generate(FinalExamProtocolReport.TEMPLATE_NAME, new FinalExamProtocolReport(savedProtocol)),
+                pdfService.generate(FinalExamProtocolReport.VOCATIONAL_TEMPLATE_NAME, new FinalExamProtocolReport(savedProtocol)),
                 protocolSignForm.getCertificate());
 
         httpSession.setAttribute(BDOC_TO_SIGN, unsignedBdocContainer);
@@ -190,7 +190,7 @@ public class FinalExamVocationalProtocolController {
         FinalExamProtocolUtil.assertCanEdit(user, protocol);
 
         Protocol savedProtocol = finalExamProtocolService.save(protocol, protocolSaveForm);
-        byte[] pdfData = pdfService.generate(FinalExamProtocolReport.TEMPLATE_NAME, new FinalExamProtocolReport(savedProtocol));
+        byte[] pdfData = pdfService.generate(FinalExamProtocolReport.VOCATIONAL_TEMPLATE_NAME, new FinalExamProtocolReport(savedProtocol));
         
         MobileIdSession session = bdocService.mobileSign("lopueksami_protokoll.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
@@ -244,7 +244,7 @@ public class FinalExamVocationalProtocolController {
             throws IOException {
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
-                pdfService.generate(FinalExamProtocolReport.TEMPLATE_NAME, new FinalExamProtocolReport(protocol)));
+                pdfService.generate(FinalExamProtocolReport.VOCATIONAL_TEMPLATE_NAME, new FinalExamProtocolReport(protocol)));
     }
     
 }

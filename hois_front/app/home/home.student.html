@@ -1,4 +1,4 @@
-<hois-collapsable expanded="true" ng-if="tasks.todayTasks.length > 0 || tasks.tomorrowTasks.length > 0 || tasks.laterTasks.length > 0">
+<hois-collapsable class="hois-collapse2" expanded="true" ng-if="tasks.todayTasks.length > 0 || tasks.tomorrowTasks.length > 0 || tasks.laterTasks.length > 0">
     <hois-collapsable-header>
         <span>{{'home.student.homeworkAndTests' | translate}}</span>
     </hois-collapsable-header>
@@ -43,7 +43,7 @@
     </div>
 </hois-collapsable>
 
-<hois-collapsable expanded="false" ng-if="studentAbsences.length > 0">
+<hois-collapsable class="hois-collapse2" expanded="false" ng-if="studentAbsences.length > 0">
     <hois-collapsable-header>
         <span>{{'home.student.absences' | translate}}</span>
     </hois-collapsable-header>
@@ -64,14 +64,14 @@
     </div>
 </hois-collapsable>
 
-<hois-collapsable expanded="true" ng-if="lastResults.length > 0">
+<hois-collapsable class="hois-collapse2" expanded="true" ng-if="lastResults.length > 0">
     <hois-collapsable-header>
         <span>{{'home.student.lastResults' | translate}}</span>
     </hois-collapsable-header>
 
     <div layout="column" ng-repeat="result in lastResults" style="margin-top:1%">
         <div layout="row" ng-if="result.entryCode">
-            <div layout="column" flex="5" flex-xs="10" layout-align="center center" layout-align-xs="start center" 
+            <div layout="column" flex="5" flex-xs="10" layout-align="center center" layout-align-xs="start center"
                 style="font-size:13px; font-weight:bold">{{result.grade}}</div>
             <div layout="column" flex="95" flex-xs="90">
                 <div layout="row" layout-xs="column">
@@ -90,7 +90,7 @@
         </div>
 
         <div layout="row" ng-if="!result.entryCode">
-            <div layout="column" flex="5" flex-xs="10" layout-align="center center" layout-align-xs="start center" style="font-weight:bold;" 
+            <div layout="column" flex="5" flex-xs="10" layout-align="center center" layout-align-xs="start center" style="font-weight:bold;"
                 ng-class="{goodGrade: result.grade === '5', badGrade: result.grade === '2'}">{{result.grade}}</div>
             <div layout="row" layout-xs="column" flex="95" flex-xs="90">
                 <div style="font-size:18px; font-weight:bold">{{currentLanguageNameField(result)}}</div>
@@ -103,7 +103,7 @@
     </div>
 </hois-collapsable>
 
-<hois-collapsable expanded="true" ng-if="declaration.status">
+<hois-collapsable class="hois-collapse2" expanded="true" ng-if="declaration.status">
     <hois-collapsable-header>
         <span>{{'home.student.declaredSubjects' | translate}}</span>
     </hois-collapsable-header>

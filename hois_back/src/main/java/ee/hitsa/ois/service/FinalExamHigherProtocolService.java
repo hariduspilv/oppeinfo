@@ -7,8 +7,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
@@ -21,15 +23,19 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.CommitteeMember;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.protocol.ProtocolCommitteeMember;
 import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
+import ee.hitsa.ois.domain.protocol.ProtocolStudentOccupation;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
-import ee.hitsa.ois.enums.DeclarationStatus;
+import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.ProtocolType;
 import ee.hitsa.ois.enums.SubjectAssessment;
@@ -47,14 +53,13 @@ import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamHigherProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamHigherProtocolSaveForm;
+import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamHigherProtocolStudentSaveForm;
 import ee.hitsa.ois.web.commandobject.finalexamprotocol.FinalExamProtocolCommitteeMemberForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.HigherProtocolSearchDto;
-import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
 import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamHigherProtocolDto;
 import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamHigherProtocolStudentDto;
 import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamHigherProtocolSubjectDto;
-import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamHigherProtocolSubjectResult;
 
 @Transactional
 @Service
@@ -120,7 +125,9 @@ public class FinalExamHigherProtocolService extends AbstractProtocolService {
         return result;
     }
 
-    public FinalExamHigherProtocolDto finalExamVocationalProtocol(HoisUserDetails user, Protocol protocol) {
+    public FinalExamHigherProtocolDto finalExamHigherProtocol(HoisUserDetails user, Protocol protocol) {
+        includeCorrectImportedOccupationCertificates(protocol);
+        
         FinalExamHigherProtocolDto dto = FinalExamHigherProtocolDto.of(protocol);
         dto.setCanBeEdited(Boolean.valueOf(FinalExamProtocolUtil.canEdit(user, protocol)));
         dto.setCanBeDeleted(Boolean.valueOf(FinalExamProtocolUtil.canDelete(user, protocol)));
@@ -139,8 +146,26 @@ public class FinalExamHigherProtocolService extends AbstractProtocolService {
         ProtocolHdata protocolHData = new ProtocolHdata();
         protocolHData.setType(em.getReference(Classifier.class, ProtocolType.PROTOKOLLI_LIIK_P.name()));
         protocolHData.setSubjectStudyPeriod(em.getReference(SubjectStudyPeriod.class, form.getSubjectStudyPeriod()));
+        protocolHData.setCurriculum(em.getReference(Curriculum.class, form.getCurriculum()));
         protocolHData.setProtocol(protocol);
         protocol.setProtocolHdata(protocolHData);
+        
+        List<Long> studentIds = StreamUtil.toMappedList(ps -> ps.getStudentId(), form.getProtocolStudents());
+        Set<String> occupations = curriculumOccpations(protocol);
+        Map<Long, List<StudentOccupationCertificate>> studentOccupationCertificates = studentOccupationCertificates(studentIds, occupations);
+
+        protocol.setProtocolStudents(StreamUtil.toMappedList(dto -> {
+            ProtocolStudent protocolStudent = EntityUtil.bindToEntity(dto, new ProtocolStudent());
+            protocolStudent.setStudent(em.getReference(Student.class, dto.getStudentId()));
+
+            List<StudentOccupationCertificate> studentCertificates = studentOccupationCertificates.get(dto.getStudentId());
+            if (studentCertificates != null) {
+                for(StudentOccupationCertificate sc : studentCertificates) {
+                    addStudentOccupationCertificateToProtocol(protocolStudent, sc);
+                }
+            }
+            return protocolStudent;
+        }, form.getProtocolStudents()));
 
         protocol.setProtocolStudents(StreamUtil.toMappedList(dto -> {
             ProtocolStudent protocolStudent = EntityUtil.bindToEntity(dto, new ProtocolStudent());
@@ -171,9 +196,10 @@ public class FinalExamHigherProtocolService extends AbstractProtocolService {
 
     private void saveStudents(Protocol protocol, FinalExamHigherProtocolSaveForm form) {
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
-                form.getProtocolStudents(), HigherProtocolStudentDto::getId, dto -> {
+                form.getProtocolStudents(), FinalExamHigherProtocolStudentSaveForm::getId, dto -> {
                     ProtocolStudent ps = EntityUtil.bindToEntity(dto, new ProtocolStudent(), "student");
                     ps.setStudent(em.getReference(Student.class, dto.getStudentId()));
+                    saveOccupationCertificates(ps, dto);
                     return ps;
                 }, (dto, ps) -> {
                     if (gradeChangedButNotRemoved(dto, ps)) {
@@ -182,13 +208,34 @@ public class FinalExamHigherProtocolService extends AbstractProtocolService {
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
                         Short mark = getHigherGradeMark(grade);
                         gradeStudent(ps, grade, mark);
-                        //ps.setAddInfo(dto.getAddInfo());
+                        ps.setAddInfo(dto.getAddInfo());
                     } else if (gradeRemoved(dto, ps)) {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         removeGrade(ps);
                     }
+                    ps.setCurriculumGrade(dto.getCurriculumGrade() != null
+                            ? em.getReference(CurriculumGrade.class, dto.getCurriculumGrade()) : null);
+                    saveOccupationCertificates(ps, dto);
                 });
+    }
+    
+    private void saveOccupationCertificates(ProtocolStudent student, FinalExamHigherProtocolStudentSaveForm form) {
+        Map<String, Long> currentCertificates = currentCertificateCodes(student);
+        for (String code : form.getOccupations()) {
+            Long certificateId = currentCertificates.remove(code);
+            if (certificateId == null) {
+                Classifier occupation = em.getReference(Classifier.class, code);
+                
+                ProtocolStudentOccupation pso = new ProtocolStudentOccupation();
+                pso.setProtocolStudent(student);
+                pso.setOccupation(occupation);
+                pso.setPartOccupation(null);
+                student.getProtocolStudentOccupations().add(pso);
+            }
+        }
+        
+        student.getProtocolStudentOccupations().removeIf(it -> currentCertificates.containsValue(it.getId()));
     }
 
     public List<AutocompleteResult> subjectStudyPeriodsForSelection(Long schoolId) {
@@ -206,32 +253,66 @@ public class FinalExamHigherProtocolService extends AbstractProtocolService {
             return new AutocompleteResult(ssp.getId(), nameEt, nameEn);
         }, ssps);
     }
-
-    public List<FinalExamHigherProtocolSubjectResult> subjectsForSelection(HoisUserDetails user, Long studyPeriodId) {
-        String from = "from subject s"
-                + " inner join subject_study_period ssp on ssp.subject_id = s.id";
-
-        if (user.getTeacherId() != null) {
-            from += " inner join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id";
+    
+    public List<AutocompleteResult> curriculumsForSelection(Long schoolId) {
+        String from = "from curriculum c"
+                + " join curriculum_version cv on c.id=cv.curriculum_id"
+                + " join curriculum_version_hmodule cvh on cv.id=cvh.curriculum_version_id";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+        //TODO: uncomment
+        //qb.requiredCriteria("c.status_code = :curriculumStatus", "curriculumStatus", CurriculumStatus.OPPEKAVA_STAATUS_K.name());
+        //qb.requiredCriteria("cv.status_code = :versionStatus", "versionStatus", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K.name());
+        qb.requiredCriteria("cvh.type_code = :type", "type", HigherModuleType.KORGMOODUL_F.name());
+        
+        List<?> data = qb.select("c.id, c.name_et, c.name_en", em).getResultList();
+        Map<Long, AutocompleteResult> results = new HashMap<>();
+        for (Object r : data) {
+            results.put(resultAsLong(r, 0), new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)));
         }
+        return new ArrayList<>(results.values());
+    }
+
+    public List<AutocompleteResult> subjectsForSelection(HoisUserDetails user, Long studyPeriodId, Long curriclumId) {
+        String from = "from subject s"
+                + " join subject_study_period ssp on ssp.subject_id = s.id"
+                + " join curriculum_version_hmodule_subject cvhs on cvhs.subject_id = s.id"
+                + " join curriculum_version_hmodule cvh on cvhs.curriculum_version_hmodule_id = cvh.id"
+                + " join curriculum_version cv on cvh.curriculum_version_id = cv.id"
+                + " left join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id";
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("s.status_code = :statusCode", "statusCode", SubjectStatus.AINESTAATUS_K.name());
         qb.requiredCriteria("s.assessment_code = :assessmentCode", "assessmentCode", SubjectAssessment.HINDAMISVIIS_E.name());
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriodId);
+        qb.requiredCriteria("cv.curriculum_id = :curriclumId", "curriclumId", curriclumId);
         qb.optionalCriteria("sspt.teacher_id = .teacherId", "teacherId", user.getTeacherId());
 
-        String select = "s.id as subject_id, s.code, s.name_et, s.name_en, s.credits, ssp.id as studyPeriod_id";
+        String select = "distinct ssp.id as studyPeriod_id, s.code, s.name_et, s.name_en, s.credits";
         List<?> data = qb.select(select, em).getResultList();
-
-        List<FinalExamHigherProtocolSubjectResult> results = new ArrayList<>();
-        for (Object r : data) {
-            results.add(new FinalExamHigherProtocolSubjectResult(resultAsLong(r, 0),
-                    SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 2), resultAsDecimal(r, 4)),
-                    SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 3), resultAsDecimal(r, 4)),
-                    resultAsLong(r, 5)));
+        
+        Map<Long, List<String>> allTeachers = new HashMap<>();
+        Set<Long> sspIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+        if(!sspIds.isEmpty()) {
+            List<?> teachersData = em.createNativeQuery("select sspt.subject_study_period_id, p.firstname, p.lastname from subject_study_period_teacher sspt "
+                    + "join teacher t on sspt.teacher_id = t.id "
+                    + "join person p on t.person_id = p.id where sspt.subject_study_period_id in (?1) order by p.lastname, p.firstname")
+                .setParameter(1, sspIds)
+                .getResultList();
+            teachersData.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), () -> allTeachers,
+                    Collectors.mapping(r -> PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)), Collectors.toList())));
         }
+        
+        List<AutocompleteResult> results = new ArrayList<>();
+        for (Object r : data) {
+            List<String> teachers = allTeachers.get(resultAsLong(r, 0));
+            String teacherNames = teachers != null ? (" - " + String.join(", ", teachers)) : "";
+            results.add(new AutocompleteResult(resultAsLong(r, 0),
+                    SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 2), resultAsDecimal(r, 4)) + teacherNames,
+                    SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 3), resultAsDecimal(r, 4)) + teacherNames));
+        }
+        
         return results;
     }
 
@@ -251,12 +332,18 @@ public class FinalExamHigherProtocolService extends AbstractProtocolService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_FROM);
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
-        qb.requiredCriteria("d.status_code = :status", "status", DeclarationStatus.OPINGUKAVA_STAATUS_K);
+        //qb.requiredCriteria("d.status_code = :status", "status", DeclarationStatus.OPINGUKAVA_STAATUS_K);
         qb.requiredCriteria("ds.subject_study_period_id = :subjectStudyPeriodId", "subjectStudyPeriodId", subjectStudyPeriodId);
+        
+        qb.filter("not exists (select p.id from protocol p "
+          + "join protocol_hdata ph on p.id = ph.protocol_id "
+          + "left join protocol_student ps on p.id = ps.protocol_id "
+          + "where ph.subject_study_period_id = ds.subject_study_period_id "
+          + "and ps.student_id = s.id)");
 
-        List<?> students = qb.select("distinct s.id, p.firstname, p.lastname, p.idcode as idCode, s.status_code as studentStatusCode,"
-                + " sg.code as studentGroupCode, c.id as curriculumId,"
-                + " c.name_et as curriculumNameEt, c.name_en as curriculumNameEn", em).getResultList();
+        List<?> students = qb.select(
+                "distinct s.id, p.firstname, p.lastname, p.idcode as idCode, s.status_code as studentStatusCode", em)
+                .getResultList();
         
         return students.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
             FinalExamHigherProtocolStudentDto dto = new FinalExamHigherProtocolStudentDto();
@@ -264,10 +351,7 @@ public class FinalExamHigherProtocolService extends AbstractProtocolService {
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
             dto.setIdcode(resultAsString(r, 3));
             dto.setStatus(resultAsString(r, 4));
-            dto.setStudentGroup(resultAsString(r, 5));
-            dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 6), resultAsString(r, 7), resultAsString(r, 8)));
             return dto;
         }));
     }
-    
 }

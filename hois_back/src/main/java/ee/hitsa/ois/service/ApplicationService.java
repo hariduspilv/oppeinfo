@@ -32,6 +32,7 @@ import ee.hitsa.ois.domain.application.ApplicationFile;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubject;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubjectEquivalent;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.ApplicationStatus;
@@ -67,6 +68,7 @@ import ee.hitsa.ois.web.dto.application.ApplicationDto;
 import ee.hitsa.ois.web.dto.application.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.application.ApplicationPlannedSubjectEquivalentDto;
 import ee.hitsa.ois.web.dto.application.ApplicationSearchDto;
+import ee.hitsa.ois.web.dto.application.ValidAcademicLeaveDto;
 
 @Transactional
 @Service
@@ -153,7 +155,9 @@ public class ApplicationService {
             throw new ValidationFailedException(applicable.get(type).getReason());
         }
 
-        return save(user, new Application(), applicationForm);
+        Application application = new Application();
+        application.setNeedsRepresentativeConfirm(Boolean.valueOf(!StudentUtil.isAdultAndDoNotNeedRepresentative(student)));
+        return save(user, application, applicationForm);
     }
 
     /**
@@ -176,8 +180,10 @@ public class ApplicationService {
         application.setNewCurriculumVersion(EntityUtil.getOptionalOne(CurriculumVersion.class, applicationForm.getNewCurriculumVersion(), em));
         application.setStudent(EntityUtil.getOptionalOne(Student.class, applicationForm.getStudent(), em));
 
-        if (applicationForm.getAcademicApplication() != null) {
-            application.setAcademicApplication(em.getReference(Application.class, applicationForm.getAcademicApplication().getId()));
+        ValidAcademicLeaveDto validAcademicLeave = applicationForm.getValidAcademicLeave();
+        if (validAcademicLeave != null) {
+            application.setDirective(em.getReference(DirectiveStudent.class, validAcademicLeave.getId())
+                    .getDirective());
         }
         updateFiles(application, applicationForm);
         updatePlannedSubjects(application, applicationForm);
@@ -286,14 +292,15 @@ public class ApplicationService {
         return application;
     }
 
-    public Application findLastValidAcademicLeaveWithoutRevocation(Long studentId) {
-      // find last confirmed akad directive and take application from it
-      List<?> data = em.createNativeQuery("select ds.application_id from directive_student ds join directive d on ds.directive_id = d.id "+
+    public DirectiveStudent findLastValidAcademicLeaveWithoutRevocation(Long studentId) {
+      // find last confirmed akad directive
+      List<?> data = em.createNativeQuery("select ds.id from directive_student ds join directive d on ds.directive_id = d.id "+
               "left join study_period sp on ds.study_period_start_id = sp.id left join study_period ep on ds.study_period_end_id = ep.id "+
               "where ds.student_id = ?1 and ds.canceled = false and d.type_code = ?2 and d.status_code = ?3 "+
               "and case when ds.is_period then sp.start_date else ds.start_date end <= ?4 and case when ds.is_period then ep.end_date else ds.end_date end >= ?5 "+
               "and not exists(select ds2.id from directive_student ds2 join directive d2 on ds2.directive_id = d2.id and ds2.canceled = false "+
-                  "and ds2.student_id = ds.student_id and d2.type_code = ?6 and d2.status_code = ?7 join application a on ds2.application_id = a.id and a.academic_application_id = ds.application_id) "+
+                  "and ds2.student_id = ds.student_id and d2.type_code = ?6 and d2.status_code = ?7 "+
+                  "join application a on ds2.application_id = a.id and a.directive_id = ds.directive_id) "+
               "order by d.confirm_date desc")
               .setParameter(1, studentId)
               .setParameter(2, DirectiveType.KASKKIRI_AKAD.name())
@@ -304,7 +311,7 @@ public class ApplicationService {
               .setParameter(7, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
               .setMaxResults(1).getResultList();
 
-      return data.isEmpty() ? null : em.getReference(Application.class, resultAsLong(data.get(0), 0));
+      return data.isEmpty() ? null : em.getReference(DirectiveStudent.class, resultAsLong(data.get(0), 0));
     }
 
     public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(Student student) {
@@ -346,8 +353,8 @@ public class ApplicationService {
                     } else if (!StudentUtil.isOnAcademicLeave(student)) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotOnAcademicLeave"));
                     } else {
-                        Application academicLeaveApplication = findLastValidAcademicLeaveWithoutRevocation(EntityUtil.getId(student));
-                        if (academicLeaveApplication == null) {
+                        DirectiveStudent academicLeave = findLastValidAcademicLeaveWithoutRevocation(EntityUtil.getId(student));
+                        if (academicLeave == null) {
                             result.put(type, new ApplicationApplicableDto("application.messages.noValidAcademicLeaveApplicationFound"));
                         }
                     }

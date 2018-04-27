@@ -9,12 +9,14 @@ import ee.hitsa.ois.mock.MockEhisLogService;
 import ee.hitsa.ois.mock.MockEkisClient;
 import ee.hitsa.ois.mock.MockEkisLogService;
 import ee.hitsa.ois.mock.MockEkisService;
+import ee.hitsa.ois.mock.MockLdapService;
 import ee.hitsa.ois.mock.MockSaisClient;
 import ee.hitsa.ois.mock.MockSaisLogService;
 import ee.hitsa.ois.service.ehis.EhisLogService;
 import ee.hitsa.ois.service.ekis.EkisLogService;
 import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.service.sais.SaisLogService;
+import ee.hitsa.ois.service.security.LdapService;
 import ee.hois.soap.ekis.client.EkisClient;
 import ee.hois.xroad.ehis.service.EhisClient;
 import ee.hois.xroad.sais2.service.SaisClient;
@@ -63,5 +65,11 @@ public class MockServicesConfiguration {
     public SaisLogService saisLogService() {
         // do not store log entires
         return new MockSaisLogService();
+    }
+
+    @Bean
+    public LdapService ldapService() {
+        // do not access LDAP server
+        return new MockLdapService();
     }
 }

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
@@ -33,6 +34,7 @@ import ee.hitsa.ois.web.commandobject.application.ApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.application.ApplicationApplicableDto;
 import ee.hitsa.ois.web.dto.application.ApplicationDto;
 import ee.hitsa.ois.web.dto.application.ApplicationSearchDto;
+import ee.hitsa.ois.web.dto.application.ValidAcademicLeaveDto;
 
 @RestController
 @RequestMapping("/applications")
@@ -73,19 +75,19 @@ public class ApplicationController {
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Application application, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         Student student = application.getStudent();
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
-        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) || !ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status) ||
-                Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm())) {
+        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) || !ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)) {
             throw new ValidationFailedException(String.format("user %s is not allowed to delete application %d with status %s", user.getUsername(), application.getId(), status.name()));
         }
         applicationService.delete(user, application);
     }
 
     @GetMapping("/student/{id:\\d+}/validAcademicLeave")
-    public ApplicationDto academicLeave(HoisUserDetails user, @WithEntity Student student) {
+    public ValidAcademicLeaveDto academicLeave(HoisUserDetails user, @WithEntity Student student) {
         if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
             throw new ValidationFailedException(String.format("user %s is not allowed to view validAcademicLeave", user.getUsername()));
         }
-        return ApplicationDto.of(applicationService.findLastValidAcademicLeaveWithoutRevocation(EntityUtil.getId(student)));
+        DirectiveStudent academicLeave = applicationService.findLastValidAcademicLeaveWithoutRevocation(EntityUtil.getId(student));
+        return academicLeave == null ? null : ValidAcademicLeaveDto.of(academicLeave);
     }
 
     @GetMapping("student/{id:\\d+}/applicable")

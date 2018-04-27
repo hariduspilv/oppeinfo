@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.OisFileViewDto;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
@@ -29,14 +30,15 @@ public class FinalExamVocationalProtocolDto extends VersionedCommand {
     private LocalDate finalDate;
     private CommitteeDto committee;
     private List<Long> presentCommitteeMembers;
-    private List<FinalExamVocationalProtocolOccupationDto> occupations = new ArrayList<>();
+    private List<FinalExamProtocolOccupationDto> occupations = new ArrayList<>();
     private List<String> occupationGrantOccupationCodes = new ArrayList<>();
     
     private Boolean canBeEdited;
     private Boolean canBeDeleted;
     
     public static FinalExamVocationalProtocolDto of(Protocol protocol) {
-        FinalExamVocationalProtocolDto dto = EntityUtil.bindToDto(protocol, new FinalExamVocationalProtocolDto(), "protocolStudents", "protocolVdata", "studyLevel", "committee");
+        FinalExamVocationalProtocolDto dto = EntityUtil.bindToDto(protocol, new FinalExamVocationalProtocolDto(),
+                "protocolStudents", "protocolVdata", "studyLevel", "committee", "confirmer");
         dto.setProtocolStudents(StreamUtil.toMappedList(FinalExamVocationalProtocolStudentDto::of, protocol.getProtocolStudents()));
         if (protocol.getCommittee() != null) {
             dto.setCommittee(CommitteeDto.of(protocol.getCommittee()));
@@ -49,7 +51,7 @@ public class FinalExamVocationalProtocolDto extends VersionedCommand {
             dto.setStudyLevel(EntityUtil.getCode(protocol.getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule().getCurriculum().getOrigStudyLevel()));
             
             protocol.getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule().getOccupations().forEach(oc -> {
-                dto.getOccupations().add(new FinalExamVocationalProtocolOccupationDto(oc.getId(),
+                dto.getOccupations().add(new FinalExamProtocolOccupationDto(oc.getId(),
                         EntityUtil.getCode(oc.getOccupation()), oc.getOccupation().getNameEt(), oc.getOccupation().getNameEn()));
             });
             
@@ -70,6 +72,7 @@ public class FinalExamVocationalProtocolDto extends VersionedCommand {
         if (protocol.getOisFile() != null) {
             dto.setOisFile(EntityUtil.bindToDto(protocol.getOisFile(), new OisFileViewDto()));
         }
+        dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(protocol.getConfirmer()));
         
         return dto;
     }
@@ -202,11 +205,11 @@ public class FinalExamVocationalProtocolDto extends VersionedCommand {
         this.canBeDeleted = canBeDeleted;
     }
 
-    public List<FinalExamVocationalProtocolOccupationDto> getOccupations() {
+    public List<FinalExamProtocolOccupationDto> getOccupations() {
         return occupations;
     }
 
-    public void setOccupations(List<FinalExamVocationalProtocolOccupationDto> occupations) {
+    public void setOccupations(List<FinalExamProtocolOccupationDto> occupations) {
         this.occupations = occupations;
     }
 }

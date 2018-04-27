@@ -15,6 +15,7 @@ import org.hibernate.annotations.Parameter;
 
 import ee.hitsa.ois.domain.BaseEntity;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 
 @Entity
@@ -36,23 +37,40 @@ public class ProtocolHdata extends BaseEntity {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier type;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Curriculum curriculum;
+
 
     public Protocol getProtocol() {
         return protocol;
     }
+    
     public void setProtocol(Protocol protocol) {
         this.protocol = protocol;
     }
+    
     public SubjectStudyPeriod getSubjectStudyPeriod() {
         return subjectStudyPeriod;
     }
+    
     public void setSubjectStudyPeriod(SubjectStudyPeriod subjectStudyPeriod) {
         this.subjectStudyPeriod = subjectStudyPeriod;
     }
+    
     public Classifier getType() {
         return type;
     }
+    
     public void setType(Classifier type) {
         this.type = type;
+    }
+    
+    public Curriculum getCurriculum() {
+        return curriculum;
+    }
+    
+    public void setCurriculum(Curriculum curriculum) {
+        this.curriculum = curriculum;
     }
 }

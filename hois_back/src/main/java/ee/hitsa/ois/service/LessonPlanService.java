@@ -456,7 +456,7 @@ public class LessonPlanService {
     }
     
     private void setTimetableObjectStudentGroups(Journal journal, LessonPlanJournalForm form, LessonPlanModule lessonPlanModule) {
-     // Remove previously connected groups from timetable objects
+        // Remove previously connected groups from timetable objects
         Set<Long> connectedGroups = StreamUtil.toMappedSet(LessonPlanGroupForm::getStudentGroup, form.getGroups());
         connectedGroups.add(EntityUtil.getId(lessonPlanModule.getLessonPlan().getStudentGroup()));
         List<TimetableObjectStudentGroup> leftOverTimetableGroups = em.createQuery(
@@ -585,6 +585,27 @@ public class LessonPlanService {
     }
 
     public void deleteJournal(HoisUserDetails user, Journal journal) {
+        //  remove timetable objects and groups that do not have any connecting events
+        Query objectsQuery = em.createNativeQuery("select tto.id from timetable_object tto where tto.journal_id=?1 " + 
+                "and tto.id not in (select tto.id from timetable_object tto join timetable_event te on te.timetable_object_id=tto.id " +
+                "where tto.journal_id=?1)");
+        objectsQuery.setParameter(1, EntityUtil.getId(journal));
+        List<?> objectsData = objectsQuery.getResultList();
+        
+        if (!objectsData.isEmpty()) {
+            List<Long> objects = StreamUtil.toMappedList(r -> resultAsLong(r, 0), objectsData);
+            List<TimetableObjectStudentGroup> groups = em
+                    .createQuery("select tosg from TimetableObjectStudentGroup tosg where tosg.timetableObject.id in (?1)", TimetableObjectStudentGroup.class)
+                    .setParameter(1, objects).getResultList();
+            
+            for (TimetableObjectStudentGroup group: groups) {
+                EntityUtil.deleteEntity(group, em);
+            }
+            for (Long objectId : objects) {
+                EntityUtil.deleteEntity(em.getReference(TimetableObject.class, objectId), em);
+            }
+        }
+        
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(journal, em);
     }

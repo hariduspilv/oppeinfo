@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Õppekava</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+    </style>
+  </head>
+  <body>
+  	<div class="font14 header">
+	  <div>{{ content.school }}</div>
+	  <div>{{ content.nameEt }}</div>
+	  <div>{{ content.approvalDokNr }} {{ content.approval }}</div>
+  	</div>
+    <table class="reporttable font12">
+      <tr>
+        <td class="label" colspan="2">{{ "report.curriculum.iscedclass" | translate }}</td>
+        <td colspan="5">{{ content.iscedClass }}</td>
+      </tr>
+      <tr>
+        <td class="label" colspan="2" rowspan="3">{{ "report.curriculum.name" | translate }}</td>
+        <td colspan="5">{{ content.nameEt }}</td>
+      </tr>
+      <tr>
+        <td colspan="5">{{ content.nameEn }}&nbsp;</td>  
+      </tr>
+      <tr>
+        <td colspan="5">{{ content.nameRu }}&nbsp;</td>
+      </tr>
+      <tr>
+        <td class="label" colspan="2">{{ "report.curriculum.merCode" | translate }}</td>
+        <td colspan="5">{{ content.merCode }}</td>
+      </tr>
+      <tr>
+        <td class="center" colspan="5">{{ "report.curriculum.primary" | translate }}</td>
+        <td class="center" colspan="2">{{ "report.curriculum.secondary" | translate }}</td>
+      </tr>
+      <tr>
+        <td class="label"> EKR 2 </td>
+        <td class="label"> EKR 3 </td>
+        <td class="label"> EKR 4 {{ "vocationalSecondaryEducation" | translate }}</td>
+        <td class="label"> EKR 4 </td>
+        <td class="label"> EKR 5 </td>
+        <td class="label"> EKR 4 </td>
+        <td class="label"> EKR 5 </td>
+      </tr>
+      <tr>
+        <td class="center">{{ content.ekr21 }}</td>
+        <td class="center">{{ content.ekr31 }}</td>
+        <td class="center">{{ content.ekr41k }}</td>
+        <td class="center">{{ content.ekr41 }}</td>
+        <td class="center">{{ content.ekr51 }}</td>
+        <td class="center">{{ content.ekr42 }}</td>
+        <td class="center">{{ content.ekr52 }}</td>
+      </tr>
+      <tr>
+        <td class="label" colspan="2">{{ "report.curriculum.vocational.credits" | translate }}:</td>
+        <td colspan="5">{{ content.credits }}</td>
+      </tr>
+      <tr>
+        <td class="label" colspan="2">{{ "report.curriculum.draftText" | translate }}:</td>
+        <td colspan="5">{{ content.draftText }}</td>
+      </tr>
+      <tr>
+        <td class="label" colspan="2">{{ "report.curriculum.outcomes" | translate }}:</td>
+        <td colspan="5">{{ content.outcomes }}</td>
+      </tr>
+      <tr>
+        <td colspan="7">
+        	<span class="label">{{ "report.curriculum.implementation" | translate }}</span><br/>
+        	<br/>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="7">
+        	<span class="label">{{ "report.curriculum.vocational.admissionRequirements" | translate }}</span><br/>
+        	{{ content.admissionRequirements }}
+        </td>
+      </tr>
+      <tr>
+        <td colspan="7">
+        	<span class="label">{{ "report.curriculum.vocational.graduationRequirements" | translate }}</span><br/>
+        	{{ content.graduationRequirements }}
+        </td>
+      </tr>
+      <tr>
+        <td class="label" colspan="7">{{ "report.curriculum.acquiring" | translate }}</td>
+      </tr>
+      <tr>
+        <td colspan="2">{{ "report.curriculum.acquiring.qualifications" | translate }}:</td>
+        <td colspan="5">
+          {% for qualification in content.qualifications %}
+	      <p>{{ qualification }}</p>
+	      {% endfor %}
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">{{ "report.curriculum.acquiring.partoccupations" | translate }}:</td>
+        <td colspan="5">
+          {% for partoccupation in content.partoccupations %}
+	      <p>{{ partoccupation }}</p>
+	      {% endfor %}
+        </td>
+      </tr>
+      <tr>
+        <td colspan="7">
+        	<span class="label">{{ "report.curriculum.vocational.structure" | translate }}</span><br/>
+        	{{ content.structure }}
+        </td>
+      </tr>
+      <tr>
+        <td colspan="7">
+        	<span class="label">{{ "report.curriculum.specialization" | translate }}</span><br/>
+        	{{ content.specialization }}
+        </td>
+      </tr>
+      <tr>
+        <td class="label" colspan="2">{{ "report.curriculum.contactPerson" | translate }}</td>
+        <td colspan="5">{{ content.contactPerson }}</td>
+      </tr>
+      <tr>
+        <td colspan="7">
+        	{{ "report.curriculum.description" | translate }}:<br/>
+        	{{ content.description }}
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

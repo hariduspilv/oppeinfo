@@ -1,7 +1,9 @@
 <md-button
   ng-class="{'active' : isSelected()}"
   ng-href="#{{section.url}}"
-  ng-click="focusSection()">
+  ng-click="focusSection()"
+  md-colors="{color: isSelected() ? 'primary-900':'primary-900'}">
+  <md-icon md-colors="{color: isSelected() ? 'primary-900':'primary-900'}" md-font-set="material-icons" class="sm" ng-class="{'active' : isSelected()}">{{section.icon}}</md-icon>
   {{section.name | translate}}
   <span class="md-visually-hidden"
         ng-if="isSelected()">

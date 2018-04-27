@@ -141,7 +141,7 @@
 
 <div layout-padding>
   <hois-collapsable label="('journal.curriculumVersionModuleOrThemeDescription' | translate)" expanded="false">
-    <div ng-repeat="module in journal.moduleDescriptions">
+    <div ng-repeat="module in journal.moduleDescriptions | orderBy: ['-isModule', currentLanguageNameField()]">
       <a href="" class="md-raised small-link" ng-click="moduleDescriptionDialog(module)">{{currentLanguageNameField(module)}}</a>
     </div>
   </hois-collapsable>

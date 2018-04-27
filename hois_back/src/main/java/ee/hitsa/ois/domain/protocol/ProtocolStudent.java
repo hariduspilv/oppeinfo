@@ -15,6 +15,7 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodExamStudent;
 
@@ -49,6 +50,9 @@ public class ProtocolStudent extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private SubjectStudyPeriodExamStudent subjectStudyPeriodExamStudent;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    private CurriculumGrade curriculumGrade;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "protocol_student_id", nullable = false, updatable = false)
@@ -120,6 +124,14 @@ public class ProtocolStudent extends BaseEntityWithId {
 
     public void setSubjectStudyPeriodExamStudent(SubjectStudyPeriodExamStudent subjectStudyPeriodExamStudent) {
         this.subjectStudyPeriodExamStudent = subjectStudyPeriodExamStudent;
+    }
+    
+    public CurriculumGrade getCurriculumGrade() {
+        return curriculumGrade;
+    }
+
+    public void setCurriculumGrade(CurriculumGrade curriculumGrade) {
+        this.curriculumGrade = curriculumGrade;
     }
 
     public List<ProtocolStudentHistory> getProtocolStudentHistories() {

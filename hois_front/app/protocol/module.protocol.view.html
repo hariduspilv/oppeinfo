@@ -24,6 +24,7 @@
                     </div>
                   </th>
                   <th md-column>{{'moduleProtocol.moduleGrade' | translate}}</th>
+                  <th md-column>{{'moduleProtocol.changeReason' | translate}}</th>
                 </tr>
               </thead>
             <tbody md-body>
@@ -37,6 +38,7 @@
                   {{outcomeResultsView(outcome.id, row)}}
                 </td>
                 <td md-cell>{{gradeValue(row.grade)}}</td>
+                <td md-cell>{{row.addInfo}}</td>
               </tr>
             </tbody>
           </table>

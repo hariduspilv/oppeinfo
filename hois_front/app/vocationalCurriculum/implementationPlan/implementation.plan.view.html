@@ -249,6 +249,11 @@
     <div ng-show="implementationPlan.status === VERSION_STATUS.C">
       <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
     </div>
+    <!--
+    <a href="{{implementationPlanPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="implementationPlan.id">{{'main.button.print' | translate}}</a>
+    -->
+    <a href="{{curriculumVersionPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="implementationPlan.id">{{'module.implementationPlan.print' | translate}}</a>
+    <a href="{{curriculumVersionModulesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="implementationPlan.id">{{'module.implementationPlan.printModules' | translate}}</a>
     <md-button class="md-raised md-default" ng-click="back('#/vocationalCurriculum/' + curriculumId + '/view')">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

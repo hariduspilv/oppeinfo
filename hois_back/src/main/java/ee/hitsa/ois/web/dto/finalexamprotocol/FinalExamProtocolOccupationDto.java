@@ -1,13 +1,13 @@
 package ee.hitsa.ois.web.dto.finalexamprotocol;
 
-public class FinalExamVocationalProtocolOccupationDto {
+public class FinalExamProtocolOccupationDto {
     
     private Long id;
     private String code;
     private String nameEt;
     private String nameEn;
     
-    public FinalExamVocationalProtocolOccupationDto(Long id, String code, String nameEt, String nameEn) {
+    public FinalExamProtocolOccupationDto(Long id, String code, String nameEt, String nameEn) {
         this.id = id;
         this.code = code;
         this.nameEt = nameEt;

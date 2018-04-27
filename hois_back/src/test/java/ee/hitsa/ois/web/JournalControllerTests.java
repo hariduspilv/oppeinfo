@@ -86,6 +86,14 @@ public class JournalControllerTests {
     public void search() {
         ResponseEntity<JournalSearchDto> responseEntity = restTemplate.getForEntity(ENDPOINT, JournalSearchDto.class);
         Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        
+        responseEntity = restTemplate.getForEntity(
+                UriComponentsBuilder.fromUriString(ENDPOINT)
+                    .queryParam("studyYear", Long.valueOf(1L))
+                    .toUriString(), 
+                JournalSearchDto.class);
+        Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);

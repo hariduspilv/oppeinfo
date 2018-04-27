@@ -4,7 +4,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,9 +14,6 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,12 +31,10 @@ import ee.hitsa.ois.domain.protocol.ProtocolVdata;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.teacher.Teacher;
-import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.StudentStatus;
-import ee.hitsa.ois.repository.LessonPlanModuleRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -69,11 +63,7 @@ import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 @Service
 public class ModuleProtocolService extends AbstractProtocolService {
 
-    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String FINAL_EXAM_CODE = "KUTSEMOODUL_L";
-
-    @Autowired
-    private LessonPlanModuleRepository lessonPlanModuleRepository;
 
     public Page<ModuleProtocolSearchDto> search(HoisUserDetails user, ModuleProtocolSearchCommand cmd,
             Pageable pageable) {
@@ -125,7 +115,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
                     dto.setStatus(resultAsString(r, 2));
                     dto.setInserted(resultAsLocalDate(r, 3));
                     dto.setConfirmDate(resultAsLocalDate(r, 4));
-                    dto.setConfirmer(resultAsString(r, 5));
+                    dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 5)));
                     dto.setCanEdit(Boolean.valueOf(ModuleProtocolUtil.canEdit(user, ProtocolStatus.valueOf(dto.getStatus()), resultAsLong(r, 6))));
                     dtoById.put(dto.getId(), dto);
                     return dto;
@@ -343,14 +333,6 @@ public class ModuleProtocolService extends AbstractProtocolService {
         }
     }
     
-    public void removeStudent(HoisUserDetails user, ProtocolStudent student) {
-        if (!ProtocolUtil.studentCanBeDeleted(student)) {
-            throw new ValidationFailedException("moduleProtocol.messages.cantRemoveStudent");
-        }
-        EntityUtil.setUsername(user.getUsername(), em);
-        EntityUtil.deleteEntity(student, em);
-    }
-
     public Collection<ModuleProtocolStudentSelectDto> otherStudents(HoisUserDetails user, Protocol protocol) {
         Map<Long, ModuleProtocolStudentSelectDto> result = studentsForSelection(user,
                 EntityUtil.getId(protocol.getProtocolVdata().getCurriculumVersionOccupationModule()), protocol.getId());
@@ -359,15 +341,11 @@ public class ModuleProtocolService extends AbstractProtocolService {
         return result.values();
     }
 
-    public ModuleProtocolOccupationalModuleDto occupationModule(HoisUserDetails user,
+    public ModuleProtocolOccupationalModuleDto occupationModule(HoisUserDetails user, Long studyYearId,
             Long curriculumVersionOccupationModuleId) {
         ModuleProtocolOccupationalModuleDto dto = new ModuleProtocolOccupationalModuleDto();
         dto.setOccupationModuleStudents(occupationModuleStudents(user, curriculumVersionOccupationModuleId));
-        LessonPlanModule lessonPlanModule = lessonPlanModuleRepository
-                .findFirstByCurriculumVersionOccupationModuleId(curriculumVersionOccupationModuleId);
-        if (lessonPlanModule != null && lessonPlanModule.getTeacher() != null) {
-            dto.setTeacher(AutocompleteResult.of(lessonPlanModule.getTeacher()));
-        }
+        dto.setTeacher(lessonPlanModuleTeacher(studyYearId, curriculumVersionOccupationModuleId));
         return dto;
     }
 

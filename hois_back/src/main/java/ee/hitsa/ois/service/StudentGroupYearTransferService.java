@@ -187,6 +187,14 @@ public class StudentGroupYearTransferService {
             groupMap.put(groupId, groupLog);
             resultMap.put(groupId, new CalculatedStudentGroupDto(EntityUtil.getId(groupLog)));
         }
+        em.createNativeQuery("delete from student_group_year_transfer_log where id in ("
+                + "select sgytl.id"
+                + " from student_group_year_transfer_log sgytl"
+                + " join student_group_year_transfer sgyt on sgyt.id = sgytl.student_group_year_transfer_id"
+                + " join student s on s.id = sgytl.student_id"
+                + " where sgyt.id in ?1 and (s.student_group_id is null or sgyt.student_group_id != s.student_group_id))")
+                .setParameter(1, StreamUtil.toMappedList(EntityUtil::getId, groupLogs))
+                .executeUpdate();
         List<StudentGroupYearTransferLog> studentLogs = groupLogs.isEmpty() ? Collections.emptyList() : 
             em.createQuery("select sgytl from StudentGroupYearTransferLog sgytl"
                 + " where sgytl.studentGroupYearTransfer in ?1", StudentGroupYearTransferLog.class)

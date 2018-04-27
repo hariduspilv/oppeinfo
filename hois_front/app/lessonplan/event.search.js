@@ -10,12 +10,18 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
     $scope.formState = {};
     var baseUrl = '/timetableevents';
 
-
     QueryUtils.endpoint(baseUrl + '/searchFormData').search().$promise.then(function (result) {
       $scope.formState.studentGroups = result.studentGroups;
       $scope.formState.studyPeriods = result.studyPeriods;
       $scope.formState.teachers = result.teachers;
-      $scope.criteria.singleEvent = true;
+
+      if (!angular.isDefined($scope.criteria.singleEvent)) {
+        $scope.criteria.singleEvent = true;
+      }
+
+      if (!angular.isDefined($scope.criteria.from)) {
+        $scope.criteria.from = new Date();
+      }
       $scope.loadData();
     });
 
@@ -30,7 +36,7 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
     });
 
     QueryUtils.createQueryForm($scope, baseUrl, {
-      order: 'id'
+      order: $scope.currentLanguage()==='en' ? '3' : '2'
     });
 
 

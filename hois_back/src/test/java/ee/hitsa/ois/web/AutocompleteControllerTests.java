@@ -462,6 +462,14 @@ public class AutocompleteControllerTests {
     }
 
     @Test
+    public void studyPeriodsWithYear() {
+        String uri = "/autocomplete/studyPeriodsWithYear";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void studyYears() {
         String uri = "/autocomplete/studyYears";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);

@@ -500,13 +500,13 @@ public class DirectiveConfirmService {
         }
     }
 
-    private Map<Long, DirectiveStudent> findAcademicLeaves(Directive directive) {
+    Map<Long, DirectiveStudent> findAcademicLeaves(Directive directive) {
         if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_AKADK, DirectiveType.KASKKIRI_STIPTOET) || directive.getStudents().isEmpty()) {
             return Collections.emptyMap();
         }
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "+
-                "inner join directive d on ds.directive_id = d.id and ds.canceled = false "+
+                "join directive d on ds.directive_id = d.id and ds.canceled = false "+
                 "left join study_period sps on ds.study_period_start_id = sps.id "+
                 "left join study_period spe on ds.study_period_end_id = spe.id").sort(new Sort(Direction.DESC, "d.confirm_date"));
 
@@ -515,7 +515,10 @@ public class DirectiveConfirmService {
         qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_AKAD);
         if(ClassifierUtil.equals(DirectiveType.KASKKIRI_AKADK, directive.getType())) {
-            qb.requiredCriteria("ds.application_id in (select a.academic_application_id from directive_student ds2 inner join application a on ds2.application_id = a.id where ds2.directive_id = :directiveId)", "directiveId", directive.getId());
+            qb.requiredCriteria("ds.directive_id in (select a.directive_id"
+                    + " from directive_student ds2"
+                    + " join application a on ds2.application_id = a.id"
+                    + " where ds2.directive_id = :directiveId)", "directiveId", directive.getId());
         } else {
             // match academic leave period
             qb.requiredCriteria("exists(select 1 from directive_student ds2 where ds2.directive_id = :directiveId and ds2.start_date <= case when ds.is_period then spe.end_date else ds.end_date end and ds2.end_date >= case when ds.is_period then sps.start_date else ds.start_date end)", "directiveId", directive.getId());

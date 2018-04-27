@@ -103,7 +103,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <a ng-href="#/finalExamHigherProtocol/{{::row.id}}/view">{{::row.protocolNr}}</a>
+              <a ng-href="#/finalExamHigherProtocols/{{::row.id}}/view">{{::row.protocolNr}}</a>
             </td>
             <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
             <td md-cell>{{row.teachers.join(', ')}}</td>
@@ -112,7 +112,7 @@
             <td md-cell>{{row.confirmDate | hoisDate}}</td>
             <td md-cell>{{::row.confirmer}}</td>
             <td md-cell>
-              <md-button ng-if="!row.confirmDate || (row.confirmDate && auth.isAdmin())" md-no-ink class="md-primary change-button" ng-href="#/finalExamHigherProtocols/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button ng-if="row.canChange && row.status.code !== 'PROTOKOLL_STAATUS_K'" md-no-ink class="md-primary change-button" ng-href="#/finalExamHigherProtocols/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

@@ -2,7 +2,8 @@
   <form name="dialogForm" ng-submit="loadData()" novalidate ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2>{{"journal.moduleDescription" | translate}}</h2>
+        <h2 ng-if="moduleDescription.isModule">{{"journal.moduleDescription" | translate}}</h2>
+        <h2 ng-if="!moduleDescription.isModule">{{"journal.themeDescription" | translate}}</h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
@@ -13,7 +14,7 @@
       <div class="md-dialog-content form-readonly">
         <div flex>
             <div layout="column">
-              <md-input-container flex>
+              <md-input-container flex ng-if="!moduleDescription.isModule && moduleDescription.subthemes">
                 <label>{{'module.subthemes' | translate}}</label>
                 <hois-value value="moduleDescription.subthemes"></hois-value>
               </md-input-container>
@@ -21,19 +22,19 @@
                 <label>{{'module.totalGradeDescription' | translate}}</label>
                 <hois-value value="moduleDescription.totalGradeDescription"></hois-value>
               </md-input-container>
-              <md-input-container flex>
+              <md-input-container flex ng-if="!isDistinctiveAssessment">
                 <label>{{'module.gradeADescription' | translate}}</label>
                 <hois-value value="moduleDescription.passDescription"></hois-value>
               </md-input-container>
-              <md-input-container flex>
+              <md-input-container flex ng-if="isDistinctiveAssessment">
                 <label>{{'module.grade5Description' | translate}}</label>
                 <hois-value value="moduleDescription.grade5Description"></hois-value>
               </md-input-container>
-              <md-input-container flex>
+              <md-input-container flex ng-if="isDistinctiveAssessment">
                 <label>{{'module.grade4Description' | translate}}</label>
                 <hois-value value="moduleDescription.grade4Description"></hois-value>
               </md-input-container>
-              <md-input-container flex>
+              <md-input-container flex ng-if="isDistinctiveAssessment">
                 <label>{{'module.grade3Description' | translate}}</label>
                 <hois-value value="moduleDescription.grade3Description"></hois-value>
               </md-input-container>

@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.dto.finalexamprotocol;
 
-public class FinalExamVocationalProtocolCommitteeSelectDto {
+public class FinalExamProtocolCommitteeSelectDto {
 
     private Long id;
     private String members;

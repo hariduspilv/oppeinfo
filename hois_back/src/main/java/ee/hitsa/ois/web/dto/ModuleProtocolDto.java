@@ -7,6 +7,7 @@ import java.util.List;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.OisFileViewDto;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
@@ -33,7 +34,7 @@ public class ModuleProtocolDto extends VersionedCommand {
     }
 
     public static ModuleProtocolDto of(Protocol protocol) {
-        ModuleProtocolDto dto = EntityUtil.bindToDto(protocol, new ModuleProtocolDto(), "protocolStudents", "protocolVdata");
+        ModuleProtocolDto dto = EntityUtil.bindToDto(protocol, new ModuleProtocolDto(), "protocolStudents", "protocolVdata", "confirmer");
         dto.setProtocolStudents(StreamUtil.toMappedList(ModuleProtocolStudentDto::of, protocol.getProtocolStudents()));
         if (protocol.getProtocolVdata() != null) {
             dto.setProtocolVdata(ProtocolVdataDto.of(protocol.getProtocolVdata()));
@@ -41,6 +42,7 @@ public class ModuleProtocolDto extends VersionedCommand {
         if (protocol.getOisFile() != null) {
             dto.setOisFile(EntityUtil.bindToDto(protocol.getOisFile(), new OisFileViewDto()));
         }
+        dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(protocol.getConfirmer()));
         return dto;
     }
 

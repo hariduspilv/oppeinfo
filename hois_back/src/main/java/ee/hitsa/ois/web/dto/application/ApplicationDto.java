@@ -5,23 +5,21 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
-import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.util.ApplicationUtil;
-import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.DirectiveUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
-import ee.hitsa.ois.web.dto.directive.DirectiveStudentDto;
 
 public class ApplicationDto extends InsertedChangedVersionDto {
 
     private Long id;
     private Boolean needsRepresentativeConfirm;
     private Boolean isAdult;
-    private DirectiveStudentDto directiveStudent;
     private AutocompleteResult student;
     private String status;
     private String type;
@@ -41,7 +39,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private LocalDate endDate;
     private Long studyPeriodStart;
     private Long studyPeriodEnd;
-    private ApplicationDto academicApplication;
+    private ValidAcademicLeaveDto validAcademicLeave;
     private LocalDateTime submitted;
     private Boolean isAbroad;
     private String abroadSchool;
@@ -53,36 +51,29 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private Set<ApplicationFileDto> files;
 
     public static ApplicationDto of(Application application) {
-        if (application == null) {
-            return null;
-        }
-
-        ApplicationDto dto = EntityUtil.bindToDto(application, new ApplicationDto(), "files", "plannedSubjects", "academicApplication",
-                "directiveStudent");
+        ApplicationDto dto = EntityUtil.bindToDto(application, new ApplicationDto(), "files", "plannedSubjects", "validAcademicLeave");
         dto.setFiles(StreamUtil.toMappedSet(ApplicationFileDto::of, application.getFiles()));
         dto.setPlannedSubjects(StreamUtil.toMappedSet(ApplicationPlannedSubjectDto::of, application.getPlannedSubjects()));
-        dto.setAcademicApplication(ApplicationDto.of(application.getAcademicApplication()));
 
-        if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_AKAD, application.getType())) {
-            // lets use the last directive student ?
-            DirectiveStudent directiveStudent = ApplicationUtil.getDirectiveStudent(application);
-            if(directiveStudent != null) {
-                DirectiveStudentDto sdto = new DirectiveStudentDto();
-                sdto.setIsPeriod(directiveStudent.getIsPeriod());
-                sdto.setStartDate(directiveStudent.getStartDate());
-                sdto.setEndDate(directiveStudent.getEndDate());
-                sdto.setStudyPeriodStart(EntityUtil.getNullableId(directiveStudent.getStudyPeriodStart()));
-                sdto.setStudyPeriodEnd(EntityUtil.getNullableId(directiveStudent.getStudyPeriodEnd()));
-                if(Boolean.TRUE.equals(directiveStudent.getIsPeriod())) {
-                    // start and end dates for cancel date validation
-                    sdto.setStartDate(directiveStudent.getStudyPeriodStart().getStartDate());
-                    sdto.setEndDate(directiveStudent.getStudyPeriodEnd().getEndDate());
-                }
-                dto.setDirectiveStudent(sdto);
-            }
+        DirectiveStudent directiveStudent = getDirectiveStudent(application);
+        if (directiveStudent != null) {
+            dto.setValidAcademicLeave(ValidAcademicLeaveDto.of(directiveStudent));
         }
         dto.setIsAdult(Boolean.valueOf(StudentUtil.isAdultAndDoNotNeedRepresentative(application.getStudent())));
         return dto;
+    }
+
+    private static DirectiveStudent getDirectiveStudent(Application application) {
+        Directive academicDirective = application.getDirective();
+        if (academicDirective != null) {
+            return DirectiveUtil.getDirectiveStudent(academicDirective,
+                    EntityUtil.getId(application.getStudent()));
+        }
+        Application academicApplication = application.getAcademicApplication();
+        if (academicApplication != null) {
+            return ApplicationUtil.getDirectiveStudent(academicApplication);
+        }
+        return null;
     }
 
     public Long getId() {
@@ -107,14 +98,6 @@ public class ApplicationDto extends InsertedChangedVersionDto {
 
     public void setIsAdult(Boolean isAdult) {
         this.isAdult = isAdult;
-    }
-
-    public DirectiveStudentDto getDirectiveStudent() {
-        return directiveStudent;
-    }
-
-    public void setDirectiveStudent(DirectiveStudentDto directiveStudent) {
-        this.directiveStudent = directiveStudent;
     }
 
     public AutocompleteResult getStudent() {
@@ -269,12 +252,12 @@ public class ApplicationDto extends InsertedChangedVersionDto {
         this.studyPeriodEnd = studyPeriodEnd;
     }
 
-    public ApplicationDto getAcademicApplication() {
-        return academicApplication;
+    public ValidAcademicLeaveDto getValidAcademicLeave() {
+        return validAcademicLeave;
     }
 
-    public void setAcademicApplication(ApplicationDto academicApplication) {
-        this.academicApplication = academicApplication;
+    public void setValidAcademicLeave(ValidAcademicLeaveDto validAcademicLeave) {
+        this.validAcademicLeave = validAcademicLeave;
     }
 
     public LocalDateTime getSubmitted() {

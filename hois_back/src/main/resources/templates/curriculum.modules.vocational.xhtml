@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Õppekava moodulid</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+    </style>
+  </head>
+  <body>
+    <table class="reporttable font12" width="100%">
+      {% for type in content.moduleTypes %}
+      <tr>
+        <td class="label" width="20%">
+          {% if type.code == "KUTSEMOODUL_P" %}
+            {{ "report.curriculum.coreModules" | translate }}
+          {% elseif type.code == "KUTSEMOODUL_Y" %}
+            {{ "report.curriculum.generalModules" | translate }}
+          {% elseif type.code == "KUTSEMOODUL_V" %}
+            {{ "report.curriculum.optionalModules" | translate }}
+          {% elseif type.code == "KUTSEMOODUL_L" %}
+            {{ "report.curriculum.graduationModules" | translate }}
+          {% endif %}
+        </td>
+        <td class="label" colspan="2" width="80%">{{ type.totalCredits }} {{ "report.curriculum.vocationalCredits" | translate }}</td>
+      </tr>
+      {% for module in type.modules %}
+        <tr>
+          <td width="20%">{{ module.name }}</td>
+          <td width="10%" style="white-space:nowrap;">{{ module.credits }} {{ "report.curriculum.vocationalCredits" | translate }}</td>
+          <td width="70%">
+            {% for outcome in module.outcomes %}
+              &#8226;&nbsp;{{ outcome }}<br/>
+            {% endfor %}
+          </td>
+        </tr>
+      {% endfor %}
+    {% endfor %}
+    </table>
+  </body>
+</html>

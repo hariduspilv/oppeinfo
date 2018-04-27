@@ -22,7 +22,7 @@
       <br>
     </div>
 
-    <hois-collapsable  ng-if="expiringOccupationStandards && expiringOccupationStandards.length > 0" label="('home.expiringOccupationStandards.title' | translate)" link="(numberOfOccupationStandards? 'main.button.view' : 'main.button.hide')|translate" action="toggleNumberOfOccupationStandards()" ngif="expiringOccupationStandards && expiringOccupationStandards.length > 3">
+    <hois-collapsable expanded="true"  class="hois-collapse2" ng-if="expiringOccupationStandards && expiringOccupationStandards.length > 0" label="('home.expiringOccupationStandards.title' | translate)" link="(numberOfOccupationStandards? 'main.button.view' : 'main.button.hide')|translate" action="toggleNumberOfOccupationStandards()" ngif="expiringOccupationStandards && expiringOccupationStandards.length > 3">
       <!--span ng-if="expiringOccupationStandards && expiringOccupationStandards.length > 3">
         <md-button class="md-primary" ng-click="toggleNumberOfOccupationStandards()">{{(numberOfOccupationStandards? 'main.button.view' : 'main.button.hide')|translate}}</md-button>
       </span-->
@@ -53,7 +53,7 @@
 
 
 
-  <hois-collapsable label="('home.generalmessages' | translate)">
+  <hois-collapsable class="hois-collapse2" label="('home.generalmessages' | translate)" expanded="true" >
     <md-table-container>
       <table md-table md-progress="generalmessages.$promise">
         <tbody md-body>
@@ -78,7 +78,7 @@
   </hois-collapsable>
 
 
-    <hois-collapsable ng-show="showUnreadMessages && unreadMessages.content.length > 0" label="('message.messages' | translate)" expanded="false">
+    <hois-collapsable expanded="true" class="hois-collapse2" ng-show="showUnreadMessages && unreadMessages.content.length > 0" label="('message.messages' | translate)" expanded="false">
     <!--h5 ng-show="showUnreadMessages" ng-if="unreadMessages.content.length === 0">{{'message.noNewMessages' | translate}}</h5-->
     <md-table-container ng-show="showUnreadMessages">
       <table md-table md-progress="unreadMessages.$promise">
@@ -108,10 +108,9 @@
     </div>
 
   </div>
-  
-  <div ng-if="!state.currentUser">
-    <md-grid-list md-cols="1" md-cols-sm="2" md-cols-md="3" md-cols-gt-md="6" md-row-height-gt-md="1:1" md-row-height="4:3" md-gutter="8px"
-      md-gutter-gt-sm="4px">
+
+  <div ng-if="!state.currentUser" class="schoolList">
+    <md-grid-list md-cols="1" md-cols-sm="2" md-cols-md="3" md-cols-gt-md="6" md-row-height-gt-md="1:1" md-row-height="4:3" md-gutter="24px" md-gutter-gt-sm="24px">
       <md-grid-tile ng-repeat="school in schools" md-colspan="1">
         <button class="schoolTileButton" ng-click="openSchoolCurriculumSearch(school.id)">
           <img class="schoolTileImage" ng-src="data:image/JPEG;base64,{{school.logo}}" on-error-src="images/HITSA_innov_logo_03.png">

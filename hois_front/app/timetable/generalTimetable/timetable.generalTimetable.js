@@ -97,6 +97,11 @@
         $scope.groupTimetables = result;
       });
 
+      $scope.getStudentGroups = function (searchText) {
+        searchText = (searchText || '').toUpperCase();
+        return $scope.groupTimetables.filter(function (it) { return it.groupCode.toUpperCase().indexOf(searchText) !== -1; });
+      };
+
       $scope.showGroupWeek = function (groupId) {
         $scope.typeId = groupId;
       };
@@ -114,6 +119,11 @@
       QueryUtils.endpoint(teacherPeriodTimetablesEndpoint).query().$promise.then(function (result) {
         $scope.timetablesByTeachers = result;
       });
+
+      $scope.getTeachers = function (searchText) {
+        searchText = (searchText || '').toUpperCase();
+        return $scope.timetablesByTeachers.filter(function (it) { return (it.firstname + ' ' + it.lastname).toUpperCase().indexOf(searchText) !== -1; });
+      };
 
       $scope.showTeacherWeek = function (teacherId) {
         $scope.typeId = teacherId;
@@ -138,6 +148,11 @@
         QueryUtils.endpoint(roomPeriodTimetablesEndpoint).query().$promise.then(function (result) {
           $scope.timetablesByRooms = result;
         });
+
+        $scope.getRooms = function (searchText) {
+          searchText = (searchText || '').toUpperCase();
+          return $scope.timetablesByRooms.filter(function (it) { return it.roomCode.toUpperCase().indexOf(searchText) !== -1; });
+        };
 
         $scope.showRoomWeek = function (roomId) {
           $scope.typeId = roomId;

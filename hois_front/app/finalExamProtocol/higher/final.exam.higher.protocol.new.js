@@ -1,6 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('FinalExamHigherProtocolNewController', function ($scope, $route, $location, QueryUtils, DataUtils, Classifier, message, ArrayUtils) {
+angular.module('hitsaOis').controller('FinalExamHigherProtocolNewController', 
+function ($scope, $route, $location, $q, QueryUtils, DataUtils, Classifier, message, ArrayUtils) {
   var endpoint = '/finalExamHigherProtocols';
 
   $scope.auth = $route.current.locals.auth;
@@ -15,13 +16,19 @@ angular.module('hitsaOis').controller('FinalExamHigherProtocolNewController', fu
   });
 
   function getStudyPeriodSubjects() {
-    $scope.formState.subjects = QueryUtils.endpoint(endpoint + '/subjects/' + $scope.formState.studyPeriod).query();
+    if ($scope.formState.studyPeriod && $scope.formState.curriculum) {
+      $scope.formState.subjects = QueryUtils.endpoint(endpoint + '/subjects/' + $scope.formState.studyPeriod + '/' + $scope.formState.curriculum).query();
+    }
   }
+  
+  $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+  $scope.curriculums = QueryUtils.endpoint(endpoint + '/curriculums').query();
+  
+  var promises = [];
+  promises.push($scope.studyPeriods.$promise);
 
-  QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function (periods) {
-    $scope.studyPeriods = periods;
-    $scope.formState.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod(periods).id;
-    getStudyPeriodSubjects();
+  $q.all(promises).then(function() {
+    $scope.formState.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
   });
 
   $scope.studyPeriodChanged = function () {
@@ -29,8 +36,13 @@ angular.module('hitsaOis').controller('FinalExamHigherProtocolNewController', fu
     getStudyPeriodSubjects();
   };
 
+  $scope.curriculumChanged = function () {
+    $scope.formState.subject = undefined;
+    getStudyPeriodSubjects();
+  };
+
   $scope.subjectChanged = function () {
-    var query = QueryUtils.endpoint(endpoint + '/subject/' + $scope.formState.subject.subjectStudyPeriod).get();
+    var query = QueryUtils.endpoint(endpoint + '/subject/' + $scope.formState.subject.id).get();
     $scope.tabledata = {
       $promise: query.$promise
     };
@@ -54,14 +66,14 @@ angular.module('hitsaOis').controller('FinalExamHigherProtocolNewController', fu
     }
 
     var entity = {};
-    entity.subject = $scope.formState.subject.id;
-    entity.subjectStudyPeriod = $scope.formState.subject.subjectStudyPeriod;
+    entity.subjectStudyPeriod = $scope.formState.subject.id;
     entity.protocolType = $scope.formState.protocolType;
     entity.protocolStudents = $scope.formState.selectedStudents.map(function (it) {
       return {
         studentId: it
       };
     });
+    entity.curriculum = $scope.formState.curriculum;
 
     new FinalExamProtocolEndpoint(entity)
       .$save().then(function (result) {

@@ -163,7 +163,8 @@
   <div layout="row">
     <md-button ng-show="declaration.canBeSetConfirmed" class="md-raised md-primary" ng-click="confirm()">{{'declaration.confirm' | translate}}</md-button>
     <md-button ng-show="declaration.canBeSetUnconfirmed" class="md-raised md-primary" ng-click="removeConfirmation()">{{'declaration.removeConfirmation' | translate}}</md-button>
-    <md-button class="md-raised md-default" ng-click="back('#/declarations')">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="!auth.isStudent()" class="md-raised md-default" ng-click="back('#/declarations')">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="auth.isStudent()" class="md-raised md-default" ng-click="back('#/declaration/current/view')">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>
 

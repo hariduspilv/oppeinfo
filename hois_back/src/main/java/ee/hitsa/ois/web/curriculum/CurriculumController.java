@@ -30,6 +30,9 @@ import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.report.CurriculumReport;
+import ee.hitsa.ois.report.curriculum.CurriculumModulesReport;
+import ee.hitsa.ois.report.curriculum.CurriculumVersionModulesReport;
+import ee.hitsa.ois.report.curriculum.CurriculumVersionReport;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.XmlService;
@@ -109,6 +112,35 @@ public class CurriculumController {
         CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
         HttpUtil.pdf(response, curriculumVersion.getCode() + ".pdf",
                 pdfService.generate(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculumVersion)));
+    }
+    
+    @GetMapping("/print/{id:\\d+}/general.pdf")
+    public void printGeneral(HoisUserDetails user, @WithEntity Curriculum curriculum, HttpServletResponse response) throws IOException {
+        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
+        HttpUtil.pdf(response, curriculum.getCode() + ".pdf",
+                pdfService.generate(ee.hitsa.ois.report.curriculum.CurriculumReport.VOCATIONAL_TEMPLATE_NAME, 
+                        new ee.hitsa.ois.report.curriculum.CurriculumReport(curriculum)));
+    }
+
+    @GetMapping("/print/{id:\\d+}/modules.pdf")
+    public void printModules(HoisUserDetails user, @WithEntity Curriculum curriculum, HttpServletResponse response) throws IOException {
+        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
+        HttpUtil.pdf(response, curriculum.getCode() + "_modules.pdf",
+                pdfService.generate(CurriculumModulesReport.VOCATIONAL_TEMPLATE_NAME, new CurriculumModulesReport(curriculum)));
+    }
+
+    @GetMapping("/print/{id:\\d+}/curriculumVersion.pdf")
+    public void printCurriculumVersion(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion, HttpServletResponse response) throws IOException {
+        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
+        HttpUtil.pdf(response, curriculumVersion.getCode() + ".pdf",
+                pdfService.generate(CurriculumVersionReport.VOCATIONAL_TEMPLATE_NAME, new CurriculumVersionReport(curriculumVersion)));
+    }
+    
+    @GetMapping("/print/{id:\\d+}/curriculumVersionModules.pdf")
+    public void printCurriculumVersionModules(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion, HttpServletResponse response) throws IOException {
+        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
+        HttpUtil.pdf(response, curriculumVersion.getCode() + "_modules.pdf",
+                pdfService.generate(CurriculumVersionModulesReport.VOCATIONAL_TEMPLATE_NAME, new CurriculumVersionModulesReport(curriculumVersion)));
     }
 
     @GetMapping

@@ -1,56 +1,52 @@
 package ee.hitsa.ois.web.dto.finalexamprotocol;
 
-import ee.hitsa.ois.domain.curriculum.Curriculum;
+import java.util.ArrayList;
+import java.util.List;
+
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.FinalExamProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 
-public class FinalExamHigherProtocolStudentDto {
+public class FinalExamHigherProtocolStudentDto extends HigherProtocolStudentDto {
 
-    private Long id;
-    private Long studentId;
     private String fullname;
     private String idcode;
-    @ClassifierRestriction(MainClassCode.KORGHINDAMINE)
-    private String grade;
     @ClassifierRestriction(MainClassCode.OPPURSTAATUS)
     private String status;
     private String studentGroup;
-    private AutocompleteResult curriculum;
+    private CurriculumGradeDto curriculumGrade;
+    private List<FinalExamProtocolStudentOccupationDto> curriculumOccupations = new ArrayList<>();
     private Boolean canBeDeleted;
     
     public static FinalExamHigherProtocolStudentDto of(ProtocolStudent protocolStudent) {
         FinalExamHigherProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new FinalExamHigherProtocolStudentDto());
-        dto.setStudentId(protocolStudent.getStudent().getId());
-        dto.setFullname(PersonUtil.fullname(protocolStudent.getStudent().getPerson()));
-        dto.setIdcode(protocolStudent.getStudent().getPerson().getIdcode());
-        dto.setStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
-        dto.setStudentGroup(protocolStudent.getStudent().getStudentGroup().getCode());
-        Curriculum curriculum = protocolStudent.getStudent().getCurriculumVersion().getCurriculum();
-        dto.setCurriculum(new AutocompleteResult(curriculum.getId(), curriculum.getNameEt(), curriculum.getNameEn()));
+        Student student = protocolStudent.getStudent();
+        dto.setStudentId(EntityUtil.getId(student));
+        dto.setFullname(PersonUtil.fullname(student.getPerson()));
+        dto.setIdcode(student.getPerson().getIdcode());
+        dto.setStatus(EntityUtil.getCode(student.getStatus()));
+        dto.setStudentGroup(student.getStudentGroup().getCode());
+        dto.setCurriculumGrade(protocolStudent.getCurriculumGrade() != null ? CurriculumGradeDto.of(protocolStudent.getCurriculumGrade()) : null);
+        
+        if (protocolStudent.getProtocolStudentOccupations() != null) {
+            protocolStudent.getProtocolStudentOccupations().forEach(oc -> {
+                dto.getCurriculumOccupations()
+                        .add(new FinalExamProtocolStudentOccupationDto(
+                                oc.getStudentOccupationCertificate() != null ? oc.getStudentOccupationCertificate().getCertificateNr() : null, 
+                                oc.getOccupation().getCode(), null,
+                                oc.getStudentOccupationCertificate() != null ? oc.getStudentOccupationCertificate().getId() : null));
+            });
+        }
+        
         dto.setCanBeDeleted(Boolean.valueOf(FinalExamProtocolUtil.studentCanBeDeleted(protocolStudent)));
 
         return dto;
-    }
-    
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getStudentId() {
-        return studentId;
-    }
-    
-    public void setStudentId(Long studentId) {
-        this.studentId = studentId;
     }
     
     public String getFullname() {
@@ -69,14 +65,6 @@ public class FinalExamHigherProtocolStudentDto {
         this.idcode = idcode;
     }
     
-    public String getGrade() {
-        return grade;
-    }
-
-    public void setGrade(String grade) {
-        this.grade = grade;
-    }
-    
     public String getStatus() {
         return status;
     }
@@ -93,12 +81,20 @@ public class FinalExamHigherProtocolStudentDto {
         this.studentGroup = studentGroup;
     }
 
-    public AutocompleteResult getCurriculum() {
-        return curriculum;
+    public CurriculumGradeDto getCurriculumGrade() {
+        return curriculumGrade;
     }
 
-    public void setCurriculum(AutocompleteResult curriculum) {
-        this.curriculum = curriculum;
+    public void setCurriculumGrade(CurriculumGradeDto curriculumGrade) {
+        this.curriculumGrade = curriculumGrade;
+    }
+    
+    public List<FinalExamProtocolStudentOccupationDto> getCurriculumOccupations() {
+        return curriculumOccupations;
+    }
+
+    public void setCurriculumOccupations(List<FinalExamProtocolStudentOccupationDto> curriculumOccupations) {
+        this.curriculumOccupations = curriculumOccupations;
     }
 
     public Boolean getCanBeDeleted() {

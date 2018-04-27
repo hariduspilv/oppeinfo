@@ -1,11 +1,14 @@
 package ee.hitsa.ois.util;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DeclarationStatus;
+import ee.hitsa.ois.enums.StudyPeriodEventType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.dto.DeclarationDto;
@@ -17,7 +20,7 @@ public abstract class DeclarationUtil {
     }
 
     public static boolean canChangeDeclaration(HoisUserDetails user, Declaration declaration) {
-        return canEditOrChangeStatus(user, declaration.getStudent()) && 
+        return canEditOrChangeStatus(user, declaration) && 
                 ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_S, declaration.getStatus());
     }
 
@@ -30,9 +33,11 @@ public abstract class DeclarationUtil {
             return false;
         }
         if(UserUtil.isStudent(user, declaration.getStudent())) {
-            //TODO: can be unconfirmed by student only before deadline
-            return !studyPeriodFinished(declaration.getStudyPeriod()); 
+            StudyPeriodEvent declarationPeriod = declaration.getStudyPeriod().getEvents().stream()
+                    .filter(e -> StudyPeriodEventType.SYNDMUS_DEKP.name().equals(EntityUtil.getCode(e.getEventType())))
+                    .findFirst().orElse(null);
             
+            return isDeclarationPeriod(declarationPeriod); 
         } else if (UserUtil.isSchoolAdmin(user, declaration.getStudent().getSchool())) {
             return !studyPeriodFinished(declaration.getStudyPeriod());
         }
@@ -60,11 +65,30 @@ public abstract class DeclarationUtil {
 
     public static boolean canConfirmDeclaration(HoisUserDetails user, Declaration declaration) {
         return ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_S, declaration.getStatus()) &&
-                canEditOrChangeStatus(user, declaration.getStudent());
+                canEditOrChangeStatus(user, declaration);
     }
 
-    public static boolean canEditOrChangeStatus(HoisUserDetails user, Student student) {
-        return UserUtil.isSchoolAdmin(user, student.getSchool())  || 
-                (UserUtil.isStudent(user, student) && StudentUtil.isStudying(student));
+    public static boolean canEditOrChangeStatus(HoisUserDetails user, Declaration declaration) {
+        Student student = declaration.getStudent();
+        StudyPeriodEvent declarationPeriod = declaration.getStudyPeriod().getEvents().stream()
+                .filter(e -> StudyPeriodEventType.SYNDMUS_DEKP.name().equals(EntityUtil.getCode(e.getEventType())))
+                .findFirst().orElse(null);
+        return UserUtil.isSchoolAdmin(user, student.getSchool()) || 
+                (UserUtil.isStudent(user, student) && StudentUtil.isStudying(student) && isDeclarationPeriod(declarationPeriod));
+    }
+    
+    public static boolean isDeclarationPeriod(StudyPeriodEvent declarationPeriod) {
+        if (declarationPeriod != null) {
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime periodStart = declarationPeriod.getStart();
+            LocalDateTime periodEnd = declarationPeriod.getEnd() != null ? declarationPeriod.getEnd() : null;
+            
+            if (now.isAfter(periodStart) && periodEnd == null) {
+                return true;
+            } else if (now.isAfter(periodStart) && periodEnd != null && now.isBefore(periodEnd)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

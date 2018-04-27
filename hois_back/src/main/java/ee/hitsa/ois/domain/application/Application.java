@@ -19,6 +19,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.util.Period;
@@ -136,8 +137,10 @@ public class Application extends BaseEntityWithId implements Period {
     private String abroadSchool;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @Required(groups = {Akadk.class})
     private Application academicApplication;
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @Required(groups = {Akadk.class})
+    private Directive directive;
 
     @OneToMany
     @JoinColumn(name = "application_id", nullable = false, updatable = false, insertable = false)
@@ -384,6 +387,14 @@ public class Application extends BaseEntityWithId implements Period {
 
     public void setAcademicApplication(Application academicApplication) {
         this.academicApplication = academicApplication;
+    }
+
+    public Directive getDirective() {
+        return directive;
+    }
+
+    public void setDirective(Directive directive) {
+        this.directive = directive;
     }
 
     public List<DirectiveStudent> getDirectiveStudents() {

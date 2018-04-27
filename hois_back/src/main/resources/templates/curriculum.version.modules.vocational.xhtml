@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>Rakenduskava moodulid</title>
+  <style type="text/css">
+    {% include "styles.css" %}
+
+    tr {
+      page-break-inside: avoid;
+    }
+
+    .label {
+      vertical-align: top;
+    }
+  </style>
+</head>  
+
+<body>
+  <p class="font14" align="center">{{ content.school }}</p>
+  <p class="font14" align="center">{{ content.curriculumName }} {{ "report.curriculumVersion.modules.modulesImplementationPlan" | translate }}</p>
+  <table class="reporttable font12" width="100%">
+    <tr>
+      <td class="label" width="25%">{{ "report.curriculumVersion.modules.targetGroup" | translate }}</td>
+      <td width="75%">{{ content.targetGroup }}</td>
+    </tr>
+    <tr>
+      <td class="label" width="25%">{{ "report.curriculumVersion.modules.studyForm" | translate }}</td>
+      <td width="75%">{{ content.studyForm }}</td>
+    </tr>
+  </table>
+  {% for module in content.modules %} 
+    <table class="reporttable font12" width="100%">
+      <tr>
+        <td class="label" width="25%" align="center">{{ "report.curriculumVersion.modules.moduleNr" | translate }}</td>
+        <td class="label" width="25%" align="center">{{ "report.curriculumVersion.modules.moduleName" | translate }}</td>
+        <td class="label" width="25%" align="center">{{ "report.curriculumVersion.modules.moduleCredits" | translate }}</td>
+        <td class="label" width="25%" align="center">{{ "report.curriculumVersion.modules.teachers" | translate }}</td>
+      </tr>
+      <tr>
+        <td class="label" align="center">{{ loop.index + 1 }}.</td>
+        <td class="label" align="center">{{ module.name }}</td>
+        <td class="label" align="center">{{ module.credits }}</td>
+        <td>{{ module.teachers }}</td>
+      </tr>
+
+      <tr>
+        <td class="label">{{ "report.curriculumVersion.modules.requirements" | translate }}</td>
+        <td colspan="3">{{ module.requirements }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.curriculumVersion.modules.objective" | translate }}</td>
+        <td colspan="3">{{ module.objective }}</td>
+      </tr>
+
+      <tr>
+        <td colspan="2" class="label">{{ "report.curriculumVersion.modules.outcomes" | translate }}</td>
+        <td colspan="2" class="label">{{ "report.curriculumVersion.modules.criterias" | translate }}</td>
+      </tr>
+      <tr>
+        <td colspan="2" valign="top">
+          {% for outcome in module.outcomes %}
+            {{ loop.index + 1 }}. {{ outcome }}<br/>
+          {% endfor %}
+        </td>
+        <td colspan="2" valign="top">{{ module.criterias }}</td>
+      </tr>
+
+      <tr>
+        <td class="label">{{ "report.curriculumVersion.modules.themes" | translate }}</td>
+        <td colspan="3">
+          {% for theme in module.themes %}
+            {{ loop.index + 1 }}. {{ theme.name }}<br/>
+
+            {% if theme.subThemes is not null %}
+             <table class="reportsubtable">
+             <tr><td>
+             &nbsp;&nbsp;&nbsp;&nbsp;</td><td><i>{{ "report.curriculumVersion.modules.subThemes" | translate }}</i>: {{ theme.subThemes }}</td></tr></table><br/>
+            {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+      <tr>
+        <td class="label" style="text-align: right;">{{ "report.curriculumVersion.modules.independentStudy" | translate }}</td>
+        <td colspan="3">{{ module.independentStudy }}</td>
+      </tr>
+      <tr>
+        <td class="label" style="text-align: right;">{{ "report.curriculumVersion.modules.practice" | translate }}</td>
+        <td colspan="3">{{ module.practice }}</td>
+      </tr>
+
+      <tr>
+        <td class="label">{{ "report.curriculumVersion.modules.learningMethods" | translate }}</td>
+        <td colspan="3">{{ module.learningMethods }}</td>
+      </tr>
+
+      <tr>
+        <td class="label">{{ "report.curriculumVersion.modules.assessment" | translate }}</td>
+        <td colspan="3">{{ module.assessment }}</td>
+      </tr>
+      <tr>
+        <td class="label" style="text-align: right;">{{ "report.curriculumVersion.modules.gradeCriterias" | translate }}</td>
+        <td colspan="3">
+          {% if module.gradeCriteria3 is not null %}
+            {{ "report.curriculumVersion.modules.gradeCriteria3" | translate }}: {{ module.gradeCriteria3 }}<br/>
+          {% endif %}
+          {% if module.gradeCriteria4 is not null %}
+            {{ "report.curriculumVersion.modules.gradeCriteria4" | translate }}: {{ module.gradeCriteria4 }}<br/>
+          {% endif %}
+          {% if module.gradeCriteria5 is not null %}
+            {{ "report.curriculumVersion.modules.gradeCriteria5" | translate }}: {{ module.gradeCriteria5 }}<br/>
+          {% endif %}
+          {% if module.gradeCriteriaPass is not null %}
+            {{ "report.curriculumVersion.modules.gradeCriteriaPass" | translate }}: {{ module.gradeCriteriaPass }}<br/>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td class="label" style="text-align: right;">{{ "report.curriculumVersion.modules.totalGradeDescription" | translate }}</td>
+        <td colspan="3">{{ module.totalGradeDescription }}</td>
+      </tr>
+      <tr>
+        <td class="label" style="text-align: right;">{{ "report.curriculumVersion.modules.assessmentMethods" | translate }}</td>
+        <td colspan="3">{{ module.assessmentMethods }}</td>
+      </tr>
+
+      <tr>
+        <td class="label">{{ "report.curriculumVersion.modules.studyMaterials" | translate }}</td>
+        <td colspan="3">{{ module.studyMaterials }} </td>
+      </tr>
+    </table>
+    <br/><br/>
+  {% endfor %}
+</body>
+</html>

@@ -7,6 +7,7 @@ import org.apache.cxf.jaxws.EndpointImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import ee.hitsa.ois.services.EkisSoapService;
 import ee.hois.moodle.MoodleClient;
@@ -52,6 +53,7 @@ public class ServicesConfiguration {
      * @return
      */
     @Bean
+    @Profile("!test")
     public EhisClient ehisClient() {
         return new EhisClient();
     }
@@ -62,6 +64,7 @@ public class ServicesConfiguration {
      * @return
      */
     @Bean
+    @Profile("!test")
     public EkisClient ekisClient() {
         return new EkisClient();
     }
@@ -92,6 +95,7 @@ public class ServicesConfiguration {
      * @return
      */
     @Bean
+    @Profile("!test")
     public SaisClient saisClient() {
         return new SaisClient();
     }

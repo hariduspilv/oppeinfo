@@ -15,10 +15,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.enums.AcademicLeaveReason;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
@@ -140,12 +142,13 @@ public abstract class ApplicationUtil {
     }
 
     public static void assertAkadkConstraints(Application application) {
-        Application academicApplication = application.getAcademicApplication();
-        if (!ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_AKAD, academicApplication.getType())) {
+        Directive academicDirective = application.getDirective();
+        if (!ClassifierUtil.equals(DirectiveType.KASKKIRI_AKAD, academicDirective.getType())) {
             throw new ValidationFailedException("application.messages.wrongAcademicApplicationType");
         }
 
-        DirectiveStudent directiveStudent = getDirectiveStudent(academicApplication);
+        DirectiveStudent directiveStudent = DirectiveUtil.getDirectiveStudent(academicDirective, 
+                EntityUtil.getId(application.getStudent()));
         LocalDate revocationStart = getStartDate(application);
 
         LocalDate academicLeaveStart = getStartDate(directiveStudent);

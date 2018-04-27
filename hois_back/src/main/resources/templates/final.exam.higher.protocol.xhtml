@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+  <head>
+    <title>Lõpueksami protokoll</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+    </style>
+  </head>
+
+  <body>
+    <p align="center" style="font-size: 8px;">{{ content.school }}</p>
+    <p align="center" style="font-size: 8px;">{{ "report.final.exam.protocolNr" | translate }} {{ content.protocolNr }}</p>
+
+    <br/><br/>
+
+    <p align="center" style="font-size: 10px;">{{ content.curriculumModule }}</p>
+    <p align="center" style="font-size: 10px;">{{ content.credits }} {{ "report.final.exam.vocationalCredits" | translate  }}</p>
+
+    <br/>
+
+    <p>{{ "report.final.exam.tookPlace" | translate  }} {{ content.finalDate | hoisDate }}</p>
+    <p>{{ "report.final.exam.committeeMembers" | translate  }} {{ content.committeeMembers }}</p>
+
+    <br/><br/>
+
+    <table class="reporttable">
+      <tr>
+        <td class="label">{{ "report.final.exam.student.nr" | translate }}</td>
+        <td class="label">{{ "report.final.exam.student.name" | translate }}</td>
+        <td class="label">{{ "report.final.exam.student.grade" | translate }}</td>
+        {% if content.hasOccupations %}
+          <td class="label">{{ "report.final.exam.student.givenOccupation" | translate }}</td>
+          <td class="label">{{ "report.final.exam.student.givenPartOccupations" | translate }}</td>
+        {% endif %}
+      </tr>
+      {% for student in content.protocolStudents %}
+      <tr>
+        <td>{{ loop.index + 1 }}.</td>
+        <td>{{ student.name }}</td>
+        <td>
+          {{ student.grade }}
+        
+          {% if student.gradeName != null %}
+            ({{ student.gradeName }})
+          {% endif %}
+        </td>
+        {% if content.hasOccupations %}
+          <td>
+            {% for occupation in student.occupations %}
+              {{occupation}}
+              {% if loop.index != loop.length - 1 %}
+              , 
+              {% endif %}
+            {% endfor %}
+          </td>
+          <td>
+            {% for partOccupation in student.partOccupations %}
+              {{partOccupation}}
+              {% if loop.index != loop.length - 1 %}
+              , 
+              {% endif %}
+            {% endfor %}
+          </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+    
+    <br/>
+
+    <table width="100%">
+      <tr>
+        <td align="left">{{ content.confirmDate | hoisDate }}</td>
+        <td align="center">{{ content.confirmedBy }}</td>
+      </tr>
+    </table>
+  </body>
+
+</html>

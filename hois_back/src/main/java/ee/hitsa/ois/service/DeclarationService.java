@@ -62,6 +62,7 @@ import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.DeclarationDto;
 import ee.hitsa.ois.web.dto.DeclarationSubjectDto;
+import ee.hitsa.ois.web.dto.PrerequisiteSubjectDto;
 import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
@@ -198,10 +199,37 @@ public class DeclarationService {
         dto.setCanBeSetUnconfirmed(Boolean.valueOf(DeclarationUtil.canUnconfirmDeclaration(user, declaration)));
         dto.setCanBeSetConfirmed(Boolean.valueOf(DeclarationUtil.canConfirmDeclaration(user, declaration)));
         Long studentId = dto.getStudent().getId();
+        Map<Long, String> studentResults = studentSubjectResults(studentId);
         for(DeclarationSubjectDto subject : dto.getSubjects()) {
             subject.setIsAssessed(subjectAssessed(studentId, subject.getSubjectStudyPeriod(), subject.getId()));
+            
+            for (PrerequisiteSubjectDto mandatory : subject.getMandatoryPrerequisiteSubjects()) {
+                mandatory.setGrade(studentResults.get(mandatory.getId()));
+            }
+            for (PrerequisiteSubjectDto reccomended : subject.getRecommendedPrerequisiteSubjects()) {
+                reccomended.setGrade(studentResults.get(reccomended.getId()));
+            }
         }
+        
         return dto;
+    }
+    
+    private Map<Long, String> studentSubjectResults(Long studentId) {
+        Query q = em.createNativeQuery("select distinct shr.subject_id, shr.grade, shr.grade_date " + 
+                "from student_higher_result shr " +
+                "where shr.student_id = ?1 " +
+                "order by shr.grade_date asc");
+        q.setParameter(1, studentId);
+        
+        List<?> data = q.getResultList();
+        Map<Long, String> results = new HashMap<>();
+        
+        for (Object r : data) {
+            if (results.get(resultAsLong(r, 0)) == null) {
+                results.put(resultAsLong(r, 0), resultAsString(r, 1));
+            }
+        }
+        return results;
     }
 
     public boolean canCreate(HoisUserDetails user, Long studentId) {
@@ -519,7 +547,7 @@ public class DeclarationService {
         Query q = em.createNativeQuery("select exists(select * from protocol_student ps "
                 + "join protocol p on p.id = ps.protocol_id "
                 + "join protocol_hdata phd on p.id = phd.protocol_id "
-                + "where ps.student_id = ?1 and phd.subject_study_period_id = ?2) "
+                + "where ps.student_id = ?1 and phd.subject_study_period_id = ?2 and ps.grade_code is not null) "
                 + "or exists(select * from midterm_task_student_result r where r.declaration_subject_id = ?3)");
         q.setParameter(1, studentId);
         q.setParameter(2, subjectStudyPeriodId);

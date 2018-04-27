@@ -62,6 +62,10 @@ angular.module('hitsaOis')
     }
     $scope.admissionYears = admissionYears;
 
+    //$scope.implementationPlanPdfUrl = config.apiUrl + '/curriculum/print/' + id + '/curriculum.pdf';
+
+    $scope.curriculumVersionPdfUrl = config.apiUrl + '/curriculum/print/' + id + '/curriculumVersion.pdf';
+    $scope.curriculumVersionModulesPdfUrl = config.apiUrl + '/curriculum/print/' + id + '/curriculumVersionModules.pdf';
 
     var promises = [];
     if (angular.isArray(curriculumEntity.modules)) {

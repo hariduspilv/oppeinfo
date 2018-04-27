@@ -15,8 +15,8 @@ import ee.hitsa.ois.validation.StudyPeriodRange;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
-import ee.hitsa.ois.web.dto.application.ApplicationDto;
 import ee.hitsa.ois.web.dto.application.ApplicationPlannedSubjectDto;
+import ee.hitsa.ois.web.dto.application.ValidAcademicLeaveDto;
 
 @DateRange(from = "startDate", thru = "endDate")
 @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
@@ -68,7 +68,7 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     private LocalDate endDate;
     private Long studyPeriodStart;
     private Long studyPeriodEnd;
-    private ApplicationDto academicApplication;
+    private ValidAcademicLeaveDto validAcademicLeave;
 
     private LocalDateTime submitted;
 
@@ -246,12 +246,12 @@ public class ApplicationForm extends InsertedChangedVersionDto {
         this.studyPeriodEnd = studyPeriodEnd;
     }
 
-    public ApplicationDto getAcademicApplication() {
-        return academicApplication;
+    public ValidAcademicLeaveDto getValidAcademicLeave() {
+        return validAcademicLeave;
     }
 
-    public void setAcademicApplication(ApplicationDto academicApplication) {
-        this.academicApplication = academicApplication;
+    public void setValidAcademicLeave(ValidAcademicLeaveDto validAcademicLeave) {
+        this.validAcademicLeave = validAcademicLeave;
     }
 
     public LocalDateTime getSubmitted() {

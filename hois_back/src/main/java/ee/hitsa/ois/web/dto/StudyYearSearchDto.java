@@ -13,6 +13,8 @@ public class StudyYearSearchDto {
     private LocalDate startDate;
     private LocalDate endDate;
     private Long count;
+    
+    public StudyYearSearchDto() {}
 
     public StudyYearSearchDto(Object[] row) {
         this.code = (String) row[0];
@@ -27,28 +29,50 @@ public class StudyYearSearchDto {
     public String getCode() {
         return code;
     }
+    public void setCode(String code) {
+        this.code = code;
+    }
 
     public String getNameEt() {
         return nameEt;
+    }
+    public void setNameEt(String nameEt) {
+        this.nameEt = nameEt;
     }
 
     public String getNameEn() {
         return nameEn;
     }
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
+    }
 
     public Long getId() {
         return id;
+    }
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public LocalDate getStartDate() {
         return startDate;
     }
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
 
     public LocalDate getEndDate() {
         return endDate;
+    }
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
 
     public Long getCount() {
         return count;
     }
+    public void setCount(Long count) {
+        this.count = count;
+    }
+    
 }

@@ -19,8 +19,8 @@
       </div>
       <md-input-container layout="row">
         <label class="textInput">{{'studyMaterial.type' | translate}}</label>
-        <hois-classifier-select ng-model="material.typeCode" main-classifier-code="OPPEMATERJAL" model-value-attr="code" ng-disabled="material.id"
-          required></hois-classifier-select>
+        <hois-classifier-select ng-model="material.typeCode" main-classifier-code="OPPEMATERJAL" model-value-attr="code" ng-disabled="material.id" 
+          ng-change="typeCodeChanged(material.typeCode)" required></hois-classifier-select>
       </md-input-container>
       <span ng-if="!material.id && material.typeCode === 'OPPEMATERJAL_F'">
         <md-input-container flex>

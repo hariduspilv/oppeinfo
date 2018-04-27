@@ -9,18 +9,24 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.protocol.Protocol;
-import ee.hitsa.ois.domain.protocol.ProtocolVdata;
+import ee.hitsa.ois.domain.protocol.ProtocolHdata;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.PersonUtil;
 
 public class FinalExamProtocolReport {
     
-    public static final String TEMPLATE_NAME = "final.exam.protocol.xhtml";
+    public static final String VOCATIONAL_TEMPLATE_NAME = "final.exam.higher.protocol.xhtml";
+    public static final String HIGHER_TEMPLATE_NAME = "final.exam.vocational.protocol.xhtml";
 
+    private final Boolean isVocational;
     private final String school;
     private final String protocolNr;
     private final String curriculumModule;
+    private final String subject;
+    private final String subjectCode;
     private final BigDecimal credits;
     private final LocalDate finalDate;
     private final String committeeMembers;
@@ -35,12 +41,26 @@ public class FinalExamProtocolReport {
     
     public FinalExamProtocolReport(Protocol protocol, Language lang) {
         Objects.requireNonNull(protocol);
+        isVocational = protocol.getIsVocational();
         school = name(protocol.getSchool(), lang);
         protocolNr = protocol.getProtocolNr();
         
-        ProtocolVdata vData = protocol.getProtocolVdata();
-        curriculumModule = name(vData.getCurriculumVersionOccupationModule().getCurriculumModule(), lang);
-        credits = vData.getCurriculumVersionOccupationModule().getCurriculumModule().getCredits();
+        if (isVocational.booleanValue()) {
+            CurriculumModule module = protocol.getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule();
+            curriculumModule = name(module, lang);
+            credits = module.getCredits();
+            hasOccupations = Boolean.valueOf(!module.getOccupations().isEmpty());
+            subject = null;
+            subjectCode = null;
+        } else {
+            ProtocolHdata hData = protocol.getProtocolHdata();
+            Subject subj = hData.getSubjectStudyPeriod().getSubject();
+            subject = name(subj, lang);
+            subjectCode = subj.getCode();
+            credits = subj.getCredits();
+            hasOccupations = Boolean.valueOf(hData.getCurriculum().getSpecialities().stream().anyMatch(s -> s.getOccupation() != null));
+            curriculumModule = null;
+        }
         
         finalDate = protocol.getFinalDate();
         committeeMembers = protocol.getProtocolCommitteeMembers().stream()
@@ -48,16 +68,17 @@ public class FinalExamProtocolReport {
                         String.CASE_INSENSITIVE_ORDER))
                 .map(pcm -> pcm.getCommitteeMember().getMemberFullname())
                 .collect(Collectors.joining(", "));
-        
-        hasOccupations = Boolean.valueOf(!vData.getCurriculumVersionOccupationModule()
-                .getCurriculumModule().getOccupations().isEmpty());
 
         protocolStudents = protocol.getProtocolStudents().stream()
                 .sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getStudent().getPerson(), o2.getStudent().getPerson()))
-                .map(ps -> new FinalExamProtocolStudentReport(ps, lang))
+                .map(ps -> new FinalExamProtocolStudentReport(ps, isVocational, lang))
                 .collect(Collectors.toList());
         confirmedBy = PersonUtil.stripIdcodeFromFullnameAndIdcode(protocol.getConfirmer());
         confirmDate = protocol.getConfirmDate();
+    }
+
+    public Boolean getIsVocational() {
+        return isVocational;
     }
 
     public String getSchool() {
@@ -70,6 +91,14 @@ public class FinalExamProtocolReport {
 
     public String getCurriculumModule() {
         return curriculumModule;
+    }
+    
+    public String getSubject() {
+        return subject;
+    }
+
+    public String getSubjectCode() {
+        return subjectCode;
     }
 
     public BigDecimal getCredits() {

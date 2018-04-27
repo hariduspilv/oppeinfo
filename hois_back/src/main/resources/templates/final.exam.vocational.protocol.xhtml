@@ -15,12 +15,12 @@
 
     <br/><br/>
 
-    <p align="center" style="font-size: 10px;">{{ content.curriculumModule }}</p>
-    <p align="center" style="font-size: 10px;">{{ content.credits }} {{ "report.final.exam.vocationalCredits" | translate  }}</p>
+    <p align="center" style="font-size: 10px;">{{ content.subject }} {{ content.subjectCode }}</p>
+    <p align="center" style="font-size: 10px;">{{ content.credits }} {{ "report.final.exam.higherCredits" | translate  }}</p>
 
     <br/>
 
-    <p>{{ "report.final.exam.tookPlace" | translate  }} {{ content.finalDate }}</p>
+    <p>{{ "report.final.exam.tookPlace" | translate  }} {{ content.finalDate | hoisDate }}</p>
     <p>{{ "report.final.exam.committeeMembers" | translate  }} {{ content.committeeMembers }}</p>
 
     <br/><br/>
@@ -30,9 +30,9 @@
         <td class="label">{{ "report.final.exam.student.nr" | translate }}</td>
         <td class="label">{{ "report.final.exam.student.name" | translate }}</td>
         <td class="label">{{ "report.final.exam.student.grade" | translate }}</td>
+        <td class="label">{{ "report.final.exam.student.givenCurriculumGrade" | translate }}</td>
         {% if content.hasOccupations %}
           <td class="label">{{ "report.final.exam.student.givenOccupation" | translate }}</td>
-          <td class="label">{{ "report.final.exam.student.givenPartOccupations" | translate }}</td>
         {% endif %}
       </tr>
       {% for student in content.protocolStudents %}
@@ -46,18 +46,13 @@
             ({{ student.gradeName }})
           {% endif %}
         </td>
+        <td>
+          {{ student.curriculumGrade }}
+        </td>
         {% if content.hasOccupations %}
           <td>
             {% for occupation in student.occupations %}
               {{occupation}}
-              {% if loop.index != loop.length - 1 %}
-              , 
-              {% endif %}
-            {% endfor %}
-          </td>
-          <td>
-            {% for partOccupation in student.partOccupations %}
-              {{partOccupation}}
               {% if loop.index != loop.length - 1 %}
               , 
               {% endif %}
