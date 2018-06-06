@@ -30,6 +30,7 @@ jar {
 	manifest {
 		attributes 'Main-Class' : 'ee.hitsa.ois.Application'
 	}
+	excludes.add('application.properties')
 }
 
 test {
@@ -70,6 +71,7 @@ dependencies {
 	compile('org.postgresql:postgresql')
     compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.11')
     compile('com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.8.11')
+    compile('org.apache.xmlgraphics:fop:2.2')
     compile('org.xhtmlrenderer:flying-saucer-pdf:9.1.12') {
         //because of digidoc4j libraries conflicts
         exclude group: 'org.bouncycastle', module: 'bctsp-jdk14'

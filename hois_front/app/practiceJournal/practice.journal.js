@@ -3,6 +3,7 @@
 angular.module('hitsaOis').controller('PracticeJournalEditController', 
 function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message, dialogService, DataUtils, USER_ROLES) {
   var CREDITS_TO_HOURS_MULTIPLIER = 26;
+  var DAYS_AFTER_CAN_EDIT = 30;
 
   $scope.auth = $route.current.locals.auth;
   $scope.practiceJournal = {};
@@ -27,7 +28,8 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
 
   function entityToForm(entity) {
     assertPermissionToEdit(entity);
-
+    
+    DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
     $scope.formState.isHigher = angular.isObject(entity.subject);
     DataUtils.convertObjectToIdentifier(entity, ['module', 'theme', 'teacher', 'subject']);
     $scope.practiceJournal = entity;
@@ -70,10 +72,8 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
         });
       });
       $scope.formState.modules = result.map(function (it) { return it.module; });
-
-      //in case of when module is set (edit)
       if (angular.isNumber($scope.practiceJournal.module)) {
-        $scope.moduleChanged($scope.practiceJournal.module);
+        updateModuleThemes($scope.practiceJournal.module);
       }
     });
   }
@@ -88,6 +88,13 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
     });
   }
 
+  function updateModuleThemes(moduleId) {
+    var module = $scope.formState.modulesById[moduleId];
+    if (module) {
+      $scope.formState.themes = module.themes.map(function (it) { return it.theme; });
+    }
+  }
+
   function setModuleCredits() {
     if($scope.practiceJournal.module && !$scope.practiceJournal.theme) {
       $scope.practiceJournal.credits = $scope.formState.modulesById[$scope.practiceJournal.module].credits;
@@ -98,7 +105,7 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
   $scope.moduleChanged = function (moduleId) {
     if ($scope.formState.modulesById[moduleId]) {
       setModuleCredits();
-      $scope.formState.themes = $scope.formState.modulesById[moduleId].themes.map(function (it) { return it.theme; });
+      updateModuleThemes(moduleId);
 
       if (!angular.isDefined(entity) && angular.isString($scope.formState.modulesById[moduleId].assessmentMethodsEt)) {
         $scope.practiceJournal.practicePlan = $scope.formState.modulesById[moduleId].assessmentMethodsEt;
@@ -130,23 +137,104 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
     }
   };
 
+  $scope.updateHours = function () {
+    if (angular.isNumber($scope.practiceJournal.credits)) {
+      $scope.practiceJournal.hours = DataUtils.creditsToHours($scope.practiceJournal.credits);
+      $scope.practiceJournalForm.hours.$setDirty();
+    }
+  };
+  $scope.updateCredits = function () {
+    $scope.practiceJournal.credits = DataUtils.hoursToCredits($scope.practiceJournal.hours);
+    $scope.practiceJournalForm.credits.$setDirty();
+  };
+
+  function validationPassed() {
+    $scope.practiceJournalForm.$setSubmitted();
+    if(!$scope.practiceJournalForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      return false;
+    }
+    return true;
+  }
+
+  function isBeforeDaysAfterCanEdit(practiceJournal) {
+    var now = moment();
+    var endDate = moment(practiceJournal.endDate);
+
+    return moment.duration(now.diff(endDate)).asDays() <= DAYS_AFTER_CAN_EDIT;
+  }
+
   var PracticeJournalEndpoint = QueryUtils.endpoint('/practiceJournals');
   $scope.save = function () {
+    if(!validationPassed()) {
+      return false;
+    }
+    isBeforeDaysAfterCanEdit($scope.practiceJournal);
+
     $scope.practiceJournal.isHigher = $scope.formState.isHigher;
     var practiceJournal = new PracticeJournalEndpoint($scope.practiceJournal);
     if (angular.isDefined($scope.practiceJournal.id)) {
-      practiceJournal.$update().then(function () {
-        message.info('main.messages.create.success');
-        entityToForm(practiceJournal);
-        $scope.practiceJournalForm.$setPristine();
-      });
+      if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {        
+        dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEdit'}, function () {
+          practiceJournal.$update().then(function () {
+            message.info('main.messages.update.success'); 
+            $location.path('/practiceJournals');
+          });
+        });
+      } else {
+        practiceJournal.$update().then(function () {
+          message.info('main.messages.update.success');
+          entityToForm(practiceJournal);
+          $location.path('/practiceJournals/' + practiceJournal.id + '/edit');
+        });
+      }
     } else {
-      practiceJournal.$save().then(function () {
-        message.info('main.messages.create.success');
-        $location.path('/practiceJournals/' + practiceJournal.id + '/edit');
-      });
+      if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {        
+        dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEdit'}, function () {
+          practiceJournal.$save().then(function () {
+            message.info('main.messages.create.success');
+            $location.path('/practiceJournals');
+          });
+        });
+      } else {
+        practiceJournal.$save().then(function () {
+          message.info('main.messages.create.success');
+          entityToForm(practiceJournal);
+          $scope.practiceJournalForm.$setPristine();
+        });
+      }
     }
   };
+
+  $scope.confirm = function () {
+    if(!validationPassed()) {
+      return false;
+    }
+    $scope.practiceJournal.isHigher = $scope.formState.isHigher;
+    if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {        
+      dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEdit'}, function () {
+        confirmPracticeJournal(true);
+      });
+    } else {
+      confirmPracticeJournal(false);
+    }
+  };
+
+  function confirmPracticeJournal(sendBackToList) {
+    dialogService.confirmDialog({
+      prompt: 'practiceJournal.prompt.confirmConfirm'
+    }, function () {
+      QueryUtils.endpoint('/practiceJournals/' + $scope.practiceJournal.id + '/confirm/').put($scope.practiceJournal, function (practiceJournal) {
+        message.info('practiceJournal.messages.confirmed');
+        if (sendBackToList) {
+          $location.path('/practiceJournals');
+        } else {
+          entityToForm(practiceJournal);
+          $scope.practiceJournalForm.$setPristine();
+        }
+      });
+    });
+  }
 
   $scope.delete = function () {
     dialogService.confirmDialog({ prompt: 'practiceJournal.deleteconfirm' }, function () {

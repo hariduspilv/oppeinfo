@@ -1,10 +1,7 @@
-<div ng-if="protocol">
-  <div ng-include="'/protocol/module.protocol.edit.html'"
-    ng-controller="ModuleProtocolController as moduleProtocolController" ng-init="entity=protocol"></div>
-</div>
-<div ng-if="!protocol" class="ois-form-layout-padding" ng-cloak>
+
+<div class="ois-form-layout-padding" ng-cloak>
   <div flex>
-    <form ng-submit="moduleProtocolNewForm.$valid && submit()" novalidate layout="column" name="moduleProtocolNewForm">
+    <form ng-submit="submit()" novalidate layout="column" name="moduleProtocolNewForm">
       <div>
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="50" flex-sm="100" flex-xs="100">
@@ -21,7 +18,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex flex-sm="100">
             <label class="textInput">{{'moduleProtocol.curriculumVersion' | translate}}</label>
-            <hois-select ng-model="formState.curriculumVersion" type="curriculumversion" criteria="{higher: false}" ng-change="curriculumVersionChange()" required></hois-select>
+            <hois-select ng-model="formState.curriculumVersion" type="curriculumversion" criteria="{higher: false, closed: false}" ng-change="curriculumVersionChange()" required></hois-select>
           </md-input-container>
         </div>
 

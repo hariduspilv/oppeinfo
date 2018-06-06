@@ -123,12 +123,22 @@ public class AutocompleteControllerTests {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        uri = "/autocomplete/curriculumversionomodulethemes?curriculumVersionOmoduleId=0&&closedCurriculumVersionModules=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test
     public void curriculumversionomodulesandthemes() {
         String uri = "/autocomplete/curriculumversionomodulesandthemes?curriculumVersion=0";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        uri = "/autocomplete/curriculumversionomodulesandthemes?curriculumVersion=0&&closedCurriculumVersionModules=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
@@ -156,6 +166,16 @@ public class AutocompleteControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         uri = "/autocomplete/curriculumversions?languages=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        uri = "/autocomplete/curriculumversions?closed=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        uri = "/autocomplete/curriculumversions?closed=false";
         responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -397,6 +417,11 @@ public class AutocompleteControllerTests {
         responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        
+        uri = "/autocomplete/subjects?closedCurriculumVersionSubjects=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test
@@ -440,6 +465,11 @@ public class AutocompleteControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         uri = "/autocomplete/students?curriculumVersion=1&studentGroup=1";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uri = "/autocomplete/students?finishing=true";
         responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

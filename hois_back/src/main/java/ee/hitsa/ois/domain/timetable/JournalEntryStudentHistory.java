@@ -24,6 +24,8 @@ public class JournalEntryStudentHistory extends BaseEntityWithId {
 
     @NotNull
     private LocalDateTime gradeInserted;
+    
+    private String gradeInsertedBy;
 
     public JournalEntryStudent getJournalEntryStudent() {
         return journalEntryStudent;
@@ -49,4 +51,12 @@ public class JournalEntryStudentHistory extends BaseEntityWithId {
         this.gradeInserted = gradeInserted;
     }
 
+    public String getGradeInsertedBy() {
+        return gradeInsertedBy;
+    }
+
+    public void setGradeInsertedBy(String gradeInsertedBy) {
+        this.gradeInsertedBy = gradeInsertedBy;
+    }
+    
 }

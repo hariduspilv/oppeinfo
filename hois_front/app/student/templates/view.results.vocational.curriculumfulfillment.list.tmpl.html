@@ -1,7 +1,11 @@
   <hois-collapsable expanded="false">
     <hois-collapsable-header>
       <div layout="row">
-        <div flex="30">{{currentLanguageNameField(module.curriculumModule) + ' (' + currentLanguageNameField(module.curriculumModule.module) + ')'}}</div>
+        <div flex="30">
+          <span ng-if="moduleResultById[module.id].isApelTransfer" class="apelAsterisk">*</span>
+          <span>{{currentLanguageNameField(module.curriculumModule) + ' (' + currentLanguageNameField(module.curriculumModule.module) + ')'}}</span>
+          <span ng-if="moduleResultById[module.id].isApelTransfer && !moduleResultById[module.id].isFormalLearning"> - {{'student.result.informal' | translate}}</span>
+        </div>
         <div ng-if="moduleResultById[module.id] && moduleResultById[module.id].grade && positiveGrade(moduleResultById[module.id].grade.code)" flex-offset="10" class="bold" md-colors="{color: 'green-600'}">{{moduleResultById[module.id].grade.value}}</div>
         <div ng-if="moduleResultById[module.id] && moduleResultById[module.id].grade && !positiveGrade(moduleResultById[module.id].grade.code)" flex-offset="10" class="bold" md-colors="{color: 'red-500'}">{{moduleResultById[module.id].grade.value}}</div>
         <div ng-if="!moduleResultById[module.id] || !moduleResultById[module.id].grade" flex-offset="10" md-colors="{color: 'accent'}">{{((moduleResultById[module.id] ? moduleResultById[module.id].totalSubmitted : 0) - module.curriculumModule.credits) | number: 1}} {{'student.result.ekap' | translate}}</div>
@@ -22,7 +26,11 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in module.themes" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><span>{{row.nameEt}}</span></td>
+            <td md-cell>
+              <span ng-if="moduleResultById[module.id].themeResultById[row.id].isApelTransfer" class="apelAsterisk">* </span>
+              <span>{{row.nameEt}}</span>
+              <span ng-if="moduleResultById[module.id].themeResultById[row.id].isApelTransfer"> - {{'student.result.informal' | translate}}</span>
+            </td>
             <td md-cell>{{row.credits}}</td>
             <td md-cell><span>{{moduleResultById[module.id].themeResultById[row.id].grade.value}}</span></td>
             <td md-cell>{{moduleResultById[module.id].themeResultById[row.id].date | hoisDate}}</td>

@@ -7,8 +7,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 import javax.transaction.Transactional;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleThemeCapa
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapacity;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.VocationalGradeType;
+import ee.hitsa.ois.exception.EntityRemoveException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -31,6 +34,7 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.OccupationModuleCapacitiesUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleCapacityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeCapacityDto;
@@ -45,6 +49,8 @@ public class CurriculumVersionOccupationModuleService {
     private EntityManager em;
     @Autowired
     private ClassifierRepository classifierRepository;
+    
+    private static final int MIN_MODULES_FOR_DELETION = 2;
 
     private List<Classifier> getCapacityTypes() {
         return StreamUtil.toFilteredList(Classifier::isVocational, classifierRepository.findAllByMainClassCode(MainClassCode.MAHT.name()));
@@ -74,6 +80,25 @@ public class CurriculumVersionOccupationModuleService {
 
     public CurriculumVersionOccupationModule update(CurriculumVersionOccupationModuleDto dto, CurriculumVersionOccupationModule occupationModule) {
         return EntityUtil.save(updateOccupationModule(dto, occupationModule), em);
+    }
+    
+    public void delete(HoisUserDetails user, CurriculumVersionOccupationModule occupationModule) {
+        CurriculumVersion curriculumVersion = occupationModule.getCurriculumVersion();
+        if (curriculumVersion.getOccupationModules().size() < MIN_MODULES_FOR_DELETION) {
+            throw new ValidationFailedException("curriculum.error.implementationPlanAtleastOneModuleNeeded");
+        }
+        
+        EntityUtil.setUsername(user.getUsername(), em);
+        try {
+            curriculumVersion.getOccupationModules().remove(occupationModule);
+            em.flush();
+        } catch(PersistenceException e) {
+            Throwable cause = e.getCause();
+            if(cause instanceof ConstraintViolationException) {
+                throw new EntityRemoveException(null, cause);
+            }
+            throw e;
+        }
     }
 
     private CurriculumVersionOccupationModule createOccupationModule(CurriculumVersion curriculumVersion, CurriculumVersionOccupationModuleDto dto) {

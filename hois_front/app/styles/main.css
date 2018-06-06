@@ -857,6 +857,11 @@ menu-link {
     color: rgb(13, 71, 161);
 }
 
+.apelAsterisk {
+  color: rgb(21, 101, 192);
+  font-size: 18px;
+}
+
 .md-title .hois-classifier-value {
     display: inline-block;
 }
@@ -1693,7 +1698,7 @@ tr.scholarship-bottom-border td {
   font-size: 14px;
 }
 
-.journal-legend {
+.capacity-type-legend {
   padding: 5px;
   border: solid 1px lightgray;
   font-size: 13px;
@@ -1706,6 +1711,9 @@ tr.scholarship-bottom-border td {
 .middle-text {
   padding: 12px;
   vertical-align: middle;
+}
+.text-align-right {
+  text-align: right;
 }
 
 /* Following CSS used by InAadress component

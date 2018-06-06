@@ -5,6 +5,7 @@ import java.util.List;
 public class StudentAutocompleteCommand extends SearchCommand {
 
     private Boolean active;
+    private Boolean finishing;
     private Boolean finished;
     private Boolean studying;
     private Boolean academicLeave;
@@ -19,6 +20,14 @@ public class StudentAutocompleteCommand extends SearchCommand {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public Boolean getFinishing() {
+        return finishing;
+    }
+
+    public void setFinishing(Boolean finishing) {
+        this.finishing = finishing;
     }
 
     public Boolean getFinished() {

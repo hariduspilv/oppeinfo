@@ -1,0 +1,132 @@
+<div ng-if="auth.isAdmin() || auth.isTeacher()" class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="loadData()" novalidate>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'finalThesis.student' | translate}}</label>
+            <input ng-model="criteria.studentName" name="student" type="text">
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'finalThesis.label' | translate}}</label>
+            <input ng-model="criteria.theme" name="theme" type="text">
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'finalThesis.curriculum' | translate}}</label>
+            <hois-select ng-model="criteria.curriculumVersion" name="curriculumVersion" type="curriculumversion"></hois-select>
+          </md-input-container>
+          <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <hois-autocomplete flex ng-model="criteria.studentGroupObject" method="studentgroups" name="studentGroup" label="finalThesis.studentGroup"></hois-autocomplete>
+          </div>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'finalThesis.status' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" main-classifier-code="LOPUTOO_STAATUS" model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
+          <md-input-container ng-if="auth.isAdmin()" flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'finalThesis.supervisor.label' | translate}}</label>
+            <input ng-model="criteria.supervisor" name="supervisor" type="text">
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="45" flex-sm="100" flex-xs="100">
+            <div layout="column" flex>
+              <div layout="row" flex>
+                <md-input-container>
+                  <label>{{'finalThesis.insertedFrom' | translate}}</label>
+                  <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
+                </md-input-container>
+                <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'finalThesis.insertedThru' | translate}}</label>
+                  <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
+                </md-input-container>
+              </div>
+            </div>
+          </div>
+
+          <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <div layout="column" flex>
+              <div layout="row" flex>
+                <md-input-container>
+                  <label>{{'finalThesis.confirmedFrom' | translate}}</label>
+                  <md-datepicker ng-model="criteria.confirmedFrom"></md-datepicker>
+                </md-input-container>
+                <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'finalThesis.confirmedThru' | translate}}</label>
+                  <md-datepicker ng-model="criteria.confirmedThru" md-min-date="criteria.endFrom"></md-datepicker>
+                </md-input-container>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LOPTEEMA') && auth.isAdmin()" ng-href="#/finalThesis/new" class="md-raised">{{'main.button.create' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+
+<div ng-if="auth.isAdmin() || auth.isTeacher()" layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="2">{{'finalThesis.label' | translate}}</th>
+            <th md-column md-order-by="4">{{'finalThesis.student' | translate}}</th>
+            <th md-column md-order-by="7">{{'finalThesis.idcode' | translate}}</th>
+            <th md-column md-order-by="8">{{'finalThesis.supervisors' | translate}}</th>
+            <th md-column md-order-by="9">{{'finalThesis.curriculum' | translate}}</th>
+            <th md-column md-order-by="12">{{'finalThesis.studentGroup' | translate}}</th>
+            <th md-column md-order-by="13">{{'finalThesis.insertedDate' | translate}}</th>
+            <th md-column md-order-by="14">{{'finalThesis.confirmedDate' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <a ng-href="#/finalThesis/{{row.id}}/view">{{row.themeEt}}</a>
+            </td>
+            <td md-cell>{{row.student.nameEt}}</td>
+            <td md-cell>{{row.idcode}}</td>
+            <td md-cell>{{row.supervisors}}</td>
+            <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+            <td md-cell>{{row.studentGroup}}</td>
+            <td md-cell>{{row.inserted | hoisDate}}</td>
+            <td md-cell>{{row.confirmed | hoisDate}}</td>
+            <td md-cell>
+              <div ng-if="row.canBeEdited">
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/finalThesis/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+      md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>
+
+<div ng-if="noFinalThesisModule" layout-padding>
+  <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+    <div md-colors="{color: 'accent'}">
+      <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+      <span>{{'finalThesis.error.noFinalThesisModule' | translate}}</span>
+    </div>
+  </md-whiteframe>
+</div>

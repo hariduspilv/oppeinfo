@@ -17,10 +17,7 @@ import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 public class StudentViewDto extends StudentForm {
 
     private Long id;
-
-    // header
-    private OisFileCommand photo;
-
+    
     // study
     private AutocompleteResult school;
     private String status;
@@ -45,6 +42,7 @@ public class StudentViewDto extends StudentForm {
     private Boolean userCanEditStudent;
     private Boolean userCanAddRepresentative;
     private Boolean userIsSchoolAdmin;
+    private Boolean userIsStudentGroupTeacher;
     private BigDecimal curriculumCredits;
     private BigDecimal credits;
     private BigDecimal kkh;
@@ -72,14 +70,6 @@ public class StudentViewDto extends StudentForm {
 
     public void setCurriculum(Long curriculum) {
         this.curriculum = curriculum;
-    }
-
-    public OisFileCommand getPhoto() {
-        return photo;
-    }
-
-    public void setPhoto(OisFileCommand photo) {
-        this.photo = photo;
     }
 
     public AutocompleteResult getSchool() {
@@ -248,6 +238,14 @@ public class StudentViewDto extends StudentForm {
 
     public void setUserIsSchoolAdmin(Boolean userIsSchoolAdmin) {
         this.userIsSchoolAdmin = userIsSchoolAdmin;
+    }
+
+    public Boolean getUserIsStudentGroupTeacher() {
+        return userIsStudentGroupTeacher;
+    }
+
+    public void setUserIsStudentGroupTeacher(Boolean userIsStudentGroupTeacher) {
+        this.userIsStudentGroupTeacher = userIsStudentGroupTeacher;
     }
 
     public BigDecimal getCurriculumCredits() {

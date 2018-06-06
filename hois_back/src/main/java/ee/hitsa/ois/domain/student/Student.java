@@ -11,6 +11,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import ee.hitsa.ois.domain.FinalThesis;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
@@ -33,6 +34,8 @@ public class Student extends StudentBase {
     private List<JournalStudent> journalStudents;
     @OneToMany(mappedBy = "student")
     private List<StudentOccupationCertificate> occupationCertificates;
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private FinalThesis finalThesis;
 
     public Person getPerson() {
         return person;
@@ -96,6 +99,14 @@ public class Student extends StudentBase {
 
     public void setOccupationCertificates(List<StudentOccupationCertificate> occupationCertificates) {
         this.occupationCertificates = occupationCertificates;
+    }
+
+    public FinalThesis getFinalThesis() {
+        return finalThesis;
+    }
+
+    public void setFinalThesis(FinalThesis finalThesis) {
+        this.finalThesis = finalThesis;
     }
     
 }

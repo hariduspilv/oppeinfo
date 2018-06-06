@@ -604,6 +604,15 @@
         return $scope.formState.legends[weekNr];
       };
 
+      $scope.delete = function () {
+        dialogService.confirmDialog({prompt: 'lessonplan.prompt.deleteLessonplan'}, function() {
+          $scope.record.$delete().then(message.updateSuccess).then(function() {
+            message.info('main.messages.delete.success');
+            redirectBack();
+          }).catch(angular.noop);
+        });
+      }
+
       $scope.back = function() {
         if(copyOfRecord === angular.toJson($scope.record)) {
           redirectBack();

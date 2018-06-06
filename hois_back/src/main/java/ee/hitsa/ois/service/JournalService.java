@@ -39,6 +39,7 @@ import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.domain.timetable.JournalCapacity;
 import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.domain.timetable.JournalEntryCapacityType;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
@@ -47,6 +48,7 @@ import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.JournalStatus;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -71,10 +73,13 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
+import ee.hitsa.ois.web.dto.studymaterial.CapacityHoursDto;
 import ee.hitsa.ois.web.dto.studymaterial.JournalLessonHoursDto;
+import ee.hitsa.ois.web.dto.timetable.JournalDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentHistoryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentResultDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryTableDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
@@ -100,6 +105,8 @@ public class JournalService {
     private StudentRepository studentRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private ClassifierService classifierService;
     @Autowired
     private EntityManager em;
     @Autowired
@@ -194,6 +201,15 @@ public class JournalService {
             dto.setCanEdit(Boolean.valueOf(JournalUtil.hasPermissionToChange(user, journal)));
             return dto;
         });
+    }
+    
+    public JournalDto get(HoisUserDetails user, Journal journal) {
+        JournalDto dto = JournalDto.of(journal);
+        dto.setCanBeConfirmed(Boolean.valueOf(JournalUtil.canConfirm(user, journal)));
+        dto.setCanBeUnconfirmed(Boolean.valueOf(JournalUtil.canUnconfirm(user, journal)));
+        dto.setCanEdit(Boolean.valueOf(JournalUtil.hasPermissionToChange(user, journal)));
+        dto.setLessonHours(usedHours(journal));
+        return dto;
     }
 
     public Journal confirm(Journal journal) {
@@ -339,7 +355,7 @@ public class JournalService {
         JournalEntry journalEntry = EntityUtil.bindToEntity(journalEntryForm, new JournalEntry(), classifierRepository,
                 "journalEntryStudents", "journalEntryCapacityTypes");
         journal.getJournalEntries().add(journalEntry);
-        saveJournalEntryStudents(journalEntryForm, journalEntry);
+        saveJournalEntryStudents(user, journalEntryForm, journalEntry);
         return EntityUtil.save(journal, em);
     }
 
@@ -349,7 +365,7 @@ public class JournalService {
         JournalEntry journalEntry = em.getReference(JournalEntry.class, journalEntrylId);
         EntityUtil.bindToEntity(journalEntryForm, journalEntry, classifierRepository, "journalEntryStudents",
                 "journalEntryCapacityTypes");
-        saveJournalEntryStudents(journalEntryForm, journalEntry);
+        saveJournalEntryStudents(user, journalEntryForm, journalEntry);
         EntityUtil.save(journalEntry, em);
     }
     
@@ -368,13 +384,13 @@ public class JournalService {
         }
     }
 
-    private void saveJournalEntryStudents(JournalEntryForm journalEntryForm,
+    private void saveJournalEntryStudents(HoisUserDetails user, JournalEntryForm journalEntryForm,
             JournalEntry journalEntry) {
         for (JournalEntryStudentForm journalEntryStudentForm : journalEntryForm.getJournalEntryStudents()) {
             if (journalEntryStudentForm.getId() != null) {
-                updateJournalStudentEntry(journalEntryStudentForm);
+                updateJournalStudentEntry(user, journalEntryStudentForm);
             } else {
-                saveJournalStudentEntry(journalEntry, journalEntryStudentForm);
+                saveJournalStudentEntry(user, journalEntry, journalEntryStudentForm);
             }
         }
         EntityUtil.bindEntityCollection(journalEntry.getJournalEntryCapacityTypes(),
@@ -386,7 +402,7 @@ public class JournalService {
                 });
     }
 
-    private void updateJournalStudentEntry(JournalEntryStudentForm journalEntryStudentForm) {
+    private void updateJournalStudentEntry(HoisUserDetails user, JournalEntryStudentForm journalEntryStudentForm) {
         JournalEntryStudent journalEntryStudent = em.getReference(JournalEntryStudent.class, journalEntryStudentForm.getId());
         assertJournalEntryStudentRules(journalEntryStudent.getJournalStudent());
 
@@ -395,11 +411,23 @@ public class JournalService {
             JournalEntryStudentHistory journalEntryStudentHistory = new JournalEntryStudentHistory();
             journalEntryStudentHistory.setGrade(journalEntryStudent.getGrade());
             journalEntryStudentHistory.setGradeInserted(journalEntryStudent.getGradeInserted());
+            
+            String insertedBy;
+            if (journalEntryStudent.getGradeInsertedBy() != null) {
+                insertedBy = journalEntryStudent.getGradeInsertedBy();
+            } else if (journalEntryStudent.getChangedBy() != null) {
+                insertedBy = journalEntryStudent.getChangedBy();
+            } else {
+                insertedBy = journalEntryStudent.getInsertedBy();
+            }
+            journalEntryStudentHistory.setGradeInsertedBy(insertedBy);
+            
             journalEntryStudent.getJournalEntryStudentHistories().add(journalEntryStudentHistory);
         }
         if (journalEntryStudentForm.getGrade() != null && !journalEntryStudentForm.getGrade()
                 .equals(EntityUtil.getNullableCode(journalEntryStudent.getGrade()))) {
             journalEntryStudent.setGradeInserted(LocalDateTime.now());
+            journalEntryStudent.setGradeInsertedBy(user.getUsername());
         }
         EntityUtil.bindToEntity(journalEntryStudentForm, journalEntryStudent, classifierRepository,
                 "journalEntryStudentHistories", "gradeInserted");
@@ -413,7 +441,7 @@ public class JournalService {
         }
     }
 
-    private void saveJournalStudentEntry(JournalEntry journalEntry,
+    private void saveJournalStudentEntry(HoisUserDetails user, JournalEntry journalEntry,
             JournalEntryStudentForm journalEntryStudentForm) {
         JournalStudent journalStudent = em.getReference(JournalStudent.class, journalEntryStudentForm.getJournalStudent());
         assertJournalEntryStudentRules(journalStudent);
@@ -424,6 +452,7 @@ public class JournalService {
         journalEntryStudent.setJournalStudent(journalStudent);
         if (journalEntryStudentForm.getGrade() != null) {
             journalEntryStudent.setGradeInserted(LocalDateTime.now());
+            journalEntryStudent.setGradeInsertedBy(user.getUsername());
         }
         // TODO remove check, use database unique constraint
         Long id = EntityUtil.getId(journalStudent);
@@ -503,7 +532,20 @@ public class JournalService {
                             .computeIfAbsent(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
                                     id -> new ArrayList<>());
                     JournalEntryStudentResultDto dto = EntityUtil.bindToDto(journalEntryStudent,
-                            new JournalEntryStudentResultDto());
+                            new JournalEntryStudentResultDto(), "gradeInsertedBy", "journalEntryStudentHistories");
+                    
+                    String insertedBy;
+                    if (journalEntryStudent.getGradeInsertedBy() != null) {
+                        insertedBy = journalEntryStudent.getGradeInsertedBy();
+                    } else if (journalEntryStudent.getChangedBy() != null) {
+                        insertedBy = journalEntryStudent.getChangedBy();
+                    } else {
+                        insertedBy = journalEntryStudent.getInsertedBy();
+                    }
+                    
+                    dto.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(insertedBy));
+                    dto.setJournalEntryStudentHistories(StreamUtil.toMappedList(JournalEntryStudentHistoryDto::new,
+                            journalEntryStudent.getJournalEntryStudentHistories()));
                     studentresults.add(dto);
                 }
             }
@@ -556,7 +598,42 @@ public class JournalService {
     }
     
     public JournalLessonHoursDto usedHours(Journal journal) {
-        return JournalLessonHoursDto.of(journal);
+        List<JournalCapacity> capacities = journal.getJournalCapacities();
+        Set<JournalEntry> entries = journal.getJournalEntries();
+        
+        JournalLessonHoursDto dto = new JournalLessonHoursDto();
+        dto.setTotalPlannedHours(calculatePlannedHours(capacities, null));
+        dto.setTotalUsedHours(calculateUsedHours(entries, null));
+        
+        List<CapacityHoursDto> capacityHours = new ArrayList<>();
+        List<Classifier> capacityTypes = classifierService.findAllByMainClassCode(MainClassCode.MAHT);
+        for (Classifier type : capacityTypes) {
+            if (type.isVocational()) {
+                CapacityHoursDto typeHours = new CapacityHoursDto();
+                String typeCode = EntityUtil.getCode(type);
+                typeHours.setCapacity(typeCode);
+                typeHours.setPlannedHours(calculatePlannedHours(capacities, typeCode));
+                typeHours.setUsedHours(calculateUsedHours(entries, typeCode));
+                capacityHours.add(typeHours);
+            }
+        }
+        dto.setCapacityHours(capacityHours);
+        
+        return dto;
+    }
+    
+    private static Integer calculatePlannedHours(List<JournalCapacity> capacities, String typeCode) {
+        return Integer.valueOf(capacities.stream()
+                .filter(it -> typeCode == null
+                        || typeCode.equals(EntityUtil.getCode(it.getJournalCapacityType().getCapacityType())))
+                .mapToInt(it -> it.getHours() == null ? 0 : it.getHours().intValue()).sum());
+    }
+    
+    private static Integer calculateUsedHours(Set<JournalEntry> entries, String typeCode) {
+        return Integer.valueOf(entries.stream()
+                .filter(it -> typeCode == null || it.getJournalEntryCapacityTypes().stream()
+                        .anyMatch(ct -> typeCode.equals(EntityUtil.getCode(ct.getCapacityType()))))
+                .mapToInt(it -> it.getLessons() == null ? 0 : it.getLessons().intValue()).sum());
     }
 
     public byte[] journalAsExcel(Journal journal) {
@@ -611,13 +688,27 @@ public class JournalService {
         Query q = em.createNativeQuery("select j.id, j.name_et, j.study_year_id, sy.year_code, j.add_module_outcomes,"
                 + " count(case jes.absence_code when 'PUUDUMINE_H' then 1 else null end) as puudumine_h,"
                 + " count(case jes.absence_code when 'PUUDUMINE_P' then 1 else null end) as puudumine_p,"
-                + " count(case when jes.absence_code in ('PUUDUMINE_P', 'PUUDUMINE_V') then 1 else null end) as puudumine_pv from journal_entry je"
+                + " count(case when jes.absence_code in ('PUUDUMINE_P', 'PUUDUMINE_V') then 1 else null end) as puudumine_pv,"
+                + " string_agg(distinct p.firstname || ' ' || p.lastname, ', ') as teachers,"
+                + " string_agg(distinct cm.name_et || ' - ' || mcl.name_et || ' (' || c.code || ')', ', ') as module_et,"
+                + " string_agg(distinct cm.name_en || ' - ' || mcl.name_en || ' (' || c.code || ')', ', ') as module_en"
+                + " from journal_entry je"
                 + " join journal_entry_student jes on jes.journal_entry_id=je.id"
                 + " join journal_student js on jes.journal_student_id = js.id"
                 + " join journal j on j.id = js.journal_id"
                 + " join study_year sy on j.study_year_id = sy.id"
                 + " join student s on s.id = js.student_id"
+                + " left join journal_teacher jt on j.id = jt.journal_id"
+                + " left join teacher t on jt.teacher_id = t.id"
+                + " left join person p on t.person_id = p.id"
+                + " left join journal_omodule_theme jot on j.id = jot.journal_id"
+                + " left join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id = cvot.id"
+                + " left join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id"
+                + " left join curriculum_module cm on cvo.curriculum_module_id = cm.id"
+                + " left join curriculum c on cm.curriculum_id = c.id"
+                + " left join classifier mcl on cm.module_code = mcl.code"
                 + " where s.id=?1 and j.study_year_id=?2 group by j.id, sy.year_code");
+
         q.setParameter(1, studentId);
         q.setParameter(2, studyYearId);
 
@@ -631,7 +722,8 @@ public class JournalService {
         
         Query entriesQuery = em.createNativeQuery("select je.id, je.journal_id, je.entry_type_code, je.entry_date, je.content,"
                 + " ( select value from classifier where code = jes.grade_code ),"
-                + " jes.grade_inserted, jes.add_info, je.homework, je.homework_duedate from journal j"
+                + " jes.grade_inserted, coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by,"
+                + " jes.add_info, je.homework, je.homework_duedate, jes.absence_code from journal j"
                 + " inner join journal_entry je on j.id = je.journal_id"
                 + " inner join journal_student js on j.id = js.journal_id"
                 + " left join journal_entry_student jes on je.id = jes.journal_entry_id and jes.journal_student_id = js.id"
@@ -644,7 +736,8 @@ public class JournalService {
         
         List<StudentJournalEntryDto> entries = StreamUtil.toMappedList(r -> new StudentJournalEntryDto(resultAsLong(r, 0), resultAsLong(r, 1),
                 resultAsString(r, 2), resultAsLocalDate(r, 3), resultAsString(r, 4), resultAsString(r, 5), resultAsLocalDateTime(r, 6), 
-                resultAsString(r, 7), resultAsString(r, 8), resultAsLocalDate(r, 9)), data);
+                PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 7)), resultAsString(r, 8), resultAsString(r, 9), 
+                resultAsLocalDate(r, 10), resultAsString(r, 11)), data);
         entries = getEntriesWithPreviousResults(entries, studentId);
         Map<Long, List<StudentJournalEntryDto>> journalEntries = entries.stream().collect(Collectors.groupingBy(r -> r.getJournalId()));
         
@@ -659,7 +752,7 @@ public class JournalService {
         Set<Long> entriesIds = StreamUtil.toMappedSet(StudentJournalEntryDto::getId, entries.stream());
         if(!entriesIds.isEmpty()) {
             Query previousResultQuerys = em.createNativeQuery("select je.id, ( select value from classifier where code = jesh.grade_code ),"
-                    + " jesh.grade_inserted from journal j"
+                    + " jesh.grade_inserted, coalesce(jesh.grade_inserted_by, jesh.changed_by, jesh.inserted_by) as grade_inserted_by from journal j"
                     + " inner join journal_entry je on je.journal_id = j.id"
                     + " inner join journal_student js on js.journal_id = j.id"
                     + " inner join student s on s.id=js.student_id"
@@ -673,7 +766,8 @@ public class JournalService {
             List<?> previousResultQueryResult = previousResultQuerys.getResultList();
             Map<Long, List<StudentJournalEntryPreviousResultDto>> previousResults = previousResultQueryResult.stream().collect(
                     Collectors.groupingBy(r -> resultAsLong(r, 0), 
-                    Collectors.mapping(r -> new StudentJournalEntryPreviousResultDto(resultAsString(r, 1), resultAsLocalDateTime(r, 2)),
+                    Collectors.mapping(r -> new StudentJournalEntryPreviousResultDto(resultAsString(r, 1), 
+                            resultAsLocalDateTime(r, 2), PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 3))),
                     Collectors.toList())));
             for(StudentJournalEntryDto dto : entries) {
                 dto.setPreviousResults(previousResults.get(dto.getId()));

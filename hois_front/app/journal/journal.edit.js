@@ -9,8 +9,6 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   $scope.formState = {};
   $scope.showAllStudentsModel = true;
 
-
-
   function loadUsedHours() {
     QueryUtils.endpoint('/journals/' + entity.id + '/usedHours').get().$promise.then(function (result) {
       $scope.journal.lessonHours = result;
@@ -28,6 +26,9 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           if (it.journalStudentResults.hasOwnProperty(p)) {
             classifierMapper.objectmapper(it.journalStudentResults[p]);
           }
+          it.journalStudentResults[p][0].journalEntryStudentHistories.forEach(function (history) {
+            classifierMapper.objectmapper(history);
+          });
         }
       });
       $scope.journal.journalEntriesByDate = journalEntriesByDate;
@@ -175,8 +176,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   function loadJournalEntryDialogInitialData(dialogScope) {
     dialogScope.journalStudents = entity.journalStudents;
     dialogScope.absenceOptions = {};
-    // MAHT_l = loeng and it's is_vocational value is false
-    dialogScope.capacityTypes = Classifier.queryForDropdown({ mainClassCode: 'MAHT', filterValues: 'MAHT_l' });
+    dialogScope.capacityTypes =  Classifier.queryForDropdown({ mainClassCode: 'MAHT', vocational: true });
     dialogScope.lessonPlanDates = $scope.formState.lessonInfo.lessonPlanDates.map(function (it) {
       var value = $filter('hoisDate')(it);
       return { nameEt: value, nameEn: value, id: it };

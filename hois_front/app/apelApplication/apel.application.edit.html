@@ -130,7 +130,7 @@
         <md-button class="md-raised md-default" href="/#/apelApplication/">{{'main.button.back' | translate}}</md-button>
       </div>
       <div ng-if="!application.student" layout="row">
-        <md-button class="md-raised md-default" href="/#/apelApplication/">{{'main.button.back' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="back('/#/apelApplication/')">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
   </div>

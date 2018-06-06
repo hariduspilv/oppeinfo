@@ -37,6 +37,7 @@ public class JournalEntryStudent extends BaseEntityWithId {
     private Classifier grade;
 
     private LocalDateTime gradeInserted;
+    private String gradeInsertedBy;
     private String addInfo;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -98,6 +99,14 @@ public class JournalEntryStudent extends BaseEntityWithId {
 
     public void setGradeInserted(LocalDateTime gradeInserted) {
         this.gradeInserted = gradeInserted;
+    }
+    
+    public String getGradeInsertedBy() {
+        return gradeInsertedBy;
+    }
+
+    public void setGradeInsertedBy(String gradeInsertedBy) {
+        this.gradeInsertedBy = gradeInsertedBy;
     }
 
     public String getAddInfo() {

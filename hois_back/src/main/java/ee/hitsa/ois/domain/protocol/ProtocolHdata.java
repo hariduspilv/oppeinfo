@@ -16,6 +16,7 @@ import org.hibernate.annotations.Parameter;
 import ee.hitsa.ois.domain.BaseEntity;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 
 @Entity
@@ -40,7 +41,10 @@ public class ProtocolHdata extends BaseEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     private Curriculum curriculum;
-
+    
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
+    private Subject finalSubject;
 
     public Protocol getProtocol() {
         return protocol;
@@ -73,4 +77,13 @@ public class ProtocolHdata extends BaseEntity {
     public void setCurriculum(Curriculum curriculum) {
         this.curriculum = curriculum;
     }
+
+    public Subject getFinalSubject() {
+        return finalSubject;
+    }
+
+    public void setFinalSubject(Subject finalSubject) {
+        this.finalSubject = finalSubject;
+    }
+    
 }

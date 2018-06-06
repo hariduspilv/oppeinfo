@@ -1,0 +1,106 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="finalThesisForm" ng-submit="save()" novalidate>
+      <div class="form-readonly">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'finalThesis.student' | translate}}</label>
+            <hois-value value="thesis.person.firstname + ' ' + thesis.person.lastname"></hois-value>
+          </md-input-container>
+          <md-input-container ng-if="thesis.confirmed" flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'finalThesis.confirmed' | translate}}</label>
+            <hois-value value="thesis.confirmed | hoisDate"></hois-value>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'finalThesis.curriculum' | translate}}</label>
+            <hois-value value="currentLanguageNameField(thesis.curriculumVersion)"></hois-value>
+          </md-input-container>
+          <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'finalThesis.studentGroup' | translate}}</label>
+            <hois-value value="currentLanguageNameField(thesis.studentGroup)"></hois-value>
+          </md-input-container>
+        </div>
+      </div>
+
+      <div class="form-readonly">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'finalThesis.themeEt' | translate}}</label>
+            <hois-value value="thesis.themeEt"></hois-value>
+          </md-input-container>
+          <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'finalThesis.themeEn' | translate}}</label>
+            <hois-value value="thesis.themeEn"></hois-value>
+          </md-input-container>
+        </div>
+        <br>
+
+        <div layout="row">
+          <md-input-container>
+            <md-checkbox ng-model="thesis.hasDraft" aria-label="{{'finalThesis.draft' | translate}}" disabled>{{'finalThesis.draft' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-input-container ng-show="thesis.hasDraft" flex>
+            <label>{{'finalThesis.draft' | translate}}</label>
+            <textarea ng-model="thesis.draft" md-maxlength="20000" max-rows="10" readonly></textarea>
+          </md-input-container>
+        </div>
+
+        <div ng-if="thesis.addInfo" layout="row" flex>
+          <md-input-container flex>
+            <label>{{'finalThesis.addInfo' | translate}}</label>
+            <textarea ng-model="thesis.addInfo" md-maxlength="4000" max-rows="2" readonly></textarea>
+          </md-input-container>
+        </div>
+        <br>
+
+        <fieldset ng-if="thesis.supervisors.length > 0">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'finalThesis.supervisors' | translate}}</legend>
+          
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'finalThesis.supervisor.name' | translate}}</th>
+                <th md-column>{{'finalThesis.primarySupervisor' | translate}}</th>
+                <th md-column>{{'finalThesis.externalSupervisor' | translate}}</th>
+                <th md-column>{{'finalThesis.supervisor.occupation' | translate}}</th>
+                <th md-column>{{'finalThesis.supervisor.email' | translate}}</th>
+                <th md-column ng-if="!auth.isStudent()">{{'finalThesis.supervisor.idcode' | translate}}</th>
+                <th md-column>{{'finalThesis.supervisor.phone' | translate}}</th>
+                <th md-column>{{'finalThesis.supervisor.bankaccount' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="supervisor in thesis.supervisors track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{supervisor.firstname}} {{supervisor.lastname}}</td>
+                <td md-cell>
+                  <md-checkbox ng-checked="supervisor.isPrimary" ng-disabled="true" aria-label="{{'finalThesis.primarySupervisor' | translate}}"></md-checkbox>
+                </td>
+                <td md-cell>
+                  <md-checkbox ng-checked="supervisor.isExternal" ng-disabled="true" aria-label="{{'finalThesis.externalSupervisor' | translate}}"></md-checkbox>
+                </td>
+                <td md-cell>{{supervisor.occupation}}</td>
+                <td md-cell>{{supervisor.email}}</td>
+                <td md-cell ng-if="!auth.isStudent()">{{supervisor.idcode}}</td>
+                <td md-cell>{{supervisor.phone}}</td>
+                <td md-cell>{{supervisor.bankaccount}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </fieldset>
+      </div>
+
+      <div layout="row">
+        <md-button ng-if="thesis.canBeEdited" class="md-raised md-primary" ng-href="#/finalThesis/{{::thesis.id}}/edit">{{'main.button.edit' | translate}}</md-button>
+        <md-button ng-if="thesis.canBeConfirmed" class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <a ng-if="thesis.id" href="{{finalThesisPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
+        <md-button ng-if="!auth.isStudent()" class="md-raised md-default" ng-click="back('#/finalThesis/')">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

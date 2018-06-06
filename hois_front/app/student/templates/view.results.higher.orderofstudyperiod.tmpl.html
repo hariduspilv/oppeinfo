@@ -14,7 +14,11 @@
             <td md-cell>{{'student.result.higher.teacher' | translate}}</td>
           </tr>
           <tr md-row ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByStudyPeriod(studyPeriodResult.studyPeriod) | orderBy: 'lastGrade.gradeDate'">
-            <td md-cell>{{currentLanguageNameField(subjectResult.subject)}}</td>
+            <td md-cell>
+              <span ng-if="subjectResult.isApelTransfer" class="apelAsterisk">*</span>
+              <span>{{currentLanguageNameField(subjectResult.subject)}}</span>
+              <span ng-if="!subjectResult.isFormalLearning && subjectResult.isApelTransfer"> - {{'student.result.informal' | translate}}</span>
+            </td>
             <td md-cell>{{subjectResult.subject.code}}</td>
             <td md-cell>{{currentLanguageNameField(subjectResult.higherModule)}}</td>
             <td md-cell>{{subjectResult.isOptional ? 'main.no' : 'main.yes' | translate}}</td>

@@ -1,0 +1,11 @@
+<md-nav-bar hide-xs md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection">
+  <md-nav-item md-nav-href="#/documents/diplomas?_noback" name="document.diplomas">{{'document.diplomas' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/documents/supplements?_noback" name="document.supplements">{{'document.supplements' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<div hide-gt-xs layout="column">
+  <md-button class="md-raised" flex ng-href="#/documents/diplomas?_noback" ng-class="{'md-accent': currentNavItem === 'document.diplomas'}"
+    name="document.diplomas">{{'document.diplomas' | translate}}</md-button>
+  <md-button class="md-raised" ng-href="#/documents/supplements?_noback" ng-class="{'md-accent': currentNavItem === 'document.supplements'}"
+    name="document.supplements">{{'document.supplements' | translate}}</md-button>
+</div>

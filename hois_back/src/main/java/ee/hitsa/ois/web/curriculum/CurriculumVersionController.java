@@ -129,7 +129,7 @@ public class CurriculumVersionController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion) {
         CurriculumUtil.assertCanDelete(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
-        curriculumValidationService.assertCurriculumVersionCanDeleted(curriculumVersion);
+        curriculumValidationService.assertCurriculumVersionCanBeDeleted(curriculumVersion);
 
         curriculumVersionService.delete(user, curriculumVersion);
     }

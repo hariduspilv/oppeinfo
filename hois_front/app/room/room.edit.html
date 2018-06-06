@@ -4,16 +4,19 @@
 	 <div layout="column">
       <md-input-container class="md-block">
         <label>{{'room.building' | translate}}</label>
-        <hois-select ng-model="record.building" name="building" type="building" required></hois-select>
+        <hois-select ng-model="record.building" name="building" ng-change="buildingChanged()" type="building" required></hois-select>
       </md-input-container>
 
       <div layout="row" flex>
         <md-input-container class="md-block" flex="20">
           <label class="textInput">{{'room.code' | translate}}</label>
-          <input ng-model="record.code" name="code" type="text" required md-maxlength="20">
+          <input ng-model="record.code" name="code" type="text" md-maxlength="20" ng-model-options="{debounce: 250}" unique="formState.roomUniqueQuery" required>
           <div ng-messages="roomForm.code.$error">
             <div ng-message="md-maxlength">
               {{'main.messages.error.maxlength' | translate}}
+            </div>
+            <div ng-message="notUnique">
+              {{'room.alreadyexist' | translate}}
             </div>
           </div>
         </md-input-container>

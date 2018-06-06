@@ -18,6 +18,7 @@ public class DirectiveStudentSearchCommand {
     private String type;
     private String scholarshipType;
     private Long directive;
+    private Boolean isHigher;
 
     public String getFirstname() {
         return firstname;
@@ -74,4 +75,13 @@ public class DirectiveStudentSearchCommand {
     public void setDirective(Long directive) {
         this.directive = directive;
     }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
+    }
+    
 }

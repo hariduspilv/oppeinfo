@@ -46,9 +46,6 @@ public abstract class HigherProtocolUtil {
     }
 
     public static boolean canConfirm(HoisUserDetails user, Protocol protocol) {
-        if(ProtocolUtil.confirmed(protocol)) {
-            return false;
-        }
         if(!UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
             return false;
         }

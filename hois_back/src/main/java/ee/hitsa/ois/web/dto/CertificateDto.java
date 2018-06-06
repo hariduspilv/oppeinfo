@@ -2,6 +2,8 @@ package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDateTime;
 
+import org.springframework.util.StringUtils;
+
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.enums.CertificateStatus;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -87,10 +89,12 @@ public class CertificateDto extends CertificateForm {
     public static CertificateDto of(HoisUserDetails user, Certificate certificate) {
         CertificateDto dto = EntityUtil.bindToDto(certificate, new CertificateDto(), "student", "school");
         dto.setStudent(EntityUtil.getNullableId(certificate.getStudent()));
-        dto.setCanViewFromEkis(!user.isStudent() && ClassifierUtil.equals(CertificateStatus.TOEND_STAATUS_V, certificate.getStatus()) && certificate.getWdId() != null);
+        // TODO if wdUrl is expired, nullify it in DTO
         if(user.isStudent()) {
             dto.setSignatoryIdcode(null);
         }
+        dto.setCanViewFromEkis(ClassifierUtil.equals(CertificateStatus.TOEND_STAATUS_V, certificate.getStatus()) &&
+                (!user.isStudent() ? dto.getWdId() != null : StringUtils.hasText(dto.getWdUrl())));
         return dto;
     }
 }

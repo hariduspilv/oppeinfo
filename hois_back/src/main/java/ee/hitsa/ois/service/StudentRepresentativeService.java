@@ -37,7 +37,6 @@ import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -192,11 +191,10 @@ public class StudentRepresentativeService {
 
         // check for duplicate applications
         List<?> apps = em.createNativeQuery("select sra.student_id from student_representative_application sra"
-                + " inner join student_representative sr on sra.person_id = sr.person_id and sra.student_id = sr.student_id"
-                + " where sra.student_id in ?1 and sra.person_id = ?2 and sra.status_code in ?3")
+                + " where sra.student_id in ?1 and sra.person_id = ?2 and sra.status_code = ?3")
                 .setParameter(1, StreamUtil.toMappedList(Student::getId, students))
                 .setParameter(2, person.getId())
-                .setParameter(3, EnumUtil.toNameList(StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_E, StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_K))
+                .setParameter(3, StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_E.name())
                 .getResultList();
 
         Set<Long> existingApps = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), apps);
@@ -219,7 +217,7 @@ public class StudentRepresentativeService {
             application.setPerson(person);
             application.setStatus(status);
             application.setRelation(relation);
-            EntityUtil.save(application, em);
+            em.persist(application);
         }
 
         // send message to school administrative workers about new application

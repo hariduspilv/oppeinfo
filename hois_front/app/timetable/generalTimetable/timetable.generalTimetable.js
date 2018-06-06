@@ -83,19 +83,30 @@
       
       QueryUtils.createQueryForm($scope, '/timetableevents', {order: 'id'});
     }
-  ]).controller('GeneralTimetableByGroupController', ['$scope', '$route', 'QueryUtils', 'GeneralTimetableUtils',
-    function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
+  ]).controller('GeneralTimetableByGroupController', ['$scope', '$location', '$route', 'QueryUtils', 'GeneralTimetableUtils',
+    function ($scope, $location, $route, QueryUtils, GeneralTimetableUtils) {
       $scope.currentNavItem = "studentGroup";
       $scope.auth = $route.current.locals.auth;
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.typeId = undefined;
 
-      $scope.schoolId = $scope.auth == null ? $route.current.params.schoolId : $scope.auth.school.id;
-      var groupTimetablesEndpoint = '/timetables/group/' + $scope.schoolId;
+      if ($route.current.params.schoolId) {
+        $scope.schoolId = $route.current.params.schoolId  
+      } else {
+        if ($scope.auth) {
+          $scope.schoolId = $scope.auth.school.id;
+        } else {
+          $location.url('/timetables');
+        }
+      }
 
-      QueryUtils.endpoint(groupTimetablesEndpoint).query().$promise.then(function (result) {
-        $scope.groupTimetables = result;
-      });
+      if ($scope.schoolId) {
+        var groupTimetablesEndpoint = '/timetables/group/' + $scope.schoolId;
+  
+        QueryUtils.endpoint(groupTimetablesEndpoint).query().$promise.then(function (result) {
+          $scope.groupTimetables = result;
+        });
+      }
 
       $scope.getStudentGroups = function (searchText) {
         searchText = (searchText || '').toUpperCase();
@@ -106,19 +117,30 @@
         $scope.typeId = groupId;
       };
     }
-  ]).controller('GeneralTimetableByTeacherController', ['$scope', '$route', 'QueryUtils', 'GeneralTimetableUtils',
-    function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
+  ]).controller('GeneralTimetableByTeacherController', ['$scope', '$location', '$route', 'QueryUtils', 'GeneralTimetableUtils',
+    function ($scope, $location, $route, QueryUtils, GeneralTimetableUtils) {
       $scope.currentNavItem = "teacher";
       $scope.auth = $route.current.locals.auth;
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.typeId = undefined;
 
-      $scope.schoolId = $scope.auth == null ? $route.current.params.schoolId : $scope.auth.school.id;
-      var teacherPeriodTimetablesEndpoint = '/timetables/teacher/' + $scope.schoolId;
+      if ($route.current.params.schoolId) {
+        $scope.schoolId = $route.current.params.schoolId  
+      } else {
+        if ($scope.auth) {
+          $scope.schoolId = $scope.auth.school.id;
+        } else {
+          $location.url('/timetables');
+        }
+      }
 
-      QueryUtils.endpoint(teacherPeriodTimetablesEndpoint).query().$promise.then(function (result) {
-        $scope.timetablesByTeachers = result;
-      });
+      if ($scope.schoolId) {
+        var teacherPeriodTimetablesEndpoint = '/timetables/teacher/' + $scope.schoolId;
+
+        QueryUtils.endpoint(teacherPeriodTimetablesEndpoint).query().$promise.then(function (result) {
+          $scope.timetablesByTeachers = result;
+        });
+      }
 
       $scope.getTeachers = function (searchText) {
         searchText = (searchText || '').toUpperCase();
@@ -129,25 +151,36 @@
         $scope.typeId = teacherId;
       };
     }
-  ]).controller('GeneralTimetableByRoomController', ['$scope', '$route', 'QueryUtils', 'GeneralTimetableUtils',
-      function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
+  ]).controller('GeneralTimetableByRoomController', ['$scope', '$location', '$route', 'QueryUtils', 'GeneralTimetableUtils',
+      function ($scope, $location, $route, QueryUtils, GeneralTimetableUtils) {
         $scope.currentNavItem = "room";
         $scope.auth = $route.current.locals.auth;
         $scope.generalTimetableUtils = new GeneralTimetableUtils();
         $scope.typeId = undefined;
 
-        $scope.schoolId = $scope.auth == null ? $route.current.params.schoolId : $scope.auth.school.id;
-        var roomPeriodTimetablesEndpoint = '/timetables/room/' + $scope.schoolId;
+        if ($route.current.params.schoolId) {
+          $scope.schoolId = $route.current.params.schoolId  
+        } else {
+          if ($scope.auth) {
+            $scope.schoolId = $scope.auth.school.id;
+          } else {
+            $location.url('/timetables');
+          }
+        }
 
-        QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
-          $scope.weeks = weeks;
-          var shownWeekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-          $scope.shownWeek = $scope.weeks[shownWeekIndex];
-        });
+        if ($scope.schoolId) {
+          var roomPeriodTimetablesEndpoint = '/timetables/room/' + $scope.schoolId;
   
-        QueryUtils.endpoint(roomPeriodTimetablesEndpoint).query().$promise.then(function (result) {
-          $scope.timetablesByRooms = result;
-        });
+          QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
+            $scope.weeks = weeks;
+            var shownWeekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
+            $scope.shownWeek = $scope.weeks[shownWeekIndex];
+          });
+    
+          QueryUtils.endpoint(roomPeriodTimetablesEndpoint).query().$promise.then(function (result) {
+            $scope.timetablesByRooms = result;
+          });
+        }
 
         $scope.getRooms = function (searchText) {
           searchText = (searchText || '').toUpperCase();
@@ -165,7 +198,7 @@
         $scope.auth = $route.current.locals.auth;
         $scope.generalTimetableUtils = new GeneralTimetableUtils();
 
-        $scope.schoolId = $scope.auth.school.id;;
+        $scope.schoolId = $scope.auth.school.id;
 
         if ($scope.auth.isStudent() || $scope.auth.isParent()) {
           var personId = $scope.auth.student;

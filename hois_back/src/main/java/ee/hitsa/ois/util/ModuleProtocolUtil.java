@@ -1,7 +1,6 @@
 package ee.hitsa.ois.util;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
-import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.ProtocolStatus;

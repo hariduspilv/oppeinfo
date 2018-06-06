@@ -46,7 +46,6 @@ import ee.hitsa.ois.util.HigherProtocolGradeUtil;
 import ee.hitsa.ois.util.HigherProtocolUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
-import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -76,14 +75,6 @@ public class HigherProtocolService extends AbstractProtocolService {
             + "join curriculum c on c.id = cv.curriculum_id "
             + "left join declaration d on d.student_id = s.id "
             + "left join declaration_subject ds on d.id = ds.declaration_id";
-
-    private static final String STUDENT_HAS_BASIC_PROTOCOL =
-            " exists ( select p.id from protocol p "
-          + "join protocol_hdata ph on p.id = ph.protocol_id "
-          + "left join protocol_student ps on p.id = ps.protocol_id "
-          + "where ph.type_code = '" + ProtocolType.PROTOKOLLI_LIIK_P.name() + "' "
-          + "and ph.subject_study_period_id = ds.subject_study_period_id "
-          + "and ps.student_id = s.id ) ";
 
     @Autowired
     private ProtocolRepository protocolRepository;
@@ -199,11 +190,6 @@ public class HigherProtocolService extends AbstractProtocolService {
 
     public Protocol save(Protocol protocol, HigherProtocolSaveForm form) {
         updateProtocolStudents(protocol, form);
-        if(ProtocolUtil.confirmed(protocol)) {
-            protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
-            protocol.setConfirmer(null);
-            protocol.setConfirmDate(null);
-        }
         return EntityUtil.save(protocol, em);
     }
 
@@ -225,8 +211,12 @@ public class HigherProtocolService extends AbstractProtocolService {
                 });
     }
 
-    public Protocol confirm(HoisUserDetails user, Protocol protocol) {
+    public Protocol confirm(HoisUserDetails user, Protocol protocol, HigherProtocolSaveForm form) {
         setConfirmation(user, protocol);
+        
+        if (form != null) {
+            updateProtocolStudents(protocol, form);
+        }
         protocol = EntityUtil.save(protocol, em);
         
         for (ProtocolStudent protocolStudent : protocol.getProtocolStudents()) {
@@ -236,11 +226,6 @@ public class HigherProtocolService extends AbstractProtocolService {
         }
         sendStudentResultMessages(protocol);
         return protocol;
-    }
-
-    public Protocol saveAndConfirm(HoisUserDetails user, Protocol protocol, HigherProtocolSaveForm form) {
-        updateProtocolStudents(protocol, form);
-        return confirm(user, protocol);
     }
 
     public List<AutocompleteResult> getSubjectStudyPeriods(Long schoolId) {
@@ -281,15 +266,29 @@ public class HigherProtocolService extends AbstractProtocolService {
                 "subjectStudyPeriodId", criteria.getSubjectStudyPeriod());
 
         boolean repeating = ProtocolType.PROTOKOLLI_LIIK_K.name().equals(criteria.getProtocolType());
-        qb.filter(repeating ? STUDENT_HAS_BASIC_PROTOCOL : (" not " + STUDENT_HAS_BASIC_PROTOCOL));
         if(repeating) {
+            qb.filter("exists (select p.id from protocol p " 
+                    + "join protocol_hdata ph on p.id = ph.protocol_id "
+                    + "left join protocol_student ps on p.id = ps.protocol_id "
+                    + "where ph.type_code = '" + ProtocolType.PROTOKOLLI_LIIK_P.name() + "' "
+                    + "and ph.subject_study_period_id = ds.subject_study_period_id and ps.student_id = s.id "
+                    + "and ps.grade_code is not null)");
+            
             // student has registration for exam and no other protocol is pointing to same exam
             qb.filter("exists (select sspes.id from subject_study_period_exam_student sspes "
                     + "join subject_study_period_exam sspe on sspes.subject_study_period_exam_id = sspe.id "
                     + "left join protocol_student ps on ps.subject_study_period_exam_student_id = sspes.id "
                     + "where sspes.declaration_subject_id = ds.id and sspe.type_code = '"+ExamType.SOORITUS_K.name()+"' and ps.id is null)");
+        } else {
+            qb.filter("not exists (select p.id from protocol p " 
+                    + "join protocol_hdata ph on p.id = ph.protocol_id "
+                    + "left join protocol_student ps on p.id = ps.protocol_id "
+                    + "where ph.type_code = '" + ProtocolType.PROTOKOLLI_LIIK_P.name() + "' "
+                    + "and ph.subject_study_period_id = ds.subject_study_period_id and ps.student_id = s.id "
+                    + "and (ps.grade_code is null or ps.grade_code != '" + HigherAssessment.KORGHINDAMINE_MI.name() + "'))");
         }
 
+        qb.sort("p.firstname, p.lastname");
         List<?> result = qb.select(STUDENT_SELECT, em).getResultList();
         return StreamUtil.toMappedList(r -> {
             StudentSearchDto dto = new StudentSearchDto();
@@ -297,8 +296,8 @@ public class HigherProtocolService extends AbstractProtocolService {
             String firstname = resultAsString(r, 1);
             String lastname = resultAsString(r, 2);
             dto.setFullname(PersonUtil.fullname(firstname, lastname));
-            dto.setCurriculum(new AutocompleteResult(null, resultAsString(r, 3), resultAsString(r, 3)));
-            dto.setStudentGroup(new AutocompleteResult(null, resultAsString(r, 4), resultAsString(r, 4)));
+            dto.setStudentGroup(new AutocompleteResult(null, resultAsString(r, 3), resultAsString(r, 3)));
+            dto.setCurriculum(new AutocompleteResult(null, resultAsString(r, 4), resultAsString(r, 4)));
             return dto;
         }, result);
     }

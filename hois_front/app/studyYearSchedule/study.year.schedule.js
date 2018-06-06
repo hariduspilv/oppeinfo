@@ -16,9 +16,11 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
 
     QueryUtils.endpoint('/autocomplete/schooldepartments').query().$promise.then(function(response){
         $scope.schoolDepartments = response;
-        if(ArrayUtils.isEmpty($scope.criteria.schoolDepartments)) {
+        if (ArrayUtils.isEmpty($scope.criteria.schoolDepartments)) {
             $scope.criteria.schoolDepartments = $scope.schoolDepartments.map(function(el){
-                return el.id;
+                if (el.valid) {
+                    return el.id;
+                }
             });
         }
     });
@@ -58,7 +60,8 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
     );
 
     function getSchedules() {
-        $scope.record = QueryUtils.endpoint('/studyYearSchedule').search($scope.criteria);
+        // because of many parameters this endpoint was changed from get to post method, it doesn't save anything
+        $scope.record = QueryUtils.endpoint('/studyYearSchedule').save($scope.criteria);
         $scope.record.$promise.then(function(response){
             $scope.studyYearSchedules = response.studyYearSchedules;
         });

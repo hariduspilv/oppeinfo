@@ -50,6 +50,9 @@ public class SchoolForm extends VersionedCommand {
     private String adBase;
     @Size(max = 50)
     private String adIdcodeField;
+    @Size(max = 255)
+    private String nameGenitiveEt;
+    private Boolean isMinorStudentAbsence;
 
     public String getNameEt() {
         return nameEt;
@@ -201,6 +204,22 @@ public class SchoolForm extends VersionedCommand {
 
     public void setAdIdcodeField(String adIdcodeField) {
         this.adIdcodeField = adIdcodeField;
+    }
+
+    public String getNameGenitiveEt() {
+        return nameGenitiveEt;
+    }
+
+    public void setNameGenitiveEt(String nameGenitiveEt) {
+        this.nameGenitiveEt = nameGenitiveEt;
+    }
+
+    public Boolean getIsMinorStudentAbsence() {
+        return isMinorStudentAbsence;
+    }
+
+    public void setIsMinorStudentAbsence(Boolean isMinorStudentAbsence) {
+        this.isMinorStudentAbsence = isMinorStudentAbsence;
     }
     
 }

@@ -27,12 +27,7 @@ public class CertificateReportStudent {
     private boolean hasQuit;
 
     public static CertificateReportStudent of(Student student) {
-        CertificateReportStudent reportStudent = new CertificateReportStudent();
-        
-        Person person = student.getPerson();
-        reportStudent.setFirstname(person.getFirstname());
-        reportStudent.setLastname(person.getLastname());
-        reportStudent.setIdCode(student.getPerson().getIdcode());
+        CertificateReportStudent reportStudent = of(student.getPerson());
 
         if(student.getStudyForm() != null) {
             reportStudent.setStudyForm(student.getStudyForm().getNameEt().toLowerCase());

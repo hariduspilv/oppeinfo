@@ -8,32 +8,33 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HigherProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
+import ee.hitsa.ois.web.commandobject.OisFileViewDto;
 
 public class HigherProtocolDto extends HigherProtocolSaveForm {
     private Long id;
     private String protocolNr;
     private String protocolType;
-    private Boolean canChange;
-    private Boolean canConfirm;
     private String status;
     private SubjectStudyPeriodMidtermTaskDto subjectStudyPeriodMidtermTaskDto;
-    
+    private OisFileViewDto oisFile;
+    private Boolean canBeEdited;
+    private Boolean canBeConfirmed;
+
     public static HigherProtocolDto ofWithIdOnly(Protocol protocol) {
         HigherProtocolDto dto = new HigherProtocolDto();
         dto.setId(EntityUtil.getId(protocol));
         return dto;
     }
-    
+
     public static HigherProtocolDto ofForMidtermTasksForm(Protocol protocol) {
         HigherProtocolDto dto = new HigherProtocolDto();
         dto.setId(EntityUtil.getId(protocol));
         dto.setProtocolNr(protocol.getProtocolNr());
         dto.setProtocolType(EntityUtil.getCode(protocol.getProtocolHdata().getType()));
-        dto.setProtocolStudents(StreamUtil.toMappedSet(HigherProtocolStudentDto::of, 
-                protocol.getProtocolStudents()));
+        dto.setProtocolStudents(StreamUtil.toMappedSet(HigherProtocolStudentDto::of, protocol.getProtocolStudents()));
         return dto;
     }
-    
+
     public static HigherProtocolDto ofWithUserRights(HoisUserDetails user, Protocol protocol) {
         HigherProtocolDto dto = new HigherProtocolDto();
         dto.setId(EntityUtil.getId(protocol));
@@ -41,17 +42,45 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
         dto.setProtocolNr(protocol.getProtocolNr());
         dto.setProtocolType(EntityUtil.getCode(protocol.getProtocolHdata().getType()));
         dto.setStatus(EntityUtil.getCode(protocol.getStatus()));
-        
-        dto.setCanConfirm(Boolean.valueOf(HigherProtocolUtil.canConfirm(user, protocol)));
-        dto.setCanChange(Boolean.valueOf(HigherProtocolUtil.canChange(user, protocol)));
-        
-        dto.setProtocolStudents(StreamUtil.toMappedSet(HigherProtocolStudentDto::of, 
-                protocol.getProtocolStudents()));
-        
+
+        dto.setProtocolStudents(StreamUtil.toMappedSet(HigherProtocolStudentDto::of, protocol.getProtocolStudents()));
+
         Set<Long> studetnIds = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
-        dto.setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto
-                .ofForProtocol(studetnIds, protocol.getProtocolHdata().getSubjectStudyPeriod()));
+        dto.setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto.ofForProtocol(studetnIds,
+                protocol.getProtocolHdata().getSubjectStudyPeriod()));
+
+        if (protocol.getOisFile() != null) {
+            dto.setOisFile(EntityUtil.bindToDto(protocol.getOisFile(), new OisFileViewDto()));
+        }
+
+        dto.setCanBeEdited(Boolean.valueOf(HigherProtocolUtil.canChange(user, protocol)));
+        dto.setCanBeConfirmed(Boolean.valueOf(HigherProtocolUtil.canConfirm(user, protocol)));
+
         return dto;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getProtocolNr() {
+        return protocolNr;
+    }
+
+    public void setProtocolNr(String protocolNr) {
+        this.protocolNr = protocolNr;
+    }
+
+    public String getProtocolType() {
+        return protocolType;
+    }
+
+    public void setProtocolType(String protocolType) {
+        this.protocolType = protocolType;
     }
 
     public String getStatus() {
@@ -70,43 +99,28 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
         this.subjectStudyPeriodMidtermTaskDto = subjectStudyPeriodMidtermTaskDto;
     }
 
-    public String getProtocolType() {
-        return protocolType;
+    public OisFileViewDto getOisFile() {
+        return oisFile;
     }
 
-    public void setProtocolType(String protocolType) {
-        this.protocolType = protocolType;
+    public void setOisFile(OisFileViewDto oisFile) {
+        this.oisFile = oisFile;
     }
 
-    public Long getId() {
-        return id;
+    public Boolean getCanBeEdited() {
+        return canBeEdited;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setCanBeEdited(Boolean canBeEdited) {
+        this.canBeEdited = canBeEdited;
     }
 
-    public Boolean getCanChange() {
-        return canChange;
+    public Boolean getCanBeConfirmed() {
+        return canBeConfirmed;
     }
 
-    public void setCanChange(Boolean canChange) {
-        this.canChange = canChange;
+    public void setCanBeConfirmed(Boolean canBeConfirmed) {
+        this.canBeConfirmed = canBeConfirmed;
     }
 
-    public Boolean getCanConfirm() {
-        return canConfirm;
-    }
-
-    public void setCanConfirm(Boolean canConfirm) {
-        this.canConfirm = canConfirm;
-    }
-
-    public String getProtocolNr() {
-        return protocolNr;
-    }
-
-    public void setProtocolNr(String protocolNr) {
-        this.protocolNr = protocolNr;
-    }
 }

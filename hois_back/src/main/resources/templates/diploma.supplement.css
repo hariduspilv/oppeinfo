@@ -1,0 +1,84 @@
+@page {
+    size: A4;
+    margin: 60pt;
+    @bottom-right {
+        content: element(footer);
+    }
+}
+
+html {
+    font-family: Garamond;
+    font-size: 11pt;
+}
+.page-break-avoid, table tr {
+    page-break-inside: avoid;
+}
+.page-break-after-avoid {
+    page-break-after: avoid;
+}
+.label {
+    font-weight: bold;
+}
+.center {
+    text-align: center;
+}
+.font-size-9 {
+    font-size: 9pt;
+}
+
+#footer {
+    position: running(footer);
+    text-align: right;
+}
+#pagenumber:before {
+    content: counter(page);
+}
+#pagecount:before {
+    content: counter(pages);
+}
+
+.padding-top {
+    height: 60pt;
+}
+.general-info > div {
+    margin-bottom: 9pt;
+    margin-top: 9pt;
+}
+div.diploma-nr {
+    font-size: 16pt;
+    font-weight: bold;
+    margin-left: 55%;
+}
+.study-results {
+    width: 100%;
+}
+.study-results-order {
+    width: 30pt;
+}
+.study-results-credits {
+    width: 60pt;
+}
+.study-results-grade {
+    width: 80pt;
+}
+.evaluation-description, .evaluation-description th, .evaluation-description td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    font-size: 9pt;
+    font-weight: normal;
+}
+.margin-top {
+    margin-top: 10pt;
+}
+.diploma-signers {
+    margin-top: 50pt;
+    width: 100%;
+}
+.diploma-signer-left {
+    display: inline-block;
+    width: 55%;
+}
+.diploma-signer-right {
+    display: inline-block;
+    width: 44%;
+}

@@ -2,8 +2,6 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.time.LocalDate;
 
-import javax.validation.constraints.NotNull;
-
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
@@ -11,7 +9,7 @@ import ee.hitsa.ois.validation.DateRange;
 @DateRange(from = "confirmDateFrom", thru = "confirmDateThru")
 @DateRange(from = "insertedFrom", thru = "insertedThru")
 public class HigherProtocolSearchCommand {
-    @NotNull
+    
     private Long studyPeriod;
     private Long teacher;
     private String subject;

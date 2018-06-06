@@ -123,6 +123,8 @@ public class EkisService {
 
         return withResponse(ekis.registerCertificate(ctx(), request), (result) -> {
             certificate.setWdId(Long.valueOf(result.getWdId()));
+            // TODO waiting for implementation in EKIS
+            // certificate.setWdUrl(result.getWdUrl());
             certificate.setCertificateNr(result.getRegno());
             certificate.setStatus(em.getReference(Classifier.class, CertificateStatus.TOEND_STAATUS_V.name()));
             return save(certificate);
@@ -208,7 +210,11 @@ public class EkisService {
         request.setStIdCode(idcode);
         request.setStFirstNames(person.getFirstname());
         request.setStLastName(person.getLastname());
-        request.setStEmail(student.getEmail());
+        String studentEmail = student.getEmail();
+        if (studentEmail == null) {
+            throw new ValidationFailedException("contract.messages.sendToEkis.error.studentEmailMissing");
+        }
+        request.setStEmail(studentEmail);
         request.setStCurricula(student.getCurriculumVersion().getCurriculum().getNameEt());
         request.setStForm(student.getStudyForm() != null ? student.getStudyForm().getNameEt() : null);
         StudentGroup sg = student.getStudentGroup();

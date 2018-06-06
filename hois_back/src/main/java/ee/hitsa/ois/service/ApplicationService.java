@@ -35,6 +35,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.enums.AcademicLeaveReason;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
@@ -43,7 +44,6 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
 import ee.hitsa.ois.message.StudentApplicationRejectedMessage;
-import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApplicationUtil;
@@ -84,8 +84,6 @@ public class ApplicationService {
 
     @Autowired
     private AutomaticMessageService automaticMessageService;
-    @Autowired
-    private ApplicationRepository applicationRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
@@ -197,7 +195,7 @@ public class ApplicationService {
 
         switch (applicationType) {
         case AVALDUS_LIIK_AKAD:
-            ApplicationUtil.assertAkadConstraints(application, applicationRepository);
+            assertAkadConstraints(application);
             break;
         case AVALDUS_LIIK_AKADK:
             ApplicationUtil.assertAkadkConstraints(application);
@@ -208,6 +206,51 @@ public class ApplicationService {
         default:
             break;
         }
+    }
+
+    private void assertAkadConstraints(Application application) {
+        ApplicationUtil.assertStartAfterToday(application);
+
+        String reason = EntityUtil.getCode(application.getReason());
+        if (AcademicLeaveReason.AKADPUHKUS_POHJUS_T.name().equals(reason)) {
+            long daysUsed = daysUsed(EntityUtil.getId(application.getStudent()), AcademicLeaveReason.AKADPUHKUS_POHJUS_T);
+            ApplicationUtil.assertPeriod(application, 2, daysUsed);
+        } else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_A.name().equals(reason)) {
+            long daysUsed = daysUsed(EntityUtil.getId(application.getStudent()), AcademicLeaveReason.AKADPUHKUS_POHJUS_A);
+            ApplicationUtil.assertPeriod(application, 1, daysUsed);
+        } else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_L.name().equals(reason)) {
+            ApplicationUtil.assertPeriod(application, 3, 0);
+        } else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_O.name().equals(reason)) {
+            // TODO: algusega mitte varem kui esimese õppeaasta teisest semestrist
+            if (!StudentUtil.isHigher(application.getStudent())) {
+                throw new ValidationFailedException("application.messages.studentIsNotHigher");
+            }
+
+            long daysUsed = daysUsed(EntityUtil.getId(application.getStudent()), AcademicLeaveReason.AKADPUHKUS_POHJUS_O);
+            ApplicationUtil.assertPeriod(application, 1, daysUsed);
+        }
+    }
+
+    long daysUsed(Long studentId, AcademicLeaveReason reason) {
+        List<?> data = em.createNativeQuery("select sum(days_used) from (select (select min(end_date) from"
+                + " (select ds.end_date union select ds2.start_date"
+                + " from directive d2"
+                + " join directive_student ds2 on ds2.directive_id = d2.id"
+                + " join application a on a.id = ds2.application_id"
+                + " where ds2.student_id = ds.student_id and a.directive_id = ds.directive_id and d2.type_code = ?3"
+                + " and d2.status_code = ?4 and ds2.canceled = false) end_dates) - ds.start_date as days_used"
+                + " from directive d"
+                + " join directive_student ds on ds.directive_id = d.id"
+                + " where ds.student_id = ?1 and d.type_code = ?2"
+                + " and d.status_code = ?4 and ds.canceled = false and ds.reason_code = ?5) leaves")
+            .setParameter(1, studentId)
+            .setParameter(2, DirectiveType.KASKKIRI_AKAD.name())
+            .setParameter(3, DirectiveType.KASKKIRI_AKADK.name())
+            .setParameter(4, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+            .setParameter(5, reason.name())
+            .getResultList();
+        Long days = resultAsLong(data.get(0), 0);
+        return days == null ? 0 : days.longValue();
     }
 
     private void updatePlannedSubjects(Application application, ApplicationForm applicationForm) {
@@ -267,6 +310,7 @@ public class ApplicationService {
         } if (UserUtil.isAdultStudent(user, student) || UserUtil.isStudentRepresentative(user, student)) {
             setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_ESIT);
             application.setSubmitted(LocalDateTime.now());
+            application.setNeedsRepresentativeConfirm(Boolean.FALSE);
         } else {
             application.setNeedsRepresentativeConfirm(Boolean.TRUE);
         }

@@ -156,7 +156,9 @@ public abstract class UserUtil {
     }
 
     public static boolean canEditStudent(HoisUserDetails user, Student student) {
-        return (isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) || isAdultStudent(user, student)|| isStudentRepresentative(user, student);
+        return (isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+                || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+                || isAdultStudent(user, student) || isStudentRepresentative(user, student);
     }
 
     /**
@@ -167,7 +169,9 @@ public abstract class UserUtil {
      * @return
      */
     public static boolean canAddStudentRepresentative(HoisUserDetails user, Student student) {
-        return (isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) || isAdultStudent(user, student);
+        return (isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+                || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+                || isAdultStudent(user, student);
     }
 
     /**
@@ -179,7 +183,9 @@ public abstract class UserUtil {
      */
     public static boolean canEditStudentRepresentative(HoisUserDetails user, StudentRepresentative representative) {
         Student student = representative.getStudent();
-        if((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) || isAdultStudent(user, student)) {
+        if ((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+                || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+                || isAdultStudent(user, student)) {
             return true;
         }
         // representative can edit it's own record even if student's data is not visible to him/her
@@ -195,7 +201,9 @@ public abstract class UserUtil {
      */
     public static boolean canDeleteStudentRepresentative(HoisUserDetails user, StudentRepresentative representative) {
         Student student = representative.getStudent();
-        if((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) || isAdultStudent(user, student)) {
+        if ((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+                || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+                || isAdultStudent(user, student)) {
             return true;
         }
         return false;
@@ -218,6 +226,10 @@ public abstract class UserUtil {
 
     public static boolean isAdultStudent(HoisUserDetails user, Student student) {
         return isStudent(user, student) && StudentUtil.isAdultAndDoNotNeedRepresentative(student);
+    }
+    
+    public static boolean isStudentAndDoNotNeedRepresentative(HoisUserDetails user, Student student) {
+        return isStudent(user, student) && StudentUtil.doNotNeedRepresentative(student);
     }
 
     public static boolean isSame(HoisUserDetails user, Student student) {

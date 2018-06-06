@@ -84,23 +84,19 @@ public class JournalController {
     @GetMapping("/{id:\\d+}")
     public JournalDto get(HoisUserDetails user, @WithEntity Journal journal) {
         JournalUtil.assertCanView(user, journal);
-        JournalDto dto = JournalDto.of(journal);
-        dto.setCanBeConfirmed(Boolean.valueOf(JournalUtil.canConfirm(user, journal)));
-        dto.setCanBeUnconfirmed(Boolean.valueOf(JournalUtil.canUnconfirm(user, journal)));
-        dto.setCanEdit(Boolean.valueOf(JournalUtil.hasPermissionToChange(user, journal)));
-        return dto;
+        return journalService.get(user,  journal);
     }
 
     @PutMapping("/confirm/{id:\\d+}")
     public JournalDto confirm(HoisUserDetails user, @WithEntity Journal journal) {
         JournalUtil.asssertCanConfirm(user, journal);
-        return get(user, journalService.confirm(journal));
+        return journalService.get(user, journalService.confirm(journal));
     }
     
     @PutMapping("/unconfirm/{id:\\d+}")
     public JournalDto unconfirm(HoisUserDetails user, @WithEntity Journal journal) {
         JournalUtil.asssertCanUnconfirm(user, journal);
-        return get(user, journalService.unconfirm(journal));
+        return journalService.get(user, journalService.unconfirm(journal));
     }
 
     @PostMapping("/{id:\\d+}/saveEndDate")

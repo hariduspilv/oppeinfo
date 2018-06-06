@@ -1,0 +1,69 @@
+<div ng-cloak>
+  <div ng-include="'document/templates/navbar.tmpl.html'"></div>
+</div>
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'document.directive' | translate}}</label>
+            <hois-select ng-model="criteria.directiveId" values="formState.directives" show-property="display"></hois-select>
+          </md-input-container>
+
+          <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <hois-autocomplete ng-model="autocomplete.student" method="students" additional-query-params="{finishing: true}"
+              label="document.student"></hois-autocomplete>
+          </div>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'document.diplomaStatus' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.diplomaStatus" main-classifier-code="LOPUDOK_STAATUS" model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
+
+          <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <hois-autocomplete ng-model="autocomplete.curriculumVersion" method="curriculumversions" label="document.curriculumVersion"></hois-autocomplete>
+          </div>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column>{{'document.student' | translate}}</th>
+            <th md-column>{{'document.diplomaNr' | translate}}</th>
+            <th md-column>{{'document.diplomaStatus' | translate}}</th>
+            <th md-column>{{'document.supplementStatus' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <a md-class="md-primary change-button" ng-href="#/documents/supplements/{{::row.directiveStudentId}}">{{::row.fullname}}</a>
+            </td>
+            <td md-cell>{{::row.diplomaNr}}</td>
+            <td md-cell>{{currentLanguageNameField(row.diplomaStatus)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.supplementStatus)}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

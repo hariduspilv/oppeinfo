@@ -41,8 +41,9 @@
         journalId: event.journalId,
         subjectStudyPeriodId: event.subjectStudyPeriodId,
         showStudyMaterials: event.showStudyMaterials,
-        left:0,
-        width:100
+        capacityType: event.capacityType,
+        left: 0,
+        width: 100
       });
     }
 
@@ -115,7 +116,6 @@
       }
     }
   }
-
 
   function createTimetableTimeColumn(scope) {
     var timeColumn = [];
@@ -191,9 +191,39 @@
     }
   }
 
-  angular.module('hitsaOis').controller('SearchTimetableViewController', ['$scope', '$route', 'QueryUtils', 'GeneralTimetableUtils',
-    function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
+  function getCapacityTypes(scope, Classifier) {
+    var colors = ['amber-100', 'lime-100', 'teal-100', 'indigo-100', 'green-200', 'deep-orange-100', 'deep-purple-200', 'light-green-300', 'blue-grey-200', 'brown-50'];
+
+    var capacityTypes = Classifier.queryForDropdown({
+      mainClassCode: 'MAHT',
+      higher: scope.auth && scope.auth.higher ? scope.auth.higher : undefined,
+      vocational: scope.auth && scope.auth.vocational ? scope.auth.vocational : undefined
+    });
+
+    return capacityTypes.$promise.then(function (result) {
+      result.forEach(function (item, index) {
+        item.color = colors[index % 9];
+      });
+      return capacityTypes;
+    });
+  }
+
+  function getEventColor(capacityTypes, eventCapacityType) {
+    for (var i = 0; i < capacityTypes.length; i++) {
+      if (capacityTypes[i].code === eventCapacityType) {
+        return capacityTypes[i].color;
+      }
+    }
+    return 'primary-100-0.8';
+  }
+
+  angular.module('hitsaOis').controller('SearchTimetableViewController', ['$scope', '$route', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function ($scope, $route, Classifier,  GeneralTimetableUtils, QueryUtils) {
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
+      $scope.auth = $route.current.locals.auth;
+      getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
+        $scope.capacityTypes = capacityTypes;
+      });
       $scope.timetableSearch = true;
 
       $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
@@ -244,6 +274,10 @@
         }
       };
 
+      $scope.getEventColor = function (eventCapacityType) {
+        return getEventColor($scope.capacityTypes, eventCapacityType);
+      };
+
       function setWeekCriteria() {
         $scope.weekCriteria = [];
         $scope.weekCriteria.room = $scope.criteria.room;
@@ -278,13 +312,16 @@
         }
       }
     }
-  ]).controller('GroupTimetableViewController', ['$scope', '$route', 'QueryUtils', 'GeneralTimetableUtils',
-    function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
+  ]).controller('GroupTimetableViewController', ['$scope', '$route', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function ($scope, $route, Classifier, GeneralTimetableUtils, QueryUtils) {
       $scope.timetableType = "group";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
+      getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
+        $scope.capacityTypes = capacityTypes;
+      });
 
-      $scope.schoolId = $scope.auth === undefined ? $route.current.params.schoolId : $scope.auth.school.id;
+      $scope.schoolId = $route.current.params.schoolId ? $route.current.params.schoolId : $scope.auth.school.id;
       var timetableEventsEndpoint = '/timetableevents/timetableByGroup/' + $scope.schoolId;
       var timetableEventsCalendarEndpoint = '/timetableevents/timetableByGroup/calendar/' + $scope.schoolId;
 
@@ -336,6 +373,11 @@
           });
         }
       };
+
+      $scope.getEventColor = function (eventCapacityType) {
+        return getEventColor($scope.capacityTypes, eventCapacityType);
+      };
+
       function showWeekTimetable() {
         $scope.timetableEvents = null;
         QueryUtils.loadingWheel($scope, true);
@@ -354,13 +396,16 @@
         }
       }
     }
-  ]).controller('TeacherTimetableViewController', ['$scope', '$route', 'QueryUtils', 'GeneralTimetableUtils',
-    function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
+  ]).controller('TeacherTimetableViewController', ['$scope', '$route', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function ($scope, $route, Classifier, GeneralTimetableUtils, QueryUtils) {
       $scope.timetableType = "teacher";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
+      getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
+        $scope.capacityTypes = capacityTypes;
+      });
 
-      $scope.schoolId = $scope.auth === undefined ? $route.current.params.schoolId : $scope.auth.school.id;
+      $scope.schoolId = $route.current.params.schoolId ? $route.current.params.schoolId : $scope.auth.school.id;
       var timetableEventsEndpoint = '/timetableevents/timetableByTeacher/' + $scope.schoolId;
       var timetableEventsCalendarEndpoint = '/timetableevents/timetableByTeacher/calendar/' + $scope.schoolId;
 
@@ -413,6 +458,10 @@
         }
       };
 
+      $scope.getEventColor = function (eventCapacityType) {
+        return getEventColor($scope.capacityTypes, eventCapacityType);
+      };
+
       function showWeekTimetable() {
         $scope.timetableEvents = null;
         QueryUtils.loadingWheel($scope, true);
@@ -434,13 +483,16 @@
         }
       }
     }
-  ]).controller('RoomTimetableViewController', ['$scope', '$route', 'QueryUtils', 'GeneralTimetableUtils',
-    function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
+  ]).controller('RoomTimetableViewController', ['$scope', '$route', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function ($scope, $route, Classifier, GeneralTimetableUtils, QueryUtils) {
       $scope.timetableType = "room";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
+      getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
+        $scope.capacityTypes = capacityTypes;
+      });
 
-      $scope.schoolId = $scope.auth === undefined ? $route.current.params.schoolId : $scope.auth.school.id;
+      $scope.schoolId = $route.current.params.schoolId ? $route.current.params.schoolId : $scope.auth.school.id;
       var timetableEventsEndpoint = '/timetableevents/timetableByRoom/' + $scope.schoolId;
       var timetableEventsCalendarEndpoint = '/timetableevents/timetableByRoom/calendar/' + $scope.schoolId;
 
@@ -493,6 +545,10 @@
         }
       };
 
+      $scope.getEventColor = function (eventCapacityType) {
+        return getEventColor($scope.capacityTypes, eventCapacityType);
+      };
+
       function showWeekTimetable() {
         $scope.timetableEvents = null;
         QueryUtils.loadingWheel($scope, true);
@@ -514,11 +570,14 @@
           }
       }
     }
-  ]).controller('StudentTimetableViewController', ['$scope', '$route', 'QueryUtils', 'GeneralTimetableUtils',
-    function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
+  ]).controller('StudentTimetableViewController', ['$scope', '$route', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function ($scope, $route, Classifier, GeneralTimetableUtils, QueryUtils) {
       $scope.timetableType = "student";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
+      getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
+        $scope.capacityTypes = capacityTypes;
+      });
       $scope.schoolId = $scope.auth.school.id;
 
       $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
@@ -566,6 +625,10 @@
             saveCalendar(result);
           });
         }
+      };
+
+      $scope.getEventColor = function (eventCapacityType) {
+        return getEventColor($scope.capacityTypes, eventCapacityType);
       };
 
       function showWeekTimetable() {

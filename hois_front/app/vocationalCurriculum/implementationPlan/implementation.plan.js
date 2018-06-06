@@ -18,8 +18,7 @@ angular.module('hitsaOis')
     $scope.VERSION_STATUS = Curriculum.VERSION_STATUS;
 
     $scope.formState = {
-        readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
-        strictValidation: false
+        readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1
     };
 
     var entity = {curriculum: curriculumEntity.id, occupationModules: []};
@@ -228,38 +227,13 @@ angular.module('hitsaOis')
       });
     };
 
-    $scope.save = function () {
-        $scope.formState.strictValidation = false;
-        setTimeout(save, 0);
-    };
-
-    $scope.strictValidation = function() {
-        return $scope.implementationPlan.status === Curriculum.VERSION_STATUS.K;
-    };
-
     $scope.anyModuleAdded = function() {
         return !ArrayUtils.isEmpty($scope.modules);
     };
 
-    $scope.allModulesHaveData = function() {
-        if(!$scope.anyModuleAdded()) {
-            return false;
-        }
-        for(var i = 0; i < $scope.modules.length; i++) {
-            if(!$scope.isModuleValid($scope.modules[i])) {
-                return false;
-            }
-        }
-        return true;
-    };
-
-    function formIsValid() {
-        return $scope.vocationalCurriculumModuleImplementationPlanForm.$valid && ($scope.allModulesHaveData() || !$scope.strictValidation());
-    }
-
     function validationPassed(messages) {
       $scope.vocationalCurriculumModuleImplementationPlanForm.$setSubmitted();
-      if(!formIsValid()) {
+      if(!$scope.vocationalCurriculumModuleImplementationPlanForm.$valid) {
         var errorMessage = messages && messages.errorMessage ? messages.errorMessage : 'main.messages.form-has-errors';
         message.error(errorMessage);
         return false;
@@ -267,7 +241,7 @@ angular.module('hitsaOis')
       return true;
     }
 
-    function save (messages) {
+    $scope.save = function save (messages) {
 
       if(!validationPassed(messages)) {
         return;
@@ -286,7 +260,7 @@ angular.module('hitsaOis')
           message.info('main.messages.create.success');
           $location.path('/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/' + response.id + '/edit');
         });
-        }
+      }
     }
 
     $scope.delete = function() {
@@ -305,7 +279,6 @@ angular.module('hitsaOis')
           updateSuccess: 'curriculum.statuschange.implementationPlan.success.verified'
       };
       var SaveAndConfirmEndpoint = QueryUtils.endpoint("/curriculumVersion/saveAndConfirm");
-      $scope.formState.strictValidation = true;
       changeStatus(SaveAndConfirmEndpoint, messages);
     };
 
@@ -315,7 +288,6 @@ angular.module('hitsaOis')
           updateSuccess: 'curriculum.statuschange.implementationPlan.success.verified'
       };
       var ConfirmEndpoint = QueryUtils.endpoint("/curriculumVersion/confirm");
-      $scope.formState.strictValidation = true;
       changeStatus(ConfirmEndpoint, messages);
     };
 
@@ -325,7 +297,6 @@ angular.module('hitsaOis')
           updateSuccess: 'curriculum.statuschange.implementationPlan.success.closed'
       };
       var ClosingEndpoint = QueryUtils.endpoint("/curriculumVersion/close");
-      $scope.formState.strictValidation = false;
       changeStatus(ClosingEndpoint, messages);
     };
 
@@ -341,7 +312,6 @@ angular.module('hitsaOis')
               $scope.implementationPlan = response;
               DataUtils.convertStringToDates($scope.implementationPlan, ["validFrom", "validThru"]);
               $scope.implementationPlan.curriculum = curriculumEntity.id;
-              $scope.formState.strictValidation = false;
               goToReadOnlyForm(response);
               $scope.vocationalCurriculumModuleImplementationPlanForm.$setPristine();
             });

@@ -74,7 +74,7 @@ public class BuildingService {
     public Building save(Building building, BuildingForm form) {
         EntityUtil.bindToEntity(form, building);
 
-        checkUniqueness(building);
+        checkBuildingUniqueness(EntityUtil.getId(building.getSchool()), building.getCode(), building.getId());
 
         return EntityUtil.save(building, em);
     }
@@ -153,7 +153,7 @@ public class BuildingService {
             room.setBuilding(building);
         }
 
-        checkUniqueness(room);
+        checkRoomUniqueness(EntityUtil.getId(room.getBuilding()), room.getCode(), room.getId());
 
         List<RoomForm.RoomEquipmentCommand> newRoomEquipment = StreamUtil.nullSafeList(form.getRoomEquipment());
 
@@ -196,25 +196,39 @@ public class BuildingService {
         EntityUtil.deleteEntity(room, em);
     }
 
-    private void checkUniqueness(Building building) {
+    /**
+     * Is building uniquely identifiable?
+     *
+     * @param schoolId
+     * @param code
+     * @param buildingId
+     */
+    public void checkBuildingUniqueness(Long schoolId, String code, Long buildingId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from building b");
-        qb.requiredCriteria("b.school_id = :schoolId", "schoolId", EntityUtil.getId(building.getSchool()));
-        qb.requiredCriteria("upper(b.code) = :code", "code", building.getCode().toUpperCase());
-        qb.optionalCriteria("b.id != :buildingId", "buildingId", building.getId());
-        requireNoRows(qb);
+        qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("upper(b.code) = :code", "code", code.toUpperCase());
+        qb.optionalCriteria("b.id != :buildingId", "buildingId", buildingId);
+        requireNoRows(qb, "building.alreadyexist");
     }
 
-    private void checkUniqueness(Room room) {
+    /**
+     * Is room uniquely identifiable?
+     *
+     * @param buildingId
+     * @param code
+     * @param roomId
+     */
+    public void checkRoomUniqueness(Long buildingId, String code, Long roomId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from room r");
-        qb.requiredCriteria("r.building_id = :buildingId", "buildingId", EntityUtil.getId(room.getBuilding()));
-        qb.requiredCriteria("upper(r.code) = :code", "code", room.getCode().toUpperCase());
-        qb.optionalCriteria("r.id != :roomId", "roomId", room.getId());
-        requireNoRows(qb);
+        qb.requiredCriteria("r.building_id = :buildingId", "buildingId", buildingId);
+        qb.requiredCriteria("upper(r.code) = :code", "code", code.toUpperCase());
+        qb.optionalCriteria("r.id != :roomId", "roomId", roomId);
+        requireNoRows(qb, "room.alreadyexist");
     }
 
-    private void requireNoRows(JpaNativeQueryBuilder qb) {
+    private void requireNoRows(JpaNativeQueryBuilder qb, String message) {
         if(!qb.select("1", em).setMaxResults(1).getResultList().isEmpty()) {
-            throw new ValidationFailedException("main.messages.error.unique");
+            throw new ValidationFailedException(message);
         }
     }
 }

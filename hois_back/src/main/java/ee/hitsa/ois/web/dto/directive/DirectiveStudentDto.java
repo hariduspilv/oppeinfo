@@ -1,10 +1,12 @@
 package ee.hitsa.ois.web.dto.directive;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.directive.DirectiveStudentOccupation;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
@@ -14,8 +16,10 @@ import ee.hitsa.ois.enums.FinSource;
 import ee.hitsa.ois.enums.FinSpecific;
 import ee.hitsa.ois.enums.StudyLoad;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SaisAdmissionUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -30,6 +34,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private String oldLanguage;
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
+    private List<String> occupations;
     private String curriculumGrade;
     private String bankAccount;
     private Boolean applicationIsPeriod;
@@ -110,6 +115,14 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.isOccupationExamPassed = isOccupationExamPassed;
     }
 
+    public List<String> getOccupations() {
+        return occupations;
+    }
+
+    public void setOccupations(List<String> occupations) {
+        this.occupations = occupations;
+    }
+
     public String getCurriculumGrade() {
         return curriculumGrade;
     }
@@ -168,15 +181,10 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
     public static DirectiveStudentDto of(ScholarshipApplication application, DirectiveType directiveType) {
         DirectiveStudentDto dto = of(application.getStudent(), directiveType);
-        ScholarshipTerm term = application.getScholarshipTerm();
-        if("STIPTOETUS_ERI".equals(EntityUtil.getCode(term.getType()))) {
-            dto.setStartDate(application.getScholarshipFrom());
-            dto.setEndDate(application.getScholarshipThru());
-        } else {
-            dto.setStartDate(term.getPaymentStart());
-            dto.setEndDate(term.getPaymentEnd());
-        }
+        dto.setStartDate(DateUtils.startDate(application));
+        dto.setEndDate(DateUtils.endDate(application));
         dto.setBankAccount(application.getBankAccount());
+        ScholarshipTerm term = application.getScholarshipTerm();
         dto.setAmountPaid(term.getAmountPaid());
         dto.setScholarshipApplication(application.getId());
         return dto;
@@ -252,7 +260,11 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
                 setPersonData(person, dto);
             }
         }
-        return EntityUtil.bindToDto(directiveStudent, dto);
+        List<DirectiveStudentOccupation> occups = directiveStudent.getOccupations();
+        if (occups != null && !occups.isEmpty()) {
+            dto.setOccupations(StreamUtil.toMappedList(o -> EntityUtil.getCode(o.getOccupation()), occups));
+        }
+        return EntityUtil.bindToDto(directiveStudent, dto, "occupations");
     }
 
     public static DirectiveStudentDto of(SaisApplication application) {

@@ -37,6 +37,7 @@ public class Directive extends BaseEntityWithId {
     private String preamble;
     private Long wdId;
     private String confirmer;
+    private Boolean isHigher;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(updatable = false)
     private Directive canceledDirective;
@@ -142,6 +143,14 @@ public class Directive extends BaseEntityWithId {
 
     public void setConfirmer(String confirmer) {
         this.confirmer = confirmer;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
     }
 
     public Directive getCanceledDirective() {

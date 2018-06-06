@@ -3,7 +3,7 @@
     <form name="contractForm" ng-submit="save()" layout="column" novalidate>
       <div flex>
         <hois-autocomplete ng-model="contract.student" method="students" additional-query-params="{active: true, higher: formState.isHigher}" name="student"
-          label="student.label" required></hois-autocomplete>
+          label="student.label" required ng-disabled="contract.id"></hois-autocomplete>
       </div>
 
       <div ng-if="contract.student && formState.student" class="form-readonly" layout="column">
@@ -50,13 +50,13 @@
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
-          <label>{{'contract.credits' | translate}}</label>
-          <input type="number" ng-model="contract.credits" ng-min="0" ng-max="999.9" required>
+          <label>{{'contract.creditsEKAP' | translate}}</label>
+          <input type="number" name="credits" ng-model="contract.credits" ng-min="0" ng-max="999.9" ng-change="updateHours()" required>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
           <label>{{'contract.hours' | translate}}</label>
-          <input type="number" ng-model="contract.hours" ng-min="0" ng-max="32767" required>
+          <input type="number" name="hours" ng-model="contract.hours" ng-min="0" ng-max="32767" ng-change="updateCredits()" required>
         </md-input-container>
       </div>
 
@@ -67,13 +67,13 @@
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
-          <label>{{'contract.credits' | translate}}</label>
-          <input type="number" ng-model="contract.credits" ng-min="0" ng-max="999.9" required>
+          <label>{{'contract.creditsEAP' | translate}}</label>
+          <input type="number" name="credits" ng-model="contract.credits" ng-min="0" ng-max="999.9" ng-change="updateHours()" required>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
           <label>{{'contract.hours' | translate}}</label>
-          <input type="number" ng-model="contract.hours" ng-min="0" ng-max="32767" required>
+          <input type="number" name="hours" ng-model="contract.hours" ng-min="0" ng-max="32767" ng-change="updateCredits()" required>
         </md-input-container>
       </div>
 

@@ -1,0 +1,21 @@
+<md-dialog aria-label="grade add dialog" flex="30" flex-xs="100" ng-cloak>
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <div>{{'document.confirm.check' | translate}}</div>
+      <form name="dialogForm">
+        <div layout="row" ng-repeat="form in forms">
+          <md-input-container flex="100" flex-sm="100" flex-xs="100">
+            <label>{{form.fullCode}} - {{form.fullname}}</label>
+            <input type="number" ng-model="form.numeral" min="0" required>
+          </md-input-container>
+        </div>
+      </form>
+      <div>{{'document.confirm.correct' | translate}}</div>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button ng-click="submit()" class="md-raised md-primary">{{'document.confirm.yes' | translate}}</md-button>
+    <md-button ng-click="cancel()" class="md-raised">{{'document.confirm.no' | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

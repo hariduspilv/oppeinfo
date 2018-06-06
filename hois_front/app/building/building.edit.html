@@ -4,19 +4,22 @@
       <md-input-container class="md-block">
         <label>{{'building.name' | translate}}</label>
         <input ng-model="record.name" name="name" type="text" md-maxlength="255" required>
-          <div ng-messages="buildingForm.name.$error">
-            <div ng-message="md-maxlength">
-              {{'main.messages.error.maxlength' | translate}}
-            </div>
+        <div ng-messages="buildingForm.name.$error">
+          <div ng-message="md-maxlength">
+            {{'main.messages.error.maxlength' | translate}}
           </div>
+        </div>
       </md-input-container>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'building.code' | translate}}</label>
-        <input ng-model="record.code" name="code" type="text" md-maxlength="20" required>
+        <input ng-model="record.code" name="code" type="text" md-maxlength="20" ng-model-options="{debounce: 250}" unique="buildingUniqueQuery" required>
         <div ng-messages="buildingForm.code.$error">
           <div ng-message="md-maxlength">
             {{'main.messages.error.maxlength' | translate}}
+          </div>
+          <div ng-message="notUnique">
+            {{'building.alreadyexist' | translate}}
           </div>
         </div>
       </md-input-container>

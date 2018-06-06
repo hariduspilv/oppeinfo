@@ -182,10 +182,11 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
 
     $scope.save = function () {
       $scope.timetableForm.$setSubmitted();
-      /*if (!$scope.timetableForm.$valid) {
+      if (!$scope.timetableForm.$valid) {
         message.error('main.messages.form-has-errors');
         return;
-      }*/
+      }
+      
       if (angular.isDefined(id)) {
         $scope.timetable.$update({id: id}).then(function () {
           message.info('main.messages.update.success');

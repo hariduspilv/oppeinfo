@@ -223,7 +223,7 @@ angular.module('hitsaOis')
 
     function getStudents(query) {
       query.size = 1000;
-      $resource(config.apiUrl + "/" + baseUrl + "/students", query).query().$promise.then(function(response) {
+      $resource(config.apiUrl + baseUrl + "/students", query).query().$promise.then(function(response) {
         var list = studentListToReceiverOption(response).filter(function(s) {
           var existing = $scope.receivers.filter(function(r) { return r.personId === s.personId;} );
           if(!existing.length) {

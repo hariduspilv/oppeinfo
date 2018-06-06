@@ -84,8 +84,6 @@ public class JournalDto {
 
         dto.setHasJournalStudents(Boolean.valueOf(!journal.getJournalStudents().isEmpty()));
         dto.setModuleOutcomesAsEntries(journal.getAddModuleOutcomes());
-        
-        dto.setLessonHours(JournalLessonHoursDto.of(journal));
         dto.setIsDistinctiveAssessment(Boolean.valueOf(VocationalGradeType.KUTSEHINDAMISVIIS_E.name().equals(journal.getAssessment().getCode())));
         return dto;
     }

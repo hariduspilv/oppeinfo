@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Õppekava kompetentsid</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+    </style>
+  </head>
+  <body>
+    <table class="reporttable font12">
+      <tr>
+        <td class="label" rowspan="2">{{ "report.curriculum.competence" | translate }}</td>
+        <td class="label center" colspan="{{content.modules.size}}">{{ "report.curriculum.modules" | translate }}</td>
+      </tr>
+      <tr>
+        {% for module in content.modules %}
+	    <td>{{ module }}</td>
+	    {% endfor %}
+      </tr>
+      {% for competence in content.competences %}
+	  <tr>
+	  	<td>{{ competence.name }}</td>
+	  	{% for competenceModule in competence.modules %}
+	  	<td class="center">{{ competenceModule }}</td>
+	  	{% endfor %}
+	  </tr>
+	  {% endfor %}
+    </table>
+  </body>
+</html>

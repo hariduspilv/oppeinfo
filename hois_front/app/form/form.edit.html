@@ -1,0 +1,41 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="formForm" class="nomargin">
+      <div layout="row">
+        <md-input-container flex="40" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'form.type' | translate}}</label>
+          <hois-classifier-select ng-model="formState.type" name="type" model-value-attr="code" main-classifier-code="LOPUBLANKETT"
+            required></hois-classifier-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div layout="column" flex="45" flex-sm="100" flex-xs="100">
+          <div layout="row" layout-sm="column" layout-xs="column" >
+            <md-input-container flex-sm="100" flex-xs="100">
+              <label>{{'main.from' | translate}}</label>
+              <input ng-model="formState.from" pattern="\d*" required>
+            </md-input-container>
+            <md-input-container flex-sm="100" flex-xs="100">
+              <label>{{'main.thru' | translate}}</label>
+              <input ng-model="formState.thru" pattern="\d*" required>
+            </md-input-container>
+          </div>
+        </div>
+      </div>
+
+      <div layout="row" ng-if="actionType === 'defected'">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'form.reason' | translate}}</label>
+          <input ng-model="formState.reason" name="reason" required>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button class="md-raised md-primary" ng-click="update()">{{getButtonLabelKey() | translate}}</md-button>
+        <md-button ng-click="back('#/forms')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+
+    </form>
+  </div>
+</div>

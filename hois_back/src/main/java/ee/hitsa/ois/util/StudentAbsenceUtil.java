@@ -10,7 +10,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 public abstract class StudentAbsenceUtil {
 
     public static boolean canCreate(HoisUserDetails user, Student student) {
-        return UserUtil.isAdultStudent(user, student) || 
+        return UserUtil.isAdultStudent(user, student) || (UserUtil.isStudentAndDoNotNeedRepresentative(user, student) && Boolean.TRUE.equals(student.getSchool().getIsMinorStudentAbsence())) ||
                 ((UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isStudentGroupTeacher(user, student)) && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PUUDUMINE)) ||
                 UserUtil.isStudentRepresentative(user, student);
     }
@@ -18,7 +18,7 @@ public abstract class StudentAbsenceUtil {
     public static boolean canEdit(HoisUserDetails user, StudentAbsence absence) {
         Student student = absence.getStudent();
         return !accepted(absence) && !rejected(absence) &&
-                (UserUtil.isAdultStudent(user, student) || 
+                (UserUtil.isAdultStudent(user, student) || (UserUtil.isStudentAndDoNotNeedRepresentative(user, student) && Boolean.TRUE.equals(student.getSchool().getIsMinorStudentAbsence())) ||
                 ((UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isStudentGroupTeacher(user, student)) && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PUUDUMINE)) ||
                 UserUtil.isStudentRepresentative(user, student));
     }

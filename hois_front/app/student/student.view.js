@@ -298,7 +298,6 @@ function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGrad
         });
 
         var vocationalResultsStudyYear = Object.values(yearToModule);
-        console.log(yearToModule);
         /* TODO delete this code if credits aren't needed
         vocationalResultsStudyYear.forEach(function (studyYearModulesThemes) {
 
@@ -421,13 +420,17 @@ function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGrad
       }
     });
 
-    if (!angular.isDefined($scope.higherResults)) {
+    function loadHigherResults() {
       var id = (auth.isStudent() ? auth.student : $route.current.params.id);
       QueryUtils.endpoint('/students/' + id + '/higherResults').get().$promise.then(function (response) {
         $scope.higherResults = response;
         $scope.student.higherResults = $scope.higherResults;
         $scope.student.higherResults.modules.sort(moduleComparator);
       });
+    }
+
+    if (!angular.isDefined($scope.higherResults)) {
+      loadHigherResults();
     }
 
     $scope.hasMandatorySubjects = function (module) {
@@ -493,6 +496,7 @@ function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGrad
       QueryUtils.endpoint('/students/' + $scope.student.id + '/changeHigherCurriculumModules/').post(
         {modules: $scope.changeableModules}).$promise.then(function(changeableModules) {
         setChangeableModules(changeableModules);
+        loadHigherResults();
       });
     };
 
@@ -576,8 +580,16 @@ function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGrad
     $scope.currentNavItem = 'student.timetable';
     $scope.auth = $route.current.locals.auth;
 
-  }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'QueryUtils', function ($location, $route, $scope, message, QueryUtils) {
+  }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'oisFileService', 'QueryUtils', function ($location, $route, $scope, message, oisFileService, QueryUtils) {
     var id = $route.current.params.id;
+
+    function afterLoad() {
+      if($scope.student.photo) {
+        $scope.student.imageUrl = oisFileService.getUrl($scope.student.photo, 'student');
+      } else {
+        $scope.student.imageUrl = '?' + new Date().getTime();
+      }
+    }
 
     function isAddressFilled(person) {
       if (person.residenceCountry === 'RIIK_EST') {
@@ -587,6 +599,21 @@ function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGrad
     }
 
     $scope.student = QueryUtils.endpoint('/students').get({ id: id });
+    $scope.student.$promise.then(afterLoad);
+
+    
+    function withPhoto(afterPhotoLoad) {
+      if ($scope.studentEditForm.photoFiles && $scope.studentEditForm.photoFiles.$modelValue[0]) {
+        $scope.student.deleteCurrentPhoto = null;
+        $scope.student.photo = oisFileService.getFromLfFile($scope.studentEditForm.photoFiles.$modelValue[0], afterPhotoLoad);
+      } else if ($scope.studentEditForm.deleteCurrentPhoto && $scope.studentEditForm.deleteCurrentPhoto.$modelValue) {
+        $scope.student.photo = null;
+        afterPhotoLoad();
+      } else {
+        afterPhotoLoad();
+      }
+    }
+
     $scope.update = function () {
       $scope.studentEditForm.$setSubmitted();
       if (!isAddressFilled($scope.student.person)) {
@@ -597,9 +624,12 @@ function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGrad
         message.error('main.messages.form-has-errors');
         return;
       }
-      $scope.student.$update().then(function () {
-        message.updateSuccess();
-        $location.path('/students/' + id + '/main');
+
+      withPhoto(function() {
+        $scope.student.$update().then(function () {
+          message.updateSuccess();
+          $location.path('/students/' + id + '/main');
+        });
       });
     };
   }]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'QueryUtils',

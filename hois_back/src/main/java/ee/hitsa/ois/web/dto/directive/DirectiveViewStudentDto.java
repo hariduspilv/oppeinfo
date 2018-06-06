@@ -2,16 +2,19 @@ package ee.hitsa.ois.web.dto.directive;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.directive.DirectiveStudentOccupation;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentBase;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class DirectiveViewStudentDto {
@@ -57,6 +60,7 @@ public class DirectiveViewStudentDto {
     private String abroadProgramme;
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
+    private List<String> occupations;
     private String curriculumGrade;
     private String bankAccount;
     private BigDecimal amountPaid;
@@ -389,6 +393,14 @@ public class DirectiveViewStudentDto {
         this.isOccupationExamPassed = isOccupationExamPassed;
     }
 
+    public List<String> getOccupations() {
+        return occupations;
+    }
+
+    public void setOccupations(List<String> occupations) {
+        this.occupations = occupations;
+    }
+
     public String getCurriculumGrade() {
         return curriculumGrade;
     }
@@ -479,6 +491,10 @@ public class DirectiveViewStudentDto {
                 // dto.setIsCumLaude(isCumLaude);
                 // dto.setIsOccupationExamPassed(isOccupationExamPassed);
                 // dto.setCurriculumGrade(curriculumGrade);
+                List<DirectiveStudentOccupation> occups = directiveStudent.getOccupations();
+                if (occups != null && !occups.isEmpty()) {
+                    dto.setOccupations(StreamUtil.toMappedList(o -> EntityUtil.getCode(o.getOccupation()), occups));
+                }
             }
             break;
         case KASKKIRI_OKAVA:

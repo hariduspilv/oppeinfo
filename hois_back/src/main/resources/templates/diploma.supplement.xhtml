@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Hinneteleht</title>
+    <style type="text/css">
+      {% include "diploma.supplement.css" %}
+    </style>
+  </head>
+  <body>
+    <div id="footer">
+        <span id="pagenumber"/>/<span id="pagecount"/>
+    </div>
+    <div class="padding-top"></div>
+    <div class="general-info">
+        <div class="diploma-nr">{{ content.diplomaNr }}</div>
+        <div><span class="label">{{ content.schoolNameEt }}</span></div>
+        <div>{{ "diploma.validWithDiploma" | translate }}</div>
+        {% if content.additionalNrs is not empty %}
+        <div>
+            <span class="label">{{ (content.additionalNrs.size == 1 ? "diploma.additionalPageNr" : "diploma.additionalPagesNr") | translate }} </span>
+            {{ content.additionalNrs | join(', ') }}
+        </div>
+        {% endif %}
+        <div><span class="label">{{ content.firstname }} {{ content.lastname }}</span>
+            {% if content.idcode is not empty %}
+            ({{ "diploma.idcode" | translate }} {{ content.idcode }})
+            {% else %}
+            ({{ "diploma.birthdate" | translate }} {{ content.birthdate | hoisDate}})
+            {% endif %}
+        </div>
+        <div><span class="label">{{ "diploma.curriculumNameAndCode" | translate }}: </span>{{ content.curriculumNameEt }}, {{ content.merCode }}</div>
+        <div><span class="label">{{ "diploma.ekr" | translate }}: </span>{{ content.ekr }}. {{ "diploma.level" | translate }}</div>
+        <div><span class="label">{{ "diploma.vocational.credits" | translate }}: </span>{{ content.credits }} EKAP</div>
+        <div><span class="label">{{ "diploma.curriculumType" | translate }}: </span>{{ content.vocationalCurriculumType }}</div>
+        <div>
+            <span class="label">{{ "diploma.studyForm" | translate }}: </span>
+            {{ content.studyFormNameEt }}
+            {% if content.studyCompany is not empty %}
+            ({{ content.studyCompany }})
+            {% endif %}
+        </div>
+        <div><span class="label">{{ "diploma.studyLanguage" | translate }}: </span>{{ content.studyLanguageNameEt }}</div>
+    </div>
+    <div><span class="label">{{ "diploma.outcomes" | translate }}: </span></div>
+    <div>{{ content.outcomesEt }}</div>
+    
+    <div class="margin-top page-break-after-avoid"><span class="label">{{ "diploma.studyResults" | translate }}: </span></div>
+    <table class="study-results margin-top">
+        <thead class="page-break-after-avoid">
+            <tr>
+                <th class="center">{{ "diploma.results.orderNr" | translate }}</th>
+                <th>{{ "diploma.results.name" | translate }}</th>
+                <th class="center">{{ "diploma.results.credits" | translate }}</th>
+                <th>{{ "diploma.results.grade" | translate }}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for result in content.studyResults %}
+            <tr>
+                <td class="study-results-order center">{{ loop.index + 1 }}</td>
+                <td>{{ result.nameEt }}</td>
+                <td class="study-results-credits center">{{ result.credits }}</td>
+                <td class="study-results-grade">{{ result.grade }} ({{ result.gradeNameEt }})</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <div class="margin-top page-break-after-avoid"><span class="label">{{ "diploma.examResults" | translate }}: </span></div>
+    <table class="study-results margin-top">
+        <tbody>
+        {% for result in content.finalResults %}
+            <tr>
+                <td class="study-results-order"></td>
+                <td>{{ result.nameEt }}</td>
+                <td class="study-results-credits center">
+                {% if result.credits > 0 %}
+                {{ result.credits }}
+                {% endif %}
+                </td>
+                <td class="study-results-grade">{{ result.grade }} ({{ result.gradeNameEt }})</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <table class="study-results margin-top">
+        <tbody>
+            <tr>
+                <td>{{ "diploma.totalSubjectCredits" | translate }}</td>
+                <td class="study-results-credits center">{{ content.totalCredits }}</td>
+                <td class="study-results-grade"></td>
+            </tr>
+        </tbody>
+    </table>
+    {% for apel in content.apels %}
+    <div>
+        *{{ loop.index + 1 }}
+        {% if apel.isFormal %}
+        {{ "diploma.transferred" | translate }}
+        {% else %}
+        {{ "diploma.apel" | translate }}
+        {% endif %}
+        {{ apel.name }}
+    </div>
+    {% endfor %}
+    <div class="page-break-avoid margin-top">
+        <div><span class="label">{{ "diploma.evaluationDescription" | translate }}: </span></div>
+        <table class="evaluation-description">
+            <thead>
+                <tr>
+                    <th class="center">{{ "diploma.results.grade" | translate }}</th>
+                    <th class="center">{{ "diploma.gradeDescription" | translate }}</th>
+                    <th>{{ "diploma.evaluationCriteria" | translate }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="center">5</td>
+                    <td class="center">{{ "diploma.results.grade.5" | translate }}</td>
+                    <td>{{ "diploma.criteria.5" | translate }}</td>
+                </tr>
+                <tr>
+                    <td class="center">4</td>
+                    <td class="center">{{ "diploma.results.grade.4" | translate }}</td>
+                    <td>{{ "diploma.criteria.4" | translate }}</td>
+                </tr>
+                <tr>
+                    <td class="center">3</td>
+                    <td class="center">{{ "diploma.results.grade.3" | translate }}</td>
+                    <td>{{ "diploma.criteria.3" | translate }}</td>
+                </tr>
+                <tr>
+                    <td class="center">2</td>
+                    <td class="center">{{ "diploma.results.grade.2" | translate }}</td>
+                    <td>{{ "diploma.criteria.2" | translate }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="margin-top font-size-9">{{ "diploma.criteriaDescription" | translate }}</div>
+    
+    <div class="diploma-signers page-break-avoid">
+        <div class="diploma-signer-left">
+            <div>{{ content.signer1Name }}</div>
+            <div>{{ content.signer1Position }}</div>
+        </div>
+    </div>
+  </body>
+</html>

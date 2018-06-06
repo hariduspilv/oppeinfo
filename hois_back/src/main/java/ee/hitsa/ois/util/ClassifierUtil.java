@@ -110,6 +110,17 @@ public abstract class ClassifierUtil {
         return data;
     }
 
+    /**
+     * Merge functions for Collectors.toMap. Chooses first valid classifier.
+     *
+     * @param o
+     * @param n
+     * @return
+     */
+    public static Classifier validOne(Classifier o, Classifier n) {
+        return o.isValid() ? o : n;
+    }
+
     // sorters for classifiers
     private static final Map<String, Comparator<ClassifierSelection>> CLASSIFIER_SORT = new HashMap<>();
     static {

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.config;
 
+import javax.annotation.PostConstruct;
 import javax.xml.ws.Endpoint;
 
 import org.apache.cxf.Bus;
@@ -14,6 +15,7 @@ import ee.hois.moodle.MoodleClient;
 import ee.hois.soap.dds.service.DigiDocServiceClient;
 import ee.hois.soap.ekis.client.EkisClient;
 import ee.hois.xroad.ehis.service.EhisClient;
+import ee.hois.xroad.handler.CustomValidationEventHandler;
 import ee.hois.xroad.kutseregister.service.KutseregisterClient;
 import ee.hois.xroad.rtip.service.RtipClient;
 import ee.hois.xroad.sais2.service.SaisClient;
@@ -47,6 +49,11 @@ public class ServicesConfiguration {
         return endpoint;
     }
 
+    @PostConstruct
+    public void postConstruct() {
+        bus.setProperty("jaxb-reader-validation-event-handler", new CustomValidationEventHandler());
+    }
+    
     /**
      * Ehis client
      *

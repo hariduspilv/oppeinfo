@@ -44,6 +44,12 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
 
   var ModuleProtocolEndpoint = QueryUtils.endpoint('/moduleProtocols');
   $scope.submit = function () {
+    if(!$scope.moduleProtocolNewForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      $scope.moduleProtocolNewForm.$setSubmitted();
+      return false;
+    }
+
     if (ArrayUtils.isEmpty($scope.formState.selectedStudents)) {
       message.error("moduleProtocol.error.noStudents");
       return;

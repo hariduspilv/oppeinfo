@@ -1,5 +1,7 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
@@ -25,7 +27,6 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -115,30 +116,60 @@ public class StudentResultHigherService {
     }
 
     private List<StudentHigherSubjectResultDto> getStudentResults(Student student) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_higher_result shr").sort("shr.grade_date");
+        String query = "from student_higher_result shr "
+                + "left join student_higher_result_module shrm on shr.id = shrm.student_higher_result_id "
+                + "left join apel_application_record aar on shr.apel_application_record_id = aar.id "
+                + "left join apel_application aa on aar.apel_application_id = aa.id "
+                + "left join apel_school a_s on shr.apel_school_id = a_s.id";
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(query).sort("shr.grade_date");
         qb.requiredCriteria("shr.student_id = :studentId", "studentId", EntityUtil.getId(student));
-
+        
         List<?> rows = qb.select(
-                "distinct shr.subject_id, shr.grade_code, shr.grade, shr.grade_date, shr.teachers, shr.study_period_id, shr.grade_mark",
+                "distinct shr.id, shr.subject_id, shr.subject_name_et, shr.subject_name_en, shr.subject_code, shr.credits, "
+                + "coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id), "
+                + "shr.apel_application_record_id, aar.is_formal_learning, a_s.id as school_id, a_s.name_et, a_s.name_en, "
+                + "shr.grade_code, shr.grade, shr.grade_date, shr.teachers, "
+                + "coalesce(shr.study_period_id, get_study_period(cast(shr.grade_date as date), cast(aa.school_id as int))) as study_period_id, shr.grade_mark",
                 em).getResultList();
 
         List<StudentHigherSubjectResultDto> studentResults = new ArrayList<>();
         for (Object r : rows) {
             StudentHigherSubjectResultDto dto = new StudentHigherSubjectResultDto();
-            Long subjectId = resultAsLong(r, 0);
-            dto.setSubject(subjectId != null ? SubjectSearchDto.of(em.getReference(Subject.class, subjectId)) : null);
+            dto.setId(resultAsLong(r, 0));
+
+            SubjectSearchDto subject = new SubjectSearchDto();
+            subject.setId(resultAsLong(r, 1));
+            subject.setNameEt(resultAsString(r, 2));
+            subject.setNameEn(resultAsString(r, 3));
+            subject.setCode(resultAsString(r, 4));
+            subject.setCredits(resultAsDecimal(r, 5));
+            dto.setSubject(subject);
+            
+            Long moduleId = resultAsLong(r, 6);
+            dto.setHigherModule(moduleId != null ? StudentHigherSubjectResultDto.getHigherModuleDto(em.getReference(CurriculumVersionHigherModule.class, moduleId)): null);
             dto.setIsExtraCurriculum(Boolean.TRUE);
             dto.setIsOk(Boolean.FALSE);
             dto.setIsOptional(Boolean.TRUE);
             
+            Long apelApplicationRecordId = resultAsLong(r, 7);
+            dto.setIsApelTransfer(apelApplicationRecordId != null ? Boolean.TRUE : Boolean.FALSE);
+            if (dto.getIsApelTransfer().booleanValue()) {
+                dto.setIsFormalLearning(resultAsBoolean(r, 8));
+                if (dto.getIsFormalLearning().booleanValue() && resultAsLong(r, 9) != null) {
+                    dto.getSubject().setNameEt(dto.getSubject().getNameEt() + " - " + resultAsString(r, 10));
+                    dto.getSubject().setNameEn(dto.getSubject().getNameEn() + " - " + resultAsString(r, 11));
+                }
+            }
+            
             StudentHigherSubjectResultGradeDto grade = new StudentHigherSubjectResultGradeDto();
-            grade.setGrade(resultAsString(r, 1));
-            grade.setGradeValue(resultAsString(r, 2));
-            grade.setGradeDate(resultAsLocalDate(r, 3));
-            grade.getTeachers().add(resultAsString(r, 4));
-            grade.setStudyPeriod(resultAsLong(r, 5));
-            grade.setGradeMark(resultAsShort(r, 6));
-            grade.setGradeNameEt(ClassifierUtil.getNullableNameEt(em.getReference(Classifier.class, resultAsString(r, 1))));
+            grade.setGrade(resultAsString(r, 12));
+            grade.setGradeValue(resultAsString(r, 13));
+            grade.setGradeDate(resultAsLocalDate(r, 14));
+            grade.getTeachers().add(resultAsString(r, 15));
+            grade.setStudyPeriod(resultAsLong(r, 16));
+            grade.setGradeMark(resultAsShort(r, 17));
+            grade.setGradeNameEt(ClassifierUtil.getNullableNameEt(em.getReference(Classifier.class, resultAsString(r, 12))));
             
             dto.getGrades().add(grade);
             studentResults.add(dto);
@@ -148,16 +179,28 @@ public class StudentResultHigherService {
 
     private static List<StudentHigherSubjectResultDto> mergeModuleSubjectsAndResults(
             List<StudentHigherSubjectResultDto> moduleSubjects, List<StudentHigherSubjectResultDto> studentResults) {
+        List<Long> addedGrades = new ArrayList<>();
         for(StudentHigherSubjectResultDto moduleSubject : moduleSubjects) {
-            List<StudentHigherSubjectResultDto> subjectsResults = getStudentResultsForSubject(moduleSubject.getSubject().getId(), studentResults);
+            List<StudentHigherSubjectResultDto> subjectsResults = getStudentResultsForSubject(
+                    moduleSubject.getHigherModule().getId(), moduleSubject.getSubject().getId(), studentResults);
+            boolean isApelTransfer = subjectsResults.stream().anyMatch(sr -> Boolean.TRUE.equals(sr.getIsApelTransfer()));
+            moduleSubject.setIsApelTransfer(Boolean.valueOf(isApelTransfer));
+            
             addGrades(moduleSubject, subjectsResults);
+            // collect added grades so that they won't be added again
+            addedGrades.addAll(StreamUtil.toMappedList(sr -> sr.getId(), subjectsResults));
         }
+        addTransferredSubjectsToModules(moduleSubjects, studentResults, addedGrades);
         addResultsForExtraCurriculumSubjects(moduleSubjects, studentResults);
         return moduleSubjects;
     }
 
-    private static List<StudentHigherSubjectResultDto> getStudentResultsForSubject(Long subjectId, List<StudentHigherSubjectResultDto> studentResults) {
-        return StreamUtil.toFilteredList(sr -> sr.getSubject().getId().equals(subjectId), studentResults);
+    private static List<StudentHigherSubjectResultDto> getStudentResultsForSubject(Long moduleId, Long subjectId,
+            List<StudentHigherSubjectResultDto> studentResults) {
+        return StreamUtil.toFilteredList(
+                sr -> (sr.getHigherModule() == null || sr.getHigherModule().getId().equals(moduleId))
+                        && sr.getSubject().getId().equals(subjectId),
+                StreamUtil.toFilteredList(sr -> sr.getSubject().getId() != null, studentResults));
     }
 
     private static void addGrades(StudentHigherSubjectResultDto moduleSubject,
@@ -167,18 +210,32 @@ public class StudentResultHigherService {
             subjectResult.setIsExtraCurriculum(Boolean.FALSE);
         }
     }
+    
+    private static void addTransferredSubjectsToModules(List<StudentHigherSubjectResultDto> moduleSubjects,
+            List<StudentHigherSubjectResultDto> studentResults, List<Long> addedGrades) {
+        List<StudentHigherSubjectResultDto> transferredSubjects = StreamUtil.toFilteredList(
+                sr -> sr.getHigherModule() != null && !addedGrades.contains(sr.getId()), studentResults);
+        
+        for (StudentHigherSubjectResultDto subject : transferredSubjects) {
+            subject.setIsExtraCurriculum(Boolean.FALSE);
+            subject.setIsOptional(Boolean.FALSE);
+            moduleSubjects.add(subject);
+        }
+    }
 
     private static void addResultsForExtraCurriculumSubjects(List<StudentHigherSubjectResultDto> moduleSubjects,
             List<StudentHigherSubjectResultDto> studentResults) {
         List<StudentHigherSubjectResultDto> extraCurriculumResults =
                 StreamUtil.toFilteredList(sr -> Boolean.TRUE.equals(sr.getIsExtraCurriculum()), studentResults);
-        mergeEstraCurriculumResutls(extraCurriculumResults);
+        extraCurriculumResults = mergeExtraCurriculumResults(extraCurriculumResults);
         moduleSubjects.addAll(extraCurriculumResults);
     }
 
-    private static void mergeEstraCurriculumResutls(List<StudentHigherSubjectResultDto> extraCurriculumResults) {
+    private static List<StudentHigherSubjectResultDto> mergeExtraCurriculumResults(List<StudentHigherSubjectResultDto> extraCurriculumResults) {
         Map<Long, StudentHigherSubjectResultDto> map = new HashMap<>();
-        Iterator<StudentHigherSubjectResultDto> iterator = extraCurriculumResults.iterator();
+        List<StudentHigherSubjectResultDto> extraCurriculumSubjectResults = StreamUtil.toFilteredList(r -> r.getSubject().getId() != null, 
+                extraCurriculumResults);
+        Iterator<StudentHigherSubjectResultDto> iterator = extraCurriculumSubjectResults.iterator();
         while(iterator.hasNext()) {
             StudentHigherSubjectResultDto studentResult = iterator.next();
             Long subjectId = studentResult.getSubject().getId();
@@ -189,6 +246,7 @@ public class StudentResultHigherService {
                 map.put(subjectId, studentResult);
             }
         }
+        return extraCurriculumSubjectResults;
     }
 
     private static void calculateIsOk(List<StudentHigherSubjectResultDto> mergedList) {

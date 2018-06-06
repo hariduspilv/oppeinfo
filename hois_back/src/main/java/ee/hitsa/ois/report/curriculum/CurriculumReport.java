@@ -8,16 +8,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupation;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.enums.CurriculumConsecution;
+import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.report.ReportUtil;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 
 public class CurriculumReport {
@@ -46,21 +52,23 @@ public class CurriculumReport {
     private final BigDecimal credits;
     private final String draftText;
     private final String outcomes;
-    
+    private final String implementation;
     private final String admissionRequirements;
     private final String graduationRequirements;
     private final List<String> qualifications;
     private final List<String> partoccupations;
     private final String structure;
+    private final String optionalStudyDescription;
     private final String specialization;
     private final String contactPerson;
     private final String description;
+    private final String versionUrl;
 
-    public CurriculumReport(Curriculum curriculum) {
-        this(curriculum, Language.ET);
+    public CurriculumReport(Curriculum curriculum, String frontendBaseUrl) {
+        this(curriculum, frontendBaseUrl, Language.ET);
     }
     
-    public CurriculumReport(Curriculum curriculum, Language lang) {
+    public CurriculumReport(Curriculum curriculum, String frontendBaseUrl, Language lang) {
         school = name(curriculum.getSchool(), lang);
         approval = curriculum.getApproval();
         approvalDokNr = curriculum.getApprovalDokNr();
@@ -71,22 +79,32 @@ public class CurriculumReport {
         nameRu = curriculum.getNameRu();
         merCode = curriculum.getMerCode();
         
-        String studyLevel = curriculum.getOrigStudyLevel().getValue();
+        Classifier origStudyLevel = curriculum.getOrigStudyLevel();
+        String studyLevel = origStudyLevel.getValue();
+        Optional<ClassifierConnect> optionalConnect = origStudyLevel.getClassifierConnects().stream()
+                .filter(c -> "EKR".equals(c.getMainClassifierCode()))
+                .findAny();
+        String studyLevelConnected = optionalConnect.isPresent() ? 
+                optionalConnect.get().getConnectClassifier().getValue() : 
+                    studyLevel;
         Classifier consecution = curriculum.getConsecution();
         boolean isPrimary = ClassifierUtil.equals(CurriculumConsecution.OPPEKAVA_TYPE_E, consecution);
         boolean isSecondary = ClassifierUtil.equals(CurriculumConsecution.OPPEKAVA_TYPE_J, consecution);
         boolean isVocationalSecondary = SECONDARY_LEVELS.contains(studyLevel);
-        ekr21 = isPrimary && studyLevel.startsWith("2") ? "X" : "";
-        ekr31 = isPrimary && studyLevel.startsWith("3") ? "X" : "";
+        ekr21 = isPrimary && studyLevelConnected.startsWith("2") ? "X" : "";
+        ekr31 = isPrimary && studyLevelConnected.startsWith("3") ? "X" : "";
         ekr41k = isPrimary && isVocationalSecondary ? "X" : "";
-        ekr41 = isPrimary && !isVocationalSecondary && studyLevel.startsWith("4") ? "X" : "";
-        ekr51 = isPrimary && studyLevel.startsWith("5") ? "X" : "";
-        ekr42 = isSecondary && studyLevel.startsWith("4") ? "X" : "";
-        ekr52 = isSecondary && studyLevel.startsWith("5") ? "X" : "";
+        ekr41 = isPrimary && !isVocationalSecondary && studyLevel.startsWith("4") && studyLevelConnected.startsWith("4") ? "X" : "";
+        ekr51 = isPrimary && studyLevelConnected.startsWith("5") ? "X" : "";
+        ekr42 = isSecondary && studyLevelConnected.startsWith("4") ? "X" : "";
+        ekr52 = isSecondary && studyLevelConnected.startsWith("5") ? "X" : "";
         
         credits = curriculum.getCredits();
         draftText = curriculum.getDraftText();
         outcomes = curriculum.getOutcomesEt();
+        implementation = curriculum.getStudyForms().stream()
+                .map(sf -> TranslateUtil.name(sf.getStudyForm(), lang))
+                .collect(Collectors.joining(", "));
         admissionRequirements = curriculum.getAdmissionRequirementsEt();
         graduationRequirements = curriculum.getGraduationRequirementsEt();
         qualifications = new ArrayList<>();
@@ -104,9 +122,15 @@ public class CurriculumReport {
             partoccupations.add(TranslateUtil.translate(ReportUtil.KEY_MISSING, lang));
         }
         structure = curriculum.getStructure();
+        optionalStudyDescription = curriculum.getOptionalStudyDescription();
         specialization = ReportUtil.valueOrMissing(curriculum.getSpecialization(), lang);
         contactPerson = curriculum.getContactPerson();
         description = curriculum.getDescription();
+        Set<CurriculumVersion> versions = curriculum.getVersions();
+        versionUrl = ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, curriculum.getStatus()) && !versions.isEmpty() ? 
+                frontendBaseUrl + "curriculum/" + EntityUtil.getId(curriculum) 
+                + "/version/" + EntityUtil.getId(versions.iterator().next()) :
+                    null;
     }
 
     public String getSchool() {
@@ -181,6 +205,10 @@ public class CurriculumReport {
         return outcomes;
     }
 
+    public String getImplementation() {
+        return implementation;
+    }
+
     public String getAdmissionRequirements() {
         return admissionRequirements;
     }
@@ -201,6 +229,10 @@ public class CurriculumReport {
         return structure;
     }
 
+    public String getOptionalStudyDescription() {
+        return optionalStudyDescription;
+    }
+
     public String getSpecialization() {
         return specialization;
     }
@@ -211,6 +243,10 @@ public class CurriculumReport {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getVersionUrl() {
+        return versionUrl;
     }
 
 }

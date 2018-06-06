@@ -40,6 +40,7 @@ import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.sais.SaisApplicationGraduatedSchool;
+import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentHistory;
@@ -49,6 +50,7 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.enums.ScholarshipStatus;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.HoisException;
@@ -110,6 +112,7 @@ public class DirectiveConfirmService {
             allErrors.add(new Error("directive.missingstudents"));
         }
         Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
+        Map<Long, List<DirectiveStudent>> scholarships = findScholarships(directive);
         Set<Long> changedStudents = DirectiveType.KASKKIRI_TYHIST.equals(directiveType) ? new HashSet<>(directiveService.changedStudentsForCancel(directive.getCanceledDirective())) : Collections.emptySet();
         List<DirectiveViewStudentDto> invalidStudents = new ArrayList<>();
         // validate each student's data for given directive
@@ -140,9 +143,19 @@ public class DirectiveConfirmService {
                     }
                 }
             }
-            // TODO check for valid studentGroup for ennist, immat, okava, ovorm
-            // TODO check for valid curriculumVersion for ennist (student's current), immat, okava
-            if(DirectiveType.KASKKIRI_AKADK.equals(directiveType)) {
+            // FIXME check for valid studentGroup for ennist, immat, okava, ovorm?
+            // FIXME check for valid curriculumVersion for ennist (student's current), immat, okava?
+            if(DirectiveType.KASKKIRI_AKAD.equals(directiveType)) {
+                List<DirectiveStudent> studentScholarships = scholarships.get(EntityUtil.getId(ds.getStudent()));
+                if(studentScholarships != null) {
+                    LocalDate startDate = DateUtils.periodStart(ds);
+                    LocalDate endDate = DateUtils.periodEnd(ds);
+                    if(studentScholarships.stream().anyMatch(p -> !p.getStartDate().isAfter(endDate) && !p.getEndDate().isBefore(startDate)
+                            && !Boolean.TRUE.equals(p.getScholarshipApplication().getScholarshipTerm().getIsAcademicLeave()))) {
+                        invalidStudents.add(createInvalidStudent(ds, "directive.scholarshipExists"));
+                    }
+                }
+            } else if(DirectiveType.KASKKIRI_AKADK.equals(directiveType)) {
                 // check that cancel date is inside academic leave period
                 DirectiveStudent academicLeave = academicLeaves.get(EntityUtil.getId(ds.getStudent()));
                 LocalDate leaveCancel = ds.getStartDate();
@@ -159,6 +172,11 @@ public class DirectiveConfirmService {
                     if(msg != null) {
                         allErrors.add(new ErrorForField(msg, propertyPath(rowNum, "startDate")));
                     }
+                }
+            } else if(DirectiveType.KASKKIRI_EKSMAT.equals(directiveType)) {
+                // check for existing scholarship
+                if(scholarships.containsKey(EntityUtil.getId(ds.getStudent()))) {
+                    invalidStudents.add(createInvalidStudent(ds, "directive.scholarshipExists"));
                 }
             } else if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType)) {
                 // check by hand because for immatv it's filled automatically after directive confirmation
@@ -179,12 +197,7 @@ public class DirectiveConfirmService {
                     reason = "directive.scholarshipStudentNotActive";
                 }
                 if(reason != null) {
-                    DirectiveViewStudentDto dto = new DirectiveViewStudentDto();
-                    Person p = ds.getPerson();
-                    dto.setFullname(p.getFullname());
-                    dto.setIdcode(p.getIdcode());
-                    dto.setReason(reason);
-                    invalidStudents.add(dto);
+                    invalidStudents.add(createInvalidStudent(ds, reason));
                 }
             } else if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
                 // check that it's last modification of student
@@ -381,6 +394,7 @@ public class DirectiveConfirmService {
         case KASKKIRI_AKAD:
             duration = ChronoUnit.DAYS.between(DateUtils.periodStart(directiveStudent), DateUtils.periodEnd(directiveStudent).plusDays(1));
             student.setNominalStudyEnd(student.getNominalStudyEnd().plusDays(duration));
+            cancelScholarships(directiveStudent);
             break;
         case KASKKIRI_AKADK:
             duration = ChronoUnit.DAYS.between(DateUtils.periodStart(academicLeave), directiveStudent.getStartDate());
@@ -390,6 +404,7 @@ public class DirectiveConfirmService {
             // FIXME correct field for Õppuri eksmatrikuleerimise kuupäev?
             student.setStudyEnd(confirmDate);
             userService.disableUser(student, confirmDate);
+            cancelScholarships(directiveStudent);
             break;
         case KASKKIRI_ENNIST:
             student.setStudyStart(confirmDate);
@@ -492,6 +507,32 @@ public class DirectiveConfirmService {
         }
     }
 
+    private void cancelScholarships(DirectiveStudent directiveStudent) {
+        List<ScholarshipApplication> scholarships = em.createQuery("select sa from ScholarshipApplication sa where sa.student.id = ?1 and sa.status.code = ?2 " +
+                "and not exists(select ds from DirectiveStudent ds where ds.scholarshipApplication = sa)", ScholarshipApplication.class)
+            .setParameter(1, EntityUtil.getId(directiveStudent.getStudent()))
+            .setParameter(2, ScholarshipStatus.STIPTOETUS_STAATUS_A.name())
+            .getResultList();
+
+        if(!scholarships.isEmpty()) {
+            // reject all matching scholarship applications which are not on directive
+            Classifier rejected = em.getReference(Classifier.class, ScholarshipStatus.STIPTOETUS_STAATUS_L.name());
+            LocalDate startDate = DateUtils.periodStart(directiveStudent);
+            LocalDate endDate = DateUtils.periodEnd(directiveStudent);
+
+            for(ScholarshipApplication sa : scholarships) {
+                if(ClassifierUtil.equals(DirectiveType.KASKKIRI_AKAD, directiveStudent.getDirective().getType())) {
+                    // only those matching period and not allowed during academic leave
+                    if(startDate.isAfter(DateUtils.endDate(sa)) || endDate.isBefore(DateUtils.startDate(sa)) ||
+                            Boolean.TRUE.equals(sa.getScholarshipTerm().getIsAcademicLeave())) {
+                        continue;
+                    }
+                }
+                sa.setStatus(rejected);
+            }
+        }
+    }
+
     private void updateApplicationStatus(DirectiveStudent directiveStudent, Classifier applicationStatus) {
         Application application = directiveStudent.getApplication();
         if(application != null) {
@@ -537,6 +578,26 @@ public class DirectiveConfirmService {
         }).collect(Collectors.toMap(ds -> EntityUtil.getId(ds.getStudent()), ds -> ds, (o, n) -> o));
     }
 
+    Map<Long, List<DirectiveStudent>> findScholarships(Directive directive) {
+        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_EKSMAT) || directive.getStudents().isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
+        // scholarships which have not ended or which have no directive to end payment
+        List<DirectiveStudent> data = em.createQuery("select ds from DirectiveStudent ds " +
+                "where ds.canceled = false and ds.student.id in (?1) and ds.directive.type.code = ?2 and ds.directive.status.code = ?3 and ds.endDate >= CURRENT_DATE " +
+                "and not exists(select ds2 from DirectiveStudent ds2 where ds2.canceled = false " +
+                    "and ds2.scholarshipApplication = ds.scholarshipApplication and ds2.directive.type.code = ?4 and ds2.directive.status.code = ?5)", DirectiveStudent.class)
+            .setParameter(1, studentIds)
+            .setParameter(2, DirectiveType.KASKKIRI_STIPTOET.name())
+            .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+            .setParameter(4, DirectiveType.KASKKIRI_STIPTOETL.name())
+            .setParameter(5, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+            .getResultList();
+
+        return data.stream().collect(Collectors.groupingBy(r -> EntityUtil.getId(r.getStudent())));
+    }
+
     private void setDirectiveStatus(Directive directive, DirectiveStatus status) {
         directive.setStatus(em.getReference(Classifier.class, status.name()));
     }
@@ -575,6 +636,16 @@ public class DirectiveConfirmService {
         // new role for student
         userService.enableUser(student, directiveStudent.getDirective().getConfirmDate());
         return student;
+    }
+
+    private static DirectiveViewStudentDto createInvalidStudent(DirectiveStudent ds, String reason) {
+        DirectiveViewStudentDto dto = new DirectiveViewStudentDto();
+        dto.setStudent(EntityUtil.getNullableId(ds.getStudent()));
+        Person p = ds.getPerson();
+        dto.setFullname(p.getFullname());
+        dto.setIdcode(p.getIdcode());
+        dto.setReason(reason);
+        return dto;
     }
 
     private static void copyDirectiveProperties(DirectiveType directiveType, Object source, Student student) {

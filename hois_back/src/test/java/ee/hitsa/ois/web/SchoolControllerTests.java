@@ -264,6 +264,14 @@ public class SchoolControllerTests {
         Assert.assertTrue(HttpStatus.OK.equals(responseEntity.getStatusCode()) || HttpStatus.BAD_REQUEST.equals(responseEntity.getStatusCode()));
     }
 
+    @Test
+    public void searchFinalDocSigners() {
+        UriComponentsBuilder uri = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("finaldocsigners");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
     @SuppressWarnings("unchecked")
     private static List<StudyYearScheduleLegendDto> getUpdateLegendsResult(Object body) {
         Map<String, ?> map = (Map<String, ?>) body;

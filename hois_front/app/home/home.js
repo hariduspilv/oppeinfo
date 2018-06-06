@@ -59,6 +59,19 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       checkIfHasUnacceptedAbsences();
       checkUnconfirmedJournals();
       expiringOccupationStandards();
+      studentAfterAuthentication();
+    }
+
+    function studentAfterAuthentication() {
+      if (Session.studentId) {
+        $scope.sessionStudentId = Session.studentId;
+        getStudentInformation();
+      } else {
+        $scope.sessionStudentId = null;
+        $scope.tasks = [];
+        $scope.studentAbsences = [];
+        $scope.lastResults = [];
+      }
     }
 
     if (AuthService.isAuthenticated()) {
@@ -103,37 +116,19 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     $scope.toggleNumberOfOccupationStandards = function() {
       $scope.numberOfOccupationStandards = $scope.numberOfOccupationStandards ? undefined : initialNumberOfOccupationStandards;
     };
-  }
-]).controller('StudentHomeController', ['$scope', 'QueryUtils', 'Session', 'AUTH_EVENTS',
-  function($scope, QueryUtils, Session, AUTH_EVENTS) {
 
     function getStudentInformation() {
-      if (Session.studentId) {
-        $scope.sessionStudentId = Session.studentId;
-  
-        QueryUtils.endpoint('/journals/studentJournalTasks/').search({studentId: Session.studentId}).$promise.then(function (result) {
-          getTodayAndTomorrowDate();
-          sortTasksByDate(result.tasks.reverse());
-          $scope.testTaskTypes = ['SISSEKANNE_H', 'SISSEKANNE_L', 'SISSEKANNE_E', 'SISSEKANNE_I', 'SISSEKANNE_P', 'SISSEKANNE_R'];
-        });
-  
-        $scope.studentAbsences = QueryUtils.endpoint('/journals/studentJournalAbsences/').query({studentId: Session.studentId});
-        $scope.lastResults = QueryUtils.endpoint('/journals/studentJournalLastResults/').query({studentId: Session.studentId});
-        $scope.declaration = Session.roleCode === 'ROLL_L' ? undefined : QueryUtils.endpoint('/declarations/current').get();
-      } else {
-        $scope.sessionStudentId = null;
-        $scope.tasks = [];
-        $scope.studentAbsences = [];
-        $scope.lastResults = [];
-      }
+      QueryUtils.endpoint('/journals/studentJournalTasks/').search({studentId: Session.studentId}).$promise.then(function (result) {
+        getTodayAndTomorrowDate();
+        console.log(result);
+        sortTasksByDate(result.tasks.reverse());
+        $scope.testTaskTypes = ['SISSEKANNE_H', 'SISSEKANNE_L', 'SISSEKANNE_E', 'SISSEKANNE_I', 'SISSEKANNE_P', 'SISSEKANNE_R'];
+      });
+
+      $scope.studentAbsences = QueryUtils.endpoint('/journals/studentJournalAbsences/').query({studentId: Session.studentId});
+      $scope.lastResults = QueryUtils.endpoint('/journals/studentJournalLastResults/').query({studentId: Session.studentId});
+      $scope.declaration = Session.roleCode === 'ROLL_L' ? undefined : QueryUtils.endpoint('/declarations/current').get();
     }
-    
-    function afterAuthentication() {
-      getStudentInformation();
-    }
-    
-    getStudentInformation();
-    $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
 
     function getTodayAndTomorrowDate() {
       var today, tomorrow;

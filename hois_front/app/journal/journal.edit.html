@@ -24,12 +24,17 @@
               <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_O'">{{'journal.outcome' | translate}}{{journalEntry.outcomeOrderNr + 1}}</span>
               <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L' && journalEntry.entryType.code !== 'SISSEKANNE_O'">{{journalEntry.entryDate  ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
               <md-tooltip>
-                <span ng-if="journalEntry.startLessonNr">{{journalEntry.startLessonNr}}. {{'journal.lesson' | translate}},&nbsp;</span> {{journalEntry.nameEt}}
+                <span ng-if="journalEntry.startLessonNr">
+                  <span ng-if="!journalEntry.lessons || journalEntry.lessons <= 1">{{journalEntry.startLessonNr}}. {{'journal.lesson' | translate}}</span> 
+                  <span ng-if="journalEntry.lessons && journalEntry.lessons > 1">{{journalEntry.startLessonNr}}. - {{journalEntry.startLessonNr + journalEntry.lessons-1}}. {{'journal.lesson' | translate}}</span>
+                  ,&nbsp;
+                </span>
+                <span>{{journalEntry.nameEt}}</span>
                 <span>,&nbsp;</span> {{currentLanguageNameField(journalEntry.entryType)}}
                 <span>,&nbsp;</span> {{journalEntry.teacher}}
               </md-tooltip>
             </th>
-            <th ></th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -39,7 +44,7 @@
               <span ng-if="row.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
             </td>
             <td class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate">
-              <div layout="row" flex layout-align="center">
+              <div layout="row" style="padding-left:1em;">
                 <div ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
                   <span>
                     {{result.absence.value}}
@@ -54,12 +59,22 @@
                       </span>
                     </md-tooltip>
                   </span>
-                  <span ng-if="result.absence.value">/</span>
+                  <span ng-if="result.absence.value && (result.journalEntryStudentHistories.length > 0 || result.grade)">/</span>
+
+                  <span ng-repeat="historyResult in result.journalEntryStudentHistories | orderBy: 'gradeInserted' track by $index">
+                    <span ng-class="{journalBadResult: !gradeUtil.isPositive(historyResult.grade.code)}">{{historyResult.grade.value}}</span>
+                    <span>* / </span>
+                    <md-tooltip>
+                      {{historyResult.gradeInserted | hoisDate}}, &nbsp; {{historyResult.gradeInsertedBy}} 
+                    </md-tooltip>
+                  </span>
+
                   <span>
                     <span ng-class="{journalFinalResult: journalEntry.entryType.code === 'SISSEKANNE_L',
-                    journalBadResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
+                                    journalBadResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
+                    <span ng-if="!result.grade && result.journalEntryStudentHistories.length > 0"> - </span>
                     <md-tooltip ng-if="result.grade.value">
-                      {{result.gradeInserted | hoisDate}}
+                      {{result.gradeInserted | hoisDate}}, &nbsp; {{result.gradeInsertedBy}} 
                       <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
                     </md-tooltip>
                   </span>
@@ -67,7 +82,6 @@
               </div>
             </td>
             <td>
-              <!--md-button class="remove nomargin" ng-click="removeStudentFromJournal(row.studentId)">&times;</md-button-->
               <a class="remove nomargin" ng-click="removeStudentFromJournal(row.studentId)">&times;</a>
             </td>
           </tr>
@@ -86,14 +100,14 @@
         <h2>{{'journal.entries' | translate}}</h2>
       </div>
       <div layout="row" layout-align="start end" layout-sm="column" layout-xs="column" flex="60">
-        <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_T')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_T'])}}</span>
-        <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_E')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_E'])}}</span>
-        <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_I')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_I'])}}</span>
-        <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_H')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_H'])}}</span>
-        <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_P')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_P'])}}</span>
-        <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_R')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_R'])}}</span>
-        <span ng-if="journal.moduleOutcomesAsEntries" class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_O')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_O'])}}</span>
-        <span class="journal-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_L')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}</span>
+        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_T')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_T'])}}</span>
+        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_E')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_E'])}}</span>
+        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_I')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_I'])}}</span>
+        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_H')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_H'])}}</span>
+        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_P')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_P'])}}</span>
+        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_R')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_R'])}}</span>
+        <span ng-if="journal.moduleOutcomesAsEntries" class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_O')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_O'])}}</span>
+        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_L')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}</span>
       </div>
     </div>
     <md-table-container>

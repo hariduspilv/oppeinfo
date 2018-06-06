@@ -12,6 +12,10 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
                         allStudyForms: Classifier.queryForDropdown({mainClassCode: 'OPPEVORM', higher: school.higher || undefined, vocational: school.vocational || undefined}),
                         studyForms: [], curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyhigher: onlyhigher};
 
+    if ($scope.criteria.isValid === undefined) {
+      $scope.criteria.isValid = true;
+    }
+
     if(onlyhigher) {
       $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionHigher';
     } else if(!school.higher && school.vocational) {
@@ -107,6 +111,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
         $scope.formState.origStudyLevel = result.origStudyLevel;
         $scope.formState.specialities = result.specialities || [];
         $scope.formState.isVocational = result.isVocational;
+        $scope.formState.studyPeriodInYears = result.studyPeriodInYears;
 
         // try to restore values
         $scope.record.language = $scope.formState.languages.indexOf($scope.formState.language) !== -1 ? $scope.formState.language : null;

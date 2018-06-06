@@ -1,0 +1,118 @@
+<div class="ois-form-layout-padding" ng-cloak>
+  <div flex>
+    <form ng-submit="save()" novalidate layout="column" name="finalProtocolForm">
+      <div ng-include="'finalProtocol/templates/final.higher.protocol.header.tmpl.html'"></div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="10" flex-lg="20" flex-md="20" flex-sm="100" flex-xs="100">
+          <label ng-if="protocol.isFinalThesis" class="required">{{'finalProtocol.finalDateThesis' | translate}}</label>
+          <label ng-if="!protocol.isFinalThesis" class="required">{{'finalProtocol.finalDateExam' | translate}}</label>
+          <md-datepicker ng-model="protocol.finalDate" ng-change="selectedFinalDateChanged()" ng-disabled="!formState.canEditProtocol"
+            required></md-datepicker>
+        </md-input-container>
+      </div>
+
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'finalProtocol.committee' | translate}}</legend>
+        <div flex="30" flex-sm="100" flex-xs="100">
+          <md-input-container style="width: 100%">
+            <label>{{'finalProtocol.committee' | translate}}</label>
+            <md-select ng-model="protocol.committee" aria-label="committee" ng-change="selectedCommitteeChanged()" ng-disabled="!formState.canEditProtocol">
+              <md-option ng-value="null"></md-option>
+              <md-option ng-repeat="val in committees" ng-value="val.id">{{val.members}}</md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+        <md-table-container ng-if="committeeMembers">
+          <table md-table md-progress="protocol.$promise" class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'finalProtocol.name' | translate}}</th>
+                <th md-column>{{'finalProtocol.role' | translate}}</th>
+                <th md-column>{{'finalProtocol.present' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in committeeMembers | orderBy: 'memberName'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{row.memberName}}</td>
+                <td md-cell ng-if="row.isChairman">{{'finalProtocol.chairman' | translate}}</td>
+                <td md-cell ng-if="!row.isChairman">{{'finalProtocol.member' | translate}}</td>
+                <td md-cell>
+                  <md-checkbox aria-label="module" ng-model="row.isPresent" ng-disabled="!formState.canEditProtocol"></md-checkbox>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </fieldset>
+
+      <br/>
+
+      <div>
+        <div flex>
+          <md-table-container>
+            <table md-table md-progress="protocol.$promise" multiple="true">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'finalProtocol.id' | translate}}</th>
+                  <th md-column>{{'student.label' | translate}}</th>
+                  <th md-column>{{'student.idcode' | translate}}</th>
+                  <th md-column>{{'finalProtocol.studentGroup' | translate}}</th>
+                  <th md-column>{{'finalProtocol.grade' | translate}}</th>
+                  <th md-column ng-if="formState.canChangeConfirmedProtocolGrade">{{'finalProtocol.changeReason' | translate}}</th>
+                  <th md-column ng-repeat="grade in protocol.curriculumGrades">{{currentLanguageNameField(grade)}}</th>
+                  <th md-column ng-repeat="occupation in protocol.occupations">{{currentLanguageNameField(occupation)}}</th>
+                  <th md-column></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname' track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>{{$index + 1}}</td>
+                  <td md-cell>{{row.fullname}}</td>
+                  <td md-cell>{{row.idcode}}</td>
+                  <td md-cell>{{row.studentGroup}}</td>
+                  <td md-cell>
+                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code"
+                      aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol"></hois-select>
+                  </td>
+                  <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
+                    <md-input-container ng-if="row.gradeHasChanged">
+                      <input ng-model="row.addInfo" aria-label="addInfo" type="text" md-maxlength="255" ng-change="addInfoChanged(row);" required>
+                    </md-input-container>
+                    <span ng-if="row.addInfo && !row.gradeHasChanged">
+                      {{row.addInfo}}
+                    </span>
+                  </td>
+                  <td md-cell ng-repeat="grade in protocol.curriculumGrades">
+                    <md-checkbox ng-click="setCurriculumGrade(row, grade.id)" ng-checked="grade.id === row.curriculumGrade.id" 
+                      ng-disabled="!formState.canEditProtocol" aria-label="{{currentLanguageNameField(grade)}}"></md-checkbox>
+                  </td>
+                  <td md-cell ng-repeat="occupation in protocol.occupations">
+                    <md-checkbox ng-model="row.occupations[occupation.code].granted" aria-label="{{occupation.code}}" 
+                      ng-disabled="!formState.canEditProtocol || !row.canGrantOccupation" ng-change="setOccupation(row, occupation.code)"></md-checkbox>
+                      {{row.occupations[occupation.code].certificateNr}}
+                  </td>
+                  <td md-cell>
+                    <a ng-if="row.canBeDeleted && formState.canAddDeleteStudents" ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </div>
+      </div>
+
+      <br/>
+
+      <div layout="row">
+        <md-button ng-if="formState.canEditProtocol && protocol.status.code !== 'PROTOKOLL_STAATUS_K'" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-if="formState.canConfirm" class="md-raised md-primary" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <md-button ng-if="protocol.canBeDeleted" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <a ng-show="formState.protocolPdfUrl" ng-href="{{formState.protocolPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
+        <a ng-show="protocol.oisFile" ng-href="{{getUrl(protocol.oisFile, 'protocol')}}" target="_blank" rel="noopener noreferrer"
+          class="md-button md-raised">{{'finalProtocol.downloadSigned' | translate}}</a>
+        <md-button class="md-raised" ng-click="back('#/finalHigherProtocols/', finalProtocolForm)">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -6,7 +6,7 @@ public class CurriculumVersionOccupationModuleAutocompleteCommand extends Search
 
     private Long curriculumVersion;
     private Boolean curriculumModules;
-    private String curriculumVersionStatusCode;
+    private Boolean closedCurriculumVersionModules;
     private Long school;
     private Long student;
     private Boolean otherStudents;
@@ -27,12 +27,12 @@ public class CurriculumVersionOccupationModuleAutocompleteCommand extends Search
         this.curriculumModules = curriculumModules;
     }
 
-    public String getCurriculumVersionStatusCode() {
-        return curriculumVersionStatusCode;
+    public Boolean getClosedCurriculumVersionModules() {
+        return closedCurriculumVersionModules;
     }
 
-    public void setCurriculumVersionStatusCode(String curriculumVersionStatusCode) {
-        this.curriculumVersionStatusCode = curriculumVersionStatusCode;
+    public void setClosedCurriculumVersionModules(Boolean closedCurriculumVersionModules) {
+        this.closedCurriculumVersionModules = closedCurriculumVersionModules;
     }
 
     public Long getSchool() {

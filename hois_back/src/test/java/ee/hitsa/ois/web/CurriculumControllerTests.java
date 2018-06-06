@@ -68,6 +68,7 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto
 @Transactional
 public class CurriculumControllerTests {
 
+    private static final String ENDPOINT = "/curriculum";
     private static final String NAME = "CurriculumControllerTest2";
     private static final String CODE = "testCode2";
 
@@ -374,8 +375,15 @@ public class CurriculumControllerTests {
                 CurriculumDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
-        testCurriculum = curriculumRepository.getOne(responseEntity.getBody().getId());
+        Long curriculumId = responseEntity.getBody().getId();
+        testCurriculum = curriculumRepository.getOne(curriculumId);
         Assert.assertFalse(testCurriculum.getNameEt().equals("newName"));
+        
+        responseEntity = restTemplate.getForEntity(UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(curriculumId.toString())
+                .toUriString(), CurriculumDto.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertNotNull(responseEntity.getBody());
 
         // update curriculum text field and classifier field
         curriculumForm = responseEntity.getBody();
@@ -643,7 +651,7 @@ public class CurriculumControllerTests {
 //        occupations.add(getCurriculumOccupationDto("KUTSE_10411912"));
 //        curriculumForm.setOccupations(occupations);
 
-        curriculumForm.setModules(Sets.newLinkedHashSet(getCurriculumModuleDto(), getCurriculumModuleDto()));
+        //curriculumForm.setModules(Sets.newLinkedHashSet(getCurriculumModuleDto(), getCurriculumModuleDto()));
     }
 
     private static CurriculumSpecialityDto getCurriculumSpecialityDto() {

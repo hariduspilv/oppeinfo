@@ -66,6 +66,8 @@ public class School extends BaseEntityWithId implements Translatable {
     private String adDomain;
     private String adBase;
     private String adIdcodeField;
+    private String nameGenitiveEt;
+    private Boolean isMinorStudentAbsence = Boolean.FALSE;
 
     @JsonIgnore
     @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -243,5 +245,21 @@ public class School extends BaseEntityWithId implements Translatable {
     public void setAdIdcodeField(String adIdcodeField) {
         this.adIdcodeField = adIdcodeField;
     }
-    
+
+    public String getNameGenitiveEt() {
+        return nameGenitiveEt;
+    }
+
+    public void setNameGenitiveEt(String nameGenitiveEt) {
+        this.nameGenitiveEt = nameGenitiveEt;
+    }
+
+    public Boolean getIsMinorStudentAbsence() {
+        return isMinorStudentAbsence;
+    }
+
+    public void setIsMinorStudentAbsence(Boolean isMinorStudentAbsence) {
+        this.isMinorStudentAbsence = isMinorStudentAbsence;
+    }
+
 }

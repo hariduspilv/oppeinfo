@@ -71,7 +71,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
 
     $scope.updateAllApplicationCheckBoxes = function (value) {
       $scope.applications.forEach(function (app, index) {
-        if (index < $scope.allowedCount) {
+        if (index < $scope.allowedCount || !angular.isNumber($scope.allowedCount)) {
           $scope.selected[app.id] = value;
         }
       });

@@ -41,6 +41,16 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     }
   };
 
+  $scope.getGrade = function (gradeCode) {
+    if ($scope.grades) {
+      for (var i = 0; i < $scope.grades.length; i++) {
+        if ($scope.grades[i].code === gradeCode) {
+          return $scope.grades[i];
+        }
+      } 
+    }
+  };
+
   $scope.openAddFileDialog = function () {
     dialogService.showDialog('practiceJournal/practice.journal.entry.add.file.dialog.html', function (dialogScope) {
       dialogScope.addedFiles = $scope.practiceJournal.practiceJournalFiles;

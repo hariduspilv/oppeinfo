@@ -2,15 +2,6 @@
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
-      .when('/thesisTopics', {
-        templateUrl: 'fakePages/fake.html',
-        controller: 'fakeController',
-        controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPTEEMA]
-        }
-      })
       .when('/thesisProtocols', {
         templateUrl: 'fakePages/fake.html',
         controller: 'fakeController',
@@ -18,39 +9,6 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPPROTOKOLL]
-        }
-      })
-      .when('/forms', {
-        templateUrl: 'fakePages/fake.html',
-        controller: 'fakeController',
-        controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPBLANKETT]
-        }
-      })
-      .when('/documentsPreparation', {
-        templateUrl: 'fakePages/fake.html',
-        controller: 'fakeController',
-        controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-        data: {
-          authorizedRoles: [
-            USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_DIPLOM,
-            USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT
-          ]
-        }
-      })
-      .when('/documentsPrint', {
-        templateUrl: 'fakePages/fake.html',
-        controller: 'fakeController',
-        controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-        data: {
-          authorizedRoles: [
-            USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_DIPLOM,
-            USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT
-          ]
         }
       })
       .when('/viewTimetable', {

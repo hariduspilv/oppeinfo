@@ -129,7 +129,7 @@
           <div flex layout="row" layout-align="center">
             <a class="sidenav-link2 very-small-caption" href="mailto:tahvel@hitsa.ee" md-colors="{color: 'background-400'}">tahvel@hitsa.ee</a>
           </div>
-          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="very-small-caption">Versioon 0.6.9/20180427</span></div>
+          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="very-small-caption">Versioon 0.7.0/20180606</span></div>
           <div flex layout="row" ng-show="state.currentUser" layout-align="center">
             <a class="sidenav-link" href="https://kratt.edu.ee" target="_blank" rel="noopener">Kratt</a>
           </div>
@@ -229,6 +229,8 @@
   <script src="components/hois.value.js"></script>
   <script src="components/hois.time.js"></script>
   <script src="components/hois.date.filter.js"></script>
+  <script src="components/hois.study.period.filter.js"></script>
+  <script src="components/md.maxlength.js"></script>
 
   <script src="contract/contract.js"></script>
   <script src="contract/contract.view.js"></script>
@@ -247,10 +249,16 @@
   <script src="directive/directive.coordinator.js"></script>
   <script src="directive/directive.route.js"></script>
 
+  <script src="document/document.js"></script>
+  <script src="document/document.route.js"></script>
+
   <script src="exam/exam.js"></script>
   <script src="exam/exam.route.js"></script>
 
   <script src="fakePages/fake.js"></script>
+
+  <script src="form/form.js"></script>
+  <script src="form/form.route.js"></script>
 
   <script src="generalMessage/general.message.js"></script>
   <script src="generalMessage/general.message.route.js"></script>
@@ -335,13 +343,16 @@
   <script src="services/ekis.service.js"></script>
   <script src="services/error.js"></script>
   <script src="services/form.utils.js"></script>
+  <script src="services/higher.grade.js"></script>
   <script src="services/inaadress.service.js"></script>
   <script src="services/menu.js"></script>
   <script src="services/message.js"></script>
-  <script src="services/protocol.confirmation.service.js"></script>
   <script src="services/ois.file.service.js"></script>
+  <script src="services/protocol.utils.js"></script>
+  <script src="services/vocational.grade.js"></script>
   <script src="services/query.utils.js"></script>
 
+  <script src="school/final.doc.signer.js"></script>
   <script src="school/school.js"></script>
   <script src="school/school.department.js"></script>
   <script src="school/school.edit.js"></script>
@@ -358,7 +369,6 @@
   <script src="student/student.js"></script>
   <script src="student/student.view.js"></script>
   <script src="student/student.route.js"></script>
-  <script src="student/vocational.grade.js"></script>
   <script src="student/student.journal.js"></script>
 
   <script src="studentAbsence/absence.route.js"></script>
@@ -419,15 +429,19 @@
   <script src="teacher/teacher.occupation.js"></script>
   <script src="teacher/teacher.route.js"></script>
 
-  <script src="finalExamProtocol/higher/final.exam.higher.protocol.list.js"></script>
-  <script src="finalExamProtocol/higher/final.exam.higher.protocol.new.js"></script>
-  <script src="finalExamProtocol/higher/final.exam.higher.protocol.js"></script>
-  <script src="finalExamProtocol/higher/final.exam.higher.protocol.route.js"></script>
+  <script src="finalThesis/final.thesis.js"></script>
+  <script src="finalThesis/final.thesis.list.js"></script>
+  <script src="finalThesis/final.thesis.route.js"></script>
 
-  <script src="finalExamProtocol/vocational/final.exam.vocational.protocol.list.js"></script>
-  <script src="finalExamProtocol/vocational/final.exam.vocational.protocol.new.js"></script>
-  <script src="finalExamProtocol/vocational/final.exam.vocational.protocol.js"></script>
-  <script src="finalExamProtocol/vocational/final.exam.vocational.protocol.route.js"></script>
+  <script src="finalProtocol/higher/final.higher.protocol.list.js"></script>
+  <script src="finalProtocol/higher/final.higher.protocol.new.js"></script>
+  <script src="finalProtocol/higher/final.higher.protocol.js"></script>
+  <script src="finalProtocol/higher/final.higher.protocol.route.js"></script>
+
+  <script src="finalProtocol/vocational/final.vocational.protocol.list.js"></script>
+  <script src="finalProtocol/vocational/final.vocational.protocol.new.js"></script>
+  <script src="finalProtocol/vocational/final.vocational.protocol.js"></script>
+  <script src="finalProtocol/vocational/final.vocational.protocol.route.js"></script>
 
   <script src="persons/persons.js"></script>
   <script src="persons/persons.route.js"></script>

@@ -218,7 +218,7 @@ public class DeclarationService {
         Query q = em.createNativeQuery("select distinct shr.subject_id, shr.grade, shr.grade_date " + 
                 "from student_higher_result shr " +
                 "where shr.student_id = ?1 " +
-                "order by shr.grade_date asc");
+                "order by shr.grade_date desc");
         q.setParameter(1, studentId);
         
         List<?> data = q.getResultList();

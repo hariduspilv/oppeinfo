@@ -143,7 +143,7 @@
 				<md-input-container  flex="45">
 					<label>{{'curriculum.educationLevel' | translate}}</label>
 					<hois-classifier-select ng-model="curriculum.educationLevel" main-classifier-code="HARIDUSTASE" watch-model="curriculum.origStudyLevel"
-            filter-values connect-main-classifier-code="HARIDUSTASE" select-first-value disabled ng-disabled="formState.notEditableBasicData"></hois-classifier-select>
+            filter-values connect-main-classifier-code="HARIDUSTASE" select-first-value disabled></hois-classifier-select>
 				</md-input-container>
 				<md-input-container flex="50" flex-offset="5">
 					<label>{{'curriculum.studyLanguage' | translate}}</label>
@@ -598,6 +598,7 @@
       </div>
 	  <a href="{{curriculumPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="curriculum.id">{{'main.button.printGeneral' | translate}}</a>
 	  <a href="{{curriculumModulesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="curriculum.id">{{'main.button.printModules' | translate}}</a>
+	  <a href="{{curriculumCompetencesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="curriculum.id">{{'main.button.printCompetences' | translate}}</a>
       <md-button class="md-raised md-default" ng-click="back('#/curriculum', vocationalCurriculumForm)">{{'main.button.back' | translate}}</md-button>
     </div>
 </div>

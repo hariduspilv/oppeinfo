@@ -14,13 +14,18 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     });
     var baseUrl = '/timetables';
     $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
-    QueryUtils.loadingWheel($scope, true);
-    QueryUtils.endpoint(baseUrl + '/:id/createVocationalPlan').search({
-      id: $scope.timetableId
-    }).$promise.then(function (result) {
-      initializeData(result, $route.current.params.groupId, null);
-      QueryUtils.loadingWheel($scope, false);
-    });
+
+    function getVocationalPlan() {
+      QueryUtils.loadingWheel($scope, true);
+      QueryUtils.endpoint(baseUrl + '/:id/createVocationalPlan').search({
+        id: $scope.timetableId
+      }).$promise.then(function (result) {
+        initializeData(result, $route.current.params.groupId, null);
+        QueryUtils.loadingWheel($scope, false);
+      });
+    }
+
+    getVocationalPlan();
 
     function initializeData(result, selectedGroupId, selectedGroups) {
       var displayPeriodLessons = $scope.plan.displayPeriodLessons ? $scope.plan.displayPeriodLessons : false;
@@ -337,7 +342,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         dialogScope.lesson.startTime = new Date(currentEvent.start);
         dialogScope.lesson.endTime = new Date(currentEvent.end);
         if (currentEvent.rooms) {
-          dialogScope.lesson.eventRooms = currentEvent.rooms;
+          dialogScope.lesson.eventRooms = angular.copy(currentEvent.rooms);
         } else {
           dialogScope.lesson.eventRooms = [];
         }
@@ -375,12 +380,30 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
             return filtered;
           }, [])
         };
-        QueryUtils.endpoint(baseUrl + '/saveVocationalEventRoomsAndTimes').save(query).$promise.then(function (result) {
-          initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
+
+        var occupiedQuery = angular.copy(query);
+        occupiedQuery.rooms = occupiedQuery.rooms.reduce(function (filtered, room) {
+          filtered.push(room.id);
+          return filtered;
+        }, []);
+
+        QueryUtils.endpoint(baseUrl + '/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
+          if(result.occupied) {
+            dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
+              saveEventRoomsAndTimes(query, currGroupId);
+            });
+          } else {
+            saveEventRoomsAndTimes(query, currGroupId);
+          }
         });
       });
     };
 
+    function saveEventRoomsAndTimes(query, currGroupId) {
+      QueryUtils.endpoint(baseUrl + '/saveVocationalEventRoomsAndTimes').save(query).$promise.then(function (result) {
+        initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
+      });
+    }
 
     $scope.saveEvent = function (params) {
       var currGroupId = $scope.plan.selectedGroup;
@@ -401,10 +424,32 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         oldEventId: params.oldEventId,
         capacityType: params.capacityType
       };
+
+      var existsQuery = {
+        journal: journalId,
+        timetable: $scope.timetableId,
+        lessonTime: this.lessonTime.id,
+        selectedDay: selectedDay,
+      };
+
+      QueryUtils.endpoint(baseUrl + '/timetableTimeOccupied').get(existsQuery).$promise.then(function (result) {
+        if (result.occupied) {
+          dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
+            saveVocationalEvent(query, currGroupId);
+          }, function () {
+            getVocationalPlan();
+          });
+        } else {
+          saveVocationalEvent(query, currGroupId);
+        }
+      });
+    };
+
+    function saveVocationalEvent(query, currGroupId) {
       QueryUtils.endpoint(baseUrl + '/saveVocationalEvent').save(query).$promise.then(function (result) {
         initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
       });
-    };
+    }
 
     $scope.range = function (count) {
       var array = [];

@@ -47,7 +47,7 @@ public class CurriculumVersion extends BaseEntityWithId {
     @Size(max=4000)
     private String teachers;
 
-    @Size(max=4000)
+    @Size(max=20000)
     private String description;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

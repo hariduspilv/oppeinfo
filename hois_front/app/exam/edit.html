@@ -120,7 +120,7 @@
       </div>
 
       <md-autocomplete ng-if="record.id" flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0"
-          ng-disabled="record.places > 0 && record.students.length >= record.places"
+          ng-disabled="record.places >= 0 && record.students.length >= record.places"
           md-floating-label="{{'exam.addStudent' | translate}}"
           md-min-length="2"
           md-items="item in lookupStudents(queryText)"

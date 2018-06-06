@@ -29,11 +29,12 @@ angular.module('hitsaOis').controller('SchoolEditController', ['$scope', '$route
     }
 
     function withLogo(afterLogoLoad) {
-      if($scope.school.deleteCurrentLogo) {
+      if($scope.logoFiles[0]) {
+        $scope.school.deleteCurrentLogo = null;
+        $scope.school.logo = oisFileService.getFromLfFile($scope.logoFiles[0], afterLogoLoad);
+      } else if($scope.school.deleteCurrentLogo) {
         $scope.school.logo = null;
         afterLogoLoad();
-      } else if($scope.logoFiles[0]) {
-        $scope.school.logo = oisFileService.getFromLfFile($scope.logoFiles[0], afterLogoLoad);
       } else {
         afterLogoLoad();
       }

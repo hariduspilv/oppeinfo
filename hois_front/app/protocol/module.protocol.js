@@ -1,10 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolController', function ($scope, $route, Classifier, $q, ArrayUtils, ProtocolConfirmationService, QueryUtils, message, $location, dialogService, $mdDialog, $window, oisFileService, config, $timeout, $filter) {
-  var endpoint = '/moduleProtocols/';
+angular.module('hitsaOis').controller('ModuleProtocolController', function ($scope, $route, Classifier, $q, ArrayUtils, ProtocolUtils, QueryUtils, message, $location, dialogService, $mdDialog, $window, oisFileService, config, $timeout, $filter) {
+  var endpoint = '/moduleProtocols';
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', status: 'PROTOKOLL_STAATUS' });
-  var studentClMapper = Classifier.valuemapper({ journalResults: 'KUTSEHINDAMINE', status: 'OPPURSTAATUS' });
   var editForbiddenGrades = ['KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_X'];
   var viewForbiddenGrades = ['KUTSEHINDAMINE_X'];
   var allGrades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
@@ -105,70 +104,19 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     return results;
   }
 
-  function allProtocolStudentsGraded() {
-    if (!angular.isDefined($scope.protocol) || !angular.isArray($scope.protocol.protocolStudents)) {
-      return false;
-    }
-
-    var allGraded = true;
-    for (var i = 0; i < $scope.protocol.protocolStudents.length; i++) {
-      if (!angular.isString($scope.protocol.protocolStudents[i].grade) || $scope.protocol.protocolStudents[i].grade.trim().length === 0) {
-        allGraded = false;
-        break;
-      }
-    }
-    return allGraded;
-  }
-
-  function allChangedGradesHaveAddInfo() {
-    if (!angular.isDefined($scope.protocol) || !angular.isArray($scope.protocol.protocolStudents)) {
-      return false;
-    }
-
-    var allHaveAddInfo = true;
-    if ($scope.formState.canEditConfirmedProtocol) {
-      for (var i = 0; i < $scope.protocol.protocolStudents.length; i++) {
-        if ($scope.protocol.protocolStudents[i].gradeHasChanged) {
-          var addInfo = $scope.protocol.protocolStudents[i].addInfo;
-          addInfo = addInfo !== undefined && addInfo !== null ? addInfo.split(' ').join('') : null;
-          
-          if (!addInfo) {
-            allHaveAddInfo = false;
-            break;
-          }
-        }
-      }
-    }
-    return allHaveAddInfo;
-  }
-
-  function canChangeConfirmedProtocolGrade() {
-    return canEditConfirmedProtocol() && $scope.protocol.status.code === 'PROTOKOLL_STAATUS_K';
-  }
-
-  function canEditConfirmedProtocol() {
-    return ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M') &&
-      ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_K_TEEMAOIGUS_MOODULPROTOKOLL");
-  }
-
-  function canConfirm() {
-    return allProtocolStudentsGraded() && allChangedGradesHaveAddInfo() && 
-      ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M') &&
-      ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_K_TEEMAOIGUS_MOODULPROTOKOLL");
-  }
-
   function entityToDto(entity) {
     $q.all(clMapper.promises).then(function () {
+      $scope.moduleProtocolForm.$setPristine();
       $scope.protocol = clMapper.objectmapper(entity);
       $scope.savedStudents = angular.copy($scope.protocol.protocolStudents);
       $scope.getUrl = oisFileService.getUrl;
       loadJournals();
       loadOutcomes();
-      $scope.formState.canEditConfirmedProtocol = canEditConfirmedProtocol();
-      $scope.formState.canChangeConfirmedProtocolGrade = canChangeConfirmedProtocolGrade();
-      $scope.formState.canAddDeleteStudents = $scope.protocol.status.code !== 'PROTOKOLL_STAATUS_K' && $scope.protocol.canBeEdited;
-      $scope.formState.canConfirm = $scope.protocol.status.code !== 'PROTOKOLL_STAATUS_K' && canConfirm();
-      $scope.formState.protocolPdfUrl = config.apiUrl + endpoint + entity.id + '/print/protocol.pdf';
+      $scope.formState.canEditProtocol = ProtocolUtils.canEditProtocol($scope.auth, $scope.protocol);
+      $scope.formState.canChangeConfirmedProtocolGrade = ProtocolUtils.canChangeConfirmedProtocolGrade($scope.auth, $scope.protocol);
+      $scope.formState.canAddDeleteStudents = ProtocolUtils.canAddDeleteStudents($scope.auth, $scope.protocol);
+      $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.protocol);
+      $scope.formState.protocolPdfUrl = config.apiUrl + endpoint + '/' + entity.id + '/print/protocol.pdf';
     });
   }
 
@@ -188,20 +136,11 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
         }
       }
     }
-
-    if ($scope.protocol.status.code === 'PROTOKOLL_STAATUS_K' && $scope.auth.isAdmin()) {
-      $scope.formState.canConfirm = canConfirm();
-    }
+    $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.protocol);
   };
 
-  $scope.addInfoChanged = function (row) {
-    if (row.addInfo && row.addInfo.charAt(0) === ' ') {
-      row.addInfo = null;
-    }
-    
-    if ($scope.protocol.status.code === 'PROTOKOLL_STAATUS_K' && $scope.auth.isAdmin()) {
-      $scope.formState.canConfirm = canConfirm();
-    }
+  $scope.addInfoChanged = function () {
+    $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.protocol);
   };
 
   if ($route.current.locals.entity) {
@@ -210,7 +149,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
 
   $scope.deleteProtocolStudent = function (protocolStudent) {
     dialogService.confirmDialog({prompt: 'moduleProtocol.prompt.deleteStudent'}, function() {
-      var ProtocolStudentEndpoint = QueryUtils.endpoint('/moduleProtocols/' + $scope.protocol.id + '/removeStudent');
+      var ProtocolStudentEndpoint = QueryUtils.endpoint(endpoint + '/' + $scope.protocol.id + '/removeStudent');
       var removedStudent = new ProtocolStudentEndpoint(protocolStudent);
       removedStudent.$delete().then(function (protocol) {
           message.info('main.messages.delete.success');
@@ -222,18 +161,10 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
   $scope.addProtocolStudents = function () {
     dialogService.showDialog('protocol/module.protocol.addStudent.dialog.html', function (dialogScope) {
       dialogScope.selectedStudents = [];
-      var query = QueryUtils.endpoint(endpoint + $scope.protocol.id + '/otherStudents').query();
-      dialogScope.tabledata = {
-        $promise: query.$promise,
-      };
-      query.$promise.then(function (result) {
-        dialogScope.tabledata.content = studentClMapper.objectmapper(result);
-      });
-      dialogScope.journalResultsView = function (results) {
-        return results.map(function (it) { return it.value; }).join(' / ');
-      };
+      QueryUtils.createQueryForm(dialogScope, endpoint + '/' + $scope.protocol.id + '/otherStudents', {});
+      dialogScope.loadData();
     }, function (submittedDialogScope) {
-      QueryUtils.endpoint(endpoint + $scope.protocol.id + '/addStudents').save({
+      QueryUtils.endpoint(endpoint + '/' + $scope.protocol.id + '/addStudents').save({
         version: $scope.protocol.version,
         protocolStudents: submittedDialogScope.selectedStudents.map(function (it) { return { studentId: it }; })
       }, function (result) {
@@ -260,21 +191,38 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     return grade ? grade.value : undefined;
   };
 
+  function validationPassed() {
+    if(!$scope.moduleProtocolForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      $scope.moduleProtocolForm.$setSubmitted();
+      return false;
+    }
+    return true;
+  }
+
   $scope.confirm = function () {
+    if(!validationPassed()) {
+      return;
+    }
+
     var data = {
       version: $scope.protocol.version,
       protocolStudents: $scope.protocol.protocolStudents,
     };
 
     if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      ProtocolConfirmationService.signBeforeConfirm(endpoint + $scope.protocol.id, data, entityToDto);
+      ProtocolUtils.signBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, entityToDto);
     } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      ProtocolConfirmationService.mobileSignBeforeConfirm(endpoint + $scope.protocol.id, data, entityToDto);
+      ProtocolUtils.mobileSignBeforeConfirm(endpoint  + '/' + $scope.protocol.id, data, entityToDto);
     }
   };
 
-  var ModuleProtocolEndpoint = QueryUtils.endpoint('/moduleProtocols');
+  var ModuleProtocolEndpoint = QueryUtils.endpoint(endpoint);
   $scope.save = function () {
+    if(!validationPassed()) {
+      return;
+    }
+    
     new ModuleProtocolEndpoint({ id: $scope.protocol.id, version: $scope.protocol.version, protocolStudents: $scope.protocol.protocolStudents })
       .$update().then(function (result) {
         message.info('main.messages.create.success');
@@ -295,7 +243,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
   }
 
   $scope.calculate = function() {
-    QueryUtils.endpoint("/moduleProtocols/" + $scope.protocol.id + "/calculate").query($scope.calculateGrades).$promise.then(function(response){
+    QueryUtils.endpoint(endpoint + '/' + $scope.protocol.id + "/calculate").query($scope.calculateGrades).$promise.then(function(response){
       $scope.calculateGrades.protocolStudents = [];
       setCalculatedGrades(response);
       message.info('moduleProtocol.messages.calculated');
@@ -303,7 +251,6 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
   };
 
   var Endpoint = QueryUtils.endpoint(endpoint);
-
   $scope.delete = function() {
     dialogService.confirmDialog({prompt: 'moduleProtocol.prompt.delete'}, function() {
       new Endpoint($scope.protocol).$delete().then(function(){

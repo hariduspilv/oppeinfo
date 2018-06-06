@@ -1,0 +1,36 @@
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="name">{{'finalDocSigner.name' | translate}}</th>
+            <th md-column md-order-by="position">{{'finalDocSigner.position' | translate}}</th>
+            <th md-column md-order-by="isFirst">{{'finalDocSigner.isFirst' | translate}}</th>
+            <th md-column md-order-by="isValid">{{'finalDocSigner.isValid' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.name}}</td>
+            <td md-cell>{{::row.position}}</td>
+            <td md-cell>{{::row.isFirst ? 'main.yes' : 'main.no' | translate}}</td>
+            <td md-cell>{{::row.isValid ? 'main.yes' : 'main.no' | translate}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LOPDOKALLKIRI')" 
+                ng-href="#/school/finaldocsigners/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+
+  <div layout="row">
+    <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LOPDOKALLKIRI')" ng-href="#/school/finaldocsigners/new">{{'main.button.create' | translate}}</md-button>
+  </div>
+</div>

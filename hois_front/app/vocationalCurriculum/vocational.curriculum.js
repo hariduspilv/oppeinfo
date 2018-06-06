@@ -138,6 +138,7 @@ angular.module('hitsaOis')
 
     $scope.curriculumPdfUrl = config.apiUrl + baseUrl + '/print/' + id + '/general.pdf';
     $scope.curriculumModulesPdfUrl = config.apiUrl + baseUrl + '/print/' + id + '/modules.pdf';
+    $scope.curriculumCompetencesPdfUrl = config.apiUrl + baseUrl + '/print/' + id + '/competences.pdf';
 
     $scope.$watchCollection('curriculum.curriculumOccupations', function() {
         $scope.validation.occupationsLength = $scope.curriculum && $scope.curriculum.curriculumOccupations ? $scope.curriculum.curriculumOccupations.length : 0;

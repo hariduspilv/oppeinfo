@@ -23,10 +23,15 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
     var Endpoint = QueryUtils.endpoint(baseUrl);
 
     $scope.equipmentDefs = Classifier.queryForDropdown({mainClassCode: 'SEADMED'});
-    $scope.formState = {};
+    $scope.formState = {roomUniqueQuery: {id: id}};
+
+    function updateUniqueCommand() {
+      $scope.formState.roomUniqueQuery.url = baseUrl + '/unique/' + ($scope.record.building || '0');
+    }
 
     function afterLoad(record) {
       $scope.formState.roomEquipment = (record.roomEquipment || []).map(function(e) { return {equipment: $scope.equipmentDefs[e.equipment], equipmentCount: e.equipmentCount}; });
+      updateUniqueCommand();
     }
 
     $scope.equipmentDefs.$promise.then(function() {
@@ -78,6 +83,11 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
 
     $scope.delete = function() {
       FormUtils.deleteRecord($scope.record, '/rooms/search?_noback', {prompt: 'room.deleteconfirm'});
+    };
+
+    $scope.buildingChanged = function() {
+      updateUniqueCommand();
+      $scope.roomForm.code.$validate();
     };
   }
 ]);

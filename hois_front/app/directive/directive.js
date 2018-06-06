@@ -15,10 +15,15 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $scope.formState.excludedTypes.push('KASKKIRI_TYHIST');
     }
 
+    var occupationMap;
     if(!$scope.formState.school.higher) {
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
       $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
       $scope.formState.excludedTypes.push('KASKKIRI_VALIS');
+      var occupations = Classifier.queryForDropdown({mainClassCodes: 'KUTSE,OSAKUTSE'});
+      occupations.$promise.then(function() {
+        occupationMap = Classifier.toMap(occupations);
+      });
     }
 
     function setScholarshipEditable() {
@@ -30,8 +35,24 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $scope.formState.templateUrl = 'directive/directive.type.'+templateId+'.edit.html';
     }
 
-    function studentConverter(student) {
-      return DataUtils.convertStringToDates(student, ['startDate', 'endDate']);
+    function mapStudentOccupations(student) {
+      if (student.occupations) {
+        student.occupations = student.occupations.map(function(code) {
+          return occupationMap[code];
+        });
+      }
+    }
+
+    function studentConverter(students) {
+      var result = DataUtils.convertStringToDates(students, ['startDate', 'endDate']);
+      if (occupationMap) {
+        if (angular.isArray(result)) {
+          result.forEach(mapStudentOccupations);
+        } else {
+          mapStudentOccupations(result);
+        }
+      }
+      return result;
     }
 
     function afterLoad(result) {
@@ -118,7 +139,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     function studentsToDirective(students, callback) {
       var data = {type: $scope.record.type, scholarshipType: $scope.record.scholarshipType, canceledDirective: canceledDirective,
                   curriculumVersion: $scope.formState.curriculumVersion, studyLevel: $scope.formState.studyLevel,
-                  students: students.map(function(i) { return i.id; })};
+                  students: students.map(function(i) { return i.id; }), isHigher: $scope.record.isHigher};
 
       QueryUtils.endpoint(baseUrl+'/directivedata').save(data, callback);
     }
@@ -196,6 +217,16 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       var data = {type: $scope.record.type};
       if(data.type === 'KASKKIRI_EKSMAT') {
         data.application = true;
+      } else if(data.type === 'KASKKIRI_LOPET') {
+        if (!angular.isDefined($scope.record.isHigher)) {
+          var school = $scope.formState.school;
+          if (school.higher && school.vocational) {
+            return; // let user choose
+          } else {
+            $scope.record.isHigher = school.higher;
+          }
+        }
+        data.isHigher = $scope.record.isHigher;
       }
       var scholarship = data.type === 'KASKKIRI_STIPTOET' || data.type === 'KASKKIRI_STIPTOETL';
       if(scholarship) {
@@ -320,8 +351,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
           row._found = true;
           row.firstname = response.firstname;
           row.lastname = response.lastname;
-          row.birthdate = response.birthdate;
-          row.sex = response.sex;
+          row.birthdate = response.birthdate || DataUtils.birthdayFromIdcode(idcode);
+          row.sex = response.sex || DataUtils.sexFromIdcode(idcode);
           row.citizenship = response.citizenship;
         }).catch(function(response) {
           if(response.status === 404) {
@@ -423,7 +454,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
                   }, function() {
                     // remove invalid students and do the whole process again
                     invalidStudents.forEach(function(it) {
-                      $scope.deleteStudent(it.idcode);
+                      var row = $scope.record.students.find(function(s) { return s.student === it.student; });
+                      if(row) {
+                        $scope.deleteStudent(row);
+                      }
                     });
                     deletedInvalid = true;
                     sendToConfirm();
@@ -450,13 +484,29 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     var clMapper = Classifier.valuemapper({status: 'KASKKIRI_STAATUS'});
 
     $scope.formState = {school: Session.school || {}};
+    
+    var occupationMap;
+    if(!$scope.formState.school.higher) {
+      var occupations = Classifier.queryForDropdown({mainClassCodes: 'KUTSE,OSAKUTSE'});
+      occupations.$promise.then(function() {
+        occupationMap = Classifier.toMap(occupations);
+      });
+    }
+
     $scope.record = QueryUtils.endpoint(baseUrl + '/:id/view').search({id: id});
 
     $scope.record.$promise.then(function() {
       var templateId = $scope.record.type === 'KASKKIRI_TYHIST' ? $scope.record.canceledDirectiveType.substr(9).toLowerCase() : ($scope.record.type ? $scope.record.type.substr(9).toLowerCase() : 'unknown');
       $scope.formState.templateUrl = 'directive/directive.type.'+templateId+'.view.html';
       clMapper.objectmapper($scope.record.cancelingDirectives || []);
-      $scope.record.students.forEach(function(it) { it._foreign = !it.idcode; });
+      $scope.record.students.forEach(function(it) {
+        it._foreign = !it.idcode;
+        if (occupationMap && it.occupations) {
+          it.occupations = it.occupations.map(function(code) {
+            return occupationMap[code];
+          });
+        }
+      });
     });
 
     $scope.cancelDirective = function() {

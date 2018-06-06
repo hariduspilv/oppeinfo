@@ -9,6 +9,8 @@ public class ModuleProtocolStudentSelectDto {
     private String fullname;
     private String idcode;
     private String status;
+    private String studentGroup;
+    private AutocompleteResult curriculum;
     private List<String> journalResults = new ArrayList<>();
 
     public Long getStudentId() {
@@ -41,6 +43,22 @@ public class ModuleProtocolStudentSelectDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+    
+    public String getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(String studentGroup) {
+        this.studentGroup = studentGroup;
+    }
+
+    public AutocompleteResult getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(AutocompleteResult curriculum) {
+        this.curriculum = curriculum;
     }
 
     public List<String> getJournalResults() {

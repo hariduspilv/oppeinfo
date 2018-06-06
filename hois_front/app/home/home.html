@@ -78,7 +78,7 @@
   </hois-collapsable>
 
 
-    <hois-collapsable expanded="true" class="hois-collapse2" ng-show="showUnreadMessages && unreadMessages.content.length > 0" label="('message.messages' | translate)" expanded="false">
+    <hois-collapsable expanded="true" class="hois-collapse2" ng-show="showUnreadMessages && unreadMessages.content.length > 0" label="('message.messages' | translate)">
     <!--h5 ng-show="showUnreadMessages" ng-if="unreadMessages.content.length === 0">{{'message.noNewMessages' | translate}}</h5-->
     <md-table-container ng-show="showUnreadMessages">
       <table md-table md-progress="unreadMessages.$promise">
@@ -102,10 +102,7 @@
     </md-table-container>
     </hois-collapsable>
 
-
-    <div ng-controller="StudentHomeController">
-      <div ng-if="sessionStudentId" ng-include="'home/home.student.html'"></div>
-    </div>
+    <div ng-if="sessionStudentId" ng-include="'home/home.student.html'"></div>
 
   </div>
 

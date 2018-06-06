@@ -20,15 +20,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.FinalDocSigner;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.EmailGeneratorService;
+import ee.hitsa.ois.service.FinalDocSignerService;
 import ee.hitsa.ois.service.SchoolDepartmentService;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.StudyYearService;
@@ -40,6 +44,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.web.commandobject.FinalDocSignerForm;
 import ee.hitsa.ois.web.commandobject.GenerateEmailCommand;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentForm;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentSearchCommand;
@@ -52,6 +57,7 @@ import ee.hitsa.ois.web.commandobject.StudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.StudyYearForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
+import ee.hitsa.ois.web.dto.FinalDocSignerDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentDto;
 import ee.hitsa.ois.web.dto.SchoolDto;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
@@ -78,6 +84,8 @@ public class SchoolController {
     private TeacherOccupationService teacherOccupationService;
     @Autowired
     private StudyYearService studyYearService;
+    @Autowired
+    private FinalDocSignerService finalDocSignerService;
 
     @GetMapping
     public Page<SchoolDto> search(HoisUserDetails user, @Valid SchoolSearchCommand schoolSearchCommand, Pageable pageable) {
@@ -305,6 +313,40 @@ public class SchoolController {
     public Map<String, ?> generateEmail(HoisUserDetails user, @Valid @RequestBody GenerateEmailCommand name) {
         UserUtil.assertIsSchoolAdmin(user);
         return Collections.singletonMap("email", emailGeneratorService.generateEmail(getSchool(user), name.getFirstname(), name.getLastname()));
+    }
+
+    @GetMapping("/finaldocsigners")
+    public Page<FinalDocSignerDto> searchFinalDocSigners(HoisUserDetails user, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_LOPDOKALLKIRI);
+        return finalDocSignerService.search(user.getSchoolId(), pageable);
+    }
+
+    @GetMapping("/finaldocsigners/{id:\\d+}")
+    public FinalDocSignerDto getFinalDocSigner(HoisUserDetails user, @WithEntity FinalDocSigner finalDocSigner) {
+        UserUtil.assertIsSchoolAdmin(user, finalDocSigner.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_LOPDOKALLKIRI);
+        return FinalDocSignerDto.of(finalDocSigner);
+    }
+
+    @PostMapping("/finaldocsigners")
+    public HttpUtil.CreatedResponse createFinalDocSigner(HoisUserDetails user, @Valid @RequestBody FinalDocSignerForm form) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LOPDOKALLKIRI);
+        return HttpUtil.created(finalDocSignerService.create(user, form));
+    }
+
+    @PutMapping("/finaldocsigners/{id:\\d+}")
+    public FinalDocSignerDto saveFinalDocSigner(HoisUserDetails user, 
+            @WithVersionedEntity(versionRequestBody = true) FinalDocSigner finalDocSigner, 
+            @Valid @RequestBody FinalDocSignerForm form) {
+        UserUtil.assertIsSchoolAdmin(user, finalDocSigner.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LOPDOKALLKIRI);
+        return getFinalDocSigner(user, finalDocSignerService.save(finalDocSigner, form));
+    }
+
+    @DeleteMapping("/finaldocsigners/{id:\\d+}")
+    public void deleteFinalDocSigner(HoisUserDetails user, 
+            @WithVersionedEntity(versionRequestParam = "version") FinalDocSigner finalDocSigner, 
+            @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        UserUtil.assertIsSchoolAdmin(user, finalDocSigner.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LOPDOKALLKIRI);
+        finalDocSignerService.delete(user, finalDocSigner);
     }
 
     private School getSchool(HoisUserDetails user) {

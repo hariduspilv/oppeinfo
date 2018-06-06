@@ -18,6 +18,7 @@ public class StudentGroupSearchCommand {
     private List<Long> teachers;
     private LocalDate validFrom;
     private LocalDate validThru;
+    private Boolean isValid;
 
     public List<Long> getTeachers() {
         return teachers;
@@ -90,4 +91,13 @@ public class StudentGroupSearchCommand {
     public void setValidThru(LocalDate validThru) {
         this.validThru = validThru;
     }
+
+    public Boolean getIsValid() {
+        return isValid;
+    }
+
+    public void setIsValid(Boolean isValid) {
+        this.isValid = isValid;
+    }
+    
 }

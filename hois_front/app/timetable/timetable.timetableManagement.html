@@ -39,8 +39,8 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
-          <th md-column>{{'timetable.management.period' | translate}}</th>
-          <th md-column>{{'timetable.management.status' | translate}}</th>
+          <th md-column md-order-by="3, 4">{{'timetable.management.period' | translate}}</th>
+          <th md-column md-order-by="2">{{'timetable.management.status' | translate}}</th>
           <th md-column></th>
           <th></th>
         </tr>

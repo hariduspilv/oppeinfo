@@ -446,14 +446,14 @@ public class TimetableEventService {
     
     private List<TimetableEventSearchDto> getTimetableEventsList(JpaNativeQueryBuilder qb) {
         String select = "distinct tet.id, j.id as journal_id, ssp.id as subject_study_period_id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(te.name, j.name_et, subj.name_en) as name_en,"
-                + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId";
+                + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId, te.capacity_type_code";
         List<?> eventResult = qb.select(select, em).getResultList();
         
         List<TimetableEventSearchDto> eventResultList = StreamUtil.toMappedList(
                 r -> new TimetableEventSearchDto(resultAsLong(r, 0), resultAsLong(r, 1), resultAsLong(r, 2), resultAsString(r, 3), resultAsString(r, 4),
                         resultAsLocalDateTime(r, 5).toLocalDate(), resultAsLocalDateTime(r, 5).toLocalTime(),
                         resultAsLocalDateTime(r, 6).toLocalTime(), resultAsBoolean(r, 7), 
-                        Boolean.valueOf(resultAsLong(r, 8) == null), resultAsLong(r, 9)), eventResult);
+                        Boolean.valueOf(resultAsLong(r, 8) == null), resultAsLong(r, 9), resultAsString(r, 10)), eventResult);
         return eventResultList;
     }
 
@@ -496,14 +496,15 @@ public class TimetableEventService {
     public Page<TimetableEventSearchDto> search(TimetableEventSearchCommand criteria, Pageable pageable, Long schoolId) {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria, schoolId).sort(pageable);
         String select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(te.name, j.name_et, subj.name_en) as name_en,"
-                    + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId";
+                    + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId, te.capacity_type_code";
         // do not show exams, they are managed thru separate UI
         qb.filter("not exists(select 1 from subject_study_period_exam sspe2 where sspe2.timetable_event_id = tet.timetable_event_id)");
 
         Page<TimetableEventSearchDto> result = JpaQueryUtil.pagingResult(qb, select, em, pageable).map(r -> {
             return new TimetableEventSearchDto(resultAsLong(r, 0), null, null, resultAsString(r, 1), resultAsString(r, 2),
                     resultAsLocalDateTime(r, 3).toLocalDate(), resultAsLocalDateTime(r, 3).toLocalTime(),
-                    resultAsLocalDateTime(r, 4).toLocalTime(), resultAsBoolean(r, 5), Boolean.valueOf(resultAsLong(r, 6) == null), resultAsLong(r, 7));
+                    resultAsLocalDateTime(r, 4).toLocalTime(), resultAsBoolean(r, 5), Boolean.valueOf(resultAsLong(r, 6) == null),
+                    resultAsLong(r, 7), resultAsString(r, 8));
         });
         setRoomsTeachersAndGroupsForSearchDto(result.getContent());
         setShowStudyMaterials(result.getContent());

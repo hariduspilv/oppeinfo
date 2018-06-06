@@ -43,7 +43,11 @@ public abstract class StudentUtil {
     }
 
     public static boolean isAdultAndDoNotNeedRepresentative(Student student) {
-        return Boolean.FALSE.equals(student.getIsRepresentativeMandatory()) && PersonUtil.isAdult(student.getPerson());
+        return doNotNeedRepresentative(student) && PersonUtil.isAdult(student.getPerson());
+    }
+    
+    public static boolean doNotNeedRepresentative(Student student) {
+        return Boolean.FALSE.equals(student.getIsRepresentativeMandatory());
     }
 
     public static boolean hasRepresentatives(Student student) {

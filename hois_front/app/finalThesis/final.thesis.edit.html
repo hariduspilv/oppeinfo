@@ -1,0 +1,110 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="finalThesisForm" ng-submit="save()" novalidate>
+      <div ng-hide="thesis.student" layout="row" layout-sm="column" layout-xs="column">
+        <div flex="45" flex-sm="100" flex-xs="100">
+          <hois-autocomplete flex ng-model="thesis.student" name="student" label="finalThesis.student" url="/finalThesis/students"></hois-autocomplete>
+        </div>
+      </div>
+
+      <div ng-hide="!thesis.student" class="form-readonly">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'finalThesis.student' | translate}}</label>
+            <hois-value value="thesis.person.firstname + ' ' + thesis.person.lastname"></hois-value>
+          </md-input-container>
+          <md-input-container ng-if="thesis.confirmed" flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'finalThesis.confirmed' | translate}}</label>
+            <hois-value value="thesis.confirmed | hoisDate"></hois-value>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100" >
+            <label>{{'finalThesis.curriculum' | translate}}</label>
+            <hois-value value="currentLanguageNameField(thesis.curriculumVersion)"></hois-value>
+          </md-input-container>
+          <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'finalThesis.studentGroup' | translate}}</label>
+            <hois-value value="currentLanguageNameField(thesis.studentGroup)"></hois-value>
+          </md-input-container>
+        </div>
+      </div>
+
+      <div ng-hide="!thesis.student">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label >{{'finalThesis.themeEt' | translate}}</label>
+            <input type="text" ng-model="thesis.themeEt" md-maxlength="4000" required>
+          </md-input-container>
+          <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label >{{'finalThesis.themeEn' | translate}}</label>
+            <input type="text" ng-model="thesis.themeEn" md-maxlength="4000" ng-required="!thesis.isVocational">
+          </md-input-container>
+        </div>
+        <br>
+
+        <div layout="row">
+          <md-input-container>
+            <md-checkbox ng-model="thesis.hasDraft" aria-label="{{'finalThesis.draft' | translate}}">{{'finalThesis.draft' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-input-container ng-show="thesis.hasDraft" flex>
+            <label>{{'finalThesis.draft' | translate}}</label>
+            <textarea ng-model="thesis.draft" md-maxlength="20000" max-rows="10" md-select-on-focus></textarea>
+          </md-input-container>
+        </div>
+
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label>{{'finalThesis.addInfo' | translate}}</label>
+            <textarea ng-model="thesis.addInfo" md-maxlength="4000" max-rows="2" md-select-on-focus ng-disabled="auth.isStudent()"></textarea>
+          </md-input-container>
+        </div>
+        <br>
+
+        <fieldset>
+          <legend md-colors="{color: 'primary-800'}" ng-class="{invalid: finalThesisForm.$submitted && thesis.supervisors.length === 0}" class="md-title-small">{{'finalThesis.supervisors' | translate}}&nbsp;*</legend>
+          <md-button class="md-raised" ng-click="openAddSupervisorDialog()">{{'main.button.add' | translate}}</md-button>
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'finalThesis.supervisor.name' | translate}}</th>
+                <th md-column>{{'finalThesis.primarySupervisor' | translate}}</th>
+                <th md-column>{{'finalThesis.externalSupervisor' | translate}}</th>
+                <th md-column></th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="supervisor in thesis.supervisors track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{supervisor.firstname}} {{supervisor.lastname}}</td>
+                <td md-cell>
+                  <md-checkbox ng-checked="supervisor.isPrimary" ng-disabled="true" aria-label="{{'finalThesis.primarySupervisor' | translate}}"></md-checkbox>
+                </td>
+                <td md-cell>
+                  <md-checkbox ng-checked="supervisor.isExternal" ng-disabled="true" aria-label="{{'finalThesis.externalSupervisor' | translate}}"></md-checkbox>
+                </td>
+                <td md-cell>
+                  <md-button md-no-ink class="md-primary change-button" ng-click="openAddSupervisorDialog($index)">{{'main.button.change' | translate}}</md-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </fieldset>
+      </div>
+
+      <div ng-if="thesis.student" layout="row">
+        <md-button ng-if="!thesis.id || thesis.canBeEdited" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-if="thesis.canBeConfirmed" class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <a ng-if="thesis.id" href="{{finalThesisPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
+        <md-button ng-if="!auth.isStudent()" class="md-raised md-default" ng-click="back('#/finalThesis/')">{{'main.button.back' | translate}}</md-button>
+      </div>
+
+      <div ng-if="!thesis.student" layout="row">
+        <md-button class="md-raised md-default" ng-click="back('#/finalThesis/')">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -68,7 +68,7 @@ public class StudentAbsenceService {
             + "from study_year sy "
             + "where sy.id = :studyYear "
             + "and sy.start_date <= sa.valid_from "
-            + "and (case when sa.valid_thru is null then sy.end_date >= sa.valid_from else sy.end_date >= sa.valid_thru end)) ";
+            + "and (case when sa.valid_thru is null then sa.valid_from >= sy.start_date and sa.valid_from <= sy.end_date else sy.start_date <= sa.valid_thru and sy.end_date >= sa.valid_from end)) ";
 
     public Page<StudentAbsenceDto> search(HoisUserDetails user, StudentAbsenceSearchCommand criteria,
             Pageable pageable) {

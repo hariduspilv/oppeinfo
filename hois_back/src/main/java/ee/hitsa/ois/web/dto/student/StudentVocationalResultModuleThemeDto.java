@@ -17,7 +17,9 @@ public class StudentVocationalResultModuleThemeDto {
     private List<AutocompleteResult> teachers = new ArrayList<>();
     private String studyYear;
     private LocalDate studyYearStartDate;
-
+    private Boolean isApelTransfer;
+    private Boolean isFormalLearning;
+    
     public AutocompleteResult getModule() {
         return module;
     }
@@ -82,4 +84,20 @@ public class StudentVocationalResultModuleThemeDto {
         this.studyYearStartDate = studyYearStartDate;
     }
 
+    public Boolean getIsApelTransfer() {
+        return isApelTransfer;
+    }
+
+    public void setIsApelTransfer(Boolean isApelTransfer) {
+        this.isApelTransfer = isApelTransfer;
+    }
+
+    public Boolean getIsFormalLearning() {
+        return isFormalLearning;
+    }
+
+    public void setIsFormalLearning(Boolean isFormalLearning) {
+        this.isFormalLearning = isFormalLearning;
+    }
+    
 }

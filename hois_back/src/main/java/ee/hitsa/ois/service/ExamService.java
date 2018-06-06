@@ -239,8 +239,7 @@ public class ExamService {
             dto.setAddInfo(resultAsString(r, 10));
             Long places = resultAsLong(r, 11);
             Long booked = resultAsLong(r, 12);
-            // 0 in places means "do not check"
-            dto.setFreePlaces(places != null && places.longValue() > 0 ? Long.valueOf(Math.max(places.longValue() - booked.longValue(), 0)) : null);
+            dto.setFreePlaces(places != null ? Long.valueOf(Math.max(places.longValue() - booked.longValue(), 0)) : null);
             boolean registered = resultAsLong(r, 7) != null;
             dto.setRegistered(Boolean.valueOf(registered));
             dto.setCanChange(Boolean.valueOf(isBeforeDeadline(dto.getDeadline(), dto.getStart()) && (!registered || !hasGrade(grades.get(resultAsLong(r, 13)), dto.getId(), dto.getType()))));
@@ -521,7 +520,7 @@ public class ExamService {
             }
         }
         // registration deadline is not validated for admin and teacher
-        if(exam.getPlaces() != null && exam.getPlaces().longValue() > 0 && exam.getPlaces().longValue() < studentIds.size()) {
+        if(exam.getPlaces() != null && exam.getPlaces().longValue() < studentIds.size()) {
             throw new ValidationFailedException("exam.message.overbooked");
         }
 

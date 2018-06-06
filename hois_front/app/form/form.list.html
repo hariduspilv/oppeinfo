@@ -1,0 +1,76 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'form.type' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.type" name="type" model-value-attr="code" main-classifier-code="LOPUBLANKETT"></hois-classifier-select>
+          </md-input-container>
+
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'form.status' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" name="status" model-value-attr="code" main-classifier-code="LOPUBLANKETT_STAATUS"></hois-classifier-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div layout="column" flex="45" flex-sm="100" flex-xs="100">
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex-sm="100" flex-xs="100">
+                <label>{{'main.from' | translate}}</label>
+                <input type="number" ng-model="criteria.from" min="0">
+              </md-input-container>
+              <md-input-container flex-sm="100" flex-xs="100">
+                <label>{{'main.thru' | translate}}</label>
+                <input type="number" ng-model="criteria.thru" min="0">
+              </md-input-container>
+            </div>
+          </div>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="canEdit" href="#/forms/new">{{'main.button.add' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="canEdit" href="#/forms/delete">{{'main.button.delete' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="canEdit" href="#/forms/defected">{{'form.button.defected' | translate}}</md-button>
+          <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'form.button.excel' | translate}}</a>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'form.type' | translate}}</th>
+            <th md-column>{{'form.code' | translate}}</th>
+            <th md-column>{{'main.from' | translate}}</th>
+            <th md-column>{{'main.thru' | translate}}</th>
+            <th md-column md-numeric>{{'form.count' | translate}}</th>
+            <th md-column>{{'form.status' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(row.type)}}</td>
+            <td md-cell>{{::row.code}}</td>
+            <td md-cell>{{::row.from}}</td>
+            <td md-cell>{{::row.thru}}</td>
+            <td md-cell>{{::row.count}}</td>
+            <td md-cell>
+              {{currentLanguageNameField(row.status)}}
+              <md-tooltip ng-if="row.status.code === 'LOPUBLANKETT_STAATUS_R' && row.defectReason">{{::row.defectReason}}</md-tooltip>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </div>
+</div>

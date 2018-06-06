@@ -131,6 +131,15 @@ angular.module('hitsaOis')
       }
     }
 
+    $scope.delete = function() {
+      dialogService.confirmDialog({prompt: 'curriculum.prompt.deleteModule'}, function() {
+        new Endpoint($scope.occupationModule).$delete().then(function() {
+          message.info('main.messages.delete.success');
+          $location.path('/vocationalCurriculum/' + curriculum + '/moduleImplementationPlan/' + curriculumVersion + '/edit');
+        }).catch(angular.noop);
+      });
+    };
+
     function classifierToCapacity(c) {
       return {
         capacityType: c.code,

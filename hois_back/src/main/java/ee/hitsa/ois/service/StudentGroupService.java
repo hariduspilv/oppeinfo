@@ -94,6 +94,12 @@ public class StudentGroupService {
         qb.optionalCriteria("sg.teacher_id in (:teacherIds)", "teacherIds", criteria.getTeachers());
         qb.optionalCriteria("sg.valid_from >= :validFrom", "validFrom", criteria.getValidFrom());
         qb.optionalCriteria("sg.valid_thru <= :validThru", "validThru", criteria.getValidThru());
+        
+        if (Boolean.TRUE.equals(criteria.getIsValid())) {
+            qb.optionalCriteria(
+                    ":currentDate between coalesce(sg.valid_from, :currentDate) and coalesce(sg.valid_thru, :currentDate)",
+                    "currentDate", LocalDate.now());
+        }
 
         return JpaQueryUtil.pagingResult(qb.select(STUDENT_GROUP_LIST_SELECT, em, Collections.singletonMap("studentStatus", StudentStatus.STUDENT_STATUS_ACTIVE)), pageable, () -> qb.count(em)).map(r -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
@@ -278,6 +284,7 @@ public class StudentGroupService {
         data.put("origStudyLevel", EntityUtil.getCode(curriculum.getOrigStudyLevel()));
         data.put("specialities", findSpecialities(curriculum));
         data.put("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(curriculum)));
+        data.put("studyPeriodInYears", Integer.valueOf((int) Math.ceil((double) curriculum.getStudyPeriod().intValue() / 12)));
         return data;
     }
 

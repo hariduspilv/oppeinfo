@@ -8,6 +8,10 @@ import java.time.temporal.ChronoUnit;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
+import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
+import ee.hitsa.ois.enums.ScholarshipType;
+
 public abstract class DateUtils {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -62,6 +66,16 @@ public abstract class DateUtils {
 
     public static LocalDate periodEnd(Period p) {
         return Boolean.TRUE.equals(p.getIsPeriod()) ? p.getStudyPeriodEnd().getEndDate() : p.getEndDate();
+    }
+
+    public static LocalDate startDate(ScholarshipApplication application) {
+        ScholarshipTerm term = application.getScholarshipTerm();
+        return ClassifierUtil.equals(ScholarshipType.STIPTOETUS_ERI, term.getType()) ? application.getScholarshipFrom() : term.getPaymentStart();
+    }
+
+    public static LocalDate endDate(ScholarshipApplication application) {
+        ScholarshipTerm term = application.getScholarshipTerm();
+        return ClassifierUtil.equals(ScholarshipType.STIPTOETUS_ERI, term.getType()) ? application.getScholarshipThru() : term.getPaymentEnd();
     }
 
     public static LocalDate toLocalDate(XMLGregorianCalendar cal) {

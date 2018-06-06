@@ -149,5 +149,43 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPETASE]
       }
+    })
+    .when('/school/finaldocsigners', {
+      templateUrl: 'school/final.doc.signer.search.html',
+      controller: 'SimpleListController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        params: function() { return {order: 'name'}; },
+        url: function() { return '/school/finaldocsigners'; }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPDOKALLKIRI]
+      }
+    })
+    .when('/school/finaldocsigners/new', {
+      templateUrl: 'school/final.doc.signer.edit.html',
+      controller: 'FinalDocSignerEditController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LOPDOKALLKIRI]
+      }
+    })
+    .when('/school/finaldocsigners/:id/edit', {
+      templateUrl: 'school/final.doc.signer.edit.html',
+      controller: 'FinalDocSignerEditController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LOPDOKALLKIRI]
+      }
     });
 }]);

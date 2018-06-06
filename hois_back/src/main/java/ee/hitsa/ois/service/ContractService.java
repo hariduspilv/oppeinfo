@@ -370,7 +370,7 @@ public class ContractService {
     private void sendUniqueUrlEmailToEnterpriseSupervisor(HoisUserDetails user, Contract contract) {
         String url = getPracticeJournalSupervisorUrl(contract);
         PracticeJournalUniqueUrlMessage data = new PracticeJournalUniqueUrlMessage(contract.getStudent(), url);
-        automaticMessageService.sendMessageToEnterprise(contract.getEnterprise(), em.getReference(School.class, user.getSchoolId()), MessageType.TEATE_LIIK_PRAKTIKA_URL, data);
+        automaticMessageService.sendMessageToEnterprise(contract, em.getReference(School.class, user.getSchoolId()), MessageType.TEATE_LIIK_PRAKTIKA_URL, data);
     }
 
     private String getPracticeJournalSupervisorUrl(Contract contract) {

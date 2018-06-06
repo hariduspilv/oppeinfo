@@ -77,10 +77,15 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('ReportTeacherLoadHigherController', ['$scope', '$timeout', 'DataUtils', 'QueryUtils',
-  function ($scope, $timeout, DataUtils, QueryUtils) {
+]).controller('ReportTeacherLoadHigherController', ['$scope', '$timeout', 'DataUtils', 'FormUtils', 'QueryUtils',
+  function ($scope, $timeout, DataUtils, FormUtils, QueryUtils) {
     QueryUtils.createQueryForm($scope, '/reports/teachers/load/higher', {order: 'p.lastname,p.firstname'});
 
+    var loadData = $scope.loadData;
+    $scope.loadData = function() {
+      FormUtils.withValidForm($scope.teacherLoadReportForm, loadData);
+    };
+
     $scope.formState = {studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), studyPeriods: {}};
     $scope.formState.allStudyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
     $scope.formState.studyYears.$promise.then(function() {
@@ -106,10 +111,15 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       }
     });
   }
-]).controller('ReportTeacherLoadVocationalController', ['$scope', '$timeout', 'DataUtils', 'QueryUtils',
-  function ($scope, $timeout, DataUtils, QueryUtils) {
+]).controller('ReportTeacherLoadVocationalController', ['$scope', '$timeout', 'DataUtils', 'FormUtils', 'QueryUtils',
+  function ($scope, $timeout, DataUtils, FormUtils, QueryUtils) {
     QueryUtils.createQueryForm($scope, '/reports/teachers/load/vocational', {order: 'p.lastname,p.firstname'});
 
+    var loadData = $scope.loadData;
+    $scope.loadData = function() {
+      FormUtils.withValidForm($scope.teacherLoadReportForm, loadData);
+    };
+
     $scope.formState = {studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), studyPeriods: {}};
     $scope.formState.allStudyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
     $scope.formState.studyYears.$promise.then(function() {
@@ -135,9 +145,14 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       }
     });
   }
-]).controller('ReportVotaController', ['$scope', '$timeout', 'DataUtils', 'QueryUtils',
-  function ($scope, $timeout, DataUtils, QueryUtils) {
+]).controller('ReportVotaController', ['$scope', '$timeout', 'DataUtils', 'FormUtils', 'QueryUtils',
+  function ($scope, $timeout, DataUtils, FormUtils, QueryUtils) {
     QueryUtils.createQueryForm($scope, '/reports/vota', {order: 'sy.start_date'});
+
+    var loadData = $scope.loadData;
+    $scope.loadData = function() {
+      FormUtils.withValidForm($scope.votaReportForm, loadData);
+    };
 
     $scope.formState = {studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), studyPeriods: {}};
     $scope.formState.allStudyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();

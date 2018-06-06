@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.Enterprise;
+import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Message;
 import ee.hitsa.ois.domain.MessageReceiver;
 import ee.hitsa.ois.domain.MessageTemplate;
@@ -110,12 +110,13 @@ public class AutomaticMessageService {
         }
     }
 
-    public void sendMessageToEnterprise(Enterprise enterprise, School school, MessageType type, Object dataBean) {
+    public void sendMessageToEnterprise(Contract contract, School school, MessageType type, Object dataBean) {
         Message message = getMessage(type, school, dataBean);
 
-        if (message != null && StringUtils.hasText(enterprise.getContactPersonEmail())) {
+        String to = contract.getSupervisorEmail();
+        if (message != null && StringUtils.hasText(to)) {
             Person automaticSender = em.getReference(Person.class, PersonUtil.AUTOMATIC_SENDER_ID);
-            mailService.sendMail(automaticSender.getEmail(), enterprise.getContactPersonEmail(), message.getSubject(), message.getContent());
+            mailService.sendMail(automaticSender.getEmail(), to, message.getSubject(), message.getContent());
         }
     }
 

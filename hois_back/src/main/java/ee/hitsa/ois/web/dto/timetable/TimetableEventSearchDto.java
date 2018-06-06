@@ -21,10 +21,11 @@ public class TimetableEventSearchDto {
     private Boolean singleEvent;
     private Boolean publicEvent;
     private Long timetableId;
-    private Boolean showStudyMaterials; 
+    private Boolean showStudyMaterials;
+    private String capacityType;
 
     public TimetableEventSearchDto(Long id, Long journalId, Long subjectStudyPeriodId,String nameEt, String nameEn, LocalDate date, 
-            LocalTime timeStart, LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent, Long timetableId) {
+            LocalTime timeStart, LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent, Long timetableId, String capacityType) {
         this.id = id;
         this.journalId = journalId;
         this.subjectStudyPeriodId = subjectStudyPeriodId;
@@ -37,6 +38,7 @@ public class TimetableEventSearchDto {
         this.singleEvent = singleEvent;
         this.publicEvent = Boolean.TRUE;
         this.timetableId = timetableId;
+        this.capacityType = capacityType; 
     }
 
     public Long getId() {
@@ -165,6 +167,14 @@ public class TimetableEventSearchDto {
 
     public void setShowStudyMaterials(Boolean showStudyMaterials) {
         this.showStudyMaterials = showStudyMaterials;
+    }
+
+    public String getCapacityType() {
+        return capacityType;
+    }
+
+    public void setCapacityType(String capacityType) {
+        this.capacityType = capacityType;
     }
     
 }

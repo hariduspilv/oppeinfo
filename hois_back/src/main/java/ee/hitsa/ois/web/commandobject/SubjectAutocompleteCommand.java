@@ -5,6 +5,7 @@ public class SubjectAutocompleteCommand extends SearchCommand {
     private Boolean practice;
     private Boolean withCredits = Boolean.TRUE;
     private Long curriculumVersion;
+    private Boolean closedCurriculumVersionSubjects;
     private Boolean curriculumSubjects;
     private Long student;
     private Boolean otherStudents;
@@ -31,6 +32,14 @@ public class SubjectAutocompleteCommand extends SearchCommand {
 
     public void setCurriculumVersion(Long curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
+    }
+
+    public Boolean getClosedCurriculumVersionSubjects() {
+        return closedCurriculumVersionSubjects;
+    }
+
+    public void setClosedCurriculumVersionSubjects(Boolean closedCurriculumVersionSubjects) {
+        this.closedCurriculumVersionSubjects = closedCurriculumVersionSubjects;
     }
 
     public Boolean getCurriculumSubjects() {

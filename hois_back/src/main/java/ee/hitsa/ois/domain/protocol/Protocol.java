@@ -61,6 +61,7 @@ public class Protocol extends BaseEntityWithId {
     private Committee committee;
     
     private LocalDate finalDate;
+    private Boolean isFinalThesis;
 
     public ProtocolHdata getProtocolHdata() {
         return protocolHdata;
@@ -173,6 +174,14 @@ public class Protocol extends BaseEntityWithId {
 
     public void setFinalDate(LocalDate finalDate) {
         this.finalDate = finalDate;
+    }
+
+    public Boolean getIsFinalThesis() {
+        return isFinalThesis;
+    }
+
+    public void setIsFinalThesis(Boolean isFinalThesis) {
+        this.isFinalThesis = isFinalThesis;
     }
     
 }

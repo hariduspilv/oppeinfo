@@ -437,8 +437,7 @@
           dialogScope.modulesAndThemes = [];
           QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query({
             student: dialogScope.student.id,            
-            curriculumVersion: dialogScope.curriculumVersionId,
-            curriculumVersionStatusCode: "OPPEKAVA_VERSIOON_STAATUS_K"
+            curriculumVersion: dialogScope.curriculumVersionId
           }).$promise.then(function (result) {
             result = sortByName(result);
             for (var i = 0; i < result.length; i++) {

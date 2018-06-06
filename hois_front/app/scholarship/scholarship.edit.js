@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$rootScope', 'Classifier', '$location', 'message', 'QueryUtils', 'dialogService', '$route', 'DataUtils',
-  function ($scope, $rootScope, Classifier, $location, message, QueryUtils, dialogService, $route, DataUtils) {
+angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$rootScope', 'Classifier', '$location', 'message', 'QueryUtils', 'dialogService', '$route',
+  function ($scope, $rootScope, Classifier, $location, message, QueryUtils, dialogService, $route) {
     var templateMap = {
       STIPTOETUS_POHI: 'scholarship/term/scholarship.pohi.edit.html',
       STIPTOETUS_ERI: 'scholarship/term/scholarship.eri.edit.html',
@@ -19,7 +19,6 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
     typePromise.then(function(result) {
       $scope.formState.typeMap = Classifier.toMap(result);
     });
-    $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
 
     var id = $route.current.params.id;
     var baseUrl = '/scholarships';
@@ -41,11 +40,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       $scope.formState.allowedStipendTypes = [result.type];
       $scope.stipend = result;
       $scope.stipendTypeChanged();
-      $scope.formState.studyPeriods.$promise.then(function () {
-        $scope.formState.readonlyStudyPeriod = $scope.formState.studyPeriods.find(function (it) {
-          return it.id === $scope.stipend.studyPeriod;
-        });
-      });
+      $scope.stipendForm.$setPristine();
     }
 
     if (id) {
@@ -58,14 +53,6 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
         $scope.stipend.type = $scope.formState.allowedStipendTypes[0];
         $scope.stipendTypeChanged();
       }
-      $scope.formState.studyPeriods.$promise.then(function () {
-        if (!$scope.stipend.studyPeriod) {
-          var sp = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyPeriods);
-          if(sp) {
-            $scope.stipend.studyPeriod = sp.id;
-          }
-        }
-      });
       $scope.stipend.courses = ['KURSUS_1', 'KURSUS_2', 'KURSUS_3', 'KURSUS_4'];
       $scope.missingCurriculums = true;
     }
@@ -199,8 +186,8 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       $scope.formState.typeIsScholarship = (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf(result.type) !== -1);
       $scope.curriculumsDisplay = result.curriculums.map($scope.currentLanguageNameField);
 
-      $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(function () {
-        $scope.formState.readonlyStudyPeriod = $scope.formState.studyPeriods.find(function (it) {
+      QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(function (studyPeriods) {
+        $scope.formState.readonlyStudyPeriod = studyPeriods.find(function (it) {
           return it.id === $scope.stipend.studyPeriod;
         });
       });

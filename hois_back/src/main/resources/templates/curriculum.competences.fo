@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format" font-family="helvetica" font-size="10pt">
+	<fo:layout-master-set>
+		<fo:simple-page-master master-name="A4-landscape" page-height="21.0cm" page-width="29.7cm" margin="2cm">
+			<fo:region-body region-name="xsl-region-body" margin-bottom=".5in" margin-top=".50in"/>
+			<fo:region-after region-name="xsl-region-after" extent=".5in"/>
+		</fo:simple-page-master>
+	</fo:layout-master-set>
+	<fo:page-sequence master-reference="A4-landscape">
+		<fo:static-content flow-name="xsl-region-after">
+			<fo:block text-align="center" padding="10px">
+				<fo:page-number/>/<fo:page-number-citation-last ref-id="end"/>
+			</fo:block>
+		</fo:static-content>
+		<fo:flow flow-name="xsl-region-body">
+			{% for table in content.tables %}
+			{% if loop.index == 0 %}
+			<fo:table table-layout="fixed" width="100%">
+			{% else %}
+			<fo:table table-layout="fixed" width="100%" break-before="page">
+			{% endif %}
+				<fo:table-column column-width="210pt"/>
+				{% for module in table.modules %}
+				<fo:table-column column-width="50pt"/>
+				{% endfor %}
+				
+				<fo:table-header>
+					<fo:table-row>
+						<fo:table-cell number-rows-spanned="2" border-style="solid" display-align="center">
+							<fo:block font-weight="bold" text-align="center">{{ "report.curriculum.competence" | translate }}</fo:block>
+						</fo:table-cell>
+						<fo:table-cell number-columns-spanned="{{table.modules.size}}" border-style="solid" padding="3pt">
+							<fo:block font-weight="bold" text-align="center">{{ "report.curriculum.modules" | translate }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					<fo:table-row>
+						{% for module in table.modules %}
+						<fo:table-cell border-style="solid" height="150pt" display-align="after" padding="3pt">
+							<fo:block-container reference-orientation="90" display-align="center" height="43pt" width="150pt">
+								<fo:block>{{module}}</fo:block>
+							</fo:block-container>
+						</fo:table-cell>
+						{% endfor %}
+					</fo:table-row>
+				</fo:table-header>
+
+				<fo:table-body>
+					{% for competence in table.competences %}
+					<fo:table-row>
+						<fo:table-cell border-style="solid" padding="3px">
+							<fo:block>{{ competence.name }}</fo:block>
+						</fo:table-cell>
+						{% for competenceModule in competence.modules %}
+						<fo:table-cell border-style="solid" display-align="center">
+							<fo:block text-align="center">{{ competenceModule }}</fo:block>
+						</fo:table-cell>
+						{% endfor %}
+					</fo:table-row>
+					{% else %}
+					<fo:table-row>
+						<fo:table-cell number-columns-spanned="{{1 + table.modules.size}}" border-style="solid" padding="20px">
+							<fo:block text-align="center">{{ "report.curriculum.competence.missing" | translate }}</fo:block>
+						</fo:table-cell>
+					</fo:table-row>
+					{% endfor %}
+				</fo:table-body>
+			</fo:table>
+			{% endfor %}
+			<fo:block id="end"/>
+		</fo:flow>
+	</fo:page-sequence>
+</fo:root>

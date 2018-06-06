@@ -35,6 +35,7 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.OccupationalGrade;
@@ -228,6 +229,13 @@ public class AutocompleteService {
             qb.requiredCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K);
             qb.requiredCriteria("c.valid_from <= :currentDate and (c.valid_thru is null or c.valid_thru >= :currentDate)", "currentDate", LocalDate.now());
         }
+       
+        if(Boolean.TRUE.equals(lookup.getClosed())) {
+            qb.requiredCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C);
+        } else if (Boolean.FALSE.equals(lookup.getClosed())) {
+            qb.requiredCriteria("cv.status_code != :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C);
+        }
+        
         if(Boolean.TRUE.equals(lookup.getSais())) {
             qb.filter("exists(select sa.id from sais_admission sa where sa.curriculum_version_id = cv.id)");
         }
@@ -295,9 +303,13 @@ public class AutocompleteService {
                     lookup.getCurriculumVersion());
         }
         qb.optionalCriteria("c.school_id = :schoolId",  "schoolId", lookup.getSchool());
-
-        qb.optionalContains("cv.status_code",  "statusCode", lookup.getCurriculumVersionStatusCode());
         qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "cm.name_en" : "cm.name_et", "name", lookup.getName());
+        
+        if (Boolean.TRUE.equals(lookup.getClosedCurriculumVersionModules())) {
+            qb.optionalCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
+        } else {
+            qb.optionalCriteria("cv.status_code != :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
+        }
         
         if (lookup.getStudent() != null) {
             if (otherStudents) {
@@ -340,8 +352,13 @@ public class AutocompleteService {
 
         qb.requiredCriteria("cvot.curriculum_version_omodule_id = :curriculum_version_omodule_id",
                 "curriculum_version_omodule_id", lookup.getCurriculumVersionOmoduleId());
-        qb.optionalContains("cv.status_code",  "statusCode", lookup.getCurriculumVersionStatusCode());
-
+        
+        if (Boolean.TRUE.equals(lookup.getClosedCurriculumVersionModules())) {
+            qb.optionalCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
+        } else {
+            qb.optionalCriteria("cv.status_code != :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
+        }
+        
         List<?> data = qb.select("cvot.id, cvot.name_et, cvot.credits", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             String name = resultAsString(r, 1);
@@ -356,7 +373,7 @@ public class AutocompleteService {
         for (CurriculumVersionOccupationModuleResult module : modules) {
             CurriculumVersionOccupationModuleThemeAutocompleteCommand themeLookup = new CurriculumVersionOccupationModuleThemeAutocompleteCommand();
             themeLookup.setCurriculumVersionOmoduleId(module.getId());
-            themeLookup.setCurriculumVersionStatusCode(lookup.getCurriculumVersionStatusCode());
+            themeLookup.setClosedCurriculumVersionModules(lookup.getClosedCurriculumVersionModules());
             List<CurriculumVersionOccupationModuleThemeResult> themes = curriculumVersionOccupationModuleThemes(themeLookup);
             modulesAndThemes.add(new CurriculumVersionOModulesAndThemesResult(module.getId(), module.getNameEt(),
                     module.getNameEn(), module.getCredits(), module.getAssessment(), module.getGradeCode(), module.getGradeDate(), 
@@ -521,8 +538,17 @@ public class AutocompleteService {
         // optional for teacher's view form, when user is external expert
         qb.optionalCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
 
-        List<?> data = qb.select("sd.id, sd.name_et, sd.name_en, sd.school_id, s.code", em).getResultList();
-        return StreamUtil.toMappedList(r -> new SchoolDepartmentResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3), resultAsString(r, 4)), data);
+        List<?> data = qb.select(
+                "sd.id, sd.name_et, sd.name_en, sd.school_id, s.code, sd.valid_from, sd.valid_thru, "
+                + "(sd.valid_from is null or sd.valid_from <= date(now())) and (sd.valid_thru is null or sd.valid_thru >= date(now())) as valid",
+                em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            SchoolDepartmentResult dto = new SchoolDepartmentResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3), resultAsString(r, 4));
+            dto.setValidFrom(resultAsLocalDate(r, 5));
+            dto.setValidThru(resultAsLocalDate(r, 6));
+            dto.setValid(resultAsBoolean(r, 7));
+            return dto;
+        }, data);
     }
 
     public List<StudentGroupResult> studentGroups(Long schoolId, StudentGroupAutocompleteCommand lookup) {
@@ -589,6 +615,13 @@ public class AutocompleteService {
                     + "where cv.id = s.curriculum_version_id "
                     + "and c.is_higher = false )");
         }
+        if (Boolean.TRUE.equals(lookup.getFinishing())) {
+            qb.requiredCriteria("exists (select 1 from directive_student ds"
+                    + " join directive d on d.id = ds.directive_id"
+                    + " where ds.student_id = s.id and ds.canceled = false"
+                    + " and d.type_code = '" + DirectiveType.KASKKIRI_LOPET.name() + "'"
+                    + " and d.inserted >= :from)", "from", DocumentService.DIRECTIVE_INSERTED_FROM);
+        }
 
         qb.optionalCriteria("s.curriculum_version_id in (:curriculumVersion)", "curriculumVersion", lookup.getCurriculumVersion());
         qb.optionalCriteria("s.student_group_id in (:studentGroup)", "studentGroup", lookup.getStudentGroup());
@@ -604,12 +637,10 @@ public class AutocompleteService {
      * SubjectService.search() is not used as it does not enable to search by both code and name using autocomplete
      */
     public List<SubjectResult> subjects(Long schoolId, SubjectAutocompleteCommand lookup) {
-        String from ="from subject s";
-        if (lookup.getCurriculumSubjects() != null) {
-            from += " inner join curriculum_version_hmodule_subject cvhs on cvhs.subject_id = s.id"
-                    + " inner join curriculum_version_hmodule cvh on cvh.id = cvhs.curriculum_version_hmodule_id"
-                    + " inner join curriculum_version cv on cv.id = cvh.curriculum_version_id";
-        }
+        String from ="from subject s"
+                + " left join curriculum_version_hmodule_subject cvhs on cvhs.subject_id = s.id"
+                + " left join curriculum_version_hmodule cvh on cvh.id = cvhs.curriculum_version_hmodule_id"
+                + " left join curriculum_version cv on cv.id = cvh.curriculum_version_id";
 
         boolean otherStudents = Boolean.TRUE.equals(lookup.getOtherStudents());
         if (otherStudents) {
@@ -617,6 +648,11 @@ public class AutocompleteService {
         }
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        if (Boolean.TRUE.equals(lookup.getClosedCurriculumVersionSubjects())) {
+            qb.optionalCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
+        } else {
+            qb.optionalCriteria("cv.status_code != :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
+        }
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         if (!otherStudents) {
             qb.requiredCriteria("s.status_code = :statusCode", "statusCode", SubjectStatus.AINESTAATUS_K);

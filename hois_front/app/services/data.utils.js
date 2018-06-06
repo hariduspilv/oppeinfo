@@ -10,6 +10,8 @@
 angular.module('hitsaOis').factory('DataUtils',
   function () {
 
+    var HOURS_PER_CREDIT_POINT = 26;
+
     function convert(object, dateProperties, pattern) {
       if (angular.isArray(object)) {
         return object.map(function (it) { return convert(it, dateProperties, pattern); });
@@ -78,6 +80,27 @@ angular.module('hitsaOis').factory('DataUtils',
              (period1.startDate >= period2.startDate) && (period1.startDate <= period2.endDate);
     }
 
+    function occupiedEventTimePrompts(occupiedTime) {
+      var rooms = occupiedTime.rooms.map(function(room) {
+        return room;
+      }).join(', ');
+
+      var teachers = occupiedTime.teachers.map(function(teacher) {
+        return teacher.nameEt;
+      }).join(', ');
+
+      var prompts = [];
+      if (rooms.length > 0) {
+        prompts.push('timetable.roomIsOccupied');
+      }
+      if (teachers.length > 0) {
+        prompts.push('timetable.teacherIsOccupied');
+      }
+      prompts.push('timetable.continue');
+
+      return {extraPrompts: prompts, rooms: rooms, teachers: teachers};
+    }
+
     return {
       assign: function (path, obj, value) {
         return path.split('.').reduce(function (prev, curr, currentIndex, array) {
@@ -97,6 +120,7 @@ angular.module('hitsaOis').factory('DataUtils',
       sortStudyYearsOrPeriods: sortStudyYearsOrPeriods,
       isPastStudyYearOrPeriod: isPastStudyYearOrPeriod,
       periodsOverlap: periodsOverlap,
+      occupiedEventTimePrompts: occupiedEventTimePrompts,
 
       sexFromIdcode: function (idcode) {
         if (idcode.length !== 11 || isNaN(idcode)) {
@@ -112,6 +136,13 @@ angular.module('hitsaOis').factory('DataUtils',
         var centuries = { "1": "18", "2": "18", "3": "19", "4": "19", "5": "20", "6": "20", "7": "21", "8": "21" };
         var date = centuries[idcode.charAt(0)] + idcode.substring(1, 7);
         return moment(date).toDate();
+      },
+
+      creditsToHours: function(credits) {
+        return Math.round(HOURS_PER_CREDIT_POINT * credits);
+      },
+      hoursToCredits: function(hours) {
+        return Math.round((hours / HOURS_PER_CREDIT_POINT) * 10) / 10;
       }
     };
   }

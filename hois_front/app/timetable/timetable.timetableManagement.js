@@ -6,7 +6,7 @@ angular.module('hitsaOis').controller('TimetableManagementController',
     var baseUrl = '/timetables';
 
     var clMapper = Classifier.valuemapper({status: 'TUNNIPLAAN_STAATUS'});
-    QueryUtils.createQueryForm($scope, baseUrl + "/searchTimetableForManagement", {order: 'start_date'}, clMapper.objectmapper);
+    QueryUtils.createQueryForm($scope, baseUrl + "/searchTimetableForManagement", {order: '3, 4'}, clMapper.objectmapper);
 
     $scope.formState = {xlsDiffUrl: 'timetables/timetableDifference.xls', xlsPlanUrl: 'timetables/timetablePlan.xlsx'};
 

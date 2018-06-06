@@ -9,7 +9,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -36,7 +35,6 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.JournalStatus;
-import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -124,13 +122,13 @@ public class PracticeJournalService {
             dto.setStartDate(resultAsLocalDate(r, 1));
             dto.setEndDate(resultAsLocalDate(r, 2));
             dto.setPracticePlace(resultAsString(r, 3));
+            dto.setStatus(resultAsString(r, 4));
 
             Boolean hasSupervisorOpinion = resultAsBoolean(r, 23);
-            dto.setCanStudentAddEntries(
-                    Boolean.valueOf(JournalStatus.PAEVIK_STAATUS_T.name().equals(resultAsString(r, 4))
-                            && Boolean.FALSE.equals(hasSupervisorOpinion)));
+            dto.setCanStudentAddEntries(Boolean.valueOf(PracticeJournalUserRights.canStudentAddEntries(dto.getStatus(), hasSupervisorOpinion)));
 
             dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate())));
+            dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate())));
 
             String studentName = PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 5), studentName, studentName));
@@ -171,6 +169,7 @@ public class PracticeJournalService {
     public PracticeJournalDto get(HoisUserDetails user, PracticeJournal practiceJournal) {
         PracticeJournalDto dto = get(practiceJournal);
         dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate())));
+        dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate())));
         dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, dto.getEndDate())));
         return dto;
     }
@@ -197,6 +196,12 @@ public class PracticeJournalService {
         changedPracticeJournal.setTeacher(EntityUtil.getOptionalOne(Teacher.class, practiceJournalForm.getTeacher(), em));
         changedPracticeJournal.setSubject(EntityUtil.getOptionalOne(Subject.class, practiceJournalForm.getSubject(), em));
         return EntityUtil.save(changedPracticeJournal, em);
+    }
+    
+    public PracticeJournal confirm(PracticeJournal practiceJournal, PracticeJournalForm practiceJournalForm) {
+        save(practiceJournal, practiceJournalForm);
+        practiceJournal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_K.name()));
+        return EntityUtil.save(practiceJournal, em);
     }
 
     private void assertValidationRules(PracticeJournalForm practiceJournalForm) {

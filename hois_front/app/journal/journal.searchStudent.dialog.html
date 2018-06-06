@@ -1,4 +1,4 @@
-<md-dialog aria-label="search student dialog">
+<md-dialog aria-label="search student dialog" flex="60" flex-sm="100" flex-xs="100">
   <form name="dialogForm" ng-submit="loadData()" novalidate ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
@@ -56,7 +56,7 @@
 
     <span flex></span>
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-raised md-primary" ng-click="submit()">{{'journal.addSelectedStudents' | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="submit()" ng-disabled="selectedStudents.length === 0">{{'journal.addSelectedStudents' | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

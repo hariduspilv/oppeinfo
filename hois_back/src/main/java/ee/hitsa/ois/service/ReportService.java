@@ -29,6 +29,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -61,8 +62,6 @@ import ee.hitsa.ois.web.dto.report.VotaDto;
 @Transactional
 @Service
 public class ReportService {
-
-    private static final String VOTA_STATUS_CONFIRMED = "VOTA_STAATUS_C";
 
     @Autowired
     private EntityManager em;
@@ -313,10 +312,12 @@ public class ReportService {
                     "join apel_application_record aar on aafsm.apel_application_record_id = aar.id " +
                     "join apel_application aa on aar.apel_application_id = aa.id " +
                     "left join apel_school aps on aafsm.apel_school_id = aps.id " +
-                    "left join curriculum_version_omodule cvo on aafsm.curriculum_version_omodule_id = cvo.id " +
+                    "left join apel_application_formal_replaced_subject_or_module aafrsm on aar.id = aafrsm.apel_application_record_id and aafrsm.curriculum_version_omodule_id is not null " +
+                    "left join curriculum_version_omodule cvo on coalesce(aafsm.curriculum_version_omodule_id, aafrsm.curriculum_version_omodule_id) = cvo.id " +
                     "left join curriculum_version_hmodule cvh on aafsm.curriculum_version_hmodule_id = cvh.id");
             qb.requiredCriteria("aa.inserted >= :start", "start", start);
             qb.requiredCriteria("aa.inserted <= :end", "end", end);
+            qb.requiredCriteria("aa.status_code != :draft", "draft", ApelApplicationStatus.VOTA_STAATUS_K);
             qb.requiredCriteria("(cvo.curriculum_version_id in (:cv) or cvh.curriculum_version_id in (:cv))", "cv", cvIds);
 
             List<?> data = qb.select("aa.id, aa.inserted, case when aafsm.is_my_school then '"+ClassifierUtil.COUNTRY_ESTONIA+"' else aps.country_code end, aafsm.transfer, aa.confirmed, aafsm.credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id), aa.status_code", em).getResultList();
@@ -337,6 +338,7 @@ public class ReportService {
                     "left join curriculum_version_hmodule cvh on aaism.curriculum_version_hmodule_id = cvh.id");
             qb.requiredCriteria("aa.inserted >= :start", "start", start);
             qb.requiredCriteria("aa.inserted <= :end", "end", end);
+            qb.requiredCriteria("aa.status_code != :draft", "draft", ApelApplicationStatus.VOTA_STAATUS_K);
             qb.requiredCriteria("(cvo.curriculum_version_id in (:cv) or cvh.curriculum_version_id in (:cv))", "cv", cvIds);
 
             data = qb.select("aa.id, aa.inserted, aaism.transfer, aa.confirmed, coalesce(cvh.total_credits, cvot.credits) as credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id), aa.status_code", em).getResultList();
@@ -359,34 +361,44 @@ public class ReportService {
     }
 
     private Page<TeacherLoadDto> teacherLoad(Long schoolId, TeacherLoadCommand criteria, Pageable pageable, boolean higher) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                "from journal_teacher jt inner join journal j on j.id = jt.journal_id " +
-                "inner join study_year sy on j.study_year_id = sy.id " +
-                "inner join classifier syc on sy.year_code = syc.code " +
-                "inner join study_period sp on sp.study_year_id = sy.id " +
-                "inner join teacher t on jt.teacher_id = t.id inner join person p on t.person_id = p.id " +
-                "inner join journal_capacity jc on j.id = jc.journal_id and jc.study_period_id = sp.id").sort(pageable);
-
-        qb.requiredCriteria("j.school_id = :schoolId", "schoolId", schoolId);
-        qb.requiredCriteria("j.study_year_id = :studyYear", "studyYear", criteria.getStudyYear());
-        qb.optionalCriteria("jc.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
-        qb.optionalCriteria("jt.teacher_id = :teacher", "teacher", criteria.getTeacher());
-
+        Page<?> result;
         if(higher) {
-            // subject filter
-            qb.optionalCriteria("jt.teacher_id in (select sspt.teacher_id from subject_study_period_teacher sspt " +
-                    "inner join subject_study_period ssp on sspt.subject_study_period_id = ssp.id " +
-                    "where ssp.study_period_id = sp.id and ssp.subject_id = :subject)", "subject", criteria.getSubject());
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt " + 
+                    "join subject_study_period ssp on ssp.id = sspt.subject_study_period_id " +
+                    "join study_period sp on sp.id = ssp.study_period_id " +
+                    "join study_year sy on sy.id = sp.study_year_id " +
+                    "join classifier syc on sy.year_code = syc.code " +
+                    "join teacher t on sspt.teacher_id = t.id " +
+                    "join person p on t.person_id = p.id " +
+                    /*"join subject_study_period_plan sspp on ssp.subject_id = sspp.subject_id and sspp.study_period_id = sp.id " +*/
+                    "join subject_study_period_capacity ssppc on ssppc.subject_study_period_id = ssp.id").sort(pageable);
+            qb.requiredCriteria("sy.school_id = :schoolId", "schoolId", schoolId);
+            qb.requiredCriteria("sp.study_year_id = :studyYear", "studyYear", criteria.getStudyYear());
+            qb.optionalCriteria("ssp.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
+            qb.optionalCriteria("ssp.subject_id = :subject", "subject", criteria.getSubject());
+            qb.optionalCriteria("sspt.teacher_id = :teacher", "teacher", criteria.getTeacher());
+            qb.groupBy("syc.name_et, syc.name_en, sp.name_et, sp.name_en, p.firstname, p.lastname, sspt.teacher_id, sp.id");
+            result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, sum(ssppc.hours), sspt.teacher_id, sp.id", em, pageable);
         } else {
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
+                    "from journal_teacher jt inner join journal j on j.id = jt.journal_id " +
+                    "inner join study_year sy on j.study_year_id = sy.id " +
+                    "inner join classifier syc on sy.year_code = syc.code " +
+                    "inner join study_period sp on sp.study_year_id = sy.id " +
+                    "inner join teacher t on jt.teacher_id = t.id inner join person p on t.person_id = p.id " +
+                    "inner join journal_capacity jc on j.id = jc.journal_id and jc.study_period_id = sp.id").sort(pageable);
+            qb.requiredCriteria("j.school_id = :schoolId", "schoolId", schoolId);
+            qb.requiredCriteria("j.study_year_id = :studyYear", "studyYear", criteria.getStudyYear());
+            qb.optionalCriteria("jc.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
+            qb.optionalCriteria("jt.teacher_id = :teacher", "teacher", criteria.getTeacher());
             // module filter
             qb.optionalCriteria("j.id in (select jot.journal_id from journal_omodule_theme jot " +
                     "inner join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id = cvot.id " +
                     "inner join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "+
                     "where cvo.curriculum_module_id = :module)", "module", criteria.getModule());
+            qb.groupBy("syc.name_et, syc.name_en, sp.name_et, sp.name_en, p.firstname, p.lastname, jt.teacher_id, jc.study_period_id");
+            result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, sum(jc.hours), jt.teacher_id, jc.study_period_id", em, pageable);
         }
-
-        qb.groupBy("syc.name_et, syc.name_en, sp.name_et, sp.name_en, p.firstname, p.lastname, jt.teacher_id, jc.study_period_id");
-        Page<?> result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, sum(jc.hours), jt.teacher_id, jc.study_period_id", em, pageable);
 
         // calculate used teacher id and study period id values for returned page
         Map<Long, Map<Long, List<Object>>> subjectRecords = new HashMap<>();
@@ -402,25 +414,24 @@ public class ReportService {
 
             if(higher) {
                 // higher: select subjects by teacher and study period id: starting from SubjectStudyPeriodTeacher table
-                qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt " +
+                JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt " +
                         "inner join subject_study_period ssp on sspt.subject_study_period_id = ssp.id "+
                         "inner join subject s on ssp.subject_id = s.id");
 
                 qb.requiredCriteria("sspt.teacher_id in (:teacher)", "teacher", teachers);
                 qb.requiredCriteria("ssp.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
 
-                List<?> subjects = qb.select("s.name_et, s.name_en, s.code, sspt.teacher_id, ssp.study_period_id", em).getResultList();
+                List<?> subjects = qb.select("distinct s.name_et, s.name_en, s.code, sspt.teacher_id, ssp.study_period_id", em).getResultList();
                 subjects.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 3), () -> subjectRecords, Collectors.groupingBy(r -> resultAsLong(r, 4))));
             } else {
                 // vocational: select modules by teacher and study period id
-                qb = new JpaNativeQueryBuilder("from journal_teacher jt " +
+                JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_teacher jt " +
                         "inner join journal j on jt.journal_id = j.id " +
                         "inner join study_year sy on j.study_year_id = sy.id " +
                         "inner join study_period sp on sp.study_year_id = sy.id " +
                         "inner join journal_omodule_theme jot on j.id = jot.journal_id " +
                         "inner join lesson_plan_module lpm on jot.lesson_plan_module_id = lpm.id "+
-                        "inner join curriculum_version_omodule_theme cvot on lpm.curriculum_version_omodule_id = cvot.id " +
-                        "inner join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "+
+                        "inner join curriculum_version_omodule cvo on lpm.curriculum_version_omodule_id = cvo.id "+
                         "inner join curriculum_module cm on cvo.curriculum_module_id = cm.id " +
                         "inner join classifier m on cm.module_code = m.code " +
                         "inner join curriculum c on cm.curriculum_id = c.id");
@@ -428,12 +439,12 @@ public class ReportService {
                 qb.requiredCriteria("jt.teacher_id in (:teacher)", "teacher", teachers);
                 qb.requiredCriteria("sp.id in (:studyPeriod)", "studyPeriod", studyPeriods);
 
-                List<?> modules = qb.select("cm.name_et, cm.name_en, m.name_et as modulename_et, m.name_en as modulename_en, c.code, jt.teacher_id, sp.id", em).getResultList();
+                List<?> modules = qb.select("distinct cm.name_et, cm.name_en, m.name_et as modulename_et, m.name_en as modulename_en, c.code, jt.teacher_id, sp.id", em).getResultList();
                 modules.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 5), () -> moduleRecords, Collectors.groupingBy(r -> resultAsLong(r, 6))));
             }
 
             // actual load
-            qb = new JpaNativeQueryBuilder("from timetable_object tto " +
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_object tto " +
                     "inner join timetable t on tto.timetable_id = t.id " +
                     "inner join timetable_event te on te.timetable_object_id = tto.id " +
                     "inner join timetable_event_time tet on tet.timetable_event_id = te.id " +
@@ -443,7 +454,7 @@ public class ReportService {
             qb.requiredCriteria("t.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
 
             qb.groupBy("tete.teacher_id, t.study_period_id");
-            List<?> actualLoad = qb.select("tete.teacher_id, t.study_period_id, coalesce(sum(te.lessons), 0)", em).getResultList();
+            List<?> actualLoad = qb.select("tete.teacher_id, t.study_period_id, sum(coalesce(te.lessons, 1))", em).getResultList();
             actualLoad.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), () -> actualLoadHours, Collectors.toMap(r -> resultAsLong(r, 1), r -> resultAsLong(r, 2))));
         }
 
@@ -577,8 +588,7 @@ public class ReportService {
         public void addInformal(Object r) {
             Long applicationId = resultAsLong(r, 0);
             applications.add(applicationId);
-            // FIXME should check confirmed date?
-            boolean accepted = Boolean.TRUE.equals(resultAsBoolean(r, 2)) && VOTA_STATUS_CONFIRMED.equals(resultAsString(r, 6));
+            boolean accepted = isAccepted(resultAsBoolean(r, 2), resultAsString(r, 6));
             BigDecimal credits = resultAsDecimal(r, 4);
             if(credits != null) {
                 totalCredits = totalCredits.add(credits);
@@ -596,8 +606,7 @@ public class ReportService {
             Long applicationId = resultAsLong(r, 0);
             applications.add(applicationId);
             String country = resultAsString(r, 2);
-            // FIXME should check confirmed date?
-            boolean accepted = Boolean.TRUE.equals(resultAsBoolean(r, 3)) && VOTA_STATUS_CONFIRMED.equals(resultAsString(r, 7));
+            boolean accepted = isAccepted(resultAsBoolean(r, 3), resultAsString(r, 7));
             BigDecimal credits = resultAsDecimal(r, 5);
             totalCredits = totalCredits.add(credits);
             if(accepted) {
@@ -614,6 +623,10 @@ public class ReportService {
                     acceptedAbroadCredits = acceptedAbroadCredits.add(credits);
                 }
             }
+        }
+
+        private static boolean isAccepted(Boolean transfer, String applicationStatus) {
+            return Boolean.TRUE.equals(transfer) && ApelApplicationStatus.VOTA_STAATUS_C.name().equals(applicationStatus);
         }
     }
 }

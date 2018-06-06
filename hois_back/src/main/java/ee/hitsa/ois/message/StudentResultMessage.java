@@ -26,7 +26,7 @@ public class StudentResultMessage extends StudentMessage {
             subjectName = data.getCurriculumVersionOccupationModule().getCurriculumModule().getNameEt();
         } else {
             ProtocolHdata data = protocol.getProtocolHdata();
-            Subject subject = data.getSubjectStudyPeriod().getSubject();
+            Subject subject = Boolean.TRUE.equals(protocol.getIsFinalThesis()) ? data.getFinalSubject() : data.getSubjectStudyPeriod().getSubject();
             subjectCode = subject.getCode();
             subjectName = subject.getNameEt();
         }

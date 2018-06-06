@@ -7,6 +7,7 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Required;
+import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class StudentForm extends VersionedCommand {
@@ -30,6 +31,9 @@ public class StudentForm extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.ERIVAJADUS)
     private String specialNeed;
     private Boolean isRepresentativeMandatory;
+    @Valid
+    private OisFileCommand photo;
+    private Boolean deleteCurrentPhoto;
 
     public StudentPersonForm getPerson() {
         return person;
@@ -86,6 +90,24 @@ public class StudentForm extends VersionedCommand {
     public void setIsRepresentativeMandatory(Boolean isRepresentativeMandatory) {
         this.isRepresentativeMandatory = isRepresentativeMandatory;
     }
+    
+    public OisFileCommand getPhoto() {
+        return photo;
+    }
+
+    public void setPhoto(OisFileCommand photo) {
+        this.photo = photo;
+    }
+
+    public Boolean getDeleteCurrentPhoto() {
+        return deleteCurrentPhoto;
+    }
+
+    public void setDeleteCurrentPhoto(Boolean deleteCurrentPhoto) {
+        this.deleteCurrentPhoto = deleteCurrentPhoto;
+    }
+
+
 
     public static class StudentPersonForm {
 

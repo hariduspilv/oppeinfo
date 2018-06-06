@@ -10,6 +10,10 @@
     // FIXME: oppesuund is lost when returning to page
 
 
+    if (!$scope.criteria.status) {
+      $scope.criteria.status = ['OPPEKAVA_STAATUS_M', 'OPPEKAVA_STAATUS_S', 'OPPEKAVA_STAATUS_K'];
+    }
+
     function getListOfStudyLevels() {
        /*
         * Let other users without school to watch this form, not only External expert

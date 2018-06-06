@@ -55,10 +55,8 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
         });
       });
       $scope.formState.modules = result.map(function (it) { return it.module; });
-
-      //in case of when module is set (edit)
       if (angular.isNumber($scope.contract.module)) {
-        $scope.moduleChanged($scope.contract.module);
+        updateModuleThemes($scope.contract.module);
       }
     });
   }
@@ -73,6 +71,13 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
     });
   }
 
+  function updateModuleThemes(moduleId) {
+    var module = $scope.formState.modulesById[moduleId];
+    if (module) {
+      $scope.formState.themes = module.themes.map(function (it) { return it.theme; });
+    }
+  }
+
   function setModuleCredits() {
     if($scope.contract.module && !$scope.contract.theme) {
       $scope.contract.credits = $scope.formState.modulesById[$scope.contract.module].credits;
@@ -83,7 +88,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
   $scope.moduleChanged = function (moduleId) {
     if ($scope.formState.modulesById[moduleId]) {
       setModuleCredits();
-      $scope.formState.themes = $scope.formState.modulesById[moduleId].themes.map(function (it) { return it.theme; });
+      updateModuleThemes(moduleId);
 
       if (!angular.isDefined(entity) && angular.isString($scope.formState.modulesById[moduleId].assessmentMethodsEt)) {
         $scope.contract.practicePlan = $scope.formState.modulesById[moduleId].assessmentMethodsEt;
@@ -113,6 +118,17 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
         $scope.contract.practicePlan = $scope.formState.subjectsById[subjectId].outcomesEt;
       }
     }
+  };
+
+  $scope.updateHours = function () {
+    if (angular.isNumber($scope.contract.credits)) {
+      $scope.contract.hours = DataUtils.creditsToHours($scope.contract.credits);
+      $scope.contractForm.hours.$setDirty();
+    }
+  };
+  $scope.updateCredits = function () {
+    $scope.contract.credits = DataUtils.hoursToCredits($scope.contract.hours);
+    $scope.contractForm.credits.$setDirty();
   };
 
   $scope.enterpriseChanged = function (enterpriseId) {

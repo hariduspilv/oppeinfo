@@ -24,6 +24,7 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
       values: '@',
       valueProperty: '@',
       showProperty: '@',
+      preselectCurrent: '@',
       selectCurrentStudyYear: '@',
       loadAfterDefer: '=',
     },
@@ -47,12 +48,28 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
         doFilter();
       }
 
-      function afterStudyYearsLoad() {
-        if (angular.isDefined(scope.selectCurrentStudyYear) && !scope.ngModel) {
-          var currentStudyYear = DataUtils.getCurrentStudyYearOrPeriod(scope.options);
-          if (currentStudyYear) {
-            scope.ngModel = currentStudyYear.id;
+      function preselectCurrentStudyYearOrPeriod() {
+        if (!scope.ngModel) {
+          var current = DataUtils.getCurrentStudyYearOrPeriod(scope.options);
+          if (current) {
+            scope.ngModel = current.id;
           }
+        }
+      }
+
+      function afterStudyYearsLoad() {
+        if (angular.isDefined(scope.selectCurrentStudyYear)) {
+          preselectCurrentStudyYearOrPeriod();
+        }
+      }
+
+      function afterStudyPeriodsWithYearLoad() {
+        scope.options.forEach(function (studyPeriod) {
+          studyPeriod.display = scope.$root.currentLanguageNameField(studyPeriod.studyYear) + ' ' + 
+            scope.$root.currentLanguageNameField(studyPeriod);
+        });
+        if (angular.isDefined(scope.preselectCurrent)) {
+          preselectCurrentStudyYearOrPeriod();
         }
       }
 
@@ -84,6 +101,11 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
             scope.options = QueryUtils.endpoint('/autocomplete/subjectsList').query(scope.criteria);
           } else if(attrs.type === 'studyperiod') {
             scope.options = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+          } else if(attrs.type === 'studyperiodyear') {
+            if (!scope.showProperty) {
+              scope.showProperty = 'display';
+            }
+            scope.options = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(afterStudyPeriodsWithYearLoad);
           } else if(attrs.type === 'apelschool') {
             scope.options = QueryUtils.endpoint('/autocomplete/apelschools').query();
           }

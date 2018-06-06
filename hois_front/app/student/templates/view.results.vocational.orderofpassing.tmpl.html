@@ -12,7 +12,14 @@
     </thead>
     <tbody md-body>
       <tr md-row ng-repeat="row in vocationalResultsPassing | orderBy: '-date'" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell><span ng-class="row.isModule ? 'md-body-2 bold' : ''"><span ng-if="row.isModule">M: </span>{{currentLanguageNameField(row.name)}}</span></td>
+        <td md-cell>
+          <span ng-if="row.isApel" class="apelAsterisk">*</span>
+          <span ng-class="row.isModule ? 'md-body-2 bold' : ''">
+            <span ng-if="row.isModule">M: </span>
+            <span>{{currentLanguageNameField(row.name)}}</span>
+          </span>
+          <span ng-if="row.isInformal"> - {{'student.result.informal' | translate}}</span>
+        </td>
         <td md-cell><span ng-if="row.entryType">{{currentLanguageNameField(row.entryType)}}</span></td>
         <td md-cell><span ng-class="row.isModule ? 'md-body-2 bold' : ''">{{row.grade.value}}</span></td>
         <td md-cell>{{row.date | hoisDate}}</td>

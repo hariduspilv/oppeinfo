@@ -3,10 +3,12 @@ package ee.hitsa.ois.web;
 import java.util.List;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,8 +27,8 @@ public class StudyYearScheduleController {
     @Autowired
     private StudyYearScheduleService studyYearScheduleService;
 
-    @GetMapping
-    public StudyYearScheduleDtoContainer getStudyYearSchedules(HoisUserDetails user, StudyYearScheduleDtoContainer schedulesCmd) {
+    @PostMapping
+    public StudyYearScheduleDtoContainer getStudyYearSchedules(HoisUserDetails user, @NotNull @Valid @RequestBody StudyYearScheduleDtoContainer schedulesCmd) {
         // user can select school department with no student groups, and it should not cause an error
         if(!CollectionUtils.isEmpty(schedulesCmd.getStudyPeriods())) {
             schedulesCmd.setStudyYearSchedules(studyYearScheduleService.getSet(user.getSchoolId(), schedulesCmd));

@@ -12,7 +12,7 @@ public class JournalEntryByDateDto {
 
     private LocalDate entryDate;
     private Long startLessonNr;
-    private Integer lessons;
+    private Long lessons;
     private String nameEt;
     @ClassifierRestriction(MainClassCode.SISSEKANNE)
     private String entryType;
@@ -41,11 +41,11 @@ public class JournalEntryByDateDto {
         this.startLessonNr = startLessonNr;
     }
 
-    public Integer getLessons() {
+    public Long getLessons() {
         return lessons;
     }
 
-    public void setLessons(Integer lessons) {
+    public void setLessons(Long lessons) {
         this.lessons = lessons;
     }
 

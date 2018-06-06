@@ -108,6 +108,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
           } else {
             afterLoad(result);
             message.updateSuccess();
+            form.$setPristine();
           }
         });
       } else {
@@ -180,9 +181,8 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
 
     //this is only used when viewing by the admin
     $scope.accept = function () {
-      QueryUtils.endpoint(baseUrl + '/acceptApplications').put({
-        applications: [id]
-      }, function () {
+      QueryUtils.endpoint(baseUrl + '/acceptApplications').put([id]
+      , function () {
         loadApplication();
       });
     };

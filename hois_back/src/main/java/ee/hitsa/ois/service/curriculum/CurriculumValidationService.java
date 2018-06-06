@@ -263,7 +263,7 @@ public class CurriculumValidationService {
             assertHigherModulesHaveSubjects(form);
             assertHigherModulesHaveSpecialities(form);
         } else {
-            assertAllOccupationModulesValid(curriculumVersion);
+            assertOccupationModulesValid(curriculumVersion);
             assertAllOccupationModuleThemesValid(curriculumVersion);
         }
     }
@@ -277,7 +277,7 @@ public class CurriculumValidationService {
             assertHigherModulesHaveSubjects(dto);
             assertHigherModulesHaveSpecialities(dto);
         } else {
-            assertAllOccupationModulesValid(curriculumVersion);
+            assertOccupationModulesValid(curriculumVersion);
         }
     }
 
@@ -341,7 +341,7 @@ public class CurriculumValidationService {
         }
     }
 
-    private static void assertAllOccupationModulesValid(CurriculumVersion implementationPlan) {
+    private static void assertOccupationModulesValid(CurriculumVersion implementationPlan) {
         Curriculum curriculum = implementationPlan.getCurriculum();
         
         long curriculumModules = curriculum.getModules().stream()
@@ -351,13 +351,8 @@ public class CurriculumValidationService {
         .stream().filter(m -> !CurriculumUtil.isFreeModule(m.getCurriculumModule()))
         .count();
         
-        if(curriculumModules != implementationPlanModules) {
-            throw new ValidationFailedException("curriculum.error.implementationPlanNotAllModules");
-        }
-        for(CurriculumModule module : curriculum.getModules()) {
-            if(!moduleHasOccupationModule(module, implementationPlan)) {
-                throw new ValidationFailedException("curriculum.error.implementationPlanNotAllModules");
-            }
+        if(curriculumModules > 0 && implementationPlanModules < 1) {
+            throw new ValidationFailedException("curriculum.error.implementationPlanAtleastOneModuleNeeded");
         }
     }
 
@@ -399,15 +394,8 @@ public class CurriculumValidationService {
         return Short.valueOf((short)capacitiesSum);
     }
 
-    private static boolean moduleHasOccupationModule(CurriculumModule module, CurriculumVersion implementationPlan) {
-        if(CurriculumUtil.isFreeModule(module)) {
-            return true;
-        }
-        return implementationPlan.getOccupationModules().stream().anyMatch(om -> module.equals(om.getCurriculumModule()));
-    }
-
     // Common for higher & vocational curriculum versions
-    public void assertCurriculumVersionCanDeleted(CurriculumVersion version) {
+    public void assertCurriculumVersionCanBeDeleted(CurriculumVersion version) {
         if(ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C, version.getStatus())) {
             throw new ValidationFailedException("curriculum.error.cannotBeDeleted");
         }

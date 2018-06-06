@@ -86,7 +86,14 @@ public class LessonPlanController {
         UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
         return get(user, lessonPlanService.save(lessonPlan, form));
     }
-
+    
+    @DeleteMapping("/{id:\\d+}")
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") LessonPlan lessonPlan,
+            @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
+        lessonPlanService.delete(user, lessonPlan);
+    }
+    
     @GetMapping("/searchFormData")
     public Map<String, ?> searchFormData(HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);

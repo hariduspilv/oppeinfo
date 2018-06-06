@@ -36,6 +36,7 @@ public class CertificateStudentResult {
         result.setGradeName(grade.getGradeNameEt());
         result.setGradeValue(grade.getGradeValue());
         result.setDate(DateUtils.date(grade.getGradeDate()));
+        result.setAssessedBy(String.join(", ", StreamUtil.nullSafeList(grade.getTeachers())));
         return result;
     }
 
@@ -50,7 +51,7 @@ public class CertificateStudentResult {
         result.setGradeName(grade != null ? grade.getNameEt() : null);
         result.setGradeValue(grade != null ? grade.getValue() : null);
         result.setDate(DateUtils.date(dto.getDate()));
-        result.setTeachers(StreamUtil.toMappedList(AutocompleteResult::getNameEt, dto.getTeachers()));
+        result.setAssessedBy(String.join(", ", StreamUtil.toMappedList(AutocompleteResult::getNameEt, dto.getTeachers())));
         return result;
     }
 

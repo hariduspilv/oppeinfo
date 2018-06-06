@@ -67,6 +67,15 @@ public class CurriculumVersionOccupationModuleController {
         validate(user, EntityUtil.getId(occupationModule.getCurriculumVersion()));
         return get(user, curriculumVersionOccupationModuleService.update(dto, occupationModule));
     }
+    
+    @DeleteMapping("/{id:\\d+}")
+    public void delete(HoisUserDetails user, @WithEntity CurriculumVersionOccupationModule occupationModule) {
+        CurriculumVersion curriculumVersion = curriculumVersionRepository.getOne(EntityUtil.getId(occupationModule.getCurriculumVersion()));
+        CurriculumUtil.assertCanDelete(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
+        curriculumValidationService.assertCurriculumVersionCanBeDeleted(curriculumVersion);
+        curriculumVersionOccupationModuleService.delete(user, occupationModule);
+    }
+
 
     @GetMapping("/curriculumModule/{id:\\d+}")
     public CurriculumModuleDto getCurriculumModule(@WithEntity CurriculumModule module) {

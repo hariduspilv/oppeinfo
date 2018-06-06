@@ -19,7 +19,7 @@
 <div ng-if="!application.isAdult" layout="row" layout-sm="column" layout-xs="column">
     <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
       <label>{{'application.confirmedByRepresentative' | translate}}</label>
-      <hois-value value="application.needsRepresentativeConfirm === true && application.status === 'AVALDUS_STAATUS_KOOST' ? 'main.no' : 'main.yes' | translate"></hois-value>
+      <hois-value value="application.needsRepresentativeConfirm === true || application.status === 'AVALDUS_STAATUS_KOOST' ? 'main.no' : 'main.yes' | translate"></hois-value>
     </md-input-container>
 </div>
 <div ng-if="application.status === 'AVALDUS_STAATUS_TAGASI'" layout="row" layout-sm="column" layout-xs="column">

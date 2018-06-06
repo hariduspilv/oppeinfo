@@ -19,6 +19,7 @@ public class DirectiveViewDto {
     private Long id;
     private String headline;
     private String type;
+    private Boolean isHigher;
     private String directiveNr;
     private LocalDate confirmDate;
     private String addInfo;
@@ -57,6 +58,14 @@ public class DirectiveViewDto {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
     }
 
     public String getDirectiveNr() {

@@ -23,7 +23,6 @@ public class HigherProtocolSearchDto {
     private String confirmer;
     private Boolean canChange;
     
-
     public static HigherProtocolSearchDto ofWithUserRithts(Protocol protocol, HoisUserDetails user) {
         HigherProtocolSearchDto dto = new HigherProtocolSearchDto();
         EntityUtil.bindToDto(protocol, dto, "confirmer");

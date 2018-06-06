@@ -2,7 +2,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form ng-submit="loadData()" novalidate>
+      <form name="teacherLoadReportForm" ng-submit="loadData()" novalidate>
         <div layout="row">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'report.teachersload.studyYear' | translate}}</label>
@@ -59,8 +59,8 @@
                 {{currentLanguageNameField(module.module)}}
               </div>
             </td>
-            <td md-cell>{{::row.plannedhours}}</td>
-            <td md-cell>{{::row.actualhours}}</td>
+            <td md-cell>{{::row.plannedHours}}</td>
+            <td md-cell>{{::row.actualHours}}</td>
           </tr>
         </tbody>
       </table>

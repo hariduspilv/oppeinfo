@@ -44,8 +44,8 @@
           </md-input-container>
         </div>
       </div>
-      <div>
-        <img ng-if="student.photo" ng-src="{{student.imageUrl}}">
+      <div flex="30">
+        <img ng-if="student.photo" flex="60" style="display: block; margin-left: auto; margin-right: auto;" ng-src="{{student.imageUrl}}">
       </div>
     </div>
 
@@ -143,7 +143,7 @@
       </hois-collapsable>
     </div>
 
-    <div ng-if="student.isVocational && student.occupationCertificates && student.occupationCertificates.length > 0">
+    <div ng-if="student.occupationCertificates && student.occupationCertificates.length > 0">
       <hois-collapsable label="('student.occupationcertificate.label' | translate)">
         <div ng-repeat="row in student.occupationCertificates">
           <div layout="row" layout-sm="column" layout-xs="column">
@@ -151,11 +151,15 @@
               <label>{{'student.occupationcertificate.certificateNr' | translate}}</label>
               <hois-value value="row.certificateNr"></hois-value>
             </md-input-container>
-            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container ng-if="!student.isVocational" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'student.occupationcertificate.occupation' | translate}}</label>
               <hois-classifier-value ng-model="row.occupationCode" main-classifier-code="KUTSE"></hois-classifier-value>
             </md-input-container>
-            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container ng-if="student.isVocational" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'student.occupationcertificate.occupation' | translate}}</label>
+              <hois-classifier-value ng-model="row.occupationCode" main-classifier-code="KUTSE"></hois-classifier-value>
+            </md-input-container>
+            <md-input-container ng-if="student.isVocational" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'student.occupationcertificate.partOccupation' | translate}}</label>
               <hois-classifier-value ng-model="row.partOccupationSpecialityCode" main-classifier-codes="OSAKUTSE,SPETSKUTSE"></hois-classifier-value>
             </md-input-container>

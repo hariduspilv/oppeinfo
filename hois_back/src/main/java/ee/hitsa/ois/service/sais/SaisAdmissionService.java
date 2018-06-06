@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
@@ -37,6 +38,7 @@ import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryBuilder;
@@ -124,9 +126,10 @@ public class SaisAdmissionService {
     }
 
     private void processResponse(AdmissionExportResponse response, List<SaisAdmissionSearchDto> result, Long schoolId) {
-        Map<String, Classifier> oppekeelMap = StreamUtil.toMap(Classifier::getExtraval1, classifierService.findAllByMainClassCode(MainClassCode.OPPEKEEL));
-        // XXX maybe ignore values with getExtraval1 missing and when multiple items with same values, use first one
-        Map<String, Classifier> oppevormMap = StreamUtil.toMap(Classifier::getValue, classifierService.findAllByMainClassCode(MainClassCode.OPPEVORM));
+        Map<String, Classifier> oppekeelMap = classifierService.findAllByMainClassCode(MainClassCode.OPPEKEEL).stream().collect(
+                Collectors.toMap(Classifier::getExtraval1, it -> it, ClassifierUtil::validOne));
+        Map<String, Classifier> oppevormMap = classifierService.findAllByMainClassCode(MainClassCode.OPPEVORM).stream().collect(
+                Collectors.toMap(Classifier::getValue, it -> it, ClassifierUtil::validOne));
 
         Classifier finallikasRe = em.getReference(Classifier.class, FinSource.FINALLIKAS_RE.name());
         Classifier finallikasRev = em.getReference(Classifier.class, FinSource.FINALLIKAS_REV.name());

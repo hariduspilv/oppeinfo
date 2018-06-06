@@ -19,7 +19,7 @@ angular.module('hitsaOis').controller('StudentScholarshipController', ['dialogSe
       $q.all([available, student]).then(function () {
         $scope.possibleStipends.forEach(function (possible) {
           var match = $scope.studentStipends.find(function (application) {
-            return application.id === possible.id;
+            return application.termId === possible.id;
           });
           if (match) {
             possible.canApply = false;

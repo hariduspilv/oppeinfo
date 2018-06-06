@@ -155,6 +155,11 @@ public class LessonPlanService {
         AssertionFailedException.throwIf(!modules.isEmpty(), "Unhandled lessonplan module");
         return EntityUtil.save(lessonPlan, em);
     }
+    
+    public void delete(HoisUserDetails user, LessonPlan lessonPlan) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(lessonPlan, em);
+    }
 
     public Page<LessonPlanSearchDto> search(Long schoolId, LessonPlanSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(

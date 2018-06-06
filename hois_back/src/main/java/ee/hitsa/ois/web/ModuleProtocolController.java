@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -49,6 +48,7 @@ import ee.hitsa.ois.web.commandobject.ModuleProtocolSignForm;
 import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EntityMobileSignDto;
 import ee.hitsa.ois.web.dto.EntitySignDto;
@@ -87,6 +87,7 @@ public class ModuleProtocolController {
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         ModuleProtocolDto dto = ModuleProtocolDto.of(protocol);
         dto.setCanBeEdited(ModuleProtocolUtil.canEdit(user, protocol));
+        dto.setCanBeConfirmed(ModuleProtocolUtil.canConfirm(user, protocol));
         dto.setCanBeDeleted(ModuleProtocolUtil.canDelete(user, protocol));
         return dto;
     }
@@ -138,10 +139,10 @@ public class ModuleProtocolController {
     }
 
     @GetMapping("/{id:\\d+}/otherStudents")
-    public Collection<ModuleProtocolStudentSelectDto> otherStudents(HoisUserDetails user,
-            @WithEntity Protocol protocol) {
+    public Page<ModuleProtocolStudentSelectDto> otherStudents(HoisUserDetails user, @WithEntity Protocol protocol,
+            StudentNameSearchCommand command, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return moduleProtocolService.otherStudents(user, protocol);
+        return moduleProtocolService.otherStudents(user, protocol, command, pageable);
     }
 
     @PostMapping("/{id:\\d+}/addStudents")
@@ -238,6 +239,7 @@ public class ModuleProtocolController {
         return get(user, protocol);
     }
 
+    /* TODO: remove if admin's can't confirm without ID card or mobile ID log in
     @PostMapping("/{id:\\d+}/confirm")
     public ModuleProtocolDto confirm(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
@@ -245,6 +247,7 @@ public class ModuleProtocolController {
         ModuleProtocolUtil.assertCanEdit(user, protocol);
         return get(user, moduleProtocolService.confirm(user, protocol, moduleProtocolSaveForm));
     }
+    */
 
     @GetMapping("/{id:\\d+}/print/protocol.pdf")
     public void print(HoisUserDetails user, @WithEntity Protocol protocol, HttpServletResponse response)

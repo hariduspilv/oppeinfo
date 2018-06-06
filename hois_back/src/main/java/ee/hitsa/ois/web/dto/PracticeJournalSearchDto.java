@@ -17,7 +17,9 @@ public class PracticeJournalSearchDto {
     private String practicePlace;
     private AutocompleteResult teacher;
     private LocalDateTime studentLastEntryDate;
+    private String status;
     private Boolean canEdit;
+    private Boolean canConfirm;
     private Boolean canStudentAddEntries;
     private Boolean canAddEntries;
     private AutocompleteResult subject;
@@ -117,6 +119,14 @@ public class PracticeJournalSearchDto {
     public void setStudentLastEntryDate(LocalDateTime studentLastEntryDate) {
         this.studentLastEntryDate = studentLastEntryDate;
     }
+    
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     public Boolean getCanEdit() {
         return canEdit;
@@ -124,6 +134,14 @@ public class PracticeJournalSearchDto {
 
     public void setCanEdit(Boolean canEdit) {
         this.canEdit = canEdit;
+    }
+
+    public Boolean getCanConfirm() {
+        return canConfirm;
+    }
+
+    public void setCanConfirm(Boolean canConfirm) {
+        this.canConfirm = canConfirm;
     }
 
     public Boolean getCanStudentAddEntries() {

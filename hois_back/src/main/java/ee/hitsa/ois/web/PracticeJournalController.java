@@ -90,6 +90,14 @@ public class PracticeJournalController {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return get(user, practiceJournalService.save(practiceJournal, practiceJournalForm));
     }
+    
+    @PutMapping("/{id:\\d+}/confirm")
+    public PracticeJournalDto confirm(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) PracticeJournal practiceJournal,
+            @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return get(user, practiceJournalService.confirm(practiceJournal, practiceJournalForm));
+    }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user,

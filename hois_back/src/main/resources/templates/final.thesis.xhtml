@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>{{ "report.final.thesis.label" | translate }}</title>
+  <style type="text/css">
+    {% include "styles.css" %}
+
+    tr {
+      page-break-inside: avoid;
+    }
+  </style>
+</head>
+
+<body>
+  <p class="font14" align="center">{{ content.school }}</p>
+  <p class="font14" align="center">{{ content.curriculum }}</p>
+  <table class="reporttable font12">
+    <tr>
+      <td class="label">{{ "report.final.thesis.student.name" | translate }}</td>
+      <td>{{ content.student }}</td>
+    </tr>
+    <tr>
+      <td class="label">{{ "report.final.thesis.theme" | translate }}</td>
+      <td>{{ content.theme }}</td>
+    </tr>
+    {% if content.hasDraft %}
+      <tr>
+        <td class="label" colspan="2">{{ "report.final.thesis.draft" | translate }}</td>
+      </tr>
+      <tr>
+        <td colspan="2">{{ content.draft }}</td>
+      </tr>
+    {% endif %}
+  </table>
+</body>
+
+</html>

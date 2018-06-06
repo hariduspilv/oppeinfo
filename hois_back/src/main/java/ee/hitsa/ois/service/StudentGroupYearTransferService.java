@@ -55,9 +55,9 @@ public class StudentGroupYearTransferService {
 
     private static final String SELECT_AKADK = "select ds2.start_date as end_date from directive d2"
             + " join directive_student ds2 on ds2.directive_id = d2.id"
-            + " where d2.status_code = ?1 and d2.type_code = ?3"
-            + " and ds2.start_date between ds.start_date and ds.end_date"
-            + " and ds2.student_id = ds.student_id";
+            + " join application a on a.id = ds2.application_id"
+            + " where d2.status_code = ?1 and d2.type_code = ?3 and ds2.canceled = false"
+            + " and ds2.student_id = ds.student_id and a.directive_id = ds.directive_id";
     
     @Autowired
     private EntityManager em;
@@ -72,7 +72,7 @@ public class StudentGroupYearTransferService {
                 + " join classifier c on sy.year_code = c.code"
                 + " where sy.school_id = ?1 and (sy.end_date > now()"
                 + " or exists (select id from student_group_year_transfer where study_year_id = sy.id))"
-                + " order by c.code desc")
+                + " order by c.code")
                 .setParameter(1, schoolId)
                 .getResultList();
         return StreamUtil.toMappedList(r -> new StudyYearSearchDto((Object[])r), data);
@@ -187,14 +187,16 @@ public class StudentGroupYearTransferService {
             groupMap.put(groupId, groupLog);
             resultMap.put(groupId, new CalculatedStudentGroupDto(EntityUtil.getId(groupLog)));
         }
-        em.createNativeQuery("delete from student_group_year_transfer_log where id in ("
-                + "select sgytl.id"
-                + " from student_group_year_transfer_log sgytl"
-                + " join student_group_year_transfer sgyt on sgyt.id = sgytl.student_group_year_transfer_id"
-                + " join student s on s.id = sgytl.student_id"
-                + " where sgyt.id in ?1 and (s.student_group_id is null or sgyt.student_group_id != s.student_group_id))")
-                .setParameter(1, StreamUtil.toMappedList(EntityUtil::getId, groupLogs))
-                .executeUpdate();
+        if (!groupLogs.isEmpty()) {
+            em.createNativeQuery("delete from student_group_year_transfer_log where id in ("
+                    + "select sgytl.id"
+                    + " from student_group_year_transfer_log sgytl"
+                    + " join student_group_year_transfer sgyt on sgyt.id = sgytl.student_group_year_transfer_id"
+                    + " join student s on s.id = sgytl.student_id"
+                    + " where sgyt.id in ?1 and (s.student_group_id is null or sgyt.student_group_id != s.student_group_id))")
+            .setParameter(1, StreamUtil.toMappedList(EntityUtil::getId, groupLogs))
+            .executeUpdate();
+        }
         List<StudentGroupYearTransferLog> studentLogs = groupLogs.isEmpty() ? Collections.emptyList() : 
             em.createQuery("select sgytl from StudentGroupYearTransferLog sgytl"
                 + " where sgytl.studentGroupYearTransfer in ?1", StudentGroupYearTransferLog.class)

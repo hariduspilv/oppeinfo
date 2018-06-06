@@ -71,12 +71,14 @@
         </div>
 
         <div class="form-readonly" flex="30" flex-sm="100" flex-xs="100">
-          <md-input-container style="width: 100%; margin-top: 20px">
+          <md-input-container class="md-input-has-value" style="width: 100%; margin-top: 20px">
             <label class="textInput">{{'journal.capacitiesPlannedAndEnteredLessonsCount' | translate}}</label>
-            <hois-value value="'A: ' + journal.lessonHours.plannedHoursCapacityA + '/' + journal.lessonHours.usedHoursCapacityA
-                                + ' I: ' + journal.lessonHours.plannedHoursCapacityI + '/' + journal.lessonHours.usedHoursCapacityI
-                                + ' P: ' + journal.lessonHours.plannedHoursCapacityP + '/' + journal.lessonHours.usedHoursCapacityP
-                                + ' S: ' + journal.lessonHours.plannedHoursCapacityS + '/' + journal.lessonHours.usedHoursCapacityS"></hois-value>
+            <div class="md-body-1">
+              <span ng-repeat="type in journal.lessonHours.capacityHours | orderBy: 'capacity'">
+                <span>{{type.capacity.substr(-1).toUpperCase()}}:</span>
+                <span>{{type.plannedHours + '/' + type.usedHours}}</span>
+              </span>
+            </div>
           </md-input-container>
         </div>
       </div>
@@ -87,12 +89,14 @@
           <hois-value value="journal.moodleCourseId"></hois-value>
         </md-input-container>
 
-        <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" class="md-input-has-value">
           <label class="textInput">{{'journal.capacitiesPlannedAndEnteredLessonsCount' | translate}}</label>
-          <hois-value value="'A: ' + journal.lessonHours.plannedHoursCapacityA + '/' + journal.lessonHours.usedHoursCapacityA
-                              + ' I: ' + journal.lessonHours.plannedHoursCapacityI + '/' + journal.lessonHours.usedHoursCapacityI
-                              + ' P: ' + journal.lessonHours.plannedHoursCapacityP + '/' + journal.lessonHours.usedHoursCapacityP
-                              + ' S: ' + journal.lessonHours.plannedHoursCapacityS + '/' + journal.lessonHours.usedHoursCapacityS"></hois-value>
+          <div class="md-body-1">
+            <span ng-repeat="type in journal.lessonHours.capacityHours | orderBy: 'capacity'">
+              <span>{{type.capacity.substr(-1).toUpperCase()}}:</span>
+              <span>{{type.plannedHours + '/' + type.usedHours}}</span>
+            </span>
+          </div>
         </md-input-container>
       </div>
     </form>

@@ -36,7 +36,7 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
     });
 
     QueryUtils.createQueryForm($scope, baseUrl, {
-      order: $scope.currentLanguage()==='en' ? '3' : '2'
+      order:'4 desc'
     });
 
 

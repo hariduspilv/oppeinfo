@@ -17,7 +17,7 @@
         <div layout="row" flex>
           <md-input-container flex>
             <label class="textInput">{{'stipend.studyPeriod' | translate}}</label>
-            <hois-value value="currentLanguageNameField(formState.readonlyStudyPeriod)"></hois-value>
+            <hois-value value="formState.readonlyStudyPeriod | hoisStudyPeriod"></hois-value>
           </md-input-container>
         </div>
         <div layout="row">

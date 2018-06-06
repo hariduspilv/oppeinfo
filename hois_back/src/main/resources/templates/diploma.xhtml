@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Diplom</title>
+    <style type="text/css">
+      {% include "diploma.css" %}
+    </style>
+  </head>
+  <body>
+    {% for diploma in content %}
+    {% if loop.index == 0 %}
+    <div class="diploma">
+    {% else %}
+    <div class="diploma page-break-before">
+    {% endif %}
+        &nbsp;
+        <div class="diploma-cumlaude">
+        {% if diploma.isCumLaude and diploma.type.code == "LOPUBLANKETT_KK" %}
+        {{ "diploma.vocational.cumLaude" | translate }}
+        {% endif %}
+        </div>
+        <div class="diploma-center">
+            <div class="diploma-name">{{ diploma.firstname }} {{ diploma.lastname }}</div>
+            {% if diploma.idcode != null and not diploma.idcode.empty %}
+            <div>{{ "diploma.idcode" | translate }} {{ diploma.idcode }}</div>
+            {% else %}
+            <div>{{ "diploma.birthdate" | translate }} {{ diploma.birthdate | hoisDate}}</div>
+            {% endif %}
+            <div>{{ "diploma.graduated" | translate }}</div>
+            <div>{{ diploma.schoolNameGenitiveEt }}</div>
+            <div>{{ diploma.level }}</div>
+            <div>{{ diploma.curriculumNameEt }} ({{ "diploma.code" | translate }} {{ diploma.merCode }})</div>
+            {% if diploma.isOccupation %}
+            <div>{{ "diploma.given" | translate }} {{ "diploma.occupation" | translate }} {{ diploma.occupationText }}</div>
+            {% endif %}
+            {% if diploma.isPartoccupation %}
+            <div>{{ "diploma.given" | translate }} {{ "diploma.partoccupation" | translate }} {{ diploma.partoccupationText }}</div>
+            {% endif %}
+        </div>
+        <div class="diploma-directive">
+            <div>{{ "diploma.directiveNr" | translate }}
+            {% if diploma.directive.directiveNr != null and not diploma.directive.directiveNr.empty %}
+            {{ diploma.directive.directiveNr }},
+            {% else %}
+            X,
+            {% endif %}
+            {% if diploma.directive.confirmDate != null %}
+            {{ diploma.directive.confirmDate | hoisDate}}
+            {% else %}
+            XX.XX.XXXX
+            {% endif %}
+            </div>
+        </div>
+        <div class="diploma-signers">
+            <div class="diploma-signer-left">
+                <div>{{ diploma.signer1Name }}</div>
+                <div>{{ diploma.signer1Position }}</div>
+            </div>
+            <div class="diploma-signer-right">
+                <div>{{ diploma.signer2Name }}</div>
+                <div>{{ diploma.signer2Position }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+  </body>
+</html>

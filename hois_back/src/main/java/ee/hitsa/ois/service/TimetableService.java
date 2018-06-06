@@ -31,6 +31,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -84,6 +86,7 @@ import ee.hitsa.ois.web.commandobject.timetable.TimetableEditForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventHigherForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventVocationalForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand;
+import ee.hitsa.ois.web.commandobject.timetable.TimetableTimeOccupiedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.RoomDto;
 import ee.hitsa.ois.web.dto.timetable.DateRangeDto;
@@ -99,6 +102,7 @@ import ee.hitsa.ois.web.dto.timetable.TimetableCurriculumDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDatesDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableTimeOccupiedDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableJournalDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupCapacityDto;
@@ -495,28 +499,6 @@ public class TimetableService {
         return timetableEvent;
     }
     
-    /*public Map<String, Boolean> checkForRoomAndTeacherClashes(TimetableClashForm form) {
-        Boolean update = form.getTimetableEventTimeId() != null ? Boolean.TRUE : Boolean.FALSE;
-        if(Boolean.TRUE.equals(form.getHigher())) {
-            return checkHigherClashes(form, update);
-        }
-        return checkVocationalClashes(form, update);
-    }
-    
-     private Map<String, Boolean> checkHigherClashes(TimetableClashForm form, Boolean update) {
-        if(Boolean.TRUE.equals(update)) {
-            TimetableEventTime timetableEventTime = em.getReference(TimetableEventTime.class, form.getTimetableEventTimeId());
-        }
-        return null;
-    }
-    
-    private Map<String, Boolean> checkVocationalClashes(TimetableClashForm form, Boolean update) {
-        if(Boolean.TRUE.equals(update)) {
-            TimetableEventTime timetableEventTime = em.getReference(TimetableEventTime.class, form.getTimetableEventTimeId());
-        }
-        return null;
-    }*/
-    
     private void addRoomsToTimetableEventTime(TimetableEventTime timetableEventTime, List<Long> rooms) {
         for(Long room : rooms) {
             TimetableEventRoom timetableEventRoom = new TimetableEventRoom();
@@ -657,6 +639,72 @@ public class TimetableService {
         }
         return timetableEvent;
     }
+    
+    public TimetableTimeOccupiedDto timetableTimeOccupied(TimetableTimeOccupiedCommand command) {
+        if (command.getJournal() != null && command.getTimetable() != null && command.getLessonTime() != null) {
+            Journal journal = em.getReference(Journal.class, command.getJournal());
+            Timetable timetable = em.getReference(Timetable.class, command.getTimetable());
+            LessonTime lessonTime = em.getReference(LessonTime.class,command.getLessonTime());
+            LocalDate start = command.getSelectedDay().equals(timetable.getStartDate().getDayOfWeek())
+                    ? timetable.getStartDate()
+                    : timetable.getStartDate().with(TemporalAdjusters.next(command.getSelectedDay()));
+            List<Long> teachers = StreamUtil.toMappedList(it -> EntityUtil.getId(it.getTeacher()), journal.getJournalTeachers());
+            List<Long> rooms = StreamUtil.toMappedList(it -> EntityUtil.getId(it.getRoom()), journal.getJournalRooms());
+
+            return timetableTimeOccupied(start.atTime(lessonTime.getStartTime()), start.atTime(lessonTime.getEndTime()),
+                    teachers, rooms, null);
+        }
+        
+        return timetableTimeOccupied(command.getStartTime(), command.getEndTime(), command.getTeachers(),
+                command.getRooms(), command.getTimetableEventId());
+    }
+    
+    public TimetableTimeOccupiedDto timetableTimeOccupied(LocalDateTime start, LocalDateTime end,
+            List<Long> teachers, List<Long> rooms, Long timetabelEventTimeId) {
+        TimetableTimeOccupiedDto dto = new TimetableTimeOccupiedDto();
+        dto.setOccupied(Boolean.FALSE);
+        
+        if (CollectionUtils.isEmpty(teachers) && CollectionUtils.isEmpty(rooms)) {
+            return dto;
+        }
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event te " + 
+                "join timetable_event_time tet on te.id = tet.timetable_event_id " + 
+                "left join timetable_event_teacher tett on tet.id = tett.timetable_event_time_id " +
+                "left join teacher t on tett.teacher_id = t.id " +
+                "left join person p on t.person_id = p.id " +
+                "left join timetable_event_room ter on tet.id = ter.timetable_event_time_id " +
+                "left join room r on ter.room_id = r.id");
+        
+        qb.requiredCriteria("tet.start <= :timeEnd", "timeEnd", end);
+        qb.requiredCriteria("tet.end >= :timeStart", "timeStart", start);
+        qb.optionalCriteria("tet.id != :currentEventTimeId", "currentEventTimeId", timetabelEventTimeId);
+        
+        if (!CollectionUtils.isEmpty(teachers) && !CollectionUtils.isEmpty(rooms)) {
+            qb.filter("(tett.teacher_id in (" + StringUtils.join(teachers, ", ") + ")"
+                    + " or ter.room_id in (" + StringUtils.join(rooms, ", ") + "))");
+        } else {
+            qb.optionalCriteria("tett.teacher_id in (:teacherIds)", "teacherIds", teachers);
+            qb.optionalCriteria("ter.room_id in (:roomIds)", "roomIds", rooms);
+        }
+        
+        List<?> data = qb.select("tet.id, tett.teacher_id, p.firstname, p.lastname, ter.room_id, r.code", em).getResultList();
+        if (!data.isEmpty()) {
+            dto.setOccupied(Boolean.TRUE);
+            if (!CollectionUtils.isEmpty(teachers)) {
+                dto.setTeachers(StreamUtil.toMappedSet(
+                        r -> new AutocompleteResult(resultAsLong(r, 1),
+                                PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)),
+                                PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3))),
+                        StreamUtil.toFilteredList(r -> resultAsLong(r, 1) != null && teachers.contains(resultAsLong(r, 1)), data)));
+            }
+            if (!CollectionUtils.isEmpty(rooms)) {
+                dto.setRooms(StreamUtil.toMappedSet(r -> resultAsString(r, 5), StreamUtil
+                        .toFilteredList(r -> resultAsLong(r, 4) != null && rooms.contains(resultAsLong(r, 4)), data)));
+            }
+        }
+        return dto; 
+    }
 
     public Timetable saveEventRoomsAndTimes(HoisUserDetails user, TimetableRoomAndTimeForm form) {
         if(form.getTimetableEventId() != null && form.getEndTime() != null && form.getStartTime() != null) {
@@ -772,7 +820,7 @@ public class TimetableService {
 
     private Page<TimetableManagementSearchDto> searchHigherTimetableForManagement(
             TimetableManagementSearchCommand criteria, Pageable pageable, HoisUserDetails user) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable t").sort("t.start_date desc");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable t").sort(pageable);
 
         qb.requiredCriteria("t.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", user.getSchoolId());
@@ -788,7 +836,7 @@ public class TimetableService {
 
     private Page<TimetableManagementSearchDto> searchVocationalTimetableForManagement(
             TimetableManagementSearchCommand criteria, Pageable pageable, HoisUserDetails user) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable t").sort("t.start_date desc");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable t");
 
         qb.requiredCriteria("t.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", user.getSchoolId());
@@ -809,6 +857,19 @@ public class TimetableService {
 
         StudyPeriod sp = em.getReference(StudyPeriod.class, criteria.getStudyPeriod());
         wrappedData = addMissingDatesToBlocked(sp, wrappedData);
+
+        String pageableSort = pageable.getSort().toString();
+        if ("3: ASC, 4: ASC".equals(pageableSort)) {
+            Collections.sort(wrappedData, StreamUtil.comparingWithNullsLast(TimetableManagementSearchDto::getStart));
+        } else if ("3: DESC, 4: DESC".equals(pageableSort)) {
+            Collections.sort(wrappedData, StreamUtil.comparingWithNullsLast(TimetableManagementSearchDto::getStart));
+            Collections.reverse(wrappedData);
+        } else if ("2: ASC".equals(pageableSort)) {
+            Collections.sort(wrappedData, StreamUtil.comparingWithNullsLast(TimetableManagementSearchDto::getStatus));
+        } else if ("2: DESC".equals(pageableSort)) {
+            Collections.sort(wrappedData, StreamUtil.comparingWithNullsLast(TimetableManagementSearchDto::getStatus));
+            Collections.reverse(wrappedData);
+        }
 
         int totalCount = wrappedData.size();
         int start = Math.min(pageable.getOffset(), totalCount);

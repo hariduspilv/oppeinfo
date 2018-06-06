@@ -1,20 +1,12 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$scope', '$sessionStorage', '$filter', 'QueryUtils', 'DataUtils', '$route', '$rootScope', 'message', 'orderByFilter', '$location', 'config', 'MidtermTaskUtil', 'dialogService', 'ArrayUtils', 'Classifier', 
-function ($scope, $sessionStorage, $filter, QueryUtils, DataUtils, $route, $rootScope, message, orderBy, $location, config, MidtermTaskUtil, dialogService, ArrayUtils, Classifier) {
-
+angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$scope', '$sessionStorage', '$filter', '$q', 'QueryUtils', 'DataUtils', '$route', '$rootScope', 'message', 'orderByFilter', '$location', 'config', 'MidtermTaskUtil', 'dialogService', 'ArrayUtils', 'Classifier', 'ProtocolUtils', 'oisFileService',
+function ($scope, $sessionStorage, $filter, $q, QueryUtils, DataUtils, $route, $rootScope, message, orderBy, $location, config, MidtermTaskUtil, dialogService, ArrayUtils, Classifier, ProtocolUtils, oisFileService) {
   $scope.auth = $route.current.locals.auth;
-
-  $scope.record = $route.current.locals.entity;
   var baseUrl = "/higherProtocols";
-
   var Endpoint = QueryUtils.endpoint(baseUrl);
-  var ConfirmEndpoint = QueryUtils.endpoint(baseUrl + "/confirm");
-  var SaveAndConfirmEndpoint = QueryUtils.endpoint(baseUrl + "/saveAndConfirm");
-
   var midtermTaskUtil = new MidtermTaskUtil();
-
-  var forbiddenGrades = ['KORGHINDAMINE_MI'];
+  var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS' });
 
   function getEmptyStudentResult(student, midtermTask) {
     return {
@@ -31,37 +23,28 @@ function ($scope, $sessionStorage, $filter, QueryUtils, DataUtils, $route, $root
     protocolStudents: []
   };
 
-  function afterLoad() {
-    $scope.savedStudents = angular.copy($scope.record.protocolStudents);
-
-    $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks = midtermTaskUtil.getSortedMidtermTasks($scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
-
-    addEmptyStudentResults();// TODO add to MidtermTaskUtil
-
-    midtermTaskUtil.sortStudentResults($scope.record.subjectStudyPeriodMidtermTaskDto.studentResults, $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
-
-    $scope.formState = {};
-    $scope.formState.protocolPdfUrl = config.apiUrl + baseUrl + '/print/' + $scope.record.id + '/protocol.pdf';
-    $scope.formState.canCalculate = $scope.record.protocolType === 'PROTOKOLLI_LIIK_P' && $scope.record.canChange && !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject;
-    $scope.formState.isConfirmed = $scope.record.status === 'PROTOKOLL_STAATUS_K';
-    $scope.formState.canEditConfirmedProtocol = canEditConfirmedProtocol();
-    $scope.formState.canChangeConfirmedProtocolGrade = canChangeConfirmedProtocolGrade();
-    $scope.formState.canConfirm = $scope.record.status !== 'PROTOKOLL_STAATUS_K' && canConfirm();
-  }
-
-  function canChangeConfirmedProtocolGrade() {
-    return canEditConfirmedProtocol() && $scope.record.status === 'PROTOKOLL_STAATUS_K';
-  }
-
-  function canEditConfirmedProtocol() {
-    return ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M') &&
-      ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_K_TEEMAOIGUS_PROTOKOLL");
-  }
-
-  function canConfirm() {
-    return allProtocolStudentsGraded() && allChangedGradesHaveAddInfo() && 
-      ($scope.auth.loginMethod === 'LOGIN_TYPE_I' || $scope.auth.loginMethod === 'LOGIN_TYPE_M') &&
-      $scope.auth.authorizedRoles.indexOf("ROLE_OIGUS_K_TEEMAOIGUS_PROTOKOLL") !== -1;
+  function entityToDto(entity) {
+    $q.all(clMapper.promises).then(function () {
+      $scope.higherProtocolForm.$setPristine();
+      $scope.record = clMapper.objectmapper(entity);
+      $scope.savedStudents = angular.copy($scope.record.protocolStudents);
+  
+      $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks = midtermTaskUtil.getSortedMidtermTasks($scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
+  
+      addEmptyStudentResults();// TODO add to MidtermTaskUtil
+  
+      midtermTaskUtil.sortStudentResults($scope.record.subjectStudyPeriodMidtermTaskDto.studentResults, $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
+  
+      $scope.getUrl = oisFileService.getUrl;
+      $scope.formState = {};
+      $scope.formState.protocolPdfUrl = config.apiUrl + baseUrl + '/print/' + $scope.record.id + '/protocol.pdf';
+      $scope.formState.canEditProtocol = ProtocolUtils.canEditProtocol($scope.auth, $scope.record);
+      $scope.formState.canChangeConfirmedProtocolGrade = ProtocolUtils.canChangeConfirmedProtocolGrade($scope.auth, $scope.record);
+      $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.record);
+      $scope.formState.canCalculate = $scope.record.protocolType === 'PROTOKOLLI_LIIK_P' && $scope.formState.canEditProtocol &&
+        !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject;
+      $scope.formState.isConfirmed = $scope.record.status === 'PROTOKOLL_STAATUS_K';
+    });
   }
 
   $scope.gradeChanged = function(row) {
@@ -80,61 +63,16 @@ function ($scope, $sessionStorage, $filter, QueryUtils, DataUtils, $route, $root
         }
       }
     }
-
-    if ($scope.record.status === 'PROTOKOLL_STAATUS_K' && $scope.auth.isAdmin()) {
-      $scope.formState.canConfirm = canConfirm();
-    }
+    $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.record);
   };
 
-  $scope.addInfoChanged = function (row) {
-    if (row.addInfo && row.addInfo.charAt(0) === ' ') {
-      row.addInfo = null;
-    }
-    
-    if ($scope.record.status === 'PROTOKOLL_STAATUS_K' && $scope.auth.isAdmin()) {
-      $scope.formState.canConfirm = canConfirm();
-    }
+  $scope.addInfoChanged = function () {
+    $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.record);
   };
 
-  afterLoad();
-
-  function allProtocolStudentsGraded() {
-    if (!angular.isDefined($scope.record) || !angular.isArray($scope.record.protocolStudents)) {
-      return false;
-    }
-
-    var allGraded = true;
-    for (var i = 0; i < $scope.record.protocolStudents.length; i++) {
-      if (!angular.isString($scope.record.protocolStudents[i].grade) || $scope.record.protocolStudents[i].grade.trim().length === 0) {
-        allGraded = false;
-        break;
-      }
-    }
-    return allGraded;
+  if ($route.current.locals.entity) {
+    entityToDto($route.current.locals.entity);
   }
-
-  function allChangedGradesHaveAddInfo() {
-    if (!angular.isDefined($scope.record) || !angular.isArray($scope.record.protocolStudents)) {
-      return false;
-    }
-
-    var allHaveAddInfo = true;
-    if ($scope.formState.canEditConfirmedProtocol) {
-      for (var i = 0; i < $scope.record.protocolStudents.length; i++) {
-        if ($scope.record.protocolStudents[i].gradeHasChanged) {
-          var addInfo = $scope.record.protocolStudents[i].addInfo;
-          addInfo = addInfo !== undefined && addInfo !== null ? addInfo.split(' ').join('') : null;
-          
-          if (!addInfo) {
-            allHaveAddInfo = false;
-            break;
-          }
-        }
-      }
-    }
-    return allHaveAddInfo;
-  }
-
 
   function studentHasResultForTask(student, midtermTask) {
     var result = $scope.record.subjectStudyPeriodMidtermTaskDto.studentResults.find(function(studentResult){
@@ -175,19 +113,13 @@ function ($scope, $sessionStorage, $filter, QueryUtils, DataUtils, $route, $root
     if(!validationPassed()) {
       return;
     }
-    if($scope.formState.isConfirmed) {
-      dialogService.confirmDialog({prompt: 'higherProtocol.prompt.saveConfirmedProtocol'}, save);
-    } else {
-      save();
-    }
+    save();
   };
 
   function save() {
     new Endpoint($scope.record).$update().then(function(response){
       message.updateSuccess();
-      $scope.record = response;
-      afterLoad();
-      $scope.higherProtocolForm.$setPristine();
+      entityToDto(response);
     });
   }
 
@@ -203,15 +135,7 @@ function ($scope, $sessionStorage, $filter, QueryUtils, DataUtils, $route, $root
     listOfResults.forEach(setCalculatedGrade);
   }
 
-  function filterGrades() {
-    $scope.grades = $scope.grades.filter(function(it) {
-      if (!$route.current.locals.isView) {
-        return forbiddenGrades.indexOf(it.code) === -1;
-      }
-    });
-  }
-
-  $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' }, filterGrades);
+  $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' });
 
   $scope.calculate = function() {
     QueryUtils.endpoint(baseUrl + "/" + $scope.record.id + "/calculate").query($scope.calculateGrades).$promise.then(function(response){
@@ -221,21 +145,16 @@ function ($scope, $sessionStorage, $filter, QueryUtils, DataUtils, $route, $root
     });
   };
 
-  $scope.confirm = function() {
-    new ConfirmEndpoint($scope.record).$update().then(function(response){
-      message.info('higherProtocol.message.confirmed');
-      $scope.record = response;
-      afterLoad();
-    });
-  };
+  $scope.confirm = function () {
+    if(!validationPassed()) {
+      return;
+    }
 
-  $scope.saveAndConfirm = function() {
-    new SaveAndConfirmEndpoint($scope.record).$update().then(function(response){
-      message.info('higherProtocol.message.savedAndConfirmed');
-      $scope.record = response;
-      afterLoad();
-      $scope.higherProtocolForm.$setPristine();
-    });
+    if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
+      ProtocolUtils.signBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, entityToDto);
+    } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
+      ProtocolUtils.mobileSignBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, entityToDto);
+    }
   };
 
   $scope.getMidtermTaskHeader = midtermTaskUtil.getMidtermTaskHeader;

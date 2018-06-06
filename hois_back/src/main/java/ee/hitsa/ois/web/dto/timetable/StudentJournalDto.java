@@ -3,8 +3,11 @@ package ee.hitsa.ois.web.dto.timetable;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.List;
+
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudentJournalDto {
     private final Long id;
@@ -15,6 +18,8 @@ public class StudentJournalDto {
     private final Short absenceH;
     private final Short absenceP;
     private final Short absencePV;
+    private final String teachers;
+    private final AutocompleteResult modules;
     private List<StudentJournalEntryDto> journalEntries;
     
     public StudentJournalDto(Object[] row) {
@@ -26,6 +31,8 @@ public class StudentJournalDto {
         this.absenceH = resultAsShort(row, 5);
         this.absenceP = resultAsShort(row, 6);
         this.absencePV = resultAsShort(row, 7);
+        this.teachers = resultAsString(row, 8);
+        this.modules = new AutocompleteResult(null, resultAsString(row, 9), resultAsString(row, 10));
     }
 
     public Long getId() {
@@ -60,6 +67,14 @@ public class StudentJournalDto {
         return absencePV;
     }
     
+    public String getTeachers() {
+        return teachers;
+    }
+
+    public AutocompleteResult getModules() {
+        return modules;
+    }
+
     public void setJournalEntries(List<StudentJournalEntryDto> journalEntries) {
         this.journalEntries = journalEntries;
     }

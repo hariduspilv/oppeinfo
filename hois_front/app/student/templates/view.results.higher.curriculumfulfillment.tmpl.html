@@ -1,5 +1,6 @@
 <hois-collapsable ng-repeat="module in higherResults.modules" expanded="false">
-  <hois-collapsable-header>
+  <!-- if there is no extra curriculum subjects module(KORGMOODUL_V) then module.id is set to -1 -->
+  <hois-collapsable-header ng-if="module.id > -1">
     <div layout="row">
       <div flex="30">
         <span>{{'curriculum.module' | translate}} {{currentLanguageNameField(module)}} {{module.totalCredits}} EAP</span>
@@ -9,6 +10,14 @@
       <b ng-if="!module.isOk" flex-offset="10" md-colors="{color: 'accent'}">&nbsp;{{ module.totalDifference }}</b>
       <i class="material-icons" flex-offset="10" md-colors="{color: 'green-600'}" ng-if="module.isOk">done</i>
     </div>
+  </hois-collapsable-header>
+  <hois-collapsable-header ng-if="module.id === -1">
+      <div layout="row">
+        <div flex="30">
+          <hois-classifier-value class="inline" ng-model="module.type" main-classifier-code="KORGMOODUL"></hois-classifier-value>
+        </div>
+        <i class="material-icons" flex-offset="10" md-colors="{color: 'green-600'}" ng-if="module.isOk">done</i>
+      </div>
   </hois-collapsable-header>
   <md-table-container>
     <table md-table>
@@ -29,7 +38,11 @@
           <td md-cell>{{'student.result.isOk' | translate}}</td>
         </tr>
         <tr md-row ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module) | filter: {isOptional: false} | orderBy: currentLanguageNameField()">
-          <td md-cell>{{currentLanguageNameField(subjectResult.subject)}}</td>
+          <td md-cell>
+            <span ng-if="subjectResult.isApelTransfer" class="apelAsterisk">*</span>
+            <span>{{currentLanguageNameField(subjectResult.subject)}}</span>
+            <span ng-if="!subjectResult.isFormalLearning && subjectResult.isApelTransfer"> - {{'student.result.informal' | translate}}</span>
+          </td>
           <td md-cell>{{subjectResult.subject.code}}</td>
           <td md-cell>{{subjectResult.subject.credits}}</td>
           <td md-cell>
@@ -78,7 +91,11 @@
         <tr md-row ng-repeat="subjectResult in higherResults.subjectResults
           | filter: filterSubjectResultsByModule(module) | filter: {isOptional: true} | filter: {electiveModule: '!'}
           | orderBy: currentLanguageNameField()">
-          <td md-cell>{{currentLanguageNameField(subjectResult.subject)}}</td>
+          <td md-cell>
+            <span ng-if="subjectResult.isApelTransfer" class="apelAsterisk">*</span>
+            <span>{{currentLanguageNameField(subjectResult.subject)}}</span>
+            <span ng-if="!subjectResult.isFormalLearning && subjectResult.isApelTransfer"> - {{'student.result.informal' | translate}}</span>
+          </td>
           <td md-cell>{{subjectResult.subject.code}}</td>
           <td md-cell>{{subjectResult.subject.credits}}</td>
           <td md-cell>

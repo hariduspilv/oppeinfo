@@ -69,7 +69,7 @@
       <tr>
         <td colspan="7">
         	<span class="label">{{ "report.curriculum.implementation" | translate }}</span><br/>
-        	<br/>
+        	{{ content.implementation }}
         </td>
       </tr>
       <tr>
@@ -107,6 +107,11 @@
         <td colspan="7">
         	<span class="label">{{ "report.curriculum.vocational.structure" | translate }}</span><br/>
         	{{ content.structure }}
+            {% if content.optionalStudyDescription != null %}
+            <br/>
+            <span class="label">{{ "report.curriculum.vocational.optionalStudyDescription" | translate }}:</span><br/>
+            {{ content.optionalStudyDescription }}
+            {% endif %}
         </td>
       </tr>
       <tr>
@@ -122,6 +127,9 @@
       <tr>
         <td colspan="7">
         	{{ "report.curriculum.description" | translate }}:<br/>
+            {% if content.versionUrl != null %}
+            {{ "report.curriculum.version.url" | translate }}: {{ content.versionUrl }}<br/>
+            {% endif %}
         	{{ content.description }}
         </td>
       </tr>

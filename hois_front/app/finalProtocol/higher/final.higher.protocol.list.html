@@ -1,0 +1,142 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="loadData()" novalidate class="nomargin">
+        <div ng-if="auth.isAdmin()" layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="50" flex-sm="100" flex-xs="100">
+              <label>{{'finalThesis.student' | translate}}</label>
+              <input ng-model="criteria.studentName" type="text">
+          </md-input-container>
+
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          </md-input-container>
+        </div>
+
+        <div ng-if="auth.isAdmin()" layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="50" flex-sm="100" flex-xs="100">
+            <label>{{'finalProtocol.protocolType' | translate}}</label>
+            <md-select ng-model="criteria.isFinalThesis" aria-label="{{'finalProtocol.protocolType' | translate}}">
+              <md-option md-option-empty></md-option>
+              <md-option ng-value="true">{{'finalProtocol.finalThesis' | translate}}</md-option>
+              <md-option ng-value="false">{{'finalProtocol.finalExam' | translate}}</md-option>
+            </md-select>
+          </md-input-container>
+
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'finalProtocol.protocolStatus' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" main-classifier-code="PROTOKOLL_STAATUS" model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
+        </div>
+
+        <div ng-if="auth.isTeacher()" layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                <label>{{'finalThesis.student' | translate}}</label>
+                <input ng-model="criteria.studentName" type="text">
+            </md-input-container>
+
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'finalProtocol.protocolStatus' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" main-classifier-code="PROTOKOLL_STAATUS" model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="50" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'finalProtocol.protocolNr' | translate}}</label>
+            <input type="text" ng-model="criteria.protocolNr">
+          </md-input-container>
+
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'higherProtocol.subject' | translate}}</label>
+            <input type="text" ng-model="criteria.subject">
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="50" flex-sm="100" flex-xs="100">
+            <div layout="column" flex>
+              <div layout="row" flex>
+                <md-input-container>
+                  <label>{{'finalProtocol.insertedFrom' | translate}}</label>
+                  <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
+                </md-input-container>
+                <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'finalProtocol.insertedThru' | translate}}</label>
+                  <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
+                </md-input-container>
+              </div>
+            </div>
+          </div>
+
+          <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <div layout="column" flex>
+              <div layout="row" flex>
+                <md-input-container>
+                  <label>{{'finalProtocol.confirmedFrom' | translate}}</label>
+                  <md-datepicker ng-model="criteria.confirmDateFrom"></md-datepicker>
+                </md-input-container>
+                <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'finalProtocol.confirmedThru' | translate}}</label>
+                  <md-datepicker ng-model="criteria.confirmDateThru" md-min-date="criteria.confirmDateFrom"></md-datepicker>
+                </md-input-container>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearSearch()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-href="#/finalHigherProtocols/exam/new" ng-if="formState.canCreateProtocol">{{'finalProtocol.addFinalExamProtocol' | translate}}</md-button>
+          <md-button class="md-raised" ng-href="#/finalHigherProtocols/thesis/new" ng-if="formState.canCreateProtocol && auth.isAdmin()">{{'finalProtocol.addFinalThesisProtocol' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="2">{{'finalProtocol.protocolNr' | translate}}</th>
+            <th md-column ng-if="auth.isAdmin()" md-order-by="3">{{'finalProtocol.protocolType' | translate}}</th>
+            <th md-column md-order-by="4">{{'finalProtocol.status' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? '6, 8, 9' : '6, 7, 9'}}">{{'finalProtocol.subject' | translate}}</th>
+            <th md-column md-order-by="11, 12, 13">{{'finalProtocol.committeeChairman' | translate}}</th>
+            <th md-column md-order-by="14">{{'finalProtocol.insertedDate' | translate}}</th>
+            <th md-column md-order-by="15">{{'finalProtocol.confirmedDate' | translate}}</th>
+            <th md-column md-order-by="16">{{'finalProtocol.confirmer' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <a ng-href="#/finalHigherProtocols/{{::row.id}}/view">{{::row.protocolNr}}</a>
+            </td>
+            <td md-cell ng-if="auth.isAdmin()">
+              <span ng-if="row.isFinalThesis">{{'finalProtocol.finalThesis' | translate}}</span>
+              <span ng-if="!row.isFinalThesis">{{'finalProtocol.finalExam' | translate}}</span>
+            </td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
+            <td md-cell>{{row.committeeChairman}}</td>
+            <td md-cell>{{row.inserted | hoisDate}}</td>
+            <td md-cell>{{row.confirmDate | hoisDate}}</td>
+            <td md-cell>{{::row.confirmer}}</td>
+            <td md-cell>
+              <md-button ng-if="row.canChange && row.status.code !== 'PROTOKOLL_STAATUS_K'" md-no-ink class="md-primary change-button" ng-href="#/finalHigherProtocols/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+      md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>

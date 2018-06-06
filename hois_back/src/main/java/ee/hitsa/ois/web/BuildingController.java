@@ -5,8 +5,10 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,9 +23,11 @@ import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.BuildingForm;
 import ee.hitsa.ois.web.commandobject.RoomForm;
 import ee.hitsa.ois.web.commandobject.RoomSearchCommand;
+import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.dto.BuildingDto;
 import ee.hitsa.ois.web.dto.RoomDto;
 import ee.hitsa.ois.web.dto.RoomSearchDto;
@@ -59,6 +63,19 @@ public class BuildingController {
         buildingService.delete(user, building);
     }
 
+    @GetMapping("/buildings/unique")
+    public boolean checkBuildingUniqueness(HoisUserDetails user, UniqueCommand criteria) {
+        UserUtil.assertIsSchoolAdmin(user);
+        try {
+            if(StringUtils.hasLength(criteria.getParamValue())) {
+                buildingService.checkBuildingUniqueness(user.getSchoolId(), criteria.getParamValue(), criteria.getId());
+            }
+        } catch(@SuppressWarnings("unused") ValidationFailedException e) {
+            return false;
+        }
+        return true;
+    }
+
     // room: search/get/save/update/delete
     @GetMapping("/rooms")
     public Page<RoomSearchDto> searchRooms(HoisUserDetails user, @Valid RoomSearchCommand searchCommand, Pageable pageable) {
@@ -88,5 +105,18 @@ public class BuildingController {
     public void deleteRoom(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Room room, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, room.getBuilding().getSchool());
         buildingService.delete(user, room);
+    }
+
+    @GetMapping("/rooms/unique/{buildingId:\\d+}")
+    public boolean checkRoomUniqueness(HoisUserDetails user, @PathVariable("buildingId") Long buildingId, UniqueCommand criteria) {
+        UserUtil.assertIsSchoolAdmin(user);
+        try {
+            if(StringUtils.hasLength(criteria.getParamValue()) && !Long.valueOf(0).equals(buildingId)) {
+                buildingService.checkRoomUniqueness(buildingId, criteria.getParamValue(), criteria.getId());
+            }
+        } catch(@SuppressWarnings("unused") ValidationFailedException e) {
+            return false;
+        }
+        return true;
     }
 }

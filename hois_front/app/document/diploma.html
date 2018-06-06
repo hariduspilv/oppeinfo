@@ -1,0 +1,66 @@
+<div ng-cloak>
+  <div ng-include="'document/templates/navbar.tmpl.html'"></div>
+</div>
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div>
+    <form name="documentForm">
+      <md-input-container class="md-block">
+        <label>{{'document.directive' | translate}}</label>
+        <hois-select ng-model="criteria.directiveId" values="formState.directives" show-property="display" 
+          ng-change="directiveChanged()" required></hois-select>
+      </md-input-container>
+      <md-input-container class="md-block" ng-hide="!criteria.directiveId">
+        <label>{{'document.formType' | translate}}</label>
+        <hois-classifier-select ng-model="criteria.formType" model-value-attr="code" show-only-values="formState.formTypes"
+          main-classifier-code="LOPUBLANKETT" ng-change="formTypeChanged()" required></hois-classifier-select>
+      </md-input-container>
+      <br/>
+      <md-table-container ng-hide="formState.students.length === 0">
+        <table md-table>
+          <thead md-head>
+            <tr md-row>
+              <th md-column>
+                <md-checkbox ng-model="formState.allStudentsSelected" ng-change="selectAllStudents(formState.allStudentsSelected)"></md-checkbox>
+              </th>
+              <th md-column>{{'document.student' | translate}}</th>
+              <th md-column>{{'document.idcode' | translate}} / {{'document.birthdate' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in formState.students" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>
+                <md-checkbox ng-model="row.selected" ng-change="updatePdfUrl()"></md-checkbox>
+              </td>
+              <td md-cell>{{::row.fullname}}</td>
+              <td md-cell>{{::row.idcode || (row.birthdate | hoisDate)}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <br/>
+      <div layout="row" ng-hide="formState.students.length === 0">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label>{{'document.signer1' | translate}}</label>
+          <hois-select ng-model="criteria.signer1Id" values="formState.firstsigners" show-property="display" 
+            ng-change="updatePdfUrl()" required></hois-select>
+        </md-input-container>
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'document.signer2' | translate}}</label>
+          <hois-select ng-model="criteria.signer2Id" values="formState.signers" show-property="display" 
+            ng-change="updatePdfUrl()" required></hois-select>
+        </md-input-container>
+      </div>
+      <div layout="row" ng-hide="formState.students.length === 0">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100">
+          <label>{{'document.supplementForm' | translate}}</label>
+          <input type="number" ng-model="criteria.numeral" min="0">
+        </md-input-container>
+        <span class="middle-text label">{{formState.freeForms.join(', ')}}</span>
+      </div>
+    </form>
+
+    <a ng-href="{{viewPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="viewPdfUrl">{{'document.button.showPdf' | translate}}</a>
+    <md-button ng-click="print()" class="md-raised md-primary" ng-if="viewPdfUrl">{{'main.button.print' | translate}}</md-button>
+  </div>
+</div>

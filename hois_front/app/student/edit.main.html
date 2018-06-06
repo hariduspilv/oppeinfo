@@ -42,7 +42,7 @@
 
       </hois-collapsable>
 
-      <hois-collapsable label="('student.study' | translate)" ng-if="student.userIsSchoolAdmin">
+      <hois-collapsable label="('student.study' | translate)" ng-if="student.userIsSchoolAdmin || student.userIsStudentGroupTeacher">
 
         <md-input-container class="md-block">
           <label>{{'student.studentCard' | translate}}</label>
@@ -61,7 +61,7 @@
 
       </hois-collapsable>
 
-      <hois-collapsable label="('student.specialNeeds' | translate)" ng-if="student.userIsSchoolAdmin">
+      <hois-collapsable label="('student.specialNeeds' | translate)" ng-if="student.userIsSchoolAdmin || student.userIsStudentGroupTeacher">
 
         <md-checkbox ng-model="student.isSpecialNeed" name="isSpecialNeed">
           {{'student.isSpecialNeed' | translate}}
@@ -76,6 +76,29 @@
           {{'student.isRepresentativeMandatory' | translate}}
         </md-checkbox>
 
+      </hois-collapsable>
+
+      <hois-collapsable label="('student.photo.label' | translate)" ng-if="student.userIsSchoolAdmin || student.userIsStudentGroupTeacher">
+        <lf-ng-md-file-input name="photoFiles"
+          lf-files="photoFiles" lf-filesize="3MB"
+          accept=".png, .jpg, .jpeg" lf-mimetype="image/*" preview
+          lf-placeholder="{{!student.photo ? ('student.photo.notSelected' | translate) :  ('student.photo.selectNewPhoto' | translate)}}"
+          lf-browse-label="{{'student.photo.selectPhoto' | translate}}"
+          lf-remove-label="{{'main.button.clear' | translate}}"></lf-ng-md-file-input>
+    
+        <div ng-messages="studentEditForm.photoFiles.$error" style="color:red;">
+          <div ng-message="filesize">{{'main.messages.error.fileTooLarge' | translate}} 3MB!</div>
+          <div ng-message="mimetype">{{'main.messages.error.wrongExtension' | translate}} png, jpg, jpeg</div>
+        </div>
+
+        <h3 ng-if="student.photo">{{'student.photo.currentPhoto' | translate}}</h3>
+        <div flex="30" flex-sm="100" flex-xs="100">
+          <img ng-if="student.photo" flex="100" ng-src="{{student.imageUrl}}" id="currentPhotoView">
+        </div>
+        <br>
+        <md-checkbox ng-model="student.deleteCurrentPhoto" name="deleteCurrentPhoto" ng-if="student.photo && !photoFiles[0]">
+            {{'student.photo.delete' | translate}}
+        </md-checkbox>
       </hois-collapsable>
 
     </form>

@@ -1,4 +1,20 @@
 <div layout-padding ng-if="typeId || searchResultEvents">
+    <div layout="row" flex>
+        <div layout="row" layout-align="end end" layout-sm="column" layout-xs="column" flex="90" style="margin-left: auto; margin-right: auto;">
+            <div ng-repeat="c in capacityTypes" flex-offset="5" class="capacity-type-legend" md-colors="{background: c.color}">
+                <span>{{currentLanguageNameField(c)}}</span>
+            </div>
+            <div flex-offset="5" class="capacity-type-legend" md-colors="{background: 'primary-100-0.8'}">
+                <span>{{'timetable.timetableEvent.singleEvent' | translate}}</span>
+            </div>
+            <div flex-offset="5" class="capacity-type-legend" md-colors="{background: 'accent-100-0.8'}">
+                <span>{{'timetable.timetableEvent.occupied' | translate}}</span>
+            </div>
+        </div>  
+    </div>
+</div>
+
+<div layout-padding ng-if="typeId || searchResultEvents">
     <div layout="row" layout-align="center" style="padding: 0px">
         <a ng-if="shownTimetableCurriculum || shownTeacher || shownRoom" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{typeId}}/{{weekIndex}}">
             <span ng-if="shownTimetableCurriculum">{{shownTimetableCurriculum.studentGroupCode}}, {{currentLanguageNameField(shownTimetableCurriculum)}}</span>
@@ -40,8 +56,8 @@
                 <div style="height:32px;text-align:center" md-colors="day.today ?  {background: 'accent-400'}:{}">{{'timetable.timetablePlan.' + day.name | translate}}<br>{{day.date | hoisDate}}</div>
                 <div layout="row">
                     <div flex ng-repeat="event in day.events track by $index" ng-style="{'height': event.rowHeight + 'px', 'top': event.top + 'px', 'z-index': $index, 'left': event.left+'%','width': 'calc('+event.width +'% - 2px)'}"
-                        style="padding: 0; border: 1px solid; position:absolute; overflow: hidden;"
-                        md-colors="event.public ? {background: 'primary-100-0.8','border-color': 'primary-500'} : {background: 'accent-100-0.8','border-color': 'accent-500'}"
+                        md-colors="event.public ? {background: getEventColor(event.capacityType)} : {background: 'accent-100-0.8'}"
+                        style="padding: 0; border: 1px solid; position:absolute; overflow: hidden; border-color: rgba(0,0,0, 0.3);"
                         class="timetableEvent">
                         <md-tooltip md-direction="bottom" style="margin: -18px; height: auto;">
                             <div ng-if="event.public">{{event.timeStart}}-{{event.timeEnd}} {{currentLanguageNameField(event)}}</div>
@@ -106,10 +122,10 @@
             </hois-collapsable-header>
             <div layout="column">
                 <div flex ng-repeat="event in day.events track by $index">
-                    <div style="border: 1px solid #e8e8e8; min-height: 80px;">
+                    <div md-colors="event.public ? {background: getEventColor(event.capacityType)} : {background: 'accent-100-0.8'}" style="border: 1px solid rgba(0,0,0, 0.3); min-height: 80px;">
                         <div>
                             <span style="font-weight: bold">{{event.timeStart}}-{{event.timeEnd}}</span>
-                            <span ng-if="event.public">{{currentLanguageNameField(event)}}</span>
+                            <span ng-if="!event.public">{{currentLanguageNameField(event)}}</span>
                             <span ng-if="!event.public">{{'timetable.timetableEvent.occupied' | translate}}</span>
                         </div>
                         <div>

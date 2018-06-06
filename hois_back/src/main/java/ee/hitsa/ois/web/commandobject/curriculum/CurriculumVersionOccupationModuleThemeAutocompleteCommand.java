@@ -6,7 +6,7 @@ public class CurriculumVersionOccupationModuleThemeAutocompleteCommand {
 
     @Required
     private Long curriculumVersionOmoduleId;
-    private String curriculumVersionStatusCode;
+    private Boolean closedCurriculumVersionModules;
 
     public Long getCurriculumVersionOmoduleId() {
         return curriculumVersionOmoduleId;
@@ -16,11 +16,12 @@ public class CurriculumVersionOccupationModuleThemeAutocompleteCommand {
         this.curriculumVersionOmoduleId = curriculumVersionOmoduleId;
     }
 
-    public String getCurriculumVersionStatusCode() {
-        return curriculumVersionStatusCode;
+    public Boolean getClosedCurriculumVersionModules() {
+        return closedCurriculumVersionModules;
     }
 
-    public void setCurriculumVersionStatusCode(String curriculumVersionStatusCode) {
-        this.curriculumVersionStatusCode = curriculumVersionStatusCode;
+    public void setClosedCurriculumVersionModules(Boolean closedCurriculumVersionModules) {
+        this.closedCurriculumVersionModules = closedCurriculumVersionModules;
     }
+    
 }

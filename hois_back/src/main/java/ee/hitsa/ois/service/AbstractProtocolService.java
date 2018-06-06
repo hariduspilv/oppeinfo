@@ -41,7 +41,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ProtocolStudentForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.finalexamprotocol.FinalExamProtocolCommitteeSelectDto;
+import ee.hitsa.ois.web.dto.finalprotocol.FinalProtocolCommitteeSelectDto;
 
 @Transactional
 public class AbstractProtocolService {
@@ -126,7 +126,7 @@ public class AbstractProtocolService {
     
     public void removeStudent(HoisUserDetails user, ProtocolStudent student) {
         if (!ProtocolUtil.studentCanBeDeleted(student)) {
-            throw new ValidationFailedException("finalExamProtocol.messages.cantRemoveStudent");
+            throw new ValidationFailedException("finalProtocol.messages.cantRemoveStudent");
         }
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(student, em);
@@ -152,14 +152,14 @@ public class AbstractProtocolService {
     
     /* FINAL EXAM methods */
     
-    public List<FinalExamProtocolCommitteeSelectDto> committeesForSelection(HoisUserDetails user, LocalDate finalDate) {
+    public List<FinalProtocolCommitteeSelectDto> committeesForSelection(HoisUserDetails user, LocalDate finalDate) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from committee c"
                 + " left join committee_member cm on c.id = cm.committee_id"
                 + " left join teacher t on t.id = cm.teacher_id left join person p on p.id = t.person_id ");
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
-        qb.optionalCriteria("c.valid_from <= :finalExamDate", "finalExamDate", finalDate);
-        qb.optionalCriteria("c.valid_thru >= :finalExamDate", "finalExamDate", finalDate);
+        qb.optionalCriteria("c.valid_from <= :finalDate", "finalDate", finalDate);
+        qb.optionalCriteria("c.valid_thru >= :finalDate", "finalDate", finalDate);
         qb.groupBy(" c.id ");
 
         List<?> committees = qb.select("distinct c.id,"
@@ -168,7 +168,7 @@ public class AbstractProtocolService {
                 + " else p.firstname || ' ' || p.lastname end), ', ') as members", em).getResultList();
 
         return StreamUtil.toMappedList(r -> {
-            FinalExamProtocolCommitteeSelectDto dto = new FinalExamProtocolCommitteeSelectDto();
+            FinalProtocolCommitteeSelectDto dto = new FinalProtocolCommitteeSelectDto();
             dto.setId(resultAsLong(r, 0));
             dto.setMembers(resultAsString(r, 1));
             return dto;
@@ -192,8 +192,12 @@ public class AbstractProtocolService {
                 studentCertificates.forEach((k, v) -> {
                     if (protocolStudentCertificates == null || !protocolStudentCertificates.keySet().remove(k)) {
                         // remove manually added occupation certificate before replacing it with imported certificate
-                        removeOccupationAddedToProtocol(ps, EntityUtil.getCode(v.getOccupation()),
-                                v.getPartOccupation() != null ? EntityUtil.getCode(v.getPartOccupation()) : null);
+                        if (Boolean.FALSE.equals(protocol.getIsVocational())) {
+                            ps.getProtocolStudentOccupations().removeIf(it -> it.getStudentOccupationCertificate() == null);
+                        } else {
+                            removeOccupationAddedToProtocol(ps, EntityUtil.getCode(v.getOccupation()),
+                                    v.getPartOccupation() != null ? EntityUtil.getCode(v.getPartOccupation()) : null);
+                        }
                         addStudentOccupationCertificateToProtocol(ps, v);
                     }
                 });
@@ -210,10 +214,11 @@ public class AbstractProtocolService {
     protected Set<String> curriculumOccpations(Protocol protocol) {
         if (Boolean.TRUE.equals(protocol.getIsVocational())) {
             return StreamUtil.toMappedSet(o -> EntityUtil.getCode(o.getOccupation()),
-                    protocol.getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule().getOccupations());
+                    protocol.getProtocolVdata().getCurriculumVersion().getCurriculum().getOccupations());
         }
         return StreamUtil.toMappedSet(s -> EntityUtil.getCode(s.getOccupation()),
-                protocol.getProtocolHdata().getCurriculum().getSpecialities());
+                protocol.getProtocolHdata().getCurriculum().getSpecialities().stream()
+                        .filter(s -> s.getOccupation() != null).collect(Collectors.toList()));
     }
     
     private static void removeOccupationAddedToProtocol(ProtocolStudent student, String occupation, String partOccupation) {

@@ -6,6 +6,7 @@ public class CurriculumVersionAutocompleteCommand {
     private Boolean higher;
     private Boolean sais;
     private Boolean valid;
+    private Boolean closed;
     private Boolean languages;
 
     public String getName() {
@@ -38,6 +39,14 @@ public class CurriculumVersionAutocompleteCommand {
 
     public void setValid(Boolean valid) {
         this.valid = valid;
+    }
+    
+    public Boolean getClosed() {
+        return closed;
+    }
+
+    public void setClosed(Boolean closed) {
+        this.closed = closed;
     }
 
     public Boolean getLanguages() {

@@ -53,7 +53,7 @@
           </md-input-container>
         </div>
 
-        <div layout="row" flex>
+        <div ng-if="practiceJournal.contract" layout="row" flex>
           <md-input-container flex>
             <label>{{'enterprise.label' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.contract.enterprise)"></hois-value>
@@ -91,7 +91,7 @@
                 <th md-column>{{'practiceJournal.practiceJournalEntry.practiceDate' | translate}}</th>
                 <th md-column>{{'practiceJournal.practiceJournalEntry.description' | translate}}</th>
                 <th md-column>{{'practiceJournal.practiceJournalEntry.hours' | translate}}</th>
-                <th md-column>{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}</th>
+                <th ng-if="practiceJournal.contract" md-column>{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}</th>
                 <th md-column>{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}</th>
               </tr>
             </thead>
@@ -107,7 +107,7 @@
                 <td md-cell>
                   <hois-value value="row.hours"></hois-value>
                 </td>
-                <td md-cell>
+                <td ng-if="practiceJournal.contract" md-cell>
                   <hois-value value="row.supervisorComment"></hois-value>
                 </td>
                 <td md-cell>
@@ -135,7 +135,7 @@
         </md-input-container>
       </div>
 
-      <div class="form-readonly" layout="row">
+      <div ng-if="practiceJournal.contract" class="form-readonly" layout="row">
         <md-input-container flex>
           <label>{{'practiceJournal.supervisorComment' | translate}}</label>
           <hois-value value="practiceJournal.supervisorComment"></hois-value>
@@ -194,7 +194,7 @@
       </md-input-container>
     </div>
 
-    <div class="form-readonly" layout="row">
+    <div ng-if="practiceJournal.contract" class="form-readonly" layout="row">
       <md-input-container flex>
         <label>{{'practiceJournal.supervisorOpinion' | translate}}</label>
         <hois-value value="practiceJournal.supervisorOpinion"></hois-value>
@@ -204,7 +204,7 @@
     <div class="form-readonly" layout="row">
       <md-input-container flex>
         <label class="textInput">{{'practiceJournal.grade' | translate}}</label>
-        <hois-classifier-value ng-model="practiceJournal.grade" main-classifier-code="KUTSEHINDAMINE" model-value-attr="code"></hois-classifier-value>
+        <hois-value value="getGrade(practiceJournal.grade).value"></hois-value>
       </md-input-container>
     </div>
 

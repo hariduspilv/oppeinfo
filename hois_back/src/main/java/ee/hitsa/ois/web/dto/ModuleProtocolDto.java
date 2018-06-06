@@ -25,6 +25,7 @@ public class ModuleProtocolDto extends VersionedCommand {
     private ProtocolVdataDto protocolVdata;
     private OisFileViewDto oisFile;
     private boolean canBeEdited;
+    private boolean canBeConfirmed;
     private boolean canBeDeleted;
     
     public static ModuleProtocolDto onlyId(Protocol protocol) {
@@ -132,6 +133,14 @@ public class ModuleProtocolDto extends VersionedCommand {
 
     public void setCanBeEdited(boolean canBeEdited) {
         this.canBeEdited = canBeEdited;
+    }
+    
+    public boolean isCanBeConfirmed() {
+        return canBeConfirmed;
+    }
+
+    public void setCanBeConfirmed(boolean canBeConfirmed) {
+        this.canBeConfirmed = canBeConfirmed;
     }
 
     public boolean isCanBeDeleted() {

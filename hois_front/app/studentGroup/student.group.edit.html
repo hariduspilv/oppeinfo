@@ -11,7 +11,7 @@
 
         <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'studentGroup.course' | translate}}</label>
-          <input ng-model="record.course" name="course" ng-readonly="formState.readonly" type="number" required min="0">
+          <input ng-model="record.course" name="course" ng-readonly="formState.readonly" type="number" required min="1" ng-max="formState.studyPeriodInYears">
         </md-input-container>
 
         <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">

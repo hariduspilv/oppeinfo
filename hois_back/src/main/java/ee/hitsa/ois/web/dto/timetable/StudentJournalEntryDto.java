@@ -12,13 +12,15 @@ public class StudentJournalEntryDto {
     private final String content;
     private final String gradeValue;
     private final LocalDateTime gradeInserted;
+    private final String gradeInsertedBy;
     private final String addInfo;
     private final String homework;
     private final LocalDate homeworkDueDate;
+    private final String absence;
     private List<StudentJournalEntryPreviousResultDto> previousResults;
 
     public StudentJournalEntryDto(Long id, Long journalId, String entryType, LocalDate entryDate, String content, String gradeValue,
-            LocalDateTime gradeInserted, String addInfo, String homework, LocalDate homeworkDueDate) {
+            LocalDateTime gradeInserted, String gradeInsertedBy, String addInfo, String homework, LocalDate homeworkDueDate, String absence) {
         this.id = id;
         this.journalId = journalId;
         this.entryType = entryType;
@@ -26,9 +28,11 @@ public class StudentJournalEntryDto {
         this.content = content;
         this.gradeValue = gradeValue;
         this.gradeInserted = gradeInserted;
+        this.gradeInsertedBy = gradeInsertedBy;
         this.addInfo = addInfo;
         this.homework = homework;
         this.homeworkDueDate = homeworkDueDate;
+        this.absence = absence;
     }
 
     public Long getId() {
@@ -58,6 +62,10 @@ public class StudentJournalEntryDto {
     public LocalDateTime getGradeInserted() {
         return gradeInserted;
     }
+    
+    public String getGradeInsertedBy() {
+        return gradeInsertedBy;
+    }
 
     public String getAddInfo() {
         return addInfo;
@@ -69,6 +77,10 @@ public class StudentJournalEntryDto {
 
     public LocalDate getHomeworkDueDate() {
         return homeworkDueDate;
+    }
+    
+    public String getAbsence() {
+        return absence;
     }
 
     public List<StudentJournalEntryPreviousResultDto> getPreviousResults() {

@@ -1,0 +1,106 @@
+<md-dialog aria-label="supervisor edit dialog" flex="50" flex-sm="50" flex-xs="100">
+  <form name="dialogForm" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"finalThesis.supervisor.add" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div layout-padding>
+        <form name="supervisorForm" novalidate>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container>
+              <md-radio-group layout-gt-sm="row" ng-model="supervisor.isExternal" ng-change="typeChanged(supervisor.isExternal)" required>
+                <md-radio-button ng-value="false" aria-label="passedModule">
+                  {{'finalThesis.inSchool' | translate}}
+                </md-radio-button>
+                <md-radio-button ng-value="true" aria-label="curriculumModule">
+                  {{'finalThesis.external' | translate}}
+                </md-radio-button>
+              </md-radio-group>
+            </md-input-container>
+          </div>
+
+          <div ng-if="supervisor.isExternal == true || supervisor.isExternal == false">
+            <md-input-container>
+              <md-checkbox ng-model="supervisor.isPrimary" ng-disabled="false" aria-label="{{'finalThesis.primarySupervisor' | translate}}">
+                  {{'finalThesis.primarySupervisor' | translate}}
+              </md-checkbox>
+            </md-input-container>
+          </div>
+
+          <div ng-if="supervisor.isExternal == true" layout="row" layout-sm="column" layout-xs="column">
+            <div layout="column" flex>
+              <md-input-container>
+                <label>{{'finalThesis.supervisor.firstname' | translate}}</label>
+                <input type="text" ng-model="supervisor.firstname" name="firstname" md-maxlength="100" required>
+              </md-input-container>
+              <md-input-container>
+                <label>{{'finalThesis.supervisor.lastname' | translate}}</label>
+                <input type="text" ng-model="supervisor.lastname" name="lastname" md-maxlength="100" required>
+              </md-input-container>
+              <md-input-container>
+                <label>{{'finalThesis.supervisor.idcode' | translate}}</label>
+                <input type="text" ng-model="supervisor.idcode" name="idcode" md-maxlength="11">
+              </md-input-container>
+              <md-input-container>
+                <label>{{'finalThesis.supervisor.occupation' | translate}}</label>
+                <input type="text" ng-model="supervisor.occupation" name="occupation" md-maxlength="100" required>
+              </md-input-container>
+              <md-input-container>
+                <label>{{'finalThesis.supervisor.email' | translate}}</label>
+                <input type="email" ng-model="supervisor.email" name="email" md-maxlength="100" required>
+              </md-input-container>
+              <md-input-container>
+                <label>{{'finalThesis.supervisor.phone' | translate}}</label>
+                <input type="text" ng-model="supervisor.phone" name="phone" md-maxlength="100">
+              </md-input-container>
+              <md-input-container>
+                <label>{{'finalThesis.supervisor.bankaccount' | translate}}</label>
+                <input type="text" ng-model="supervisor.bankaccount" name="bankaccount" md-maxlength="100">
+              </md-input-container>
+            </div>
+          </div>
+
+          <span ng-if="supervisor.isExternal == false">
+            <div layout="column" flex>
+              <div>
+                <hois-autocomplete label="finalThesis.supervisor.name" ng-model="supervisor.teacher" 
+                  method="teachers" additional-query-params="{valid: true}"></hois-autocomplete>
+              </div>
+            </div>
+            <br>
+  
+            <div class="form-readonly">
+              <div layout="column">
+                <md-input-container flex>
+                  <label>{{'finalThesis.supervisor.occupation' | translate}}</label>
+                  <hois-value value="supervisor.occupation"></hois-value>
+                </md-input-container>
+                <md-input-container flex>
+                  <label>{{'finalThesis.supervisor.email' | translate}}</label>
+                  <hois-value value="supervisor.email"></hois-value>
+                </md-input-container>
+              </div>
+            </div>
+          </span>
+
+        </form>
+      </div>
+    </md-dialog-content>
+
+    {{supervisorIndex}}
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button ng-if="newSupervisor" class="md-raised md-primary" ng-click="submitSupervisor()">{{"main.button.add" | translate}}</md-button>
+      <md-button ng-if="!newSupervisor" class="md-raised md-primary" ng-click="submitSupervisor()">{{"main.button.edit" | translate}}</md-button>
+      <md-button ng-if="!newSupervisor" class="md-raised" ng-click="removeSupervisor()">{{"main.button.delete" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

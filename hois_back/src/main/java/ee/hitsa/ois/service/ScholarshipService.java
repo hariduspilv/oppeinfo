@@ -745,12 +745,12 @@ public class ScholarshipService {
         }
         if (!term.getScholarshipTermStudyLoads().isEmpty() && !StreamUtil
                 .toMappedList(l -> EntityUtil.getCode(l.getStudyLoad()), term.getScholarshipTermStudyLoads())
-                .contains(EntityUtil.getCode(student.getStudyLoad()))) {
+                .contains(EntityUtil.getNullableCode(student.getStudyLoad()))) {
             return false;
         }
         if (!term.getScholarshipTermStudyForms().isEmpty() && !StreamUtil
                 .toMappedList(f -> EntityUtil.getCode(f.getStudyForm()), term.getScholarshipTermStudyForms())
-                .contains(EntityUtil.getCode(student.getStudyForm()))) {
+                .contains(EntityUtil.getNullableCode(student.getStudyForm()))) {
             return false;
         }
         if (!StreamUtil

@@ -11,6 +11,7 @@ public class DirectiveDataCommand {
     @Required
     @ClassifierRestriction(MainClassCode.KASKKIRI)
     private String type;
+    private Boolean isHigher;
     @ClassifierRestriction(MainClassCode.STIPTOETUS)
     private String scholarshipType;
     private List<Long> curriculumVersion;
@@ -24,6 +25,14 @@ public class DirectiveDataCommand {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
     }
 
     public String getScholarshipType() {

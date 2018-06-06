@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,11 +19,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.bdoc.MobileIdSession;
+import ee.hitsa.ois.bdoc.UnsignedBdocContainer;
+import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.report.HigherProtocolReport;
+import ee.hitsa.ois.service.BdocService;
 import ee.hitsa.ois.service.HigherProtocolService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.service.security.MobileIdStatus;
 import ee.hitsa.ois.util.HigherProtocolUtil;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
@@ -30,9 +37,13 @@ import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.HigherProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
+import ee.hitsa.ois.web.commandobject.HigherProtocolSignForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolStudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
+import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.EntityMobileSignDto;
+import ee.hitsa.ois.web.dto.EntitySignDto;
 import ee.hitsa.ois.web.dto.HigherProtocolDto;
 import ee.hitsa.ois.web.dto.HigherProtocolSearchDto;
 import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
@@ -41,9 +52,14 @@ import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 @RestController
 @RequestMapping("/higherProtocols")
 public class HigherProtocolController {
+    
+    private static final String BDOC_TO_SIGN = "higherProtocolBdocContainerToSign";
+    private static final String MOBILE_SESSCODE = "higherProtocolBdocMobileSesscode";
 
     @Autowired
     private HigherProtocolService higherProtocolService;
+    @Autowired
+    private BdocService bdocService;
     @Autowired
     private PdfService pdfService;
 
@@ -84,27 +100,6 @@ public class HigherProtocolController {
         return get(user, higherProtocolService.save(protocol, form));
     }
 
-    /**
-     * HigherProtocolSaveForm is used only for version control
-     */
-    @PutMapping("/confirm/{id:\\d+}")
-    public HigherProtocolDto confirm(HoisUserDetails user,
-            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
-            @SuppressWarnings("unused") @NotNull @RequestBody HigherProtocolSaveForm form) {
-        HigherProtocolUtil.assertCanConfirm(user, protocol);
-        return get(user, higherProtocolService.confirm(user, protocol));
-    }
-
-    @PutMapping("/saveAndConfirm/{id:\\d+}")
-    public HigherProtocolDto saveAndConfirm(HoisUserDetails user,
-            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
-            @NotNull @Valid @RequestBody HigherProtocolSaveForm form) {
-        HigherProtocolUtil.assertCanChange(user, protocol);
-        HigherProtocolUtil.assertCanConfirm(user, protocol);
-        HigherProtocolUtil.validate(form, protocol);
-        return get(user, higherProtocolService.saveAndConfirm(user, protocol, form));
-    }
-
     @GetMapping("/subjectStudyPeriods")
     public List<AutocompleteResult> getSubjectStudyPeriods(HoisUserDetails user) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
@@ -117,6 +112,99 @@ public class HigherProtocolController {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return higherProtocolService.getStudents(user.getSchoolId(), criteria);
     }
+    
+    @PostMapping("/{id:\\d+}/signToConfirm")
+    public EntitySignDto signToConfirm(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
+            @Valid @RequestBody HigherProtocolSignForm higherProtocolSignForm, HttpSession httpSession) {
+        HigherProtocolUtil.assertCanChange(user, protocol);
+        HigherProtocolUtil.assertCanConfirm(user, protocol);
+        HigherProtocolUtil.validate(higherProtocolSignForm, protocol);
+
+        Protocol savedProtocol = higherProtocolService.save(protocol, higherProtocolSignForm);
+
+        UnsignedBdocContainer unsignedBdocContainer = bdocService.createUnsignedBdocContainer("protokoll.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                pdfService.generate(HigherProtocolReport.TEMPLATE_NAME, new HigherProtocolReport(savedProtocol)),
+                higherProtocolSignForm.getCertificate());
+
+        httpSession.setAttribute(BDOC_TO_SIGN, unsignedBdocContainer);
+        return EntitySignDto.of(savedProtocol, unsignedBdocContainer);
+    }
+
+    @PostMapping("/{id:\\d+}/signToConfirmFinalize")
+    public HigherProtocolDto signToConfirmFinalize(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
+            @Valid @RequestBody SignatureCommand signatureCommand, HttpSession httpSession) {
+
+        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
+
+        UnsignedBdocContainer unsignedBdocContainer = (UnsignedBdocContainer) httpSession.getAttribute(BDOC_TO_SIGN);
+        protocol.setOisFile(bdocService.getSignedBdoc(unsignedBdocContainer, signatureCommand.getSignature(), "protokoll"));
+        httpSession.removeAttribute(BDOC_TO_SIGN);
+        return get(user, higherProtocolService.confirm(user, protocol, null));
+    }
+
+    @PostMapping("/{id:\\d+}/mobileSignToConfirm")
+    public EntityMobileSignDto mobileSignToConfirm(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
+            @Valid @RequestBody HigherProtocolSaveForm higherProtocolSaveForm, HttpSession httpSession) {
+        HigherProtocolUtil.assertCanChange(user, protocol);
+        HigherProtocolUtil.assertCanConfirm(user, protocol);
+        HigherProtocolUtil.validate(higherProtocolSaveForm, protocol);
+
+        Protocol savedProtocol = higherProtocolService.save(protocol, higherProtocolSaveForm);
+        byte[] pdfData = pdfService.generate(HigherProtocolReport.TEMPLATE_NAME, new HigherProtocolReport(savedProtocol));
+        
+        MobileIdSession session = bdocService.mobileSign("protokoll.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                pdfData,
+                user.getMobileNumber());
+
+        httpSession.setAttribute(MOBILE_SESSCODE, session.getSesscode());
+        return EntityMobileSignDto.of(savedProtocol, session.getChallengeID());
+    }
+
+    @RequestMapping("/{id:\\d+}/mobileSignStatus")
+    public MobileIdStatus mobileSignStatus(HttpSession httpSession) {
+        MobileIdStatus response = new MobileIdStatus();
+        Integer sesscode = (Integer) httpSession.getAttribute(MOBILE_SESSCODE);
+        if (sesscode != null) {
+            String statusCode = bdocService.mobileSignStatus(sesscode);
+            response.setStatus(statusCode);
+            if (BdocService.closeMobileSession(statusCode)) {
+                httpSession.removeAttribute(MOBILE_SESSCODE);
+            }
+        }
+        return response;
+    }
+
+    @PostMapping("/{id:\\d+}/mobileSignFinalize")
+    public HigherProtocolDto mobileSignFinalize(HoisUserDetails user, 
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
+            @SuppressWarnings("unused") @RequestBody VersionedCommand version, HttpSession httpSession) {
+        Integer sesscode = (Integer) httpSession.getAttribute(MOBILE_SESSCODE);
+        if (sesscode != null) {
+            OisFile signedBdoc = bdocService.getMobileSignedBdoc(sesscode, "protokoll");
+            if (signedBdoc != null) {
+                protocol.setOisFile(signedBdoc);
+                protocol = higherProtocolService.confirm(user, protocol, null);
+            }
+            httpSession.removeAttribute(MOBILE_SESSCODE);
+        }
+        return get(user, protocol);
+    }
+    
+    /* TODO: remove if admin's can't confirm without ID card or mobile ID log in
+    @PutMapping("/confirm/{id:\\d+}")
+    public HigherProtocolDto confirm(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
+            @NotNull @Valid @RequestBody HigherProtocolSaveForm form) {
+        HigherProtocolUtil.assertCanChange(user, protocol);
+        HigherProtocolUtil.assertCanConfirm(user, protocol);
+        HigherProtocolUtil.validate(form, protocol);
+        return get(user, higherProtocolService.confirm(user, protocol, form));
+    }
+    */
 
     @GetMapping("/{id:\\d+}/calculate")
     public List<ProtocolStudentResultDto> calculateGrades(HoisUserDetails user,

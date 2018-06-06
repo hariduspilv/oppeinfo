@@ -118,6 +118,13 @@ public class ApplicationServiceTests {
         Assert.assertEquals("application.messages.periodIsTooLong", result.getErrorInfo().getErrors().get(0).getCode());
     }
 
+    @Test
+    public void testDaysUsed() {
+        final Long studentId = Long.valueOf(427);
+        Assert.assertEquals(27, service.daysUsed(studentId, AcademicLeaveReason.AKADPUHKUS_POHJUS_O));
+        Assert.assertEquals(0, service.daysUsed(studentId, AcademicLeaveReason.AKADPUHKUS_POHJUS_T));
+    }
+    
     private static ApplicationForm getAkadApplicationForm(Student student) {
         ApplicationForm applicationForm = new ApplicationForm();
         applicationForm.setStudent(AutocompleteResult.of(student));

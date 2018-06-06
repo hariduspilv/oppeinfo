@@ -25,6 +25,12 @@ angular.module('hitsaOis').controller('HigherProtocolNewController', function ($
 
   var HigherProtocolEndpoint = QueryUtils.endpoint(baseUrl);
   $scope.submit = function () {
+    if(!$scope.higherProtocolNewForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      $scope.higherProtocolNewForm.$setSubmitted();
+      return false;
+    }
+
     if (ArrayUtils.isEmpty($scope.record.students)) {
       message.error("higherProtocol.error.noStudents");
       return;

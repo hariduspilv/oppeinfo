@@ -15,6 +15,9 @@ public class StudentVocationalResultByTimeDto {
     private String entryType;
     private String studyYear;
     private LocalDate studyYearStartDate;
+    private Boolean isApel;
+    private Boolean isInformal;
+    private Boolean isFormal;
     
     public AutocompleteResult getName() {
         return name;
@@ -86,6 +89,30 @@ public class StudentVocationalResultByTimeDto {
     
     public void setStudyYearStartDate(LocalDate studyYearStartDate) {
         this.studyYearStartDate = studyYearStartDate;
+    }
+
+    public Boolean getIsApel() {
+        return isApel;
+    }
+
+    public void setIsApel(Boolean isApel) {
+        this.isApel = isApel;
+    }
+
+    public Boolean getIsInformal() {
+        return isInformal;
+    }
+
+    public void setIsInformal(Boolean isInformal) {
+        this.isInformal = isInformal;
+    }
+
+    public Boolean getIsFormal() {
+        return isFormal;
+    }
+
+    public void setIsFormal(Boolean isFormal) {
+        this.isFormal = isFormal;
     }
     
 }

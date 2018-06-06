@@ -12,6 +12,8 @@ angular.module('hitsaOis').controller('BuildingEditController', ['$route', '$sco
       $scope.record = new Endpoint({});
     }
 
+    $scope.buildingUniqueQuery = {url: baseUrl + '/unique',  id: id};
+
     $scope.update = function() {
       FormUtils.saveRecord($scope.buildingForm, $scope.record, baseUrl);
     };

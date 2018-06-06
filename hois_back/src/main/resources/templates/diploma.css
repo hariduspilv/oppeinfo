@@ -1,0 +1,52 @@
+@page {
+    size: A4;
+    margin: 60pt;
+}
+
+html {
+    font-family: Garamond;
+    font-size: 14pt;
+}
+.diploma {
+    height: 670pt;
+    width: 100%;
+}
+.page-break-before {
+    page-break-before: always;
+}
+.diploma-cumlaude {
+    height: 20pt;
+    margin-top: 190pt;
+    text-align: center;
+    width: 100%;
+}
+.diploma-center {
+    height: 180pt;
+    margin-top: 50pt;
+    text-align: center;
+    width: 100%;
+}
+.diploma-center > div {
+    margin: 9pt 0;
+}
+.diploma-name {
+    font-size: 18pt;
+    font-weight: bold;
+}
+.diploma-directive {
+    height: 20pt;
+    margin-top: 70pt;
+    width: 100%;
+}
+.diploma-signers {
+    margin-top: 110pt;
+    width: 100%;
+}
+.diploma-signer-left {
+    display: inline-block;
+    width: 55%;
+}
+.diploma-signer-right {
+    display: inline-block;
+    width: 44%;
+}

@@ -7,14 +7,14 @@
         <div layout="row" flex>
           <md-input-container flex>
             <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipType' : 'stipend.grantType' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.type" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS" show-only-values="criteria.allowedStipendTypes"></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.type" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS" show-only-values="allowedStipendTypes"></hois-classifier-select>
           </md-input-container>
         </div>
 
         <div layout="row" flex>
           <md-input-container flex>
             <label class="textInput">{{'stipend.studyPeriod' | translate}}</label>
-            <hois-select ng-model="criteria.studyPeriod" values="studyPeriods"></hois-select>
+            <hois-select ng-model="criteria.studyPeriod" type="studyperiodyear" preselect-current></hois-select>
           </md-input-container>
         </div>
 

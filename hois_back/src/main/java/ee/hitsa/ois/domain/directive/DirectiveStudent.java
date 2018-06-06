@@ -2,11 +2,14 @@ package ee.hitsa.ois.domain.directive;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -129,6 +132,8 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private ScholarshipApplication scholarshipApplication;
     @Required(groups = Stiptoet.class)
     private BigDecimal amountPaid;
+    @OneToMany(mappedBy = "directiveStudent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DirectiveStudentOccupation> occupations;
 
     public Directive getDirective() {
         return directive;
@@ -422,4 +427,13 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     public void setAmountPaid(BigDecimal amountPaid) {
         this.amountPaid = amountPaid;
     }
+
+    public List<DirectiveStudentOccupation> getOccupations() {
+        return occupations;
+    }
+
+    public void setOccupations(List<DirectiveStudentOccupation> occupations) {
+        this.occupations = occupations;
+    }
+    
 }

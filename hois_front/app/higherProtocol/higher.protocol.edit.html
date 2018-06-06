@@ -43,7 +43,7 @@
               {{getMidtermTaskHeader(midtermTask)}}
             </th>
             <th md-column>{{'higherProtocol.finalGrade' | translate}}</th>
-            <th md-column ng-if="formState.canChangeConfirmedProtocolGrade">{{'higherProtocol.changeReason' | translate}} {{</th>
+            <th md-column ng-if="formState.canChangeConfirmedProtocolGrade" style="min-width: 250px;">{{'higherProtocol.changeReason' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
@@ -57,15 +57,15 @@
                 <span ng-if="result.isText">{{result.pointsTxt}}</span>
               </td>
               <td md-cell>
-                <hois-select ng-model="student.grade" values="grades" show-property="value" value-property="code"
+                <hois-select ng-model="student.grade" values="grades" show-property="value" value-property="code" ng-disabled="!formState.canEditProtocol"
                   aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-change="gradeChanged(student)"></hois-select>
               </td>
               <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                 <md-input-container ng-if="student.gradeHasChanged">
                   <input ng-model="student.addInfo" aria-label="addInfo" type="text" md-maxlength="255" ng-change="addInfoChanged(student);" required>
-                </md-input-container>
+                </md-input-container> 
                 <span ng-if="student.addInfo && !student.gradeHasChanged">
-                  {{row.addInfo}}
+                  {{student.addInfo}}
                 </span>
               </td>
             </ng-form>
@@ -79,10 +79,12 @@
     </div>
     <br>
     <div>
-      <md-button ng-show="record.canChange" class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-      <md-button ng-show="formState.canConfirm" class="md-raised" ng-click="saveAndConfirm()">{{'main.button.confirm' | translate}}</md-button>
+      <md-button ng-show="formState.canEditProtocol && record.status.code !== 'PROTOKOLL_STAATUS_K'" class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+      <md-button ng-show="formState.canConfirm" class="md-raised md-primary" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
       <a href="{{formState.protocolPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
-      <md-button class="md-raised" ng-href="#/higherProtocols">{{'main.button.back' | translate}}</md-button>
+      <a ng-show="record.oisFile" ng-href="{{getUrl(record.oisFile, 'protocol')}}" target="_blank" rel="noopener noreferrer"
+        class="md-button md-raised">{{'higherProtocol.downloadSigned' | translate}}</a>
+      <md-button class="md-raised" ng-click="back('#/higherProtocols/', higherProtocolForm)">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>
 </div>

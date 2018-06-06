@@ -10,13 +10,13 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.HigherAssessment;
-import ee.hitsa.ois.enums.SubjectAssessment;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 
 public class StudentHigherSubjectResultDto {
 
+    private Long id;
     private SubjectSearchDto subject;
     private List<StudentHigherSubjectResultGradeDto> grades = new ArrayList<>();
     private StudentHigherSubjectResultGradeDto lastGrade;
@@ -25,6 +25,8 @@ public class StudentHigherSubjectResultDto {
     private Boolean isOptional;
     private Boolean isExtraCurriculum;
     private Boolean isOk;
+    private Boolean isApelTransfer;
+    private Boolean isFormalLearning;
 
     public static StudentHigherSubjectResultDto ofHigherModuleSubject(CurriculumVersionHigherModuleSubject higherModuleSubject) {
         StudentHigherSubjectResultDto dto = new StudentHigherSubjectResultDto();
@@ -68,16 +70,20 @@ public class StudentHigherSubjectResultDto {
         }
         return null;
     }
+    
+    public Long getId() {
+        return id;
+    }
 
-    public boolean isDistinctiveAssessment() {
-        return !SubjectAssessment.HINDAMISVIIS_A.name().equals(this.getSubject().getAssessment());
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public boolean hasResult() {
         return this.getLastGrade() != null;
     }
 
-    private static AutocompleteResult getHigherModuleDto(CurriculumVersionHigherModule module) {
+    public static AutocompleteResult getHigherModuleDto(CurriculumVersionHigherModule module) {
         return new AutocompleteResult(EntityUtil.getId(module), module.getNameEt(), module.getNameEn());
     }
 
@@ -144,4 +150,23 @@ public class StudentHigherSubjectResultDto {
     public void setLastGrade(StudentHigherSubjectResultGradeDto lastGrade) {
         this.lastGrade = lastGrade;
     }
+
+    public Boolean getIsApelTransfer() {
+        return isApelTransfer;
+    }
+
+    public void setIsApelTransfer(Boolean isApelTransfer) {
+        this.isApelTransfer = isApelTransfer;
+    }
+
+    public Boolean getIsFormalLearning() {
+        return isFormalLearning;
+    }
+
+    public void setIsFormalLearning(Boolean isFormalLearning) {
+        this.isFormalLearning = isFormalLearning;
+    }
+    
 }
+
+
