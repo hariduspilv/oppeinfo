@@ -45,7 +45,8 @@
 
         <div layout="row" flex="100">
           <div layout="row" flex="50">
-            <hois-autocomplete flex ng-model="criteria.roomObject" method="rooms" name="student" label="lessonplan.event.room"></hois-autocomplete>
+            <hois-autocomplete flex ng-model="criteria.roomObject" method="rooms" name="student" label="lessonplan.event.room"
+              additional-query-params="{isStudy: true}"></hois-autocomplete>
           </div>
           <md-input-container flex="50" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'lessonplan.event.otherRoom' | translate}}</label>
@@ -86,7 +87,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{row.nameEt}}</td>
+            <td md-cell><a ng-href="#/timetable/timetableEvent/{{::row.id}}/view">{{row.nameEt}}</a></td>
             <td md-cell>{{::row.date | hoisDate}}</td>
             <td md-cell>{{::row.timeStart | hoisTime}}-{{::row.timeEnd | hoisTime}}</td>
             <td md-cell><span ng-repeat="teacher in row.teachers">{{::teacher.name}}{{$last ? "" : ", "}}</span></td>

@@ -184,6 +184,10 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
     $scope.scrollTop = scrollTop;
     $rootScope.$on('$locationChangeSuccess', openPage);
 
+    $scope.openTerms = function() {
+      dialogService.showDialog('components/terms.et.dialog.html');
+    };
+
 
     var mainContentArea = document.querySelector("[role='main']");
     var scrollContentEl = mainContentArea.querySelector('md-content[md-scroll-y]');

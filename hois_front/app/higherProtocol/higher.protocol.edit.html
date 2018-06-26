@@ -51,7 +51,9 @@
           md-select="student.id" md-select-id="student.id">
             <ng-form name="higherProtocolStudentForm">
               <td md-cell>{{student.student.nameEt}}</td>
-              <td md-cell ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">{{student.practiceResult}}</td>
+              <td md-cell ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">
+                <span ng-class="{badResult: !gradeUtil.isPositiveValue(student.practiceResult)}">{{student.practiceResult}}</span>
+              </td>
               <td md-cell ng-repeat="result in record.subjectStudyPeriodMidtermTaskDto.studentResults | filter: filterStudentResults(student)">
                 <span ng-if="!result.isText">{{result.points}}</span>
                 <span ng-if="result.isText">{{result.pointsTxt}}</span>

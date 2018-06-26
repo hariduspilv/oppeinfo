@@ -2,6 +2,7 @@
 
 angular.module('hitsaOis').controller('FinalHigherProtocolEditController', ['$route', '$location', '$scope', '$filter', '$q', 'ArrayUtils', 'Classifier', 'DataUtils', 'HigherGradeUtil', 'ProtocolUtils', 'QueryUtils', 'config' ,'dialogService', 'message', 'oisFileService',
 function ($route, $location, $scope, $filter, $q, ArrayUtils, Classifier, DataUtils, HigherGradeUtil, ProtocolUtils, QueryUtils, config, dialogService, message, oisFileService) {
+  $scope.gradeUtil = HigherGradeUtil;
   var endpoint = "/finalHigherProtocols";
   $scope.auth = $route.current.locals.auth;
   $scope.record = $route.current.locals.entity;

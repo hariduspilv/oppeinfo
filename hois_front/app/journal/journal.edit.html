@@ -62,7 +62,7 @@
                   <span ng-if="result.absence.value && (result.journalEntryStudentHistories.length > 0 || result.grade)">/</span>
 
                   <span ng-repeat="historyResult in result.journalEntryStudentHistories | orderBy: 'gradeInserted' track by $index">
-                    <span ng-class="{journalBadResult: !gradeUtil.isPositive(historyResult.grade.code)}">{{historyResult.grade.value}}</span>
+                    <span ng-class="{badResult: !gradeUtil.isPositive(historyResult.grade.code)}">{{historyResult.grade.value}}</span>
                     <span>* / </span>
                     <md-tooltip>
                       {{historyResult.gradeInserted | hoisDate}}, &nbsp; {{historyResult.gradeInsertedBy}} 
@@ -71,7 +71,7 @@
 
                   <span>
                     <span ng-class="{journalFinalResult: journalEntry.entryType.code === 'SISSEKANNE_L',
-                                    journalBadResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
+                                    badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
                     <span ng-if="!result.grade && result.journalEntryStudentHistories.length > 0"> - </span>
                     <md-tooltip ng-if="result.grade.value">
                       {{result.gradeInserted | hoisDate}}, &nbsp; {{result.gradeInsertedBy}} 

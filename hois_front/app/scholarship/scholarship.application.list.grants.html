@@ -115,7 +115,7 @@
             <!-- only for soidu -->
             <td md-cell ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{application.compensationReason ? currentLanguageNameField(application.compensationReason) : '-'}}</td>
             <td md-cell ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{application.compensationFrequency ? currentLanguageNameField(application.compensationFrequency) : '-'}}</td>
-            <td md-cell>{{application.isTeacherConfirm ? 'main.yes' : 'main.no' | translate}}</td>
+            <td md-cell>{{application.isTeacherConfirm === true ? ('main.yes' | translate) : application.isTeacherConfirm === false ? ('main.no' | translate) : ''}}</td>
             <td md-cell>{{currentLanguageNameField(application.status)}}
               <md-tooltip ng-if="['STIPTOETUS_STAATUS_L', 'STIPTOETUS_STAATUS_T'].indexOf(application.status.code) !== -1  && application.rejectComment">{{application.rejectComment}}</md-tooltip>
             </td>
@@ -126,11 +126,15 @@
 
 
     <div layout="row" ng-if="applications.length > 0">
-      <md-button class="md-raised md-primary" ng-click="accept()" ng-if="canManage">{{'main.button.accept' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="annul()" ng-if="canManage">{{'main.button.annul' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="reject()" ng-if="canManage">{{'main.button.reject' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="refreshResults()">{{'main.button.refreshResults' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="checkComplies()">{{'main.button.checkComplies' | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="accept()" ng-if="auth.isAdmin() && canManage">{{'main.button.accept' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="annul()" ng-if="auth.isAdmin() && canManage">{{'main.button.annul' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="reject()" ng-if="auth.isAdmin() && canManage">{{'main.button.reject' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="refreshResults()" ng-if="auth.isAdmin()">{{'main.button.refreshResults' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="checkComplies()" ng-if="auth.isAdmin()">{{'main.button.checkComplies' | translate}}</md-button>
+      
+      <md-button class="md-raised md-primary" ng-click="teacherConfirm('yes')" ng-if="auth.isTeacher()">{{'main.button.confirm' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="teacherConfirm('annul')" ng-if="auth.isTeacher()">{{'main.button.annul' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="teacherConfirm('no')" ng-if="auth.isTeacher()">{{'main.button.noConfirm' | translate}}</md-button>
     </div>
   </div>
 </div>

@@ -1,8 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$scope', '$sessionStorage', '$filter', '$q', 'QueryUtils', 'DataUtils', '$route', '$rootScope', 'message', 'orderByFilter', '$location', 'config', 'MidtermTaskUtil', 'dialogService', 'ArrayUtils', 'Classifier', 'ProtocolUtils', 'oisFileService',
-function ($scope, $sessionStorage, $filter, $q, QueryUtils, DataUtils, $route, $rootScope, message, orderBy, $location, config, MidtermTaskUtil, dialogService, ArrayUtils, Classifier, ProtocolUtils, oisFileService) {
+angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$scope', '$sessionStorage', '$filter', '$q', 'QueryUtils', 'DataUtils', '$route', '$rootScope', 'message', 'orderByFilter', '$location', 'config', 'MidtermTaskUtil', 'dialogService', 'ArrayUtils', 'Classifier', 'ProtocolUtils', 'oisFileService', 'HigherGradeUtil',
+function ($scope, $sessionStorage, $filter, $q, QueryUtils, DataUtils, $route, $rootScope, message, orderBy, $location, config, MidtermTaskUtil, dialogService, ArrayUtils, Classifier, ProtocolUtils, oisFileService, HigherGradeUtil) {
   $scope.auth = $route.current.locals.auth;
+  $scope.gradeUtil = HigherGradeUtil;
   var baseUrl = "/higherProtocols";
   var Endpoint = QueryUtils.endpoint(baseUrl);
   var midtermTaskUtil = new MidtermTaskUtil();

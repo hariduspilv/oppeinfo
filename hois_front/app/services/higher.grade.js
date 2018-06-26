@@ -18,6 +18,9 @@ angular.module('hitsaOis').constant('HigherGrade', {
   var DISTINCTIVE_GRADES = [HigherGrade.KORGHINDAMINE_0, HigherGrade.KORGHINDAMINE_1, HigherGrade.KORGHINDAMINE_2, 
     HigherGrade.KORGHINDAMINE_3, HigherGrade.KORGHINDAMINE_4, HigherGrade.KORGHINDAMINE_5];
 
+  var POSITIVE_GRADE_VALUES = ['1', '2', '3', '4', '5', 'A'];
+  var DISTINCTIVE_GRADE_VALUES = ['0', '1', '2', '3', '4', '5'];
+
   return {
     isPositive: function(gradeCode) {
       return ArrayUtils.includes(POSITIVE_GRADES, gradeCode);
@@ -25,5 +28,11 @@ angular.module('hitsaOis').constant('HigherGrade', {
     isDistinctive: function(gradeCode) {
       return ArrayUtils.includes(DISTINCTIVE_GRADES, gradeCode);
     },
+    isPositiveValue: function(gradeValue) {
+      return ArrayUtils.includes(POSITIVE_GRADE_VALUES, gradeValue);
+    },
+    isDistinctiveValue: function(gradeValue) {
+      return ArrayUtils.includes(DISTINCTIVE_GRADE_VALUES, gradeValue);
+    }
   };
 });

@@ -58,6 +58,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
@@ -424,10 +425,9 @@ public class DirectiveService {
                     adjustPeriod(directiveStudent);
                     break;
                 case KASKKIRI_LOPET:
-                    // TODO copy from student data
-                    // student.setCurriculumGrade(curriculumGrade);
                     directiveStudent.setCurriculumVersion(student.getCurriculumVersion());
                     directiveStudent.setIsCumLaude(Boolean.valueOf(cumLaude.contains(studentId)));
+                    directiveStudent.setCurriculumGrade(getCurriculumGrade(studentId));
                     directiveStudent.setIsOccupationExamPassed(Boolean.valueOf(studentsWithCertificate.contains(studentId)));
                     saveOccupations(directiveStudent, Stream.concat(
                             occupations.containsKey(studentId) ? occupations.get(studentId).stream() : Stream.empty(), 
@@ -600,6 +600,10 @@ public class DirectiveService {
                 for (DirectiveStudentDto dto : result) {
                     Long studentId = dto.getStudent();
                     dto.setIsCumLaude(Boolean.valueOf(cumLaude.contains(studentId)));
+                    CurriculumGrade curriculumGrade = getCurriculumGrade(studentId);
+                    if (curriculumGrade != null) {
+                        dto.setCurriculumGrade(AutocompleteResult.of(curriculumGrade));
+                    }
                     dto.setIsOccupationExamPassed(Boolean.valueOf(studentsWithCertificate.contains(studentId)));
                     if (occupations.containsKey(studentId)) {
                         dto.setOccupations(occupations.get(studentId));
@@ -1039,6 +1043,18 @@ public class DirectiveService {
                 .setParameter(2, ProtocolStatus.PROTOKOLL_STAATUS_K.name())
                 .getResultList();
         return data.stream().map(r -> resultAsLong(r, 0)).collect(Collectors.toSet());
+    }
+    
+    private CurriculumGrade getCurriculumGrade(Long studentId) {
+        List<CurriculumGrade> result = em.createQuery("select ps.curriculumGrade"
+                + " from ProtocolStudent ps"
+                + " where ps.student.id = ?1"
+                + " and ps.protocol.status.code = ?2 and ps.protocol.isFinal = true", 
+                CurriculumGrade.class)
+                .setParameter(1, studentId)
+                .setParameter(2, ProtocolStatus.PROTOKOLL_STAATUS_K.name())
+                .getResultList();
+        return result.isEmpty() ? null : result.get(0);
     }
 
     private Set<Long> occupationCertificates(Set<Long> studentIds) {

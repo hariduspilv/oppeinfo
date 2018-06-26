@@ -6,7 +6,7 @@ angular.module('hitsaOis')
     var NOT_MOBILE_ID_USER_ERROR = 301;
 
     function setLoggedInVisuals(authenticatedUser) {
-      if (angular.isObject(authenticatedUser) && authenticatedUser.roleCode !== 'ROLL_V') {
+      if (angular.isObject(authenticatedUser) && ['ROLL_V', 'ROLL_X'].indexOf(authenticatedUser.roleCode) === -1) {
         QueryUtils.endpoint('/message/received/new').get().$promise.then(function (result) {
           $rootScope.unreadMessages = result.unread;
         });

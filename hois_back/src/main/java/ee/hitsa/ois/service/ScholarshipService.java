@@ -64,6 +64,7 @@ import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshiApplicationRejectionForm;
@@ -295,7 +296,7 @@ public class ScholarshipService {
         applicationDto.setCredits(credits);
         applicationDto.setAverageMark(results.getAverageMark());
         applicationDto.setLastPeriodMark(results.getLastPeriodMark());
-        applicationDto.setCurriculumCompletion(getCurriculumCompletion(credits, student));
+        applicationDto.setCurriculumCompletion(StudentUtil.getCurriculumCompletion(credits, student));
         if (application == null) {
             applicationDto.setPhone(student.getPerson().getPhone());
             applicationDto.setEmail(student.getEmail());
@@ -355,7 +356,7 @@ public class ScholarshipService {
         application.setCredits(results.getCredits());
         
         application.setCurriculumCompletion(term.getCurriculumCompletion() == null ? null : 
-            getCurriculumCompletion(results.getCredits(), student));
+            StudentUtil.getCurriculumCompletion(results.getCredits(), student));
         application.setAverageMark(term.getAverageMark() == null ? null : 
             useSaisPoints(term, student) ? getSaisPoints(student) : results.getAverageMark());
         application.setLastPeriodMark(term.getLastPeriodMark() == null ? null : results.getLastPeriodMark());
@@ -596,6 +597,11 @@ public class ScholarshipService {
                         + " join curriculum c on c.id = sg.curriculum_id");
 
         qb.requiredCriteria("st.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isTeacher()) {
+            qb.requiredCriteria("sa.student_group_id in (select sg.id from student_group sg"
+                    + " where sg.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
+        }
+        
         qb.optionalContains("st.name_et", "nameEt", command.getNameEt());
         qb.optionalCriteria("st.type_code = :typeCode", "typeCode", command.getType());
         qb.optionalCriteria("sa.status_code = :status", "status", command.getStatus());
@@ -612,7 +618,7 @@ public class ScholarshipService {
 
         String select = "sa.id as application_id, st.type_code, st.id as term_id, st.name_et, c.code, s.id as student_id"
                 + ", p.firstname, p.lastname, p.idcode, sa.average_mark, sa.last_period_mark , sa.curriculum_completion"
-                + ", st.is_teacher_confirm, sa.status_code, sa.compensation_reason_code, sa.compensation_frequency_code"
+                + ", sa.is_teacher_confirmed, sa.status_code, sa.compensation_reason_code, sa.compensation_frequency_code"
                 + ", sa.credits, sa.absences, sa.reject_comment"
                 + ", (select case when s.study_start > date(now()) - interval '" + SAIS_POINTS_MONTHS + " months'"
                 + " then sais.points else null end"
@@ -691,9 +697,23 @@ public class ScholarshipService {
         return result;
     }
 
+    public HttpStatus teacherConfirmApplications(HoisUserDetails user, List<Long> applicationIds, Boolean isTeacherConfirmed) {
+        List<ScholarshipApplication> applications = getApplications(applicationIds);
+        checkTeacherAccess(user, applications);
+        updateApplicationTeacherConfirms(applications, isTeacherConfirmed);
+        return HttpStatus.OK;
+    }
+
     private static void checkAccess(HoisUserDetails user, List<ScholarshipApplication> applications) {
         for (ScholarshipApplication application : applications) {
             UserUtil.throwAccessDeniedIf(!UserUtil.isSameSchool(user, application.getScholarshipTerm().getSchool()), 
+                    "User has no right to edit these applications");
+        }
+    }
+
+    private static void checkTeacherAccess(HoisUserDetails user, List<ScholarshipApplication> applications) {
+        for (ScholarshipApplication application : applications) {
+            UserUtil.throwAccessDeniedIf(!UserUtil.isStudentGroupTeacher(user, application.getStudentGroup()), 
                     "User has no right to edit these applications");
         }
     }
@@ -722,6 +742,13 @@ public class ScholarshipService {
         for (ScholarshipApplication application : entities) {
             application.setStatus(statusCl);
             application.setDecisionDate(LocalDate.now());
+            EntityUtil.save(application, em);
+        }
+    }
+
+    private void updateApplicationTeacherConfirms(List<ScholarshipApplication> entities, Boolean isTeacherConfirmed) {
+        for (ScholarshipApplication application : entities) {
+            application.setIsTeacherConfirmed(isTeacherConfirmed);
             EntityUtil.save(application, em);
         }
     }
@@ -787,7 +814,7 @@ public class ScholarshipService {
             }
         }
         if (term.getCurriculumCompletion() != null) {
-            if (getCurriculumCompletion(results.getCredits(), student).compareTo(term.getCurriculumCompletion()) < 0) {
+            if (StudentUtil.getCurriculumCompletion(results.getCredits(), student).compareTo(term.getCurriculumCompletion()) < 0) {
                 return false;
             }
         }
@@ -843,12 +870,6 @@ public class ScholarshipService {
         }
     }
 
-    private static BigDecimal getCurriculumCompletion(BigDecimal credits, Student student) {
-        BigDecimal curriculumCredits = student.getCurriculumVersion().getCurriculum().getCredits();
-        return credits.multiply(BigDecimal.valueOf(100))
-                .divide(curriculumCredits, 0, RoundingMode.HALF_UP);
-    }
-    
     private static class StudentResults {
         private BigDecimal averageMark;
         private BigDecimal lastPeriodMark;

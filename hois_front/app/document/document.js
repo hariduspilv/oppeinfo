@@ -1,17 +1,19 @@
 'use strict';
 
-angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$q', '$window', 'Classifier', 'config', 'QueryUtils', 'DataUtils', 'DocumentUtils', 'dialogService', 'message',
-  function ($scope, $q, $window, Classifier, config, QueryUtils, DataUtils, DocumentUtils, dialogService, message) {
+angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$route', '$q', '$httpParamSerializer', '$window', 'Classifier', 
+    'config', 'QueryUtils', 'DataUtils', 'DocumentUtils', 'dialogService', 'message',
+  function ($scope, $route, $q, $httpParamSerializer, $window, Classifier, config, QueryUtils, DataUtils, DocumentUtils, dialogService, message) {
     var baseUrl = '/documents';
 
-    $scope.currentNavItem = 'document.diplomas';
+    $scope.isHigher = $route.current.locals.params.isHigher;
+    $scope.currentNavItem = 'document.diplomas' + ($scope.isHigher ? '' : '.vocational');
 
     $scope.criteria = {};
 
     var clMapper = Classifier.valuemapper({status: 'KASKKIRI_STAATUS'});
 
     $scope.formState = {
-      directives: QueryUtils.endpoint(baseUrl + '/diploma/directives').query(function(result) {
+      directives: QueryUtils.endpoint(baseUrl + '/diploma/directives').query({isHigher: $scope.isHigher}, function(result) {
         DataUtils.convertStringToDates(result, ['date']);
         $q.all(clMapper.promises).then(function() {
           clMapper.objectmapper(result);
@@ -47,8 +49,10 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$q', '$wi
     }
     function queryFreeForms() {
       QueryUtils.endpoint(baseUrl + '/diploma/forms').query({formType: $scope.criteria.formType}, function(result) {
-        $scope.criteria.numeral = result.shift().numeral;
-        $scope.formState.freeForms = result.map(mapToFullCode);
+        if (result && result.length > 0) {
+          $scope.criteria.numeral = result.shift().numeral;
+          $scope.formState.freeForms = result.map(mapToFullCode);
+        }
       });
     }
     $scope.formTypeChanged = function() {
@@ -76,23 +80,30 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$q', '$wi
         return student.id;
       });
     }
-    function getPdfUrlParams(selectedStudentIds) {
-      return 'directiveId=' + $scope.criteria.directiveId +
-        '&formType=' + $scope.criteria.formType + '&studentIds=' + selectedStudentIds.join(',') +
-        '&signer1Id=' + $scope.criteria.signer1Id + '&signer2Id=' + $scope.criteria.signer2Id;
+    function canPrint() {
+      if ($scope.criteria.studentIds.length === 0) {
+        return false;
+      }
+      if (!$scope.criteria.signer1Id || !$scope.criteria.signer2Id) {
+        return false;
+      }
+      if ($scope.isHigher && !$scope.criteria.city) {
+        return false;
+      }
+      return true;
     }
     $scope.updatePdfUrl = function() {
-      var selectedStudentIds = getSelectedStudentIds();
-      if (selectedStudentIds.length === 0 || !$scope.criteria.signer1Id || !$scope.criteria.signer2Id) {
+      $scope.criteria.studentIds = getSelectedStudentIds();
+      if (!canPrint()) {
         $scope.viewPdfUrl = undefined;
         return;
       }
-      $scope.viewPdfUrl = config.apiUrl + baseUrl + '/diploma/print/view.pdf?' + getPdfUrlParams(selectedStudentIds);
+      $scope.viewPdfUrl = config.apiUrl + baseUrl + '/diploma/print/view.pdf?' + $httpParamSerializer($scope.criteria);
     };
 
     function getPrintUrl() {
-      return config.apiUrl + baseUrl + '/diploma/print.pdf?' + getPdfUrlParams(getSelectedStudentIds()) +
-        '&numeral=' + $scope.criteria.numeral;
+      $scope.criteria.studentIds = getSelectedStudentIds();
+      return config.apiUrl + baseUrl + '/diploma/print.pdf?' + $httpParamSerializer($scope.criteria);
     }
 
     $scope.print = function() {
@@ -121,15 +132,17 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$q', '$wi
         });
       }).$promise.catch(angular.noop);
     };
-  }]).controller('SupplementSearchController', ['$scope', '$q', 'Classifier', 'QueryUtils', 'DataUtils', 'DocumentUtils',
-  function ($scope, $q, Classifier, QueryUtils, DataUtils, DocumentUtils) {
+  }]).controller('SupplementSearchController', ['$scope', '$route', '$q', 'Classifier', 'QueryUtils', 'DataUtils', 'DocumentUtils',
+  function ($scope, $route, $q, Classifier, QueryUtils, DataUtils, DocumentUtils) {
     var baseUrl = '/documents';
-    $scope.currentNavItem = 'document.supplements';
+
+    $scope.isHigher = $route.current.locals.params.isHigher;
+    $scope.currentNavItem = 'document.supplements' + ($scope.isHigher ? '' : '.vocational');
     
     var clMapper = Classifier.valuemapper({status: 'KASKKIRI_STAATUS', 
       diplomaStatus: 'LOPUDOK_STAATUS', supplementStatus: 'LOPUDOK_STAATUS'});
     $scope.formState = {
-      directives: QueryUtils.endpoint(baseUrl + '/supplement/directives').query(function(result) {
+      directives: QueryUtils.endpoint(baseUrl + '/supplement/directives').query({isHigher: $scope.isHigher}, function(result) {
         DataUtils.convertStringToDates(result, ['date']);
         $q.all(clMapper.promises).then(function() {
           clMapper.objectmapper(result);
@@ -138,7 +151,10 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$q', '$wi
       })
     };
     $scope.autocomplete = {};
-    QueryUtils.createQueryForm($scope, baseUrl + '/supplement/students', {order: 'p.lastname, p.firstname'}, clMapper.objectmapper);
+    QueryUtils.createQueryForm($scope, baseUrl + '/supplement/students', {
+      isHigher: $scope.isHigher,
+      order: 'p.lastname, p.firstname'
+    }, clMapper.objectmapper);
     var _clearCriteria = $scope.clearCriteria;
     $scope.clearCriteria = function() {
       _clearCriteria();
@@ -153,8 +169,8 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$q', '$wi
     $scope.$watch('autocomplete.curriculumVersion', function () {
       $scope.criteria.curriculumVersionId = $scope.autocomplete.curriculumVersion ? $scope.autocomplete.curriculumVersion.id : null;
     });
-  }]).controller('SupplementController', ['$scope', '$route', '$window', 'config', 'QueryUtils', 'DocumentUtils', 'dialogService', 'message',
-  function ($scope, $route, $window, config, QueryUtils, DocumentUtils, dialogService, message) {
+  }]).controller('SupplementController', ['$scope', '$route', '$httpParamSerializer', '$window', 'config', 'QueryUtils', 'DocumentUtils', 'dialogService', 'message',
+  function ($scope, $route, $httpParamSerializer, $window, config, QueryUtils, DocumentUtils, dialogService, message) {
     var baseUrl = '/documents';
     var id = $route.current.params.id;
 
@@ -169,10 +185,14 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$q', '$wi
       return form.fullCode;
     }
     $scope.record = QueryUtils.endpoint(baseUrl + '/supplement').get({id: id}, function(result) {
-      $scope.criteria.numeral = result.freeForms.shift().numeral;
-      $scope.criteria.additionalNumeral = result.freeExtraForms.shift().numeral;
-      result.freeForms = result.freeForms.map(mapToFullCode);
-      result.freeExtraForms = result.freeExtraForms.map(mapToFullCode);
+      if (result.freeForms && result.freeForms.length > 0) {
+        $scope.criteria.numeral = result.freeForms.shift().numeral;
+        result.freeForms = result.freeForms.map(mapToFullCode);
+      }
+      if (result.freeExtraForms && result.freeExtraForms.length > 0) {
+        $scope.criteria.additionalNumeral = result.freeExtraForms.shift().numeral;
+        result.freeExtraForms = result.freeExtraForms.map(mapToFullCode);
+      }
     });
     
     $scope.updatePdfUrl = function() {
@@ -184,8 +204,7 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$q', '$wi
     };
 
     function getPrintUrl() {
-      return config.apiUrl + baseUrl + '/supplement/' + id + '/print.pdf?signer1Id=' + $scope.criteria.signer1Id +
-        '&numeral=' + $scope.criteria.numeral + '&additionalNumeral=' + $scope.criteria.additionalNumeral;
+      return config.apiUrl + baseUrl + '/supplement/' + id + '/print.pdf?' + $httpParamSerializer($scope.criteria);
     }
 
     $scope.print = function() {

@@ -42,7 +42,8 @@
 </div>
 <div>
   <div layout="row" flex="100">
-    <hois-autocomplete flex ng-model="formState.curriculum" method="curriculums" label="stipend.curriculums" ng-required="missingCurriculums"></hois-autocomplete>
+    <hois-autocomplete flex ng-model="formState.curriculum" method="curriculums" label="stipend.curriculums" ng-required="missingCurriculums"
+      additional-query-params="{higher: false}"></hois-autocomplete>
   </div>
   <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in stipend.curriculums">
     <div layout="row" flex layout-align="start center">

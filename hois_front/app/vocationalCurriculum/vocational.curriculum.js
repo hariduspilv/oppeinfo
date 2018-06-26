@@ -408,6 +408,9 @@ angular.module('hitsaOis')
             var specialities = [];
             var partOccupations = [];
             result.forEach(function(it) {
+              if (!Classifier.isValid(it.classifier)) {
+                return;
+              }
               if(it.classifier.mainClassCode === 'SPETSKUTSE') {
                 specialities.push(it.classifier);
               }
@@ -526,7 +529,7 @@ angular.module('hitsaOis')
                     QueryUtils.endpoint('/autocomplete/classifiers/withparents').query({mainClassCode: "KUTSE"}).$promise
               ]).then(function(data){
                   dialogScope.partOccupations = data[0];
-                  dialogScope.occupations = data[1].filter(function(el1){
+                  dialogScope.occupations = data[1].filter(Classifier.isValid).filter(function(el1){
                         for(var i = 0; i < dialogScope.partOccupations.length; i++){
                             if(ArrayUtils.includes(dialogScope.partOccupations[i].parents, el1.code)) {
                                 return true;
@@ -545,6 +548,9 @@ angular.module('hitsaOis')
               });
 
             dialogScope.filterPartOccupations = function(partOccupation){
+                if (!Classifier.isValid(partOccupation)) {
+                  return false;
+                }
                 return dialogScope.occupation ? ArrayUtils.includes(partOccupation.parents, dialogScope.occupation.code) : true;
             };
 

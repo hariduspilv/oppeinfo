@@ -28,6 +28,7 @@ import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
@@ -88,7 +89,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/curriculums")
-    public Page<AutocompleteResult> curriculums(HoisUserDetails user, SearchCommand term) {
+    public Page<AutocompleteResult> curriculums(HoisUserDetails user, CurriculumAutocompleteCommand term) {
         return asPage(autocompleteService.curriculums(user.getSchoolId(), term));
     }
     

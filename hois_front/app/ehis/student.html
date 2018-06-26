@@ -54,6 +54,7 @@
                 <th md-column ng-if="criteria.dataType === 'GRADUATION'">{{'ehis.student.academicNr' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{'ehis.student.percentage' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{'ehis.student.points' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{'ehis.student.lastPeriod' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.fromDate' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.toDate' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.abroadPurpose' | translate}}</th>
@@ -75,6 +76,7 @@
                 <td md-cell ng-if="criteria.dataType === 'GRADUATION'">{{::row.academicNr}}</td>
                 <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.percentage}}</td>
                 <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.points}}</td>
+                <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.lastPeriod ? 'main.yes' : 'main.no' | translate}}</td>
                 <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{::row.fromDate | hoisDate}}</td>
                 <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{::row.toDate | hoisDate}}</td>
                 <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">

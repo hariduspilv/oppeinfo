@@ -33,6 +33,18 @@
 					<xsd:element name="stip_type" type="xsd:string"/>
 					<xsd:element name="stip_name" type="xsd:string"/>
 					<xsd:element name="stip_amount" type="xsd:string"/>
+					<!--NEW ELEMENTS -->
+					<xsd:element name="repr_first_name" type="xsd:string"/>
+					<xsd:element name="repr_last_name" type="xsd:string"/>
+					<xsd:element name="curricula_mer_code" type="xsd:string"/>
+					<xsd:element name="study_level" type="xsd:string"/>
+					<xsd:element name="curricula_study_period" type="xsd:int"/>  
+					<xsd:element name="course" type="xsd:int"/>  
+					<xsd:element name="teacher_first_name" type="xsd:string"/>
+					<xsd:element name="teacher_last_name" type="xsd:string"/>
+					<xsd:element name="occupation" type="xsd:string"/>
+					<xsd:element name="specialization" type="xsd:string"/>
+					<xsd:element name="avg_grade" type="xsd:string"/>
 				</xsd:sequence>
 			</xsd:complexType>
 			<xsd:complexType name="contentArray">

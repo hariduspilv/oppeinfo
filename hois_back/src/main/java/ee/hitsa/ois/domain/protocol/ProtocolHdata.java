@@ -42,8 +42,7 @@ public class ProtocolHdata extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Curriculum curriculum;
     
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Subject finalSubject;
 
     public Protocol getProtocol() {

@@ -8,7 +8,21 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function ($translate) { return $translate.onReady(); },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        params: function() { return {isHigher: true}; }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPTUNNISTUS_TRUKKIMINE]
+      }
+    })
+    .when('/documents/diplomas/vocational', {
+      templateUrl: 'document/diploma.html',
+      controller: 'DiplomaController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        params: function() { return {isHigher: false}; }
       },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPTUNNISTUS_TRUKKIMINE]
@@ -20,7 +34,21 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function ($translate) { return $translate.onReady(); },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        params: function() { return {isHigher: true}; }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE]
+      }
+    })
+    .when('/documents/supplements/vocational', {
+      templateUrl: 'document/supplement.search.html',
+      controller: 'SupplementSearchController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        params: function() { return {isHigher: false}; }
       },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE]

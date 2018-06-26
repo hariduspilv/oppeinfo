@@ -96,6 +96,7 @@ public class RtipService {
     // TODO remove - for testing only
     public void syncSchool(HoisUserDetails user, LocalDate from, LocalDate to) {
         School school = em.getReference(School.class, user.getSchoolId());
+        assertRtipSchoolCode(school);
         syncSchool(school, from, to);
     }
 

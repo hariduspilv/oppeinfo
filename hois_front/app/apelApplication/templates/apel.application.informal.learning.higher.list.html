@@ -41,8 +41,8 @@
         <td md-cell>{{row.credits}}</td>
         <td md-cell>{{row.grade.value}}</td>
         <td md-cell>
-            <span ng-if="row.isOptional === true">{{currentLanguageNameField(row.module)}} ({{'main.yes' | translate}})</span>
-            <span ng-if="row.isOptional === false">{{currentLanguageNameField(row.module)}} ({{'main.no' | translate}})</span>
+            <span ng-if="row.isOptional === false">{{currentLanguageNameField(row.module)}} ({{'main.yes' | translate}})</span>
+            <span ng-if="row.isOptional === true">{{currentLanguageNameField(row.module)}} ({{'main.no' | translate}})</span>
         </td>
         <td md-cell>{{row.skills}}</td>
         <td md-cell style="border-left: 1px rgba(0, 0, 0, 0.12) solid;"></td>

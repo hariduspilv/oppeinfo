@@ -2,6 +2,7 @@ package ee.hitsa.ois.service.ehis;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -26,6 +27,7 @@ import ee.hois.xroad.ehis.generated.KhlEnnistamine;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusLisa;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
 import ee.hois.xroad.ehis.generated.KhlLyhiajaliseltValismaal;
+import ee.hois.xroad.ehis.generated.KhlOiendType;
 import ee.hois.xroad.ehis.generated.KhlOppeasutus;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
 import ee.hois.xroad.ehis.generated.KhlOppeasutuseLopetamine;
@@ -68,9 +70,6 @@ public class EhisDirectiveStudentService extends EhisService {
                     break;
                 case KASKKIRI_ENNIST:
                     reinstatement(directiveStudent);
-                    break;
-                case KASKKIRI_LOPET:
-                    graduation(directiveStudent);
                     break;
                 case KASKKIRI_OKOORM:
                     changeStudyLoad(directiveStudent);
@@ -207,15 +206,33 @@ public class EhisDirectiveStudentService extends EhisService {
         makeRequest(directive, khlOppeasutusList);
     }
 
-    WsEhisStudentLog graduation(DirectiveStudent directiveStudent) {
+    WsEhisStudentLog graduation(DirectiveStudent directiveStudent, String docNr, 
+            String academicNr, List<String> extraNr) {
         try {
             Student student = directiveStudent.getStudent();
             KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
             KhlOppeasutuseLopetamine oppeasutuseLopetamine = new KhlOppeasutuseLopetamine();
             oppeasutuseLopetamine.setMuutusKp(date(LocalDate.now()));
-            // TODO Fix when actually we have a way to get value
-            oppeasutuseLopetamine.setLopudokumendiNr("FIXME000001");
+            oppeasutuseLopetamine.setLopudokumendiNr(docNr);
+            KhlOiendType oiend = new KhlOiendType();
+            oiend.setOiendiNr(academicNr);
+            if (extraNr != null) {
+                int size = extraNr.size();
+                if (size > 0) {
+                    oiend.setLisaleht1Nr(extraNr.get(0));
+                }
+                if (size > 1) {
+                    oiend.setLisaleht2Nr(extraNr.get(1));
+                }
+                if (size > 2) {
+                    oiend.setLisaleht3Nr(extraNr.get(2));
+                }
+                if (size > 3) {
+                    oiend.setLisaleht4Nr(extraNr.get(3));
+                }
+            }
+            oppeasutuseLopetamine.setEestikeelneAkademOiend(oiend);
             oppeasutuseLopetamine.setCumLaude(yesNo(directiveStudent.getIsCumLaude()));
 
             Optional.ofNullable(directiveStudent.getCurriculumGrade())

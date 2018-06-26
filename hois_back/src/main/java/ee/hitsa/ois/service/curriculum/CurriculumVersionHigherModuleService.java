@@ -211,7 +211,7 @@ public class CurriculumVersionHigherModuleService {
 
         List<?> data = qb.select("distinct cvm.type_name_et, cvm.type_name_en", em).getResultList();
         return StreamUtil.toMappedList(r ->
-             new ClassifierSelection(null, resultAsString(r, 0), resultAsString(r, 1), null, null, null, null, null, null, null)
+             new ClassifierSelection(null, resultAsString(r, 0), resultAsString(r, 1), null, null, null, null, null, null, null, null, null)
         , data);
     }
 

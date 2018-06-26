@@ -590,6 +590,10 @@ public class LessonPlanService {
     }
 
     public void deleteJournal(HoisUserDetails user, Journal journal) {
+        if (!journal.getJournalStudents().isEmpty()) {
+            throw new ValidationFailedException("lessonplan.journal.hasStudents");
+        }
+        
         //  remove timetable objects and groups that do not have any connecting events
         Query objectsQuery = em.createNativeQuery("select tto.id from timetable_object tto where tto.journal_id=?1 " + 
                 "and tto.id not in (select tto.id from timetable_object tto join timetable_event te on te.timetable_object_id=tto.id " +

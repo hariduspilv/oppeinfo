@@ -32,7 +32,11 @@
               <span ng-if="moduleResultById[module.id].themeResultById[row.id].isApelTransfer"> - {{'student.result.informal' | translate}}</span>
             </td>
             <td md-cell>{{row.credits}}</td>
-            <td md-cell><span>{{moduleResultById[module.id].themeResultById[row.id].grade.value}}</span></td>
+            <td md-cell>
+              <span ng-class="{badResult: !gradeUtil.isPositive(moduleResultById[module.id].themeResultById[row.id].grade.code)}">
+                {{moduleResultById[module.id].themeResultById[row.id].grade.value}}
+              </span>
+            </td>
             <td md-cell>{{moduleResultById[module.id].themeResultById[row.id].date | hoisDate}}</td>
             <td md-cell>{{displayTeachers(moduleResultById[module.id].themeResultById[row.id].teachers)}}</td>
             <td md-cell>{{positiveThemeResult(moduleResultById[module.id].themeResultById[row.id]) ? 'main.yes' : 'main.no' | translate}}</td>

@@ -30,6 +30,7 @@ public class AuthenticatedUser implements Serializable {
     private List<UserProjection> users;
     private LoginMethod loginMethod;
     private Integer sessionTimeoutInSeconds;
+    private List<Long> teacherGroupIds;
 
     public AuthenticatedUser(String name, Long user, String roleCode, Long student, Long teacher, Integer sessionTimeoutInSeconds) {
         this.name = name;
@@ -140,6 +141,14 @@ public class AuthenticatedUser implements Serializable {
 
     public void setSessionTimeoutInSeconds(Integer sessionTimeoutInSeconds) {
         this.sessionTimeoutInSeconds = sessionTimeoutInSeconds;
+    }
+
+    public List<Long> getTeacherGroupIds() {
+        return teacherGroupIds;
+    }
+
+    public void setTeacherGroupIds(List<Long> teacherGroupIds) {
+        this.teacherGroupIds = teacherGroupIds;
     }
 
 }

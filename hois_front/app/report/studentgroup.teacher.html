@@ -1,0 +1,162 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="studentGroupTeacherReportForm" novalidate>
+        <div layout="row">
+          <md-input-container flex="30" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'report.studentGroupTeacher.studyYear' | translate}}</label>
+            <hois-select ng-model="criteria.studyYear" values="formState.studyYears"></hois-select>
+          </md-input-container>
+
+          <md-input-container flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'report.studentGroupTeacher.studyPeriod' | translate}}</label>
+            <md-select ng-model="formState.studyPeriod" ng-change="studyPeriodChanged()" ng-model-options="{trackBy: '$value.id'}">
+              <md-option md-option-empty></md-option>
+              <md-option ng-value="period" ng-repeat="period in criteria.studyYear ? formState.studyPeriods[criteria.studyYear] : formState.allStudyPeriods | orderBy: currentLanguageNameField()">
+                {{currentLanguageNameField(period)}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+
+          <md-input-container flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'report.studentGroupTeacher.studentGroup' | translate}}</label>
+            <md-select ng-model="formState.studentGroup" ng-change="studentGroupChanged()" ng-model-options="{trackBy: '$value.id'}" required>
+              <md-option ng-value="studentGroup" ng-repeat="studentGroup in formState.studentGroups | orderBy: currentLanguageNameField()">
+                {{currentLanguageNameField(studentGroup)}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-input-container>
+            <label>{{'report.studentGroupTeacher.entriesFrom' | translate}}</label>
+            <md-datepicker ng-model="criteria.from"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex-offset="5">
+            <label>{{'report.studentGroupTeacher.entriesThru' | translate}}</label>
+            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-md="column" layout-sm="column" layout-xs="column">
+          <md-checkbox ng-repeat="entryType in entryTypes" ng-model="criteria.entryType[entryType.code]" aria-label="{{'directive.student.foreign' | translate}}">
+            <span ng-if="getEntryColor(entryType.code)" md-colors="{color: getEntryColor(entryType.code)}">{{currentLanguageNameField(entryType)}}</span>
+            <span ng-if="!getEntryColor(entryType.code)">{{currentLanguageNameField(entryType)}}</span>
+          </md-checkbox>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-checkbox ng-model="criteria.moduleGrade" aria-label="{{'report.studentGroupTeacher.moduleGrade' | translate}}">
+            {{'report.studentGroupTeacher.moduleGrade' | translate}}
+          </md-checkbox>
+          <md-checkbox ng-model="criteria.absencesPerJournals" aria-label="{{'report.studentGroupTeacher.absencesPerJournals' | translate}}">
+            {{'report.studentGroupTeacher.absencesPerJournals' | translate}}
+          </md-checkbox>
+          <md-checkbox ng-model="criteria.journalsWithEntries" aria-label="{{'report.studentGroupTeacher.journalsWithEntries' | translate}}">
+            {{'report.studentGroupTeacher.journalsWithEntries' | translate}}
+          </md-checkbox>
+        </div>
+
+        <div layout="row">
+          <md-button class="md-raised md-primary" ng-click="search()">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <a ng-href="{{pdf(formState.pdfUrl, criteria)}}" target="_blank" class="md-button md-raised"
+            ng-disabled="!criteria.studentGroup || (!criteria.studyYear && !criteria.from)">{{'report.studentGroupTeacher.printPdf' | translate}}</a>
+          <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised" 
+            ng-disabled="!criteria.studentGroup || (!criteria.studyYear && !criteria.from)">{{'report.studentGroupTeacher.printXls' | translate}}</a>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+<div layout-padding ng-if="record">
+  <div flex>
+    <div class="container" fixed-column-table fixed-columns="1" ng-style="{height: (record.students.length > 15) ? 15*32 + 210 + 'px' : record.students.length * 32 + 210 + 'px'}">
+      <table ng-if="record.moduleTypes.length > 0" class="student-group-teacher-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th ng-repeat="type in record.moduleTypes" colspan="{{type.colspan}}">
+              <hois-classifier-value ng-model="type.code" main-classifier-code="KUTSEMOODUL"></hois-classifier-value>
+            </th>
+            <th colspan="4"></th>
+          </tr>
+          <tr >
+            <th></th>
+            <th ng-repeat="module in record.modules" colspan="{{module.colspan}}">{{currentLanguageNameField(module)}}</th>
+            <th colspan="4"></th>
+          </tr>
+          <tr>
+            <th>{{'report.studentGroupTeacher.studentName' | translate}}</th>
+            <th ng-repeat="column in record.resultColumns">
+              <a ng-if="column.journal" ng-href="#/journal/{{column.journal.id}}/view" class="md-primary change-button">{{currentLanguageNameField(column.journal)}}</a>
+              <span ng-if="column.module">M</span>
+              <span ng-if="column.practiceModuleTheme">{{currentLanguageNameField(column.practiceModuleTheme)}}</span>
+              <span ng-if="column.fullPracticeModule">{{'report.studentGroupTeacher.wholePracticeModule' | translate}}</span>
+            </th>
+            <th>{{'report.studentGroupTeacher.totalAbsences' | translate}}</th>
+            <th>{{'report.studentGroupTeacher.withoutReasonAbsences' | translate}}</th>
+            <th>{{'report.studentGroupTeacher.withReasonAbsences' | translate}}</th>
+            <th>{{'report.studentGroupTeacher.beingLate' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td>
+              <div>
+                <span>{{row.fullname}}</span>
+                <a ng-click="openAddInfoDialog(row)">
+                  <md-icon ng-if="row.hasAddInfo" class="md-icon-button">message</md-icon>
+                </a>
+              </div>
+            </td>
+            <td ng-repeat="resultColumn in row.resultColumns">
+              <div ng-if="resultColumn.journalResult" layout="row">
+                <div ng-repeat="entry in resultColumn.journalResult.entries" ng-if="entry.grade">
+                  <span ng-if="!gradeUtil.isPositive(entry.grade.code)" class="badResult">{{entry.grade.value}}</span>
+                  <span ng-if="gradeUtil.isPositive(entry.grade.code) && entryTypeColors[entry.entryType.code]" 
+                    md-colors="{color: getEntryColor(entry.entryType.code)}">{{entry.grade.value}}</span>
+                  <span ng-if="gradeUtil.isPositive(entry.grade.code) && !entryTypeColors[entry.entryType.code]">{{entry.grade.value}}</span>
+                  <md-tooltip>
+                    <span>{{entry.gradeInserted  ? (entry.gradeInserted | hoisDate) : '-'}},</span>
+                    <span>{{entry.gradeInsertedBy}},</span>
+                    <span>{{currentLanguageNameField(entry.entryType)}}</span>
+                  </md-tooltip>
+                </div>
+                <div></div>
+                <div ng-if="resultColumn.journalResult.absenceH">H: {{resultColumn.journalResult.absenceH}}</div>
+                <div ng-if="resultColumn.journalResult.absenceP">P: {{resultColumn.journalResult.absenceP}}</div>
+                <div ng-if="resultColumn.journalResult.absenceV">V: {{resultColumn.journalResult.absenceV}}</div>
+              </div>
+              <div ng-if="resultColumn.practiceModuleThemeResult">
+                <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.practiceModuleThemeResult.grade.code)}">{{resultColumn.practiceModuleThemeResult.grade.value}}</div>
+                <md-tooltip>
+                    <span>{{resultColumn.practiceModuleThemeResult.gradeInserted  ? (resultColumn.practiceModuleThemeResult.gradeInserted | hoisDate) : '-'}}</span>
+                </md-tooltip>
+              </div>
+              <div ng-if="resultColumn.practiceModuleResult">
+                <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.practiceModuleResult.grade.code)}">{{resultColumn.practiceModuleResult.grade.value}}</div>
+                <md-tooltip>
+                    <span>{{resultColumn.practiceModuleResult.gradeInserted  ? (resultColumn.practiceModuleResult.gradeInserted | hoisDate) : '-'}}</span>
+                </md-tooltip>
+              </div>
+              <div ng-if="resultColumn.moduleResult">
+                <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.moduleResult.grade.code)}">{{resultColumn.moduleResult.grade.value}}</div>
+                <md-tooltip>
+                    <span>{{resultColumn.moduleGrade.gradeInserted  ? (resultColumn.moduleGrade.gradeInserted | hoisDate) : '-'}}</span>
+                </md-tooltip>
+              </div>
+            </td>
+            <td>{{row.absenceP + row.absenceV}}</td>
+            <td>{{row.absenceP}}</td>
+            <td>{{row.absenceV}}</td>
+            <td>{{row.absenceH}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

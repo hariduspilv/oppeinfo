@@ -77,7 +77,7 @@
               md-selected-item="classifiersParent$index"
               md-search-text="queryName"
               md-items="item in querySearch(queryName, connection.code)"
-              md-item-text="currentLanguageNameField(item)"
+              md-item-text="item | hoisValidDates"
               md-min-length="0"
               placeholder="{{'classifier.connection.add' | translate}}"
               ng-model="queryName"
@@ -86,7 +86,7 @@
               >
 
             <md-item-template>
-              <span md-highlight-text="queryName" md-highlight-flags="^i">{{currentLanguageNameField(item)}}</span>
+              <span md-highlight-text="queryName" md-highlight-flags="^i">{{item | hoisValidDates}}</span>
             </md-item-template>
 
             <md-not-found>
@@ -96,7 +96,7 @@
           </md-autocomplete>
 
           <p ng-repeat="parent in parents | filter:{ mainClassCode: connection.code}">
-            <a ng-bind="currentLanguageNameField(parent)" ng-href="#/classifier/{{parent.mainClassCode}}/{{parent.code}}/edit"></a>
+            <a ng-bind="parent | hoisValidDates" ng-href="#/classifier/{{parent.mainClassCode}}/{{parent.code}}/edit"></a>
             <md-button class="remove" ng-click="removeParent(parent)">&times;</md-button>
           </p>
           <br>

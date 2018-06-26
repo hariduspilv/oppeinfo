@@ -42,27 +42,60 @@ public class DocumentControllerTests {
     }
     
     @Test
-    public void diplomaDirectives() {
+    public void diplomaDirectivesHigher() {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(
                 UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("diploma", "directives")
+                .queryParam("isHigher", Boolean.TRUE)
+                .toUriString(), Object.class);
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void diplomaDirectivesVocational() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(
+                UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("diploma", "directives")
+                .queryParam("isHigher", Boolean.FALSE)
                 .toUriString(), Object.class);
         assertNotNull(responseEntity);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
     
     @Test
-    public void supplementDirectives() {
+    public void supplementDirectivesHigher() {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(
                 UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("supplement", "directives")
+                .queryParam("isHigher", Boolean.TRUE)
+                .toUriString(), Object.class);
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void supplementDirectivesVocational() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(
+                UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("supplement", "directives")
+                .queryParam("isHigher", Boolean.FALSE)
                 .toUriString(), Object.class);
         assertNotNull(responseEntity);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
     
     @Test
-    public void supplementStudents() {
+    public void supplementStudentsHigher() {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(
                 UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("supplement", "students")
+                .queryParam("isHigher", Boolean.TRUE)
+                .toUriString(), Object.class);
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void supplementStudentsVocational() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(
+                UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("supplement", "students")
+                .queryParam("isHigher", Boolean.FALSE)
                 .toUriString(), Object.class);
         assertNotNull(responseEntity);
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

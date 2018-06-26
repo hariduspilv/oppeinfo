@@ -724,9 +724,9 @@ public class StudentService {
                 + "join study_year sy on sy.id = j.study_year_id "
                 + "join journal_entry je on je.journal_id = js.journal_id "
                 + "join journal_entry_student jes on jes.journal_entry_id = je.id and jes.journal_student_id=js.id "
-                + "join journal_teacher jt on jt.journal_id = js.journal_id "
-                + "join teacher t on t.id = jt.teacher_id "
-                + "join person tp on tp.id = t.person_id "
+                + "left join journal_teacher jt on jt.journal_id = js.journal_id "
+                + "left join teacher t on t.id = jt.teacher_id "
+                + "left join person tp on tp.id = t.person_id "
                 + "where js.student_id = :studentId and "
                 + "je.entry_type_code = :entryTypeCode "
                 + "order by cvot.id desc, teacher_id, jes.grade_inserted desc)";

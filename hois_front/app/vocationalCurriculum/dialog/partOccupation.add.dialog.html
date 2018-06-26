@@ -19,7 +19,7 @@
             <!--<hois-classifier-select ng-model="occupation" main-classifier-code="KUTSE" required ng-disabled="formState.readOnly"></hois-classifier-select>-->
             <md-select ng-model="occupation" required ng-disabled="formState.readOnly">
               <md-option ng-value="option" ng-repeat="option in occupations | orderBy: currentLanguageNameField()">
-                {{ currentLanguageNameField(option) }}
+                {{ option | hoisValidDates }}
              </md-option>
             </md-select>
           </md-input-container>
@@ -31,7 +31,7 @@
 
            <md-select ng-model="partOccupationAquired" required ng-disabled="formState.readOnly">
               <md-option ng-value="option" ng-repeat="option in partOccupations | filter: filterPartOccupations | orderBy: currentLanguageNameField()">
-                {{ currentLanguageNameField(option) }}
+                {{ option | hoisValidDates }}
              </md-option>
             </md-select>
           </md-input-container>

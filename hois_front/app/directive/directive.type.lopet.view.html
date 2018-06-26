@@ -18,9 +18,7 @@
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{currentLanguageNameField(row.newCurriculumVersion)}}</td>
         <td md-cell>{{row.isCumLaude ? 'main.yes' : 'main.no' | translate}}</td>
-        <td md-cell ng-if="record.isHigher">
-          <hois-classifier-value ng-model="row.curriculumGrade" main-classifier-code="EHIS_KRAAD"></hois-classifier-value>
-        </td>
+        <td md-cell ng-if="record.isHigher">{{currentLanguageNameField(row.curriculumGrade)}}</td>
         <td md-cell ng-if="!record.isHigher">
           <div ng-repeat="occupation in row.occupations | orderBy: 'nameEt'">
             {{currentLanguageNameField(occupation)}}

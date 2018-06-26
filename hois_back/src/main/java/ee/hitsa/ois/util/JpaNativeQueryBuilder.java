@@ -164,6 +164,10 @@ public class JpaNativeQueryBuilder {
         filter(criteria, name, StringUtils.hasText(value) ? value : null);
     }
 
+    public void requiredCriteria(String criteria, String name, Boolean value) {
+        filter(criteria, name, value);
+    }
+
     public void parameter(String name, Object value) {
         if(value == null) {
             throw new AssertionFailedException("Parameter value is missing");

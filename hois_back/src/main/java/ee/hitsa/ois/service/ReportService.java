@@ -629,4 +629,5 @@ public class ReportService {
             return Boolean.TRUE.equals(transfer) && ApelApplicationStatus.VOTA_STAATUS_C.name().equals(applicationStatus);
         }
     }
+    
 }

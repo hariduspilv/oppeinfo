@@ -14,6 +14,7 @@ import javax.persistence.Table;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 
 @Entity
 @Table(name = "curriculum_version_omodule")
@@ -67,6 +68,9 @@ public class CurriculumVersionOccupationModule extends BaseEntityWithId {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false)
     private Set<CurriculumVersionOccupationModuleYearCapacity> yearCapacities = new HashSet<>();
+    
+    @OneToMany(mappedBy = "curriculumVersionOccupationModule", cascade = CascadeType.ALL)
+    private Set<LessonPlanModule> lessonPlanModules = new HashSet<>();
 
     public String getRequirementsEt() {
         return requirementsEt;
@@ -214,5 +218,14 @@ public class CurriculumVersionOccupationModule extends BaseEntityWithId {
     public void setCurriculumVersion(CurriculumVersion curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
     }
+
+    public Set<LessonPlanModule> getLessonPlanModules() {
+        return lessonPlanModules;
+    }
+
+    public void setLessonPlanModules(Set<LessonPlanModule> lessonPlanModules) {
+        this.lessonPlanModules = lessonPlanModules;
+    }
+    
 
 }

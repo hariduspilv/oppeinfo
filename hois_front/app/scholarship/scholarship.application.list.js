@@ -7,6 +7,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     $scope.formState = {};
     $scope.formState.allowedStipendTypes = $route.current.locals.params.allowedStipendTypes;
     var stipend = $route.current.locals.params.stipend;
+    $scope.auth = $route.current.locals.auth;
     $scope.canManage = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS);
 
     $scope.selected = {};
@@ -125,6 +126,15 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
           ids: applications,
           stipend: stipend
         });
+      } else {
+        message.error('stipend.messages.error.noStudentsSelected');
+      }
+    };
+
+    $scope.teacherConfirm = function (action) {
+      var applications = chosenApplications();
+      if (applications.length > 0) {
+        QueryUtils.endpoint(baseUrl + '/teacherConfirmApplications/' + action).put(applications, $scope.reloadTable);
       } else {
         message.error('stipend.messages.error.noStudentsSelected');
       }

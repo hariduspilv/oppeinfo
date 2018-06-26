@@ -63,7 +63,9 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controller: 'SimpleListController',
       controllerAs: 'controller',
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR]
+        authorizedRoles: function(Session) {
+          return Session.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR) !== -1 && Session.roleCode !== 'ROLL_T';
+        }
       },
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },

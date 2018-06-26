@@ -1,0 +1,63 @@
+@page {
+    size: A4 landscape;
+}
+
+
+
+table {
+    page-break-inside: avoid;
+    table-layout:fixed;
+    border-collapse: collapse;
+}
+
+.studentGroupTeachertable {
+    -fs-table-paginate: paginate;
+    page-break-inside: avoid;
+    page-break-after: always;
+    border-spacing: 0;
+}
+
+.studentGroupTeachertable td,
+.studentGroupTeachertable th {
+    border-spacing: 0;
+    border-top: 1px solid black;
+    border-left: 1px solid black;
+    padding: 3px;
+}
+
+.studentGroupTeachertable tr:last-child > td{
+    border-bottom: 1px solid black;
+}
+
+.studentGroupTeachertable td:last-child,
+.studentGroupTeachertable th:last-child{
+    border-right: 1px solid black; 
+}
+
+.studentGroupTeachertable th { 
+    font-weight: bold;
+    word-wrap: break-word;
+}
+
+.studentGroupTeachertable:last-child {
+    page-break-after: avoid;
+}
+
+#footer {
+    position: running(footer);
+    text-align: right;
+}
+
+@page {
+    @bottom-right {
+        content: element(footer);
+    }
+}
+
+#pagenumber:before {
+    content: counter(page);
+}
+
+#pagecount:before {
+    content: counter(pages);
+}

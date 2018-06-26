@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>{{ "studentgroupteacher.title" | translate }}</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+      {% include "studentgroupteacher.css" %}
+    </style>
+  </head>
+
+  <body>
+    <div id="footer">
+        <span id="pagenumber"/>/<span id="pagecount"/>
+    </div>
+    {% for table in content.tables %}
+      <table class="studentGroupTeachertable">
+        <thead>
+          <tr>
+            <th class="label">{{ "studentgroupteacher.studentName" | translate }}</th>
+            {% for column in table.resultColumns %}
+              <th class="label">{{ column }}</th>
+            {% endfor %}
+
+            {% if loop.index == loop.length - 1 %}
+              <th class="label">{{ "studentgroupteacher.totalAbsences" | translate }}</th>
+              <th class="label">{{ "studentgroupteacher.withoutReasonAbsences" | translate }}</th>
+              <th class="label">{{ "studentgroupteacher.withReasonAbsences" | translate }}</th>
+              <th class="label">{{ "studentgroupteacher.beingLate" | translate }}</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in table.students %}
+          <tr>
+            <td>{{ student.fullname }}</td>
+            {% for column in student.resultColumns %}
+              <td class="center" style="white-space: nowrap">{{ column }}</td>
+            {% endfor %}
+
+            {% if student.totalAbsences >= 0 %}
+              <td class="center">{{ student.totalAbsences }}</td>
+              <td class="center">{{ student.withoutReasonAbsences }}</td>
+              <td class="center">{{ student.withReasonAbsences }}</td>
+              <td class="center">{{ student.beingLate }}</td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endfor %}
+
+    <table class="reportsubtable">
+      <tr>
+        <td class="label">{{ "studentgroupteacher.journal" | translate }}</td>
+      </tr>
+      <!--tr>
+        <td class="label">{{ "studentgroupteacher.moduleType" | translate }}</td>
+        <td class="label">{{ "studentgroupteacher.module" | translate }}</td>
+        <td class="label">{{ "studentgroupteacher.journal" | translate }}</td>
+      </tr-->
+      {% for journal in content.journals %}
+        <tr>
+          <td>{{ journal.name }} - {{ journal.module }} ({{ journal.moduleType }})</td>
+        </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>

@@ -685,6 +685,14 @@ md-toast.toastError .md-toast-content {
   margin: 15px 0;
 }
 
+ol.terms > li {
+  font-weight: bold;
+  margin-top: 10px;
+}
+ol.terms > li > * {
+  font-weight: normal;
+}
+
 .sidenav-link {
   font-size: 13px;
   margin: 10px;
@@ -1251,7 +1259,7 @@ th.bordered[md-column] {
   font-weight: bold;
 }
 
-.journalBadResult {
+.badResult {
   color: red;
 }
 
@@ -2269,4 +2277,39 @@ label.ui-btn {
 
 .user-section .md-select-value{
   margin-top: -6px;
+}
+
+.student-group-teacher-table {
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.student-group-teacher-table th,  .student-group-teacher-table td {
+  border: 1px solid lightgrey;
+}
+
+.student-group-teacher-table tr:nth-child(3) th {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.student-group-teacher-table tr:nth-child(3) th a{
+  color: rgba(0,0,0,0.87) !important;
+}
+
+.student-group-teacher-table td {
+  height: 30px;
+}
+
+.student-group-teacher-table td div{
+  white-space: nowrap;
+}
+
+.student-group-teacher-table td div div{
+  margin: 3px;
+}
+
+.student-group-teacher-table td:not(:first-child) {
+  text-align: center;
 }

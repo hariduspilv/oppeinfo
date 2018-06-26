@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -28,6 +29,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.ControllerErrorHandler;
 import ee.hitsa.ois.web.commandobject.form.FormDefectedForm;
 import ee.hitsa.ois.web.commandobject.form.FormForm;
 import ee.hitsa.ois.web.commandobject.form.FormSearchForm;
@@ -39,6 +41,8 @@ public class FormService {
 
     private static final Set<String> SUPPLEMENT_TYPES = EnumUtil.toNameSet(
             FormType.LOPUBLANKETT_HIN, FormType.LOPUBLANKETT_HINL);
+    private static final Set<String> SCHOOL_CODE_TYPES = EnumUtil.toNameSet(
+            FormType.LOPUBLANKETT_E, FormType.LOPUBLANKETT_L, FormType.LOPUBLANKETT_M, FormType.LOPUBLANKETT_O);
     private static final Sort GROUP_SORT = new Sort(new Sort.Order("type_code"),
             new Sort.Order("code"), new Sort.Order(Direction.ASC, "numeral"), new Sort.Order("status_code"),
             new Sort.Order("defect_reason"));
@@ -108,13 +112,25 @@ public class FormService {
         School school = em.getReference(School.class, user.getSchoolId());
         Classifier type = em.getReference(Classifier.class, formForm.getType());
         Classifier status = em.getReference(Classifier.class, FormStatus.LOPUBLANKETT_STAATUS_K.name());
+        String code;
+        if (SUPPLEMENT_TYPES.contains(formForm.getType())) {
+            code = null;
+        } else {
+            code = type.getValue();
+            if (SCHOOL_CODE_TYPES.contains(formForm.getType())) {
+                String schoolCode = school.getEhisSchool().getExtraval2();
+                if (schoolCode == null) {
+                    throw new ValidationFailedException("form.error.noSchoolCode");
+                }
+                code = code + schoolCode;
+            }
+        }
         String format = "%s%0" + formForm.getThru().length() + "d";
         for (long i = from; i <= thru; i++) {
             Form form = new Form();
             form.setSchool(school);
             form.setType(type);
             form.setStatus(status);
-            String code = getCode(type);
             form.setCode(code);
             form.setNumeral(Long.valueOf(i));
             form.setFullCode(String.format(format, code == null ? "" : code, Long.valueOf(i)));
@@ -122,26 +138,21 @@ public class FormService {
         }
     }
     
-    private static String getCode(Classifier type) {
-        if (SUPPLEMENT_TYPES.contains(EntityUtil.getCode(type))) {
-            return null;
-        }
-        return type.getValue();
-    }
-    
     private void checkExisting(HoisUserDetails user, String typeCode, long from, long thru) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from form f");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from form f").sort("f.numeral");
         if (SUPPLEMENT_TYPES.contains(typeCode)) {
             qb.requiredCriteria("f.school_id = :school", "school", user.getSchoolId());
         }
         qb.requiredCriteria("f.type_code = :type", "type", typeCode);
         qb.requiredCriteria("f.numeral >= :from", "from", Long.valueOf(from));
         qb.requiredCriteria("f.numeral <= :thru", "thru", Long.valueOf(thru));
-        List<?> result = qb.select("1", em)
-                .setMaxResults(1)
+        List<?> result = qb.select("f.full_code", em)
                 .getResultList();
         if (!result.isEmpty()) {
-            throw new ValidationFailedException("form.error.existing");
+            throw new ValidationFailedException(Collections.singletonList(
+                    new ControllerErrorHandler.ErrorInfo.Error("form.error.existing", 
+                            Collections.singletonMap("nrs", result.stream()
+                                    .map(r -> resultAsString(r, 0)).collect(Collectors.joining(", "))))));
         }
     }
 

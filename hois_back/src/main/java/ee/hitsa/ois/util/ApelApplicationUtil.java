@@ -30,8 +30,6 @@ public abstract class ApelApplicationUtil {
             throw new ValidationFailedException("apel.error.subjectNameEtIsNull");
         } else if (Boolean.FALSE.equals(subject.getIsMySchool()) && subject.getNameEn() == null) {
             throw new ValidationFailedException("apel.error.subjectNameEnIsNull");
-        } else if (subject.getSubjectCode() == null) {
-            throw new ValidationFailedException("apel.error.subjectCodeIsNull");
         }
     }
 

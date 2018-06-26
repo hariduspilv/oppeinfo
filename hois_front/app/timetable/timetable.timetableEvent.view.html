@@ -1,0 +1,59 @@
+<div class="ois-form-layout-padding form-readonly" ng-cloak>
+  <div flex>
+    <br>
+    <form name="eventForm" >
+      <div layout="row" layout-xs="column" flex="100">
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+          <label>{{'main.date' | translate}}</label>
+          <hois-value value="timetableEvent.date | hoisDate"></hois-value>
+        </md-input-container>
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'main.start' | translate}}</label>
+          <hois-value value="timetableEvent.startTime | hoisTime"></hois-value>
+        </md-input-container>
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'main.end' | translate}}</label>
+          <hois-value value="timetableEvent.endTime | hoisTime"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="row" flex="100">
+        <md-input-container flex="60" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'timetable.timetableEvent.name' | translate}}</label>
+          <hois-value value="timetableEvent.name"></hois-value>
+        </md-input-container>
+      </div>
+
+      <fieldset flex="60" flex-sm="100" flex-xs="100" ng-if="timetableEvent.teachers.length > 0">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.teachers' | translate}}</legend>
+        <md-table-container>
+          <table md-table class="secondary-table">
+            <tbody md-body>
+              <tr md-row ng-repeat="teacher in timetableEvent.teachers" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{teacher.nameEt}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </fieldset>
+
+      <br>
+
+      <fieldset flex="60" flex-sm="100" flex-xs="100" ng-if="timetableEvent.rooms.length > 0">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.rooms' | translate}}</legend>
+        <md-table-container>
+          <table md-table class="secondary-table">
+            <tbody md-body>
+              <tr md-row ng-repeat="room in timetableEvent.rooms" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{room.nameEt}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </fieldset>
+
+      <div layout="row" flex="100">
+        <md-button ng-href="#/lessonplans/events" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

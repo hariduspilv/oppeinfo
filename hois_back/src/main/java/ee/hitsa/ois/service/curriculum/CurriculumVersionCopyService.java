@@ -64,7 +64,7 @@ public class CurriculumVersionCopyService {
             for(CurriculumVersionOccupationModule copied : occupationModules) {
                 CurriculumVersionOccupationModule newModule = new CurriculumVersionOccupationModule();
                 BeanUtils.copyProperties(copied, newModule, "id", "created", "createdBy", "changed", "changedBy",
-                        "version", "capacities", "themes", "yearCapacities", "curriculumVersion");
+                        "version", "capacities", "themes", "yearCapacities", "curriculumVersion", "lessonPlanModules");
                 newModule.setCurriculumVersion(newCurriculumVersion);
                 
                 copyThemes(newModule, copied.getThemes());

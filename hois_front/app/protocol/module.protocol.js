@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolController', function ($scope, $route, Classifier, $q, ArrayUtils, ProtocolUtils, QueryUtils, message, $location, dialogService, $mdDialog, $window, oisFileService, config, $timeout, $filter) {
+angular.module('hitsaOis').controller('ModuleProtocolController', function ($scope, $route, Classifier, $q, ArrayUtils, ProtocolUtils, VocationalGradeUtil, QueryUtils, message, $location, dialogService, $mdDialog, $window, oisFileService, config, $timeout, $filter) {
   var endpoint = '/moduleProtocols';
+  $scope.gradeUtil = VocationalGradeUtil;
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', status: 'PROTOKOLL_STAATUS' });
   var editForbiddenGrades = ['KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_X'];
@@ -24,9 +25,9 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     });
   });
 
-  var protocolStudentJournalResults = {};
+  $scope.protocolStudentJournalResults = {};
   function loadJournals() {
-    protocolStudentJournalResults = {};
+    $scope.protocolStudentJournalResults = {};
     var journalResults = {};
     $scope.protocol.protocolStudents.forEach(function (protocolStudent) {
       protocolStudent.journalResults.forEach(function (journalResult) {
@@ -39,13 +40,13 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
           });
         }
 
-        if (!protocolStudentJournalResults[protocolStudent.id]) {
-          protocolStudentJournalResults[protocolStudent.id] = {};
+        if (!$scope.protocolStudentJournalResults[protocolStudent.id]) {
+          $scope.protocolStudentJournalResults[protocolStudent.id] = {};
         }
-        if (!protocolStudentJournalResults[protocolStudent.id][journalResult.journalId]) {
-          protocolStudentJournalResults[protocolStudent.id][journalResult.journalId] = [];
+        if (!$scope.protocolStudentJournalResults[protocolStudent.id][journalResult.journalId]) {
+          $scope.protocolStudentJournalResults[protocolStudent.id][journalResult.journalId] = [];
         }
-        protocolStudentJournalResults[protocolStudent.id][journalResult.journalId].push(clMapper.objectmapper(journalResult).grade);
+        $scope.protocolStudentJournalResults[protocolStudent.id][journalResult.journalId].push(clMapper.objectmapper(journalResult).grade);
       });
     });
     var journals = [];
@@ -62,9 +63,9 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     $scope.journals = journals;
   }
 
-  var protocolStudentOutcomeResults = {};
+  $scope.protocolStudentOutcomeResults = {};
   function loadOutcomes() {
-    protocolStudentOutcomeResults = {};
+    $scope.protocolStudentOutcomeResults = {};
     $scope.protocol.protocolStudents.forEach(function (protocolStudent) {
       var outcomeResults = [];
       protocolStudent.outcomeResults.forEach(function (outcomeResult) {
@@ -73,11 +74,11 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
 
       outcomeResults = sortResultsByGradeInserted(outcomeResults);
       outcomeResults.forEach(function (outcomeResult) {
-        if (!protocolStudentOutcomeResults[protocolStudent.id]) {
-          protocolStudentOutcomeResults[protocolStudent.id] = {};
+        if (!$scope.protocolStudentOutcomeResults[protocolStudent.id]) {
+          $scope.protocolStudentOutcomeResults[protocolStudent.id] = {};
         }
-        if (!protocolStudentOutcomeResults[protocolStudent.id][outcomeResult.id]) {
-          protocolStudentOutcomeResults[protocolStudent.id][outcomeResult.id] = clMapper.objectmapper(outcomeResult).grade;
+        if (!$scope.protocolStudentOutcomeResults[protocolStudent.id][outcomeResult.id]) {
+          $scope.protocolStudentOutcomeResults[protocolStudent.id][outcomeResult.id] = clMapper.objectmapper(outcomeResult).grade;
         }
       });
     });
@@ -172,18 +173,6 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
         entityToDto(result);
       });
     });
-  };
-
-  $scope.journalResultsView = function (journalId, protocolStudent) {
-    if (protocolStudentJournalResults[protocolStudent.id] && protocolStudentJournalResults[protocolStudent.id][journalId]) {
-      return protocolStudentJournalResults[protocolStudent.id][journalId].map(function (it) { return it.value; }).join(' / ');
-    }
-  };
-
-  $scope.outcomeResultsView = function (curriculumModuleOutcomeId, protocolStudent) {
-    if (protocolStudentOutcomeResults[protocolStudent.id] && protocolStudentOutcomeResults[protocolStudent.id][curriculumModuleOutcomeId]) {
-      return protocolStudentOutcomeResults[protocolStudent.id][curriculumModuleOutcomeId].value;
-    }
   };
 
   $scope.gradeValue = function (code) {

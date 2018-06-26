@@ -11,7 +11,7 @@ angular.module('hitsaOis').controller('OccupationCertificateImportController', [
     }
 
     $scope.criteria = {};
-    $scope.formState = {allStudentGroups: QueryUtils.endpoint('/autocomplete/studentgroups').query({higher: false, valid: true})};
+    $scope.formState = {allStudentGroups: QueryUtils.endpoint('/autocomplete/studentgroups').query({valid: true})};
     $scope.formState.allStudentGroups.$promise.then(function() { curriculumVersionChanged($scope.criteria.curriculumVersion); });
     $scope.$watchCollection('criteria.curriculumVersion', curriculumVersionChanged);
 

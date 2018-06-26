@@ -28,6 +28,7 @@ public class Diploma extends BaseEntityWithId {
     private Boolean isCumLaude;
     private String merCode;
     private String curriculumNameEt;
+    private String schoolNameEt;
     private String schoolNameGenitiveEt;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
@@ -55,6 +56,9 @@ public class Diploma extends BaseEntityWithId {
     private String partoccupationText;
     private Boolean isOccupation;
     private Boolean isPartoccupation;
+    private String curriculumGradeNameEt;
+    private String curriculumGradeNameEn;
+    private String city;
     
     public School getSchool() {
         return school;
@@ -110,6 +114,13 @@ public class Diploma extends BaseEntityWithId {
     }
     public void setCurriculumNameEt(String curriculumNameEt) {
         this.curriculumNameEt = curriculumNameEt;
+    }
+    
+    public String getSchoolNameEt() {
+        return schoolNameEt;
+    }
+    public void setSchoolNameEt(String schoolNameEt) {
+        this.schoolNameEt = schoolNameEt;
     }
     
     public String getSchoolNameGenitiveEt() {
@@ -215,6 +226,27 @@ public class Diploma extends BaseEntityWithId {
     }
     public void setIsPartoccupation(Boolean isPartoccupation) {
         this.isPartoccupation = isPartoccupation;
+    }
+    
+    public String getCurriculumGradeNameEt() {
+        return curriculumGradeNameEt;
+    }
+    public void setCurriculumGradeNameEt(String curriculumGradeNameEt) {
+        this.curriculumGradeNameEt = curriculumGradeNameEt;
+    }
+    
+    public String getCurriculumGradeNameEn() {
+        return curriculumGradeNameEn;
+    }
+    public void setCurriculumGradeNameEn(String curriculumGradeNameEn) {
+        this.curriculumGradeNameEn = curriculumGradeNameEn;
+    }
+    
+    public String getCity() {
+        return city;
+    }
+    public void setCity(String city) {
+        this.city = city;
     }
     
 }

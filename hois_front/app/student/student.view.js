@@ -198,6 +198,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 
 }]).controller('StudentViewResultsVocationalController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope', 'VocationalGradeUtil', 'StudentUtil',
 function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGradeUtil, StudentUtil) {
+  $scope.gradeUtil = VocationalGradeUtil;
   var entryMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', studyYear: 'OPPEAASTA', entryType: 'SISSEKANNE' });
   var moduleMapper = Classifier.valuemapper({ module: 'KUTSEMOODUL' });
 
@@ -404,8 +405,9 @@ function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGrad
     }
   }
 
-}]).controller('StudentViewResultsHigherController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', 'StudentUtil', '$rootScope',
-  function ($q, $route, $scope, Classifier, QueryUtils, StudentUtil, $rootScope) {
+}]).controller('StudentViewResultsHigherController', ['$q', '$route', '$scope', 'Classifier', 'HigherGradeUtil', 'QueryUtils', 'StudentUtil', '$rootScope',
+  function ($q, $route, $scope, Classifier, HigherGradeUtil, QueryUtils, StudentUtil, $rootScope) {
+    $scope.gradeUtil = HigherGradeUtil;
     var auth = $route.current.locals.auth;
 
     $scope.canChangeStudentModules = $scope.auth.isAdmin() && StudentUtil.isActive($scope.student.status) && $scope.auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR') !== -1;

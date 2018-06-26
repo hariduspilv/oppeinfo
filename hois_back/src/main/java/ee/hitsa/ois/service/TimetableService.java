@@ -650,16 +650,44 @@ public class TimetableService {
                     : timetable.getStartDate().with(TemporalAdjusters.next(command.getSelectedDay()));
             List<Long> teachers = StreamUtil.toMappedList(it -> EntityUtil.getId(it.getTeacher()), journal.getJournalTeachers());
             List<Long> rooms = StreamUtil.toMappedList(it -> EntityUtil.getId(it.getRoom()), journal.getJournalRooms());
-
-            return timetableTimeOccupied(start.atTime(lessonTime.getStartTime()), start.atTime(lessonTime.getEndTime()),
-                    teachers, rooms, null);
+            
+            return timetableTimeOccupied(Arrays.asList(start.atTime(lessonTime.getStartTime())), Arrays.asList(start.atTime(lessonTime.getEndTime())), teachers, rooms, null);
         }
         
-        return timetableTimeOccupied(command.getStartTime(), command.getEndTime(), command.getTeachers(),
+        List<LocalDateTime> starts = new ArrayList<>();
+        List<LocalDateTime> ends = new ArrayList<>();
+        starts.add(command.getStartTime());
+        ends.add(command.getEndTime());
+        eventRepeatStartAndEndTimes(command, starts, ends);
+        
+        return timetableTimeOccupied(starts, ends, command.getTeachers(),
                 command.getRooms(), command.getTimetableEventId());
     }
     
-    public TimetableTimeOccupiedDto timetableTimeOccupied(LocalDateTime start, LocalDateTime end,
+    private static void eventRepeatStartAndEndTimes(TimetableTimeOccupiedCommand command, List<LocalDateTime> starts, List<LocalDateTime> ends) {
+        long daysToAdd;
+        if (TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_P.name().equals(command.getRepeatCode())) {
+            daysToAdd = 1;
+        } else if (TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_N.name().equals(command.getRepeatCode())) {
+            daysToAdd = 7;
+        } else if (TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_N2.name().equals(command.getRepeatCode())) {
+            daysToAdd = 14;
+        } else {
+            return;
+        }
+        
+        LocalDateTime endTime = command.getStartTime().plusWeeks(command.getWeekAmount().longValue());
+        LocalDateTime start = command.getStartTime().plusDays(daysToAdd);
+        LocalDateTime end = command.getEndTime().plusDays(daysToAdd);
+        while (endTime.isAfter(start)) {
+            starts.add(start);
+            ends.add(end);
+            start = start.plusDays(daysToAdd);
+            end = end.plusDays(daysToAdd);
+        }
+    }
+    
+    public TimetableTimeOccupiedDto timetableTimeOccupied(List<LocalDateTime> starts, List<LocalDateTime> ends,
             List<Long> teachers, List<Long> rooms, Long timetabelEventTimeId) {
         TimetableTimeOccupiedDto dto = new TimetableTimeOccupiedDto();
         dto.setOccupied(Boolean.FALSE);
@@ -676,9 +704,18 @@ public class TimetableService {
                 "left join timetable_event_room ter on tet.id = ter.timetable_event_time_id " +
                 "left join room r on ter.room_id = r.id");
         
-        qb.requiredCriteria("tet.start <= :timeEnd", "timeEnd", end);
-        qb.requiredCriteria("tet.end >= :timeStart", "timeStart", start);
         qb.optionalCriteria("tet.id != :currentEventTimeId", "currentEventTimeId", timetabelEventTimeId);
+        
+        if (!starts.isEmpty() && !ends.isEmpty()) {
+            String timeFilter = "";
+            for (int i = 0; i < starts.size(); i++) {
+                timeFilter += timeFilter.isEmpty() ? "(" : " or ";
+                timeFilter += "(tet.start <= '" + JpaQueryUtil.parameterAsTimestamp(ends.get(i)) + "' and tet.end >= '"
+                        + JpaQueryUtil.parameterAsTimestamp(starts.get(i)) + "')";
+            }
+            timeFilter += ")";
+            qb.filter(timeFilter);
+        }
         
         if (!CollectionUtils.isEmpty(teachers) && !CollectionUtils.isEmpty(rooms)) {
             qb.filter("(tett.teacher_id in (" + StringUtils.join(teachers, ", ") + ")"

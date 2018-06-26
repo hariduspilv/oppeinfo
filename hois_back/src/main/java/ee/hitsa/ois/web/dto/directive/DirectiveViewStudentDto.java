@@ -6,6 +6,7 @@ import java.util.List;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.directive.DirectiveStudentOccupation;
 import ee.hitsa.ois.domain.student.Student;
@@ -61,7 +62,7 @@ public class DirectiveViewStudentDto {
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
     private List<String> occupations;
-    private String curriculumGrade;
+    private AutocompleteResult curriculumGrade;
     private String bankAccount;
     private BigDecimal amountPaid;
 
@@ -401,11 +402,11 @@ public class DirectiveViewStudentDto {
         this.occupations = occupations;
     }
 
-    public String getCurriculumGrade() {
+    public AutocompleteResult getCurriculumGrade() {
         return curriculumGrade;
     }
 
-    public void setCurriculumGrade(String curriculumGrade) {
+    public void setCurriculumGrade(AutocompleteResult curriculumGrade) {
         this.curriculumGrade = curriculumGrade;
     }
 
@@ -487,10 +488,10 @@ public class DirectiveViewStudentDto {
         case KASKKIRI_LOPET:
             if (student != null) {
                 dto.setNewCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
-                // TODO
-                // dto.setIsCumLaude(isCumLaude);
-                // dto.setIsOccupationExamPassed(isOccupationExamPassed);
-                // dto.setCurriculumGrade(curriculumGrade);
+                CurriculumGrade grade = directiveStudent.getCurriculumGrade();
+                if (grade != null) {
+                    dto.setCurriculumGrade(AutocompleteResult.of(grade));
+                }
                 List<DirectiveStudentOccupation> occups = directiveStudent.getOccupations();
                 if (occups != null && !occups.isEmpty()) {
                     dto.setOccupations(StreamUtil.toMappedList(o -> EntityUtil.getCode(o.getOccupation()), occups));

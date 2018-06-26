@@ -7,6 +7,7 @@ import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -32,13 +33,18 @@ import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsEkisLog;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.directive.DirectiveStudentOccupation;
+import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.student.StudentRepresentative;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.CertificateStatus;
 import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.enums.ContractStatus;
@@ -47,6 +53,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.Translatable;
@@ -76,6 +83,8 @@ public class EkisService {
 
     // XXX we send 0 as missing wd_id value
     private static final int MISSING_WD_ID = 0;
+    // XXX we send 0 as missing int value
+    private static final int MISSING_INT = 0;
 
     @Autowired
     private EkisClient ekis;
@@ -273,6 +282,44 @@ public class EkisService {
 
         content.setFirstName(person.getFirstname());
         content.setLastName(person.getLastname());
+        if (Boolean.TRUE.equals(student.getIsRepresentativeMandatory()) || !PersonUtil.isAdult(person)) {
+            List<StudentRepresentative> representatives = student.getRepresentatives();
+            if (representatives != null) {
+                representatives.stream()
+                .filter(r -> Boolean.TRUE.equals(r.getIsStudentVisible()))
+                .sorted(Comparator.comparing(r -> EntityUtil.getCode(r.getRelation()), Comparator.reverseOrder()))
+                .findFirst().ifPresent(r -> {
+                    Person representative = r.getPerson();
+                    content.setReprFirstName(representative.getFirstname());
+                    content.setReprLastName(representative.getLastname());
+                });
+            }
+        }
+        content.setCurricula(curriculum(student));
+        CurriculumVersion curriculumVersion = student.getCurriculumVersion();
+        if (curriculumVersion != null) {
+            Curriculum curriculum = curriculumVersion.getCurriculum();
+            content.setCurriculaMerCode(curriculum.getMerCode());
+            content.setStudyLevel(name(curriculum.getOrigStudyLevel()));
+            content.setCurriculaStudyPeriod(intValue(curriculum.getStudyPeriod()));
+            content.setForm(name(student.getStudyForm()));
+        }
+        StudentGroup studentGroup = ds.getStudentGroup();
+        if (studentGroup == null) {
+            studentGroup = student.getStudentGroup();
+        }
+        if (studentGroup != null) {
+            content.setGroup(studentGroup.getCode());
+            content.setCourse(intValue(studentGroup.getCourse()));
+            Teacher groupTeacher = studentGroup.getTeacher();
+            if (groupTeacher != null) {
+                Person teacher = groupTeacher.getPerson();
+                content.setTeacherFirstName(teacher.getFirstname());
+                content.setTeacherLastName(teacher.getLastname());
+            }
+        }
+        content.setFinsource(name(student.getFin()));
+        content.setLang(name(student.getLanguage()));
         switch(directiveType) {
         case KASKKIRI_AKAD:
             content.setStartDate(periodStart(ds));
@@ -308,8 +355,15 @@ public class EkisService {
             break;
         case KASKKIRI_LOPET:
             content.setCurricula(curriculum(ds));
-            // TODO cum laude
+            content.setKudos(yesNo(ds.getIsCumLaude()));
             content.setDegree(name(ds.getCurriculumGrade()));
+            List<DirectiveStudentOccupation> occupations = ds.getOccupations();
+            if (occupations != null) {
+                occupations.stream()
+                    .map(DirectiveStudentOccupation::getOccupation)
+                    .sorted(Comparator.comparing(EntityUtil::getCode))
+                    .findFirst().ifPresent(o -> content.setOccupation(name(o)));
+            }
             break;
         case KASKKIRI_OKAVA:
             content.setForm(name(ds.getStudyForm()));
@@ -332,6 +386,16 @@ public class EkisService {
             content.setEndDate(date(ds.getEndDate()));
             content.setStipType(value(ds.getDirective().getScholarshipType()));
             content.setStipName(name(ds.getDirective().getScholarshipType()));
+            ScholarshipApplication scholarshipApplication = ds.getScholarshipApplication();
+            if (scholarshipApplication != null) {
+                BigDecimal grade = scholarshipApplication.getLastPeriodMark();
+                if (grade == null) {
+                    grade = scholarshipApplication.getAverageMark();
+                }
+                if (grade != null) {
+                    content.setAvgGrade(grade.toString());
+                }
+            }
             content.setStipAmount(money(ds.getAmountPaid()));
             break;
         case KASKKIRI_STIPTOETL:
@@ -426,6 +490,14 @@ public class EkisService {
         return classifier != null ? classifier.getValue() : null;
     }
 
+    private static int intValue(Number number) {
+        return number != null ? number.intValue() : MISSING_INT;
+    }
+    
+    private static String yesNo(Boolean value) {
+        return value != null ? (Boolean.TRUE.equals(value) ? "jah" : "ei") : null;
+    }
+    
     private static String qguid() {
         return UUID.randomUUID().toString();
     }

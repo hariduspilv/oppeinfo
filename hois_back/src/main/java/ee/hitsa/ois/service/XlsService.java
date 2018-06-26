@@ -133,6 +133,14 @@ public class XlsService {
             Classifier c = classifierCache.getByCode(code, MainClassCode.valueOf(mainClassCode));
             return c != null ? name(c) : "? - " + code;
         }
+        
+        public String classifierValue(String code, String mainClassCode) {
+            if (code == null) {
+                return "";
+            }
+            Classifier c = classifierCache.getByCode(code, MainClassCode.valueOf(mainClassCode));
+            return c != null ? c.getValue() : "? - " + code;
+        }
 
         public List<Classifier> allClassifiers(String... mainClassCodes) {
             List<Classifier> classifiers = new ArrayList<>();
@@ -179,4 +187,5 @@ public class XlsService {
             return DateUtils.date(localDate);
         }
     }
+    
 }

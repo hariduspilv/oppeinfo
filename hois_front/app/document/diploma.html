@@ -39,24 +39,32 @@
         </table>
       </md-table-container>
       <br/>
-      <div layout="row" ng-hide="formState.students.length === 0">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
-          <label>{{'document.signer1' | translate}}</label>
-          <hois-select ng-model="criteria.signer1Id" values="formState.firstsigners" show-property="display" 
-            ng-change="updatePdfUrl()" required></hois-select>
-        </md-input-container>
-        <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label>{{'document.signer2' | translate}}</label>
-          <hois-select ng-model="criteria.signer2Id" values="formState.signers" show-property="display" 
-            ng-change="updatePdfUrl()" required></hois-select>
-        </md-input-container>
-      </div>
-      <div layout="row" ng-hide="formState.students.length === 0">
-        <md-input-container flex="20" flex-sm="100" flex-xs="100">
-          <label>{{'document.supplementForm' | translate}}</label>
-          <input type="number" ng-model="criteria.numeral" min="0">
-        </md-input-container>
-        <span class="middle-text label">{{formState.freeForms.join(', ')}}</span>
+      <div ng-hide="formState.students.length === 0">
+        <div layout="row">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'document.signer1' | translate}}</label>
+            <hois-select ng-model="criteria.signer1Id" values="formState.firstsigners" show-property="display" 
+              ng-change="updatePdfUrl()" required></hois-select>
+          </md-input-container>
+          <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'document.signer2' | translate}}</label>
+            <hois-select ng-model="criteria.signer2Id" values="formState.signers" show-property="display" 
+              ng-change="updatePdfUrl()" required></hois-select>
+          </md-input-container>
+        </div>
+        <div layout="row" ng-if="isHigher">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'document.city' | translate}}</label>
+            <input type="text" ng-model="criteria.city" ng-change="updatePdfUrl()" required>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
+            <label>{{'document.freeForms' | translate}}</label>
+            <input type="number" ng-model="criteria.numeral" min="0">
+          </md-input-container>
+          <hois-free-forms value="formState.freeForms"></hois-free-forms>
+        </div>
       </div>
     </form>
 

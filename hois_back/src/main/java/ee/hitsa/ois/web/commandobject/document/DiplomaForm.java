@@ -4,6 +4,7 @@ public class DiplomaForm extends DiplomaBaseForm {
 
     private Long signer1Id;
     private Long signer2Id;
+    private String city;
     private Long numeral;
     
     public Long getSigner1Id() {
@@ -18,6 +19,13 @@ public class DiplomaForm extends DiplomaBaseForm {
     }
     public void setSigner2Id(Long signer2Id) {
         this.signer2Id = signer2Id;
+    }
+    
+    public String getCity() {
+        return city;
+    }
+    public void setCity(String city) {
+        this.city = city;
     }
     
     public Long getNumeral() {

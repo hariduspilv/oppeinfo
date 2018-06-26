@@ -13,6 +13,7 @@ import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
@@ -255,6 +256,14 @@ public abstract class UserUtil {
         }
         return false;
     }
+    
+    public static boolean isStudentGroupTeacher(HoisUserDetails user, StudentGroup studentGroup) {
+        if(isTeacher(user, studentGroup.getSchool())) {
+            Teacher teacher = studentGroup.getTeacher();
+            return user.getTeacherId().equals(EntityUtil.getNullableId(teacher));
+        }
+        return false;
+    }
 
     public static boolean isMainAdminOrExternalExpert(HoisUserDetails user) {
         return user.isMainAdmin() || user.isExternalExpert();
@@ -320,6 +329,10 @@ public abstract class UserUtil {
         AssertionFailedException.throwIf(!isSchoolAdmin(user, school) && !isTeacher(user, school), "User is not school admin or teacher in given school");
     }
 
+    public static void assertIsTeacher(HoisUserDetails user) {
+        throwAccessDeniedIf(!user.isTeacher(), "User is not teacher");
+    }
+
     public static void assertCanUpdateUser(String role) {
         AssertionFailedException.throwIf(role.equals(Role.ROLL_T.name()) || role.equals(Role.ROLL_L.name()),"Invalid role");
     }
@@ -347,6 +360,11 @@ public abstract class UserUtil {
     public static void assertIsSchoolAdminOrStudentOrRepresentative(HoisUserDetails user) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isStudent() && !user.isRepresentative(),
                 "User is not school admin, student, or student representative");
+    }
+    
+    public static void assertIsSchoolAdminOrStudentGroupTeacher(HoisUserDetails user, StudentGroup studentGroup) {
+        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !isStudentGroupTeacher(user, studentGroup),
+                "User is not school admin or student group teacher");
     }
 
     public static void assertCanViewStudent(HoisUserDetails user, Student student) {

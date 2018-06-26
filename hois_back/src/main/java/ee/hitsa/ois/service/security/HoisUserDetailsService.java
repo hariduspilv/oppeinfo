@@ -2,6 +2,7 @@ package ee.hitsa.ois.service.security;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.security.Principal;
@@ -33,6 +34,7 @@ import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.UserService;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.UserProjection;
 
 @Transactional
@@ -111,6 +113,13 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
                 authenticatedUser.setHigher(Boolean.valueOf(type.isHigher()));
                 authenticatedUser.setDoctoral(Boolean.valueOf(type.isDoctoral()));
             }
+        }
+        Long teacherId = authenticatedUser.getTeacher();
+        if (teacherId != null) {
+            List<?> result = em.createNativeQuery("select sg.id from student_group sg where sg.teacher_id = ?1")
+                .setParameter(1, teacherId)
+                .getResultList();
+            authenticatedUser.setTeacherGroupIds(StreamUtil.toMappedList(r -> resultAsLong(r, 0), result));
         }
         authenticatedUser.setSchool(authenticatedSchool);
         authenticatedUser.setAuthorizedRoles(userDetails.getAuthorities());

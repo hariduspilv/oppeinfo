@@ -4,6 +4,7 @@ public class StudentGroupAutocompleteCommand extends SearchCommand {
 
     private Boolean valid;
     private Boolean higher;
+    private Long studentGroupTeacherId;
 
     public Boolean getValid() {
         return valid;
@@ -20,4 +21,13 @@ public class StudentGroupAutocompleteCommand extends SearchCommand {
     public void setHigher(Boolean higher) {
         this.higher = higher;
     }
+
+    public Long getStudentGroupTeacherId() {
+        return studentGroupTeacherId;
+    }
+
+    public void setStudentGroupTeacherId(Long studentGroupTeacherId) {
+        this.studentGroupTeacherId = studentGroupTeacherId;
+    }
+    
 }

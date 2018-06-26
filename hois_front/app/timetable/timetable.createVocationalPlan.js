@@ -425,14 +425,14 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         capacityType: params.capacityType
       };
 
-      var existsQuery = {
+      var occupiedQuery = {
         journal: journalId,
         timetable: $scope.timetableId,
         lessonTime: this.lessonTime.id,
         selectedDay: selectedDay,
       };
 
-      QueryUtils.endpoint(baseUrl + '/timetableTimeOccupied').get(existsQuery).$promise.then(function (result) {
+      QueryUtils.endpoint(baseUrl + '/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
         if (result.occupied) {
           dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
             saveVocationalEvent(query, currGroupId);

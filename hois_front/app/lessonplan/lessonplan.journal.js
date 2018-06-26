@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
-  function ($location, $route, $scope, dialogService, message, Classifier, QueryUtils) {
+angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$location', '$route', '$scope', '$timeout', 'dialogService', 'message', 'Classifier', 'QueryUtils', '$http',
+  function ($location, $route, $scope, $timeout, dialogService, message, Classifier, QueryUtils, $http) {
     var id = $route.current.params.id;
     var lessonPlan = $route.current.params.lessonPlan;
     var occupationModule = $route.current.params.occupationModule;
@@ -47,11 +47,20 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
           result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({
             curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule
           });
+          $timeout(setJournalFormPristine);
         }
       }
       checkCapacitiesForThemes();
       $scope.record.lessonPlan = result.lessonPlan;
     });
+
+    function setJournalFormPristine() {
+      if ($http.pendingRequests.length > 0) {
+        $timeout(setJournalFormPristine);
+      } else {
+        $scope.journalForm.$setPristine();
+      }
+    }
 
     $scope.lessonPlanModule = $route.current.params.lessonPlanModule;
 
@@ -75,6 +84,8 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       if ($scope.record.id) {
         $scope.record.$update().then(function (result) {
           message.updateSuccess();
+          $scope.journalForm.$setPristine();
+          $scope.removedJournalTeacherIds = {};
           for (var i = 0; result.groups.length > i; i++) {
             result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({
               curriculumVersion: result.groups[i].curriculumVersion
@@ -87,6 +98,8 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       } else {
         $scope.record.$save().then(function () {
           message.info('main.messages.create.success');
+          $scope.journalForm.$setPristine();
+          $scope.removedJournalTeacherIds = {};
           $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback&lessonPlanModule=' + $scope.record.lessonPlanModuleId);
         }).catch(angular.noop);
       }
@@ -116,7 +129,8 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
           $scope.record.journalOccupationModuleThemes = [];
         }
         if ($scope.record.journalOccupationModuleThemes.indexOf(themeId) !== -1) {
-         message.error('lessonplan.journal.duplicatetheme');
+          message.error('lessonplan.journal.duplicatetheme');
+          $scope.journalForm.$setPristine();
           return;
         }
         $scope.record.journalOccupationModuleThemes.push(themeId);
@@ -131,6 +145,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
         $scope.record.journalOccupationModuleThemes.splice(index, 1);
       }
       checkCapacitiesForThemes();
+      $scope.journalForm.$setDirty();
     };
 
     function checkCapacitiesForThemes() {
@@ -169,6 +184,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       if (index !== -1) {
         $scope.record.journalRooms.splice(index, 1);
       }
+      $scope.journalForm.$setDirty();
     };
 
     $scope.addTeacher = function () {
@@ -179,9 +195,11 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
           return e.teacher.id === $scope.formState.teacher.id;
         })) {
         message.error('lessonplan.journal.duplicateteacher');
+        $scope.journalForm.$setPristine();
         return;
       }
       $scope.record.journalTeachers.push({
+        id: $scope.removedJournalTeacherIds ? $scope.removedJournalTeacherIds[$scope.formState.teacher.id] : null,
         teacher: $scope.formState.teacher
       });
       $scope.formState.teacher = undefined;
@@ -197,6 +215,12 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       if (teacherIndex !== -1) {
         $scope.record.journalTeachers.splice(teacherIndex, 1);
       }
+      
+      if (!$scope.removedJournalTeacherIds) {
+        $scope.removedJournalTeacherIds = {};
+      }
+      $scope.removedJournalTeacherIds[teacher.teacher.id] = teacher.id;
+      $scope.journalForm.$setDirty();
     };
 
     $scope.addGroup = function () {
@@ -229,6 +253,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
           })) {
           message.error('lessonplan.journal.duplicateroom');
           $scope.formState.room = undefined;
+          $scope.journalForm.$setPristine();
           return;
         }
         $scope.record.journalRooms.push($scope.formState.room);
@@ -277,6 +302,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       if (groupIndex !== -1) {
         $scope.record.groups.splice(groupIndex, 1);
       }
+      $scope.journalForm.$setDirty();
     };
   }
 ]);

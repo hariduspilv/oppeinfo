@@ -1,5 +1,7 @@
 package ee.hitsa.ois.util;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.student.Student;
@@ -53,4 +55,11 @@ public abstract class StudentUtil {
     public static boolean hasRepresentatives(Student student) {
         return StreamUtil.nullSafeList(student.getRepresentatives()).stream().anyMatch(StudentRepresentative::getIsStudentVisible);
     }
+
+    public static BigDecimal getCurriculumCompletion(BigDecimal credits, Student student) {
+        BigDecimal curriculumCredits = student.getCurriculumVersion().getCurriculum().getCredits();
+        return credits.multiply(BigDecimal.valueOf(100))
+                .divide(curriculumCredits, 0, RoundingMode.HALF_UP);
+    }
+    
 }

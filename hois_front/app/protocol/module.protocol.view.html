@@ -33,12 +33,20 @@
                   <td md-cell>{{row.fullname}}</td>
                   <td md-cell>{{row.idcode}}</td>
                   <td md-cell ng-repeat="journal in journals | orderBy: 'nameEt'">
-                    {{journalResultsView(journal.id, row)}}
+                    <span ng-if="protocolStudentJournalResults[row.id] && protocolStudentJournalResults[row.id][journal.id]"
+                      ng-repeat="grade in protocolStudentJournalResults[row.id][journal.id]">
+                      <span ng-class="{badResult: !gradeUtil.isPositive(grade.code)}">{{grade.value}}</span>
+                      <span ng-if="!$last">/</span>
+                    </span>
                   </td>
                   <td md-cell ng-if="formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
-                    {{outcomeResultsView(outcome.id, row)}}
+                    <span ng-if="protocolStudentOutcomeResults[row.id] && protocolStudentOutcomeResults[row.id][outcome.id]">
+                      <span ng-class="{badResult: !gradeUtil.isPositive(protocolStudentOutcomeResults[row.id][outcome.id].code)}">{{protocolStudentOutcomeResults[row.id][outcome.id].value}}</span>
+                    </span>
                   </td>
-                  <td md-cell>{{gradeValue(row.grade)}}</td>
+                  <td md-cell>
+                    <span ng-class="{badResult: !gradeUtil.isPositive(row.grade)}">{{gradeValue(row.grade)}}</span>
+                  </td>
                   <td md-cell>{{row.addInfo}}</td>
                 </tr>
               </tbody>

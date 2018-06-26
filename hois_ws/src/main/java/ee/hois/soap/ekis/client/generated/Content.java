@@ -36,6 +36,17 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="stip_type" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="stip_name" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="stip_amount" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="repr_first_name" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="repr_last_name" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="curricula_mer_code" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="study_level" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="curricula_study_period" type="{http://www.w3.org/2001/XMLSchema}int"/&gt;
+ *         &lt;element name="course" type="{http://www.w3.org/2001/XMLSchema}int"/&gt;
+ *         &lt;element name="teacher_first_name" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="teacher_last_name" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="occupation" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="specialization" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="avg_grade" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -64,7 +75,18 @@ import javax.xml.bind.annotation.XmlType;
     "eap",
     "stipType",
     "stipName",
-    "stipAmount"
+    "stipAmount",
+    "reprFirstName",
+    "reprLastName",
+    "curriculaMerCode",
+    "studyLevel",
+    "curriculaStudyPeriod",
+    "course",
+    "teacherFirstName",
+    "teacherLastName",
+    "occupation",
+    "specialization",
+    "avgGrade"
 })
 public class Content {
 
@@ -106,6 +128,27 @@ public class Content {
     protected String stipName;
     @XmlElement(name = "stip_amount", required = true)
     protected String stipAmount;
+    @XmlElement(name = "repr_first_name", required = true)
+    protected String reprFirstName;
+    @XmlElement(name = "repr_last_name", required = true)
+    protected String reprLastName;
+    @XmlElement(name = "curricula_mer_code", required = true)
+    protected String curriculaMerCode;
+    @XmlElement(name = "study_level", required = true)
+    protected String studyLevel;
+    @XmlElement(name = "curricula_study_period")
+    protected int curriculaStudyPeriod;
+    protected int course;
+    @XmlElement(name = "teacher_first_name", required = true)
+    protected String teacherFirstName;
+    @XmlElement(name = "teacher_last_name", required = true)
+    protected String teacherLastName;
+    @XmlElement(required = true)
+    protected String occupation;
+    @XmlElement(required = true)
+    protected String specialization;
+    @XmlElement(name = "avg_grade", required = true)
+    protected String avgGrade;
 
     /**
      * Gets the value of the idCode property.
@@ -561,6 +604,254 @@ public class Content {
      */
     public void setStipAmount(String value) {
         this.stipAmount = value;
+    }
+
+    /**
+     * Gets the value of the reprFirstName property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getReprFirstName() {
+        return reprFirstName;
+    }
+
+    /**
+     * Sets the value of the reprFirstName property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setReprFirstName(String value) {
+        this.reprFirstName = value;
+    }
+
+    /**
+     * Gets the value of the reprLastName property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getReprLastName() {
+        return reprLastName;
+    }
+
+    /**
+     * Sets the value of the reprLastName property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setReprLastName(String value) {
+        this.reprLastName = value;
+    }
+
+    /**
+     * Gets the value of the curriculaMerCode property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getCurriculaMerCode() {
+        return curriculaMerCode;
+    }
+
+    /**
+     * Sets the value of the curriculaMerCode property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setCurriculaMerCode(String value) {
+        this.curriculaMerCode = value;
+    }
+
+    /**
+     * Gets the value of the studyLevel property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getStudyLevel() {
+        return studyLevel;
+    }
+
+    /**
+     * Sets the value of the studyLevel property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setStudyLevel(String value) {
+        this.studyLevel = value;
+    }
+
+    /**
+     * Gets the value of the curriculaStudyPeriod property.
+     * 
+     */
+    public int getCurriculaStudyPeriod() {
+        return curriculaStudyPeriod;
+    }
+
+    /**
+     * Sets the value of the curriculaStudyPeriod property.
+     * 
+     */
+    public void setCurriculaStudyPeriod(int value) {
+        this.curriculaStudyPeriod = value;
+    }
+
+    /**
+     * Gets the value of the course property.
+     * 
+     */
+    public int getCourse() {
+        return course;
+    }
+
+    /**
+     * Sets the value of the course property.
+     * 
+     */
+    public void setCourse(int value) {
+        this.course = value;
+    }
+
+    /**
+     * Gets the value of the teacherFirstName property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getTeacherFirstName() {
+        return teacherFirstName;
+    }
+
+    /**
+     * Sets the value of the teacherFirstName property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setTeacherFirstName(String value) {
+        this.teacherFirstName = value;
+    }
+
+    /**
+     * Gets the value of the teacherLastName property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getTeacherLastName() {
+        return teacherLastName;
+    }
+
+    /**
+     * Sets the value of the teacherLastName property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setTeacherLastName(String value) {
+        this.teacherLastName = value;
+    }
+
+    /**
+     * Gets the value of the occupation property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getOccupation() {
+        return occupation;
+    }
+
+    /**
+     * Sets the value of the occupation property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setOccupation(String value) {
+        this.occupation = value;
+    }
+
+    /**
+     * Gets the value of the specialization property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getSpecialization() {
+        return specialization;
+    }
+
+    /**
+     * Sets the value of the specialization property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setSpecialization(String value) {
+        this.specialization = value;
+    }
+
+    /**
+     * Gets the value of the avgGrade property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getAvgGrade() {
+        return avgGrade;
+    }
+
+    /**
+     * Sets the value of the avgGrade property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setAvgGrade(String value) {
+        this.avgGrade = value;
     }
 
 }

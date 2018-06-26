@@ -21,23 +21,27 @@ public class CurriculumVersionModuleTypeReport {
     
     public CurriculumVersionModuleTypeReport(String code, List<CurriculumVersionOccupationModule> occupationModules, List<Short> studyYears, Language lang) {
         this.code = code;
-        modules = StreamUtil.toMappedList(m -> new CurriculumVersionModuleTypeModuleReport(m, lang), occupationModules);
+        modules = StreamUtil.toMappedList(m -> new CurriculumVersionModuleTypeModuleReport(m, studyYears, lang), occupationModules);
         modules.sort(Comparator.comparing(CurriculumVersionModuleTypeModuleReport::getName));
         
-        for (Short year : studyYears) {
-            studyYearCredits.put(year, BigDecimal.ZERO);
-        }
-        
-        for (CurriculumVersionModuleTypeModuleReport module : modules) {
-            Map<Short, BigDecimal> moduleStudyYearCredits = module.getStudyYearCredits();
-            for (Short key : moduleStudyYearCredits.keySet()) {
-                BigDecimal credits = moduleStudyYearCredits.get(key);
-                if (credits != null) {
-                    studyYearCredits.put(key, studyYearCredits.get(key).add(credits));
+        if (!studyYears.isEmpty()) {
+            for (Short year : studyYears) {
+                studyYearCredits.put(year, BigDecimal.ZERO);
+            }
+            
+            for (CurriculumVersionModuleTypeModuleReport module : modules) {
+                Map<Short, BigDecimal> moduleStudyYearCredits = module.getStudyYearCredits();
+                for (Short key : moduleStudyYearCredits.keySet()) {
+                    BigDecimal credits = moduleStudyYearCredits.get(key);
+                    if (credits != null && studyYearCredits.get(key) != null) {
+                        studyYearCredits.put(key, studyYearCredits.get(key).add(credits));
+                    }
                 }
             }
+            totalCredits = studyYearCredits.values().stream().collect(Collectors.reducing(BigDecimal.ZERO, BigDecimal::add));
+        } else {
+            totalCredits = BigDecimal.ZERO;
         }
-        totalCredits = studyYearCredits.values().stream().collect(Collectors.reducing(BigDecimal.ZERO, BigDecimal::add));
     }
 
     public String getCode() {

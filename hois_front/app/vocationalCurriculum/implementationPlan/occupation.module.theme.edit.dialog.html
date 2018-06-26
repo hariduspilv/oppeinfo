@@ -41,14 +41,14 @@
 
           <md-input-container flex="10">
             <label>{{'main.hour' | translate}}</label>
-            <input ng-model="occupationModuleTheme.hours" name="hours" type="number" min="0" max="999" pattern="^\d+$" required
+            <input ng-model="occupationModuleTheme.hours" name="hours" type="number" min="0" max="9999" pattern="^\d+$" required
               ng-change="setDefaultCredits()">
             <div ng-messages="dialogForm.hours.$error" ng-show="dialogForm.hours.$dirty">
               <div ng-message="min">
                 {{'main.messages.error.positive' | translate}}
               </div>
               <div ng-message="max">
-                {{'curriculum.error.max999' | translate}}
+                {{'curriculum.error.max9999' | translate}}
               </div>
               <div ng-message="pattern">
                 {{'stateCurriculum.enter.credits.integer' | translate}}
@@ -93,7 +93,7 @@
               <div flex="30" class="occupation-module-capacity">{{currentLanguageNameField(item)}}</div>
               <div flex="30">
                 <md-input-container flex>
-                  <input ng-model="item.hours" type="number" min="0" max="999" pattern="^\d+$" aria-label="capacity hours" class="small-input" ng-required="item.contact">
+                  <input ng-model="item.hours" type="number" min="0" max="9999" pattern="^\d+$" aria-label="capacity hours" class="small-input" ng-required="item.contact">
                 </md-input-container>
               </div>
               <div flex="40" layout="row">

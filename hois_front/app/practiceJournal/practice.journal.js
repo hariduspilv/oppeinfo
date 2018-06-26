@@ -175,7 +175,7 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
     var practiceJournal = new PracticeJournalEndpoint($scope.practiceJournal);
     if (angular.isDefined($scope.practiceJournal.id)) {
       if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {        
-        dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEdit'}, function () {
+        dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEditSave'}, function () {
           practiceJournal.$update().then(function () {
             message.info('main.messages.update.success'); 
             $location.path('/practiceJournals');
@@ -190,7 +190,7 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
       }
     } else {
       if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {        
-        dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEdit'}, function () {
+        dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEditSave'}, function () {
           practiceJournal.$save().then(function () {
             message.info('main.messages.create.success');
             $location.path('/practiceJournals');
@@ -212,27 +212,25 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
     }
     $scope.practiceJournal.isHigher = $scope.formState.isHigher;
     if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {        
-      dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEdit'}, function () {
+      dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEditConfirm'}, function () {
         confirmPracticeJournal(true);
       });
     } else {
-      confirmPracticeJournal(false);
+      dialogService.confirmDialog({prompt: 'practiceJournal.prompt.confirmConfirm'}, function () {
+        confirmPracticeJournal(false);
+      });
     }
   };
 
   function confirmPracticeJournal(sendBackToList) {
-    dialogService.confirmDialog({
-      prompt: 'practiceJournal.prompt.confirmConfirm'
-    }, function () {
-      QueryUtils.endpoint('/practiceJournals/' + $scope.practiceJournal.id + '/confirm/').put($scope.practiceJournal, function (practiceJournal) {
-        message.info('practiceJournal.messages.confirmed');
-        if (sendBackToList) {
-          $location.path('/practiceJournals');
-        } else {
-          entityToForm(practiceJournal);
-          $scope.practiceJournalForm.$setPristine();
-        }
-      });
+    QueryUtils.endpoint('/practiceJournals/' + $scope.practiceJournal.id + '/confirm/').put($scope.practiceJournal, function (practiceJournal) {
+      message.info('practiceJournal.messages.confirmed');
+      if (sendBackToList) {
+        $location.path('/practiceJournals');
+      } else {
+        entityToForm(practiceJournal);
+        $scope.practiceJournalForm.$setPristine();
+      }
     });
   }
 

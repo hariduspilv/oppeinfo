@@ -39,7 +39,7 @@ angular.module('hitsaOis').controller('FinalVocationalProtocolNewController', fu
         }
       });
       
-      if (result.teacher && !$scope.formState.teacher) {
+      if (result.teacher) {
         $scope.formState.teacher = result.teacher.id;
       }
     });

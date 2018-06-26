@@ -16,13 +16,13 @@ html {
 }
 .diploma-cumlaude {
     height: 20pt;
-    margin-top: 190pt;
+    margin-top: 220pt;
     text-align: center;
     width: 100%;
 }
 .diploma-center {
-    height: 180pt;
-    margin-top: 50pt;
+    height: 230pt;
+    margin-top: 20pt;
     text-align: center;
     width: 100%;
 }
@@ -33,20 +33,24 @@ html {
     font-size: 18pt;
     font-weight: bold;
 }
-.diploma-directive {
-    height: 20pt;
-    margin-top: 70pt;
-    width: 100%;
+.diploma-grade-en {
+    font-weight: bold;
+    font-style: italic;
 }
 .diploma-signers {
-    margin-top: 110pt;
+    margin-top: 80pt;
     width: 100%;
 }
 .diploma-signer-left {
     display: inline-block;
+    margin-top: 10pt;
     width: 55%;
 }
 .diploma-signer-right {
     display: inline-block;
     width: 44%;
+}
+.diploma-city {
+    margin-top: 10pt;
+    width: 100%;
 }

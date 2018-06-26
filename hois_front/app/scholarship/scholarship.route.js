@@ -252,7 +252,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: function(Session) {
+          return Session.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1 || 
+            (angular.isArray(Session.teacherGroupIds) && Session.teacherGroupIds.length > 0);
+        }
       }
     })
     .when('/scholarships/applications/drGrants', {

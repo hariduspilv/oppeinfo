@@ -183,5 +183,10 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
       return {promises: promises, objectmapper: objectmapper};
     };
 
+    Classifier.isValid = function(record) {
+      var currentDate = new Date().withoutTime();
+      return (!record.validFrom || new Date(record.validFrom) <= currentDate) && (!record.validThru || new Date(record.validThru) >= currentDate);
+    };
+
     return Classifier;
 }]);

@@ -109,6 +109,20 @@ public class KutseregisterService {
                 cvOccupations.add(new OccupationDto(specialityName, resultAsString(r, 6), resultAsLocalDate(r, 7), resultAsLocalDate(r, 8)));
             }
         }
+        data = em.createNativeQuery("select cv.id, cocl.name_et, cocl.code, cocl.valid_from, cocl.valid_thru " +
+                "from curriculum_version cv " +
+                "join curriculum c on cv.curriculum_id = c.id " +
+                "join curriculum_speciality cs on cs.curriculum_id = c.id " +
+                "join classifier cocl on cs.occupation_code = cocl.code " +
+                "where c.school_id = ?1 and cv.id in (?2)")
+                .setParameter(1, schoolId)
+                .setParameter(2, criteria.getCurriculumVersion())
+                .getResultList();
+        for(Object r : data) {
+            Long cvId = resultAsLong(r, 0);
+            List<OccupationDto> cvOccupations = occupations.computeIfAbsent(cvId, (key) -> new ArrayList<>());
+            cvOccupations.add(new OccupationDto(resultAsString(r, 1), resultAsString(r, 2), resultAsLocalDate(r, 3), resultAsLocalDate(r, 4)));
+        }
 
         // existing occupation certificates
         data = em.createNativeQuery("select soc.student_id, soc.certificate_nr from student_occupation_certificate soc where soc.student_id in (?1)")
@@ -186,7 +200,7 @@ public class KutseregisterService {
                         speciality = findOccupation(certificate.getSpetsialiseerumine(), SPECIALIZATION_PREFIX, certificate.getValjaantud(), occupations);
                         if(speciality != null) {
                             occupation = ClassifierUtil.parentFor(speciality, MainClassCode.KUTSE).orElse(null);
-                        } else if(!StringUtils.hasText(certificate.getSpetsialiseerumine())) {
+                        } else {
                             // just occupation certificate
                             occupation = findOccupation(certificate.getStandard(), OCCUPATION_PREFIX, certificate.getValjaantud(), occupations);
                         }

@@ -59,7 +59,9 @@
                   <td md-cell>{{$index + 1}}</td>
                   <td md-cell>{{row.fullname}}</td>
                   <td md-cell ng-if="protocol.isFinalThesis">{{row.theme.nameEt}}</td>
-                  <td md-cell>{{gradeValue(row.grade)}}</td>
+                  <td md-cell>
+                    <span ng-class="{badResult: !gradeUtil.isPositive(row.grade)}">{{gradeValue(row.grade)}}</span>
+                  </td>
                   <td md-cell ng-if="protocol.status.code === 'PROTOKOLL_STAATUS_K'">{{row.addInfo}}</td>
                   <td md-cell>
                     <span ng-repeat="occupation in protocol.occupations">

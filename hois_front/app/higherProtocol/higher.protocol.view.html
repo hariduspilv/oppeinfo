@@ -48,12 +48,16 @@
           <tr md-row ng-repeat="student in record.protocolStudents | orderBy: 'student.nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
             <ng-form name="higherProtocolStudentForm">
               <td md-cell>{{student.student.nameEt}}</td>
-              <td md-cell ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">{{student.practiceResult}}</td>
+              <td md-cell ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">
+                <span ng-class="{badResult: !gradeUtil.isPositiveValue(student.practiceResult)}">{{student.practiceResult}}</span>
+              </td>
               <td md-cell ng-repeat="result in record.subjectStudyPeriodMidtermTaskDto.studentResults | filter: filterStudentResults(student)">
                 <span ng-if="!result.isText">{{result.points}}</span>
                 <span ng-if="result.isText">{{result.pointsTxt}}</span>
               </td>
-              <td md-cell>{{student.gradeValue}}</td>
+              <td md-cell>
+                <span ng-class="{badResult: !gradeUtil.isPositiveValue(student.gradeValue)}">{{student.gradeValue}}</span>
+              </td>
               <td md-cell ng-if="record.status.code === 'PROTOKOLL_STAATUS_K'">{{student.addInfo}}</td>
             </ng-form>
           </tr>

@@ -7,6 +7,7 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
@@ -91,6 +92,10 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
         return new AutocompleteResult(curriculum.getId(),
                 CurriculumUtil.curriculumName(curriculum.getCode(), curriculum.getNameEt()),
                 CurriculumUtil.curriculumName(curriculum.getCode(), curriculum.getNameEn()));
+    }
+    
+    public static AutocompleteResult of(CurriculumGrade grade) {
+        return new AutocompleteResult(grade.getId(), grade.getNameEt(), grade.getNameEn());
     }
 
     public static AutocompleteResult of(CurriculumModule curriculumModule) {

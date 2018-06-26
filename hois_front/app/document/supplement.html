@@ -24,18 +24,18 @@
 
       <div layout="row" ng-if="record.diplomaStatus !== 'LOPUDOK_STAATUS_K'">
         <md-input-container flex="20" flex-sm="100" flex-xs="100">
-          <label>{{'document.supplementForm' | translate}}</label>
-          <input type="number" ng-model="criteria.numeral" min="0">
+          <label>{{'document.freeForms' | translate}}</label>
+          <input type="number" ng-model="criteria.numeral" min="0" required>
         </md-input-container>
-        <span class="middle-text label">{{record.freeForms.join(', ')}}</span>
+        <hois-free-forms value="record.freeForms"></hois-free-forms>
       </div>
     
       <div layout="row" ng-if="record.diplomaStatus !== 'LOPUDOK_STAATUS_K'">
         <md-input-container flex="20" flex-sm="100" flex-xs="100">
-          <label>{{'document.supplementExtraForm' | translate}}</label>
+          <label>{{'document.freeExtraForms' | translate}}</label>
           <input type="number" ng-model="criteria.additionalNumeral" min="0">
         </md-input-container>
-        <span class="middle-text label">{{record.freeExtraForms.join(', ')}}</span>
+        <hois-free-forms value="record.freeExtraForms"></hois-free-forms>
       </div>
       
       <div layout="row">

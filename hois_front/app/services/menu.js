@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('Menu', function(config, $location, $rootScope, USER_ROLES, $route) {
+  .factory('Menu', function($location, $rootScope, $route) {
 
     var sections = [];
 
@@ -331,6 +331,14 @@ angular.module('hitsaOis')
             name: 'main.menu.reports.vota',
             url: "/reports/vota?_menu",
             icon:"transfer_within_a_station"
+          },
+          {
+            name: 'main.menu.reports.studentGroupTeacher',
+            url: "/reports/studentgroupteacher?_menu",
+            icon:"accessibility_new",
+            studyLevel: {
+              vocational: true
+            }
           }
         ]
       });
@@ -356,9 +364,20 @@ angular.module('hitsaOis')
             icon:"format_bold"
           },
           {
-            name: 'main.menu.graduation.documentsPrint',
+            name: 'main.menu.graduation.documentsPrintHigher',
             url: "/documents/diplomas?_menu",
-            icon:"print"
+            icon:"print",
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.graduation.documentsPrintVocational',
+            url: "/documents/diplomas/vocational?_menu",
+            icon:"print",
+            studyLevel: {
+              vocational: true
+            }
           },
           {
             name: 'main.menu.graduation.finalProtocolsHigher',
@@ -410,10 +429,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.dataexchange.kutseregister',
             url: "/occupationcertificate/import?_menu",
-            icon:"android",
-            studyLevel: {
-              vocational: true
-            }
+            icon:"android"
           },
           {
             name: 'main.menu.dataexchange.rtip',
@@ -433,10 +449,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.dataexchange.kutseregisterLogs',
             url: "/kutseregister/logs?_menu",
-            icon:"view_day",
-            studyLevel: {
-              vocational: true
-            }
+            icon:"view_day"
           },
           {
             name: 'main.menu.dataexchange.rtipLogs',
@@ -577,7 +590,7 @@ angular.module('hitsaOis')
       });
     }
 
-    function getTeacherSections() {
+    function getTeacherSections(authenticatedUser) {
       sections.push({
         name: 'main.menu.curriculums.label',
         url: "/curriculum?_menu",
@@ -643,7 +656,10 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.study.absences',
             url: "/absences?_menu",
-            icon: "announcement"
+            icon: "announcement",
+            studyLevel: {
+              vocational: true
+            }
           },
           {
             name: 'main.menu.study.journal.journalsVocational',
@@ -707,6 +723,16 @@ angular.module('hitsaOis')
       });
 
       sections.push({
+        name: 'main.menu.scholarships.grantApplications',
+        url: "/scholarships/applications/grants?_menu",
+        type: 'link',
+        icon:"euro_symbol",
+        studyLevel: {
+          vocational: true
+        }
+      });
+
+      sections.push({
         name: 'main.menu.practiceAndGraduation.label',
         type: 'toggle',
         icon: "school",
@@ -744,6 +770,19 @@ angular.module('hitsaOis')
           }
         ]
       });
+
+
+      if (authenticatedUser.teacherGroupIds.length > 0) {
+        sections.push({
+          name: 'main.menu.studentGroupTeacher.label',
+          type: 'link',
+          url: "/reports/studentgroupteacher?_menu",
+          icon: "accessibility_new",
+          studyLevel: {
+            vocational: true
+          }
+        });
+      }
     }
 
     function getMainAdminSections() {
@@ -1284,7 +1323,7 @@ angular.module('hitsaOis')
           getMainAdminSections();
           break;
         case "ROLL_O":
-          getTeacherSections();
+          getTeacherSections(authenticatedUser);
           break;
         case "ROLL_T":
           getStudentSections(authenticatedUser);

@@ -8,12 +8,12 @@
  * # hoisClassifierSelect
  */
 angular.module('hitsaOis')
-  .directive('hoisClassifierSelect', function (Classifier, ClassifierConnect) {
+  .directive('hoisClassifierSelect', function (Classifier, ClassifierConnect, hoisValidDatesFilter) {
     return {
       template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }" >'+ // md-on-open="queryPromise" this causes some bugs
       '<md-option ng-if="!isMultiple && ((!isRequired && !ngRequired) || isShowEmpty)" md-option-empty></md-option>'+
       '<md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-hide="option.hide" ' +
-      'aria-label="{{$root.currentLanguageNameField(option)}}">{{$root.currentLanguageNameField(option)}}</md-option></md-select>',
+      'aria-label="{{getLabel(option)}}">{{getLabel(option)}}</md-option></md-select>',
       restrict: 'E',
       require: ['ngModel'],
       replace: true,
@@ -35,7 +35,8 @@ angular.module('hitsaOis')
         watchMultiple: '@',
         searchFromConnect: '@',
         selectFirstValue: '@',
-        defaultValue: '@'
+        defaultValue: '@',
+        onlyValid: '@'
       },
       link: function postLink(scope, element) {
         scope.isMultiple = angular.isDefined(scope.multiple);
@@ -43,6 +44,8 @@ angular.module('hitsaOis')
         scope.isShowEmpty = angular.isDefined(scope.showEmpty);
         //fix select not showing required visuals if <hois-classifier-select required> is used
         element.attr('required', scope.isRequired);
+
+        scope.getLabel = angular.isDefined(scope.onlyValid) ? hoisValidDatesFilter : scope.$root.currentLanguageNameField;
 
         classifierPostLink(scope, Classifier, ClassifierConnect);
       }
@@ -211,6 +214,13 @@ angular.module('hitsaOis')
             deselectHiddenValue();
           });
         }
+
+        if(angular.isDefined(scope.onlyValid)) {
+          for(var key in scope.optionsByCode) {
+            var option = scope.optionsByCode[key];
+            option.hide = !Classifier.isValid(option);
+          }
+        }
         deselectHiddenValue();
       };
       doOptionsFiltering();
@@ -286,7 +296,8 @@ angular.module('hitsaOis')
     if(params.mainClassCode || params.mainClassCodes) {
       var query = Classifier.queryForDropdown(params, function(arrayResult) {
         arrayResult.forEach(function(classifier) {
-          var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu};
+          var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu,
+            validFrom: classifier.validFrom, validThru: classifier.validThru};
           optionsByCode[option.code] = option;
         });
         scope.optionsByCode = optionsByCode;

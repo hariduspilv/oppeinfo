@@ -5,12 +5,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 import ee.hitsa.ois.domain.WsEhisStudentLog;
-import ee.hitsa.ois.domain.apelapplication.ApelApplicationRecord;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.StreamUtil;
 
 public class EhisStudentReport {
 
@@ -81,25 +79,58 @@ public class EhisStudentReport {
     }
 
     public static class ApelApplication extends EhisStudentReport {
+        private final LocalDate confirmed;
         private final List<StudyRecord> records;
+
+        public ApelApplication(ee.hitsa.ois.domain.apelapplication.ApelApplication application, WsEhisStudentLog log,
+                List<StudyRecord> records) {
+            fill(application.getStudent(), log);
+            confirmed = application.getConfirmed().toLocalDate();
+            this.records = records;
+        }
+
+        public LocalDate getConfirmed() {
+            return confirmed;
+        }
 
         public List<StudyRecord> getRecords() {
             return records;
         }
-
-        public ApelApplication(ee.hitsa.ois.domain.apelapplication.ApelApplication application, WsEhisStudentLog log) {
-            fill(application.getStudent(), log);
-            records = StreamUtil.toMappedList(StudyRecord::new, application.getRecords());
-        }
-
+        
         public static class StudyRecord {
             private final BigDecimal credits;
             private final Boolean isFormalLearning;
+            private LocalDate gradeDate;
+            private String schoolNameEt;
+            private String countryCode;
+            
+            public StudyRecord(BigDecimal credits, Boolean isFormalLearning) {
+                this.credits = credits;
+                this.isFormalLearning = isFormalLearning;
+            }
 
-            public StudyRecord(ApelApplicationRecord record) {
-                isFormalLearning = record.getIsFormalLearning();
-                // TODO real value
-                credits = BigDecimal.ZERO;
+            public LocalDate getGradeDate() {
+                return gradeDate;
+            }
+
+            public void setGradeDate(LocalDate gradeDate) {
+                this.gradeDate = gradeDate;
+            }
+
+            public String getSchoolNameEt() {
+                return schoolNameEt;
+            }
+
+            public void setSchoolNameEt(String schoolNameEt) {
+                this.schoolNameEt = schoolNameEt;
+            }
+
+            public String getCountryCode() {
+                return countryCode;
+            }
+
+            public void setCountryCode(String countryCode) {
+                this.countryCode = countryCode;
             }
 
             public BigDecimal getCredits() {
@@ -109,56 +140,55 @@ public class EhisStudentReport {
             public Boolean getIsFormalLearning() {
                 return isFormalLearning;
             }
+            
         }
     }
 
     public static class Graduation extends EhisStudentReport {
-        private String docNr;
         private final Boolean cumLaude;
-        private String academicNr;
+        private final String docNr;
+        private final String academicNr;
+        private final List<String> extraNr;
 
-        public Graduation(DirectiveStudent directiveStudent, WsEhisStudentLog log) {
+        public Graduation(DirectiveStudent directiveStudent, WsEhisStudentLog log,
+                String docNr, String academicNr, List<String> extraNr) {
             fill(directiveStudent.getStudent(), log);
-            //graduation.setDocNr();
+            
             cumLaude = directiveStudent.getIsCumLaude();
-            //graduation.setAcademicNr();
-        }
-
-        public String getDocNr() {
-            return docNr;
-        }
-
-        public void setDocNr(String docNr) {
             this.docNr = docNr;
+            this.academicNr = academicNr;
+            this.extraNr = extraNr;
         }
 
         public Boolean getCumLaude() {
             return cumLaude;
         }
 
+        public String getDocNr() {
+            return docNr;
+        }
+
         public String getAcademicNr() {
             return academicNr;
         }
-
-        public void setAcademicNr(String academicNr) {
-            this.academicNr = academicNr;
+        
+        public List<String> getExtraNr() {
+            return extraNr;
         }
     }
 
     public static class CurriculaFulfilment extends EhisStudentReport {
         private final BigDecimal percentage;
         private final BigDecimal points;
-        // TODO
-        /*
-vi. Eelmine periood – märge, kas saadeti andmed eelmise või jooksva perioodi seisuga.
-         */
-        public CurriculaFulfilment(Student student, WsEhisStudentLog log) {
+        private final Boolean lastPeriod;
+        
+        public CurriculaFulfilment(Student student, WsEhisStudentLog log, BigDecimal percentage,
+                BigDecimal points, Boolean lastPeriod) {
             fill(student, log);
 
-            // TODO currently no way to find
-            percentage = new BigDecimal(100);
-            // TODO currently no way to find
-            points = new BigDecimal(50);
+            this.percentage = percentage;
+            this.points = points;
+            this.lastPeriod = lastPeriod;
         }
 
         public BigDecimal getPercentage() {
@@ -168,6 +198,11 @@ vi. Eelmine periood – märge, kas saadeti andmed eelmise või jooksva perioodi
         public BigDecimal getPoints() {
             return points;
         }
+
+        public Boolean getLastPeriod() {
+            return lastPeriod;
+        }
+        
     }
 
     public static class ForeignStudy extends EhisStudentReport {

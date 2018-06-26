@@ -40,15 +40,15 @@ public class DocumentController {
     private DocumentService documentService;
     
     @GetMapping("/diploma/directives")
-    public List<DirectiveDto> diplomaDirectives(HoisUserDetails user) {
+    public List<DirectiveDto> diplomaDirectives(HoisUserDetails user, Boolean isHigher) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_LOPTUNNISTUS_TRUKKIMINE);
-        return documentService.diplomaDirectives(user);
+        return documentService.diplomaDirectives(user, isHigher);
     }
 
     @GetMapping("/supplement/directives")
-    public List<DirectiveDto> supplementDirectives(HoisUserDetails user) {
+    public List<DirectiveDto> supplementDirectives(HoisUserDetails user, Boolean isHigher) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_HINNETELEHT_TRUKKIMINE);
-        return documentService.supplementDirectives(user);
+        return documentService.supplementDirectives(user, isHigher);
     }
 
     @GetMapping("/formtypes")
@@ -64,9 +64,10 @@ public class DocumentController {
     }
 
     @GetMapping("/supplement/students")
-    public Page<SupplementStudentDto> supplementStudents(HoisUserDetails user, SupplementSearchForm form, Pageable pageable) {
+    public Page<SupplementStudentDto> supplementStudents(HoisUserDetails user, Boolean isHigher, 
+            SupplementSearchForm form, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_HINNETELEHT_TRUKKIMINE);
-        return documentService.supplementStudents(user, form, pageable);
+        return documentService.supplementStudents(user, isHigher, form, pageable);
     }
 
     @GetMapping("/supplement/{id:\\d+}")

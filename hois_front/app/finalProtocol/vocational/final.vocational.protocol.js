@@ -1,8 +1,9 @@
 'use strict';
 
 angular.module('hitsaOis').controller('FinalVocationalProtocolEditController', 
-function ($scope, $route, $filter, $timeout, $window, $q, QueryUtils, Classifier, ProtocolUtils, oisFileService, config, message, dialogService, ArrayUtils, $location) {
+function ($scope, $route, $filter, $timeout, $window, $q, QueryUtils, Classifier, ProtocolUtils, VocationalGradeUtil, oisFileService, config, message, dialogService, ArrayUtils, $location) {
   var endpoint = '/finalVocationalProtocols';
+  $scope.gradeUtil = VocationalGradeUtil;
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
   var studentClMapper = Classifier.valuemapper({ journalResults: 'KUTSEHINDAMINE', status: 'OPPURSTAATUS' });

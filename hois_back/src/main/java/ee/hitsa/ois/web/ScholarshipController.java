@@ -66,7 +66,7 @@ public class ScholarshipController {
     @GetMapping("/applications")
     public ScholarshipTermApplicationSearchDto applications(@Valid ScholarshipApplicationSearchCommand command,
             HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
         return scholarshipService.applications(command, user);
     }
 
@@ -94,6 +94,24 @@ public class ScholarshipController {
     public HttpStatus acceptApplications(HoisUserDetails user, @RequestBody List<Long> applicationIds) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
         return scholarshipService.acceptApplications(user, applicationIds);
+    }
+
+    @PutMapping("/teacherConfirmApplications/yes")
+    public HttpStatus teacherConfirmApplicationsYes(HoisUserDetails user, @RequestBody List<Long> applicationIds) {
+        UserUtil.assertIsTeacher(user);
+        return scholarshipService.teacherConfirmApplications(user, applicationIds, Boolean.TRUE);
+    }
+
+    @PutMapping("/teacherConfirmApplications/no")
+    public HttpStatus teacherConfirmApplicationsNo(HoisUserDetails user, @RequestBody List<Long> applicationIds) {
+        UserUtil.assertIsTeacher(user);
+        return scholarshipService.teacherConfirmApplications(user, applicationIds, Boolean.FALSE);
+    }
+
+    @PutMapping("/teacherConfirmApplications/annul")
+    public HttpStatus teacherConfirmApplicationsAnnul(HoisUserDetails user, @RequestBody List<Long> applicationIds) {
+        UserUtil.assertIsTeacher(user);
+        return scholarshipService.teacherConfirmApplications(user, applicationIds, null);
     }
 
     @PutMapping("/annulApplications")

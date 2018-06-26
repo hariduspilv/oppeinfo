@@ -2,6 +2,7 @@ package ee.hitsa.ois.report.curriculum;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -16,9 +17,10 @@ public class CurriculumVersionModuleTypeModuleReport {
     private Map<Short, BigDecimal> studyYearCredits = new HashMap<>();
     private final BigDecimal totalCredits;
 
-    public CurriculumVersionModuleTypeModuleReport(CurriculumVersionOccupationModule occupationModule, Language lang) {
+    public CurriculumVersionModuleTypeModuleReport(CurriculumVersionOccupationModule occupationModule, List<Short> studyYears, Language lang) {
         name = TranslateUtil.name(occupationModule.getCurriculumModule(), lang);
-        studyYearCredits = StreamUtil.toMap(om -> om.getStudyYearNumber(), om -> om.getCredits(), occupationModule.getYearCapacities());
+        studyYearCredits = StreamUtil.toMap(om -> om.getStudyYearNumber(), om -> om.getCredits(), StreamUtil
+                .toFilteredList(om -> studyYears.contains(om.getStudyYearNumber()), occupationModule.getYearCapacities()));
         totalCredits = studyYearCredits.values().stream().collect(Collectors.reducing(BigDecimal.ZERO, BigDecimal::add));
     }
 

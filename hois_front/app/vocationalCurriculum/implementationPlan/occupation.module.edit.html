@@ -20,7 +20,7 @@
             <div flex="30" class="occupation-module-capacity">{{currentLanguageNameField(item)}}</div>
             <div flex="30">
               <md-input-container flex>
-                <input ng-model="item.hours" type="number" min="0" max="999" pattern="^\d+$" aria-label="capacity hours" class="small-input"
+                <input ng-model="item.hours" type="number" min="0" max="9999" pattern="^\d+$" aria-label="capacity hours" class="small-input"
                   ng-readonly="hasThemes()" ng-required="item.contact">
               </md-input-container>
             </div>

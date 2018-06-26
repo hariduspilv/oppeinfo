@@ -6,12 +6,15 @@ import java.util.List;
 
 public class TimetableTimeOccupiedCommand {
 
-    // TimetableService.saveVocationalEventRoomsAndTimes
+    // TimetableService.saveVocationalEventRoomsAndTimes and TimetableEventService.createEvent
     private Long timetableEventId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private List<Long> rooms;
     private List<Long> teachers;
+    
+    private String repeatCode;
+    private Long weekAmount;
     
     // TimetableService.saveVocationalEvent
     private Long journal;
@@ -58,7 +61,23 @@ public class TimetableTimeOccupiedCommand {
     public void setTeachers(List<Long> teachers) {
         this.teachers = teachers;
     }
-    
+
+    public String getRepeatCode() {
+        return repeatCode;
+    }
+
+    public void setRepeatCode(String repeatCode) {
+        this.repeatCode = repeatCode;
+    }
+
+    public Long getWeekAmount() {
+        return weekAmount;
+    }
+
+    public void setWeekAmount(Long weekAmount) {
+        this.weekAmount = weekAmount;
+    }
+
     public Long getJournal() {
         return journal;
     }

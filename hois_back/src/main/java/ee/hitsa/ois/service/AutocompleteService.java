@@ -67,6 +67,7 @@ import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
@@ -160,11 +161,13 @@ public class AutocompleteService {
 
         qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
 
-        List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value, c.value2", em).getResultList();
+        List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational"
+                + ", c.main_class_code, c.value, c.value2, c.valid_from, c.valid_thru", em).getResultList();
         List<ClassifierSelection> result = StreamUtil.toMappedList(r -> new ClassifierSelection(resultAsString(r, 0),
                     resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3),
                     resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
-                    resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 9)), data);
+                    resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 9),
+                    resultAsLocalDate(r, 10), resultAsLocalDate(r, 11)), data);
 
         return ClassifierUtil.sort(mainClassCodes, result);
     }
@@ -177,12 +180,14 @@ public class AutocompleteService {
 
         qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
 
-        List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value, array_to_string(parents.parent, ', ')", em).getResultList();
+        List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational"
+                + ", c.main_class_code, c.value, array_to_string(parents.parent, ', '), c.valid_from, c.valid_thru", em).getResultList();
         List<ClassifierSelection> result = StreamUtil.toMappedList(r -> {
             ClassifierSelection c = new ClassifierSelection(resultAsString(r, 0),
                     resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3),
                     resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
-                    resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 9));
+                    resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 9),
+                    resultAsLocalDate(r, 10), resultAsLocalDate(r, 11));
             String parents = resultAsString(r, 9);
             if(parents != null) {
                 c.setParents(Arrays.asList(parents.split(", ")));
@@ -193,11 +198,12 @@ public class AutocompleteService {
         return ClassifierUtil.sort(mainClassCodes, result);
     }
 
-    public List<AutocompleteResult> curriculums(Long schoolId, SearchCommand term) {
+    public List<AutocompleteResult> curriculums(Long schoolId, CurriculumAutocompleteCommand term) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum c");
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains(Language.EN.equals(term.getLang()) ? "c.name_en" : "c.name_et", "name", term.getName());
+        qb.optionalCriteria("c.is_higher = :higher", "higher", term.getHigher());
 
         List<?> data = qb.select("c.id, c.name_et, c.name_en, c.code", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
         return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0),
@@ -557,6 +563,7 @@ public class AutocompleteService {
                 "left outer join curriculum_version cv on sg.curriculum_version_id = cv.id");
 
         qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("sg.teacher_id = :studentGroupTeacherId", "studentGroupTeacherId", lookup.getStudentGroupTeacherId());
 
         if(Boolean.TRUE.equals(lookup.getValid())) {
             qb.requiredCriteria("(sg.valid_from is null or sg.valid_from <= :now) and (sg.valid_thru is null or sg.valid_thru >= :now)", "now", LocalDate.now());

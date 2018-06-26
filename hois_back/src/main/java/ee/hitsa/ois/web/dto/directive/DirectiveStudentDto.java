@@ -5,6 +5,7 @@ import java.util.List;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.directive.DirectiveStudentOccupation;
 import ee.hitsa.ois.domain.sais.SaisApplication;
@@ -35,7 +36,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
     private List<String> occupations;
-    private String curriculumGrade;
+    private AutocompleteResult curriculumGrade;
     private String bankAccount;
     private Boolean applicationIsPeriod;
     private LocalDate applicationStartDate;
@@ -123,11 +124,11 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.occupations = occupations;
     }
 
-    public String getCurriculumGrade() {
+    public AutocompleteResult getCurriculumGrade() {
         return curriculumGrade;
     }
 
-    public void setCurriculumGrade(String curriculumGrade) {
+    public void setCurriculumGrade(AutocompleteResult curriculumGrade) {
         this.curriculumGrade = curriculumGrade;
     }
 
@@ -259,6 +260,10 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             if(person != null) {
                 setPersonData(person, dto);
             }
+        }
+        CurriculumGrade grade = directiveStudent.getCurriculumGrade();
+        if (grade != null) {
+            dto.setCurriculumGrade(AutocompleteResult.of(grade));
         }
         List<DirectiveStudentOccupation> occups = directiveStudent.getOccupations();
         if (occups != null && !occups.isEmpty()) {

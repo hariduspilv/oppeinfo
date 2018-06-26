@@ -40,14 +40,41 @@ html {
 .padding-top {
     height: 60pt;
 }
-.general-info > div {
-    margin-bottom: 9pt;
-    margin-top: 9pt;
+.school-name {
+	font-size: 18pt;
+    font-weight: bold;
+	text-align: center;
+	text-transform: uppercase;
+	width: 100%;
 }
 div.diploma-nr {
-    font-size: 16pt;
+    font-size: 12pt;
     font-weight: bold;
-    margin-left: 55%;
+	margin-top: 50pt;
+	text-align: center;
+	width: 100%;
+}
+.supplement-description {
+	border: 1px solid black;
+	margin: 10pt;
+	margin-bottom: 20pt;
+	padding: 2pt 5pt;
+	width: 95%;
+}
+h1 {
+    font-size: 12pt;
+    font-weight: bold;
+	margin-top: 10pt;
+	page-break-after: avoid;
+}
+table.general-info {
+	width: 100%;
+}
+table.general-info td:first-child {
+	width: 200pt;
+}
+table.general-info td:last-child {
+	font-weight: bold;
 }
 .study-results {
     width: 100%;
@@ -64,8 +91,8 @@ div.diploma-nr {
 .evaluation-description, .evaluation-description th, .evaluation-description td {
     border: 1px solid black;
     border-collapse: collapse;
-    font-size: 9pt;
     font-weight: normal;
+    padding: 2pt 5pt;
 }
 .margin-top {
     margin-top: 10pt;

@@ -50,7 +50,7 @@
               <tr>
                 <td ng-repeat="grade in subjectResult.grades | orderBy: 'gradeDate'">
                   <span ng-if="$index !== 0">/</span>
-                  {{grade.gradeValue}}
+                  <span ng-class="{badResult: !gradeUtil.isPositive(grade.grade)}">{{grade.gradeValue}}</span>
                 </td>
               </tr>
             </table>
@@ -103,7 +103,7 @@
               <tr>
                 <td ng-repeat="grade in subjectResult.grades | orderBy: 'gradeDate'">
                   <span ng-if="$index !== 0">/</span>
-                  {{grade.gradeValue}}
+                  <span ng-class="{badResult: !gradeUtil.isPositive(grade.grade)}">{{grade.gradeValue}}</span>
                 </td>
               </tr>
             </table>
@@ -143,7 +143,7 @@
               <tr>
                 <td ng-repeat="grade in subjectResult.grades | orderBy: 'gradeDate'">
                   <span ng-if="$index !== 0">/</span>
-                  {{grade.gradeValue}}
+                  <span ng-class="{badResult: !gradeUtil.isPositive(grade.grade)}">{{grade.gradeValue}}</span>
                 </td>
               </tr>
             </table>
