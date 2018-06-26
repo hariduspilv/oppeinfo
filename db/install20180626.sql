@@ -1,4 +1,4 @@
-\c tahvel_20180625
+\c hois
 
 CREATE OR REPLACE FUNCTION get_study_year(p_date date, p_school int)
  RETURNS integer
