@@ -62,6 +62,12 @@
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.schoolName' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.country' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.abroadProgramme' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'VOTA'">{{'ehis.student.votaConfirmDate' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'VOTA'">{{'ehis.student.points' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'VOTA'">{{'ehis.student.votaType' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'VOTA'">{{'ehis.student.schoolName' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'VOTA'">{{'ehis.student.gradeDate' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'VOTA'">{{'ehis.student.votaCountry' | translate}}</th>
                 <th md-column >{{'ehis.student.error' | translate}}</th>
                 <th md-column >{{'ehis.student.message' | translate}}</th>
               </tr>
@@ -73,7 +79,12 @@
                 <td md-cell>{{::row.curriculum}}</td>
                 <td md-cell ng-if="criteria.dataType === 'GRADUATION'">{{::row.docNr}}</td>
                 <td md-cell ng-if="criteria.dataType === 'GRADUATION'">{{row.cumLaude ? 'main.yes' : 'main.no' | translate}}</td>
-                <td md-cell ng-if="criteria.dataType === 'GRADUATION'">{{::row.academicNr}}</td>
+                <td md-cell ng-if="criteria.dataType === 'GRADUATION'">
+                  {{::row.academicNr}}
+                  <span ng-if="row.extraNr && row.extraNr.length > 0">
+                    ({{'ehis.student.extraNr' | translate}}: {{row.extraNr.join(', ')}})
+                  </span>
+                </td>
                 <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.percentage}}</td>
                 <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.points}}</td>
                 <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.lastPeriod ? 'main.yes' : 'main.no' | translate}}</td>
@@ -90,7 +101,15 @@
                 <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">
                     <hois-classifier-value ng-model="row.abroadProgramme" main-classifier-code="VALISKOOL_PROGRAMM"></hois-classifier-value>
                 </td>
-                <td md-cell>{{row.error ? 'main.no' : 'main.yes' | translate}}</td>
+                <td md-cell ng-if="criteria.dataType === 'VOTA'">{{::row.confirmed | hoisDate}}</td>
+                <td md-cell ng-if="criteria.dataType === 'VOTA'">{{::row.credits}}</td>
+                <td md-cell ng-if="criteria.dataType === 'VOTA'">{{::row.isFormalLearning ? 'ehis.student.formal' : 'ehis.student.informal' | translate}}</td>
+                <td md-cell ng-if="criteria.dataType === 'VOTA'">{{::row.schoolNameEt}}</td>
+                <td md-cell ng-if="criteria.dataType === 'VOTA'">{{::row.gradeDate | hoisDate}}</td>
+                <td md-cell ng-if="criteria.dataType === 'VOTA'">
+                  <hois-classifier-value ng-model="row.countryCode" main-classifier-code="RIIK"></hois-classifier-value>
+                </td>
+                <td md-cell>{{row.error === true ? ('main.no' | translate) : (row.error === false ? ('main.yes' | translate) : '')}}</td>
                 <td md-cell>{{::row.message}}</td>
               </tr>
             </tbody>

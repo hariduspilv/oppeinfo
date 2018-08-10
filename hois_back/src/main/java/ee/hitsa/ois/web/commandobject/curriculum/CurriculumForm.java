@@ -111,6 +111,28 @@ public class CurriculumForm extends VersionedCommand {
     private LocalDate accreditationValidDate;
     @Size(max = 1000)
     private String accreditationNr;
+    @Size(max = 255)
+    private String final21;
+    @Size(max = 255)
+    private String final31;
+    @Size(max = 255)
+    private String final33;
+    @Size(max = 255)
+    private String final51;
+    @Size(max = 255)
+    private String final52;
+    @Size(max = 255)
+    private String final61;
+    @Size(max = 255)
+    private String finalEn31;
+    @Size(max = 255)
+    private String finalEn33;
+    @Size(max = 255)
+    private String finalEn51;
+    @Size(max = 255)
+    private String finalEn52;
+    @Size(max = 255)
+    private String finalEn61;
     private Boolean occupation = Boolean.FALSE;
     @NotNull
     @Min(0)
@@ -500,6 +522,94 @@ public class CurriculumForm extends VersionedCommand {
 
     public void setAccreditationNr(String accreditationNr) {
         this.accreditationNr = accreditationNr;
+    }
+
+    public String getFinal21() {
+        return final21;
+    }
+
+    public void setFinal21(String final21) {
+        this.final21 = final21;
+    }
+
+    public String getFinal31() {
+        return final31;
+    }
+
+    public void setFinal31(String final31) {
+        this.final31 = final31;
+    }
+
+    public String getFinal33() {
+        return final33;
+    }
+
+    public void setFinal33(String final33) {
+        this.final33 = final33;
+    }
+
+    public String getFinal51() {
+        return final51;
+    }
+
+    public void setFinal51(String final51) {
+        this.final51 = final51;
+    }
+
+    public String getFinal52() {
+        return final52;
+    }
+
+    public void setFinal52(String final52) {
+        this.final52 = final52;
+    }
+
+    public String getFinal61() {
+        return final61;
+    }
+
+    public void setFinal61(String final61) {
+        this.final61 = final61;
+    }
+
+    public String getFinalEn31() {
+        return finalEn31;
+    }
+
+    public void setFinalEn31(String finalEn31) {
+        this.finalEn31 = finalEn31;
+    }
+
+    public String getFinalEn33() {
+        return finalEn33;
+    }
+
+    public void setFinalEn33(String finalEn33) {
+        this.finalEn33 = finalEn33;
+    }
+
+    public String getFinalEn51() {
+        return finalEn51;
+    }
+
+    public void setFinalEn51(String finalEn51) {
+        this.finalEn51 = finalEn51;
+    }
+
+    public String getFinalEn52() {
+        return finalEn52;
+    }
+
+    public void setFinalEn52(String finalEn52) {
+        this.finalEn52 = finalEn52;
+    }
+
+    public String getFinalEn61() {
+        return finalEn61;
+    }
+
+    public void setFinalEn61(String finalEn61) {
+        this.finalEn61 = finalEn61;
     }
 
     public Integer getStudyPeriod() {

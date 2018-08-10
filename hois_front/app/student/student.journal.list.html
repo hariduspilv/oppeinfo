@@ -20,6 +20,8 @@
                         <tr md-row>
                             <th md-column>{{'student.journal.journalName' | translate}}</th>
                             <th md-column>{{'student.journal.grades' | translate}}</th>
+                            <th md-column>{{'student.journal.modules' | translate}}</th>
+                            <th md-column>{{'student.journal.teachers' | translate}}</th>
                             <th md-column>{{'student.journal.absencesIncudlingWithoutReason' | translate}}</th>
                             <th md-column>{{'student.journal.lateForClass' | translate}}</th>
                             <th md-column></th>
@@ -41,6 +43,8 @@
                                 </md-tooltip>
                             </span>
                             </td>
+                            <td md-cell>{{currentLanguageNameField(journal.modules)}}</td>
+                            <td md-cell>{{journal.teachers}}</td>
                             <td md-cell width="20%">
                                 <span>{{journal.absencePV}} /</span>
                                 <span ng-class="{bad: journal.absenceP > 0}">{{journal.absenceP}}</span>

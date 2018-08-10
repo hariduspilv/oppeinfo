@@ -288,8 +288,8 @@
 
       function searchTimetableWeek() {
         $scope.timetableEvents = null;
-        QueryUtils.loadingWheel($scope, true);
         if ($scope.shownWeek) {
+          QueryUtils.loadingWheel($scope, true);
           QueryUtils.endpoint('/timetableevents/timetableSearch').query({
               room: $scope.weekCriteria.room,
               teachers: $scope.weekCriteria.teachers,
@@ -380,8 +380,8 @@
 
       function showWeekTimetable() {
         $scope.timetableEvents = null;
-        QueryUtils.loadingWheel($scope, true);
         if ($scope.shownWeek) {
+          QueryUtils.loadingWheel($scope, true);
           QueryUtils.endpoint(timetableEventsEndpoint).search({
               studentGroups: [$scope.$parent.typeId],
               from: $scope.shownWeek.start,
@@ -464,8 +464,8 @@
 
       function showWeekTimetable() {
         $scope.timetableEvents = null;
-        QueryUtils.loadingWheel($scope, true);
         if ($scope.shownWeek) {
+          QueryUtils.loadingWheel($scope, true);
           QueryUtils.endpoint(timetableEventsEndpoint).search({
               teachers: [$scope.$parent.typeId],
               from: $scope.shownWeek.start,
@@ -551,8 +551,8 @@
 
       function showWeekTimetable() {
         $scope.timetableEvents = null;
-        QueryUtils.loadingWheel($scope, true);
         if ($scope.shownWeek) {
+          QueryUtils.loadingWheel($scope, true);
           QueryUtils.endpoint(timetableEventsEndpoint).search({
               room: $scope.$parent.typeId,
               from: $scope.shownWeek.start,
@@ -633,8 +633,8 @@
 
       function showWeekTimetable() {
         $scope.timetableEvents = null;
-        QueryUtils.loadingWheel($scope, true);
         if ($scope.shownWeek) {
+          QueryUtils.loadingWheel($scope, true);
           QueryUtils.endpoint('/timetableevents/timetableByStudent').search({
             student: $scope.typeId,
             from: $scope.shownWeek.start,

@@ -21,6 +21,7 @@ public class FinalDocSignerDto extends FinalDocSignerForm {
         dto.setVersion(signer.getVersion());
         dto.setName(signer.getName());
         dto.setPosition(signer.getPosition());
+        dto.setPositionEn(signer.getPositionEn());
         dto.setIsFirst(signer.getIsFirst());
         dto.setIsValid(signer.getIsValid());
         return dto;

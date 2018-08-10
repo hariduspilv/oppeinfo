@@ -142,7 +142,7 @@ angular.module('hitsaOis')
     };
 
     $scope.subjectsValid = function() {
-      return !$scope.formState.moduleMustHaveSubjects || $scope.data.subjects.length > 0;
+      return !$scope.formState.moduleMustHaveSubjects || ($scope.data.subjects && $scope.data.subjects.length > 0);
     }
 
     $scope.removeSubject = function (subject) {

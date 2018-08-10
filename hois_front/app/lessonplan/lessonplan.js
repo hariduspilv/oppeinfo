@@ -91,7 +91,7 @@
   }
 
   angular.module('hitsaOis').controller('LessonplanSearchController',
-    function ($location, $mdDialog, $route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService) {
+    function ($location, $mdDialog, $route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService, message) {
       $scope.canEdit = AuthService.isAuthorized([USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
         USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA]);
 
@@ -115,6 +115,11 @@
             };
 
             $scope.create = function () {
+              if(!$scope.newLessonPlanForm.$valid) {
+                message.error('main.messages.form-has-errors');
+                return;
+              }
+
               QueryUtils.endpoint(baseUrl).save($scope.record).$promise.then(function (result) {
                 $mdDialog.hide();
                 $location.url(baseUrl + '/vocational/' + result.id + '/edit');
@@ -310,6 +315,8 @@
             _: createTotalsRow($scope)
           }
         };
+        $scope.formState.studyPeriodMonths = result.studyPeriod % 12;
+        $scope.formState.studyPeriodYears = Math.floor(result.studyPeriod / 12);
         initializeTotals(result);
         QueryUtils.loadingWheel($scope, false);
         //refreshFixedColumns();
@@ -339,7 +346,6 @@
 
       angular.element($window).bind('resize', function(){
         $scope.windowWidth = $window.innerWidth;
-        console.log("22:"+$scope.tb+" "+ $window.innerHeight);
         angular.element(document.getElementsByClassName("container")).css('height', ($scope.tb > $window.innerHeight ? $window.innerHeight : $scope.tb)-250 + 'px');
      });
 

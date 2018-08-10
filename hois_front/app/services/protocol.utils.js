@@ -4,7 +4,7 @@ angular.module('hitsaOis')
   .factory('ProtocolUtils', function ($mdDialog, $timeout, $rootScope, $window, QueryUtils, config, message) {
     var protocolUtils = {};
 
-    protocolUtils.signBeforeConfirm = function (endpoint, data, callback) {
+    protocolUtils.signBeforeConfirm = function (endpoint, data, confirmMessage, callback) {
       $window.hwcrypto.getCertificate({ lang: 'en' }).then(function (certificate) {
         data.certificate = certificate.hex;
         QueryUtils.endpoint(endpoint + '/signToConfirm').save(data, function (result) {
@@ -13,7 +13,7 @@ angular.module('hitsaOis')
               signature: signature.hex,
               version: result.version
             }, function (result) {
-              message.info('finalProtocol.messages.confirmed');
+              message.info(confirmMessage);
               callback(result);
             });
           });
@@ -28,7 +28,7 @@ angular.module('hitsaOis')
       });
     };
 
-    protocolUtils.mobileSignBeforeConfirm = function (endpoint, data, callback) {
+    protocolUtils.mobileSignBeforeConfirm = function (endpoint, data, confirmMessage, callback) {
       QueryUtils.endpoint(endpoint + '/mobileSignToConfirm').save(data, function (result) {
         if (result.challengeID) {
           $rootScope.signVersion = result.version;
@@ -41,14 +41,14 @@ angular.module('hitsaOis')
             clickOutsideToClose: false
           });
           $rootScope.mobileIdPolls = 0;
-          $timeout(pollMobileSignStatus(endpoint, callback), config.mobileIdInitialDelay);
+          $timeout(pollMobileSignStatus(endpoint, confirmMessage, callback), config.mobileIdInitialDelay);
         } else {
           message.error('main.messages.error.mobileIdSignFailed');
         }
       }).catch(angular.noop);
     };
 
-    function pollMobileSignStatus(endpoint, callback) {
+    function pollMobileSignStatus(endpoint, confirmMessage, callback) {
       QueryUtils.endpoint(endpoint + '/mobileSignStatus').get(
         function (response) {
           if (response.status === 'SIGNATURE') {
@@ -56,7 +56,7 @@ angular.module('hitsaOis')
             QueryUtils.endpoint(endpoint + '/mobileSignFinalize').save({
               version: $rootScope.signVersion
             }, function (result) {
-              message.info('finalProtocol.messages.confirmed');
+              message.info(confirmMessage);
               callback(result);
             });
           } else if (response.status === 'OUTSTANDING_TRANSACTION') {

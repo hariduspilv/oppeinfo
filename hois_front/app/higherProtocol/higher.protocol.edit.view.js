@@ -152,9 +152,9 @@ function ($scope, $sessionStorage, $filter, $q, QueryUtils, DataUtils, $route, $
     }
 
     if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      ProtocolUtils.signBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, entityToDto);
+      ProtocolUtils.signBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, 'higherProtocol.message.confirmed', entityToDto);
     } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      ProtocolUtils.mobileSignBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, entityToDto);
+      ProtocolUtils.mobileSignBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, 'higherProtocol.message.confirmed', entityToDto);
     }
   };
 

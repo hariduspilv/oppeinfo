@@ -115,12 +115,12 @@ public class SubjectService {
      * @return
      */
     public Page<SubjectSearchDto> search(HoisUserDetails user, SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
-        Boolean canEdit = Boolean.valueOf(SubjectUserRights.hasPermissionToEdit(user));
+        Boolean canEdit = Boolean.valueOf(user != null && SubjectUserRights.hasPermissionToEdit(user));
         return subjectRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 
-            if (user.getSchoolId() != null) {
-                filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
+            if (subjectSearchCommand.getSchoolId() != null) {
+                filters.add(cb.equal(root.get("school").get("id"), subjectSearchCommand.getSchoolId()));
             }
 
             if (!CollectionUtils.isEmpty(subjectSearchCommand.getDepartments())) {
@@ -154,7 +154,7 @@ public class SubjectService {
             if (!CollectionUtils.isEmpty(subjectSearchCommand.getAssessments())) {
                 filters.add(root.get("assessment").get("code").in(subjectSearchCommand.getAssessments()));
             }
-            if(!SubjectUserRights.canViewAllSubjects(user)) {
+            if(user == null || !SubjectUserRights.canViewAllSubjects(user)) {
                 subjectSearchCommand.setStatus(Collections.singletonList(SubjectStatus.AINESTAATUS_K.name()));
             }
             if (!CollectionUtils.isEmpty(subjectSearchCommand.getStatus())) {

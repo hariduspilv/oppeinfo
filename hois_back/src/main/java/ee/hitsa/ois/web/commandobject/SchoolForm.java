@@ -53,6 +53,15 @@ public class SchoolForm extends VersionedCommand {
     @Size(max = 255)
     private String nameGenitiveEt;
     private Boolean isMinorStudentAbsence;
+    @Size(max = 100)
+    private String finalSchoolType;
+    @Size(max = 500)
+    private String final62;
+    @Size(max = 100)
+    private String finalSchoolTypeEn;
+    @Size(max = 500)
+    private String finalEn62;
+
 
     public String getNameEt() {
         return nameEt;
@@ -220,6 +229,38 @@ public class SchoolForm extends VersionedCommand {
 
     public void setIsMinorStudentAbsence(Boolean isMinorStudentAbsence) {
         this.isMinorStudentAbsence = isMinorStudentAbsence;
+    }
+
+    public String getFinalSchoolType() {
+        return finalSchoolType;
+    }
+
+    public void setFinalSchoolType(String finalSchoolType) {
+        this.finalSchoolType = finalSchoolType;
+    }
+
+    public String getFinal62() {
+        return final62;
+    }
+
+    public void setFinal62(String final62) {
+        this.final62 = final62;
+    }
+
+    public String getFinalSchoolTypeEn() {
+        return finalSchoolTypeEn;
+    }
+
+    public void setFinalSchoolTypeEn(String finalSchoolTypeEn) {
+        this.finalSchoolTypeEn = finalSchoolTypeEn;
+    }
+
+    public String getFinalEn62() {
+        return finalEn62;
+    }
+
+    public void setFinalEn62(String finalEn62) {
+        this.finalEn62 = finalEn62;
     }
     
 }

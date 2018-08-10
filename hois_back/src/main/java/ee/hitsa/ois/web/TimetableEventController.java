@@ -21,16 +21,21 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.service.TimetableEventService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventSearchCommand;
+import ee.hitsa.ois.web.commandobject.timetable.TimetableNewHigherTimeOccupiedCommand;
+import ee.hitsa.ois.web.commandobject.timetable.TimetableNewVocationalTimeOccupiedCommand;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableSingleEventForm;
+import ee.hitsa.ois.web.commandobject.timetable.TimetableTimeOccupiedCommand;
 import ee.hitsa.ois.web.dto.timetable.TimetableByGroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByRoomDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByStudentDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableCalendarDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableTimeOccupiedDto;
 
 @RestController
 @RequestMapping("/timetableevents")
@@ -63,15 +68,16 @@ public class TimetableEventController {
     }
     
     @PostMapping
-    public TimetableSingleEventForm create(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
-        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(), form.getTeachers());
-        return timetableEventService.getTimetableSingleEventForm(timetableEventService.createEvent(form, user.getSchoolId()));
+    public void create(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
+        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(), StreamUtil.toMappedList(t -> t.getId(), form.getTeachers()));
+        timetableEventService.createEvent(form, user.getSchoolId());
     }
     
     @PutMapping("/{id:\\d+}")
     public TimetableSingleEventForm update(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
-        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(), form.getTeachers());
-        return timetableEventService.getTimetableSingleEventForm(timetableEventService.updateEvent(form));
+        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(), StreamUtil.toMappedList(t -> t.getId(), form.getTeachers()));
+        timetableEventService.updateEvent(form);
+        return timetableEventService.getTimetableSingleEventForm(form.getId());
     }
     
     @DeleteMapping("/{id:\\d+}")
@@ -135,5 +141,23 @@ public class TimetableEventController {
     public TimetableCalendarDto roomTimetableIcs(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
         return timetableEventService.getRoomCalendar(criteria, language, school);
+    }
+    
+    @GetMapping("/timetableTimeOccupied")
+    public TimetableTimeOccupiedDto timetableTimeOccupied(HoisUserDetails user, TimetableTimeOccupiedCommand command) {
+        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(), command.getTeachers());
+        return timetableEventService.timetableTimeOccupied(command);
+    }
+    
+    @GetMapping("/timetableNewVocationalTimeOccupied")
+    public TimetableTimeOccupiedDto timetableTimeOccupied(HoisUserDetails user, TimetableNewVocationalTimeOccupiedCommand command) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return timetableEventService.timetableTimeOccupied(command);
+    }
+    
+    @GetMapping("/timetableNewHigherTimeOccupied")
+    public TimetableTimeOccupiedDto timetableTimeOccupied(HoisUserDetails user, TimetableNewHigherTimeOccupiedCommand command) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return timetableEventService.timetableTimeOccupied(command);
     }
 }

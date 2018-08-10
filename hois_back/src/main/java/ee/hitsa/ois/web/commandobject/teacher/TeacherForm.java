@@ -34,7 +34,6 @@ public class TeacherForm extends VersionedCommand {
     @Required
     @Size(max = 100)
     private String email;
-    @Required
     @Size(max = 100)
     private String phone;
     @NotNull

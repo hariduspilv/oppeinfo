@@ -886,6 +886,10 @@ menu-link {
     width: 150px;
 }
 
+md-datepicker.wider-datepicker div.md-datepicker-input-container {
+  width: 250px;
+}
+
 /*._md-datepicker-floating-label._md-datepicker-has-calendar-icon > label:not(.md-no-float):not(.md-container-ignore) {
      right: inherit;
 }
@@ -1529,16 +1533,8 @@ div[ois-drag="true"] {
 }
 
 #timetable-planned-column > div:not(:first-child){
-    margin-left: 5px;
+    margin-top: 2px;
     display: block;
-}
-
-#timetable-planned-capacity {
-    float: left;
-}
-
-.timetable-planned-capacity {
-  float: left;
 }
 
 #timetable-planned-capacity div:not(:first-child){

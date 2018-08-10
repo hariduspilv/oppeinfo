@@ -210,19 +210,20 @@ public class EhisStudentReport {
         private final LocalDate toDate;
         private final String abroadPurpose;
         private final BigDecimal points;
+        private final Integer nominalStudyExtension;
         private final LocalDate nominalStudyEnd;
         private final String schoolName;
         private final String country;
         private final String abroadProgramme;
 
-        public ForeignStudy(DirectiveStudent ds, WsEhisStudentLog log) {
+        public ForeignStudy(DirectiveStudent ds, WsEhisStudentLog log, BigDecimal points, Integer nominalStudyExtension) {
             fill(ds.getStudent(), log);
 
             fromDate = DateUtils.periodStart(ds);
             toDate = DateUtils.periodEnd(ds);
             abroadPurpose = EntityUtil.getCode(ds.getAbroadPurpose());
-            // TODO currently no way to find
-            points = new BigDecimal(50);
+            this.points = points;
+            this.nominalStudyExtension = nominalStudyExtension;
             nominalStudyEnd = ds.getNominalStudyEnd();
             schoolName = Boolean.TRUE.equals(ds.getIsAbroad()) ? ds.getAbroadSchool() : ds.getEhisSchool().getNameEt();
             country = EntityUtil.getCode(ds.getCountry());
@@ -243,6 +244,10 @@ public class EhisStudentReport {
 
         public BigDecimal getPoints() {
             return points;
+        }
+        
+        public Integer getNominalStudyExtension() {
+            return nominalStudyExtension;
         }
 
         public LocalDate getNominalStudyEnd() {

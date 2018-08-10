@@ -52,7 +52,6 @@
           <tr md-row>
             <th md-column md-order-by="sg.code">{{'lessonplan.studentGroup' | translate}}</th>
             <th md-column md-order-by="cv.code">{{'lessonplan.curriculumVersion' | translate}}</th>
-            <th md-column>{{'lessonplan.journalreference' | translate}}</th>
             <th></th>
           </tr>
         </thead>
@@ -60,7 +59,6 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{::row.studentGroup}}</td>
             <td md-cell>{{::row.curriculumVersion}}</td>
-            <td md-cell>vt. tunniplaani</td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-href="#/lessonplans/vocational/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>

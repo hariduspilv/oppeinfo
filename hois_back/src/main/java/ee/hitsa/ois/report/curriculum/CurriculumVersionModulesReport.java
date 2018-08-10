@@ -5,7 +5,10 @@ import java.util.List;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.report.ReportUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 
@@ -29,8 +32,12 @@ public class CurriculumVersionModulesReport {
         curriculumName = TranslateUtil.name(curriculum, lang);
         targetGroup = curriculumVersion.getTargetGroup();
         studyForm = TranslateUtil.name(curriculumVersion.getCurriculumStudyForm().getStudyForm(), lang);
-        modules = StreamUtil.toMappedList(m -> new CurriculumVersionModuleReport(m, lang), curriculumVersion.getOccupationModules());
-        modules.sort(Comparator.comparing(CurriculumVersionModuleReport::getName));
+        
+        Comparator<CurriculumVersionOccupationModule> compareType = Comparator.comparingInt(m -> ReportUtil.CURRICULUM_MODULE_ORDER.indexOf(
+                EntityUtil.getCode(m.getCurriculumModule().getModule())));
+        modules = StreamUtil.toMappedList(m -> new CurriculumVersionModuleReport(m, lang), 
+                curriculumVersion.getOccupationModules().stream()
+                .sorted(compareType.thenComparing(m -> TranslateUtil.name(m.getCurriculumModule(), lang))));
     }
 
     public String getSchool() {

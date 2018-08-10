@@ -10,7 +10,8 @@
                  ng-required="required"
                  ng-disabled="disabled"
                  md-floating-label="{{label | translate}}">
-  <md-item-template>
-    <span md-highlight-text="searchText">{{$root.currentLanguageNameField(item)}}</span>
+  <md-item-template>  
+    <span md-highlight-text="searchText" ng-style="item.isOccupied ? {color: 'red'} : {}">{{$root.currentLanguageNameField(item)}}</span>
   </md-item-template>
+  {{highlightParam}}
 </md-autocomplete>

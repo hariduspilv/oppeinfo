@@ -33,6 +33,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
+import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
 import ee.hitsa.ois.domain.student.StudentHigherResult;
 import ee.hitsa.ois.domain.student.StudentHigherResultModule;
 import ee.hitsa.ois.domain.student.StudentHistory;
@@ -44,7 +45,6 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MessageType;
-import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.message.StudentAbsenceCreated;
@@ -438,8 +438,14 @@ public class StudentService {
         }
 
         if (Boolean.TRUE.equals(dto.getIsVocational())) {
-            dto.setCredits(vocationalTotalCreditsOnCurrentCurriculum(student));
-            dto.setKkh(vocationalWeightedAverageGrade(student));
+            StudentCurriculumCompletion completion = getStudentCurriculumCompletion(student);
+            if (completion != null) {
+                dto.setCredits(completion.getCredits());
+                dto.setKkh(completion.getAverageMark());
+            } else {
+                dto.setCredits(BigDecimal.ZERO);
+                dto.setKkh(BigDecimal.ZERO);
+            }
         }
         dto.setOccupationCertificates(occupationCertificates(student));
         
@@ -450,41 +456,13 @@ public class StudentService {
         return dto;
     }
     
-    public BigDecimal vocationalTotalCreditsOnCurrentCurriculum(Student student) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                "from (select distinct on (cm.id) cm.id, svr.credits from student_vocational_result svr " 
-                        + "inner join curriculum_version_omodule cvo on cvo.id = svr.curriculum_version_omodule_id "
-                        + "inner join curriculum_module cm on cm.id = cvo.curriculum_module_id " 
-                        + "where svr.student_id = :studentId and " + "cvo.curriculum_version_id = :curriculumVersionId "
-                        + "order by cm.id, svr.id desc) as module_results");
-
-        qb.parameter("studentId", EntityUtil.getId(student));
-        qb.parameter("curriculumVersionId", EntityUtil.getId(student.getCurriculumVersion()));
-
-        return resultAsDecimal(qb.select("sum(credits)", em).getSingleResult(), 0);
-    }
-
-    private BigDecimal vocationalWeightedAverageGrade(Student student) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                "from (select CAST(grade.value AS integer) as grade_value, sum(cvoyc.credits) as ekap from student_vocational_result svr "
-                        + "inner join classifier grade on grade.code = grade_code "
-                        + "inner join curriculum_version_omodule_year_capacity cvoyc on cvoyc.curriculum_version_omodule_id = svr.curriculum_version_omodule_id "
-                        + "inner join curriculum_version_omodule cvo on cvo.id = svr.curriculum_version_omodule_id "
-                        + "inner join curriculum_version cv on cv.id = cvo.curriculum_version_id "
-                        + "where svr.student_id = :studentId and cv.id = :curriculumVersionId and svr.grade_code in :positiveValueGrades "
-                        + "group by cvoyc.curriculum_version_omodule_id, grade.value) as grade_ekap");
-
-        qb.parameter("studentId", EntityUtil.getId(student));
-        qb.parameter("curriculumVersionId", EntityUtil.getId(student.getCurriculumVersion()));
-        qb.parameter("positiveValueGrades", OccupationalGrade.OCCUPATIONAL_VALUE_GRADE_POSITIVE);
-//      sum(ekap) is zero in some cases
-        Object result = qb.select("sum(grade_value * ekap) as grade_sum, sum(ekap) as credits_sum", em).getSingleResult();
-        BigDecimal gradeSum = resultAsDecimal(result, 0);
-        BigDecimal creditsSum = resultAsDecimal(result, 1);
-        if(gradeSum != null && creditsSum != null && BigDecimal.ZERO.compareTo(creditsSum) != 0) {
-            return gradeSum.divide(creditsSum, 3, BigDecimal.ROUND_HALF_UP);
-        }
-        return null;
+    public StudentCurriculumCompletion getStudentCurriculumCompletion(Student student) {
+        List<StudentCurriculumCompletion> result = em.createQuery("select scc"
+                + " from StudentCurriculumCompletion scc where scc.student = ?1", 
+                StudentCurriculumCompletion.class)
+                .setParameter(1, student)
+                .getResultList();
+        return result.isEmpty() ? null : result.get(0);
     }
     
     public Collection<StudentVocationalResultByTimeDto> vocationalResultsByTimeResults(Student student) {
@@ -639,7 +617,8 @@ public class StudentService {
                 student.getCurriculumVersion().getOccupationModules()));
 
         Set<Long> curriculaModuleIds = StreamUtil.toMappedSet(StudentVocationalModuleDto::getId, dto.getCurriculumModules());
-        Set<Long> extraCurriculaModuleIds = StreamUtil.toMappedSet(it -> it.getModule().getId(), dto.getResults());
+        Set<Long> extraCurriculaModuleIds = StreamUtil.toMappedSet(it -> it.getModule().getId(), 
+                StreamUtil.toFilteredList(it -> it.getModule().getId() != null, dto.getResults()));
         extraCurriculaModuleIds.removeIf(curriculaModuleIds::contains);
         dto.setExtraCurriculaModules(StreamUtil.toMappedList(StudentVocationalModuleDto::of, curriculumVersionOccupationModuleRepository.findAll(extraCurriculaModuleIds)));
         return dto;
@@ -649,6 +628,7 @@ public class StudentService {
         List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
         result.addAll(vocationalResultsThemeResults(student));
         result.addAll(vocationalResultsModuleResults(student));
+        result.addAll(otherSchoolExtraCurriculaModuleResults(student));
         result.sort(StreamUtil.comparingWithNullsLast(StudentVocationalResultModuleThemeDto::getDate).reversed());
         return result;
     }
@@ -663,8 +643,7 @@ public class StudentService {
                 + " join classifier mcl on mcl.code = cm.module_code"
                 + " left join student_vocational_result_omodule svro on svr.id = svro.student_vocational_result_id"
                 + " left join study_year sy on sy.id = svr.study_year_id"
-                + " left join apel_application_record aar on svr.apel_application_record_id = aar.id"
-                + " left join apel_school a_s on svr.apel_school_id = a_s.id";
+                + " left join apel_application_record aar on svr.apel_application_record_id = aar.id";
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
         qb.requiredCriteria("svr.student_id = :studentId", "studentId", EntityUtil.getId(student));
@@ -673,8 +652,8 @@ public class StudentService {
         List<?> rows = qb.select(
                 "distinct coalesce(svro.curriculum_version_omodule_id, svr.curriculum_version_omodule_id),"
                 + "cv.code, cm.name_et as module_name_et, mcl.name_et classifer_name_et,cm.name_en as module_name_en, mcl.name_en as classifer_name_en, "
-                + "cm.credits, svr.apel_application_record_id, aar.is_formal_learning, a_s.id as school_id, a_s.name_et, a_s.name_en,svr.grade_code, "
-                + "svr.grade_date, svr.teachers, sy.year_code, sy.start_date",
+                + "cm.credits, svr.apel_application_record_id, aar.is_formal_learning, svr.grade_code, svr.grade_date, "
+                + "svr.teachers, sy.year_code, sy.start_date",
                 em).getResultList();
 
         for (Object r : rows) {
@@ -686,27 +665,56 @@ public class StudentService {
             
             Long apelApplicationRecordId = resultAsLong(r, 7);
             dto.setIsApelTransfer(apelApplicationRecordId != null ? Boolean.TRUE : Boolean.FALSE);
-            if (dto.getIsApelTransfer().booleanValue()) {
-                dto.setIsFormalLearning(resultAsBoolean(r, 8));
-                /*
-                TODO: other school modules, name comes from svr.module_name_et + " - " + a_s.name_et
-                if (dto.getIsFormalLearning().booleanValue() && resultAsLong(r, 10) != null) {
-                    dto.setModule(new AutocompleteResult(dto.getModule().getId(),
-                            dto.getModule().getNameEt() + " - " + resultAsString(r, 11),
-                            dto.getModule().getNameEn() + " - " + resultAsString(r, 12)));
-                }
-                */
-            }
-            dto.setGrade(resultAsString(r, 12));
-            dto.setDate(resultAsLocalDate(r, 13));
-            dto.getTeachers().add(new AutocompleteResult(null, resultAsString(r, 14), resultAsString(r, 14)));
-            dto.setStudyYear(resultAsString(r, 15));
-            dto.setStudyYearStartDate(resultAsLocalDate(r, 16));
+            dto.setIsFormalLearning(resultAsBoolean(r, 8));
+            dto.setGrade(resultAsString(r, 9));
+            dto.setDate(resultAsLocalDate(r, 10));
+            dto.getTeachers().add(new AutocompleteResult(null, resultAsString(r, 11), resultAsString(r, 11)));
+            dto.setStudyYear(resultAsString(r, 12));
+            dto.setStudyYearStartDate(resultAsLocalDate(r, 13));
             result.add(dto);
         }
         return result;
     }
     
+    private List<StudentVocationalResultModuleThemeDto> otherSchoolExtraCurriculaModuleResults(Student student) {
+        List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_vocational_result svr "
+                + "join curriculum_version_omodule cvo on cvo.id = any(svr.arr_modules) "
+                + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+                + "join classifier mcl on mcl.code = cm.module_code "
+                + "left join apel_school a_s on svr.apel_school_id = a_s.id "
+                + "left join study_year sy on sy.id = svr.study_year_id");
+        qb.requiredCriteria("svr.student_id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.filter("svr.curriculum_version_omodule_id is null");
+        qb.sort("svr.grade_date");
+        qb.groupBy("svr.arr_modules, svr.module_name_et, svr.module_name_en, svr.credits, a_s.id, "
+                + "svr.grade_code, svr.grade_date, svr.teachers, sy.year_code, sy.start_date");
+        
+        List<?> rows = qb.select("svr.module_name_et, svr.module_name_en, string_agg(cm.name_et || ' - ' || mcl.name_et, ', ') as replaced_modules_et, " + 
+                "string_agg(cm.name_en || ' - ' || mcl.name_en, ', ') as replaced_modules_en, svr.credits, a_s.id as school_id, " + 
+                "a_s.name_et, a_s.name_en, svr.grade_code, svr.grade_date, svr.teachers, sy.year_code, sy.start_date", em).getResultList();
+
+        for (Object r : rows) {
+            StudentVocationalResultModuleThemeDto dto = new StudentVocationalResultModuleThemeDto();
+            dto.setModule(new AutocompleteResult(null, 
+                    otherSchoolExtraCurriculumModuleName(resultAsString(r, 0), resultAsString(r, 2), resultAsString(r, 6)),
+                    otherSchoolExtraCurriculumModuleName(resultAsString(r, 1), resultAsString(r, 3), resultAsString(r, 7))));
+            dto.setCredits(resultAsDecimal(r, 4));
+            dto.setGrade(resultAsString(r, 8));
+            dto.setIsOtherSchool(Boolean.TRUE);
+            result.add(dto);
+       }
+       return result;
+    }
+    
+    private static String otherSchoolExtraCurriculumModuleName(String moduleName, String replacedModules, String school) {
+        if (moduleName != null && replacedModules != null && school != null) {
+            return moduleName + " -> (" + replacedModules + ") - " + school; 
+        }
+        return null;
+    }
+
     private Collection<StudentVocationalResultModuleThemeDto> vocationalResultsThemeResults(Student student) {
         String journalResults = "select distinct on (cvot.id, teacher_id) cvot.id cvot_id, cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, jes.grade_code grade_code, jes.grade_inserted grade_inserted, "
                 + "tp.id teacher_id, tp.firstname teacher_firstname, tp.lastname teacher_lastname,"

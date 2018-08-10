@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -13,9 +14,14 @@ public class FinalDocSigner extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private School school;
+    @Column(nullable = false)
     private String name;
+    @Column(nullable = false)
     private String position;
+    private String positionEn;
+    @Column(nullable = false)
     private Boolean isFirst;
+    @Column(nullable = false)
     private Boolean isValid;
     
     public School getSchool() {
@@ -37,6 +43,13 @@ public class FinalDocSigner extends BaseEntityWithId {
     }
     public void setPosition(String position) {
         this.position = position;
+    }
+    
+    public String getPositionEn() {
+        return positionEn;
+    }
+    public void setPositionEn(String positionEn) {
+        this.positionEn = positionEn;
     }
     
     public Boolean getIsFirst() {

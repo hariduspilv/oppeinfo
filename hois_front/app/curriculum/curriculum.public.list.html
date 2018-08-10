@@ -31,6 +31,7 @@
       <tr md-row>
         <th md-column md-order-by="school.{{currentLanguageNameField()}}">{{'school.label' | translate}}</th>
         <th md-column md-order-by="{{currentLanguageNameField()}}">{{'curriculum.name' | translate}}</th>
+        <th md-column md-order-by="merCode">{{'curriculum.search.merCode' | translate}}</th>
         <th md-column md-order-by="origStudyLevel.{{currentLanguageNameField()}}">{{'curriculum.studyLevel' | translate}}</th>
         <th md-column md-order-by="credits">
           <span>{{'curriculum.search.creditsEapEkap' | translate}}</span>
@@ -45,6 +46,7 @@
         <td md-cell>
           <a href="/#/curriculum/{{::row.id}}">{{currentLanguageNameField(row)}}</a>
         </td>
+        <td md-cell>{{::row.merCode}}</td>
         <td md-cell>{{currentLanguageNameField(row.origStudyLevel)}}</td>
         <td md-cell>{{::row.credits}}</td>
         <td md-cell>{{row.validFrom | hoisDate}}</td>

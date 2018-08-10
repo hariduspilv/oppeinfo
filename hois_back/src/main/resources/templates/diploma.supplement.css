@@ -16,6 +16,15 @@ html {
 .page-break-after-avoid {
     page-break-after: avoid;
 }
+.bold {
+    font-weight: bold;
+}
+.italic {
+    font-style: italic;
+}
+.underline {
+    text-decoration: underline;
+}
 .label {
     font-weight: bold;
 }
@@ -47,6 +56,12 @@ html {
 	text-transform: uppercase;
 	width: 100%;
 }
+.school-name-en {
+	font-size: 18pt;
+    font-weight: bold;
+	text-align: center;
+	width: 100%;
+}
 div.diploma-nr {
     font-size: 12pt;
     font-weight: bold;
@@ -61,7 +76,7 @@ div.diploma-nr {
 	padding: 2pt 5pt;
 	width: 95%;
 }
-h1 {
+h1, h2, h3 {
     font-size: 12pt;
     font-weight: bold;
 	margin-top: 10pt;
@@ -69,6 +84,9 @@ h1 {
 }
 table.general-info {
 	width: 100%;
+}
+table.general-info td {
+    vertical-align: top;
 }
 table.general-info td:first-child {
 	width: 200pt;
@@ -79,13 +97,22 @@ table.general-info td:last-child {
 .study-results {
     width: 100%;
 }
-.study-results-order {
-    width: 30pt;
+table.study-results th {
+    text-align: center;
+    vertical-align: top;
+}
+table.study-results td {
+    vertical-align: top;
 }
 .study-results-credits {
-    width: 60pt;
+    text-align: center;
+    width: 40pt;
+}
+.study-results-date {
+    text-align: center;
 }
 .study-results-grade {
+    text-align: center;
     width: 80pt;
 }
 .evaluation-description, .evaluation-description th, .evaluation-description td {
@@ -97,15 +124,24 @@ table.general-info td:last-child {
 .margin-top {
     margin-top: 10pt;
 }
-.diploma-signers {
-    margin-top: 50pt;
-    width: 100%;
+table.confirmation-info {
+    margin-bottom: 80pt;
+	width: 100%;
 }
-.diploma-signer-left {
-    display: inline-block;
-    width: 55%;
+table.confirmation-info td {
+	font-weight: bold;
+    vertical-align: top;
 }
-.diploma-signer-right {
-    display: inline-block;
-    width: 44%;
+table.confirmation-info td:first-child {
+    font-weight: normal;
+	width: 110pt;
+}
+table.higher-desc {
+    page-break-inside: avoid;
+}
+table.higher-desc td {
+    border: 1px solid black;
+    padding: 2pt;
+    text-align: center;
+    vertical-align: top;
 }

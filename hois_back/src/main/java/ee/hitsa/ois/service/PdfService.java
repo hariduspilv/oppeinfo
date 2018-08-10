@@ -4,7 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.StringReader;
 import java.lang.invoke.MethodHandles;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -24,6 +25,7 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import com.lowagie.text.DocumentException;
 
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.exception.HoisException;
 
 /**
@@ -45,8 +47,8 @@ public class PdfService {
      * @param data
      * @return
      */
-    public byte[] generate(String templateName, Object data) {
-        ITextRenderer renderer = createRenderer(templateName, data);
+    public byte[] generate(String templateName, Object data, Language lang) {
+        ITextRenderer renderer = createRenderer(templateName, data, lang);
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         try {
             renderer.createPDF(os);
@@ -57,6 +59,11 @@ public class PdfService {
             throw new HoisException(e);
         }
     }
+    
+
+    public byte[] generate(String templateName, Object data) {
+        return generate(templateName, data, Language.ET);
+    }
 
     /**
      * Generates pdf using flying saucer and returns total number of pages used
@@ -65,8 +72,8 @@ public class PdfService {
      * @param data
      * @return
      */
-    public int getPageCount(String templateName, Object data) {
-        ITextRenderer renderer = createRenderer(templateName, data);
+    public int getPageCount(String templateName, Object data, Language lang) {
+        ITextRenderer renderer = createRenderer(templateName, data, lang);
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         try {
             renderer.createPDF(os);
@@ -78,8 +85,12 @@ public class PdfService {
         }
     }
     
-    private ITextRenderer createRenderer(String templateName, Object data) {
-        String xhtml = evaluateTemplate(templateName, data);
+    public int getPageCount(String templateName, Object data) {
+        return getPageCount(templateName, data, Language.ET);
+    }
+    
+    private ITextRenderer createRenderer(String templateName, Object data, Language lang) {
+        String xhtml = evaluateTemplate(templateName, data, lang);
         ITextRenderer renderer = new ITextRenderer();
         renderer.setDocumentFromString(xhtml);
         try {
@@ -119,7 +130,14 @@ public class PdfService {
         }
     }
 
+    private String evaluateTemplate(String templateName, Object data, Language lang) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("content", data);
+        map.put("lang", lang);
+        return templateService.evaluateTemplate(templateName, map);
+    }
+
     private String evaluateTemplate(String templateName, Object data) {
-        return templateService.evaluateTemplate(templateName, Collections.singletonMap("content", data));
+        return evaluateTemplate(templateName, data, Language.ET);
     }
 }

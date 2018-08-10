@@ -7,7 +7,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.lang.invoke.MethodHandles;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -243,7 +242,7 @@ public class PracticeJournalService {
         EntityUtil.setUsername(user.getUsername(), em);
         
         if (practiceJournalEntriesTeacherForm.getGrade() != null && !practiceJournalEntriesTeacherForm.getGrade()
-                .equals(EntityUtil.getCode(practiceJournal.getGrade()))) {
+                .equals(EntityUtil.getNullableCode(practiceJournal.getGrade()))) {
             practiceJournal.setGradeInserted(LocalDateTime.now());
         }
         EntityUtil.bindToEntity(practiceJournalEntriesTeacherForm, practiceJournal, classifierRepository,

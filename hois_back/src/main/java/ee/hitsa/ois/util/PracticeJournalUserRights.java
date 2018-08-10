@@ -50,7 +50,7 @@ public final class PracticeJournalUserRights {
     }
 
     public static boolean canDelete(HoisUserDetails user, LocalDate endDate) {
-        return canEdit(user, endDate);
+        return canEdit(user, endDate) && !user.isStudent();
     }
     
 }

@@ -7,6 +7,7 @@ public class SupplementStudentDto {
     private String diplomaNr;
     private String diplomaStatus;
     private String supplementStatus;
+    private String supplementStatusEn;
     
     public Long getDirectiveStudentId() {
         return directiveStudentId;
@@ -41,6 +42,13 @@ public class SupplementStudentDto {
     }
     public void setSupplementStatus(String supplementStatus) {
         this.supplementStatus = supplementStatus;
+    }
+    
+    public String getSupplementStatusEn() {
+        return supplementStatusEn;
+    }
+    public void setSupplementStatusEn(String supplementStatusEn) {
+        this.supplementStatusEn = supplementStatusEn;
     }
 
 }

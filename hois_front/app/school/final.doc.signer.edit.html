@@ -11,6 +11,11 @@
         <input ng-model="record.position" name="position" type="text" required md-maxlength="255">
       </md-input-container>
 
+      <md-input-container class="md-block" ng-if="auth.higher">
+        <label>{{'finalDocSigner.positionEn' | translate}}</label>
+        <input ng-model="record.positionEn" name="positionEn" type="text" required md-maxlength="255">
+      </md-input-container>
+
       <div layout="column">
         <md-checkbox ng-model="record.isFirst" aria-label="{{'finalDocSigner.isFirst' | translate}}">
           {{'finalDocSigner.isFirst' | translate}}

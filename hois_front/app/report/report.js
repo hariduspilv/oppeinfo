@@ -248,12 +248,23 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
     $scope.storedCriteria = $scope.fromStorage(baseUrl);
   }
 
+  function searchUsingStoredCriteria() {
+    if ($scope.studentGroupTeacherReportForm && $scope.studentGroupTeacherReportForm.$valid) {
+      $scope.search();
+    } else {
+      $timeout(searchUsingStoredCriteria);
+    }
+  }
+
   if(!$scope.storedCriteria || angular.equals({}, $scope.storedCriteria)) {
     $scope.criteria = {entryType: {'SISSEKANNE_H': true, 'SISSEKANNE_R': true, 'SISSEKANNE_O': true, 'SISSEKANNE_L': true}};
   } else {
     $scope.criteria = $scope.storedCriteria;
     $scope.formState.studyPeriod = $scope.storedCriteria.formState.studyPeriod;
     $scope.formState.studentGroup = $scope.storedCriteria.formState.studentGroup;
+    if ($scope.formState.studentGroup && ($scope.criteria.studyYear || $scope.criteria.from)) {
+      $timeout(searchUsingStoredCriteria);
+    }
   }
 
   Classifier.queryForDropdown({ mainClassCode: 'SISSEKANNE' }, function (result) {

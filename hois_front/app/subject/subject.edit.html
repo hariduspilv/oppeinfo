@@ -121,7 +121,7 @@
                  class="md-raised">{{'subject.passive' | translate}}</md-button>
 
       <md-button ng-if="subject.canDelete" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-      <md-button ng-href="{{::formState.backUrl}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      <md-button ng-click="back(formState.backUrl, subjectForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>
 </div>

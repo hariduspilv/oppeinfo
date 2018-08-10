@@ -185,7 +185,7 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
     $rootScope.$on('$locationChangeSuccess', openPage);
 
     $scope.openTerms = function() {
-      dialogService.showDialog('components/terms.et.dialog.html');
+      dialogService.showDialog('components/terms.' + $scope.currentLanguage() + '.dialog.html');
     };
 
 

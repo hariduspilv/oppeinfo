@@ -7,7 +7,10 @@ public class SupplementDto {
     private String fullname;
     private String diplomaNr;
     private String diplomaStatus;
-    private List<FormDto> freeForms;
+    private String supplementStatus;
+    private String supplementStatusEn;
+    private List<FormDto> forms;
+    private List<FormDto> formsEn;
     private List<FormDto> freeExtraForms;
     
     public String getFullname() {
@@ -31,11 +34,32 @@ public class SupplementDto {
         this.diplomaStatus = diplomaStatus;
     }
     
-    public List<FormDto> getFreeForms() {
-        return freeForms;
+    public String getSupplementStatus() {
+        return supplementStatus;
     }
-    public void setFreeForms(List<FormDto> freeForms) {
-        this.freeForms = freeForms;
+    public void setSupplementStatus(String supplementStatus) {
+        this.supplementStatus = supplementStatus;
+    }
+
+    public String getSupplementStatusEn() {
+        return supplementStatusEn;
+    }
+    public void setSupplementStatusEn(String supplementStatusEn) {
+        this.supplementStatusEn = supplementStatusEn;
+    }
+    
+    public List<FormDto> getForms() {
+        return forms;
+    }
+    public void setForms(List<FormDto> forms) {
+        this.forms = forms;
+    }
+    
+    public List<FormDto> getFormsEn() {
+        return formsEn;
+    }
+    public void setFormsEn(List<FormDto> formsEn) {
+        this.formsEn = formsEn;
     }
     
     public List<FormDto> getFreeExtraForms() {

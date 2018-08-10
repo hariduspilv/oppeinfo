@@ -81,12 +81,14 @@ public class LogsController {
     @GetMapping("/kutseregister")
     public Page<QfLogDto> kutseregisterSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
         UserUtil.assertIsMainAdminOrSchoolAdmin(user);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER);
         return kutseregisterLogService.search(user, command, pageable);
     }
 
     @GetMapping("/kutseregister/{id:\\d+}")
     public QfLogDto kutseregisterGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
         UserUtil.assertIsMainAdminOrSchoolAdmin(user);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER);
         return kutseregisterLogService.get(user, id, messageType);
     }
 
@@ -94,6 +96,7 @@ public class LogsController {
     @PostMapping("/kutseregister/sync")
     public void kutseregisterSync(HoisUserDetails user, @RequestBody @Valid KutseregisterSyncForm form) {
         UserUtil.assertIsMainAdmin(user);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER);
         kutseregisterService.muutunudKutsestandardid(form.getFrom());
     }
 

@@ -6,6 +6,7 @@
           <tr md-row>
             <th md-column md-order-by="name">{{'finalDocSigner.name' | translate}}</th>
             <th md-column md-order-by="position">{{'finalDocSigner.position' | translate}}</th>
+            <th md-column md-order-by="positionEn" ng-if="auth.higher">{{'finalDocSigner.positionEn' | translate}}</th>
             <th md-column md-order-by="isFirst">{{'finalDocSigner.isFirst' | translate}}</th>
             <th md-column md-order-by="isValid">{{'finalDocSigner.isValid' | translate}}</th>
             <th md-column></th>
@@ -15,6 +16,7 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{::row.name}}</td>
             <td md-cell>{{::row.position}}</td>
+            <td md-cell ng-if="auth.higher">{{::row.positionEn}}</td>
             <td md-cell>{{::row.isFirst ? 'main.yes' : 'main.no' | translate}}</td>
             <td md-cell>{{::row.isValid ? 'main.yes' : 'main.no' | translate}}</td>
             <td md-cell>

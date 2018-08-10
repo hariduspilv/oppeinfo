@@ -64,4 +64,15 @@ angular.module('hitsaOis').controller('StudyMaterialHigherListController', ['$sc
       $scope.$watch('teacher', function (newTeacher) {
         $scope.criteria.teacher = newTeacher ? newTeacher.id : null;
       });
+
+      $scope.$watch('criteria.studyYear', function() {
+        if ($scope.criteria.studyYear && $scope.criteria.journalObject) {
+          $scope.criteria.journalObject = $scope.criteria.journalObject.studyYear === $scope.criteria.studyYear ? $scope.criteria.journalObject : null;
+        }
+      });
+
+      $scope.$watch('criteria.journalObject', function() {
+        $scope.criteria.journal = $scope.criteria.journalObject ? $scope.criteria.journalObject.id : null;
+      });
+
     }]);

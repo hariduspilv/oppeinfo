@@ -19,6 +19,7 @@ public class StudyYearScheduleDtoContainer {
     private Set<Long> studyPeriods;
     @Size(max = 4000)
     private String addInfo;
+    private Boolean showMine;
 
     public Set<Long> getDeletedStudyYearSchedules() {
         return deletedStudyYearSchedules;
@@ -58,6 +59,14 @@ public class StudyYearScheduleDtoContainer {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public Boolean getShowMine() {
+        return showMine;
+    }
+
+    public void setShowMine(Boolean showMine) {
+        this.showMine = showMine;
     }
 
 }

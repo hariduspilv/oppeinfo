@@ -26,7 +26,7 @@ public enum FormType {
     /** R - eestikeelne akadeemiline õiend */
     LOPUBLANKETT_R,
     /** DE - ingliskeelne akadeemiline õiend */
-    LOPUBLANKETT_DE,
+    LOPUBLANKETT_DS,
     /** S - akadeemilise õiendi lisaleht */
     LOPUBLANKETT_S,
     /** Hinneteleht */

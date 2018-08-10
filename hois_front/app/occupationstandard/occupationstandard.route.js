@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').config(['$routeProvider', function ($routeProvider) {
+angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
     .when('/occupationstandard', {
       templateUrl: 'occupationstandard/occupationstandard.html',
@@ -11,9 +11,7 @@ angular.module('hitsaOis').config(['$routeProvider', function ($routeProvider) {
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: function(Session) {
-          return Session.roleCode === 'ROLL_P';
-        }
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER]
       }
     });
 }]);

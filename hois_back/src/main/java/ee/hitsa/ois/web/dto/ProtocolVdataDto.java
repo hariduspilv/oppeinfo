@@ -19,6 +19,7 @@ public class ProtocolVdataDto {
     private List<AutocompleteResult> outcomes;
     private Long curriculum;
     private Long curriculumModule;
+    private Boolean isPractice;
 
     public static ProtocolVdataDto of(ProtocolVdata protocolVdata) {
         ProtocolVdataDto dto = new ProtocolVdataDto();
@@ -34,6 +35,7 @@ public class ProtocolVdataDto {
 
         dto.setCurriculum(EntityUtil.getId(protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule().getCurriculum()));
         dto.setCurriculumModule(EntityUtil.getId(protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule()));
+        dto.setIsPractice(protocolVdata.getCurriculumVersionOccupationModule().getCurriculumModule().getPractice());
         return dto;
     }
 
@@ -116,4 +118,13 @@ public class ProtocolVdataDto {
     public void setCurriculumModule(Long curriculumModule) {
         this.curriculumModule = curriculumModule;
     }
+
+    public Boolean getIsPractice() {
+        return isPractice;
+    }
+
+    public void setIsPractice(Boolean isPractice) {
+        this.isPractice = isPractice;
+    }
+    
 }

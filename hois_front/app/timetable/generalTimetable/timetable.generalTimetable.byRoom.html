@@ -7,13 +7,13 @@
         md-search-text="searchText"
         md-min-length="1"
         md-items="item in getRooms(searchText)" 
-        md-item-text="item.roomCode"
+        md-item-text="item.code"
         md-selected-item-change="showRoomWeek(item.roomId)" 
         md-floating-label="{{'timetable.search.room' | translate}}"
         md-require-match
         md-no-cache>
         <md-item-template>
-          <span md-highlight-text="searchText">{{item.roomCode}}</span>
+          <span md-highlight-text="searchText">{{item.code}}</span>
         </md-item-template>
       </md-autocomplete>
     </div>

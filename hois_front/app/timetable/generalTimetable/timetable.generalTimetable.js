@@ -184,7 +184,7 @@
 
         $scope.getRooms = function (searchText) {
           searchText = (searchText || '').toUpperCase();
-          return $scope.timetablesByRooms.filter(function (it) { return it.roomCode.toUpperCase().indexOf(searchText) !== -1; });
+          return $scope.timetablesByRooms.filter(function (it) { return it.code.toUpperCase().indexOf(searchText) !== -1; });
         };
 
         $scope.showRoomWeek = function (roomId) {

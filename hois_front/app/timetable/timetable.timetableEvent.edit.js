@@ -35,7 +35,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       }
 
       var occupiedQuery = timetableTimeOccupiedQuery();
-      QueryUtils.endpoint('/timetables/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
+      QueryUtils.endpoint(baseUrl + '/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
         if(result.occupied) {
           dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
             saveEvent();

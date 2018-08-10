@@ -36,6 +36,7 @@ import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyPeriodEvent;
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
@@ -366,8 +367,16 @@ public class DeclarationService {
     }
 
     private List<Declaration> unconfirmedDeclarations(Long schoolId) {
-        return em.createQuery("select d from Declaration d where d.student.school.id = ?1 and d.status.code = ?2", Declaration.class)
-            .setParameter(1, schoolId).setParameter(2, DeclarationStatus.OPINGUKAVA_STAATUS_S.name())
+        Long studyPeriod = studyYearService.getCurrentStudyPeriod(schoolId);
+        if(studyPeriod == null) {
+            return new ArrayList<>();
+        }
+        
+        return em.createQuery("select d from Declaration d where d.student.school.id = ?1 and d.status.code = ?2 and d.studyPeriod.id = ?3", 
+                Declaration.class)
+            .setParameter(1, schoolId)
+            .setParameter(2, DeclarationStatus.OPINGUKAVA_STAATUS_S.name())
+            .setParameter(3, studyPeriod)
             .getResultList();
     }
 

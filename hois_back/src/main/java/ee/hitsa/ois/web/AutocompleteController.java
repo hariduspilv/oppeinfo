@@ -37,6 +37,8 @@ import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteComm
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.EnterpriseResult;
+import ee.hitsa.ois.web.dto.JournalAutocompleteResult;
+import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithLogo;
@@ -66,7 +68,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/rooms")
-    public Page<AutocompleteResult> rooms(HoisUserDetails user, RoomsAutocompleteCommand lookup) {
+    public Page<OccupiedAutocompleteResult> rooms(HoisUserDetails user, RoomsAutocompleteCommand lookup) {
         return asPage(autocompleteService.rooms(user.getSchoolId(), lookup));
     }
 
@@ -175,12 +177,12 @@ public class AutocompleteController {
     }
 
     @GetMapping("/teachers")
-    public Page<AutocompleteResult> teachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
+    public Page<OccupiedAutocompleteResult> teachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         return asPage(autocompleteService.teachers(user.getSchoolId(), lookup, true));
     }
 
     @GetMapping("/teachersList")
-    public List<AutocompleteResult> teachersAsList(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
+    public List<OccupiedAutocompleteResult> teachersAsList(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         return autocompleteService.teachers(user.getSchoolId(), lookup, false);
     }
 
@@ -232,7 +234,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/journals")
-    public List<AutocompleteResult> journals(HoisUserDetails user, JournalAutocompleteCommand lookup) {
+    public List<JournalAutocompleteResult> journals(HoisUserDetails user, JournalAutocompleteCommand lookup) {
         return autocompleteService.journals(user, lookup);
     }
 

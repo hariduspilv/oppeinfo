@@ -13,12 +13,12 @@
             <div class="ois-form-layout-padding nomargin" layout="column" ng-cloak>
       <md-input-container class="md-block">
         <label class="textInput">{{'lessonplan.studyYear' | translate}}</label>
-        <hois-select values="formState.studyYears" ng-model="record.studyYear" md-autofocus></hois-select>
+        <hois-select values="formState.studyYears" ng-model="record.studyYear" md-autofocus required></hois-select>
       </md-input-container>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'lessonplan.studentGroup' | translate}}</label>
-        <hois-select values="formState.studentGroupMap[record.studyYear]" ng-model="record.studentGroup"></hois-select>
+        <hois-select values="formState.studentGroupMap[record.studyYear]" ng-model="record.studentGroup" required></hois-select>
       </md-input-container>
     </div>
   </md-dialog-content>

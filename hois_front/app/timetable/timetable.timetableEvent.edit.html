@@ -21,7 +21,7 @@
           <input type="text" ng-model="timetableEvent.name" required md-maxlength="255">
         </md-input-container>
       </div>
-      <div layout="row" flex="100">
+      <div ng-if="!timetableEvent.id" layout="row" flex="100">
         <md-input-container flex="20" flex-sm="100" flex-xs="100">
           <md-checkbox ng-model="timetableEvent.repeat" aria-label="Is repeat event">
             {{'timetable.timetableEvent.isRepeat' | translate}}
@@ -43,7 +43,9 @@
       </div>
 
       <div layout="row" flex="60" flex-sm="100" flex-xs="100">
-        <hois-autocomplete label="timetable.timetableEvent.teacher" ng-model="timetableEvent.teacher" ng-disabled="auth.isTeacher()" method="teachers" flex></hois-autocomplete>
+        <hois-autocomplete label="timetable.timetableEvent.teacher" ng-model="timetableEvent.teacher" ng-disabled="auth.isTeacher()" method="teachers"
+          additional-query-params="{valid: true, occupied: true, date: timetableEvent.date, startTime: timetableEvent.startTime, endTime: timetableEvent.endTime, 
+            repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount}" flex></hois-autocomplete>
       </div>
       <div layout="column" class="common-label" flex="55" ng-repeat="teacher in timetableEvent.teachers">
         <div layout="row" flex layout-align="start center">
@@ -56,9 +58,11 @@
       </div>
 
       <div layout="row" flex="60" flex-sm="100" flex-xs="100">
-        <hois-autocomplete label="timetable.timetableEvent.room" ng-model="timetableEvent.room" additional-query-params="{isStudy: true}" method="rooms" flex></hois-autocomplete>
+        <hois-autocomplete label="timetable.timetableEvent.room" ng-model="timetableEvent.room" method="rooms"
+          additional-query-params="{isStudy: true, occupied: true, date: timetableEvent.date, startTime: timetableEvent.startTime, endTime: timetableEvent.endTime, 
+            repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount}" flex></hois-autocomplete>
       </div>
-      <div layout="column" class="common-label" flex="55" ng-repeat="room in timetableEvent.rooms">
+      <div layout="column" class="common-label" flex="55" ng-repeat="room in timetableEvent.rooms | orderBy: currentLanguageNameField()">
         <div layout="row" flex layout-align="start center">
           <div flex="5">&nbsp;</div>
           <div flex="50">{{room.nameEt}}</div>
@@ -69,9 +73,22 @@
       </div>
 
       <div layout="row" flex="100">
+        <md-input-container flex="60" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'timetable.timetableEvent.otherTeacher' | translate}}</label>
+          <input type="text" ng-model="timetableEvent.otherTeacher" md-maxlength="1000">
+        </md-input-container>
+      </div>
+      <div layout="row" flex="100">
+        <md-input-container flex="60" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'timetable.timetableEvent.otherRoom' | translate}}</label>
+          <input type="text" ng-model="timetableEvent.otherRoom" md-maxlength="1000">
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex="100">
         <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="timetableEvent.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-        <md-button ng-href="#/lessonplans/events" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-click="back('#/lessonplans/events', eventForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
   </div>

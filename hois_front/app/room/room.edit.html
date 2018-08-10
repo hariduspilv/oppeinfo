@@ -86,6 +86,6 @@
 
     <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
     <md-button ng-click="delete()" ng-show="record.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-    <md-button ng-href="#/rooms/search" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-click="back('#/rooms/search', roomForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

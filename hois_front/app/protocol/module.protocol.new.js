@@ -32,7 +32,7 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
           $scope.formState.selectedStudents.push(it.studentId);
         }
       });
-      if (result.teacher && !$scope.formState.teacher) {
+      if (result.teacher) {
         $scope.formState.teacher = result.teacher.id;
       }
     });

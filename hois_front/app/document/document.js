@@ -140,7 +140,7 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$route', 
     $scope.currentNavItem = 'document.supplements' + ($scope.isHigher ? '' : '.vocational');
     
     var clMapper = Classifier.valuemapper({status: 'KASKKIRI_STAATUS', 
-      diplomaStatus: 'LOPUDOK_STAATUS', supplementStatus: 'LOPUDOK_STAATUS'});
+      diplomaStatus: 'LOPUDOK_STAATUS', supplementStatus: 'LOPUDOK_STAATUS', supplementStatusEn: 'LOPUDOK_STAATUS'});
     $scope.formState = {
       directives: QueryUtils.endpoint(baseUrl + '/supplement/directives').query({isHigher: $scope.isHigher}, function(result) {
         DataUtils.convertStringToDates(result, ['date']);
@@ -159,6 +159,7 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$route', 
     $scope.clearCriteria = function() {
       _clearCriteria();
       $scope.autocomplete = {};
+      $scope.criteria.isHigher = $scope.isHigher;
     };
 
     $q.all(clMapper.promises).then($scope.loadData);
@@ -173,8 +174,11 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$route', 
   function ($scope, $route, $httpParamSerializer, $window, config, QueryUtils, DocumentUtils, dialogService, message) {
     var baseUrl = '/documents';
     var id = $route.current.params.id;
+    $scope.isHigher = $route.current.locals.params.isHigher;
 
-    $scope.criteria = {};
+    $scope.contentData = {showSubjectCode: true, showTeacher: true};
+    $scope.formData = {};
+    $scope.formDataEn = {};
     $scope.formState = {
       signers: QueryUtils.endpoint(baseUrl + '/signers').query(function(result) {
         DocumentUtils.mapSignerDisplay(result);
@@ -185,31 +189,64 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$route', 
       return form.fullCode;
     }
     $scope.record = QueryUtils.endpoint(baseUrl + '/supplement').get({id: id}, function(result) {
-      if (result.freeForms && result.freeForms.length > 0) {
-        $scope.criteria.numeral = result.freeForms.shift().numeral;
-        result.freeForms = result.freeForms.map(mapToFullCode);
+      if (result.forms && result.forms.length > 0) {
+        if (result.supplementStatus !== 'LOPUDOK_STAATUS_T') {
+          $scope.formData.numeral = result.forms.shift().numeral;
+        }
+        result.forms = result.forms.map(mapToFullCode);
+      }
+      if (result.formsEn && result.formsEn.length > 0) {
+        if (result.supplementStatusEn !== 'LOPUDOK_STAATUS_T') {
+          $scope.formDataEn.numeral = result.formsEn.shift().numeral;
+        }
+        result.formsEn = result.formsEn.map(mapToFullCode);
       }
       if (result.freeExtraForms && result.freeExtraForms.length > 0) {
-        $scope.criteria.additionalNumeral = result.freeExtraForms.shift().numeral;
+        var first = result.freeExtraForms.shift().numeral;
+        $scope.formData.additionalNumeral = first;
+        $scope.formDataEn.additionalNumeral = first;
         result.freeExtraForms = result.freeExtraForms.map(mapToFullCode);
       }
     });
     
+    function isPrinted(lang) {
+      if (lang === 'EN') {
+        return $scope.record.supplementStatusEn && $scope.record.supplementStatusEn !== 'LOPUDOK_STAATUS_K';
+      } else {
+        return $scope.record.supplementStatus && $scope.record.supplementStatus !== 'LOPUDOK_STAATUS_K';
+      }
+    }
+    function canPrint() {
+      if (!$scope.contentData.signer1Id || ($scope.isHigher && !$scope.contentData.signer2Id)) {
+        return false;
+      }
+      return true;
+    }
     $scope.updatePdfUrl = function() {
-      if (!$scope.criteria.signer1Id) {
+      if (!canPrint()) {
         $scope.viewPdfUrl = undefined;
+        $scope.viewPdfUrlEn = undefined;
         return;
       }
-      $scope.viewPdfUrl = config.apiUrl + baseUrl + '/supplement/' + id + '/print/view.pdf?signer1Id=' + $scope.criteria.signer1Id;
+      var url = config.apiUrl + baseUrl + '/supplement/' + id + '/print/view.pdf?' + $httpParamSerializer($scope.contentData);
+      $scope.viewPdfUrl = isPrinted('ET') ? undefined : url;
+      $scope.viewPdfUrlEn = isPrinted('EN') ? undefined : (url + '&lang=EN');
     };
 
-    function getPrintUrl() {
-      return config.apiUrl + baseUrl + '/supplement/' + id + '/print.pdf?' + $httpParamSerializer($scope.criteria);
+    function getPrintParams(lang) {
+      var result = angular.extend({}, $scope.contentData, lang === 'EN' ? $scope.formDataEn : $scope.formData);
+      if (lang) {
+        angular.extend(result, {lang: lang});
+      }
+      return result;
+    }
+    function getPrintUrl(lang) {
+      return config.apiUrl + baseUrl + '/supplement/' + id + '/print.pdf?' + $httpParamSerializer(getPrintParams(lang));
     }
 
-    $scope.print = function() {
-      QueryUtils.endpoint(baseUrl + '/supplement/' + id + '/calculate').query($scope.criteria, function(result) {
-        $window.location = getPrintUrl();
+    $scope.print = function(lang) {
+      QueryUtils.endpoint(baseUrl + '/supplement/' + id + '/calculate').query(getPrintParams(lang), function(result) {
+        $window.location = getPrintUrl(lang);
         dialogService.confirmDialog({
           prompt: 'document.confirm.print', 
           forms: result.map(mapToFullCode).join(', '),
@@ -220,7 +257,7 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$route', 
             return form.id;
           }), function() {
             message.updateSuccess();
-            $window.location.href = '#/documents/supplements';
+            $window.location.href = '#/documents/supplements' + ($scope.isHigher ? '' : '/vocational');
           });
         });
       }).$promise.catch(angular.noop);

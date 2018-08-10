@@ -75,6 +75,28 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     private String accreditationResolution;
     private LocalDate accreditationValidDate;
     private String accreditationNr;
+    @Column(name = "final_21")
+    private String final21;
+    @Column(name = "final_31")
+    private String final31;
+    @Column(name = "final_33")
+    private String final33;
+    @Column(name = "final_51")
+    private String final51;
+    @Column(name = "final_52")
+    private String final52;
+    @Column(name = "final_61")
+    private String final61;
+    @Column(name = "final_en_31")
+    private String finalEn31;
+    @Column(name = "final_en_33")
+    private String finalEn33;
+    @Column(name = "final_en_51")
+    private String finalEn51;
+    @Column(name = "final_en_52")
+    private String finalEn52;
+    @Column(name = "final_en_61")
+    private String finalEn61;
 
     @Column(name = "is_occupation")
     private Boolean occupation;
@@ -525,6 +547,94 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
 
     public void setAccreditationNr(String accreditationNr) {
         this.accreditationNr = accreditationNr;
+    }
+
+    public String getFinal21() {
+        return final21;
+    }
+
+    public void setFinal21(String final21) {
+        this.final21 = final21;
+    }
+
+    public String getFinal31() {
+        return final31;
+    }
+
+    public void setFinal31(String final31) {
+        this.final31 = final31;
+    }
+
+    public String getFinal33() {
+        return final33;
+    }
+
+    public void setFinal33(String final33) {
+        this.final33 = final33;
+    }
+
+    public String getFinal51() {
+        return final51;
+    }
+
+    public void setFinal51(String final51) {
+        this.final51 = final51;
+    }
+
+    public String getFinal52() {
+        return final52;
+    }
+
+    public void setFinal52(String final52) {
+        this.final52 = final52;
+    }
+
+    public String getFinal61() {
+        return final61;
+    }
+
+    public void setFinal61(String final61) {
+        this.final61 = final61;
+    }
+
+    public String getFinalEn31() {
+        return finalEn31;
+    }
+
+    public void setFinalEn31(String finalEn31) {
+        this.finalEn31 = finalEn31;
+    }
+
+    public String getFinalEn33() {
+        return finalEn33;
+    }
+
+    public void setFinalEn33(String finalEn33) {
+        this.finalEn33 = finalEn33;
+    }
+
+    public String getFinalEn51() {
+        return finalEn51;
+    }
+
+    public void setFinalEn51(String finalEn51) {
+        this.finalEn51 = finalEn51;
+    }
+
+    public String getFinalEn52() {
+        return finalEn52;
+    }
+
+    public void setFinalEn52(String finalEn52) {
+        this.finalEn52 = finalEn52;
+    }
+
+    public String getFinalEn61() {
+        return finalEn61;
+    }
+
+    public void setFinalEn61(String finalEn61) {
+        this.finalEn61 = finalEn61;
     }
 
     public LocalDate getValidThru() {

@@ -22,34 +22,115 @@
         </md-input-container>
       </div>
 
-      <div layout="row" ng-if="record.diplomaStatus !== 'LOPUDOK_STAATUS_K'">
-        <md-input-container flex="20" flex-sm="100" flex-xs="100">
-          <label>{{'document.freeForms' | translate}}</label>
-          <input type="number" ng-model="criteria.numeral" min="0" required>
-        </md-input-container>
-        <hois-free-forms value="record.freeForms"></hois-free-forms>
-      </div>
-    
-      <div layout="row" ng-if="record.diplomaStatus !== 'LOPUDOK_STAATUS_K'">
-        <md-input-container flex="20" flex-sm="100" flex-xs="100">
-          <label>{{'document.freeExtraForms' | translate}}</label>
-          <input type="number" ng-model="criteria.additionalNumeral" min="0">
-        </md-input-container>
-        <hois-free-forms value="record.freeExtraForms"></hois-free-forms>
-      </div>
-      
       <div layout="row">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'document.signer1' | translate}}</label>
-          <hois-select ng-model="criteria.signer1Id" values="formState.signers" show-property="display" 
+          <hois-select ng-model="contentData.signer1Id" values="formState.signers" show-property="display" 
+            ng-change="updatePdfUrl()" required></hois-select>
+        </md-input-container>
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'document.signer2' | translate}}</label>
+          <hois-select ng-model="contentData.signer2Id" values="formState.signers" show-property="display" 
             ng-change="updatePdfUrl()" required></hois-select>
         </md-input-container>
       </div>
+      <br>
+      <div layout="row">
+        <div flex="45" flex-sm="100" flex-xs="100">
+          <md-checkbox ng-model="contentData.showSubjectCode" ng-change="updatePdfUrl()">
+            {{'document.showSubjectCode' | translate}}
+          </md-checkbox>
+        </div>
+        <div flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-checkbox ng-model="contentData.showTeacher" ng-change="updatePdfUrl()">
+            {{'document.showTeacher' | translate}}
+          </md-checkbox>
+        </div>
+      </div>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'document.estonian' | translate}}</legend>
+        <br>
+        
+        <div layout="row" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && record.supplementStatus !== 'LOPUDOK_STAATUS_T'">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
+            <label>{{'document.freeForms' | translate}}</label>
+            <input type="number" ng-model="formData.numeral" min="0" required>
+          </md-input-container>
+          <hois-free-forms value="record.forms"></hois-free-forms>
+        </div>
+      
+        <div layout="row" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && record.supplementStatus !== 'LOPUDOK_STAATUS_T'">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
+            <label>{{'document.freeExtraForms' | translate}}</label>
+            <input type="number" ng-model="formData.additionalNumeral" min="0">
+          </md-input-container>
+          <hois-free-forms value="record.freeExtraForms"></hois-free-forms>
+        </div>
+        
+        <div layout="row" ng-if="record.supplementStatus === 'LOPUDOK_STAATUS_T'">
+          <md-input-container flex="40" flex-sm="100" flex-xs="100" class="readonly">
+            <label>{{'document.supplementStatus' | translate}}</label>
+            <hois-classifier-value ng-model="record.supplementStatus" main-classifier-code="LOPUDOK_STAATUS" model-value-attr="code"></hois-classifier-value>
+          </md-input-container>
+        </div>
+      
+        <div layout="row" ng-if="record.supplementStatus === 'LOPUDOK_STAATUS_T'">
+          <md-input-container flex="40" flex-sm="100" flex-xs="100" class="readonly">
+            <label>{{'document.usedForms' | translate}}</label>
+            <hois-value value="record.forms.join(', ')"></hois-value>
+          </md-input-container>
+        </div>
+        
+        <a ng-href="{{viewPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="viewPdfUrl">{{'document.button.showPdf' | translate}}</a>
+        <md-button ng-click="print()" class="md-raised md-primary" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && viewPdfUrl">
+          {{'main.button.print' | translate}}
+        </md-button>
+      </fieldset>
+      
+      <br>
+
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'document.english' | translate}}</legend>
+        <br>
+        
+        <div layout="row" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && record.supplementStatusEn !== 'LOPUDOK_STAATUS_T'">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
+            <label>{{'document.freeForms' | translate}}</label>
+            <input type="number" ng-model="formDataEn.numeral" min="0" required>
+          </md-input-container>
+          <hois-free-forms value="record.formsEn"></hois-free-forms>
+        </div>
+      
+        <div layout="row" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && record.supplementStatusEn !== 'LOPUDOK_STAATUS_T'">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
+            <label>{{'document.freeExtraForms' | translate}}</label>
+            <input type="number" ng-model="formDataEn.additionalNumeral" min="0">
+          </md-input-container>
+          <hois-free-forms value="record.freeExtraForms"></hois-free-forms>
+        </div>
+        
+        <div layout="row" ng-if="record.supplementStatusEn === 'LOPUDOK_STAATUS_T'">
+          <md-input-container flex="40" flex-sm="100" flex-xs="100" class="readonly">
+            <label>{{'document.supplementStatus' | translate}}</label>
+            <hois-classifier-value ng-model="record.supplementStatus" main-classifier-code="LOPUDOK_STAATUS" model-value-attr="code"></hois-classifier-value>
+          </md-input-container>
+        </div>
+      
+        <div layout="row" ng-if="record.supplementStatusEn === 'LOPUDOK_STAATUS_T'">
+          <md-input-container flex="40" flex-sm="100" flex-xs="100" class="readonly">
+            <label>{{'document.usedForms' | translate}}</label>
+            <hois-value value="record.forms.join(', ')"></hois-value>
+          </md-input-container>
+        </div>
+        
+        <a ng-href="{{viewPdfUrlEn}}" target="_blank" class="md-button md-raised" ng-if="viewPdfUrlEn">{{'document.button.showPdf' | translate}}</a>
+        <md-button ng-click="print('EN')" class="md-raised md-primary" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && viewPdfUrlEn">
+          {{'main.button.print' | translate}}
+        </md-button>
+      </fieldset>
     </form>
 
     <div layout="row">
-      <a ng-href="{{viewPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="viewPdfUrl">{{'document.button.showPdf' | translate}}</a>
-      <md-button ng-click="print()" class="md-raised md-primary" ng-if="record.diplomaStatus !== 'LOPUDOK_STAATUS_K' && viewPdfUrl">{{'main.button.print' | translate}}</md-button>
       <md-button ng-click="back('#/documents/supplements')" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
   </div>

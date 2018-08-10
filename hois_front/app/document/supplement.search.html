@@ -21,12 +21,13 @@
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
-            <label>{{'document.diplomaStatus' | translate}}</label>
+            <label>{{isHigher ? 'document.diplomaStatus' : 'document.diplomaStatusVocational' | translate}}</label>
             <hois-classifier-select ng-model="criteria.diplomaStatus" main-classifier-code="LOPUDOK_STAATUS" model-value-attr="code"></hois-classifier-select>
           </md-input-container>
 
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <hois-autocomplete ng-model="autocomplete.curriculumVersion" method="curriculumversions" label="document.curriculumVersion"></hois-autocomplete>
+            <hois-autocomplete ng-if="isHigher" ng-model="autocomplete.curriculumVersion" method="curriculumversions" label="document.curriculumVersion"></hois-autocomplete>
+            <hois-autocomplete ng-if="!isHigher" ng-model="autocomplete.curriculumVersion" method="curriculumversions" label="document.curriculumVersionVocational"></hois-autocomplete>
           </div>
         </div>
 
@@ -45,19 +46,23 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column>{{'document.student' | translate}}</th>
-            <th md-column>{{'document.diplomaNr' | translate}}</th>
-            <th md-column>{{'document.diplomaStatus' | translate}}</th>
-            <th md-column>{{'document.supplementStatus' | translate}}</th>
+            <th md-column>{{isHigher ? 'document.diplomaNr' : 'document.diplomaNrVocational' | translate}}</th>
+            <th md-column>{{isHigher ? 'document.diplomaStatus' : 'document.diplomaStatusVocational' | translate}}</th>
+            <th md-column>{{isHigher ? 'document.supplementStatus' : 'document.supplementStatusVocational' | translate}}</th>
+            <th md-column ng-if="isHigher">{{'document.supplementStatusEn' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <a md-class="md-primary change-button" ng-href="#/documents/supplements/{{::row.directiveStudentId}}">{{::row.fullname}}</a>
+              <a md-class="md-primary change-button" ng-href="#/documents/supplements{{isHigher ? '' : '/vocational'}}/{{::row.directiveStudentId}}">
+                {{::row.fullname}}
+              </a>
             </td>
             <td md-cell>{{::row.diplomaNr}}</td>
             <td md-cell>{{currentLanguageNameField(row.diplomaStatus)}}</td>
             <td md-cell>{{currentLanguageNameField(row.supplementStatus)}}</td>
+            <td md-cell ng-if="isHigher">{{currentLanguageNameField(row.supplementStatusEn)}}</td>
           </tr>
         </tbody>
       </table>

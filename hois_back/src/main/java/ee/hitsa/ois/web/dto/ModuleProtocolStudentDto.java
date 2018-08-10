@@ -26,6 +26,8 @@ public class ModuleProtocolStudentDto {
     private String addInfo;
     private List<ModuleProtocolJournalResultDto> journalResults = new ArrayList<>();
     private List<ModuleProtocolOutcomeResultDto> outcomeResults = new ArrayList<>();
+    private List<ModuleProtocolPracticeJournalResultDto> practiceJournalResults = new ArrayList<>();
+    
     /**
      * This variable does not consider user rights, it is checked by ModuleProtocolDto.canBeEdited
      */
@@ -39,8 +41,6 @@ public class ModuleProtocolStudentDto {
         dto.setIdcode(protocolStudent.getStudent().getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
         
-        
-
         if (protocolStudent.getStudent().getJournalStudents() != null) {
             List<JournalStudent> journalStudents = protocolStudent.getStudent().getJournalStudents();
             for (JournalStudent journalStudent : journalStudents) {
@@ -76,6 +76,21 @@ public class ModuleProtocolStudentDto {
             }
             
         }
+        
+        if (protocolStudent.getStudent().getPracticeJournals() != null) {
+            protocolStudent.getStudent().getPracticeJournals().stream()
+                .filter(pj -> EntityUtil.getId(pj.getStudyYear())
+                        .equals(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getStudyYear())))
+                .filter(pj -> EntityUtil.getNullableCode(pj.getGrade()) != null)
+                .filter(pj -> EntityUtil.getId(pj.getModule())
+                        .equals(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule())))
+                .forEach(pj -> dto.getPracticeJournalResults()
+                        .add(new ModuleProtocolPracticeJournalResultDto(pj.getId(), EntityUtil.getCode(pj.getGrade()),
+                                pj.getTheme() != null ? AutocompleteResult.of(pj.getTheme()) : null,
+                                pj.getGradeInserted() != null ? pj.getGradeInserted() : pj.getInserted())));
+        }
+        
+        
         dto.setCanBeDeleted(Boolean.valueOf(ProtocolUtil.studentCanBeDeleted(protocolStudent)));
         return dto;
     }
@@ -134,6 +149,14 @@ public class ModuleProtocolStudentDto {
 
     public void setOutcomeResults(List<ModuleProtocolOutcomeResultDto> outcomeResults) {
         this.outcomeResults = outcomeResults;
+    }
+    
+    public List<ModuleProtocolPracticeJournalResultDto> getPracticeJournalResults() {
+        return practiceJournalResults;
+    }
+
+    public void setPracticeJournalResults(List<ModuleProtocolPracticeJournalResultDto> practiceJournalResults) {
+        this.practiceJournalResults = practiceJournalResults;
     }
 
     public String getStatus() {

@@ -26,6 +26,24 @@ function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthSer
         }
     );
 
+    $scope.$watch('criteria.department', function() {
+        if ($scope.criteria.department && $scope.criteria.curriculum) {
+            var curriculum = $scope.curricula.find(function (it) { return it.id === $scope.criteria.curriculum; });
+            if (curriculum.departments.indexOf($scope.criteria.department) === -1) {
+                $scope.criteria.curriculum = undefined;
+            }
+        }
+    });
+
+    $scope.$watch('criteria.curriculum', function() {
+        if ($scope.criteria.curriculum && $scope.criteria.studentGroup) {
+            var studentGroup = $scope.studentGroups.find(function (it) { return it.id === $scope.criteria.studentGroup; });
+            if (studentGroup.curriculum.id !== $scope.criteria.curriculum) {
+                $scope.criteria.studentGroup = undefined;
+            }
+        }
+    });
+
     $scope.curricula = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/curricula').query();
 
     QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {

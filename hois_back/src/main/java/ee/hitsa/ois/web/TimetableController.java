@@ -32,14 +32,12 @@ import ee.hitsa.ois.web.commandobject.timetable.TimetableEditForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventHigherForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventVocationalForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand;
-import ee.hitsa.ois.web.commandobject.timetable.TimetableTimeOccupiedCommand;
 import ee.hitsa.ois.web.dto.timetable.GroupTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetablePlanDto;
 import ee.hitsa.ois.web.dto.timetable.RoomTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.TeacherTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDatesDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDto;
-import ee.hitsa.ois.web.dto.timetable.TimetableTimeOccupiedDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetablePlanDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
@@ -147,12 +145,6 @@ public class TimetableController {
     public TimetableDto cloneTimetable(HoisUserDetails user, @Valid TimetableCopyForm form) {
         UserUtil.assertIsSchoolAdmin(user);
         return get(timetableService.cloneTimetable(user, form));
-    }
-    
-    @GetMapping("/timetableTimeOccupied")
-    public TimetableTimeOccupiedDto timetableTimeOccupied(HoisUserDetails user, TimetableTimeOccupiedCommand command) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return timetableService.timetableTimeOccupied(command);
     }
 
     @PostMapping("/saveVocationalEventRoomsAndTimes")

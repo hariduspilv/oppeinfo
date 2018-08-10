@@ -200,9 +200,9 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     };
 
     if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      ProtocolUtils.signBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, entityToDto);
+      ProtocolUtils.signBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'moduleProtocol.messages.confirmed',entityToDto);
     } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      ProtocolUtils.mobileSignBeforeConfirm(endpoint  + '/' + $scope.protocol.id, data, entityToDto);
+      ProtocolUtils.mobileSignBeforeConfirm(endpoint  + '/' + $scope.protocol.id, data, 'moduleProtocol.messages.confirmed', entityToDto);
     }
   };
 

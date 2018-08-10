@@ -67,6 +67,10 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
       }
     });
 
+    $scope.orderBySelectedGroup = function (group) {
+      return group.dropdownValue !== $scope.plan.selectedGroup;
+    };
+
     $scope.$watch('plan.selectedWeek', function () {
       setCurrentDatesForTimetable();
       setTimetableForGroups($scope.plan.studentGroups, false);
@@ -122,7 +126,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
       capacity.thisAllocatedLessons = 0;
       return capacity.thisPlannedLessons - capacity.thisAllocatedLessons;
     };
-
+    
     $scope.getRoomCodes = function (rooms) {
       return rooms.map(function (a) {
         return a.nameEt;
@@ -140,6 +144,14 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
         };
       }
       return '';
+    };
+
+    $scope.isUnderAllocatedLessons = function (lessonCapacity) {
+      var totalAllocatedLessons = lessonCapacity.totalAllocatedLessons ? lessonCapacity.totalAllocatedLessons : 0;
+      if (lessonCapacity.totalPlannedLessons >= totalAllocatedLessons) {
+        return true;
+      }
+      return false;
     };
 
     $scope.lessonTimeStyle = function (lessonTime) {
@@ -238,23 +250,43 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
             return filtered;
           }, [])
         };
-        QueryUtils.endpoint(baseUrl + '/saveHigherEventRoomsAndTimes').save(query).$promise.then(function (result) {
-          var changedGroup;
-          if (currentEvent.isSubjectTeacherPair) {
-            changedGroup = result.subjectTeacherPairs.find(function (it) {
-              return it.id === currentEvent.subjectStudyPeriod;
+
+        var occupiedQuery = angular.copy(query);
+        occupiedQuery.timetable = $scope.timetableId;
+        occupiedQuery.rooms = occupiedQuery.rooms.reduce(function (filtered, room) {
+          filtered.push(room.id);
+          return filtered;
+        }, []);
+
+        QueryUtils.endpoint('/timetableevents/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
+          if(result.occupied) {
+            dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
+              saveEventRoomsAndTimes(query, currentEvent);
             });
           } else {
-            changedGroup = result.studentGroups.find(function (it) {
-              return it.id === currentEvent.studentGroup;
-            });
+            saveEventRoomsAndTimes(query, currentEvent);
           }
-          setTimetableForGroups([changedGroup], true);
-          $scope.plan.studentGroupCapacities = result.studentGroupCapacities;
-          checkAndUpdateSelectedTimetable();
         });
       });
     };
+
+    function saveEventRoomsAndTimes(query, currentEvent) {
+      QueryUtils.endpoint(baseUrl + '/saveHigherEventRoomsAndTimes').save(query).$promise.then(function (result) {
+        var changedGroup;
+        if (currentEvent.isSubjectTeacherPair) {
+          changedGroup = result.subjectTeacherPairs.find(function (it) {
+            return it.id === currentEvent.subjectStudyPeriod;
+          });
+        } else {
+          changedGroup = result.studentGroups.find(function (it) {
+            return it.id === currentEvent.studentGroup;
+          });
+        }
+        setTimetableForGroups([changedGroup], true);
+        $scope.plan.studentGroupCapacities = result.studentGroupCapacities;
+        checkAndUpdateSelectedTimetable();
+      });
+    }
 
     /*$scope.saveEvent = function (params) {
 
@@ -301,7 +333,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
         return it.subjectStudyPeriod === Number(params.journalId) && it.capacityType === params.capacityType;
       });
 
-      if (matchingCapacities.length > 1) {
+      if (!isFinite(parseInt(params.oldEventId)) && matchingCapacities.length > 1) {
         dialogService.confirmDialog({
             prompt: 'timetable.timetablePlan.addForOtherGroups',
             accept: 'main.yes',
@@ -320,6 +352,33 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
 
 
     $scope.saveEventAfterCheck = function (params, allGroups, isSubjectTeacherPair, startTime) {
+      var occupiedQuery = {
+        timetable: $scope.timetableId,
+        oldEventId: params.oldEventId,
+        startTime: startTime,
+        subjectStudyPeriod: params.journalId,
+        repeatCode: $scope.plan.repeatCode,
+        lessonAmount: $scope.plan.lessonAmount,
+        room: angular.isDefined($scope.plan.eventRoom) ? $scope.plan.eventRoom.id : null
+      };
+
+      QueryUtils.endpoint('/timetableevents/timetableNewHigherTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
+        if(result.occupied) {
+          dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
+            saveEvent(params, allGroups, isSubjectTeacherPair, startTime);
+          }, function () {
+            // needs TimetablePlanDto to get rid of wrong dragable lesson
+            QueryUtils.endpoint(baseUrl + '/:id/createHigherPlan').search({id: $scope.timetableId}).$promise.then(function (result) {
+              updateChangedGroup(result, allGroups, isSubjectTeacherPair);
+            });
+          });
+        } else {
+          saveEvent(params, allGroups, isSubjectTeacherPair, startTime);
+        }
+      });
+    };
+
+    function saveEvent(params, allGroups, isSubjectTeacherPair, startTime) {
       var query = {
         timetable: $scope.timetableId,
         oldEventId: params.oldEventId,
@@ -335,24 +394,28 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
       };
 
       QueryUtils.endpoint(baseUrl + '/saveHigherEvent').save(query).$promise.then(function (result) {
-        var changedGroup;
-        if (isSubjectTeacherPair) {
-          changedGroup = result.subjectTeacherPairs.find(function (it) {
-            return it.id === Number($scope.plan.selectedGroup.substr(5));
-          });
-        } else {
-          changedGroup = result.studentGroups.find(function (it) {
-            return it.id === Number($scope.plan.selectedGroup.substr(5));
-          });
-        }
-        if (allGroups) {
-          setTimetableForGroups(result.studentGroups, false);
-        }
-        setTimetableForGroups([changedGroup], true);
-        $scope.plan.studentGroupCapacities = result.studentGroupCapacities;
-        checkAndUpdateSelectedTimetable();
+        updateChangedGroup(result, allGroups, isSubjectTeacherPair);
       });
-    };
+    }
+
+    function updateChangedGroup(result, allGroups, isSubjectTeacherPair) {
+      var changedGroup;
+      if (isSubjectTeacherPair) {
+        changedGroup = result.subjectTeacherPairs.find(function (it) {
+          return it.id === Number($scope.plan.selectedGroup.substr(5));
+        });
+      } else {
+        changedGroup = result.studentGroups.find(function (it) {
+          return it.id === Number($scope.plan.selectedGroup.substr(5));
+        });
+      }
+      if (allGroups) {
+        setTimetableForGroups(result.studentGroups, false);
+      }
+      setTimetableForGroups([changedGroup], true);
+      $scope.plan.studentGroupCapacities = result.studentGroupCapacities;
+      checkAndUpdateSelectedTimetable();
+    }
 
     $scope.range = function (count) {
       var array = [];

@@ -39,7 +39,7 @@ public class CurriculumVersionModuleReport {
         requirements = occupationModule.getRequirementsEt();
         objective = Language.EN.equals(lang) ? module.getObjectivesEn() : module.getObjectivesEt();
         outcomes = StreamUtil.toMappedList(o -> Language.EN.equals(lang) ? o.getOutcomeEn() : o.getOutcomeEt(), module.getOutcomes());
-        criterias = occupationModule.getAssessmentMethodsEt();
+        criterias = occupationModule.getAssessmentsEt();
         themes = StreamUtil.toMappedList(t -> new CurriculumVersionModuleThemeReport(t), occupationModule.getThemes());
         independentStudy = occupationModule.getIndependentStudyEt();
         practice = null; //TODO remains empty until someone demands something

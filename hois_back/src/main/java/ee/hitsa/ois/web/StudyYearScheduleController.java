@@ -31,7 +31,7 @@ public class StudyYearScheduleController {
     public StudyYearScheduleDtoContainer getStudyYearSchedules(HoisUserDetails user, @NotNull @Valid @RequestBody StudyYearScheduleDtoContainer schedulesCmd) {
         // user can select school department with no student groups, and it should not cause an error
         if(!CollectionUtils.isEmpty(schedulesCmd.getStudyPeriods())) {
-            schedulesCmd.setStudyYearSchedules(studyYearScheduleService.getSet(user.getSchoolId(), schedulesCmd));
+            schedulesCmd.setStudyYearSchedules(studyYearScheduleService.getSet(user, schedulesCmd));
         }
         return schedulesCmd;
     }
@@ -54,8 +54,8 @@ public class StudyYearScheduleController {
      * should be filtered by school departments in front end
      */
     @GetMapping("/studentGroups")
-    public List<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user) {
-        return studyYearScheduleService.getStudentGroups(user.getSchoolId());
+    public List<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user, Boolean showMine) {
+        return studyYearScheduleService.getStudentGroups(user.getSchoolId(), Boolean.TRUE.equals(showMine) ? user.getStudentId() : null);
     }
 
     @GetMapping("/studyYears")

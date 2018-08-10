@@ -87,6 +87,7 @@ public class SubjectController {
     @GetMapping
     public Page<SubjectSearchDto> search(@Valid SubjectSearchCommand subjectSearchCommand, HoisUserDetails user, Pageable pageable) {
         SubjectUserRights.assertCanSearch(user);
+        subjectSearchCommand.setSchoolId(user.getSchoolId());
         return subjectService.search(user, subjectSearchCommand, pageable);
     }
 

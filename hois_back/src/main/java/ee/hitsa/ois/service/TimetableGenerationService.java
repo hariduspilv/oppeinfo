@@ -319,6 +319,11 @@ public class TimetableGenerationService {
                     .indexOf(lessonTimesMapped.get(event.getStart().getDayOfWeek().name() + event.getLessonNr()));
 
             TimetablePlanExcelCell groupLessons = lessonsByGroups.get(event.getStudentGroup());
+            // events include lessons by studentgroups which lessonplans are not usable, lessonsByGroups do not include those groups
+            if (groupLessons == null) {
+                continue;
+            }
+            
             addEmptyBlocks(groupLessons.getDisplayValues(), index);
             String groupResult = event.getSubjectName();
             
@@ -406,31 +411,38 @@ public class TimetableGenerationService {
                         r -> new TimetableDifferenceExcelDto(resultAsLong(r, 1), resultAsString(r, 2),
                                 resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 5), resultAsLong(r, 6)),
                         Collectors.toList())));
-        List<TimetableDifferenceExcelDto> allDifferences = differencesByWeeks.get(currTimetableId);
-        allDifferences.addAll(differencesByWeeks.get(prevTimetabelId));
-        Map<Long, List<String>> teachersByJournals = getTeachersForJournals(
-                StreamUtil.toMappedSet(TimetableDifferenceExcelDto::getJournalId, allDifferences));
-
+        
         // key = journalId + _ + studentGroupId + _ + capacityType
         Map<String, TimetableDifferenceExcelDto> resultMap = new HashMap<>();
-        for (TimetableDifferenceExcelDto curr : differencesByWeeks.get(currTimetableId)) {
-            curr.setTeacherNames(String.join(", ", teachersByJournals.get(curr.getJournalId())));
-            resultMap.put(curr.getJournalId() + "_" + curr.getStudentGroupId() + "_" + curr.getCapacityType(), curr);
-        }
-        if (differencesByWeeks.get(prevTimetabelId) != null) {
-            for (TimetableDifferenceExcelDto prev : differencesByWeeks.get(prevTimetabelId)) {
-                String currentKey = prev.getJournalId() + "_" + prev.getStudentGroupId() + "_" + prev.getCapacityType();
-                TimetableDifferenceExcelDto resultRow = resultMap.get(currentKey);
-                if (resultRow == null) {
-                    prev.setPreviousWeek(prev.getCurrentWeek());
-                    prev.setDifference(Long.valueOf(0 - prev.getCurrentWeek().longValue()));
-                    prev.setCurrentWeek(Long.valueOf(0));
-                    prev.setTeacherNames(String.join(", ", teachersByJournals.get(prev.getJournalId())));
-                    resultMap.put(currentKey, prev);
-                } else {
-                    resultRow.setPreviousWeek(prev.getCurrentWeek());
-                    resultRow.setDifference(Long
-                            .valueOf(resultRow.getPreviousWeek().longValue() - resultRow.getCurrentWeek().longValue()));
+        
+        if (differencesByWeeks.get(currTimetableId) != null) {
+            List<TimetableDifferenceExcelDto> allDifferences = differencesByWeeks.get(currTimetableId);
+            if (differencesByWeeks.get(prevTimetabelId) != null) {
+                allDifferences.addAll(differencesByWeeks.get(prevTimetabelId));
+            }
+            
+            Map<Long, List<String>> teachersByJournals = getTeachersForJournals(
+                    StreamUtil.toMappedSet(TimetableDifferenceExcelDto::getJournalId, allDifferences));
+            
+            for (TimetableDifferenceExcelDto curr : differencesByWeeks.get(currTimetableId)) {
+                curr.setTeacherNames(String.join(", ", teachersByJournals.get(curr.getJournalId())));
+                resultMap.put(curr.getJournalId() + "_" + curr.getStudentGroupId() + "_" + curr.getCapacityType(), curr);
+            }
+            if (differencesByWeeks.get(prevTimetabelId) != null) {
+                for (TimetableDifferenceExcelDto prev : differencesByWeeks.get(prevTimetabelId)) {
+                    String currentKey = prev.getJournalId() + "_" + prev.getStudentGroupId() + "_" + prev.getCapacityType();
+                    TimetableDifferenceExcelDto resultRow = resultMap.get(currentKey);
+                    if (resultRow == null) {
+                        prev.setPreviousWeek(prev.getCurrentWeek());
+                        prev.setDifference(Long.valueOf(0 - prev.getCurrentWeek().longValue()));
+                        prev.setCurrentWeek(Long.valueOf(0));
+                        prev.setTeacherNames(String.join(", ", teachersByJournals.get(prev.getJournalId())));
+                        resultMap.put(currentKey, prev);
+                    } else {
+                        resultRow.setPreviousWeek(prev.getCurrentWeek());
+                        resultRow.setDifference(Long
+                                .valueOf(resultRow.getPreviousWeek().longValue() - resultRow.getCurrentWeek().longValue()));
+                    }
                 }
             }
         }

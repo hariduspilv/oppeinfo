@@ -83,7 +83,7 @@
                                 <a ng-href="#/subjectStudyPeriod/{{ssp.id}}/edit?studentGroupId={{record.studentGroup}}">{{'main.button.change' | translate}}</a>
                             </td>
                             <td ng-repeat="type in capacityTypes">
-                                <span ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code }">
+                                <span ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code } : true">
                                   <input type="number" ng-model="capacity.hours" min="0" max="1000" aria-label="{{'subjectStudyPeriod.changeLoad' | translate}}" pattern="^\d+$">
                                 </span>
                             </td>

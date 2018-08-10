@@ -1,4 +1,4 @@
-<div layout-padding ng-if="typeId || searchResultEvents">
+<div layout-padding ng-if="shownWeek && (typeId || searchResultEvents)">
     <div layout="row" flex>
         <div layout="row" layout-align="end end" layout-sm="column" layout-xs="column" flex="90" style="margin-left: auto; margin-right: auto;">
             <div ng-repeat="c in capacityTypes" flex-offset="5" class="capacity-type-legend" md-colors="{background: c.color}">
@@ -14,7 +14,7 @@
     </div>
 </div>
 
-<div layout-padding ng-if="typeId || searchResultEvents">
+<div layout-padding ng-if="shownWeek && (typeId || searchResultEvents)">
     <div layout="row" layout-align="center" style="padding: 0px">
         <a ng-if="shownTimetableCurriculum || shownTeacher || shownRoom" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{typeId}}/{{weekIndex}}">
             <span ng-if="shownTimetableCurriculum">{{shownTimetableCurriculum.studentGroupCode}}, {{currentLanguageNameField(shownTimetableCurriculum)}}</span>
@@ -62,7 +62,10 @@
                         <md-tooltip md-direction="bottom" style="margin: -18px; height: auto;">
                             <div ng-if="event.public">{{event.timeStart}}-{{event.timeEnd}} {{currentLanguageNameField(event)}}</div>
                             <div ng-if="!event.public">{{event.timeStart}}-{{event.timeEnd}} {{'timetable.timetableEvent.occupied' | translate}}</div>
-                            <div ng-repeat="room in event.rooms track by $index">{{room.buildingCode}}-{{room.roomCode}}</div>
+                            <div ng-repeat="room in event.rooms track by $index">
+                                <span ng-if="room.buildingCode">{{room.buildingCode}}-{{room.roomCode}}</span>
+                                <span ng-if="!room.buildingCode">{{room.roomCode}}</span>
+                            </div>
                             <div ng-repeat="teacher in event.teachers track by $index">{{teacher.name}}</div>
                             <div ng-repeat="studentGroup in event.studentGroups track by $index">{{studentGroup.code}}</div>
                             <div>{{event.studentGroup}}</div>
@@ -92,13 +95,15 @@
                         </div>
                         <div>
                             <span ng-repeat="teacher in event.teachers track by $index">
-                                <a ng-href="/#/timetable/teacher/{{::schoolId}}/{{teacher.id}}/{{weekIndex}}">{{teacher.name}}</a>
+                                <a ng-if="teacher.id" ng-href="/#/timetable/teacher/{{::schoolId}}/{{teacher.id}}/{{weekIndex}}">{{teacher.name}}</a>
+                                <span ng-if="!teacher.id">{{teacher.name}}</span>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
                         <div>
                             <span ng-repeat="room in event.rooms track by $index">
-                                <a ng-href="/#/timetable/room/{{::schoolId}}/{{room.id}}/{{weekIndex}}">{{room.buildingCode}}-{{room.roomCode}}</a>
+                                <a ng-if="room.id" ng-href="/#/timetable/room/{{::schoolId}}/{{room.id}}/{{weekIndex}}">{{room.buildingCode}}-{{room.roomCode}}</a>
+                                <span ng-if="!room.id">{{room.roomCode}}</span>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
@@ -130,13 +135,15 @@
                         </div>
                         <div>
                             <span ng-repeat="teacher in event.teachers track by $index">
-                                <a ng-href="/#/timetable/teacher/{{::schoolId}}/{{teacher.id}}">{{teacher.name}}</a>
+                                <a ng-if="teacher.id" ng-href="/#/timetable/teacher/{{::schoolId}}/{{teacher.id}}">{{teacher.name}}</a>
+                                <span ng-if="!teacher.id">{{teacher.name}}</span>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
                         <div>
                             <span ng-repeat="room in event.rooms track by $index">
-                                <a ng-href="/#/timetable/room/{{::schoolId}}/{{room.id}}">{{room.buildingCode}}-{{room.roomCode}}</a>
+                                <a ng-if="room.id" ng-href="/#/timetable/room/{{::schoolId}}/{{room.id}}">{{room.buildingCode}}-{{room.roomCode}}</a>
+                                <span ng-if="!room.id">{{room.roomCode}}</span>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>

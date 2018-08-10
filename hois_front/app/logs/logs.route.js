@@ -24,9 +24,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         logType: function() { return 'kutseregister'; }
       },
       data: {
-        authorizedRoles: function(Session, authorizedRoles) {
-          return Session.roleCode === 'ROLL_P' || (authorizedRoles || []).indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER) !== -1;
-        }
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER]
       }
     }).when('/rtip/logs', {
       templateUrl: 'logs/logs.view.html',

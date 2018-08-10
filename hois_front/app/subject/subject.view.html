@@ -79,15 +79,15 @@
       </md-input-container>
       <md-input-container>
         <label>{{'subject.mandatoryPrerequisiteSubjects' | translate}}</label>
-        <hois-value ng-repeat="it in subject.mandatoryPrerequisiteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+it.id"></hois-value>
+        <hois-value ng-repeat="it in subject.mandatoryPrerequisiteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+(isPublic ? 'public/' : '')+it.id"></hois-value>
       </md-input-container>
       <md-input-container>
         <label>{{'subject.recommendedPrerequisiteSubjects' | translate}}</label>
-        <hois-value ng-repeat="it in subject.recommendedPrerequisiteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+it.id"></hois-value>
+        <hois-value ng-repeat="it in subject.recommendedPrerequisiteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+(isPublic ? 'public/' : '')+it.id"></hois-value>
       </md-input-container>
       <md-input-container>
         <label>{{'subject.substituteSubjects' | translate}}</label>
-        <hois-value ng-repeat="it in subject.substituteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+it.id"></hois-value>
+        <hois-value ng-repeat="it in subject.substituteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+(isPublic ? 'public/' : '')+it.id"></hois-value>
       </md-input-container>
       <br>
       <md-input-container flex>
@@ -108,7 +108,7 @@
       </md-input-container>
       <h3>{{'subject.subjectIsPrerequisite' | translate}}</h3>
       <div ng-repeat="row in subject.primarySubjects | orderBy: currentLanguageNameField()">
-        <a ng-href="#/subject/{{row.id}}">{{currentLanguageNameField(row)}}</a>
+        <a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{row.id}}">{{currentLanguageNameField(row)}}</a>
       </div>
       <h3>{{'subject.belongsCurriculum' | translate}}</h3>
       <div ng-repeat="row in subject.curriculumVersions | orderBy: currentLanguageNameField()">

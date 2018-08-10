@@ -91,11 +91,17 @@
             <td md-cell>{{::row.date | hoisDate}}</td>
             <td md-cell>{{::row.timeStart | hoisTime}}-{{::row.timeEnd | hoisTime}}</td>
             <td md-cell><span ng-repeat="teacher in row.teachers">{{::teacher.name}}{{$last ? "" : ", "}}</span></td>
-            <td md-cell><span ng-repeat="room in row.rooms">{{::room.buildingCode}}-{{::room.roomCode}}{{$last ? "" : ", "}}</span></td>
+            <td md-cell>
+              <span ng-repeat="room in row.rooms">
+                <span ng-if="room.id">{{::room.buildingCode}}-{{::room.roomCode}}</span>
+                <span ng-if="!room.id">{{::room.roomCode}}</span>
+                {{$last ? "" : ", "}}
+              </span>
+            </td>
             <td md-cell><span ng-repeat="group in row.studentGroups">{{::group.code}}{{$last ? "" : ", "}}</span></td>
             <td md-cell>{{::row.singleEvent ? "jah" : "ei"}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-if="canEdit && afterNow(row.date, row.timeStart) && allowedToEdit(row.teachers)" ng-href="#/timetable/timetableEvent/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-if="canEdit && afterNow(row.date, row.timeStart) && allowedToEdit(row)" ng-href="#/timetable/timetableEvent/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

@@ -6,9 +6,11 @@ import java.util.stream.Collectors;
 import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.ResultColumnDto;
@@ -20,6 +22,10 @@ public abstract class ReportUtil {
     public static final String KEY_MISSING = "missing";
     public static final String MODULE_TYPE = "KUTSEMOODUL";
     public static final String VOCATIONAL_GRADE = "KUTSEHINDAMINE";
+    
+    public static final List<String> CURRICULUM_MODULE_ORDER = EnumUtil.toNameList(
+            CurriculumModuleType.KUTSEMOODUL_P, CurriculumModuleType.KUTSEMOODUL_Y, 
+            CurriculumModuleType.KUTSEMOODUL_V, CurriculumModuleType.KUTSEMOODUL_L);
 
     public static String valueOrMissing(String value, Language lang) {
         return value != null && !value.isEmpty() ? value : TranslateUtil.translate(KEY_MISSING, lang);

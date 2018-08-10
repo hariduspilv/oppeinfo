@@ -5,6 +5,7 @@ import java.util.Collection;
 
 public class SubjectSearchCommand extends SearchCommand {
 
+    private Long schoolId;
     private Collection<String> languages;
     private Collection<Long> departments;
     private Collection<String> assessments;
@@ -14,6 +15,14 @@ public class SubjectSearchCommand extends SearchCommand {
     private Collection<String> ehisSchools;
     private BigDecimal from;
     private BigDecimal thru;
+
+    public Long getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(Long schoolId) {
+        this.schoolId = schoolId;
+    }
 
     public Collection<String> getEhisSchools() {
         return ehisSchools;

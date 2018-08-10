@@ -17,10 +17,20 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controller: 'SubjectListController',
       controllerAs: 'controller',
       resolve: {
-        translationLoaded: function($translate) { return $translate.onReady(); }
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINE]
+      }
+    })
+    .when('/subject/public', {
+      templateUrl: 'subject/subject.list.html',
+      controller: 'SubjectListController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        params: function () { return { isPublic: true }; }
       }
     })
     .when('/subject/new', {
@@ -56,6 +66,15 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINE]
+      }
+    })
+    .when('/subject/public/:id', {
+      templateUrl: 'subject/subject.view.html',
+      controller: 'SubjectViewController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        params: function () { return { isPublic: true }; }
       }
     });
 }]);

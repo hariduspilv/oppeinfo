@@ -16,6 +16,7 @@ public class SubjectSearchDto {
     private String assessment;
     private Set<String> languages;
     private String status;
+    private AutocompleteResult school;
     private AutocompleteResult schoolDepartment;
     private Boolean canEdit;
 
@@ -87,6 +88,14 @@ public class SubjectSearchDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public AutocompleteResult getSchool() {
+        return school;
+    }
+
+    public void setSchool(AutocompleteResult school) {
+        this.school = school;
     }
 
     public AutocompleteResult getSchoolDepartment() {

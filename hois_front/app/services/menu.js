@@ -641,6 +641,16 @@ angular.module('hitsaOis')
       });
 
       sections.push({
+        name: 'main.menu.studyPreparation.studyYearSchedule.edit',
+        url: "/studyYearSchedule?_menu",
+        type: 'link',
+        icon:"event_available",
+        studyLevel: {
+          vocational: true
+        }
+      });
+
+      sections.push({
         name: 'main.menu.study.label',
         type: 'toggle',
         icon: "work",
@@ -885,6 +895,16 @@ angular.module('hitsaOis')
       });
 
       sections.push({
+        name: 'main.menu.studyPreparation.studyYearSchedule.edit',
+        url: "/studyYearSchedule?_menu",
+        type: 'link',
+        icon:"event_available",
+        studyLevel: {
+          vocational: true
+        }
+      });
+
+      sections.push({
         name: 'main.menu.myStudyInformation.label',
         type: 'toggle',
         icon:"work",
@@ -991,6 +1011,13 @@ angular.module('hitsaOis')
         url: "/teachers?_menu",
         icon: "supervisor_account"
       });
+
+      sections.push({
+        name: 'main.menu.timetableLink.label',
+        type: 'link',
+        url: '/timetables?_menu',
+        icon: "access_time"
+      });
     }
 
     function getParentSections() {
@@ -1030,6 +1057,16 @@ angular.module('hitsaOis')
         type: 'link',
         url: "/academicCalendar",
         icon: "date_range"
+      });
+
+      sections.push({
+        name: 'main.menu.studyPreparation.studyYearSchedule.edit',
+        url: "/studyYearSchedule?_menu",
+        type: 'link',
+        icon:"event_available",
+        studyLevel: {
+          vocational: true
+        }
       });
 
       sections.push({
@@ -1093,10 +1130,23 @@ angular.module('hitsaOis')
       });
 
       sections.push({
-        name: 'main.menu.curriculums.label',
+        name: 'main.menu.curriculum.schoolCurriculums',
         type: 'link',
         url: "/curriculums?_menu",
         icon: "list"
+      });
+      sections.push({
+        name: 'main.menu.curriculum.stateCurriculums',
+        type: 'link',
+        url: "/stateCurriculum/public?_menu",
+        icon: "playlist_add_check",
+      });
+      
+      sections.push({
+        name: 'main.menu.subjects.label',
+        url: "/subject/public?_menu",
+        type: 'link',
+        icon: "subject"
       });
     }
 

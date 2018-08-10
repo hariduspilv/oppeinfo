@@ -15,6 +15,10 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     $scope.criteria = {size: 5, page: 1, order: 'inserted, title, id'};
     $scope.generalmessages = {};
     $scope.loadGeneralMessages = function() {
+      $scope.showGeneralMessages = ['ROLL_P', 'ROLL_V'].indexOf(Session.roleCode) === -1;
+      if(!$scope.showGeneralMessages) {
+          return;
+      }
       var query = QueryUtils.getQueryParams($scope.criteria);
       $scope.generalmessages.$promise = QueryUtils.endpoint('/generalmessages/show').search(query, function(result) {
         $scope.generalmessages.content = result.content;
@@ -119,12 +123,13 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 
     function getStudentInformation() {
       QueryUtils.endpoint('/journals/studentJournalTasks/').search({studentId: Session.studentId}).$promise.then(function (result) {
-        getTodayAndTomorrowDate();
-        console.log(result);
-        sortTasksByDate(result.tasks.reverse());
-        $scope.testTaskTypes = ['SISSEKANNE_H', 'SISSEKANNE_L', 'SISSEKANNE_E', 'SISSEKANNE_I', 'SISSEKANNE_P', 'SISSEKANNE_R'];
+        if (angular.isDefined(result.tasks) && result.tasks.length > 0) {
+          getTodayAndTomorrowDate();
+          sortTasksByDate(result.tasks.reverse());
+        }
       });
 
+      $scope.testTaskTypes = ['SISSEKANNE_H', 'SISSEKANNE_L', 'SISSEKANNE_E', 'SISSEKANNE_I', 'SISSEKANNE_P', 'SISSEKANNE_R'];
       $scope.studentAbsences = QueryUtils.endpoint('/journals/studentJournalAbsences/').query({studentId: Session.studentId});
       $scope.lastResults = QueryUtils.endpoint('/journals/studentJournalLastResults/').query({studentId: Session.studentId});
       $scope.declaration = Session.roleCode === 'ROLL_L' ? undefined : QueryUtils.endpoint('/declarations/current').get();

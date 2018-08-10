@@ -1,7 +1,7 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
     <div layout="column">
       <div layout="row" flex="100" flex-sm="100" flex-xs="100">
-        {{stipend ? 'stipend.annul.stipendStudentList' : 'stipend.annul.grantStudentList' | translate}}
+        {{scholarshipType === 'scholarships' ? 'stipend.annul.stipendStudentList' : 'stipend.annul.grantStudentList' | translate}}
       </div>
     </div>
     <table md-table class="secondary-table">
@@ -28,7 +28,7 @@
     </table>
     <div layout="row" ng-if="rejections.length > 0">
       <md-button class="md-raised md-primary" ng-click="annul()">{{'main.button.annul' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="back('#/scholarships/applications/' + stipend ? 'scholarships' : 'grants')">{{'main.button.back' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="back('#/scholarships/applications/' + scholarshipType)">{{'main.button.back' | translate}}</md-button>
     </div>
   </div>
   

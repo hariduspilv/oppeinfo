@@ -85,7 +85,7 @@
     </thead>
     <tbody md-body>
     <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell><a ng-href="#/stateCurriculum/{{row.id}}/view">{{currentLanguageNameField(row)}}</a></td>
+        <td md-cell><a ng-href="#/stateCurriculum{{isPublic ? '/public' : ''}}/{{row.id}}/view">{{currentLanguageNameField(row)}}</a></td>
         <td md-cell>{{currentLanguageNameField(row.ekrLevel)}}</td>
         <td md-cell>{{row.credits}}</td>
         <td md-cell>{{row.validFrom | hoisDate}}</td>

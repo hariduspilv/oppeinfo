@@ -8,10 +8,10 @@
             <label>{{'studyYear.label' | translate}}</label>
             <hois-select ng-model="criteria.studyYear" values="studyYears" ng-required="auth.isAdmin()"></hois-select>
           </md-input-container>
-          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label>{{'journal.label' | translate}}</label>
-            <hois-select ng-model="criteria.journal" type="journal"></hois-select>
-          </md-input-container>
+          <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <hois-autocomplete label="journal.label" ng-model="criteria.journalObject" method="journals" 
+              additional-query-params="{studyYear: criteria.studyYear}"></hois-autocomplete>
+          </div>
         </div>
 
         <div ng-if="auth.isAdmin()" layout="row" layout-sm="column" layout-xs="column">

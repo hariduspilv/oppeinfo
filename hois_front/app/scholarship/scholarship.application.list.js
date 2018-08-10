@@ -6,6 +6,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     $scope.criteria = {};
     $scope.formState = {};
     $scope.formState.allowedStipendTypes = $route.current.locals.params.allowedStipendTypes;
+    $scope.scholarshipType = $route.current.locals.params.scholarshipType;
     var stipend = $route.current.locals.params.stipend;
     $scope.auth = $route.current.locals.auth;
     $scope.canManage = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS);
@@ -110,7 +111,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     $scope.annul = function () {
       var applications = chosenApplications();
       if (applications.length > 0) {
-        $location.path('/scholarships/applications/annul').search({
+        $location.path('/scholarships/applications/' + $scope.scholarshipType + '/annul').search({
           ids: applications,
           stipend: stipend
         });
@@ -122,7 +123,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     $scope.reject = function () {
       var applications = chosenApplications();
       if (applications.length > 0) {
-        $location.path('/scholarships/applications/reject').search({
+        $location.path('/scholarships/applications/' + $scope.scholarshipType + '/reject').search({
           ids: applications,
           stipend: stipend
         });
@@ -169,8 +170,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
 ]).controller('ScholarshipRejectionController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'ArrayUtils',
   function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, ArrayUtils) {
     var baseUrl = '/scholarships';
-    //if this form is currently being used for stipend or grant
-    $scope.stipend = $route.current.params.stipend;
+    $scope.scholarshipType = $route.current.params.type;
     QueryUtils.endpoint(baseUrl + '/studentProfilesRejection').query({
       id: $route.current.params.ids
     }, function (result) {
@@ -188,7 +188,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
         applications: $scope.rejections
       }, function () {
         message.info('main.messages.update.success');
-        $location.path('/scholarships/applications/' + ($scope.stipend ? 'scholarships' : 'grants'));
+        $location.path('/scholarships/applications/' + $scope.scholarshipType);
       });
     };
 
@@ -197,7 +197,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
         applications: $scope.rejections
       }, function () {
         message.info('main.messages.update.success');
-        $location.path('/scholarships/applications/' + ($scope.stipend ? 'scholarships' : 'grants'));
+        $location.path('/scholarships/applications/' + $scope.scholarshipType);
       });
     };
 

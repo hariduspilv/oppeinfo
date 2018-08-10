@@ -118,7 +118,7 @@
             </md-input-container>
             <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.phone' | translate}}</label>
-              <input ng-model="teacher.phone" name="phone" type="text" required md-maxlength="100">
+              <input ng-model="teacher.phone" name="phone" type="text" md-maxlength="100">
               <div ng-messages="teacherForm.phone.$error">
                 <div ng-message="md-maxlength">
                   {{'main.messages.error.maxlength' | translate}}

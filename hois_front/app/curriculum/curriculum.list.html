@@ -177,6 +177,7 @@
     <tr md-row>
         <th md-column md-order-by="school.{{currentLanguageNameField()}}" ng-if="!auth.school">{{'school.label' | translate}}</th>
         <th md-column md-order-by="{{currentLanguageNameField()}}">{{'curriculum.name' | translate}}</th>
+        <th md-column md-order-by="merCode">{{'curriculum.search.merCode' | translate}}</th>
         <th md-column md-order-by="origStudyLevel.{{currentLanguageNameField()}}">{{'curriculum.studyLevel' | translate}}</th>
         <th md-column md-order-by="credits">
           <span ng-if="school.vocational && school.higher || !school.vocational && !school.higher">{{'curriculum.search.creditsEapEkap' | translate}}</span>
@@ -193,6 +194,7 @@
     <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell ng-if="!auth.school">{{row.school.nameEt}}</td>
         <td md-cell><a href="" ng-click="view(row)">{{currentLanguageNameField(row)}}</a></td>
+        <td md-cell>{{::row.merCode}}</td>
         <td md-cell>{{currentLanguageNameField(row.origStudyLevel)}}</td>
         <td md-cell>{{::row.credits}}</td>
         <td md-cell>{{row.validFrom | hoisDate}}</td>

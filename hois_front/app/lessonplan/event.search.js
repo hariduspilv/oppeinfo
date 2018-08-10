@@ -49,14 +49,22 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       return new Date(dateString + ' ' + time) > new Date();
     };
 
-    $scope.allowedToEdit = function (teachers) {
+    $scope.allowedToEdit = function (event) {
+      if (!event.singleEvent) {
+        return false;
+      }
+
       if ($scope.auth.isAdmin()) {
         return true;
       }
 
       if ($scope.auth.isTeacher()) {
-        for (var i = 0; i < teachers.length; i++) {
-          if (teachers[i].id === $scope.auth.teacher) {
+        if (!event.teachers) {
+          return false;
+        }
+
+        for (var i = 0; i < event.teachers.length; i++) {
+          if (event.teachers[i].id === $scope.auth.teacher) {
             return true;
           }
         }

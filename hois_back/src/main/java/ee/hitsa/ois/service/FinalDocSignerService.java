@@ -32,13 +32,15 @@ public class FinalDocSignerService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from final_doc_signer fds").sort(pageable);
         qb.requiredCriteria("fds.school_id = :schoolId", "schoolId", schoolId);
 
-        return JpaQueryUtil.pagingResult(qb, "fds.id, fds.name, fds.position, fds.is_first, fds.is_valid", em, pageable).map(r -> {
+        return JpaQueryUtil.pagingResult(qb, "fds.id, fds.name, fds.position, fds.position_en, fds.is_first, fds.is_valid", 
+                em, pageable).map(r -> {
             FinalDocSignerDto dto = new FinalDocSignerDto();
             dto.setId(resultAsLong(r, 0));
             dto.setName(resultAsString(r, 1));
             dto.setPosition(resultAsString(r, 2));
-            dto.setIsFirst(resultAsBoolean(r, 3));
-            dto.setIsValid(resultAsBoolean(r, 4));
+            dto.setPositionEn(resultAsString(r, 3));
+            dto.setIsFirst(resultAsBoolean(r, 4));
+            dto.setIsValid(resultAsBoolean(r, 5));
             return dto;
         });
     }
@@ -52,6 +54,7 @@ public class FinalDocSignerService {
     public FinalDocSigner save(FinalDocSigner signer, FinalDocSignerForm form) {
         signer.setName(form.getName());
         signer.setPosition(form.getPosition());
+        signer.setPositionEn(form.getPositionEn());
         signer.setIsFirst(form.getIsFirst());
         signer.setIsValid(form.getIsValid());
         return EntityUtil.save(signer, em);

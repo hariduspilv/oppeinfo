@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.sais.SaisClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
@@ -26,18 +28,24 @@ public class SaisClassifierController {
     @GetMapping
     public Page<SaisClassifierSearchDto> list(SaisClassifierSearchCommand command, Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsMainAdmin(user);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KLASSIFIKAATOR);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_SAIS);
         return saisClassifierService.list(command, pageable);
     }
 
     @GetMapping("/{parentCode}")
     public Page<SaisClassifierSearchDto> search(@Required @PathVariable("parentCode") String parentCode, SaisClassifierSearchCommand command, Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsMainAdmin(user);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KLASSIFIKAATOR);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_SAIS);
         return saisClassifierService.search(parentCode, command, pageable);
     }
 
     @PostMapping("/saisImport")
     public Page<SaisClassifierSearchDto> importFromSais(SaisClassifierSearchCommand command, Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsMainAdmin(user);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KLASSIFIKAATOR);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_SAIS);
         return saisClassifierService.importFromSais(command, pageable, user);
     }
 }

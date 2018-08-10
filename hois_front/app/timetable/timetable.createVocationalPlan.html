@@ -45,36 +45,40 @@
     <div>
       <fieldset tabindex="1">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetablePlan.plannedLessons' | translate}}<span ng-if="plan.selectedGroup"> {{'timetable.timetablePlan.group' | translate}} {{plan.selectedStudentGroupObject.code}}</span></legend>
-        <table md-table class="secondary-table">
-          <thead md-head>
-            <tr md-row>
-              <th title="{{journal.name}}" md-column ng-repeat="journal in plan.currentJournals" ng-if="getByJournal(journal, 'thisPlannedLessons') > 0">
-                {{journal.name.substring(0, 4)}}
-                <br>{{getTotalsByJournal(journal, 'thisPlannedLessons')}}/{{getTotalsByJournal(journal, 'thisPlannedLessons')
-                - getTotalsByJournal(journal, 'lessonsLeft')}} ({{getTotalsByJournal(journal, 'totalPlannedLessons')}}/{{getTotalsByJournal(journal,
-                'totalAllocatedLessons')}})
-              </th>
-            </tr>
-          </thead>
-          <tbody md-body>
-            <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" id="timetable-planned">
-              <td md-cell ng-repeat="capacity in plan.currentCapacitiesGrouped track by $index" id="timetable-planned-column">
-                <div ng-repeat="current in capacity" id="timetable-planned-capacity">
-                  <div ng-if="!plan.displayPeriodLessons" ng-repeat="count in range(current.lessonsLeft)" title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}"
-                    style="background-color: {{getByCapacity(current, 'color')}}" id="{{current.journal}}-{{count}}" ois-drag="true"
-                    journal-id="{{current.journal}}" capacity-type="{{current.capacityType}}" class="timetable-drag">
-                    <span>{{getByCapacity(current, 'name').substring(0, 4)}}/{{getCapacityTypeValue(current.capacityType)}}</span>
+        <md-table-container>
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th title="{{journal.name}}" md-column ng-repeat="journal in plan.currentJournals" ng-if="getByJournal(journal, 'thisPlannedLessons') > 0">
+                  <span ng-style="{'color': isUnderAllocatedLessons(journal) ? 'rgba(0,0,0,0.87)' : 'red'}">
+                    {{journal.name.substring(0, 4)}}
+                    <br>{{getTotalsByJournal(journal, 'thisPlannedLessons')}}/{{getTotalsByJournal(journal, 'thisPlannedLessons')
+                    - getTotalsByJournal(journal, 'lessonsLeft')}} ({{getTotalsByJournal(journal, 'totalPlannedLessons')}}/{{getTotalsByJournal(journal,
+                    'totalAllocatedLessons')}})
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" id="timetable-planned">
+                <td md-cell ng-repeat="capacity in plan.currentCapacitiesGrouped track by $index" id="timetable-planned-column">
+                  <div ng-repeat="current in capacity" class="timetable-planned-capacity">
+                    <div ng-if="!plan.displayPeriodLessons && current.lessonsLeft > 0" title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}"
+                      style="background-color: {{getByCapacity(current, 'color')}}" id="{{current.journal}}-{{count}}" ois-drag="true"
+                      journal-id="{{current.journal}}" capacity-type="{{current.capacityType}}" class="timetable-drag">
+                      <span>{{getByCapacity(current, 'name').substring(0, 4)}}/{{getCapacityTypeValue(current.capacityType)}}</span>
+                    </div>
+                    <div ng-if="plan.displayPeriodLessons && current.totalLessonsLeft > 0" title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}"
+                      style="background-color: {{getByCapacity(current, 'color')}}" id="{{current.journal}}-{{count}}" ois-drag="true"
+                      journal-id="{{current.journal}}" capacity-type="{{current.capacityType}}" class="timetable-drag">
+                      <span>{{getByCapacity(current, 'name').substring(0, 4)}}/{{getCapacityTypeValue(current.capacityType)}}</span>
+                    </div>
                   </div>
-                  <div ng-if="plan.displayPeriodLessons" ng-repeat="count in range(current.totalLessonsLeft)" title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}"
-                    style="background-color: {{getByCapacity(current, 'color')}}" id="{{current.journal}}-{{count}}" ois-drag="true"
-                    journal-id="{{current.journal}}" capacity-type="{{current.capacityType}}" class="timetable-drag">
-                    <span>{{getByCapacity(current, 'name').substring(0, 4)}}/{{getCapacityTypeValue(current.capacityType)}}</span>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
       </fieldset>
     </div>
   </div>
@@ -96,7 +100,7 @@
               <span>{{lessonTime.lessonNr}}</span>
             </td>
           </tr>
-          <tr md-row ng-repeat="group in plan.currentStudentGroups" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-repeat="group in plan.currentStudentGroups | orderBy: orderBySelectedGroup" ng-class-odd="'odd'" ng-class-even="'even'">
             <td>{{group.code}}</td>
             <td ng-repeat="lessonTime in currentLessonTimes track by $index" ng-class="{noLessonTime: lessonTime.noLessons}">
               <span ng-if="!lessonTime.noLessons">

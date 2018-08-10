@@ -19,6 +19,7 @@ public class StudentVocationalResultModuleThemeDto {
     private LocalDate studyYearStartDate;
     private Boolean isApelTransfer;
     private Boolean isFormalLearning;
+    private Boolean isOtherSchool;
     
     public AutocompleteResult getModule() {
         return module;
@@ -98,6 +99,14 @@ public class StudentVocationalResultModuleThemeDto {
 
     public void setIsFormalLearning(Boolean isFormalLearning) {
         this.isFormalLearning = isFormalLearning;
+    }
+
+    public Boolean getIsOtherSchool() {
+        return isOtherSchool;
+    }
+
+    public void setIsOtherSchool(Boolean isOtherSchool) {
+        this.isOtherSchool = isOtherSchool;
     }
     
 }

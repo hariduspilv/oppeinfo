@@ -1,13 +1,14 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalListController', function ($scope, $route, $location, QueryUtils, dialogService, ArrayUtils, USER_ROLES) {
+angular.module('hitsaOis').controller('PracticeJournalListController', function ($scope, $route, $location, $q, QueryUtils, dialogService, ArrayUtils, USER_ROLES, Classifier) {
   $scope.auth = $route.current.locals.auth;
-  QueryUtils.createQueryForm($scope, '/practiceJournals', {order: 'student_person.lastname,student_person.firstname'});
+  var clMapper = Classifier.valuemapper({status: 'PAEVIK_STAATUS'});
+  QueryUtils.createQueryForm($scope, '/practiceJournals', {order: 'student_person.lastname,student_person.firstname'}, clMapper.objectmapper);
   
   var unbindStudyYearWatch = $scope.$watch('criteria.studyYear', function(value) {
     if (angular.isNumber(value)) {
       unbindStudyYearWatch();
-      $scope.loadData();
+      $q.all(clMapper.promises).then($scope.loadData);
     }
   });
 

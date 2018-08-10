@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -143,7 +144,7 @@ public class ScholarshipController {
     @GetMapping("/application/{id:\\d+}")
     public Map<String, Object> getStudentApplication(HoisUserDetails user,
             @WithEntity ScholarshipApplication application) {
-        UserUtil.assertIsSchoolAdminOrStudent(user, application.getScholarshipTerm().getSchool());
+        assertCanViewApplication(user, application);
         return scholarshipService.getApplicationView(user, application);
     }
 
@@ -215,16 +216,18 @@ public class ScholarshipController {
         return scholarshipService.studentDrGrants(user.getStudentId());
     }
 
-    @SuppressWarnings("unused")
-    private static void assertCanSeeApplication(HoisUserDetails user, ScholarshipApplication application) {
-        if (user.getStudentId() != null) {
-            AssertionFailedException.throwIf(
-                    user.getStudentId().longValue() != EntityUtil.getId(application.getStudent()).longValue(),
-                    "Invalid student");
+    private static void assertCanViewApplication(HoisUserDetails user, ScholarshipApplication application) {
+        if (user.isStudent()) {
+            UserUtil.throwAccessDeniedIf(!user.getStudentId().equals(EntityUtil.getId(application.getStudent())), 
+                    "User student does not match application student");
+        } else if (user.isSchoolAdmin()) {
+            UserUtil.throwAccessDeniedIf(!user.getSchoolId().equals(EntityUtil.getId(application.getScholarshipTerm().getSchool())), 
+                    "User school does not match application scholarship term school");
+        } else if (user.isTeacher()) {
+            UserUtil.throwAccessDeniedIf(!user.getTeacherId().equals(EntityUtil.getNullableId(application.getStudentGroup().getTeacher())), 
+                    "User teacher does not match application student group teacher");
         } else {
-            AssertionFailedException.throwIf(
-                    user.getSchoolId().longValue() != EntityUtil.getId(application.getScholarshipTerm().getSchool()).longValue(),
-                    "Invalid school");
+            throw new AccessDeniedException("User is not application student or school admin or application student group teacher");
         }
     }
     

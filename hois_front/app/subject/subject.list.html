@@ -4,6 +4,12 @@
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
     <form ng-submit="loadData()" novalidate>
       <div layout="column">
+        <div layout="row" ng-if="isPublic">
+          <md-input-container flex>
+            <label>{{'school.label' | translate}}</label>
+            <hois-select ng-model="criteria.schoolId" type="school"></hois-select>
+          </md-input-container>
+        </div>
         <div layout="row">
           <md-input-container flex>
             <label class="textInput">{{'subject.name' | translate}}</label>
@@ -92,6 +98,7 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
+          <th md-column md-order-by="{{'school.'+currentLanguageNameField()}}" ng-if="isPublic"><span>{{'school.label' | translate}}</span></th>
           <th md-column md-order-by="{{currentLanguageNameField()}}"><span>{{'subject.name' | translate}}</span></th>
           <th md-column md-order-by="code"><span>{{'subject.code' | translate}}</span></th>
           <th md-column md-order-by="credits"><span>{{'subject.creditsEap' | translate}}</span></th>
@@ -104,7 +111,8 @@
         </thead>
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell><a ng-href="#/subject/{{::row.id}}">{{currentLanguageNameField(row)}}</a></td>
+          <td md-cell ng-if="isPublic">{{currentLanguageNameField(row.school)}}</td>
+          <td md-cell><a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{::row.id}}">{{currentLanguageNameField(row)}}</a></td>
           <td md-cell>{{::row.code}}</td>
           <td md-cell>{{::row.credits}}</td>
           <td md-cell>{{currentLanguageNameField(row.assessment)}}</td>

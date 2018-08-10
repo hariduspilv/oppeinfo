@@ -1,6 +1,11 @@
 'use strict';
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
+
+  function isStudentGroupTeacher(Session) {
+    return angular.isArray(Session.teacherGroupIds) && Session.teacherGroupIds.length > 0;
+  }
+
   $routeProvider
     .when('/scholarships/grant/new', {
       templateUrl: 'scholarship/scholarship.edit.html',
@@ -247,14 +252,15 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         params: function () {
           return {
             allowedStipendTypes: ['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'],
-            stipend: false
+            stipend: false,
+            scholarshipType: "grants"
           };
         }
       },
       data: {
         authorizedRoles: function(Session) {
           return Session.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1 || 
-            (angular.isArray(Session.teacherGroupIds) && Session.teacherGroupIds.length > 0);
+            isStudentGroupTeacher(Session);
         }
       }
     })
@@ -271,7 +277,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         params: function () {
           return {
-            allowedStipendTypes: ['STIPTOETUS_DOKTOR']
+            allowedStipendTypes: ['STIPTOETUS_DOKTOR'],
+            scholarshipType: "drGrants"
           };
         }
       },
@@ -293,7 +300,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         params: function () {
           return {
             allowedStipendTypes: ['STIPTOETUS_TULEMUS', 'STIPTOETUS_ERIALA', 'STIPTOETUS_MUU'],
-            stipend: true
+            stipend: true,
+            scholarshipType: "scholarships"
           };
         }
       },
@@ -301,7 +309,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
       }
     })
-    .when('/scholarships/applications/annul', {
+    .when('/scholarships/applications/:type/annul', {
       templateUrl: 'scholarship/scholarship.application.annul.edit.html',
       controller: 'ScholarshipRejectionController',
       controllerAs: 'controller',
@@ -322,7 +330,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
       }
     })
-    .when('/scholarships/applications/reject', {
+    .when('/scholarships/applications/:type/reject', {
       templateUrl: 'scholarship/scholarship.application.reject.edit.html',
       controller: 'ScholarshipRejectionController',
       controllerAs: 'controller',

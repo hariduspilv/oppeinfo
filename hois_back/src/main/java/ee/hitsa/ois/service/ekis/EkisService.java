@@ -282,44 +282,46 @@ public class EkisService {
 
         content.setFirstName(person.getFirstname());
         content.setLastName(person.getLastname());
-        if (Boolean.TRUE.equals(student.getIsRepresentativeMandatory()) || !PersonUtil.isAdult(person)) {
-            List<StudentRepresentative> representatives = student.getRepresentatives();
-            if (representatives != null) {
-                representatives.stream()
-                .filter(r -> Boolean.TRUE.equals(r.getIsStudentVisible()))
-                .sorted(Comparator.comparing(r -> EntityUtil.getCode(r.getRelation()), Comparator.reverseOrder()))
-                .findFirst().ifPresent(r -> {
-                    Person representative = r.getPerson();
-                    content.setReprFirstName(representative.getFirstname());
-                    content.setReprLastName(representative.getLastname());
-                });
+        if (student != null) {
+            if (Boolean.TRUE.equals(student.getIsRepresentativeMandatory()) || !PersonUtil.isAdult(person)) {
+                List<StudentRepresentative> representatives = student.getRepresentatives();
+                if (representatives != null) {
+                    representatives.stream()
+                    .filter(r -> Boolean.TRUE.equals(r.getIsStudentVisible()))
+                    .sorted(Comparator.comparing(r -> EntityUtil.getCode(r.getRelation()), Comparator.reverseOrder()))
+                    .findFirst().ifPresent(r -> {
+                        Person representative = r.getPerson();
+                        content.setReprFirstName(representative.getFirstname());
+                        content.setReprLastName(representative.getLastname());
+                    });
+                }
             }
-        }
-        content.setCurricula(curriculum(student));
-        CurriculumVersion curriculumVersion = student.getCurriculumVersion();
-        if (curriculumVersion != null) {
-            Curriculum curriculum = curriculumVersion.getCurriculum();
-            content.setCurriculaMerCode(curriculum.getMerCode());
-            content.setStudyLevel(name(curriculum.getOrigStudyLevel()));
-            content.setCurriculaStudyPeriod(intValue(curriculum.getStudyPeriod()));
-            content.setForm(name(student.getStudyForm()));
-        }
-        StudentGroup studentGroup = ds.getStudentGroup();
-        if (studentGroup == null) {
-            studentGroup = student.getStudentGroup();
-        }
-        if (studentGroup != null) {
-            content.setGroup(studentGroup.getCode());
-            content.setCourse(intValue(studentGroup.getCourse()));
-            Teacher groupTeacher = studentGroup.getTeacher();
-            if (groupTeacher != null) {
-                Person teacher = groupTeacher.getPerson();
-                content.setTeacherFirstName(teacher.getFirstname());
-                content.setTeacherLastName(teacher.getLastname());
+            content.setCurricula(curriculum(student));
+            CurriculumVersion curriculumVersion = student.getCurriculumVersion();
+            if (curriculumVersion != null) {
+                Curriculum curriculum = curriculumVersion.getCurriculum();
+                content.setCurriculaMerCode(curriculum.getMerCode());
+                content.setStudyLevel(name(curriculum.getOrigStudyLevel()));
+                content.setCurriculaStudyPeriod(intValue(curriculum.getStudyPeriod()));
+                content.setForm(name(student.getStudyForm()));
             }
+            StudentGroup studentGroup = ds.getStudentGroup();
+            if (studentGroup == null) {
+                studentGroup = student.getStudentGroup();
+            }
+            if (studentGroup != null) {
+                content.setGroup(studentGroup.getCode());
+                content.setCourse(intValue(studentGroup.getCourse()));
+                Teacher groupTeacher = studentGroup.getTeacher();
+                if (groupTeacher != null) {
+                    Person teacher = groupTeacher.getPerson();
+                    content.setTeacherFirstName(teacher.getFirstname());
+                    content.setTeacherLastName(teacher.getLastname());
+                }
+            }
+            content.setFinsource(name(student.getFin()));
+            content.setLang(name(student.getLanguage()));
         }
-        content.setFinsource(name(student.getFin()));
-        content.setLang(name(student.getLanguage()));
         switch(directiveType) {
         case KASKKIRI_AKAD:
             content.setStartDate(periodStart(ds));

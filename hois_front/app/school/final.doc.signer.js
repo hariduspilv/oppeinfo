@@ -5,8 +5,8 @@ angular.module('hitsaOis').controller('FinalDocSignerEditController', ['$locatio
   function ($location, $route, $scope, dialogService, message, QueryUtils, FormUtils, USER_ROLES) {
     var id = $route.current.params.id;
     var baseUrl = '/school/finaldocsigners';
-    var auth = $route.current.locals.auth;
-    $scope.canEdit = auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LOPDOKALLKIRI) !== -1;
+    $scope.auth = $route.current.locals.auth;
+    $scope.canEdit = $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LOPDOKALLKIRI) !== -1;
     var Endpoint = QueryUtils.endpoint(baseUrl);
     if (id) {
       $scope.record = Endpoint.get({id: id});

@@ -5,12 +5,13 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,8 +32,13 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodExam;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherAbsence;
+import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.domain.timetable.LessonTime;
+import ee.hitsa.ois.domain.timetable.Timetable;
 import ee.hitsa.ois.domain.timetable.TimetableEvent;
 import ee.hitsa.ois.domain.timetable.TimetableEventRoom;
 import ee.hitsa.ois.domain.timetable.TimetableEventTeacher;
@@ -51,7 +59,10 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventSearchCommand;
+import ee.hitsa.ois.web.commandobject.timetable.TimetableNewHigherTimeOccupiedCommand;
+import ee.hitsa.ois.web.commandobject.timetable.TimetableNewVocationalTimeOccupiedCommand;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableSingleEventForm;
+import ee.hitsa.ois.web.commandobject.timetable.TimetableTimeOccupiedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.timetable.GeneralTimetableCurriculumDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByGroupDto;
@@ -63,10 +74,12 @@ import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchGroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchRoomDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchTeacherDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableTimeOccupiedDto;
 
 @Transactional
 @Service
 public class TimetableEventService {
+    private static final long LESSON_LENGTH = 45;
 
     @Autowired
     private AutocompleteService autocompleteService;
@@ -157,6 +170,7 @@ public class TimetableEventService {
                     ter.setTimetableEventTime(timetableEventTime);
                     return ter;
                 });
+        timetableEventTime.setOtherRoom(form.getOtherRoom());
     }
 
     private void bindTeachersToTimetableEvent(TimetableEventTime timetableEventTime, TimetableSingleEventForm form) {
@@ -167,6 +181,7 @@ public class TimetableEventService {
                     tet.setTimetableEventTime(timetableEventTime);
                     return tet;
                 });
+        timetableEventTime.setOtherTeacher(form.getOtherTeacher());
     }
     
     private void addTimetableEventTimes(TimetableEvent te, TimetableSingleEventForm form) {
@@ -278,15 +293,17 @@ public class TimetableEventService {
         return new TimetableByRoomDto(getStudyPeriods(schoolId, command.getFrom(), command.getThru()), eventResultList, resultAsLong(room, 0), resultAsString(room, 1), resultAsString(room, 2));
     }
     
-    private static List<TimetableEventSearchDto> filterTimetableSingleEvents(List<TimetableEventSearchDto> events) {
+    private List<TimetableEventSearchDto> filterTimetableSingleEvents(List<TimetableEventSearchDto> events) {
         List<TimetableEventSearchDto> filteredEvents = events;
         
         HoisUserDetails user = TimetableService.userFromPrincipal();
         if(user != null) {
-            if (!user.isSchoolAdmin() && !user.isTeacher()) {
+            if (!user.isSchoolAdmin() && !user.isTeacher() && !user.isStudent()) {
                 filteredEvents = hideSingleEventsData(events);
             } else if (user.isTeacher()) {
                 filteredEvents = hideOtherTeachersSingleEventsData(events, user.getTeacherId());
+            } else if (user.isStudent()) {
+                filteredEvents = hideNonStudentExamSingleEventsData(events, user.getStudentId());
             }
         } else {
             filteredEvents = hideSingleEventsData(events);
@@ -309,6 +326,25 @@ public class TimetableEventService {
                 hideSingleEventData(event);
             }
         }
+        return events;
+    }
+    
+    private List<TimetableEventSearchDto> hideNonStudentExamSingleEventsData(List<TimetableEventSearchDto> events, Long studentId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_exam spe "
+                + "join subject_study_period_exam_student spes on spes.subject_study_period_exam_id = spe.id "
+                + "join declaration_subject ds on spes.declaration_subject_id = ds.id "
+                + "join declaration d on ds.declaration_id = d.id");
+        qb.requiredCriteria("d.student_id = :studentId", "studentId", studentId);
+        
+        List<?> data = qb.select("spe.subject_study_period_id", em).getResultList();
+        List<Long> examSubjectStudyPeriods = StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
+        
+        for (TimetableEventSearchDto event : events) {
+            if (Boolean.TRUE.equals(event.getSingleEvent()) && !examSubjectStudyPeriods.contains(event.getSubjectStudyPeriodId())) {
+                hideSingleEventData(event);
+            }
+        }
+        
         return events;
     }
     
@@ -544,7 +580,20 @@ public class TimetableEventService {
         List<ResultObject> resultObjects = StreamUtil.toMappedList(
                 r -> new ResultObject(resultAsLong(r, 0), resultAsLong(r, 1), PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3))),
                 queryResult);
+        setOtherTeachersByTimetableEventTime(tetIds, resultObjects);
         return resultObjects.stream().collect(Collectors.groupingBy(r -> r.getTimetableEventId()));
+    }
+    
+    private void setOtherTeachersByTimetableEventTime(List<Long> tetIds, List<ResultObject> resultObjects) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event_time tem");
+        qb.requiredCriteria("tem.id in (:tetIds)", "tetIds", tetIds);
+        qb.filter("tem.other_teacher is not null");
+        
+        List<?> queryResult = qb.select("distinct tem.id, tem.other_teacher", em).getResultList();
+        List<ResultObject> otherTeacherResultObjects = StreamUtil.toMappedList(
+                r -> new ResultObject(resultAsLong(r, 0), null, resultAsString(r, 1)),
+                queryResult);
+        resultObjects.addAll(otherTeacherResultObjects);
     }
 
     private Map<Long, List<ResultObject>> getRoomsByTimetableEventTime(List<Long> tetIds) {
@@ -561,7 +610,20 @@ public class TimetableEventService {
         
         List<ResultObject> resultObjects = StreamUtil
                 .toMappedList(r -> new ResultObject(resultAsLong(r, 0), resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 3)), queryResult);
+        setOtherRoomsByTimetableEventTime(tetIds, resultObjects);
         return resultObjects.stream().collect(Collectors.groupingBy(r -> r.getTimetableEventId()));
+    }
+    
+    private void setOtherRoomsByTimetableEventTime(List<Long> tetIds, List<ResultObject> resultObjects) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event_time tem");
+        qb.requiredCriteria("tem.id in (:tetIds)", "tetIds", tetIds);
+        qb.filter("tem.other_room is not null");
+        
+        List<?> queryResult = qb.select("distinct tem.id, tem.other_room", em).getResultList();
+        List<ResultObject> otherRoomResultObjects = StreamUtil.toMappedList(
+                r -> new ResultObject(resultAsLong(r, 0), null, resultAsString(r, 1)),
+                queryResult);
+        resultObjects.addAll(otherRoomResultObjects);
     }
     
     private Map<Long, List<ResultObject>> getGroupsByTimetableEventTime(List<Long> tetIds) {
@@ -714,9 +776,7 @@ public class TimetableEventService {
         }
     }
     
-    public void isAdminOrIsTeachersEvent(HoisUserDetails user, Long schoolId, List<AutocompleteResult> teachers) {
-        List<Long> teacherIds = StreamUtil.toMappedList(t -> t.getId(), teachers);
-        
+    public void isAdminOrIsTeachersEvent(HoisUserDetails user, Long schoolId, List<Long> teacherIds) {
         if (!UserUtil.isSchoolAdmin(user, em.getReference(School.class, schoolId)) && !isTeachersEvent(user, teacherIds)) {
             throw new AssertionFailedException("User is not school admin in given school or it is not teacher's event");
         }
@@ -737,8 +797,8 @@ public class TimetableEventService {
     }
     
 
-    public TimetableSingleEventForm getTimetableSingleEventForm(TimetableEvent createEvent) {
-        return TimetableSingleEventForm.of(createEvent.getTimetableEventTimes().stream().sorted(Comparator.comparing(TimetableEventTime::getStart)).findFirst());
+    public TimetableSingleEventForm getTimetableSingleEventForm(Long timetableEventTime) {
+        return TimetableSingleEventForm.of(em.getReference(TimetableEventTime.class, timetableEventTime));
     }
 
     public void delete(HoisUserDetails user, TimetableEventTime timetableEventTime) {
@@ -749,5 +809,154 @@ public class TimetableEventService {
         if(te.getTimetableEventTimes().isEmpty()) {
             EntityUtil.deleteEntity(te, em);
         }
+    }
+    
+    public TimetableTimeOccupiedDto timetableTimeOccupied(TimetableNewVocationalTimeOccupiedCommand command) {
+        if (command.getOldEventId() != null) {
+            TimetableEventTime eventTime = em.getReference(TimetableEventTime.class, command.getOldEventId());
+            List<TimetableEventTime> eventTimes = eventTime.getTimetableEvent().getTimetableEventTimes();
+
+            Timetable timetable = em.getReference(Timetable.class, command.getTimetable());
+            LessonTime lessonTime = em.getReference(LessonTime.class,command.getLessonTime());
+            LocalDate start = command.getSelectedDay().equals(timetable.getStartDate().getDayOfWeek())
+                    ? timetable.getStartDate()
+                    : timetable.getStartDate().with(TemporalAdjusters.next(command.getSelectedDay()));
+            
+            List<Long> teachers = StreamUtil.toMappedList(t -> EntityUtil.getId(t.getTeacher()), eventTimes.get(0).getTimetableEventTeachers());
+            List<Long> rooms = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getRoom()), eventTimes.get(0).getTimetableEventRooms());
+                    
+            return timetableTimeOccupied(Arrays.asList(start.atTime(lessonTime.getStartTime())), Arrays.asList(start.atTime(lessonTime.getEndTime())), teachers, rooms, StreamUtil.toMappedList(et -> EntityUtil.getId(et), eventTimes));
+        }
+        Journal journal = em.getReference(Journal.class, command.getJournal());
+        Timetable timetable = em.getReference(Timetable.class, command.getTimetable());
+        LessonTime lessonTime = em.getReference(LessonTime.class,command.getLessonTime());
+        LocalDate start = command.getSelectedDay().equals(timetable.getStartDate().getDayOfWeek())
+                ? timetable.getStartDate()
+                : timetable.getStartDate().with(TemporalAdjusters.next(command.getSelectedDay()));
+        List<Long> teachers = StreamUtil.toMappedList(it -> EntityUtil.getId(it.getTeacher()), journal.getJournalTeachers());
+        List<Long> rooms = StreamUtil.toMappedList(it -> EntityUtil.getId(it.getRoom()), journal.getJournalRooms());
+        
+        return timetableTimeOccupied(Arrays.asList(start.atTime(lessonTime.getStartTime())),
+                Arrays.asList(start.atTime(lessonTime.getEndTime())), teachers, rooms, null);
+    }
+    
+    public TimetableTimeOccupiedDto timetableTimeOccupied(TimetableNewHigherTimeOccupiedCommand command) {
+        SubjectStudyPeriod subjectStudyPeriod = em.getReference(SubjectStudyPeriod.class, command.getSubjectStudyPeriod());
+        
+        List<LocalDateTime> starts = new ArrayList<>();
+        List<LocalDateTime> ends = new ArrayList<>();
+        starts.add(command.getStartTime());
+        
+        List<Long> teachers = StreamUtil.toMappedList(it -> EntityUtil.getId(it.getTeacher()), subjectStudyPeriod.getTeachers());
+        List<Long> rooms = new ArrayList<>();
+        
+        if (command.getRoom() != null) {
+            rooms.add(command.getRoom());
+        }
+        
+        if (command.getOldEventId() != null) {
+            TimetableEventTime eventTime = em.getReference(TimetableEventTime.class, command.getOldEventId());
+            LocalDateTime end = command.getStartTime().plus(Duration.between(eventTime.getStart(), eventTime.getEnd()));
+            ends.add(end);
+            
+            rooms = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getRoom()), eventTime.getTimetableEventRooms());
+        } else if (command.getLessonAmount() != null) {
+            ends.add(command.getStartTime().plusMinutes(LESSON_LENGTH * command.getLessonAmount().longValue()));
+        }
+        autocompleteService.eventRepeatStartAndEndTimes(command.getTimetable(), command.getRepeatCode(), starts, ends);
+        
+        return timetableTimeOccupied(starts, ends, teachers, rooms, null);
+    }
+    
+    public TimetableTimeOccupiedDto timetableTimeOccupied(TimetableTimeOccupiedCommand command) {
+        List<LocalDateTime> starts = new ArrayList<>();
+        List<LocalDateTime> ends = new ArrayList<>();
+        starts.add(command.getStartTime());
+        ends.add(command.getEndTime());
+        
+        if (command.getRepeatCode() != null) {
+            if (command.getWeekAmount() != null) {
+                autocompleteService.eventRepeatStartAndEndTimes(command.getRepeatCode(), command.getWeekAmount(), starts, ends);
+            } else if (command.getTimetable() != null) {
+                autocompleteService.eventRepeatStartAndEndTimes(command.getTimetable(), command.getRepeatCode(), starts, ends);
+            }
+            
+        }
+        
+        SubjectStudyPeriod ssp = command.getSubjectStudyPeriod() != null
+                ? em.getReference(SubjectStudyPeriod.class, command.getSubjectStudyPeriod())
+                : null;
+        List<Long> teachers = ssp != null
+                ? StreamUtil.toMappedList(sspt -> EntityUtil.getId(sspt.getTeacher()), ssp.getTeachers())
+                : command.getTeachers();
+                
+        List<Long> timetableEventTimeIds = new ArrayList<>();
+        if (command.getTimetableEventId() != null) {
+            TimetableEventTime eventTime = em.getReference(TimetableEventTime.class, command.getTimetableEventId());
+            timetableEventTimeIds.addAll(StreamUtil.toMappedList(et -> EntityUtil.getId(et),
+                    eventTime.getTimetableEvent().getTimetableEventTimes()));
+        }
+        if (command.getExam() != null) {
+            SubjectStudyPeriodExam exam = em.getReference(SubjectStudyPeriodExam.class, command.getExam());
+            timetableEventTimeIds.add(EntityUtil.getId(exam.getTimetableEvent().getTimetableEventTimes().get(0)));
+        }
+        
+        return timetableTimeOccupied(starts, ends, teachers, command.getRooms(), timetableEventTimeIds);
+    }
+    
+    private TimetableTimeOccupiedDto timetableTimeOccupied(List<LocalDateTime> starts, List<LocalDateTime> ends,
+            List<Long> teachers, List<Long> rooms, List<Long> timetableEventTimeIds) {
+        TimetableTimeOccupiedDto dto = new TimetableTimeOccupiedDto();
+        dto.setOccupied(Boolean.FALSE);
+        
+        if (CollectionUtils.isEmpty(teachers) && CollectionUtils.isEmpty(rooms)) {
+            return dto;
+        }
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event te " + 
+                "join timetable_event_time tet on te.id = tet.timetable_event_id " + 
+                "left join timetable_event_teacher tett on tet.id = tett.timetable_event_time_id " +
+                "left join teacher t on tett.teacher_id = t.id " +
+                "left join person p on t.person_id = p.id " +
+                "left join timetable_event_room ter on tet.id = ter.timetable_event_time_id " +
+                "left join room r on ter.room_id = r.id");
+        
+        qb.optionalCriteria("tet.id not in (:currentEventTimeIds)", "currentEventTimeIds", timetableEventTimeIds);
+        
+        if (!starts.isEmpty() && !ends.isEmpty()) {
+            String timeFilter = "";
+            for (int i = 0; i < starts.size(); i++) {
+                timeFilter += timeFilter.isEmpty() ? "(" : " or ";
+                timeFilter += "(tet.start < '" + JpaQueryUtil.parameterAsTimestamp(ends.get(i)) + "' and tet.end > '"
+                        + JpaQueryUtil.parameterAsTimestamp(starts.get(i)) + "')";
+            }
+            timeFilter += ")";
+            qb.filter(timeFilter);
+        }
+        
+        if (!CollectionUtils.isEmpty(teachers) && !CollectionUtils.isEmpty(rooms)) {
+            qb.filter("(tett.teacher_id in (" + StringUtils.join(teachers, ", ") + ")"
+                    + " or ter.room_id in (" + StringUtils.join(rooms, ", ") + "))");
+        } else {
+            qb.optionalCriteria("tett.teacher_id in (:teacherIds)", "teacherIds", teachers);
+            qb.optionalCriteria("ter.room_id in (:roomIds)", "roomIds", rooms);
+        }
+        
+        List<?> data = qb.select("tet.id, tett.teacher_id, p.firstname, p.lastname, ter.room_id, r.code", em).getResultList();
+        if (!data.isEmpty()) {
+            dto.setOccupied(Boolean.TRUE);
+            if (!CollectionUtils.isEmpty(teachers)) {
+                dto.setTeachers(StreamUtil.toMappedSet(
+                        r -> new AutocompleteResult(resultAsLong(r, 1),
+                                PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)),
+                                PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3))),
+                        StreamUtil.toFilteredList(r -> resultAsLong(r, 1) != null && teachers.contains(resultAsLong(r, 1)), data)));
+            }
+            if (!CollectionUtils.isEmpty(rooms)) {
+                dto.setRooms(StreamUtil.toMappedSet(r -> resultAsString(r, 5), StreamUtil
+                        .toFilteredList(r -> resultAsLong(r, 4) != null && rooms.contains(resultAsLong(r, 4)), data)));
+            }
+        }
+        return dto; 
     }
 }

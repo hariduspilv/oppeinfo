@@ -34,7 +34,6 @@
           <tr md-row>
             <th md-column md-order-by="person.lastname,person.firstname">{{'subjectStudyPeriod.teacher' | translate}}</th>
             <th md-column>{{'subjectStudyPeriod.hoursTotal' | translate}}</th>
-            <th md-column>{{'subjectStudyPeriod.linkToTimetable' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
@@ -42,9 +41,6 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell><a ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{criteria.studyPeriod}}/view">{{row.name}}</a></td>
             <td md-cell>{{row.hours}}</td>
-            <td md-cell>
-                <a href="#/timetable/teacher/{{schoolId}}/{{row.id}}/">{{'subjectStudyPeriod.timetable' | translate}}</a>
-              </td>
             <td md-cell>
                 <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}
                     </md-button></td>

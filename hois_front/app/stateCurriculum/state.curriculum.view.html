@@ -298,7 +298,7 @@
             <tr md-row ng-repeat="curriculum in stateCurriculum.curricula | orderBy: currentLanguageNameField()" ng-class-odd="'odd'"
               ng-class-even="'even'">
               <td md-cell>{{currentLanguageNameField(curriculum.school)}}</td>
-              <td md-cell><a class="md-primary" ng-href="#/vocationalCurriculum/{{curriculum.id}}/view">{{currentLanguageNameField(curriculum)}}</a></td>
+              <td md-cell><a class="md-primary" ng-href="{{getCurriculumViewUrl(curriculum.id)}}">{{currentLanguageNameField(curriculum)}}</a></td>
               <td md-cell>
                 <hois-classifier-value ng-model="curriculum.origStudyLevel" main-classifier-codes="OPPEASTE,EKR"></hois-classifier-value>
               </td>
@@ -329,7 +329,7 @@
             {{'stateCurriculum.statusButton.close' | translate}}
           </md-button>
         </div>
-      <a href="{{formState.stateCurriculumPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="stateCurriculum.id">{{'main.button.print' | translate}}</a>
+      <a href="{{formState.stateCurriculumPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="stateCurriculum.id && !isPublic">{{'main.button.print' | translate}}</a>
       <md-button ng-click="back('#/stateCurriculum')" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
   </div>

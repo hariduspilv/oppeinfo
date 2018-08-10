@@ -220,7 +220,7 @@ public class RtipService {
                     Person person = teacher.getPerson();
                     Sex sex = SEX.get(td02.getSUGU());
                     if(sex != null && !ClassifierUtil.equals(sex, person.getSex())) {
-                        person.setSex(em.getReference(Classifier.class, sex));
+                        person.setSex(em.getReference(Classifier.class, sex.name()));
                     }
                     person.setBirthdate(td02.getSYNNIKUUPAEV());
                     em.merge(person);

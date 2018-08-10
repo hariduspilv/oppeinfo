@@ -12,6 +12,7 @@ public class TimetableEventDto {
     private LocalDateTime end;
     private List<AutocompleteResult> rooms = new ArrayList<>();
     private List<Long> teachers = new ArrayList<>();
+    private List<String> teacherNames = new ArrayList<>();
     private Long studentGroup;
     private String capacityType;
 
@@ -110,6 +111,14 @@ public class TimetableEventDto {
         if(teachers != null) {
             this.teachers = teachers;
         }
+    }
+    
+    public List<String> getTeacherNames() {
+        return teacherNames;
+    }
+
+    public void setTeacherNames(List<String> teacherNames) {
+        this.teacherNames = teacherNames;
     }
 
     public Long getJournal() {

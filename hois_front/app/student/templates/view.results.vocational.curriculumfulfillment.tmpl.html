@@ -2,6 +2,19 @@
   <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.list.tmpl.html'"></div>
 </div>
 
+<hois-collapsable expanded="false" ng-repeat="result in ::vocationalResultsCurriculum.otherSchoolExtraCurriculaModuleResults">
+  <hois-collapsable-header>
+    <div layout="row">
+      <div flex="30">
+        <span class="apelAsterisk">*</span>
+        <span>{{currentLanguageNameField(result.module)}}</span>
+      </div>
+      <div ng-if="positiveGrade(result.grade.code)" flex-offset="10" class="bold" md-colors="{color: 'green-600'}">{{result.grade.value}} ({{result.credits}} {{'student.result.ekap' | translate}})</div>
+      <div ng-if="!positiveGrade(result.grade.code)" flex-offset="10" class="bold" md-colors="{color: 'red-500'}">{{result.grade.value}} ({{result.credits}} {{'student.result.ekap' | translate}})</div>
+    </div>
+  </hois-collapsable-header>
+</div>  
+
 <div ng-if="vocationalResultsCurriculum.extraCurriculaVocationalResultsModules && vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.length!=0">
   <h3>{{'student.result.otherModuleResults' | translate}}</h3>
 

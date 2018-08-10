@@ -10,6 +10,7 @@
                   <tr md-row>
                     <th md-column>{{'student.label' | translate}}</th>
                     <th md-column>{{'student.idcode' | translate}}</th>
+                    <th md-column ng-if="protocol.protocolVdata.isPractice">{{'moduleProtocol.practiceResult' | translate}}</th>
                     <th md-column ng-repeat="journal in journals | orderBy: 'nameEt'">
                       <div>
                         <a md-colors="{color: 'grey-50'}" ng-href="/#/journal/{{::journal.id}}/view">{{'P' + ($index + 1)}}</a>
@@ -32,6 +33,15 @@
                 <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>{{row.fullname}}</td>
                   <td md-cell>{{row.idcode}}</td>
+                  <td md-cell ng-if="protocol.protocolVdata.isPractice">
+                    <span ng-repeat="journalResult in row.practiceJournalResults | orderBy: 'inserted'">
+                      <span>
+                        <span>{{gradeValue(journalResult.grade)}}</span>
+                        <md-tooltip>{{journalResult.theme ? currentLanguageNameField(journalResult.theme) : currentLanguageNameField(protocol.protocolVdata.curriculumVersionOccupationModule)}}</md-tooltip>
+                        <span ng-if="!$last">/</span>
+                      </span>
+                    </span>
+                  </td>
                   <td md-cell ng-repeat="journal in journals | orderBy: 'nameEt'">
                     <span ng-if="protocolStudentJournalResults[row.id] && protocolStudentJournalResults[row.id][journal.id]"
                       ng-repeat="grade in protocolStudentJournalResults[row.id][journal.id]">
@@ -58,7 +68,7 @@
           <md-button ng-if="formState.canEditProtocol" class="md-primary md-raised" ng-href="#/moduleProtocols/{{::protocol.id}}/edit">{{'main.button.change' | translate}}</md-button>
           <a ng-show="formState.protocolPdfUrl" ng-href="{{formState.protocolPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
           <a ng-show="protocol.oisFile" ng-href="{{getUrl(protocol.oisFile, 'protocol')}}" target="_blank" rel="noopener noreferrer" class="md-button md-raised">{{'moduleProtocol.downloadSigned' | translate}}</a>
-          <md-button class="md-raised" ng-href="#/moduleProtocols">{{'main.button.back' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="back('#/moduleProtocols')">{{'main.button.back' | translate}}</md-button>
         </div>
       </form>
     </div>

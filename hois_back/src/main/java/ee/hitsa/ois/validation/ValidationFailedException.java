@@ -1,7 +1,9 @@
 package ee.hitsa.ois.validation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
@@ -34,6 +36,10 @@ public class ValidationFailedException extends RuntimeException {
 
     public ValidationFailedException(List<? extends Error> errors) {
         this.errorInfo = ErrorInfo.of(errors);
+    }
+    
+    public ValidationFailedException(String code, Map<Object, Object> params) {
+        this(Collections.singletonList(new Error(code, params)));
     }
 
     public ErrorInfo getErrorInfo() {

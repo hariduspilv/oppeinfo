@@ -117,17 +117,17 @@ public class DocumentController {
     
     @GetMapping("/supplement/{id:\\d+}/print/view.pdf")
     public void supplementPrintView(HoisUserDetails user, @PathVariable("id") Long directiveStudentId, 
-            Long signer1Id, HttpServletResponse response) throws IOException {
+            SupplementForm form, HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_HINNETELEHT_TRUKKIMINE);
-        documentService.createUpdateSupplement(user, directiveStudentId, signer1Id);
-        HttpUtil.pdf(response, "diploma_supplement_view.pdf", documentService.supplementPrintView(user, directiveStudentId));
+        documentService.createUpdateSupplement(user, directiveStudentId, form);
+        HttpUtil.pdf(response, "diploma_supplement_view.pdf", documentService.supplementPrintView(user, directiveStudentId, form));
     }
 
     @GetMapping("/supplement/{id:\\d+}/calculate")
     public List<FormDto> calculate(HoisUserDetails user, @PathVariable("id") Long directiveStudentId, 
             SupplementForm form) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_HINNETELEHT_TRUKKIMINE);
-        documentService.createUpdateSupplement(user, directiveStudentId, form.getSigner1Id());
+        documentService.createUpdateSupplement(user, directiveStudentId, form);
         return documentService.calculate(user, directiveStudentId, form);
     }
     
@@ -135,7 +135,7 @@ public class DocumentController {
     public void supplementPrint(HoisUserDetails user, @PathVariable("id") Long directiveStudentId, 
             SupplementForm form, HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_HINNETELEHT_TRUKKIMINE);
-        documentService.createUpdateSupplement(user, directiveStudentId, form.getSigner1Id());
+        documentService.createUpdateSupplement(user, directiveStudentId, form);
         HttpUtil.pdf(response, "diploma_supplement.pdf", documentService.supplementPrint(user, directiveStudentId, form));
     }
     

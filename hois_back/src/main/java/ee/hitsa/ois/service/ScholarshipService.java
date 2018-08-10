@@ -375,7 +375,7 @@ public class ScholarshipService {
 
     private StudentResults getVocationalResults(Student student) {
         StudentResults results = new StudentResults();
-        BigDecimal credits = studentService.vocationalTotalCreditsOnCurrentCurriculum(student);
+        BigDecimal credits = studentService.getStudentCurriculumCompletion(student).getCredits();
         results.setCredits(credits == null ? BigDecimal.ZERO : credits);
         LocalDateTime currentTime = LocalDateTime.now();
         results.setAverageMark(getAverageGrade(student, currentTime));
@@ -765,9 +765,9 @@ public class ScholarshipService {
         if (Boolean.FALSE.equals(term.getIsAcademicLeave()) && ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_A, student.getStatus())) {
             return false;
         }
-        if (!term.getScholarshipTermCourses().isEmpty() && !StreamUtil
+        if (!term.getScholarshipTermCourses().isEmpty() && (student.getStudentGroup() == null || !StreamUtil
                 .toMappedList(c -> Short.valueOf(c.getCourse().getValue()), term.getScholarshipTermCourses())
-                .contains(student.getStudentGroup().getCourse())) {
+                .contains(student.getStudentGroup().getCourse()))) {
             return false;
         }
         if (!term.getScholarshipTermStudyLoads().isEmpty() && !StreamUtil

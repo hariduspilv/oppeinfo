@@ -58,7 +58,6 @@
             <th md-column md-order-by="code">{{'subjectStudyPeriod.studentGroupCode' | translate}}</th>
             <th md-column md-order-by="curriculum.{{currentLanguageNameField()}}">{{'subjectStudyPeriod.curriculum' | translate}}</th>
             <th md-column>{{'subjectStudyPeriod.hoursTotal' | translate}}</th>
-            <th md-column>{{'subjectStudyPeriod.linkToTimetable' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
@@ -67,9 +66,6 @@
             <td md-cell><a ng-href="#/subjectStudyPeriods/studentGroups/{{row.id}}/{{criteria.studyPeriod}}/view">{{row.code}}</a></td>
             <td md-cell>{{currentLanguageNameField(row.curriculum)}}</td>
             <td md-cell>{{row.hours}}</td>
-            <td md-cell>
-              <a href="#/timetable/group/{{schoolId}}/{{row.id}}">{{'subjectStudyPeriod.timetable' | translate}}</a>
-            </td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/studentGroups/{{row.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}
                   </md-button>

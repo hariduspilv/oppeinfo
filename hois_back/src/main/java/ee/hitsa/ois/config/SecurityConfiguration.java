@@ -53,6 +53,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/autocomplete/ldapschools").permitAll()
                 .antMatchers(HttpMethod.GET, "/academicCalendar/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/classifierConnect/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/classifier/children/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/classifier/parents/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/curriculumVersion/schoolDepartments/curriculum/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetables/timetableStudyYearWeeks/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetables/group/**").permitAll()

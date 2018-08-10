@@ -16,6 +16,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
@@ -34,6 +35,10 @@ public class LessonPlanDto extends LessonPlanForm {
     private Long id;
     private String studyYearCode;
     private String studentGroupCode;
+    private Short courseNr;
+    private String curriculumCode;
+    private AutocompleteResult curriculumVersion;
+    private Integer studyPeriod;
     private List<StudyPeriodDto> studyPeriods;
     private List<Short> weekNrs;
     private List<LocalDate> weekBeginningDates;
@@ -42,7 +47,14 @@ public class LessonPlanDto extends LessonPlanForm {
     public static LessonPlanDto of(LessonPlan lessonPlan, Map<Long, Long> weekNrsLegends) {
         LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto());
         dto.setStudyYearCode(EntityUtil.getCode(lessonPlan.getStudyYear().getYear()));
-        dto.setStudentGroupCode(lessonPlan.getStudentGroup().getCode());
+        
+        StudentGroup studentGroup = lessonPlan.getStudentGroup();
+        dto.setStudentGroupCode(studentGroup.getCode());
+        dto.setCourseNr(studentGroup.getCourse());
+        dto.setCurriculumCode(studentGroup.getCurriculum().getCode());
+        dto.setCurriculumVersion(AutocompleteResult.of(studentGroup.getCurriculumVersion()));
+        dto.setStudyPeriod(studentGroup.getCurriculum().getStudyPeriod());
+        
         dto.setStudyPeriods(lessonPlan.getStudyYear().getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList()));
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(lessonPlan.getStudyYear());
         Set<Long> existingModuleIds = StreamUtil.toMappedSet(
@@ -87,6 +99,38 @@ public class LessonPlanDto extends LessonPlanForm {
 
     public void setStudentGroupCode(String studentGroupCode) {
         this.studentGroupCode = studentGroupCode;
+    }
+    
+    public Short getCourseNr() {
+        return courseNr;
+    }
+
+    public void setCourseNr(Short courseNr) {
+        this.courseNr = courseNr;
+    }
+    
+    public String getCurriculumCode() {
+        return curriculumCode;
+    }
+
+    public void setCurriculumCode(String curriculumCode) {
+        this.curriculumCode = curriculumCode;
+    }
+
+    public AutocompleteResult getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public void setCurriculumVersion(AutocompleteResult curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
+    }
+
+    public Integer getStudyPeriod() {
+        return studyPeriod;
+    }
+
+    public void setStudyPeriod(Integer studyPeriod) {
+        this.studyPeriod = studyPeriod;
     }
 
     public List<StudyPeriodDto> getStudyPeriods() {

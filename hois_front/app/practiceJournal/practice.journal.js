@@ -185,7 +185,7 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
         practiceJournal.$update().then(function () {
           message.info('main.messages.update.success');
           entityToForm(practiceJournal);
-          $location.path('/practiceJournals/' + practiceJournal.id + '/edit');
+          $scope.practiceJournalForm.$setPristine();
         });
       }
     } else {

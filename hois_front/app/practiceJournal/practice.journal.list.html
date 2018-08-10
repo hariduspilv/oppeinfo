@@ -89,8 +89,8 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="student_person.lastname,student_person.firstname">{{'student.label' | translate}}</th>
-            <th md-column>{{'studentGroup.label' | translate}}</th>
+            <th md-column ng-if="auth.isAdmin()" md-order-by="student_person.lastname,student_person.firstname">{{'student.label' | translate}}</th>
+            <th md-column ng-if="auth.isAdmin()">{{'studentGroup.label' | translate}}</th>
             <th md-column ng-if="auth.school.vocational">{{'practiceJournal.moduleAndTheme' | translate}}</th>
             <th md-column ng-if="auth.school.higher">{{'practiceJournal.subject' | translate}}</th>
             <th md-column>{{'practiceJournal.practiceStartAndEnd' | translate}}</th>
@@ -99,13 +99,14 @@
             <th md-column>{{'practiceJournal.practicePlace' | translate}}</th>
             <th md-column ng-if="auth.isAdmin()">{{'practiceJournal.schoolSupervisor' | translate}}</th>
             <th md-column>{{'practiceJournal.studentLastEntryDate' | translate}}</th>
+            <th md-column>{{'practiceJournal.status' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a ng-href="/#/practiceJournals/{{::row.id}}/view">{{currentLanguageNameField(row.student)}}</a></td>
-            <td md-cell>{{row.studentGroup}}</td>
+            <td md-cell ng-if="auth.isAdmin()"><a ng-href="/#/practiceJournals/{{::row.id}}/view">{{currentLanguageNameField(row.student)}}</a></td>
+            <td md-cell ng-if="auth.isAdmin()">{{row.studentGroup}}</td>
             <td md-cell ng-if="auth.school.vocational">{{(row.module || row.theme) ? (currentLanguageNameField(row.module) + ' ' + currentLanguageNameField(row.theme)) : '-'}}</td>
             <td md-cell ng-if="auth.school.higher">{{row.subject ? currentLanguageNameField(row.subject) : '-'}}</td>
             <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
@@ -114,8 +115,10 @@
             <td md-cell>{{row.practicePlace}}</td>
             <td md-cell ng-if="auth.isAdmin()">{{currentLanguageNameField(row.teacher)}}</td>
             <td md-cell>{{row.studentLastEntryDate | hoisDate}}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>
               <div layout="column">
+                <md-button ng-if="!auth.isAdmin()" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
                 <md-button ng-if="row.canAddEntries" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/entries/edit">{{'practiceJournal.button.fill' | translate}}</md-button>
                 <md-button ng-if="!auth.isStudent() && ((row.canEdit && row.status !== 'PAEVIK_STAATUS_K') || (row.canConfirm && row.status === 'PAEVIK_STAATUS_K'))" 
                   md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>

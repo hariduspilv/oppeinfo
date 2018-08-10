@@ -203,6 +203,10 @@ angular.module('hitsaOis')
     '/curriculums/:schoolId?',
     '/curriculum/:id',
     '/curriculum/:curriculumId/version/:id',
+    '/stateCurriculum/public',
+    '/stateCurriculum/public/:id/view',
+    '/subject/public',
+    '/subject/public/:id',
     '/timetables',
     '/timetable/generalTimetableByGroup/:schoolId?',
     '/timetable/generalTimetableByTeacher/:schoolId?',
@@ -211,7 +215,8 @@ angular.module('hitsaOis')
     '/timetable/teacher/:schoolId/:teacherId/:weekIndex?',
     '/timetable/room/:schoolId/:roomId/:weekIndex?',
     '/studyMaterial/:schoolId/vocational/:journalId/view',
-    '/studyMaterial/:schoolId/higher/:subjectStudyPeriodId/view'
+    '/studyMaterial/:schoolId/higher/:subjectStudyPeriodId/view',
+    '/practiceJournals/supervisor/:uuid'
   ])
   .service('Session', function () {
     this.school = {};
@@ -226,6 +231,7 @@ angular.module('hitsaOis')
       this.vocational = user.vocational;
       this.higher = user.higher;
       this.timeoutInSeconds = user.sessionTimeoutInSeconds;
+      this.teacherGroupIds = user.teacherGroupIds;
     };
     this.destroy = function () {
       this.userId = null;
@@ -237,6 +243,7 @@ angular.module('hitsaOis')
       this.vocational = undefined;
       this.higher = undefined;
       this.timeoutInSeconds = null;
+      this.teacherGroupIds = null;
     };
   })
   .constant('USER_ROLES', {

@@ -196,8 +196,8 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     return student && angular.isNumber(student.credits) && student.credits >= student.curriculumCredits;
   };
 
-}]).controller('StudentViewResultsVocationalController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope', 'VocationalGradeUtil', 'StudentUtil',
-function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGradeUtil, StudentUtil) {
+}]).controller('StudentViewResultsVocationalController', ['$filter', '$q', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope', 'VocationalGradeUtil', 'StudentUtil',
+function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGradeUtil, StudentUtil) {
   $scope.gradeUtil = VocationalGradeUtil;
   var entryMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', studyYear: 'OPPEAASTA', entryType: 'SISSEKANNE' });
   var moduleMapper = Classifier.valuemapper({ module: 'KUTSEMOODUL' });
@@ -247,6 +247,10 @@ function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGrad
       });
       $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules = $scope.vocationalResults.extraCurriculaModules.sort(function (m1, m2) {
         return $rootScope.currentLanguageNameField(m1.curriculumModule).localeCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
+      });
+      var otherSchoolExtraCurriculaModuleResults = $filter('filter')($scope.vocationalResults.results, {'isOtherSchool': true});
+      $scope.vocationalResultsCurriculum.otherSchoolExtraCurriculaModuleResults = otherSchoolExtraCurriculaModuleResults.sort(function (r1, r2) {
+        return $rootScope.currentLanguageNameField(r1.module).localeCompare($rootScope.currentLanguageNameField(r2.module));
       });
 
       $scope.allThemesHavePositiveGrade = function (module) {

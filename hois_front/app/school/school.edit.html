@@ -100,6 +100,26 @@
       <input ng-model="school.adIdcodeField" name="adIdcodeField" type="text" md-maxlength="50">
     </md-input-container>
 
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.finalSchoolType' | translate}}</label>
+      <input ng-model="school.finalSchoolType" name="finalSchoolType" type="text" md-maxlength="100">
+    </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.final62' | translate}}</label>
+      <textarea ng-model="school.final62" name="final62" md-maxlength="500" max-rows="10"></textarea>
+    </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.finalSchoolTypeEn' | translate}}</label>
+      <input ng-model="school.finalSchoolTypeEn" name="finalSchoolType" type="text" md-maxlength="100">
+    </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.finalEn62' | translate}}</label>
+      <textarea ng-model="school.finalEn62" name="finalEn62" md-maxlength="500" max-rows="10"></textarea>
+    </md-input-container>
+
     <lf-ng-md-file-input name="logoFiles"
       lf-files="logoFiles" lf-api="logoFileApi" lf-filesize="100KB"
       accept=".png, .jpg, .jpeg" lf-mimetype="image/*" preview
@@ -122,5 +142,5 @@
   <br>
   <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
   <md-button ng-click="delete()" ng-if="school.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-  <md-button ng-href="#/school" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  <md-button ng-click="back('#/school', schoolForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>

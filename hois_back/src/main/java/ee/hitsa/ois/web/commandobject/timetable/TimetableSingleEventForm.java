@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import javax.validation.constraints.Size;
 
+import ee.hitsa.ois.domain.Building;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.util.EntityUtil;
@@ -31,6 +32,8 @@ public class TimetableSingleEventForm {
     private List<AutocompleteResult> rooms;
     private List<AutocompleteResult> teachers;
     private Long weekAmount;
+    private String otherTeacher;
+    private String otherRoom;
 
     public static TimetableSingleEventForm of(TimetableEventTime event) {
         TimetableSingleEventForm form = new TimetableSingleEventForm();
@@ -43,11 +46,19 @@ public class TimetableSingleEventForm {
 
         form.setRooms(StreamUtil.toMappedList(r -> {
             Room room = r.getRoom();
-            return new AutocompleteResult(EntityUtil.getId(room), room.getCode(), room.getCode());
+            Building building = room.getBuilding();
+            
+            String code = building.getCode() + "-" + room.getCode();
+            Long seats = room.getSeats();
+            String nameEt = seats != null ? code + " (kohti " + seats.toString() + ")" : code;
+            String nameEn = seats != null ? code + " (seats " + seats.toString() + ")" : code;
+            return new AutocompleteResult(EntityUtil.getId(room), nameEt, nameEn);
         }, event.getTimetableEventRooms()));
+        form.setOtherRoom(event.getOtherRoom());
 
         form.setTeachers(
                 StreamUtil.toMappedList(r -> AutocompleteResult.of(r.getTeacher()), event.getTimetableEventTeachers()));
+        form.setOtherTeacher(event.getOtherTeacher());
 
         LocalDateTime maxDate = event.getTimetableEvent().getTimetableEventTimes().stream()
                 .map(TimetableEventTime::getStart).max(LocalDateTime::compareTo).get();
@@ -141,4 +152,21 @@ public class TimetableSingleEventForm {
         }
         return null;
     }
+
+    public String getOtherTeacher() {
+        return otherTeacher;
+    }
+
+    public void setOtherTeacher(String otherTeacher) {
+        this.otherTeacher = otherTeacher;
+    }
+
+    public String getOtherRoom() {
+        return otherRoom;
+    }
+
+    public void setOtherRoom(String otherRoom) {
+        this.otherRoom = otherRoom;
+    }
+    
 }

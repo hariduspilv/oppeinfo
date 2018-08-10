@@ -114,6 +114,7 @@ angular.module('hitsaOis').controller('StudentGroupYearTransferController', ['$s
         newGroupCodes: getNewGroupCodes()
       }), function(result) {
         $scope.mismatchingStudents = [];
+        $scope.inactiveStudents = 0;
         $scope.studentGroups.forEach(function(studentGroup) {
           var calculated = result[studentGroup.id];
           if (calculated) {
@@ -124,6 +125,7 @@ angular.module('hitsaOis').controller('StudentGroupYearTransferController', ['$s
             calculated.mismatchingStudents.forEach(function(student) {
               $scope.mismatchingStudents.push(angular.extend(student, {group: studentGroup}));
             });
+            $scope.inactiveStudents += calculated.unsuitableStudents - calculated.mismatchingStudents.length;
           }
         });
         clMapper.objectmapper($scope.mismatchingStudents);
@@ -164,6 +166,10 @@ angular.module('hitsaOis').controller('StudentGroupYearTransferController', ['$s
       }
       if (!allFilled($scope.mismatchingStudents, 'newGroup')) {
         message.error('main.messages.form-has-errors');
+        return;
+      }
+      if ($scope.inactiveStudents) {
+        message.error('studentGroupYearTransfer.error.studentNotActive');
         return;
       }
       dialogService.confirmDialog({prompt: 'studentGroupYearTransfer.confirm'}, function() {

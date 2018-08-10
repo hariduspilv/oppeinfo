@@ -116,34 +116,48 @@ angular.module('hitsaOis')
     })
   .controller('SubjectViewController', ['$scope', '$route', 'config', 'QueryUtils',
     function ($scope, $route, config, QueryUtils) {
+      $scope.isPublic = $route.current.locals.params && $route.current.locals.params.isPublic;
       var id = $route.current.params.id;
       var backUrl = $route.current.params.backUrl;
 
-      $scope.formState = {backUrl: backUrl ? '#/' + backUrl : '#/subject'};
-      $scope.subject = QueryUtils.endpoint('/subject').get({id: id});
+      $scope.formState = {backUrl: backUrl ? '#/' + backUrl : ($scope.isPublic ? '#/subject/public' : '#/subject')};
+      $scope.subject = QueryUtils.endpoint($scope.isPublic ? '/public/subject/view' : '/subject').get({id: id});
       $scope.publicUrl = config.apiUrl + '/public/subject/' + id + '?format=json';
   }])
-  .controller('SubjectListController', ['$q', '$scope', 'Classifier', 'QueryUtils',
-    function ($q, $scope, Classifier, QueryUtils) {
+  .controller('SubjectListController', ['$q', '$scope', '$route', 'Classifier', 'QueryUtils',
+    function ($q, $scope, $route, Classifier, QueryUtils) {
+      $scope.isPublic = $route.current.locals.params && $route.current.locals.params.isPublic;
+
       var clMapper = Classifier.valuemapper({status: 'AINESTAATUS', assessment: 'HINDAMISVIIS', languages: 'OPPEKEEL'});
-      QueryUtils.createQueryForm($scope, '/subject', {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt'}, clMapper.objectmapper);
-
-      // initialize selections on form
-      QueryUtils.endpoint('/subject/initSearchFormData').search(function (result) {
-        angular.extend($scope, result.toJSON());
-      });
-
+      QueryUtils.createQueryForm($scope, $scope.isPublic ? '/public/subjectsearch' : '/subject', 
+        {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt'}, clMapper.objectmapper);
+      
       $q.all(clMapper.promises).then($scope.loadData);
-
+      
       $scope.subjectLanguages = function (row) {
         return row.map($scope.currentLanguageNameField).join(', ');
       };
-
+      
       $scope.formState = {};
 
-      QueryUtils.endpoint('/subject/getPermissions').search(function (result) {
-        $scope.formState.canCreate = result.canCreate;
-        $scope.formState.canViewAll = result.canViewAll;
-      });
-
+      if ($scope.isPublic) {
+        $scope.$watch('criteria.schoolId', function(newSchoolId) {
+          if (newSchoolId) {
+            $scope.curricula = QueryUtils.endpoint('/public/curriculumversions').query({schoolId: newSchoolId});
+            $scope.departments = QueryUtils.endpoint('/public/schooldepartments').query({schoolId: newSchoolId});
+          } else {
+            $scope.curricula = [];
+            $scope.departments = [];
+          }
+        });
+      } else {
+        // initialize selections on form
+        QueryUtils.endpoint('/subject/initSearchFormData').search(function (result) {
+          angular.extend($scope, result.toJSON());
+        });
+        QueryUtils.endpoint('/subject/getPermissions').search(function (result) {
+          $scope.formState.canCreate = result.canCreate;
+          $scope.formState.canViewAll = result.canViewAll;
+        });
+      }
   }]);

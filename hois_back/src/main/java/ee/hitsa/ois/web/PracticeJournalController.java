@@ -64,6 +64,8 @@ public class PracticeJournalController {
             Pageable pageable) {
         if (user.isStudent()) {
             command.setStudent(user.getStudentId());
+        } else if (user.isRepresentative()) {
+            command.setStudent(user.getStudentId());
         } else if (user.isTeacher()) {
             command.setTeacher(user.getTeacherId());
         }

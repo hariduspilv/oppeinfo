@@ -780,10 +780,13 @@ public class JournalService {
      * Get student's journal tasks for view.
      * @param schoolId
      * @param studentId
-     * @return study year info and a list of student's journal tasks
+     * @return study year info and a list of student's journal tasks, or null if there is no current study year
      */
     public StudentJournalTaskListDto studentJournalTasks(Long schoolId, Long studentId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        if(studyYear == null) {
+            return null;
+        }
 
         Query q = em.createNativeQuery("select je.id, je.entry_type_code, j.name_et, coalesce(je.homework_duedate, je.entry_date) as task_date,"
                 + " coalesce(je.homework, je.content) as task_content"
@@ -807,10 +810,13 @@ public class JournalService {
      * Get student's study entries for view.
      * @param schoolId
      * @param studentId
-     * @return study year info and a list of student's study entries
+     * @return study year info and a list of student's study entries, or null if there is no current study year
      */
     public StudentJournalStudyListDto studentJournalStudy(Long schoolId, Long studentId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        if(studyYear == null) {
+            return null;
+        }
 
         Query q = em.createNativeQuery("select je.id, je.entry_date, j.name_et, je.content as content from journal_entry je"
                 + " inner join journal j on j.id=je.journal_id"
@@ -828,10 +834,13 @@ public class JournalService {
      * Get student's last 30 absences for view.
      * @param schoolId
      * @param studentId
-     * @return list of student's absences
+     * @return list of student's absences, or null if there is no current study year
      */
     public List<StudentJournalAbsenceDto> studentAbsences(Long schoolId, Long studentId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        if(studyYear == null) {
+            return null;
+        }
 
         Query q = em.createNativeQuery("select je.id, je.entry_date, j.name_et, jes.absence_code, je.start_lesson_nr,"
                 + " STRING_AGG(p.firstname || ' ' || p.lastname, ', ') as teachers from journal j"
@@ -858,10 +867,13 @@ public class JournalService {
      * Get student's last 10 results for view.
      * @param schoolId
      * @param studentId
-     * @return list of student's last results
+     * @return list of student's last results, or null if there is no current study year
      */
     public List<StudentJournalResultDto> studentLastResults(Long schoolId, Long studentId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        if(studyYear == null) {
+            return null;
+        }
 
         Query q = em.createNativeQuery("select distinct je.id, je.entry_type_code, j.name_et, null as name_en, je.content,"
                 + " c.value as grade, jes.grade_inserted, jes.add_info from journal j"

@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.commandobject.student;
 
+import java.time.LocalDate;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -25,6 +27,10 @@ public class StudentForm extends VersionedCommand {
     @Required
     @ClassifierRestriction(MainClassCode.OPPEASTE)
     private String previousStudyLevel;
+    private String studyCompany;
+    private String boardingSchool;
+    private String previousSchoolName;
+    private LocalDate previousSchoolEndDate;
 
     // special needs
     private Boolean isSpecialNeed;
@@ -65,6 +71,38 @@ public class StudentForm extends VersionedCommand {
 
     public void setPreviousStudyLevel(String previousStudyLevel) {
         this.previousStudyLevel = previousStudyLevel;
+    }
+
+    public String getStudyCompany() {
+        return studyCompany;
+    }
+
+    public void setStudyCompany(String studyCompany) {
+        this.studyCompany = studyCompany;
+    }
+
+    public String getBoardingSchool() {
+        return boardingSchool;
+    }
+
+    public void setBoardingSchool(String boardingSchool) {
+        this.boardingSchool = boardingSchool;
+    }
+
+    public String getPreviousSchoolName() {
+        return previousSchoolName;
+    }
+
+    public void setPreviousSchoolName(String previousSchoolName) {
+        this.previousSchoolName = previousSchoolName;
+    }
+
+    public LocalDate getPreviousSchoolEndDate() {
+        return previousSchoolEndDate;
+    }
+
+    public void setPreviousSchoolEndDate(LocalDate previousSchoolEndDate) {
+        this.previousSchoolEndDate = previousSchoolEndDate;
     }
 
     public Boolean getIsSpecialNeed() {
@@ -120,6 +158,11 @@ public class StudentForm extends VersionedCommand {
         @Required
         @ClassifierRestriction(MainClassCode.RIIK)
         private String residenceCountry;
+        @ClassifierRestriction(MainClassCode.RIIK)
+        private String citizenship;
+        @ClassifierRestriction(MainClassCode.OPPEKEEL)
+        private String language;
+        private String bankaccount;
         @Required
         @Size(max = 255)
         private String address;
@@ -152,6 +195,30 @@ public class StudentForm extends VersionedCommand {
 
         public void setResidenceCountry(String residenceCountry) {
             this.residenceCountry = residenceCountry;
+        }
+
+        public String getCitizenship() {
+            return citizenship;
+        }
+
+        public void setCitizenship(String citizenship) {
+            this.citizenship = citizenship;
+        }
+
+        public String getLanguage() {
+            return language;
+        }
+
+        public void setLanguage(String language) {
+            this.language = language;
+        }
+
+        public String getBankaccount() {
+            return bankaccount;
+        }
+
+        public void setBankaccount(String bankaccount) {
+            this.bankaccount = bankaccount;
         }
 
         public String getAddress() {

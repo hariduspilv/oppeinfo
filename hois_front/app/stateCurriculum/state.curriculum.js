@@ -4,6 +4,7 @@ angular.module('hitsaOis')
   .controller('StateCurriculumController', function ($route, $scope, message, Classifier, $location,
     classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils, Curriculum, config, $rootScope) {
 
+    $scope.isPublic = $route.current.locals.params && $route.current.locals.params.isPublic;
 
     $scope.STATUS = Curriculum.STATUS;
 
@@ -21,7 +22,7 @@ angular.module('hitsaOis')
         canChange: true
     };
     var baseUrl = '/stateCurriculum';
-    var Endpoint = QueryUtils.endpoint(baseUrl);
+    var Endpoint = QueryUtils.endpoint($scope.isPublic ? '/public/statecurriculum' : baseUrl);
     var id = $route.current.params.id;
     $scope.removeFromArray = ArrayUtils.remove;
     $scope.subOccupations = {};
@@ -30,6 +31,10 @@ angular.module('hitsaOis')
       strictValidation: false,
       readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
       stateCurriculumPdfUrl: config.apiUrl + baseUrl + '/print/' + id + '/stateCurriculum.pdf'
+    };
+
+    $scope.getCurriculumViewUrl = function(curriculumId) {
+        return $scope.isPublic ? ('#/curriculum/' + curriculumId) : ('#/vocationalCurriculum/' + curriculumId + '/view');
     };
 
     function getStateCurriculum() {

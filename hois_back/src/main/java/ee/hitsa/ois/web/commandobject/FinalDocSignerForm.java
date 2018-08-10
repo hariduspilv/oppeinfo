@@ -4,6 +4,7 @@ public class FinalDocSignerForm extends VersionedCommand {
 
     private String name;
     private String position;
+    private String positionEn;
     private Boolean isFirst;
     private Boolean isValid;
 
@@ -19,6 +20,13 @@ public class FinalDocSignerForm extends VersionedCommand {
     }
     public void setPosition(String position) {
         this.position = position;
+    }
+    
+    public String getPositionEn() {
+        return positionEn;
+    }
+    public void setPositionEn(String positionEn) {
+        this.positionEn = positionEn;
     }
     
     public Boolean getIsFirst() {

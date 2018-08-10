@@ -11,7 +11,11 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KLASSIFIKAATOR]
+          authorizedRoles: function(Session, authorizedRoles) {
+            var roles = (authorizedRoles || []);
+            return roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KLASSIFIKAATOR) !== -1 && 
+              roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_ANDMEVAHETUS_SAIS) !== -1;
+          }
         }
       })
       .when('/saisClassifier/:code', {

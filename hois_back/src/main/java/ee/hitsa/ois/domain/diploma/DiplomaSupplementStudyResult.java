@@ -29,6 +29,8 @@ public class DiplomaSupplementStudyResult extends BaseEntityWithId {
     private String apelSchoolNameEt;
     private String apelSchoolNameEn;
     private Boolean isFinal;
+    private String subjectCode;
+    private Boolean isFinalThesis;
     
     public DiplomaSupplement getDiplomaSupplement() {
         return diplomaSupplement;
@@ -114,4 +116,17 @@ public class DiplomaSupplementStudyResult extends BaseEntityWithId {
     public void setIsFinal(Boolean isFinal) {
         this.isFinal = isFinal;
     }
+    public String getSubjectCode() {
+        return subjectCode;
+    }
+    public void setSubjectCode(String subjectCode) {
+        this.subjectCode = subjectCode;
+    }
+    public Boolean getIsFinalThesis() {
+        return isFinalThesis;
+    }
+    public void setIsFinalThesis(Boolean isFinalThesis) {
+        this.isFinalThesis = isFinalThesis;
+    }
+    
 }

@@ -132,17 +132,48 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
 
     $scope.update = function() {
       FormUtils.withValidForm($scope.examForm, function() {
-        if($scope.record.id) {
-          $scope.record.$update().then(message.updateSuccess).then(afterLoad).catch(angular.noop);
-          $scope.examForm.$setPristine();
-        } else {
-          $scope.record.$save().then(function() {
-            message.info('main.messages.create.success');
-            $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
-          }).catch(angular.noop);
-        }
+        var occupiedQuery = timetableTimeOccupiedQuery();
+        QueryUtils.endpoint('/timetableevents/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
+          if (result.occupied) {
+            dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
+              update();
+            });
+          } else {
+            update();
+          }
+        });
       });
     };
+
+    function timetableTimeOccupiedQuery() {
+      var occupiedQuery = {rooms: $scope.record.room.id, subjectStudyPeriod: $scope.record.subjectStudyPeriod, exam: $scope.record.id};
+      
+      var date = moment($scope.record.startDate);
+      var startTime = moment($scope.record.startTime, 'HH:mm');
+      var endTime = moment($scope.record.endTime, 'HH:mm');
+      occupiedQuery.startTime = new Date(date.year(), date.month(), date.date(), startTime.hours(), startTime.minutes());
+      occupiedQuery.endTime = new Date(date.year(), date.month(), date.date(), endTime.hours(), endTime.minutes());
+      
+      return occupiedQuery;
+    }
+
+    $scope.getLocalDateTime = function (time) {
+      var date = moment($scope.record.startDate);
+      time = moment(time, 'HH:mm');
+      return new Date(date.year(), date.month(), date.date(), time.hours(), time.minutes());
+    };
+
+    function update() {
+      if($scope.record.id) {
+        $scope.record.$update().then(message.updateSuccess).then(afterLoad).catch(angular.noop);
+        $scope.examForm.$setPristine();
+      } else {
+        $scope.record.$save().then(function() {
+          message.info('main.messages.create.success');
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
+        }).catch(angular.noop);
+      }
+    }
 
     $scope.delete = function() {
       FormUtils.deleteRecord($scope.record, '/examTimes?_noback', {prompt: 'exam.message.deleteconfirm'});

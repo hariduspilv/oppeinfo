@@ -1,8 +1,11 @@
 'use strict';
 
 angular.module('hitsaOis').controller('studyYearScheduleController', 
-function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogService, USER_ROLES, AuthService) {
+function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogService, USER_ROLES, AuthService) {
+    $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPETOOGRAAFIK);
+
+    $scope.useMyFilter = $scope.auth.isStudent() || $scope.auth.isParent();
 
     $scope.criteria = {
         schoolDepartments: [],
@@ -10,6 +13,9 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
         studyPeriods: [],
         studentGroups: []
     };
+    if ($scope.useMyFilter) {
+        $scope.criteria.showMine = true;
+    }
 
     $scope.weeks = [];
     $scope.studyYearSchedules = [];
@@ -31,7 +37,19 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
         $scope.legends = response.legends;
     });
 
-    $scope.studentGroups = QueryUtils.endpoint('/studyYearSchedule/studentGroups').query();
+    function getStudentGroups() {
+        $scope.studentGroups = QueryUtils.endpoint('/studyYearSchedule/studentGroups').query({showMine: $scope.criteria.showMine});
+        if ($scope.criteria.showMine) {
+            $scope.studentGroups.$promise.then(function(response){
+                if (angular.isArray(response) && response.length > 0) {
+                    $scope.criteria.schoolDepartments = response[0].schoolDepartments;
+                }
+            });
+        }
+        $scope.criteria.studentGroups = [];
+    }
+
+    getStudentGroups();
 
     function selectCurrentStudyYear() {
         $scope.criteria.studyYear = DataUtils.getCurrentStudyYearOrPeriod($scope.studyYears);
@@ -49,15 +67,19 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
         }
     );
 
-    $scope.$watch('criteria.schoolDepartments', function() {
-            if(!ArrayUtils.isEmpty($scope.studentGroups)){
-                $scope.criteria.studentGroups = $scope.studentGroups
-                .filter(function(sg){return ArrayUtils.intersect(sg.schoolDepartments, $scope.criteria.schoolDepartments);})
-                .map(function(sg){return sg.id;});
-                getSchedules();
-            }
+    $scope.schoolDepartmentsChanged = function() {
+        if(!ArrayUtils.isEmpty($scope.studentGroups)){
+            $scope.criteria.studentGroups = $scope.studentGroups
+            .filter(function(sg){return ArrayUtils.intersect(sg.schoolDepartments, $scope.criteria.schoolDepartments);})
+            .map(function(sg){return sg.id;});
+            getSchedules();
         }
-    );
+    };
+
+    $scope.showMineChanged = function() {
+        getStudentGroups();
+        getSchedules();
+    };
 
     function getSchedules() {
         // because of many parameters this endpoint was changed from get to post method, it doesn't save anything

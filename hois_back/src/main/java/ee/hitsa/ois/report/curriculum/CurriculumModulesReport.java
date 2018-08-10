@@ -5,10 +5,9 @@ import java.util.List;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
-import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.report.ReportUtil;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.StreamUtil;
 
 public class CurriculumModulesReport {
@@ -23,11 +22,7 @@ public class CurriculumModulesReport {
     }
     
     public CurriculumModulesReport(Curriculum curriculum, Language lang) {
-        List<String> curriculumModuleTypes = EnumUtil.toNameList(CurriculumModuleType.KUTSEMOODUL_P,
-                CurriculumModuleType.KUTSEMOODUL_Y, CurriculumModuleType.KUTSEMOODUL_V,
-                CurriculumModuleType.KUTSEMOODUL_L);
-        
-        for (String type : curriculumModuleTypes) {
+        for (String type : ReportUtil.CURRICULUM_MODULE_ORDER) {
             List<CurriculumModule> modules = StreamUtil.toFilteredList(
                     m -> EntityUtil.getCode(m.getModule()).equals(type), curriculum.getModules());
             moduleTypes.add(new CurriculumModulesTypeReport(type, modules, lang));

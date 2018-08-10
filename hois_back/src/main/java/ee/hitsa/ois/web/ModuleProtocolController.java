@@ -56,6 +56,7 @@ import ee.hitsa.ois.web.dto.ModuleProtocolDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolOccupationalModuleDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolSearchDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolStudentSelectDto;
+import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 
 
@@ -126,7 +127,7 @@ public class ModuleProtocolController {
     }
 
     @GetMapping("teachers")
-    public List<AutocompleteResult> teachers(HoisUserDetails user) {
+    public List<OccupiedAutocompleteResult> teachers(HoisUserDetails user) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return autocompleteService.teachers(user.getSchoolId(), new TeacherAutocompleteCommand(), false);
     }

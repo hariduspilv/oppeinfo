@@ -24,6 +24,7 @@ import com.mitchellbosecke.pebble.extension.Filter;
 import com.mitchellbosecke.pebble.extension.escaper.EscapingStrategy;
 import com.mitchellbosecke.pebble.loader.ClasspathLoader;
 import com.mitchellbosecke.pebble.loader.Loader;
+import com.mitchellbosecke.pebble.template.EvaluationContext;
 import com.mitchellbosecke.pebble.template.PebbleTemplate;
 
 import ee.hitsa.ois.enums.Language;
@@ -88,8 +89,13 @@ public class TemplateService {
 
         @Override
         public Object apply(Object input, Map<String, Object> args) {
-            // TODO parametrized language
-            return TranslateUtil.translate((String)input, Language.ET);
+            Language lang = Language.ET;
+            EvaluationContext context = (EvaluationContext) args.get("_context");
+            Object language = context.getScopeChain().get("lang");
+            if (language instanceof Language) {
+                lang = (Language) language;
+            }
+            return TranslateUtil.translate((String)input, lang);
         }
     }
 

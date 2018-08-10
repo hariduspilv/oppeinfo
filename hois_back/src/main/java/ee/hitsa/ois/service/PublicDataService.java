@@ -19,17 +19,23 @@ import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.CurriculumStatus;
+import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.service.curriculum.CurriculumSearchService;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
 import ee.hitsa.ois.web.dto.PublicDataMapper;
+import ee.hitsa.ois.web.dto.StateCurriculumDto;
+import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
 
 @Transactional
@@ -100,6 +106,36 @@ public class PublicDataService {
             }
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable, em);
+    }
+    
+    public StateCurriculumDto stateCurriculum(StateCurriculum stateCurriculum) {
+        assertVisibleToPublic(stateCurriculum);
+        StateCurriculumDto dto = StateCurriculumDto.of(stateCurriculum);
+        dto.setCurricula(StreamUtil.toMappedSet(CurriculumSearchDto::forStateCurriculumForm, 
+                stateCurriculum.getCurricula().stream()
+                    .filter(c -> ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, c.getStatus()))));
+        return dto;
+    }
+
+    private static void assertVisibleToPublic(StateCurriculum stateCurriculum) {
+        if(!ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, stateCurriculum.getStatus())) {
+            throw new EntityNotFoundException();
+        }
+    }
+
+    public SubjectDto subjectView(Subject subject) {
+        assertVisibleToPublic(subject);
+        return SubjectDto.of(subject, em.createQuery("select cvms.module.curriculumVersion from CurriculumVersionHigherModuleSubject cvms"
+                + " where cvms.subject.id = ?1 and cvms.module.curriculumVersion.status.code = ?2", CurriculumVersion.class)
+                .setParameter(1, subject.getId())
+                .setParameter(2, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K.name())
+                .getResultList());
+    }
+
+    private static void assertVisibleToPublic(Subject subject) {
+        if(!ClassifierUtil.equals(SubjectStatus.AINESTAATUS_K, subject.getStatus())) {
+            throw new EntityNotFoundException();
+        }
     }
 
 }

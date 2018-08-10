@@ -77,7 +77,8 @@
           </div>
         </md-input-container>
 
-        <hois-autocomplete label="exam.room" ng-model="record.room" method="rooms" required flex="40" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"></hois-autocomplete>
+        <hois-autocomplete label="exam.room" ng-model="record.room" method="rooms" required flex="40" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
+          additional-query-params="{isStudy: true, occupied: true, date: record.startDate, startTime: getLocalDateTime(record.startTime), endTime: getLocalDateTime(record.endTime)}"></hois-autocomplete>
       </div>
 
       <div layout="row">

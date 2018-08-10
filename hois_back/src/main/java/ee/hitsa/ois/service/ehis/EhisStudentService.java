@@ -6,6 +6,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -150,7 +151,8 @@ public class EhisStudentService extends EhisService {
         Query extraQuery = em.createNativeQuery("select f.full_code"
                 + " from form f"
                 + " join diploma_supplement_form dsf on dsf.form_id = f.id"
-                + " where dsf.diploma_supplement_id = ?1 and f.status_code = ?2 and f.type_code = ?3")
+                + " where dsf.diploma_supplement_id = ?1 and f.status_code = ?2 and f.type_code = ?3"
+                + " order by f.numeral")
                 .setParameter(2, FormStatus.LOPUBLANKETT_STAATUS_T.name())
                 .setParameter(3, FormType.LOPUBLANKETT_HINL.name());
         List<?> result = em.createNativeQuery("select ds.id, dip_f.full_code as dip_code, sup_f.full_code as sup_code, sup.id as sup_id"
@@ -193,10 +195,24 @@ public class EhisStudentService extends EhisService {
     private List<EhisStudentReport.ForeignStudy> foreignStudy(Long schoolId, EhisStudentForm ehisStudentForm) {
         List<EhisStudentReport.ForeignStudy> foreignStudies = new ArrayList<>();
         for (DirectiveStudent directiveStudent : findForeignStudents(schoolId, ehisStudentForm)) {
-            WsEhisStudentLog log = ehisDirectiveStudentService.foreignStudy(directiveStudent);
-            foreignStudies.add(new EhisStudentReport.ForeignStudy(directiveStudent, log));
+            BigDecimal points = BigDecimal.ZERO; // TODO get real value
+            Integer nominalStudyExtension = Integer.valueOf(getNominalStudyExtension(directiveStudent));
+            WsEhisStudentLog log = ehisDirectiveStudentService.foreignStudy(directiveStudent, points, nominalStudyExtension);
+            foreignStudies.add(new EhisStudentReport.ForeignStudy(directiveStudent, log, points, nominalStudyExtension));
         }
         return foreignStudies;
+    }
+    
+    private static int getNominalStudyExtension(DirectiveStudent directiveStudent) {
+        LocalDate fromDate = DateUtils.periodStart(directiveStudent);
+        LocalDate toDate = DateUtils.periodEnd(directiveStudent);
+        long months = ChronoUnit.MONTHS.between(fromDate, toDate.plusDays(1));
+        if (months >= 8) {
+            return 2;
+        } else if (months >= 3) {
+            return 1;
+        }
+        return 0;
     }
 
     private List<EhisStudentReport.CurriculaFulfilment> curriculumFulfillment(Long schoolId) {

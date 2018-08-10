@@ -16,9 +16,11 @@ import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.StudyYearSchedule;
 import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.StudyYearScheduleRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
@@ -36,12 +38,23 @@ public class StudyYearScheduleService {
     @Autowired
     private StudyYearScheduleRepository studyYearScheduleRepository;
 
-    public Set<StudyYearScheduleDto> getSet(Long schoolId, StudyYearScheduleDtoContainer schedulesCmd) {
+    public Set<StudyYearScheduleDto> getSet(HoisUserDetails user, StudyYearScheduleDtoContainer schedulesCmd) {
         JpaQueryBuilder<StudyYearSchedule> qb = new JpaQueryBuilder<>(StudyYearSchedule.class, "sys");
 
-        qb.requiredCriteria("sys.school.id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("sys.school.id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("sys.studyPeriod.id in (:studyPeriodIds)", "studyPeriodIds", schedulesCmd.getStudyPeriods());
-        qb.optionalCriteria("sys.studentGroup.id in (:studentGroupIds)", "studentGroupIds", schedulesCmd.getStudentGroups());
+        if (Boolean.TRUE.equals(schedulesCmd.getShowMine())) {
+            Long studentId = user.getStudentId();
+            if (studentId != null) {
+                Student student = em.getReference(Student.class, studentId);
+                StudentGroup studentGroup = student.getStudentGroup();
+                if (studentGroup != null) {
+                    qb.requiredCriteria("sys.studentGroup.id = :studentGroupId", "studentGroupId", EntityUtil.getId(studentGroup));
+                }
+            }
+        } else {
+            qb.optionalCriteria("sys.studentGroup.id in (:studentGroupIds)", "studentGroupIds", schedulesCmd.getStudentGroups());
+        }
 
         return StreamUtil.toMappedSet(StudyYearScheduleDto::of, qb.select(em).getResultList());
     }
@@ -105,9 +118,15 @@ public class StudyYearScheduleService {
         return schedule;
     }
 
-    public List<StudentGroupSearchDto> getStudentGroups(Long schoolId) {
-        List<StudentGroup> data = em.createQuery("select sg from StudentGroup sg where sg.school.id = ?1", StudentGroup.class)
-                .setParameter(1, schoolId).getResultList();
+    public List<StudentGroupSearchDto> getStudentGroups(Long schoolId, Long studentId) {
+        List<StudentGroup> data;
+        if (studentId != null) {
+            data = em.createQuery("select s.studentGroup from Student s where s.id = ?1", StudentGroup.class)
+                .setParameter(1, studentId).getResultList();
+        } else {
+            data = em.createQuery("select sg from StudentGroup sg where sg.school.id = ?1", StudentGroup.class)
+                    .setParameter(1, schoolId).getResultList();
+        }
         return StreamUtil.toMappedList(sg -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
             dto.setId(sg.getId());

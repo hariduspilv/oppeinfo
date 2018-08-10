@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service.ehis;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.List;
@@ -39,8 +40,6 @@ import ee.hois.xroad.ehis.generated.KhlOppur;
 @Transactional
 @Service
 public class EhisDirectiveStudentService extends EhisService {
-
-    private static final String SUBJECT_POINTS = "0";
 
     public void updateStudents(Job job) {
         Directive directive = em.getReference(Directive.class, EntityUtil.getId(job.getDirective()));
@@ -356,7 +355,7 @@ public class EhisDirectiveStudentService extends EhisService {
         makeRequest(directive, khlOppeasutusList);
     }
 
-    public WsEhisStudentLog foreignStudy(DirectiveStudent directiveStudent) {
+    public WsEhisStudentLog foreignStudy(DirectiveStudent directiveStudent, BigDecimal points, Integer nominalStudyExtension) {
         try {
             Student student = directiveStudent.getStudent();
             Directive directive = directiveStudent.getDirective();
@@ -367,9 +366,8 @@ public class EhisDirectiveStudentService extends EhisService {
             khlLyhiajaliseltValismaal.setPerioodAlates(date(directiveStudent.getStartDate()));
             khlLyhiajaliseltValismaal.setPerioodKuni(date(directiveStudent.getEndDate()));
             khlLyhiajaliseltValismaal.setKlEesmark(ehisValue(directiveStudent.getAbroadPurpose()));
-            // TODO replace with real data
-            khlLyhiajaliseltValismaal.setAinepunkte(SUBJECT_POINTS);
-            khlLyhiajaliseltValismaal.setNominaalajaPikendamine(BigInteger.ZERO);
+            khlLyhiajaliseltValismaal.setAinepunkte(points.toString());
+            khlLyhiajaliseltValismaal.setNominaalajaPikendamine(BigInteger.valueOf(nominalStudyExtension.longValue()));
             khlLyhiajaliseltValismaal.setOppeasutuseNimi(Boolean.TRUE.equals(directiveStudent.getIsAbroad()) ? directiveStudent.getAbroadSchool() : name(directiveStudent.getEhisSchool()));
             khlLyhiajaliseltValismaal.setKlSihtriik(value2(directiveStudent.getCountry()));
             khlLyhiajaliseltValismaal.setKlProgramm(ehisValue(directiveStudent.getAbroadProgramme()));

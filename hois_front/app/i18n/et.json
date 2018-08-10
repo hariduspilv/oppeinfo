@@ -666,7 +666,7 @@
       "delete": "Kustuta foto"
     },
     "postcode": "Sihtnumber",
-    "previousSchoolEndDate": "Lõpetamise aasta",
+    "previousSchoolEndDate": "Eelneva õppeasutuse lõpetamise aasta",
     "previousSchoolName": "Eelnevalt lõpetatud õppeasutus",
     "previousStudyLevel": "Eelnev haridus",
     "representatives": "Esindajad",
@@ -943,6 +943,10 @@
     "adDomain": "AD serveri domeen",
     "adBase": "Kasutajate asukoht AD-s",
     "adIdcodeField": "Kasutaja isikukoodi atribuudi nimi AD-s",
+    "finalSchoolType": "Õppeasutuse tüüp",
+    "final62": "Täiendava info allikad",
+    "finalSchoolTypeEn": "Õppeasutuse tüüp i.k.",
+    "finalEn62": "Täiendava info allikad i.k.",
     "logo": {
       "notSelected": "Logo on valimata",
       "selectLogo": "Vali logo",
@@ -1137,9 +1141,9 @@
     "addPlanDialog": "Uus tunnijaotusplaan",
     "credits": "EKAP",
     "curriculumVersion": "Õppekava",
+    "course": "Kursus",
     "grandTotal": "KÕIK KOKKU",
     "isUsable": "on kasutatav",
-    "journalreference": "Viide tunniplaanile",
     "journals": "Päevikud",
     "modulehours": "Mooduli maht tundides",
     "moduleTotal": "kokku",
@@ -1150,6 +1154,7 @@
     "showTotals": "kuva kokku read",
     "showWeeks": "kuva nädalad",
     "studentGroup": "Õpperühm",
+    "studyPeriod": "Õppeaeg",
     "studyYear": "Õppeaasta",
     "subjects": "Õppeained",
     "teacher": "Õpetaja",
@@ -1504,6 +1509,17 @@
     "minorSpecialtyDeleteConfirm": "Kas oled kindel, et soovid kõrvaleriala kustutada?",
     "additionalInfo": "Muu info",
     "approvalInfo": "Õppeasutuse kinnitamise info",
+    "diplomaInfo": "Lõpudokumendile minevad väljad",
+    "final31": "3.1. Tase",
+    "final33": "3.3. Õppe alustamise tingimused",
+    "final51": "5.1. Edasiõppimisvõimalused",
+    "final52": "5.2. Pääs tööturule",
+    "final61": "6.1. Lisainfo",
+    "finalEn31": "3.1. Tase i.k.",
+    "finalEn33": "3.3. Õppe alustamise tingimused i.k.",
+    "finalEn51": "5.1. Edasiõppimisvõimalused i.k.",
+    "finalEn52": "5.2. Pääs tööturule i.k.",
+    "finalEn61": "6.1. Lisainfo i.k.",
     "sentToEhis": "Õppekava on EHISesse saadetud",
     "statuses": "Õppekava kehtivus ja staatused",
     "versionStatus": "Õppekava versiooni kehtivus ja staatus",
@@ -1532,7 +1548,8 @@
     "search": {
       "creditsEap": "Maht EAP",
       "creditsEkap": "Maht EKAP",
-      "creditsEapEkap": "Maht EAP/EKAP"
+      "creditsEapEkap": "Maht EAP/EKAP",
+      "merCode": "HTM kood"
     },
     "consecution": {
       "label": "Järgnevus",
@@ -2077,7 +2094,6 @@
     "studentGroup": "Õpperühm",
     "studentGroupCode": "Õpperühma tähis",
     "hoursTotal": "Planeeritud tundide arv kokku",
-    "linkToTimetable": "Viide tunniplaanile",
     "department": "Struktuuriüksus",
     "curriculum": "Õppekava",
     "timetable": "Tunniplaan",
@@ -2204,14 +2220,14 @@
     "mismatchingStudents": "Rühmaga sidumata õppijad",
     "reason": "Põhjus",
     "newGroup": "Uus rühm",
-    "confirm": "Õppijad viiakse üle uude õppeaastasse ja muudetakse nende kursust. Õpperühma saab üle viia uude õppeaastasse üks kord õppeaastas. Kas oled kindel, et soovid jätkata?",
+    "confirm": "Õppurid viiakse üle uude õppeaastasse, muudetakse nende kursust ja õpperühma tähist. Õpperühma saab üle viia uude õppeaastasse üks kord õppeaastas. Kas oled kindel, et soovid jätkata?",
     "recalculate": "Õpperühmade uude aastasse üle viimiseks vajutada nupule \"Arvuta\", et arvutada õppijate arvud õpperühmades",
     "button": {
       "transfer": "Vii uude õppeaastasse"
     },
     "error": {
       "noPreviousStudyYear": "Eelmine õppeaasta puudub",
-      "studentNotActive": "Õppija ei ole aktiivne"
+      "studentNotActive": "Uude õppeaastasse üleviimiseks valitud õpperühma kuulub mitteaktiivseid õppureid"
     }
   },
   "theme": {
@@ -2343,6 +2359,7 @@
   "studyYearSchedule": {
     "studyYear": "Õppeaasta",
     "schoolDepartment": "Struktuuriüksus",
+    "showMine": "Kuva minu õppetöögraafik",
     "studentGroup": "Õpperühm",
     "week": "nädal",
     "studyType": "Õppetöö liik",
@@ -2373,21 +2390,31 @@
     "supplements": "Akad. õiendid",
     "diplomasVocational": "Lõputunnistused",
     "supplementsVocational": "Hinnetelehed",
-    "curriculumVersion": "Rakenduskava",
-    "diplomaNr": "Tunnistuse nr",
-    "diplomaStatus": "Tunnistuse staatus",
+    "curriculumVersion": "Õppekava versioon",
+    "diplomaNr": "Diplomi nr",
+    "diplomaStatus": "Diplomi staatus",
+    "curriculumVersionVocational": "Rakenduskava",
+    "diplomaNrVocational": "Tunnistuse nr",
+    "diplomaStatusVocational": "Tunnistuse staatus",
     "directive": "Käskkiri",
     "formType": "Blanketi liik",
     "student": "Õppija",
-    "supplementStatus": "Hinnetelehe staatus",
+    "supplementStatus": "Akad. õiendi staatus",
+    "supplementStatusEn": "Akad. õiendi staatus i.k.",
+    "supplementStatusVocational": "Hinnetelehe staatus",
     "idcode": "Isikukood",
     "birthdate": "Sünniaeg",
     "signer1": "Esimene allkirjastaja",
     "signer2": "Teine allkirjastaja",
     "city": "Väljaandmise koht",
+    "showSubjectCode": "Õppeaine kood",
+    "showTeacher": "Õppejõud",
     "freeForms": "Vabad blanketid",
     "freeExtraForms": "Vabad lisalehtede blanketid",
+    "usedForms": "Kasutatud blanketid",
     "noFreeForms": "Puuduvad",
+    "estonian": "Eesti keeles",
+    "english": "Inglise keeles",
     "button": {
       "showPdf": "Näita pdf"
     },
@@ -2400,7 +2427,7 @@
     },
     "error": {
       "notEnoughForms": "Süsteemis ei ole piisavalt kasutamata blankette",
-      "formNotFound": "Blanketti ei eksisteeri või on juba kasutatud",
+      "formNotFound": "Blanketti ei eksisteeri või on juba kasutatud: {{nrs}}",
       "missingEhisCode": "Õppekava HTM kood puudub"
     }
   },
@@ -2500,8 +2527,10 @@
       "weekAmount": "Nädalate arv",
       "repetition": "Kordus",
       "teacher": "Õpetaja",
+      "otherTeacher": "Õppeasutuse väline õpetaja",
       "teachers": "Õpetaja(d)",
       "room": "Ruum",
+      "otherRoom": "Õppeasutuse väline ruum",
       "rooms": "Ruumid",
       "occupied": "Hõivatud",
       "duplicateroom": "Ruum on juba olemas",
@@ -2632,6 +2661,7 @@
     "journalCapacity":"maht {{capacity}} tundi",
     "downloadSigned": "Lae allkirjastatud protokoll",
     "outcome": "ÕV",
+    "practiceResult": "Praktika tulemus",
     "messages": {
       "studentSuccesfullyAdded": "Õppijad edukalt lisatud",
       "confirmed": "Mooduli protokoll edukalt kinnitatud",
@@ -2750,6 +2780,7 @@
       "curriculum": "Õppekava",
       "dataType": "Saadetavad andmed",
       "docNr": "Lõpudokumendi number",
+      "extraNr": "lisalehed",
       "error": "Sõnumi saatmine õnnestus",
       "fromDate": "Alates",
       "idcode": "Isikukood",
@@ -2757,6 +2788,12 @@
       "name": "Õppija nimi",
       "percentage": "ÕK täidetus",
       "points": "Ainepunktid",
+      "votaConfirmDate": "Õpitulemuse arvestamise kp",
+      "votaType": "Arvestuse tüüp",
+      "formal": "Formaalne",
+      "informal": "Informaalne",
+      "votaCountry": "Riik",
+      "gradeDate": "Originaalsoorituse kuupäev",
       "lastPeriod": "Eelmine periood",
       "result": "Õppijad, kelle andmed saadeti EHISesse",
       "schoolName": "Õppeasutus",
@@ -3243,6 +3280,7 @@
     "teacherComment": "Õppeasutuse juhendaja kommentaar",
     "supervisorComment": "Juhendaja kommentaar",
     "grade": "Hinne",
+    "status": "Staatus",
     "deleteconfirm":"Kas oled kindel, et soovid praktika päeviku kustutada?",
     "vocationalOrHigherSelect": "Kas kutseõpe või kõrgõpe?",
     "vocationalOrHigherPracticeJournal": "Palun valige, kas soovite lisada kutseõppe või kõrgõppe praktika päevikut?",
@@ -3421,7 +3459,7 @@
       "lastname": "Perekonnanimi",
       "idcode": "Isikukood",
       "phone": "Telefon",
-      "bankaccount": "Pangakonto number",
+      "bankaccount": "Arveldusarve",
       "add": "Lisa juhendaja"
     },
     "error": {
@@ -3441,6 +3479,7 @@
   "finalDocSigner": {
     "name": "Allkirjastaja",
     "position": "Ametikoht",
+    "positionEn": "Ametikoht i.k.",
     "isFirst": "Esimene allkirjastaja",
     "isValid": "Kehtiv",
     "deleteconfirm": "Kas oled kindel, et soovid allkirjastaja kustutada?"
@@ -3553,7 +3592,7 @@
     },
     "annul": {
       "grantStudentList": "Õppetoetuse tühistamine",
-      "stipendStudentList": "Stipendiumi tagasi lükkamine"
+      "stipendStudentList": "Stipendiumi tühistamine"
     }
   },
   "public": {

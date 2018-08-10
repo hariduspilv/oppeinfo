@@ -360,7 +360,7 @@
       };
   }]).controller('TeacherListController', ['$scope', '$route', 'QueryUtils', 'USER_ROLES',
   function ($scope, $route, QueryUtils, USER_ROLES) {
-    QueryUtils.createQueryForm($scope, '/teachers', {order: 'p.lastname,p.firstname'});
+    QueryUtils.createQueryForm($scope, '/teachers', {order: 'p.lastname,p.firstname', isActive: true});
 
     $scope.auth = $route.current.locals.auth;
     $scope.showSchool = $scope.auth.isExternalExpert();

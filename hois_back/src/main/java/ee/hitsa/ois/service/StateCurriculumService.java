@@ -80,7 +80,7 @@ public class StateCurriculumService {
      * StateCurriculumSearchDto can also be simplified: iscedClass and large constructor can be removed
      */
     public Page<StateCurriculumSearchDto> search(HoisUserDetails user, StateCurriculumSearchCommand criteria, Pageable pageable) {
-        if(!StateCurriculumUtil.hasPermissionToView(user)) {
+        if(user == null || !StateCurriculumUtil.hasPermissionToView(user)) {
             criteria.setStatus(Collections.singletonList(CurriculumStatus.OPPEKAVA_STAATUS_K.name()));
         }
 
@@ -135,7 +135,9 @@ public class StateCurriculumService {
         dto.setCredits(resultAsLong(r, 5));
         dto.setStatus(resultAsString(r, 6));
         dto.setEkrLevel(resultAsString(r, 7));
-        dto.setCanChange(Boolean.valueOf(StateCurriculumUtil.canChange(user, dto.getStatus())));
+        if (user != null) {
+            dto.setCanChange(Boolean.valueOf(StateCurriculumUtil.canChange(user, dto.getStatus())));
+        }
         return dto;
     }
 

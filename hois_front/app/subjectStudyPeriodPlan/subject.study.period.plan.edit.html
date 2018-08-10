@@ -60,7 +60,7 @@
         <div layout="row">
             <md-button ng-if="!readOnly" class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
             <md-button ng-if="!readOnly && record.id" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="/#/subjectStudyPeriodPlans">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back('/#/subjectStudyPeriodPlans', subjectStudyPeriodPlanEditForm)">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
 </div>

@@ -4,11 +4,11 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 public class RoomTimetableDto {
     private Long roomId;
-    private String roomCode;
+    private String code;
     
     public RoomTimetableDto(Object[] row) {
         this.roomId =  resultAsLong(row, 0);
-        this.roomCode = (String) row[1];
+        this.code = (String) row[1] + "-" + row[2];
     }
 
     public Long getRoomId() {
@@ -19,12 +19,12 @@ public class RoomTimetableDto {
         this.roomId = roomId;
     }
 
-    public String getRoomCode() {
-        return roomCode;
+    public String getCode() {
+        return code;
     }
 
-    public void setRoomCode(String roomCode) {
-        this.roomCode = roomCode;
+    public void setCode(String code) {
+        this.code = code;
     }
     
 }

@@ -2,6 +2,8 @@
 
 angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService', 'ArrayUtils',
   function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService, ArrayUtils) {
+    var bsave=false;
+    $scope.Math = window.Math;
     $scope.isArray = angular.isArray;
     $scope.journalColors = ['#ffff00', '#9fff80', '#ff99cc', '#E8DAEF', '#85C1E9', '#D1F2EB',
      '#ABEBC6', '#F9E79F', '#FAD7A0', '#EDBB99', '#D5DBDB', '#64B5F6','#B0BEC5', '#80CBC4',
@@ -15,24 +17,18 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     var baseUrl = '/timetables';
     $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
 
-    function getVocationalPlan() {
-      QueryUtils.loadingWheel($scope, true);
-      QueryUtils.endpoint(baseUrl + '/:id/createVocationalPlan').search({
-        id: $scope.timetableId
-      }).$promise.then(function (result) {
-        initializeData(result, $route.current.params.groupId, null);
-        QueryUtils.loadingWheel($scope, false);
-      });
-    }
-
-    getVocationalPlan();
+    QueryUtils.loadingWheel($scope, true);
+    QueryUtils.endpoint(baseUrl + '/:id/createVocationalPlan').search({
+      id: $scope.timetableId
+    }).$promise.then(function (result) {
+      initializeData(result, $route.current.params.groupId, null);
+      QueryUtils.loadingWheel($scope, false);
+    });
 
     function initializeData(result, selectedGroupId, selectedGroups) {
       var displayPeriodLessons = $scope.plan.displayPeriodLessons ? $scope.plan.displayPeriodLessons : false;
-      //console.log(selectedGroupId);
-      //console.log(selectedGroups);
       $scope.plan = result;
-      $scope.plan.selectAll = false;//selectedGroups==null ? falsetrue;
+      $scope.plan.selectAll = false;
       $scope.plan.displayPeriodLessons = displayPeriodLessons;
       $scope.plan.journals.sort(function (a, b) {
         return a.id - b.id;
@@ -53,9 +49,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       } else {
         $scope.plan.currentStudentGroups = $scope.plan.studentGroups;
         $scope.plan.currentStudentGroups.forEach(function (studentGroup) {
-          //console.log(typeof(studentGroup.id)+" "+typeof(selectedGroupId));
           if (studentGroup.id !== Number(selectedGroupId)) {
-            //console.log(studentGroup.id+" "+selectedGroupId);
             studentGroup._selected = false;
             $scope.plan.selectAll = false;
           }
@@ -143,7 +137,15 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       $scope.plan.plannedLessonsByGroup = plannedLessonsByGroup;
       $scope.plan.selectedGroup = selectedGroupId;
       setCapacities();
-      $scope.updateGroups();
+      if(!bsave)
+      {
+        $scope.updateGroups();
+      }
+      else
+      {
+        bsave=false;
+      }
+
     }
 
     $scope.$watch('plan.selectedGroup', function () {
@@ -161,6 +163,10 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         }
         $scope.updateGroups();
       }
+    };
+
+    $scope.orderBySelectedGroup = function (group) {
+      return group.id !== $scope.plan.selectedGroup;
     };
 
     function setCapacities() {
@@ -205,6 +211,15 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         result += it[param];
       });
       return result;
+    };
+
+    $scope.isUnderAllocatedLessons = function (journal) {
+      if ($scope.getTotalsByJournal(journal, 'thisPlannedLessons') >= $scope.getTotalsByJournal(journal, 'thisPlannedLessons') - $scope.getTotalsByJournal(journal, 'lessonsLeft')) {
+        if ($scope.getTotalsByJournal(journal, 'totalPlannedLessons') >= $scope.getTotalsByJournal(journal, 'totalAllocatedLessons')) {
+          return true;
+        }
+      }
+      return false;
     };
 
     $scope.getByCapacity = function (capacity, param) {
@@ -360,6 +375,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
           }
         });
         dialogScope.deleteEvent = function (toDelete) {
+          bsave=true;
           QueryUtils.endpoint(baseUrl + '/deleteVocationalEvent').save({
             timetableEventId: toDelete
           }).$promise.then(function (result) {
@@ -387,7 +403,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
           return filtered;
         }, []);
 
-        QueryUtils.endpoint(baseUrl + '/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
+        QueryUtils.endpoint('/timetableevents/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
           if(result.occupied) {
             dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
               saveEventRoomsAndTimes(query, currGroupId);
@@ -400,12 +416,14 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     };
 
     function saveEventRoomsAndTimes(query, currGroupId) {
+      bsave=true;
       QueryUtils.endpoint(baseUrl + '/saveVocationalEventRoomsAndTimes').save(query).$promise.then(function (result) {
         initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
       });
     }
 
     $scope.saveEvent = function (params) {
+      bsave=true;
       var currGroupId = $scope.plan.selectedGroup;
       var selectedDay, daysSoFar = 0;
       for (var k = 0; $scope.dayOrder.length > k; k++) {
@@ -430,14 +448,22 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         timetable: $scope.timetableId,
         lessonTime: this.lessonTime.id,
         selectedDay: selectedDay,
+        oldEventId: params.oldEventId
       };
 
-      QueryUtils.endpoint(baseUrl + '/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
+      QueryUtils.endpoint('/timetableevents/timetableNewVocationalTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
         if (result.occupied) {
           dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
             saveVocationalEvent(query, currGroupId);
           }, function () {
-            getVocationalPlan();
+            bsave = false;
+            QueryUtils.loadingWheel($scope, true);
+            QueryUtils.endpoint(baseUrl + '/:id/createVocationalPlan').search({
+              id: $scope.timetableId
+            }).$promise.then(function (result) {
+              initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
+              QueryUtils.loadingWheel($scope, false);
+            });
           });
         } else {
           saveVocationalEvent(query, currGroupId);

@@ -2,7 +2,9 @@
   <div layout="column">
     <div flex="30" class="md-title">
       <hois-classifier-value ng-model="record.studyYearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
-      <span>{{'lessonplan.studentGroup' | translate}} {{record.studentGroupCode}}</span>
+      <span>{{'lessonplan.studentGroup' | translate}} {{record.studentGroupCode}} ({{record.courseNr}}. {{'lessonplan.course' | translate}}), </span>
+      <span>{{record.curriculumCode}}, {{currentLanguageNameField(record.curriculumVersion)}}, </span>
+      <span>{{'lessonplan.studyPeriod' | translate}} {{formState.studyPeriodYears}} {{'main.years' | translate}} {{formState.studyPeriodMonths}} {{'main.months' | translate}}</span>
     </div>
     <br>
     <div flex layout="row">
