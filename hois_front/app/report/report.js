@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope', 'Classifier', 'QueryUtils',
-  function ($q, $scope, Classifier, QueryUtils) {
+angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope', '$route', 'Classifier', 'QueryUtils',
+  function ($q, $scope, $route, Classifier, QueryUtils) {
+    $scope.auth = $route.current.locals.auth;
     var certificateMapper = Classifier.valuemapper({occupationCode: 'KUTSE', partOccupationCode: 'OSAKUTSE', specialityCode: 'SPETSKUTSE'});
     var clMapper = Classifier.valuemapper({fin: 'FINALLIKAS', finSpecific: 'FINTAPSUSTUS', language: 'OPPEKEEL',
       studyLevel: 'OPPEASTE', studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', status: 'OPPURSTAATUS'});
@@ -17,10 +18,29 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
         result[i].occupationCertificates = (result[i].occupationCertificates || []).map(certMapper);
       }
     }
-    QueryUtils.createQueryForm($scope, '/reports/students', {order: 'p.lastname,p.firstname'}, afterLoad);
+    QueryUtils.createQueryForm($scope, '/reports/students', {order: 'p.lastname,p.firstname', isHigher: $scope.auth.higher}, afterLoad);
+    var _clearCriteria = $scope.clearCriteria;
+    $scope.clearCriteria = function() {
+      _clearCriteria();
+      $scope.criteria.isHigher = $scope.auth.higher;
+    };
 
+    $scope.formState = {
+      studentGroups: QueryUtils.endpoint('/autocomplete/studentgroups').query(),
+      filterStudentGroups: [],
+      xlsUrl: 'reports/students/students.xls'
+    };
 
-    $scope.formState = {xlsUrl: 'reports/students/students.xls'};
+    $scope.curriculumVersionChanged = function() {
+      $scope.formState.filterStudentGroups = [];
+      if ($scope.criteria.curriculumVersion) {
+        $scope.formState.studentGroups.forEach(function(studentGroup) {
+          if (studentGroup.curriculumVersion !== $scope.criteria.curriculumVersion.id) {
+            $scope.formState.filterStudentGroups.push(studentGroup.id);
+          }
+        });
+      }
+    };
 
     $q.all(certificateMapper.promises).then(function() {
       $q.all(clMapper.promises).then($scope.loadData);
@@ -50,11 +70,18 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
         }
       }
     });
+    $scope.criteria.date = new Date().withoutTime();
+    var _clearCriteria = $scope.clearCriteria;
+    $scope.clearCriteria = function() {
+      _clearCriteria();
+      $scope.criteria.curriculum = [];
+    };
 
     $scope.loadData();
   }
-]).controller('ReportStudentStatisticsByperiodController', ['$scope', 'Classifier', 'QueryUtils', 'Session',
-  function ($scope, Classifier, QueryUtils, Session) {
+]).controller('ReportStudentStatisticsByperiodController', ['$scope', '$route', 'Classifier', 'QueryUtils', 'Session',
+  function ($scope, $route, Classifier, QueryUtils, Session) {
+    $scope.auth = $route.current.locals.auth;
     var classifierMapping = {OPPURSTAATUS_A: 'AKADPUHKUS_POHJUS', OPPURSTAATUS_K: 'EKSMAT_POHJUS'};
     var school = Session.school || {};
     $scope.formState = {xlsUrl: 'reports/students/statistics/studentstatisticsbyperiod.xls'};
@@ -67,13 +94,27 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
         $scope.formState.resultDef = mainClassCode ? Classifier.queryForDropdown({mainClassCode: mainClassCode, higher: school.higher, vocational: school.vocational}) : undefined;
       }
     });
+    $scope.criteria.from = new Date().withoutTime();
+    var _clearCriteria = $scope.clearCriteria;
+    $scope.clearCriteria = function() {
+      _clearCriteria();
+      $scope.criteria.curriculum = [];
+    };
 
     $scope.loadData();
   }
-]).controller('ReportCurriculumsCompletionController', ['$q', '$scope', 'Classifier', 'QueryUtils',
-  function ($q, $scope, Classifier, QueryUtils) {
+]).controller('ReportCurriculumsCompletionController', ['$q', '$scope', '$route', 'Classifier', 'QueryUtils',
+  function ($q, $scope, $route, Classifier, QueryUtils) {
+    $scope.auth = $route.current.locals.auth;
     var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', status: 'OPPURSTAATUS'});
-    QueryUtils.createQueryForm($scope, '/reports/curriculums/completion', {order: 'p.lastname,p.firstname'}, clMapper.objectmapper);
+    $scope.formState = {xlsUrl: 'reports/curriculums/completion/curriculumscompletion.xls'};
+
+    QueryUtils.createQueryForm($scope, '/reports/curriculums/completion', {order: 'p.lastname,p.firstname', isHigher: $scope.auth.higher}, clMapper.objectmapper);
+    var _clearCriteria = $scope.clearCriteria;
+    $scope.clearCriteria = function() {
+      _clearCriteria();
+      $scope.criteria.isHigher = $scope.auth.higher;
+    };
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
@@ -86,7 +127,11 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       FormUtils.withValidForm($scope.teacherLoadReportForm, loadData);
     };
 
-    $scope.formState = {studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), studyPeriods: {}};
+    $scope.formState = {
+      studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), 
+      studyPeriods: {},
+      xlsUrl: 'reports/teachers/load/higher/teachersloadhigher.xls'
+    };
     $scope.formState.allStudyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
     $scope.formState.studyYears.$promise.then(function() {
       $scope.formState.allStudyPeriods.$promise.then(function(studyPeriods) {
@@ -120,7 +165,11 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       FormUtils.withValidForm($scope.teacherLoadReportForm, loadData);
     };
 
-    $scope.formState = {studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), studyPeriods: {}};
+    $scope.formState = {
+      studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), 
+      studyPeriods: {},
+      xlsUrl: 'reports/teachers/load/vocational/teachersloadvocational.xls'
+    };
     $scope.formState.allStudyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
     $scope.formState.studyYears.$promise.then(function() {
       $scope.formState.allStudyPeriods.$promise.then(function(studyPeriods) {

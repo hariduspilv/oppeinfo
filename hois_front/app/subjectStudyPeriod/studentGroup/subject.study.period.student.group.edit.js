@@ -23,7 +23,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
     }
 
     if(studentGroup) {
-        $scope.record = Endpoint.search({studyPeriod: studyPeriodId, studentGroup: studentGroup, subjectStudyPeriodDtos: []});
+        $scope.container = {studyPeriod: studyPeriodId, studentGroup: studentGroup, subjectStudyPeriodDtos: []};
+        $scope.record = Endpoint.search($scope.container);
         $scope.record.$promise.then(function(response){
             $scope.capacitiesUtil = new SspCapacities(response);
             $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function() {
@@ -35,6 +36,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
             $scope.course = $scope.studentGroup.course.toString();
             getCurriculum();
         });
+        $scope.formState = {xlsUrl: 'subjectStudyPeriods/studentGroups/subjectstudyperiodstudentgroup.xls'};
     }
 
     function loadStudentGroups() {

@@ -56,6 +56,11 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
             ctrl.$setValidity('notUnique', $scope.record.person.idcode !== $scope.formState.student.person.idcode);
           }
 
+          function setidcodevalidity(isValid) {
+            var ctrl = $scope.studentRepresentativeEditForm.idcode;
+            ctrl.$setValidity('estonianIdcode', isValid);
+          }
+
           $scope.cancel = $mdDialog.hide;
           $scope.update = function () {
             idcodevaliditycheck();
@@ -92,6 +97,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
             var idcode = $scope.record.person.idcode;
             if(idcode && idcode.length === 11 && idcode !== $scope.formState.idcode) {
               QueryUtils.endpoint('/autocomplete/persons', {search: {method: 'GET'}}).search({idcode: idcode, role: 'forrepresentative'}).$promise.then(function(response) {
+                setidcodevalidity(true);
                 // fill first/lastname and make them readonly
                 setresult(response);
                 // fill other empty fields
@@ -102,11 +108,15 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
                   $scope.record.person.email = response.email;
                 }
                 $scope.formState.idcode = response.idcode;
-              }).catch(function() {
+              }).catch(function(error) {
                 setresult({});
+                $scope.formState.idcode = undefined;
+                setidcodevalidity(error.status !== 412);
               });
             } else if(idcode !== $scope.formState.idcode) {
               setresult({});
+              $scope.formState.idcode = undefined;
+              setidcodevalidity(idcode.length === 11);
             }
             idcodevaliditycheck();
           };
@@ -543,6 +553,19 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
       $scope.directives.$promise = QueryUtils.endpoint('/students/:studentId/directives').search(query, $scope.afterDirectivesLoad);
     };
 
+    $scope.practiceContractsCriteria = { size: 5, page: 1, order: 'contract_nr', studentId: $scope.studentId };
+    $scope.practiceContracts = {};
+    var practiceContractsMapper = Classifier.valuemapper({ status: 'LEPING_STAATUS' });
+    $scope.afterPracticeContractsLoad = function (result) {
+      $scope.practiceContracts.content = practiceContractsMapper.objectmapper(result.content);
+      $scope.practiceContracts.totalElements = result.totalElements;
+    };
+
+    $scope.loadPracticeContracts = function () {
+      var query = QueryUtils.getQueryParams($scope.practiceContractsCriteria);
+      $scope.practiceContracts.$promise = QueryUtils.endpoint('/students/:studentId/practicecontracts').search(query, $scope.afterPracticeContractsLoad);
+    };
+
     $scope.certificatesCriteria = { size: 5, page: 1, order: 'type.' + $scope.currentLanguageNameField(), student: $scope.studentId};
     $scope.certificates = {};
     var certificatesMapper = Classifier.valuemapper({type: 'TOEND_LIIK', status: 'TOEND_STAATUS'});
@@ -567,6 +590,9 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
       });
       $q.all(directivesMapper.promises).then(function () {
         $scope.afterDirectivesLoad(result.directives);
+      });
+      $q.all(practiceContractsMapper.promises).then(function () {
+        $scope.afterPracticeContractsLoad(result.practiceContracts);
       });
       if($scope.auth.isStudent()) {
         $scope.applicationTypesApplicable = result.applicationTypesApplicable;

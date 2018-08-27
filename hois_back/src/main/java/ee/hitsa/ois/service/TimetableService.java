@@ -103,6 +103,7 @@ import ee.hitsa.ois.web.dto.timetable.TimetableJournalDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupCapacityDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableStudentStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
 
@@ -1413,6 +1414,70 @@ public class TimetableService {
             start = weekEnd.plusDays(1);
         }
         return weeks;
+    }
+    
+    public List<TimetableStudentStudyYearWeekDto> timetableStudyYearWeeksStudent(Student student) {
+        Long schoolId = EntityUtil.getId(student.getSchool());
+        StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        if (studyYear == null) {
+            return null;
+        }
+        
+        boolean isHigher = student.getCurriculumVersion().getCurriculum().getHigher().booleanValue();
+        
+        Set<DateRangeDto> periodsWithConnectedSubjects = isHigher
+                ? higherPeriodsWithConnectedSubjects(EntityUtil.getId(student), EntityUtil.getId(studyYear))
+                : vocationalPeriodsWithConnectedSubjects(EntityUtil.getId(student), EntityUtil.getId(studyYear));
+        
+        List<TimetableStudyYearWeekDto> weeks = timetableStudyYearWeeks(schoolId);
+        List<TimetableStudentStudyYearWeekDto> studentWeeks = new ArrayList<>();
+        
+        for (TimetableStudyYearWeekDto week : weeks) {
+            TimetableStudentStudyYearWeekDto studentWeek = new TimetableStudentStudyYearWeekDto(week.getWeekNr(), week.getStart(), week.getEnd());
+            for (DateRangeDto period : periodsWithConnectedSubjects) {
+                if (Boolean.TRUE.equals(studentWeek.getConnectedSubjects())) {
+                    break;
+                }
+                studentWeek.setConnectedSubjects(Boolean.valueOf(
+                        !week.getStart().isAfter(period.getEnd()) && !period.getStart().isAfter(week.getEnd())));
+            }
+            studentWeeks.add(studentWeek);
+        }
+        
+        return studentWeeks;
+    }
+    
+    private Set<DateRangeDto> higherPeriodsWithConnectedSubjects(Long studentId, Long studyYearId) {
+        Query q = em.createNativeQuery("select sp.id, sp.start_date, sp.end_date from study_year sy " + 
+                "join study_period sp on sy.id = sp.study_year_id " + 
+                "join declaration d on sp.id = d.study_period_id " + 
+                "join declaration_subject ds on d.id = ds.declaration_id " + 
+                "where d.student_id = :studentId and sy.id = :studyYearId and d.status_code = :declarationStatus");
+        q.setParameter("studentId", studentId);
+        q.setParameter("studyYearId", studyYearId);
+        q.setParameter("declarationStatus", DeclarationStatus.OPINGUKAVA_STAATUS_K.name());
+        
+        List<?> data = q.getResultList();
+        Set<DateRangeDto> periodsWithConnectedSubjects = StreamUtil
+                .toMappedSet(r -> new DateRangeDto(resultAsLocalDate(r, 1), resultAsLocalDate(r, 2)), data); 
+        
+        return periodsWithConnectedSubjects;
+    }
+    
+    // TODO: return study year if there are student journals, temporary solution for unnecessary error messages
+    private Set<DateRangeDto> vocationalPeriodsWithConnectedSubjects(Long studentId, Long studyYearId) {
+        Query q = em.createNativeQuery("select sy.id, sy.start_date, sy.end_date from study_year sy " + 
+                "join journal j on sy.id = j.study_year_id " + 
+                "join journal_student js on j.id = js.journal_id " + 
+                "where js.student_id = :studentId and sy.id = :studyYearId");
+        q.setParameter("studentId", studentId);
+        q.setParameter("studyYearId", studyYearId);
+        
+        List<?> data = q.getResultList();
+        Set<DateRangeDto> periodsWithConnectedSubjects = StreamUtil
+                .toMappedSet(r -> new DateRangeDto(resultAsLocalDate(r, 1), resultAsLocalDate(r, 2)), data); 
+        
+        return periodsWithConnectedSubjects;
     }
 
     private void sendTimetableChangesMessages(TimetableObject object) {

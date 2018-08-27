@@ -16,14 +16,14 @@
             <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required autofocus></hois-select>
           </md-input-container>
 
-          <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="auth.isAdmin()">
             <hois-autocomplete label="lessonplan.teacher" ng-model="criteria.teacher" method="teachers"></hois-autocomplete>
           </div>
         </div>
 
         <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()" ng-if="auth.isAdmin()">{{'main.button.clear' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>

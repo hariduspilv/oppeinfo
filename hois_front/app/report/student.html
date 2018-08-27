@@ -11,7 +11,7 @@
 
           <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'report.student.idcode' | translate}}</label>
-            <input ng-model="criteria.idcode" name="idcode" type="text" md-minlength="11" md-maxlength="11">
+            <input ng-model="criteria.idcode" name="idcode" type="text">
           </md-input-container>
         </div>
 
@@ -45,16 +45,18 @@
             <hois-classifier-select ng-model="criteria.studyLevel" model-value-attr="code" main-classifier-code="OPPEASTE"></hois-classifier-select>
           </md-input-container>
           <div flex="45" flex-offset="5">
-            <hois-autocomplete ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.student.curriculum"></hois-autocomplete>
+            <hois-autocomplete ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.student.curriculum"
+              md-selected-item-change="curriculumVersionChanged"></hois-autocomplete>
           </div>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45">
             <label class="textInput">{{'report.student.studentGroup' | translate}}</label>
-            <input ng-model="criteria.studentGroup" type="text">
+            <hois-select ng-model="criteria.studentGroup" values="formState.studentGroups" 
+              filter-values="formState.filterStudentGroups"></hois-select>
           </md-input-container>
-          <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
+          <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100" ng-if="auth.higher">
             <label>{{'report.student.studyLoad' | translate}}</label>
             <hois-classifier-select ng-model="criteria.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS"></hois-classifier-select>
           </md-input-container>
@@ -111,7 +113,7 @@
             <th md-column>{{'report.student.studyLevel' | translate}}</th>
             <th md-column md-order-by="cv.code">{{'report.student.curriculum' | translate}}</th>
             <th md-column md-order-by="sg.code">{{'report.student.studentGroup' | translate}}</th>
-            <th md-column>{{'report.student.studyLoad' | translate}}</th>
+            <th md-column ng-if="auth.higher">{{'report.student.studyLoad' | translate}}</th>
             <th md-column>{{'report.student.studyForm' | translate}}</th>
             <th md-column>{{'report.student.status' | translate}}</th>
             <th md-column>{{'report.student.fin' | translate}}</th>
@@ -131,7 +133,7 @@
             <td md-cell>{{currentLanguageNameField(row.studyLevel)}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
             <td md-cell>{{::row.studentGroup}}</td>
-            <td md-cell>{{currentLanguageNameField(row.studyLoad)}}</td>
+            <td md-cell ng-if="auth.higher">{{currentLanguageNameField(row.studyLoad)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>{{currentLanguageNameField(row.fin)}}</td>

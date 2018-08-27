@@ -70,7 +70,7 @@ public class FinalThesisService {
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalContains(Arrays.asList("ft.theme_et", "ft.theme_en"), "theme", criteria.getTheme());
         qb.optionalCriteria("ft.status_code in (:status)", "status", criteria.getStatus());
-        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getStudentName());
+        qb.optionalContains("p.firstname || ' ' || p.lastname" , "name", criteria.getStudentName());
         
         if (user.isTeacher()) {
             qb.filter("exists(select ft.id from final_thesis "
@@ -82,7 +82,8 @@ public class FinalThesisService {
             qb.filter("exists(select ft.id from final_thesis "
                     + "join final_thesis_supervisor fts on fts.final_thesis_id = ft.id "
                     + "where upper(fts.firstname) like '%" + criteria.getSupervisor().toUpperCase() +  "%' "
-                    + "or upper(fts.lastname) like '%" + criteria.getSupervisor().toUpperCase() + "%')");
+                    + "or upper(fts.lastname) like '%" + criteria.getSupervisor().toUpperCase() + "%' "
+                    + "or upper(fts.firstname || ' ' || fts.lastname) like '%" + criteria.getSupervisor().toUpperCase() + "%')");
         }
         
         if (criteria.getCurriculumVersion() != null) {

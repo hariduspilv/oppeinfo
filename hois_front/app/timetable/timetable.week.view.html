@@ -23,10 +23,10 @@
         </a>
     </div>
     <div layout="row" layout-align="center" style="padding: 0px">
-        <md-button ng-if="previousWeekIndex && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{typeId}}/{{previousWeekIndex}}">
+        <md-button ng-if="previousWeekIndex !== undefined && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{typeId}}/{{previousWeekIndex}}">
             <md-icon>arrow_back</md-icon>
         </md-button>
-        <md-button ng-if="previousWeekIndex && !directRoute" class="md-icon-button md-primary" ng-click="previousWeek(typeId, previousWeekIndex)">
+        <md-button ng-if="previousWeekIndex !== undefined && !directRoute" class="md-icon-button md-primary" ng-click="previousWeek(typeId, previousWeekIndex)">
             <md-icon>arrow_back</md-icon>
         </md-button>
         <h2 ng-if="shownStudyPeriods" style="display:inline-block">{{shownStudyPeriods}}. {{shownWeek.start | hoisDate}} - {{shownWeek.end | hoisDate}}</h2>
@@ -38,6 +38,13 @@
             <md-icon>arrow_forward</md-icon>
         </md-button>
     </div>
+
+    <div ng-if="!timetableSearch" layout="column" layout-align="center center">
+        <span ng-if="timetableEvents && !(timetableEvents.length > 0)">{{'timetable.error.noWeekTimetable' | translate}}</span>
+        <span ng-if="shownStudent.isHigher && shownWeek.connectedSubjects === false">{{'timetable.error.noDeclaredSubjects' | translate}}</span>
+        <span ng-if="!shownStudent.isHigher && shownWeek.connectedSubjects === false">{{'timetable.error.noConnectedModules' | translate}}</span>
+    </div>
+    <div ng-if="timetableSearch && (timetableEvents && !(timetableEvents.length > 0))" layout="row" layout-align="center">{{'timetable.error.noSearchResults' | translate}}</div>
 
     <div hide-xs ng-if="timetableEvents && timetableEvents.length > 0" layout="column" flex="90" style="border: 1px solid #ccc; margin-left: auto; margin-right: auto;" id="vTimetable">
         <div layout="row" style="position:relative">
@@ -158,11 +165,6 @@
             </div>
         </hois-collapsable>
         </span>
-    </div>
-
-    <div ng-if="timetableEvents && !(timetableEvents.length > 0)">
-        <div ng-if="!timetableSearch" layout="row" layout-align="center">{{'timetable.error.noWeekTimetable' | translate}}</div>
-        <div ng-if="timetableSearch" layout="row" layout-align="center">{{'timetable.error.noSearchResults' | translate}}</div>
     </div>
 
     <div>

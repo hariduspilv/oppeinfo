@@ -34,31 +34,31 @@
       <div>&nbsp;</div>
       <md-input-container flex>
         <label>{{'module.requirements' | translate}}</label>
-        <textarea ng-model="occupationModule.requirementsEt" md-maxlength="20000" max-rows="10" md-select-on-focus required></textarea>
+        <textarea ng-model="occupationModule.requirementsEt" md-maxlength="20000" max-rows="10" required></textarea>
       </md-input-container>
 
       <md-input-container flex>
         <label>{{'module.assessments' | translate}}</label>
-        <textarea ng-model="occupationModule.assessmentsEt" md-maxlength="20000" max-rows="10" md-select-on-focus required></textarea>
+        <textarea ng-model="occupationModule.assessmentsEt" md-maxlength="20000" max-rows="10" required></textarea>
       </md-input-container>
 
       <md-input-container flex>
         <label>{{'module.learningMethods' | translate}}</label>
-        <textarea ng-model="occupationModule.learningMethodsEt" md-maxlength="20000" max-rows="10" md-select-on-focus></textarea>
+        <textarea ng-model="occupationModule.learningMethodsEt" md-maxlength="20000" max-rows="10"></textarea>
       </md-input-container>
 
       <md-input-container flex>
         <label>{{'module.assessmentMethodsAndTasks' | translate}}</label>
-        <textarea ng-model="occupationModule.assessmentMethodsEt" md-maxlength="20000" max-rows="10" md-select-on-focus></textarea>
+        <textarea ng-model="occupationModule.assessmentMethodsEt" md-maxlength="20000" max-rows="10"></textarea>
       </md-input-container>
 
       <md-input-container flex>
         <label>{{'module.independentStudyDescription' | translate}}</label>
-        <textarea ng-model="occupationModule.independentStudyEt" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+        <textarea ng-model="occupationModule.independentStudyEt" md-maxlength="20000" max-rows="2"></textarea>
       </md-input-container>
       <md-input-container flex>
         <label>{{'module.studyMaterials' | translate}}</label>
-        <textarea ng-model="occupationModule.studyMaterials" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+        <textarea ng-model="occupationModule.studyMaterials" md-maxlength="20000" max-rows="2"></textarea>
       </md-input-container>
       <div>&nbsp;</div>
       <div flex>
@@ -72,24 +72,24 @@
           <div>&nbsp;</div>
           <md-input-container flex>
             <label>{{'module.totalGradeDescription' | translate}}</label>
-            <textarea ng-model="occupationModule.totalGradeDescription" md-maxlength="20000" max-rows="2" md-select-on-focus required
+            <textarea ng-model="occupationModule.totalGradeDescription" md-maxlength="20000" max-rows="2" required
              ></textarea>
           </md-input-container>
           <div>&nbsp;</div>
           <div ng-show="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'" layout="column">
             <md-input-container flex>
               <label>{{'module.grade3Description' | translate}}</label>
-              <textarea ng-model="occupationModule.grade3Description" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
+              <textarea ng-model="occupationModule.grade3Description" md-maxlength="20000" max-rows="2" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
                ></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'module.grade4Description' | translate}}</label>
-              <textarea ng-model="occupationModule.grade4Description" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
+              <textarea ng-model="occupationModule.grade4Description" md-maxlength="20000" max-rows="2" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
                ></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'module.grade5Description' | translate}}</label>
-              <textarea ng-model="occupationModule.grade5Description" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
+              <textarea ng-model="occupationModule.grade5Description" md-maxlength="20000" max-rows="2" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
                ></textarea>
             </md-input-container>
           </div>
@@ -97,7 +97,7 @@
           <div ng-show="occupationModule.assessment === 'KUTSEHINDAMISVIIS_M'" layout="column" flex>
             <md-input-container flex>
               <label>{{'module.gradeADescription' | translate}}</label>
-              <textarea ng-model="occupationModule.passDescription" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_M'"
+              <textarea ng-model="occupationModule.passDescription" md-maxlength="20000" max-rows="10" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_M'"
                ></textarea>
             </md-input-container>
           </div>

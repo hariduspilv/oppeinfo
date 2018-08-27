@@ -76,11 +76,17 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
     }
 
     $scope.update = function () {
+      
       if (!formIsValid()) {
         return;
+      } else {
+        $scope.record.journalCapacityTypes = Classifier.getSelectedCodes($scope.formState.capacityTypes);
+        if ($scope.record.journalCapacityTypes.length === 0) {
+          message.error('lessonplan.journal.noJournalCapacityTypes');
+          return;
+        }
       }
 
-      $scope.record.journalCapacityTypes = Classifier.getSelectedCodes($scope.formState.capacityTypes);
       if ($scope.record.id) {
         $scope.record.$update().then(function (result) {
           message.updateSuccess();
@@ -295,7 +301,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
     $scope.deleteGroup = function (group) {
       var groupIndex = -1;
       $scope.record.groups.forEach(function (item, index) {
-        if (item.id === group.id) {
+        if (item.studentGroup === group.studentGroup) {
           groupIndex = index;
         }
       });

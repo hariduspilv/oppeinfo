@@ -34,6 +34,12 @@
           </md-input-container>
         </div>
 
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="45" flex-sm="100" flex-xs="100">
+            <hois-autocomplete label="{{'lessonplan.teacher' | translate}}" ng-model="criteria.teacherObject" method="teachers"></hois-autocomplete>
+          </div>
+        </div>
+
         <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
@@ -52,6 +58,7 @@
           <tr md-row>
             <th md-column md-order-by="sg.code">{{'lessonplan.studentGroup' | translate}}</th>
             <th md-column md-order-by="cv.code">{{'lessonplan.curriculumVersion' | translate}}</th>
+            <th md-column md-order-by="hours">{{'lessonplan.plannedHoursTotal' | translate}}</th>
             <th></th>
           </tr>
         </thead>
@@ -59,6 +66,7 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{::row.studentGroup}}</td>
             <td md-cell>{{::row.curriculumVersion}}</td>
+            <td md-cell>{{::row.plannedHours}}</td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-href="#/lessonplans/vocational/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>

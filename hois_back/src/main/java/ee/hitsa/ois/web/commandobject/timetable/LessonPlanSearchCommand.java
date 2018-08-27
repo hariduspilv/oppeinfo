@@ -9,6 +9,7 @@ public class LessonPlanSearchCommand {
     private Long schoolDepartment;
     private Long curriculumVersion;
     private Long studentGroup;
+    private Long teacher;
 
     public Long getStudyYear() {
         return studyYear;
@@ -41,4 +42,13 @@ public class LessonPlanSearchCommand {
     public void setStudentGroup(Long studentGroup) {
         this.studentGroup = studentGroup;
     }
+
+    public Long getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(Long teacher) {
+        this.teacher = teacher;
+    }
+    
 }

@@ -48,7 +48,7 @@
                 <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
                 <td md-cell colspan="{{capacityTypes.length + 1}}"></td>
                 <td md-cell>
-                    <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriodPlans/{{::row.subject.id}}/{{criteria.studyPeriod}}/new?_noback" ng-disabled="pastStudyPeriodSelected">{{'subjectStudyPeriodPlan.add' | translate}}
+                    <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriodPlans/{{::row.subject.id}}/{{criteria.studyPeriod}}/new" ng-disabled="pastStudyPeriodSelected">{{'subjectStudyPeriodPlan.add' | translate}}
                     </md-button>
                 </td>
             </tr>

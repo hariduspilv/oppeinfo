@@ -37,7 +37,6 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.util.ClassifierUtil;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
@@ -281,17 +280,13 @@ public class KutseregisterService {
             if(ekr == null) {
                 LOG.warn("Kutseregister sync: cannot find EKR classifier with code EKR_{}, connection from occupation {} to EKR not created", ekrLevel, code);
             } else {
-                ClassifierConnect relatedEkr = ClassifierUtil.parentLinkFor(occ, MainClassCode.EKR).orElse(null);
+                ClassifierConnect relatedEkr = ClassifierUtil.parentLinkFor(occ, ekr, MainClassCode.EKR).orElse(null);
                 if(relatedEkr == null) {
                     ClassifierConnect connect = new ClassifierConnect();
                     connect.setClassifier(occ);
                     connect.setConnectClassifier(ekr);
                     connect.setMainClassifierCode(MainClassCode.EKR.name());
                     em.persist(connect);
-                } else if(!EntityUtil.getCode(ekr).equals(EntityUtil.getCode(relatedEkr.getConnectClassifier()))) {
-                    // changed
-                    relatedEkr.setConnectClassifier(ekr);
-                    em.merge(relatedEkr);
                 }
             }
         }
@@ -320,17 +315,13 @@ public class KutseregisterService {
             }
         }
         // check relation to KUTSE
-        ClassifierConnect relatedOccupation = ClassifierUtil.parentLinkFor(child, MainClassCode.KUTSE).orElse(null);
-        if(relatedOccupation == null) {
+        ClassifierConnect relatedOccupation = ClassifierUtil.parentLinkFor(child, occupation, MainClassCode.KUTSE).orElse(null);
+        if (relatedOccupation == null) {
             ClassifierConnect connect = new ClassifierConnect();
             connect.setClassifier(child);
             connect.setConnectClassifier(occupation);
             connect.setMainClassifierCode(MainClassCode.KUTSE.name());
             em.persist(connect);
-        } else if(!EntityUtil.getCode(occupation).equals(EntityUtil.getCode(relatedOccupation.getConnectClassifier()))) {
-            // changed
-            relatedOccupation.setConnectClassifier(occupation);
-            em.merge(relatedOccupation);
         }
     }
 

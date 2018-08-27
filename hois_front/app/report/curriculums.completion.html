@@ -26,8 +26,8 @@
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="45">
-            <label>{{'report.curriculumscompletion.status' | translate}}</label>
+          <md-input-container flex="45" ng-if="auth.higher">
+            <label>{{'report.curriculumscompletion.studyLoad' | translate}}</label>
             <hois-classifier-select ng-model="criteria.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS"></hois-classifier-select>
           </md-input-container>
         </div>
@@ -35,6 +35,7 @@
         <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -50,7 +51,12 @@
             <th md-column md-order-by="p.lastname,p.firstname">{{'report.curriculumscompletion.name' | translate}}</th>
             <th md-column md-order-by="cv.code">{{'report.curriculumscompletion.curriculum' | translate}}</th>
             <th md-column md-order-by="sg.code">{{'report.curriculumscompletion.studentgroup' | translate}}</th>
-            <th md-column>{{'report.curriculumscompletion.studyLoad' | translate}}</th>
+            <th md-column>{{'report.curriculumscompletion.studyPeriodCount' | translate}}</th>
+            <th md-column>{{'report.curriculumscompletion.studyYearCount' | translate}}</th>
+            <th md-column><span translate="report.curriculumscompletion.creditsLastStudyPeriod"></span></th>
+            <th md-column><span translate="report.curriculumscompletion.credits"></span></th>
+            <th md-column><span translate="report.curriculumscompletion.curriculumCompletion"></span></th>
+            <th md-column ng-if="auth.higher">{{'report.curriculumscompletion.studyLoad' | translate}}</th>
             <th md-column>{{'report.curriculumscompletion.studyForm' | translate}}</th>
             <th md-column>{{'report.curriculumscompletion.status' | translate}}</th>
           </tr>
@@ -62,7 +68,12 @@
             </td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
             <td md-cell>{{::row.studentGroup}}</td>
-            <td md-cell>{{currentLanguageNameField(row.studyLoad)}}</td>
+            <td md-cell>{{::row.studyPeriodCount}}</td>
+            <td md-cell>{{::row.studyYearCount}}</td>
+            <td md-cell>{{::row.creditsLastStudyPeriod}}</td>
+            <td md-cell>{{::row.credits}}</td>
+            <td md-cell>{{::row.curriculumCompletion}}</td>
+            <td md-cell ng-if="auth.higher">{{currentLanguageNameField(row.studyLoad)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
           </tr>

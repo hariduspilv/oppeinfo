@@ -123,7 +123,7 @@ public class StudentGroupYearTransferService {
 
     private List<StudentGroupDto> searchLogs(SearchCommand criteria) {
         List<?> result = em.createNativeQuery("select sgyt.id, sgyt.student_group_id, sgyt.is_transfered"
-                + ", sgyt.old_code, sgyt.old_course, sgyt.new_code, sgyt.new_course"
+                + ", sgyt.old_code, sgyt.old_course, sgyt.new_code, sgyt.new_course, sg.valid_thru"
                 + ", cv.code, c.name_" + (Language.EN.equals(criteria.getLang()) ? "en" : "et")
                 + ", (select count(*) from student_group_year_transfer_log where student_group_year_transfer_id = sgyt.id) as students"
                 + ", (select count(*) from student_group_year_transfer_log where student_group_year_transfer_id = sgyt.id"
@@ -131,6 +131,7 @@ public class StudentGroupYearTransferService {
                 + ", (select count(*) from student_group_year_transfer_log where student_group_year_transfer_id = sgyt.id"
                 + " and is_matching = false) as mismatching_students"
                 + " from student_group_year_transfer sgyt"
+                + " join student_group sg on sg.id = sgyt.student_group_id"
                 + " join curriculum c on c.id = sgyt.curriculum_id"
                 + " left join curriculum_version cv on cv.id = sgyt.curriculum_version_id"
                 + " where sgyt.study_year_id = ?1")
@@ -145,11 +146,12 @@ public class StudentGroupYearTransferService {
             dto.setOldCourse(resultAsShort(r, 4));
             dto.setNewCode(resultAsString(r, 5));
             dto.setNewCourse(resultAsShort(r, 6));
-            String curriculumVersionCode = resultAsString(r, 7);
-            dto.setCurriculumName(curriculumVersionCode != null ? curriculumVersionCode : resultAsString(r, 8));
-            dto.setRelatedStudents(resultAsLong(r, 9));
-            dto.setSuitableStudents(resultAsLong(r, 10));
-            dto.setUnsuitableStudents(resultAsLong(r, 11));
+            dto.setValidThru(resultAsLocalDate(r, 7));
+            String curriculumVersionCode = resultAsString(r, 8);
+            dto.setCurriculumName(curriculumVersionCode != null ? curriculumVersionCode : resultAsString(r, 9));
+            dto.setRelatedStudents(resultAsLong(r, 10));
+            dto.setSuitableStudents(resultAsLong(r, 11));
+            dto.setUnsuitableStudents(resultAsLong(r, 12));
             return dto;
         }, result);
     }

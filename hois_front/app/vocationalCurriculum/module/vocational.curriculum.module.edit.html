@@ -70,11 +70,11 @@
       </md-input-container>
       <md-input-container flex>
         <label>{{'module.objectivesEt' | translate}}</label>
-        <textarea ng-model="module.objectivesEt" md-maxlength="10000" max-rows="10" md-select-on-focus required ></textarea>
+        <textarea ng-model="module.objectivesEt" md-maxlength="10000" max-rows="10" required ></textarea>
       </md-input-container>
       <md-input-container flex>
         <label>{{'module.objectivesEn' | translate}}</label>
-        <textarea ng-model="module.objectivesEn" md-maxlength="10000" max-rows="10" md-select-on-focus ></textarea>
+        <textarea ng-model="module.objectivesEn" md-maxlength="10000" max-rows="10" ></textarea>
       </md-input-container>
       <div flex>
         <fieldset tabindex="4">
@@ -86,11 +86,11 @@
           <div layout="row" flex>
             <md-input-container flex="45">
               <label>{{'studyOutcome.nameEt' | translate}} *</label>
-              <textarea ng-model="outcomeEt" md-maxlength="1000" max-rows="10" md-select-on-focus ></textarea>
+              <textarea ng-model="outcomeEt" md-maxlength="1000" max-rows="10" ></textarea>
             </md-input-container>
             <md-input-container flex="40" flex-offset="5">
               <label>{{'studyOutcome.nameEn' | translate}}</label>
-              <textarea ng-model="outcomeEn" md-maxlength="1000" max-rows="10" md-select-on-focus ></textarea>
+              <textarea ng-model="outcomeEn" md-maxlength="1000" max-rows="10" ></textarea>
             </md-input-container>
             <md-button class="md-primary" ng-click="addOutcome()" ng-if="!isEditingOutcome">{{'main.button.add' | translate}}</md-button>
             <md-button class="md-primary" ng-click="saveOutcome()" ng-if="isEditingOutcome">{{'main.button.change' | translate}}</md-button>

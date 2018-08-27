@@ -86,13 +86,13 @@ public class StudyMaterialController {
 
     @GetMapping("/journal/{id:\\d+}")
     public JournalDto journal(HoisUserDetails user, @WithEntity Journal journal) {
-        UserUtil.assertSameSchool(user, journal.getSchool());
+        UserUtil.assertSameSchoolOrIsMainAdminOrExternalExpert(user, journal.getSchool());
         return studyMaterialService.getJournal(journal);
     }
 
     @GetMapping("/journal/{id:\\d+}/materials")
     public List<StudyMaterialSearchDto> journalMaterials(HoisUserDetails user, @WithEntity Journal journal) {
-        UserUtil.assertSameSchool(user, journal.getSchool());
+        UserUtil.assertSameSchoolOrIsMainAdminOrExternalExpert(user, journal.getSchool());
         return materials(user, null, EntityUtil.getId(journal));
     }
 

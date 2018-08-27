@@ -191,39 +191,39 @@
 		<div layout="column">
 			<md-input-container flex>
 				<label>{{'curriculum.studyOutcomesEt' | translate}}{{getStar()}}</label>
-				<textarea ng-model="curriculum.outcomesEt" md-maxlength="20000" max-rows="10" dfs md-select-on-focus ng-required="strictValidation()"></textarea>
+				<textarea ng-model="curriculum.outcomesEt" md-maxlength="20000" max-rows="10" dfs ng-required="strictValidation()"></textarea>
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.studyOutcomesEn' | translate}}</label>
-				<textarea ng-model="curriculum.outcomesEn" md-maxlength="20000" max-rows="10" md-select-on-focus></textarea>
+				<textarea ng-model="curriculum.outcomesEn" md-maxlength="20000" max-rows="10"></textarea>
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.structure' | translate}}{{getStar()}}</label>
-				<textarea ng-model="curriculum.structure" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="strictValidation()"></textarea>
+				<textarea ng-model="curriculum.structure" md-maxlength="20000" max-rows="10" ng-required="strictValidation()"></textarea>
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.admissionRequirementsEt' | translate}}{{getStar()}}</label>
-				<textarea ng-model="curriculum.admissionRequirementsEt" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="strictValidation()"></textarea>
+				<textarea ng-model="curriculum.admissionRequirementsEt" md-maxlength="20000" max-rows="10" ng-required="strictValidation()"></textarea>
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.admissionRequirementsEn' | translate}}</label>
-				<textarea ng-model="curriculum.admissionRequirementsEn" md-maxlength="20000" max-rows="10" md-select-on-focus></textarea>
+				<textarea ng-model="curriculum.admissionRequirementsEn" md-maxlength="20000" max-rows="10"></textarea>
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.graduationRequirementsEt' | translate}}{{getStar()}}</label>
-				<textarea ng-model="curriculum.graduationRequirementsEt" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="strictValidation()"></textarea>
+				<textarea ng-model="curriculum.graduationRequirementsEt" md-maxlength="20000" max-rows="10" ng-required="strictValidation()"></textarea>
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.graduationRequirementsEn' | translate}}</label>
-				<textarea ng-model="curriculum.graduationRequirementsEn" md-maxlength="20000" max-rows="10" md-select-on-focus></textarea>
+				<textarea ng-model="curriculum.graduationRequirementsEn" md-maxlength="20000" max-rows="10"></textarea>
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.basesOfDraft' | translate}}</label>
-				<textarea ng-model="curriculum.draftText" md-maxlength="4000" max-rows="10" md-select-on-focus></textarea>
+				<textarea ng-model="curriculum.draftText" md-maxlength="4000" max-rows="10"></textarea>
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.specialityOpportunities' | translate}}</label>
-				<textarea ng-model="curriculum.specialization" md-maxlength="4000" max-rows="10" md-select-on-focus></textarea>
+				<textarea ng-model="curriculum.specialization" md-maxlength="4000" max-rows="10"></textarea>
 			</md-input-container>
 		</div>
 	</fieldset>
@@ -366,15 +366,15 @@
 			<div layout="column">
 				<md-input-container flex>
 					<label>{{'curriculum.practiceDescription' | translate}}</label>
-					<textarea ng-model="curriculum.practiceDescription" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+					<textarea ng-model="curriculum.practiceDescription" md-maxlength="20000" max-rows="2"></textarea>
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'curriculum.finalExamShortDescription' | translate}}</label>
-					<textarea ng-model="curriculum.finalExamDescription" md-maxlength="4000" max-rows="2" md-select-on-focus></textarea>
+					<textarea ng-model="curriculum.finalExamDescription" md-maxlength="4000" max-rows="2"></textarea>
 				 </md-input-container>
 				 <md-input-container flex>
 					<label>{{'curriculum.optionalStudyOpportunities' | translate}}</label>
-					<textarea ng-model="curriculum.optionalStudyDescription" md-maxlength="4000" max-rows="2" md-select-on-focus></textarea>
+					<textarea ng-model="curriculum.optionalStudyDescription" md-maxlength="4000" max-rows="2"></textarea>
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'curriculum.contactPerson' | translate}}</label>
@@ -382,7 +382,7 @@
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'main.notes' | translate}}</label>
-					<textarea ng-model="curriculum.description" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+					<textarea ng-model="curriculum.description" md-maxlength="20000" max-rows="2"></textarea>
 				</md-input-container>
 			</div>
 		</fieldset>
@@ -448,11 +448,11 @@
 				</div>
 				<md-input-container flex="100">
 					<label>{{'curriculum.jointAgreementInfoEt' | translate}}{{getStar()}}</label>
-					<textarea ng-model="curriculum.contractEt" md-maxlength="1000" max-rows="10" md-select-on-focus ng-required="curriculum.joint && strictValidation()" ng-readonly="formState.notEditableBasicData"></textarea>
+					<textarea ng-model="curriculum.contractEt" md-maxlength="1000" max-rows="10" ng-required="curriculum.joint && strictValidation()" ng-readonly="formState.notEditableBasicData"></textarea>
 				</md-input-container>
 				<md-input-container  flex="100">
 					<label>{{'curriculum.jointAgreementInfoEn' | translate}}{{getStar()}}</label>
-					<textarea ng-model="curriculum.contractEn" md-maxlength="1000" max-rows="10" md-select-on-focus ng-required="curriculum.joint && strictValidation()" ng-readonly="formState.notEditableBasicData"></textarea>
+					<textarea ng-model="curriculum.contractEn" md-maxlength="1000" max-rows="10" ng-required="curriculum.joint && strictValidation()" ng-readonly="formState.notEditableBasicData"></textarea>
 				</md-input-container>
 			</div>
 		</fieldset>

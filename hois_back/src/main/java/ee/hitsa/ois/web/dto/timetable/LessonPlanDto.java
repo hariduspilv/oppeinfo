@@ -43,6 +43,7 @@ public class LessonPlanDto extends LessonPlanForm {
     private List<Short> weekNrs;
     private List<LocalDate> weekBeginningDates;
     private List<LessonPlanLegendDto> legends;
+    private List<LessonPlanTeacherDto> teachers;
 
     public static LessonPlanDto of(LessonPlan lessonPlan, Map<Long, Long> weekNrsLegends) {
         LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto());
@@ -163,6 +164,14 @@ public class LessonPlanDto extends LessonPlanForm {
 
     public void setLegends(List<LessonPlanLegendDto> legends) {
         this.legends = legends;
+    }
+
+    public List<LessonPlanTeacherDto> getTeachers() {
+        return teachers;
+    }
+
+    public void setTeachers(List<LessonPlanTeacherDto> teachers) {
+        this.teachers = teachers;
     }
 
     public static class LessonPlanModuleDto extends LessonPlanModuleForm {
@@ -360,14 +369,20 @@ public class LessonPlanDto extends LessonPlanForm {
 
     public static class LessonPlanModuleJournalThemeDto {
 
+        private final Long id;
         private final String nameEt;
         private final BigDecimal credits;
         private final Map<String, Short> hours;
 
         public LessonPlanModuleJournalThemeDto(CurriculumVersionOccupationModuleTheme theme) {
+            id = theme.getId();
             nameEt = theme.getNameEt();
             credits = theme.getCredits();
             hours = StreamUtil.toMap(r -> EntityUtil.getCode(r.getCapacityType()), r -> r.getHours(), theme.getCapacities());
+        }
+        
+        public Long getId() {
+            return id;
         }
 
         public String getNameEt() {
@@ -394,7 +409,7 @@ public class LessonPlanDto extends LessonPlanForm {
         public AutocompleteResult getTeacher() {
             return teacher;
         }
-
+        
     }
 
     public static class StudyPeriodDto {
@@ -464,5 +479,37 @@ public class LessonPlanDto extends LessonPlanForm {
         public String getColor() {
             return color;
         }
+    }
+    
+    public static class LessonPlanTeacherDto {
+        
+        private final Long id;
+        private final Short scheduleLoad;
+        private final Boolean isStudyPeriodScheduleLoad;
+        private final Short plannedLessons;
+        
+        public LessonPlanTeacherDto(Long id, Short scheduleLoad, Boolean isStudyPeriodScheduleLoad, Short plannedLessons) {
+            this.id = id;
+            this.scheduleLoad = scheduleLoad;
+            this.isStudyPeriodScheduleLoad = isStudyPeriodScheduleLoad;
+            this.plannedLessons = plannedLessons;
+        }
+
+        public Long getId() {
+            return id;
+        }
+        
+        public Short getScheduleLoad() {
+            return scheduleLoad;
+        }
+        
+        public Boolean getIsStudyPeriodScheduleLoad() {
+            return isStudyPeriodScheduleLoad;
+        }
+
+        public Short getPlannedLessons() {
+            return plannedLessons;
+        }
+        
     }
 }

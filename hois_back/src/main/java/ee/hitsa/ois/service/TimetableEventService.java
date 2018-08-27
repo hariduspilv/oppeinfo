@@ -32,6 +32,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodExam;
 import ee.hitsa.ois.domain.teacher.Teacher;
@@ -267,11 +268,15 @@ public class TimetableEventService {
         setShowStudyMaterials(eventResultList);
         eventResultList = filterTimetableSingleEvents(eventResultList);
 
-        Query studentQuery = em.createNativeQuery("select s.id, p.firstname, p.lastname from student s join person p on s.person_id=p.id where s.id=?1");
+        Query studentQuery = em.createNativeQuery("select s.id, p.firstname, p.lastname, c.is_higher from student s "
+                + "join person p on s.person_id=p.id "
+                + "join curriculum_version cv on s.curriculum_version_id = cv.id "
+                + "join curriculum c on cv.curriculum_id = c.id where s.id=?1");
         studentQuery.setParameter(1, command.getStudent());
         Object student = studentQuery.getSingleResult();
 
-        return new TimetableByStudentDto(getStudyPeriods(schoolId, command.getFrom(), command.getThru()), eventResultList, resultAsLong(student, 0), resultAsString(student, 1), resultAsString(student, 2));
+        return new TimetableByStudentDto(getStudyPeriods(schoolId, command.getFrom(), command.getThru()),
+                eventResultList, resultAsLong(student, 0), resultAsString(student, 1), resultAsString(student, 2), resultAsBoolean(student, 3));
     }
     
     /**
@@ -411,19 +416,24 @@ public class TimetableEventService {
                 + " join student_group sg on sg.id = tog.student_group_id ) on tobj.id = tog.timetable_object_id"
                 + " left join timetable t on tobj.timetable_id = t.id left join journal j on tobj.journal_id = j.id";
 
-        boolean higherstudent = criteria.getStudent() != null && Boolean.TRUE.equals(criteria.getHigher());
+        Student student = criteria.getStudent() != null ? em.getReference(Student.class, criteria.getStudent()) : null;
+        boolean higherstudent = student != null && Boolean.TRUE.equals(student.getCurriculumVersion().getCurriculum().getHigher());
+        
         if(!higherstudent) {
             from += " left join (subject_study_period ssp join subject subj on subj.id = ssp.subject_id) on ssp.id = tobj.subject_study_period_id";
         }
-        if (criteria.getStudent() != null && Boolean.TRUE.equals(criteria.getVocational())) {
-            from += " left join  journal_student js  on js.journal_id=j.id"
-                    + " left join student s on s.id=js.student_id";
-        } else if (higherstudent) {
-            from += " left join subject_study_period_exam sspe on sspe.timetable_event_id = te.id";
-            from += " left join (subject_study_period ssp join subject subj on subj.id = ssp.subject_id) on (ssp.id = tobj.subject_study_period_id or ssp.id = sspe.subject_study_period_id)";
-            from += " left join declaration_subject decls on decls.subject_study_period_id=ssp.id"
-                    + " left join declaration decl on decls.declaration_id=decl.id"
-                    + " left join student s on decl.student_id=s.id";
+        
+        if (student != null) {
+            if (higherstudent) {
+                from += " left join subject_study_period_exam sspe on sspe.timetable_event_id = te.id";
+                from += " left join (subject_study_period ssp join subject subj on subj.id = ssp.subject_id) on (ssp.id = tobj.subject_study_period_id or ssp.id = sspe.subject_study_period_id)";
+                from += " left join declaration_subject decls on decls.subject_study_period_id=ssp.id"
+                        + " left join declaration decl on decls.declaration_id=decl.id"
+                        + " left join student s on decl.student_id=s.id";
+            } else {
+                from += " left join  journal_student js  on js.journal_id=j.id"
+                        + " left join student s on s.id=js.student_id";
+            }
         }
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);

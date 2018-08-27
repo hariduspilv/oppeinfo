@@ -4,7 +4,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
@@ -15,11 +18,15 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.repository.SubjectStudyPeriodPlanRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
+import ee.hitsa.ois.service.XlsService;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
@@ -41,6 +48,10 @@ public class SubjectStudyPeriodTeacherService {
     private SubjectStudyPeriodRepository subjectStudyPeriodRepository;
     @Autowired
     private SubjectStudyPeriodPlanRepository subjectStudyPeriodPlanRepository;
+    @Autowired
+    private SubjectStudyPeriodCapacitiesService subjectStudyPeriodCapacitiesService;
+    @Autowired
+    private XlsService xlsService;
 
     public void setSubjectStudyPeriodsToTeachersContainer(Long schoolId, SubjectStudyPeriodDtoContainer container) {
         List<SubjectStudyPeriod> ssps = subjectStudyPeriodRepository.findAll((root, query, cb) -> {
@@ -109,6 +120,58 @@ public class SubjectStudyPeriodTeacherService {
             String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
+    }
+    
+    public byte[] subjectStudyPeriodTeacherAsExcel(Long schoolId, SubjectStudyPeriodDtoContainer container) {
+        setSubjectStudyPeriodsToTeachersContainer(schoolId, container);
+        setSubjectStudyPeriodPlansToTeachersContainer(container);
+        subjectStudyPeriodCapacitiesService.setSubjects(container);
+        
+        List<Classifier> capacities = subjectStudyPeriodCapacitiesService.capacityClassifiers();
+        List<String> capacityCodes = StreamUtil.toMappedList(c -> EntityUtil.getCode(c), capacities);
+        
+        List<Map<String, Object>> subjects = new ArrayList<>();
+        for (AutocompleteResult s : container.getSubjects()) {
+            subjects.add(excelSubject(s, container, capacityCodes));
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, container.getStudyPeriod());
+        
+        data.put("studyYear", AutocompleteResult.of(studyPeriod.getStudyYear()));
+        data.put("studyPeriod", AutocompleteResult.of(studyPeriod));
+        data.put("teacher", AutocompleteResult.of(em.getReference(Teacher.class, container.getTeacher())));
+        data.put("capacities", capacities);
+        data.put("subjects", subjects);
+        data.put("totals", subjectStudyPeriodCapacitiesService.subjectPeriodTotals(subjects, capacityCodes));
+
+        return xlsService.generate("subjectstudyperiodteacher.xls", data);
+    }
+    
+    private Map<String, Object> excelSubject(AutocompleteResult subjectDto, SubjectStudyPeriodDtoContainer container, List<String> capacityCodes) {
+        Map<String, Object> subject = new HashMap<>();
+        Map<String, Short> subjectCapacityHours = subjectStudyPeriodCapacitiesService.subjectCapacityHours(subjectDto.getId(), container, capacityCodes);
+        
+        List<Map<String, Object>> periods = new ArrayList<>();
+        Map<String, Short> periodTotals = subjectStudyPeriodCapacitiesService.emptyOrderedCapacityHours(capacityCodes);
+        
+        List<SubjectStudyPeriodDto> periodDtos = StreamUtil.toFilteredList(sp -> sp.getSubject().equals(subjectDto.getId()),
+                container.getSubjectStudyPeriodDtos());
+        for (SubjectStudyPeriodDto periodDto : periodDtos) {
+            Map<String, Object> period = subjectStudyPeriodCapacitiesService.periodExcel(periodDto, periodTotals, capacityCodes);
+            if (periodDto.getStudentGroupObjects() != null) {
+                String nameEt = periodDto.getStudentGroupObjects().stream().map(sg -> sg.getNameEt()).collect(Collectors.joining(", "));
+                String nameEn = periodDto.getStudentGroupObjects().stream().map(sg -> sg.getNameEn()).collect(Collectors.joining(", "));
+                period.put("studentGroups", new AutocompleteResult(null, nameEt, nameEn));
+            }
+            periods.add(period);
+        }
+        
+        subject.put("subject", subjectDto);
+        subject.put("hours", subjectCapacityHours);
+        subject.put("subjectPeriods", periods);
+        subject.put("totals", periodTotals);
+        return subject;
     }
 
 }

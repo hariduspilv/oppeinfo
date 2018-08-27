@@ -985,7 +985,8 @@ public class AutocompleteService {
         }
         qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", lookup.getStudyYear());
         qb.optionalContains("j.name_et",  "name_et", lookup.getName());
-
+        
+        qb.sort("j.name_et");
         List<?> data = qb.select("j.id, j.name_et, j.study_year_id", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             String name = resultAsString(r, 1);

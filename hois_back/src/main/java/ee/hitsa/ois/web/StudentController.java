@@ -55,6 +55,7 @@ import ee.hitsa.ois.web.dto.student.StudentViewDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalConnectedEntity;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultByTimeDto;
 import ee.hitsa.ois.web.dto.student.StudentModuleResultDto;
+import ee.hitsa.ois.web.dto.student.StudentPracticeContractDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 
 @RestController
@@ -131,6 +132,7 @@ public class StudentController {
             result.put("applicationTypesApplicable", applicationService.applicableApplicationTypes(student));
         }
         result.put("directives", directives(user, student, new PageRequest(0, pagesize, null, "headline")));
+        result.put("practiceContracts", practiceContracts(user, student, new PageRequest(0, pagesize, null, "contract_nr")));
         Map<String, Object> studentDto = new HashMap<>();
         studentDto.put("isVocational", Boolean.valueOf(StudentUtil.isVocational(student)));
         studentDto.put("status", EntityUtil.getCode(student.getStatus()));
@@ -149,6 +151,13 @@ public class StudentController {
         assertCanView(user, student);
         return studentService.directives(user, student, pageable);
     }
+    
+    @GetMapping("/{id:\\d+}/practicecontracts")
+    public Page<StudentPracticeContractDto> practiceContracts(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
+        assertCanView(user, student);
+        return studentService.practiceContracts(user, student, pageable);
+    }
+
 
     @GetMapping("/{id:\\d+}/foreignstudies")
     public Page<StudentForeignstudyDto> foreignstudies(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {

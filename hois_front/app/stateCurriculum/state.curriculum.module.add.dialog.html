@@ -103,11 +103,11 @@
               <div layout="row" flex ng-if="!readOnly">
                 <md-input-container flex="45">
                   <label>{{'studyOutcome.nameEt' | translate}} *</label>
-                  <textarea ng-model="data.outcomesEt" md-maxlength="1000" max-rows="10" md-select-on-focus></textarea>
+                  <textarea ng-model="data.outcomesEt" md-maxlength="1000" max-rows="10"></textarea>
                 </md-input-container>
                 <md-input-container flex="40" flex-offset="5">
                   <label>{{'studyOutcome.nameEn' | translate}}</label>
-                  <textarea ng-model="data.outcomesEn" md-maxlength="1000" max-rows="10" md-select-on-focus></textarea>
+                  <textarea ng-model="data.outcomesEn" md-maxlength="1000" max-rows="10"></textarea>
                 </md-input-container>
                 <md-button class="md-primary" ng-click="addOutcome()" ng-if="!isEditingOutcome">{{'main.button.add' | translate}}</md-button>
                 <md-button class="md-primary" ng-click="saveOutcome()" ng-if="isEditingOutcome">{{'main.button.change' | translate}}</md-button>

@@ -96,6 +96,12 @@ public class ReportController {
         return reportService.curriculumCompletion(user.getSchoolId(), criteria, pageable);
     }
 
+    @GetMapping("/curriculums/completion/curriculumscompletion.xls")
+    public void curriculumCompletionAsExcel(HoisUserDetails user, @Valid CurriculumCompletionCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "curriculumscompletion.xls", reportService.curriculumCompletionAsExcel(user.getSchoolId(), criteria));
+    }
+
     @GetMapping("/curriculums/subjects")
     public Page<CurriculumSubjectsDto> curriculumSubjects(HoisUserDetails user, @Valid CurriculumSubjectsCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
@@ -108,10 +114,22 @@ public class ReportController {
         return reportService.teacherLoadHigher(user.getSchoolId(), criteria, pageable);
     }
 
+    @GetMapping("/teachers/load/higher/teachersloadhigher.xls")
+    public void teacherLoadHigherAsExcel(HoisUserDetails user, @Valid TeacherLoadCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "teachersloadhigher.xls", reportService.teacherLoadHigherAsExcel(user.getSchoolId(), criteria));
+    }
+
     @GetMapping("/teachers/load/vocational")
     public Page<TeacherLoadDto> teacherLoadVocational(HoisUserDetails user, @Valid TeacherLoadCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
         return reportService.teacherLoadVocational(user.getSchoolId(), criteria, pageable);
+    }
+
+    @GetMapping("/teachers/load/vocational/teachersloadvocational.xls")
+    public void teacherLoadVocationalAsExcel(HoisUserDetails user, @Valid TeacherLoadCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "teachersloadvocational.xls", reportService.teacherLoadVocationalAsExcel(user.getSchoolId(), criteria));
     }
 
     @GetMapping("/vota")

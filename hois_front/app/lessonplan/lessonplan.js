@@ -77,6 +77,12 @@
     totals.__ = rowSum(totals._);
   }
 
+  function getUniqueJournalThemes(themes) {
+    return themes.filter(function(obj, index, themes) {
+      return themes.map(function(mapObj) { return mapObj.id; } ).indexOf(obj.id) === index;
+    });
+  }
+
   function updateTotals(scope, totals, capacityType, index) {
     totals._[capacityType] = rowSum(totals[capacityType]);
     var sum = scope.formState.capacityTypes.reduce(function (sum, c) {
@@ -102,6 +108,7 @@
       };
       $scope.currentNavItem = $route.current.$$route.data.currentNavItem;
       var baseUrl = '/lessonplans';
+      QueryUtils.createQueryForm($scope, baseUrl, {order: 'sg.code'});
 
       $scope.newLessonplan = function () {
         var formState = $scope.formState;
@@ -198,7 +205,10 @@
         $scope.formState.curriculumVersions = result.curriculumVersions;
       });
 
-      QueryUtils.createQueryForm($scope, baseUrl, {});
+      $scope.$watch("criteria.teacherObject", function (value) {
+        $scope.criteria.teacher = angular.isObject(value) ? value.id : value;
+      });
+      
     }
   ).controller('LessonplanTeacherSearchController',
     function ($route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService) {
@@ -236,6 +246,7 @@
     function ($location, $mdDialog, $route, $scope,  $window,message, Classifier, QueryUtils, dialogService) {
       var id = $route.current.params.id;
       var baseUrl = '/lessonplans';
+      var journalMapper = Classifier.valuemapper({groupProportion: 'PAEVIK_GRUPI_JAOTUS'});
 
       $scope.setHeight = function() {
         var windowHeight = $(window).innerHeight();
@@ -257,12 +268,31 @@
         });
       };
 
+      $scope.getTeacherLoad = function (teacherId) {
+        var teacher = $scope.formState.teachers.find(function (teacher) {
+          return teacher.id === teacherId;
+        });
+
+        if (teacher) {
+          var scheduleLoad = teacher.isStudyPeriodScheduleLoad ? teacher.scheduleLoad * $scope.formState.studyPeriods.length: teacher.scheduleLoad;
+          return {
+            scheduleLoad: scheduleLoad,
+            unplannedLessons: scheduleLoad - teacher.plannedLessons > 0 ? scheduleLoad - teacher.plannedLessons : 0
+          };
+        }
+        return null;
+      };
+
+      $scope.getUniqueJournalThemes = function(themes) {
+        return getUniqueJournalThemes(themes);
+      };
+
       function updateModuleTotals(module, capacityType, index) {
         var moduleTotals = $scope.formState.moduleTotals[module.id];
         var sum = module.journals.reduce(function (sum, journal) {
           var hours = journal.hours[capacityType];
           if (hours !== undefined && hours[index] !== undefined) {
-            sum += hours[index];
+            sum += hours[index] * (1 / journal.groupProportion.value);
           }
           return sum;
         }, 0);
@@ -317,6 +347,7 @@
         };
         $scope.formState.studyPeriodMonths = result.studyPeriod % 12;
         $scope.formState.studyPeriodYears = Math.floor(result.studyPeriod / 12);
+        $scope.formState.xlsUrl = 'lessonplans/' + id + '/lessonplan.xls';
         initializeTotals(result);
         QueryUtils.loadingWheel($scope, false);
         //refreshFixedColumns();
@@ -339,7 +370,7 @@
         console.log("x: "+angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].clientHeight+"_"+tb);
         console.log("x: "+angular.element(document.getElementsByClassName("lessonplan"))[0].offsetHeight+"_"+tb);
         console.log("x: "+angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].offsetHeight+"_"+tb);
-        */angular.element(document.getElementsByClassName("container")).css('height', (tb > $window.innerHeight ? $window.innerHeight : tb) -250 + 'px');
+        *///angular.element(document.getElementsByClassName("container")).css('height', (tb > $window.innerHeight ? $window.innerHeight : tb) -250 + 'px');
         $scope.tb=tb;
       };
 
@@ -350,6 +381,7 @@
      });
 
       function initializeTotals(result) {
+        $scope.formState.teachers = result.teachers;
         $scope.formState.capacityTypes.$promise.then(function () {
           result.modules.forEach(function (module) {
             $scope.formState.moduleMap[module.id] = module;
@@ -359,6 +391,7 @@
               }
             };
             module.journals.forEach(function (journal) {
+              journalMapper.objectmapper(journal);
               journal.spHours = {};
               journal.spTotals = {};
               journal.lessonPlanModule = module.id;
@@ -526,7 +559,7 @@
             redirectBack();
           }).catch(angular.noop);
         });
-      }
+      };
 
       $scope.back = function() {
         if(copyOfRecord === angular.toJson($scope.record)) {
@@ -556,12 +589,15 @@
       var id = $route.current.params.id;
       var studyYearId = $route.current.params.studyYear;
       var baseUrl = '/lessonplans/byteacher';
+      var journalMapper = Classifier.valuemapper({groupProportion: 'PAEVIK_GRUPI_JAOTUS'});
+
       $scope.formState = {
         capacityTypes: Classifier.queryForDropdown({
           mainClassCode: 'MAHT'
         }),
         showWeeks: true,
-        showCapacityTypes: true
+        showCapacityTypes: true,
+        xlsUrl: 'lessonplans/byteacher/' + id + '/' + studyYearId + '/lessonplanbyteacher.xls'
       };
       $scope.keys = Object.keys;
 
@@ -575,6 +611,10 @@
         return $scope.formState.capacityTypes.find(function (it) {
           return it.code === capacityCode;
         });
+      };
+
+      $scope.getUniqueJournalThemes = function(themes) {
+        return getUniqueJournalThemes(themes);
       };
 
       QueryUtils.endpoint(baseUrl + '/:id/:studyYear').search({
@@ -601,6 +641,8 @@
 
         $scope.formState.capacityTypes.$promise.then(function () {
           result.journals.forEach(function (journal) {
+            journalMapper.objectmapper(journal);
+            
             journal.spHours = {};
             journal.spTotals = {};
             $scope.formState.journalTotals[journal.id] = {
@@ -629,7 +671,7 @@
             return result.journals.reduce(function (sum, journal) {
               var hours = journal.hours[capacityType];
               if (hours !== undefined) {
-                sum += hours[i];
+                sum += hours[i] * (1 / journal.groupProportion.value);
               }
               return sum;
             }, 0);

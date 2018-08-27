@@ -99,6 +99,24 @@ public abstract class ClassifierUtil {
                 .findAny();
     }
 
+    /**
+     * Find link to parent classifier for given parent and mainClassCode
+     * @param child
+     * @param parent
+     * @param mainClassCode
+     * @return empty Optional if parent link was not found
+     */
+    public static Optional<ClassifierConnect> parentLinkFor(Classifier child, Classifier parent, MainClassCode mainClassCode) {
+        if(child == null || parent == null) {
+            return Optional.empty();
+        }
+        // find matching parent link
+        return child.getClassifierConnects().stream()
+                .filter(r -> parent.equals(r.getConnectClassifier()) 
+                        && mainClassCode.name().equals(r.getMainClassifierCode()))
+                .findAny();
+    }
+
     public static List<ClassifierSelection> sort(List<String> mainClassCodes, List<ClassifierSelection> data) {
         if(mainClassCodes.size() == 1) {
             String mainClassCode = mainClassCodes.get(0);

@@ -21,7 +21,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
     }
 
     if(teacher) {
-        $scope.record = Endpoint.search({studyPeriod: studyPeriodId, teacher: teacher, subjectStudyPeriodDtos: []});
+        $scope.container = {studyPeriod: studyPeriodId, teacher: teacher, subjectStudyPeriodDtos: []};
+        $scope.record = Endpoint.search($scope.container);
         $scope.record.$promise.then(function(response){
             $scope.capacitiesUtil = new SspCapacities(response);
             Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function(response){
@@ -30,6 +31,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
             });
         });
         $scope.teacher = QueryUtils.endpoint('/subjectStudyPeriods/teacher/' + teacher).get();
+        $scope.formState = {xlsUrl: 'subjectStudyPeriods/teachers/subjectstudyperiodteacher.xls'};
     }
 
     function loadTeachers() {

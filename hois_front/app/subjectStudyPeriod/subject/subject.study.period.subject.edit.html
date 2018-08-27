@@ -63,7 +63,7 @@
                                 <a ng-href="#/subjectStudyPeriod/{{ssp.id}}/edit?subjectId={{record.subject}}">{{'main.button.change' | translate}}</a>
                             </td>
                             <td ng-repeat="type in capacityTypes">
-                                <span ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code }">
+                                <span ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code } : true">
                                   <input type="number" ng-model="capacity.hours" min="0" max="1000" aria-label="{{'subjectStudyPeriod.changeLoad' | translate}}" pattern="^\d+$">
                                 </span>
                             </td>
@@ -81,6 +81,7 @@
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+            <a ng-if="!isNew" ng-href="{{excel(formState.xlsUrl, container)}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
             <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/subjects', subjectStudyPeriodSubjectEditForm)">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>

@@ -4,7 +4,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form ng-submit="loadData()" novalidate class="nomargin">
+      <form name="timetableSearchForm" ng-submit="loadData()" novalidate class="nomargin">
         <div layout="row" layout-sm="column" layout-xs="column">
           <div flex="50" flex-sm="100" flex-xs="100">
             <hois-autocomplete flex ng-model="criteria.teacher" method="teachers" name="teacher" label="timetable.search.teacher"></hois-autocomplete>

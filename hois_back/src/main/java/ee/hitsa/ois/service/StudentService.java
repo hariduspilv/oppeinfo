@@ -75,6 +75,7 @@ import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
 import ee.hitsa.ois.web.dto.student.StudentForeignstudyDto;
 import ee.hitsa.ois.web.dto.student.StudentModuleResultDto;
+import ee.hitsa.ois.web.dto.student.StudentPracticeContractDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalConnectedEntity;
@@ -360,6 +361,39 @@ public class StudentService {
             dto.setDirectiveNr(resultAsString(r, 3));
             dto.setConfirmDate(resultAsLocalDate(r, 4));
             dto.setInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 5)));
+            return dto;
+        });
+    }
+    
+    /**
+     * Practice contracts related to student
+     *
+     * @param user
+     * @param student
+     * @param pageable
+     * @return
+     */
+    public Page<StudentPracticeContractDto> practiceContracts(HoisUserDetails user, Student student, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from contract c"
+                + " join enterprise e on c.enterprise_id = e.id"
+                + " join teacher t on c.teacher_id = t.id"
+                + " join person p on t.person_id = p.id"
+                + " join classifier status on c.status_code = status.code").sort(pageable);
+        qb.requiredCriteria("c.student_id = :studentId", "studentId", EntityUtil.getId(student));
+
+        return JpaQueryUtil.pagingResult(qb,
+                "c.id, c.contract_nr, c.start_date, c.end_date, e.name, e.contact_person_name, p.firstname, p.lastname, c.confirm_date, c.status_code",
+                em, pageable).map(r -> {
+            StudentPracticeContractDto dto = new StudentPracticeContractDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setContractNr(resultAsString(r, 1));
+            dto.setStartDate(resultAsLocalDate(r, 2));
+            dto.setEndDate(resultAsLocalDate(r, 3));
+            dto.setEnterprise(resultAsString(r, 4));
+            dto.setSupervisor(resultAsString(r, 5));
+            dto.setSchoolSupervisor(PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7)));
+            dto.setContractDate(resultAsLocalDate(r, 8));
+            dto.setStatus(resultAsString(r, 9));
             return dto;
         });
     }

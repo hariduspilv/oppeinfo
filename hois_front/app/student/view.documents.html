@@ -145,6 +145,48 @@
         md-page-select></md-table-pagination>
     </hois-collapsable>
 
+    <hois-collapsable label="('student.practiceContracts.label' | translate)">
+      <md-table-container>
+        <table md-table md-progress="practiceContracts.$promise" class="secondary-table">
+          <thead md-head md-order="practiceContractsCriteria.order" md-on-reorder="loadPracticeContracts">
+            <tr md-row>
+              <!--todo order byd-->
+              <th md-column md-order-by="contractNr">{{'student.practiceContracts.contractNumber' | translate}}</th>
+              <th md-column md-order-by="startDate, endDate">{{'student.practiceContracts.validity' | translate}}</th>
+              <th md-column md-order-by="e.name">{{'student.practiceContracts.enterprise' | translate}}</th>
+              <th md-column md-order-by="e.contactPersonName">{{'student.practiceContracts.supervisor' | translate}}</th>
+              <th md-column md-order-by="p.firstname, p.lastname">{{'student.practiceContracts.schoolSupervisor' | translate}}</th>
+              <th md-column md-order-by="confirmDate">{{'student.practiceContracts.contractDate' | translate}}</th>
+              <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'student.practiceContracts.status' | translate}}</th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in practiceContracts.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{::row.contractNr}}</td>
+              <td md-cell>{{::row.startDate | hoisDate}} - {{::row.endDate | hoisDate}}</td>
+              <td md-cell>{{::row.enterprise}}</td>
+              <td md-cell>{{::row.supervisor}}</td>
+              <td md-cell>{{::row.schoolSupervisor}}</td>
+              <td md-cell>{{::row.contractDate | hoisDate}}</td>
+              <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+              <td md-cell>
+                <md-button ng-if="auth.isAdmin() && row.status.code === 'LEPING_STAATUS_S'" 
+                  md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/edit">{{'main.button.edit' | translate}}</md-button>
+                <md-button ng-if="!auth.isAdmin() || (auth.isAdmin() && row.status.code !== 'LEPING_STAATUS_S')"
+                  md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <!-- todo lehe suuruse valik katki?-->
+      <md-table-pagination ng-if="practiceContracts.totalElements > practiceContractsCriteria.size" md-limit="practiceContractsCriteria.size" md-limit-options="[5, 10, 15]"
+        md-page="practiceContractsCriteria.page" md-total="{{practiceContracts.totalElements}}" md-on-paginate="loadPracticeContracts" 
+        md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select></md-table-pagination>
+    </hois-collapsable>
+
     <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

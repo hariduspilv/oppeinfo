@@ -2,6 +2,7 @@
 
 angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewController', 
   function ($scope, QueryUtils, Classifier, $route, SspCapacities, USER_ROLES, AuthService) {
+    $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN);
 
     var studyPeriodId = parseInt($route.current.params.studyPeriodId, 10);
@@ -9,7 +10,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewControl
     $scope.isEditing = studentGroup === null;
     var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/container');
 
-    $scope.record = Endpoint.search({studyPeriod: studyPeriodId, studentGroup: studentGroup, subjectStudyPeriodDtos: []});
+    $scope.formState = {xlsUrl: 'subjectStudyPeriods/studentGroups/subjectstudyperiodstudentgroup.xls'};
+    $scope.container = {studyPeriod: studyPeriodId, studentGroup: studentGroup, subjectStudyPeriodDtos: []};
+    $scope.record = Endpoint.search($scope.container);
     $scope.record.$promise.then(function(response){
         $scope.capacitiesUtil = new SspCapacities(response);
     });

@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web.subjectStudyPeriod;
 
+import java.io.IOException;
 import java.util.List;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodCapacitiesService;
 import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodTeacherSearchService;
 import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodTeacherService;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodSearchCommand;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
@@ -76,4 +79,9 @@ public class SubjectStudyPeriodTeacherController {
         return subjectStudyPeriodTeacherService.getTeachersList(user.getSchoolId(), studyPeriodId);
     }
 
+    @GetMapping("/subjectstudyperiodteacher.xls")
+    public void lessonplanAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "subjectstudyperiodteacher.xls", subjectStudyPeriodTeacherService.subjectStudyPeriodTeacherAsExcel(user.getSchoolId(), container));
+    }
 }

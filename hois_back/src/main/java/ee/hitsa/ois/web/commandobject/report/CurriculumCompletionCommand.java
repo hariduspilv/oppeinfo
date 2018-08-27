@@ -9,6 +9,7 @@ public class CurriculumCompletionCommand {
     private Long studentGroup;
     private String studyForm;
     private String studyLoad;
+    private Boolean isHigher;
 
     public String getName() {
         return name;
@@ -49,4 +50,13 @@ public class CurriculumCompletionCommand {
     public void setStudyLoad(String studyLoad) {
         this.studyLoad = studyLoad;
     }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
+    }
+    
 }

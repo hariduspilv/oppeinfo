@@ -6,7 +6,11 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
@@ -15,9 +19,13 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
+import ee.hitsa.ois.service.XlsService;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
@@ -36,6 +44,10 @@ public class SubjectStudyPeriodSubjectService {
     private EntityManager em;
     @Autowired
     private SubjectStudyPeriodRepository subjectStudyPeriodRepository;
+    @Autowired
+    private SubjectStudyPeriodCapacitiesService subjectStudyPeriodCapacitiesService;
+    @Autowired
+    private XlsService xlsService;
 
     public void setSubjectStudyPeriodsToSubjectsContainer(Long schoolId, SubjectStudyPeriodDtoContainer container) {
         List<SubjectStudyPeriod> ssps = subjectStudyPeriodRepository.findAll((root, query, cb) -> {
@@ -80,4 +92,53 @@ public class SubjectStudyPeriodSubjectService {
         }, data);
     }
 
+    public byte[] subjectStudyPeriodSubjectAsExcel(Long schoolId, SubjectStudyPeriodDtoContainer container) {
+        setSubjectStudyPeriodsToSubjectsContainer(schoolId, container);
+        List<Classifier> capacities = subjectStudyPeriodCapacitiesService.capacityClassifiers();
+        List<String> capacityCodes = StreamUtil.toMappedList(c -> EntityUtil.getCode(c), capacities);
+        
+        List<Map<String, Object>> subjectStudyPeriods = new ArrayList<>();
+        Map<String, Short> totals = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        
+        for (SubjectStudyPeriodDto studyPeriod : container.getSubjectStudyPeriodDtos()) {
+            Map<String, Object> period = new HashMap<>();
+            period.put("teachers", studyPeriod.getTeachers().stream().map(t -> t.getName()).collect(Collectors.joining(", ")));
+            period.put("groups", studyPeriod.getStudentGroupObjects().stream().map(g -> g.getNameEt()).collect(Collectors.joining(", ")));
+            period.put("groupProportion", studyPeriod.getGroupProportion());
+            
+            Map<String, Short> capacityHours = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            capacityCodes.forEach(c -> capacityHours.put(c, null));
+            
+            for (SubjectStudyPeriodCapacityDto capacityDto : studyPeriod.getCapacities()) {
+                capacityHours.put(capacityDto.getCapacityType(), capacityDto.getHours());
+            }
+            
+            studyPeriod.getCapacities().forEach(c -> capacityHours.put(c.getCapacityType(), c.getHours()));
+            period.put("hours", capacityHours);
+            subjectStudyPeriods.add(period);
+            
+            for (String capacity : capacityHours.keySet()) {
+                Short totalHours = totals.get(capacity) != null ? totals.get(capacity) : Short.valueOf((short) 0);
+                if (!totals.containsKey(capacity)) {
+                    totals.put(capacity, totalHours);
+                } else {
+                    Short periodHours = capacityHours.get(capacity) != null ? capacityHours.get(capacity) : Short.valueOf((short) 0);
+                    totals.put(capacity, Short.valueOf((short) (totalHours.shortValue() + periodHours.shortValue())));
+                }
+            }
+        }
+        
+        
+        Map<String, Object> data = new HashMap<>();
+        StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, container.getStudyPeriod());
+        
+        data.put("studyYear", AutocompleteResult.of(studyPeriod.getStudyYear()));
+        data.put("studyPeriod", AutocompleteResult.of(studyPeriod));
+        data.put("subject", AutocompleteResult.of(em.getReference(Subject.class, container.getSubject())));
+        data.put("capacities", capacities);
+        data.put("subjectStudyPeriods", subjectStudyPeriods);
+        data.put("totals", totals);
+
+        return xlsService.generate("subjectstudyperiodsubject.xls", data);
+    }
 }

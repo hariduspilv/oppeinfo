@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -133,5 +135,20 @@ public class LessonPlanController {
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, journal.getSchool());
         lessonPlanService.deleteJournal(user, journal);
+    }
+    
+    @GetMapping("/{id:\\d+}/lessonplan.xls")
+    public void lessonplanAsExcel(HoisUserDetails user, @WithEntity LessonPlan lessonPlan, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "lessonplan.xls", lessonPlanService.lessonplanAsExcel(lessonPlan));
+    }
+    
+    @GetMapping("/byteacher/{id:\\d+}/{sy:\\d+}/lessonplanbyteacher.xls")
+    public void lessonplanByTeacherAsExcel(HoisUserDetails user, @WithEntity Teacher teacher, 
+            @WithEntity("sy") StudyYear studyYear, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertSameSchool(user, teacher.getSchool());
+        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        HttpUtil.xls(response, "lessonplanbyteacher.xls", lessonPlanService.lessonplanByTeacherAsExcel(teacher, studyYear));
     }
 }

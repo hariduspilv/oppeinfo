@@ -12,23 +12,44 @@
     }
   }
 
-  angular.module('hitsaOis').factory('GeneralTimetableUtils', [
-    function () {
+  angular.module('hitsaOis').factory('GeneralTimetableUtils', ['$sessionStorage',
+    function ($sessionStorage) {
       var GeneralTimetableUtil = function () {
         var self = this;
+        var stateKey = 'timetableState';
 
         this.getCurrentWeekIndex = function (weeks) {
           var currentTime = moment();
+          console.log(currentTime);
 
           for (var i = 0; i <= weeks.length - 1; i++) {
-            var weekStartDate = moment(weeks[i].start).set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
-            var weekEndDate = moment(weeks[i].end).set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+            var weekStartDate = moment(weeks[i].start).startOf('day')
+            var weekEndDate = moment(weeks[i].end).endOf('day')
 
-            if (moment(currentTime).isBetween(weekStartDate, weekEndDate)) {
+            if (moment(currentTime).isBetween(weekStartDate, weekEndDate, null, '[]')) {
               return i;
             }
           }
+
+          // if current week doesn't exist, then return first week index if current date is before first week start date
+          // else return last week index
+          if (weeks) {
+            return currentTime < moment(weeks[0].start).startOf('day') ? 0 : weeks.length - 1;
+          }
         }
+        
+        this.loadState = function(schoolId) {
+          var storage = $sessionStorage[stateKey] || '{}';
+          var schoolStates = JSON.parse(storage);
+          return schoolStates[schoolId] || {};
+        }
+
+        this.changeState = function(newState, schoolId) {
+          var schoolState = {};
+          schoolState[schoolId] = angular.extend(self.loadState(schoolId), newState);
+          $sessionStorage[stateKey] = JSON.stringify(angular.extend(JSON.parse($sessionStorage[stateKey] || '{}'), schoolState));
+        }
+
       }
       return GeneralTimetableUtil;
     }
@@ -39,16 +60,40 @@
       $scope.auth = $route.current.locals.auth;
       $scope.schoolId = $scope.auth.school.id;
       $scope.formState = {};
+      var storageKey = 'timetableSearch';
+      var state = $scope.generalTimetableUtils.loadState($scope.schoolId);
       
+      function saveCriteria() {
+        var storedCriteria = $scope.fromStorage(storageKey) || {};
+        var storedSchoolCriteria = storedCriteria[$scope.schoolId] || {};
+        var schoolCriteria = {};
+        schoolCriteria[$scope.schoolId] = angular.extend(storedSchoolCriteria, {
+          roomObject: $scope.criteria.roomObject,
+          teacher: $scope.criteria.teacher,
+          studentGroup: $scope.criteria.studentGroup,
+          subjectObject: $scope.criteria.subjectObject
+        });
+
+        $scope.toStorage(storageKey, angular.extend(storedCriteria, schoolCriteria));
+      }
+
+      function loadCriteria() {
+        var storedCriteria = $scope.fromStorage(storageKey) || {};
+        angular.extend($scope.criteria, storedCriteria[$scope.schoolId]);
+      }
+
       QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
         $scope.weeks = weeks;
-        var shownWeekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
+        var shownWeekIndex = state.weekIndex ? state.weekIndex : $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
         $scope.shownWeek = $scope.weeks[shownWeekIndex];
+        loadCriteria();
+        $scope.search();
       });
 
       $scope.search = function() {
         if ($scope.shownWeek) {
           if ($scope.criteria.room || $scope.criteria.teachers || $scope.criteria.studentGroups || $scope.criteria.subject) {
+            saveCriteria();
             QueryUtils.endpoint('/timetableevents/timetableSearch').query(
               {room: $scope.criteria.room, teachers: $scope.criteria.teachers, studentGroups: $scope.criteria.studentGroups,
               journalOrSubjectId: $scope.criteria.subject, from: $scope.shownWeek.start, thru: $scope.shownWeek.end})
@@ -108,6 +153,19 @@
         });
       }
 
+      function saveGroupId(groupId) {
+        $scope.generalTimetableUtils.changeState({ groupId: groupId }, $scope.schoolId);
+      }
+    
+      function loadGroupId() {
+        var state = $scope.generalTimetableUtils.loadState($scope.schoolId);
+        if (state.groupId) {
+          $scope.typeId = state.groupId;
+        }
+      }
+
+      loadGroupId();
+    
       $scope.getStudentGroups = function (searchText) {
         searchText = (searchText || '').toUpperCase();
         return $scope.groupTimetables.filter(function (it) { return it.groupCode.toUpperCase().indexOf(searchText) !== -1; });
@@ -115,6 +173,7 @@
 
       $scope.showGroupWeek = function (groupId) {
         $scope.typeId = groupId;
+        saveGroupId(groupId);
       };
     }
   ]).controller('GeneralTimetableByTeacherController', ['$scope', '$location', '$route', 'QueryUtils', 'GeneralTimetableUtils',
@@ -142,6 +201,19 @@
         });
       }
 
+      function saveTeacherId(teacherId) {
+        $scope.generalTimetableUtils.changeState({ teacherId: teacherId }, $scope.schoolId);
+      }
+    
+      function loadTeacherId() {
+        var state = $scope.generalTimetableUtils.loadState($scope.schoolId);
+        if (state.teacherId) {
+          $scope.typeId = state.teacherId;
+        }
+      }
+
+      loadTeacherId();
+    
       $scope.getTeachers = function (searchText) {
         searchText = (searchText || '').toUpperCase();
         return $scope.timetablesByTeachers.filter(function (it) { return (it.firstname + ' ' + it.lastname).toUpperCase().indexOf(searchText) !== -1; });
@@ -149,6 +221,7 @@
 
       $scope.showTeacherWeek = function (teacherId) {
         $scope.typeId = teacherId;
+        saveTeacherId(teacherId);
       };
     }
   ]).controller('GeneralTimetableByRoomController', ['$scope', '$location', '$route', 'QueryUtils', 'GeneralTimetableUtils',
@@ -170,18 +243,25 @@
 
         if ($scope.schoolId) {
           var roomPeriodTimetablesEndpoint = '/timetables/room/' + $scope.schoolId;
-  
-          QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
-            $scope.weeks = weeks;
-            var shownWeekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-            $scope.shownWeek = $scope.weeks[shownWeekIndex];
-          });
     
           QueryUtils.endpoint(roomPeriodTimetablesEndpoint).query().$promise.then(function (result) {
             $scope.timetablesByRooms = result;
           });
         }
 
+        function saveRoomId(roomId) {
+          $scope.generalTimetableUtils.changeState({ roomId: roomId }, $scope.schoolId);
+        }
+      
+        function loadRoomId() {
+          var state = $scope.generalTimetableUtils.loadState($scope.schoolId);
+          if (state.roomId) {
+            $scope.typeId = state.roomId;
+          }
+        }
+  
+        loadRoomId();
+      
         $scope.getRooms = function (searchText) {
           searchText = (searchText || '').toUpperCase();
           return $scope.timetablesByRooms.filter(function (it) { return it.code.toUpperCase().indexOf(searchText) !== -1; });
@@ -189,6 +269,7 @@
 
         $scope.showRoomWeek = function (roomId) {
           $scope.typeId = roomId;
+          saveRoomId(roomId);
         };
 
       }

@@ -51,7 +51,7 @@
             <th md-column md-order-by="curriculumVersion.code">{{'report.studentstatisticsbyperiod.curriculum' | translate}}</th>
             <th md-column md-numeric ng-if="formState.resultType !== 'OPPURSTAATUS_L'" ng-repeat="cl in formState.resultDef">{{currentLanguageNameField(cl)}}</th>
             <th md-column md-numeric>{{formState.resultType === 'OPPURSTAATUS_L' ? 'report.studentstatisticsbyperiod.finished' : 'report.studentstatisticsbyperiod.total' | translate}}</th>
-            <th md-column md-numeric ng-if="formState.resultType === 'OPPURSTAATUS_L'">{{'report.studentstatisticsbyperiod.isCumLaude' | translate}}</th>
+            <th md-column md-numeric ng-if="formState.resultType === 'OPPURSTAATUS_L'">{{auth.higher ? 'report.studentstatisticsbyperiod.isCumLaude' : 'report.studentstatisticsbyperiod.isCumLaudeVoc' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>

@@ -705,7 +705,7 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.study.loads',
-            url: "/lessonplans/vocational/byteacher",
+            url: "/lessonplans/vocational/byteacher?_menu",
             icon:"zoom_out_map"
           },
           {

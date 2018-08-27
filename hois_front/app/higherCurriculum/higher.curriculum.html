@@ -379,11 +379,11 @@
 				</div>
 				<md-input-container flex="100">
 					<label>{{'curriculum.jointAgreementInfoEt' | translate}}{{getStar()}}</label>
-					<textarea ng-model="curriculum.contractEt" md-maxlength="1000" max-rows="10" md-select-on-focus ng-required="curriculum.joint && strictValidation()" ng-readonly="formState.readOnly || formState.notEditableBasicData"></textarea>
+					<textarea ng-model="curriculum.contractEt" md-maxlength="1000" max-rows="10" ng-required="curriculum.joint && strictValidation()" ng-readonly="formState.readOnly || formState.notEditableBasicData"></textarea>
 				</md-input-container>
 				<md-input-container  flex="100">
 					<label>{{'curriculum.jointAgreementInfoEn' | translate}}{{getStar()}}</label>
-					<textarea ng-model="curriculum.contractEn" md-maxlength="1000" max-rows="10" md-select-on-focus ng-required="curriculum.joint && strictValidation()" ng-readonly="formState.readOnly || formState.notEditableBasicData"></textarea>
+					<textarea ng-model="curriculum.contractEn" md-maxlength="1000" max-rows="10" ng-required="curriculum.joint && strictValidation()" ng-readonly="formState.readOnly || formState.notEditableBasicData"></textarea>
 				</md-input-container>
 			</div>
 		</fieldset>

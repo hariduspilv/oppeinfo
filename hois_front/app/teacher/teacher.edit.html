@@ -200,7 +200,7 @@
           <div layout="row" layout-sm="column" layout-xs="column" flex>
             <md-input-container flex>
               <label>{{'teacher.addInfo' | translate}}</label>
-              <textarea ng-model="teacher.addInfo" name="addInfo" md-maxlength="1000" max-rows="10" dfs md-select-on-focus></textarea>
+              <textarea ng-model="teacher.addInfo" name="addInfo" md-maxlength="1000" max-rows="10" dfs></textarea>
               <div ng-messages="teacherForm.addInfo.$error">
                 <div ng-message="md-maxlength">
                   {{'main.messages.error.maxlength' | translate}}

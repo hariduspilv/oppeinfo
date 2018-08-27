@@ -89,7 +89,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     // load curriculums
     $scope.formState.curriculumVersionMap = {};
     $scope.formState.languageMap = {};
-    $scope.formState.curriculumVersions = Curriculum.queryVersions({valid: true, languages: true});
+    $scope.formState.curriculumVersions = Curriculum.queryVersions({languages: true});
     $scope.formState.curriculumVersions.$promise.then(function(result) {
       $scope.formState.curriculumVersionMap = result.reduce(function(acc, item) { acc[item.id] = item; return acc; }, {});
       for(var i = 0; i < result.length; i++) {

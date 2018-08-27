@@ -63,7 +63,7 @@
           <tr ng-repeat-start="journal in module.journals">
             <td colspan="3"><span class="bold">{{::journal.nameEt}}</span>&nbsp;</td>
             <td colspan="{{::formState.weekNrs.length}}">
-              <span ng-repeat="theme in journal.themes">
+              <span ng-repeat="theme in getUniqueJournalThemes(journal.themes)">
                 <span ng-if="!$first">,&nbsp;</span>{{::theme.nameEt}}&nbsp;{{::theme.credits}}&nbsp;{{'lessonplan.credits' | translate}}
                 &nbsp;(<span ng-repeat="(hourCap, hourCount) in theme.hours">{{::getCapacityByCode(hourCap).value.toUpperCase()}}{{hourCount}}{{$last ? "" : "/"}}</span>)</span>
             </td>
@@ -74,6 +74,9 @@
                 <span style="float:left">
                   <span ng-repeat="teacher in journal.teachers">
                     <br ng-if="!$first"> {{teacher.teacher.nameEt}}
+                    <md-tooltip>
+                      <span translate="lessonplan.teacherLoad" translate-values="getTeacherLoad(teacher.teacher.id)"></span>
+                    </md-tooltip>
                   </span>
                 </span>
                 <span style="float:right">
@@ -109,14 +112,14 @@
               {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.moduleTotal' | translate}}
             </td>
             <td class="fix">{{ct.value.toUpperCase()}}</td>
-            <td class="center fix">{{formState.moduleTotals[module.id]._[ct.code]}}</td>
-            <td ng-repeat="h in formState.moduleTotals[module.id][ct.code] track by $index" class="center">{{h}}</td>
+            <td class="center fix">{{formState.moduleTotals[module.id]._[ct.code] | hoisNumber:1}}</td>
+            <td ng-repeat="h in formState.moduleTotals[module.id][ct.code] track by $index" class="center">{{h | hoisNumber:1}}</td>
           </tr>
           <tr ng-show="formState.showTotals" class="fix">
             <td class="fix" ng-if="getCapacityTypes(formState.moduleTotals[module.id]).length == 0">&nbsp;</td>
             <td class="fix">{{'lessonplan.total' | translate}}</td>
-            <td class="center fix">{{formState.moduleTotals[module.id].__}}</td>
-            <td ng-repeat="h in formState.moduleTotals[module.id]._._ track by $index" class="center">{{h}}</td>
+            <td class="center fix">{{formState.moduleTotals[module.id].__ | hoisNumber:1}}</td>
+            <td ng-repeat="h in formState.moduleTotals[module.id]._._ track by $index" class="center">{{h | hoisNumber:1}}</td>
           </tr>
           <tr ng-repeat-end ng-init="finished()"> </tr>
           <tr ng-repeat-end class="fix"></tr>
@@ -125,18 +128,18 @@
                 {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.grandTotal' | translate}}
             </td>
             <td class="center fix">{{ct.value.toUpperCase()}}</td>
-            <td class="center fix">{{formState.grandTotals._[ct.code]}}</td>
-            <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals[ct.code] track by $index" class="center">{{h}}</td>
+            <td class="center fix">{{formState.grandTotals._[ct.code] | hoisNumber:1}}</td>
+            <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals[ct.code] track by $index" class="center">{{h | hoisNumber:1}}</td>
             <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
-              class="center">{{formState.capGrandTotalsSp[ct.code][$index]}}</td>
+              class="center">{{formState.capGrandTotalsSp[ct.code][$index] | hoisNumber:1}}</td>
           </tr>
            <tr md-colors="{background: 'background-200'}" class="fix">
             <td class="fix">{{'lessonplan.total' | translate}}</td>
             <td class="fix" ng-if="formState.grandTotals && keys(formState.grandTotals).length &lt; 2">&nbsp;</td>
-            <td class="center fix">{{formState.grandTotals.__}}</td>
-            <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index" class="center">{{h}}</td>
+            <td class="center fix">{{formState.grandTotals.__ | hoisNumber:1}}</td>
+            <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index" class="center">{{h | hoisNumber:1}}</td>
             <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
-                class="center">{{formState.grandTotalsSp[$index]}}</td>
+                class="center">{{formState.grandTotalsSp[$index] | hoisNumber:1}}</td>
            </tr>
         </tbody>
         <!-- grand totals -->
@@ -165,5 +168,6 @@
 <div>
   <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <md-button class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+  <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
   <md-button ng-click="back()" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>

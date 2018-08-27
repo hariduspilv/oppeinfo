@@ -835,7 +835,7 @@ public class SaisApplicationService {
             } else {
                 otherData.setOtherDataValue(data.getValue());
             }
-            if(otherData.getOtherDataValue() != null) {
+            if(StringUtils.hasText(otherData.getOtherDataValue())) {
                 application.getOtherData().add(otherData);
             }
         }

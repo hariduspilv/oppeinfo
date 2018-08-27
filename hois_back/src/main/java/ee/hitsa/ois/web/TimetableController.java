@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.Timetable;
 import ee.hitsa.ois.service.TimetableGenerationService;
 import ee.hitsa.ois.service.TimetableService;
@@ -40,6 +41,7 @@ import ee.hitsa.ois.web.dto.timetable.TimetableDatesDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetablePlanDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableStudentStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
 
@@ -183,6 +185,11 @@ public class TimetableController {
     @GetMapping("/timetableStudyYearWeeks/{school:\\d+}")
     public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(@PathVariable("school") Long schoolId) {
         return timetableService.timetableStudyYearWeeks(schoolId);
+    }
+    
+    @GetMapping("/timetableStudyYearWeeks/student/{id:\\d+}")
+    public List<TimetableStudentStudyYearWeekDto> timetableStudyYearWeeksStudent(@WithEntity Student student) {
+        return timetableService.timetableStudyYearWeeksStudent(student);
     }
     
     @GetMapping("/group/{school:\\d+}")

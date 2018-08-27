@@ -714,6 +714,16 @@
       "label": "Käskkirjad",
       "type": "Käskkirja liik"
     },
+    "practiceContracts": {
+      "label": "Praktikalepingud",
+      "contractNumber": "Lepingu nr",
+      "validity": "Lepingu kehtivus",
+      "enterprise": "Ettevõte",
+      "supervisor": "Ettevõtte juhendaja",
+      "schoolSupervisor": "Õppeasutuse juhendaja",
+      "contractDate": "Sõlmimise kp",
+      "status": "Staatus"
+    },
     "foreignstudy": {
       "school": "Õppeasutus",
       "country": "Riik",
@@ -1164,6 +1174,7 @@
     "isFiller": "olen täitja ",
     "room": "Ruumid",
     "moduleName": "Mooduli nimi",
+    "teacherLoad": "Koormus: {{scheduleLoad}}, planeerimata tunde: {{unplannedLessons}}",
     "journal": {
       "assessment": "Hindamisviis",
       "deleteconfirm": "Kas oled kindel, et soovid päeviku kustutada?",
@@ -1184,7 +1195,8 @@
       "addModuleOutcomes": "Lisa õpiväljundid",
       "hasStudents": "Päevikuga on seotud õppijad",
       "outcomesReferenced": "Õpiväljunditega on seotud teisi kirjeid",
-      "capacityTypeReferenced": "Eemaldatud õppetöö liikidega on seotud teisi kirjeid"
+      "capacityTypeReferenced": "Eemaldatud õppetöö liikidega on seotud teisi kirjeid",
+      "noJournalCapacityTypes": "Vähemalt üks õppetöö liik peab olema valitud"
     },
     "search": {
       "vocational": "Õpperühmad (kutse)",
@@ -2549,7 +2561,9 @@
       "noWeekTimetable": "Valitud nädala kohta tunniplaan puudub",
       "noSearchResults": "Otsingutingimustele vastavaid kirjeid ei leitud",
       "missingCapacities": "Mitte ühelegi õppeainele ei ole lisatud planeeritud mahtu",
-      "isBeforeNow": "Mineviku sündmust ei saa muuta"
+      "isBeforeNow": "Mineviku sündmust ei saa muuta",
+      "noDeclaredSubjects": "Valitud perioodil deklareeritud ained puuduvad",
+      "noConnectedModules": "Valitud perioodil õpitavad moodulid puuduvad"
     }
   },
   "journal": {
@@ -2937,6 +2951,11 @@
       "name": "Õppija nimi",
       "status": "Õppija staatus",
       "studentgroup": "Õpperühm",
+      "studyPeriodCount": "Arvel semestrite/perioodide arv",
+      "studyYearCount": "Arvel õppeaastate arv",
+      "creditsLastStudyPeriod": "Eelmisel semestril/perioodil<br>tehtud ainepunktide arv (EAP/EKAP)",
+      "credits": "Tehtud ainepunktide<br>arv kokku (EAP/EKAP)",
+      "curriculumCompletion": "Õppekava täidetuse<br>protsent (%)",
       "studyForm": "Õppevorm",
       "studyLoad": "Õppekoormus"
     },
@@ -2955,6 +2974,7 @@
       "curriculum": "Õppekava",
       "finished": "Lõpetanud õppijate arv",
       "isCumLaude": "sh cum laude",
+      "isCumLaudeVoc": "sh kiitusega",
       "result": "Statistika liik",
       "total": "Õppijate arv kokku"
     },

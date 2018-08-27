@@ -45,7 +45,7 @@
 
         <md-input-container flex>
           <label>{{'main.notes' | translate}}</label>
-          <textarea ng-model="implementationPlan.description" max-rows="10" md-select-on-focus readonly></textarea>
+          <textarea ng-model="implementationPlan.description" max-rows="10" readonly></textarea>
         </md-input-container>
 
         <md-input-container flex ng-if="implementationPlan.status === VERSION_STATUS.K">

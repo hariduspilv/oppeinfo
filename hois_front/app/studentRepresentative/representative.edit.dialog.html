@@ -24,7 +24,10 @@
             <input type="text" name="idcode" ng-model="record.person.idcode" ng-blur="lookupPerson()" md-minlength="11" md-maxlength="11" ng-readonly="record.id" required md-autofocus="!record.id">
             <div class="invalid" ng-show="studentRepresentativeEditForm.idcode.$error.notUnique">
               {{'student.representative.samewithstudent' | translate}}
-             </div>
+            </div>
+            <div class="invalid" ng-show="studentRepresentativeEditForm.idcode.$error.estonianIdcode">
+              {{'main.messages.error.estonianIdcode' | translate}}
+            </div>
           </md-input-container>
 
           <md-input-container class="md-block">

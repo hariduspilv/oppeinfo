@@ -3,7 +3,6 @@ package ee.hitsa.ois.web.commandobject.report;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 @DateRange(from = "birthdateFrom", thru = "studyStartThru")
@@ -11,7 +10,6 @@ import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 public class StudentSearchCommand {
 
     private String name;
-    @EstonianIdCode
     private String idcode;
     private LocalDate birthdateFrom;
     private LocalDate birthdateThru;
@@ -26,6 +24,7 @@ public class StudentSearchCommand {
     private String fin;
     private String finSpecific;
     private String language;
+    private Boolean isHigher;
 
     public String getName() {
         return name;
@@ -146,4 +145,13 @@ public class StudentSearchCommand {
     public void setLanguage(String language) {
         this.language = language;
     }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
+    }
+    
 }

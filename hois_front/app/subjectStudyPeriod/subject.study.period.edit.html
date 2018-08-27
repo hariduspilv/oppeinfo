@@ -56,7 +56,7 @@
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="!hasObligatoryStudentGroup">
                     <label>{{'subjectStudyPeriod.studentGroups' | translate}}</label>
-                    <hois-select ng-model="record.studentGroups" values="studentGroups" multiple></hois-select>
+                    <hois-select ng-model="record.studentGroups" values="studentGroups" multiple ng-required="record.declarationType === 'DEKLARATSIOON_KOIK'"></hois-select>
                 </md-input-container>
                 <md-input-container flex="10" flex-sm="100" flex-xs="100" ng-if="hasObligatoryStudentGroup">
                     <label>{{'subjectStudyPeriod.studentGroupPreselected' | translate}}</label>

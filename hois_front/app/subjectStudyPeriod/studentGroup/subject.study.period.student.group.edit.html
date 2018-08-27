@@ -39,7 +39,7 @@
             <div layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
                 <md-input-container flex="25" flex-sm="100" flex-xs="100" >
                     <label>{{'subjectStudyPeriod.curriculum' | translate}}</label>
-                    <hois-value value="currentLanguageNameField(curriculum)"></hois-value>
+                    <hois-value value="curriculum.code + ' - ' + currentLanguageNameField(curriculum)"></hois-value>
                 </md-input-container>
                 <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'subjectStudyPeriod.curriculumStudyPeriod.label' | translate}}</label>
@@ -106,6 +106,7 @@
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+            <a ng-if="!isEditing" ng-href="{{excel(formState.xlsUrl, container)}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
             <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/studentGroups', subjectStudyPeriodStudentGroupEditForm)">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>

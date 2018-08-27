@@ -9,8 +9,8 @@
     if (scope.shownWeek) {
       scope.weekIndex = scope.shownWeek.weekNr;
 
-      scope.previousWeekIndex = scope.weeks[scope.weekIndex - 1] ? scope.weekIndex - 1 : null;
-      scope.nextWeekIndex = scope.weeks[scope.weekIndex + 1] ? scope.weekIndex + 1 : null;
+      scope.previousWeekIndex = scope.weeks[scope.weekIndex - 1] ? scope.weekIndex - 1 : undefined;
+      scope.nextWeekIndex = scope.weeks[scope.weekIndex + 1] ? scope.weekIndex + 1 : undefined;
     }
   }
 
@@ -158,9 +158,21 @@
     }
   }
 
+  function saveWeekIndex(scope, weekIndex) {
+    scope.generalTimetableUtils.changeState({ weekIndex: weekIndex }, scope.schoolId);
+  }
+
+  function loadWeekIndex(scope) {
+    var state = scope.generalTimetableUtils.loadState(scope.schoolId);
+    if (angular.isDefined(state.weekIndex)) {
+      scope.weekIndex = state.weekIndex;
+    }
+  }
+
   function changeTimetableParameters(scope, typeId, weekIndex) {
     scope.typeId = typeId;
     scope.weekIndex = weekIndex;
+    saveWeekIndex(scope, weekIndex);
     scope.shownWeek = scope.weeks[weekIndex];
   }
 
@@ -217,11 +229,11 @@
     return 'primary-100-0.8';
   }
 
-  angular.module('hitsaOis').controller('SearchTimetableViewController', ['$scope', '$route', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
-    function ($scope, $route, Classifier,  GeneralTimetableUtils, QueryUtils) {
+  angular.module('hitsaOis').controller('SearchTimetableViewController', ['$scope', '$route', '$q', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function ($scope, $route, $q, Classifier,  GeneralTimetableUtils, QueryUtils) {
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
-      getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
+      var capacityTypesPromise = getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
         $scope.capacityTypes = capacityTypes;
       });
       $scope.timetableSearch = true;
@@ -233,8 +245,8 @@
           setWeekCriteria();
           $scope.shownEvents = $scope.searchResultEvents;
 
-          $scope.weeks.$promise.then(function () {
-            if (!$scope.weekIndex) {
+          $q.all([capacityTypesPromise, $scope.weeks.$promise]).then(function () {
+            if (!angular.isDefined($scope.weekIndex)) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
             }
             $scope.shownWeek = $scope.weeks[$scope.weekIndex];
@@ -243,6 +255,8 @@
           });
         }
       });
+
+      loadWeekIndex($scope);
 
       $scope.previousWeek = function (typeId, previousWeekIndex) {
         changeTimetableParameters($scope, typeId, previousWeekIndex);
@@ -312,12 +326,12 @@
         }
       }
     }
-  ]).controller('GroupTimetableViewController', ['$scope', '$route', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
-    function ($scope, $route, Classifier, GeneralTimetableUtils, QueryUtils) {
+  ]).controller('GroupTimetableViewController', ['$scope', '$route', '$q', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function ($scope, $route, $q, Classifier, GeneralTimetableUtils, QueryUtils) {
       $scope.timetableType = "group";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
-      getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
+      var capacityTypesPromise = getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
         $scope.capacityTypes = capacityTypes;
       });
 
@@ -329,13 +343,15 @@
 
       if ($route.current.params.groupId) {
         getDirectRouteParameters($scope, $route, $route.current.params.groupId);
+      } else {
+        loadWeekIndex($scope);
       }
 
       $scope.$watchGroup(['$parent.typeId'], function () {
         if ($scope.$parent.typeId) {
           $scope.typeId = $scope.$parent.typeId;
-          $scope.weeks.$promise.then(function () {
-            if (!$scope.weekIndex) {
+          $q.all([capacityTypesPromise, $scope.weeks.$promise]).then(function () {
+            if (!angular.isDefined($scope.weekIndex)) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
             }
             $scope.shownWeek = $scope.weeks[$scope.weekIndex];
@@ -396,12 +412,12 @@
         }
       }
     }
-  ]).controller('TeacherTimetableViewController', ['$scope', '$route', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
-    function ($scope, $route, Classifier, GeneralTimetableUtils, QueryUtils) {
+  ]).controller('TeacherTimetableViewController', ['$scope', '$route', '$q', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function ($scope, $route, $q, Classifier, GeneralTimetableUtils, QueryUtils) {
       $scope.timetableType = "teacher";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
-      getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
+      var capacityTypesPromise = getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
         $scope.capacityTypes = capacityTypes;
       });
 
@@ -413,13 +429,15 @@
       
       if ($route.current.params.teacherId) {
         getDirectRouteParameters($scope, $route, $route.current.params.teacherId);
+      } else {
+        loadWeekIndex($scope);
       }
 
       $scope.$watchGroup(['$parent.typeId'], function () {
         if ($scope.$parent.typeId) {
           $scope.typeId = $scope.$parent.typeId;
-          $scope.weeks.$promise.then(function () {
-            if (!$scope.weekIndex) {
+          $q.all([capacityTypesPromise, $scope.weeks.$promise]).then(function () {
+            if (!angular.isDefined($scope.weekIndex)) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
             }
             $scope.shownWeek = $scope.weeks[$scope.weekIndex];
@@ -483,12 +501,12 @@
         }
       }
     }
-  ]).controller('RoomTimetableViewController', ['$scope', '$route', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
-    function ($scope, $route, Classifier, GeneralTimetableUtils, QueryUtils) {
+  ]).controller('RoomTimetableViewController', ['$scope', '$route', '$q', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function ($scope, $route, $q, Classifier, GeneralTimetableUtils, QueryUtils) {
       $scope.timetableType = "room";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
-      getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
+      var capacityTypesPromise = getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
         $scope.capacityTypes = capacityTypes;
       });
 
@@ -500,13 +518,15 @@
 
       if ($route.current.params.roomId) {
         getDirectRouteParameters($scope, $route, $route.current.params.roomId);
+      } else {
+        loadWeekIndex($scope);
       }
 
       $scope.$watchGroup(['$parent.typeId'], function () {
         if ($scope.$parent.typeId) {
           $scope.typeId = $scope.$parent.typeId;
-          $scope.weeks.$promise.then(function () {
-            if (!$scope.weekIndex) {
+          $q.all([capacityTypesPromise, $scope.weeks.$promise]).then(function () {
+            if (!angular.isDefined($scope.weekIndex)) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
             }
             $scope.shownWeek = $scope.weeks[$scope.weekIndex];
@@ -515,7 +535,7 @@
           });
         }
       });
-
+      
       $scope.previousWeek = function (typeId, previousWeekIndex) {
         changeTimetableParameters($scope, typeId, previousWeekIndex);
         getPreviousAndNextWeek($scope);
@@ -570,23 +590,23 @@
           }
       }
     }
-  ]).controller('StudentTimetableViewController', ['$scope', '$route', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
-    function ($scope, $route, Classifier, GeneralTimetableUtils, QueryUtils) {
+  ]).controller('StudentTimetableViewController', ['$scope', '$route', '$q', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function ($scope, $route, $q, Classifier, GeneralTimetableUtils, QueryUtils) {
       $scope.timetableType = "student";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
-      getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
+      var capacityTypesPromise = getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
         $scope.capacityTypes = capacityTypes;
       });
       $scope.schoolId = $scope.auth.school.id;
 
-      $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
+      $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/student/' + $scope.$parent.typeId).query();
 
       $scope.$watchGroup(['$parent.typeId'], function () {
         if (($scope.auth.isStudent() || $scope.auth.isParent() || $scope.auth.isAdmin()) && $scope.$parent.typeId) {
           $scope.typeId = $scope.$parent.typeId;
-          $scope.weeks.$promise.then(function () {
-            if (!$scope.weekIndex) {
+          $q.all([capacityTypesPromise, $scope.weeks.$promise]).then(function () {
+            if (!angular.isDefined($scope.weekIndex)) {
               $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
             }
             $scope.shownWeek = $scope.weeks[$scope.weekIndex];
@@ -595,6 +615,8 @@
           });
         }
       });
+
+      loadWeekIndex($scope);
 
       $scope.previousWeek = function (typeId, previousWeekIndex) {
         changeTimetableParameters($scope, typeId, previousWeekIndex);
@@ -616,8 +638,6 @@
         if ($scope.shownWeek && $scope.$parent.typeId) {
           QueryUtils.endpoint('/timetableevents/timetableByStudent/calendar').search({
             student: $scope.typeId,
-            higher: $scope.auth.higher,
-            vocational: $scope.auth.vocational,
             from: $scope.weeks[0].start,
             thru: $scope.weeks[$scope.weeks.length - 1].end,
             lang: $scope.currentLanguage()
@@ -638,12 +658,15 @@
           QueryUtils.endpoint('/timetableevents/timetableByStudent').search({
             student: $scope.typeId,
             from: $scope.shownWeek.start,
-            thru: $scope.shownWeek.end,
-            higher: $scope.auth.higher,
-            vocational: $scope.auth.vocational
+            thru: $scope.shownWeek.end
           }).$promise.then(function (result) {
             QueryUtils.loadingWheel($scope, false);
             $scope.shownStudyPeriods = result.studyPeriods;
+            $scope.shownStudent = {
+              firstname: result.firstname,
+              lastname: result.lastname,
+              isHigher: result.isHigher
+            };
             fillTimetable($scope, result.timetableEvents);
           });
         }

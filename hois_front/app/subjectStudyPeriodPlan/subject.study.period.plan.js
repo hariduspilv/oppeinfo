@@ -180,8 +180,7 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
             });
         } else {
             $scope.record.$save().then(function(response){
-                message.info('main.messages.create.success');
-                $location.path(baseUrl + "/" + response.id + "/edit");
+                $location.url(baseUrl + "/" + response.id + "/edit?_noback");
             });
         }
     }

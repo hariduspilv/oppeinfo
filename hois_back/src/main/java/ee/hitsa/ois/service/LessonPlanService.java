@@ -1,15 +1,19 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -76,13 +80,22 @@ import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm.LessonPlanGroupForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto.LessonPlanByTeacherSubjectDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanCreatedJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanTeacherDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchTeacherDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanXlsDto.LessonPlanXlsJournalDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanXlsDto.LessonPlanXlsModuleDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanXlsDto.LessonPlanXlsStudyPeriodDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanXlsDto.LessonPlanXlsTotalsDto;
 
 @Transactional
 @Service
@@ -98,9 +111,47 @@ public class LessonPlanService {
     private JournalRepository journalRepository;
     @Autowired
     private LessonPlanModuleRepository lessonPlanModuleRepository;
+    @Autowired
+    private XlsService xlsService;
+    @Autowired
+    private ClassifierService classifierService;
 
     public LessonPlanDto get(LessonPlan lessonPlan) {
-        return LessonPlanDto.of(lessonPlan, scheduleLegends(lessonPlan));
+        LessonPlanDto dto = LessonPlanDto.of(lessonPlan, scheduleLegends(lessonPlan));
+        setLessonPlanTeachers(lessonPlan, dto);
+        
+        return dto;
+    }
+    
+    public void setLessonPlanTeachers(LessonPlan lessonPlan, LessonPlanDto dto) {
+        List<LessonPlanTeacherDto> teacherDtos = new ArrayList<>();
+        
+        List<?> teachers = em.createNativeQuery("select t.id from lesson_plan lp "
+                    + "join lesson_plan_module lpm on lp.id = lpm.lesson_plan_id "
+                    + "join curriculum_version_omodule cvo on lpm.curriculum_version_omodule_id = cvo.id "
+                    + "join curriculum_version_omodule_theme cvot on cvo.id = cvot.curriculum_version_omodule_id "
+                    + "join journal_omodule_theme jot on cvot.id = jot.curriculum_version_omodule_theme_id "
+                    + "join journal_teacher jt on jot.journal_id = jt.journal_id "
+                    + "join teacher t on jt.teacher_id = t.id " 
+                    + "where lp.id = ?1")
+                .setParameter(1, dto.getId())
+                .getResultList();
+        
+        if (!teachers.isEmpty()) {
+            List<?> teacherScheduleLoads =  em.createNativeQuery("select t.id, t.schedule_load, t.is_study_period_schedule_load, sum(jc.hours) from teacher t " +
+                    "join journal_teacher jt on t.id = jt.teacher_id " +
+                    "join journal j on jt.journal_id = j.id " +
+                    "join journal_capacity jc on j.id = jc.journal_id " +
+                    "where t.id in (:teacherIds) and j.study_year_id = :studyYearId " +
+                    "group by t.id")
+                .setParameter("teacherIds", StreamUtil.toMappedList(r -> resultAsLong(r, 0), teachers))
+                .setParameter("studyYearId", EntityUtil.getId(lessonPlan.getStudyYear()))
+                .getResultList();
+            
+            teacherDtos = StreamUtil.toMappedList(r -> new LessonPlanTeacherDto(resultAsLong(r, 0), resultAsShort(r, 1),
+                    resultAsBoolean(r, 2), resultAsShort(r, 3)), teacherScheduleLoads);
+        }
+        dto.setTeachers(teacherDtos);
     }
 
     public LessonPlan create(HoisUserDetails user, LessonPlanCreateForm form) {
@@ -171,9 +222,25 @@ public class LessonPlanService {
         qb.optionalCriteria("cv.school_department_id = :schoolDepartmentId", "schoolDepartmentId", criteria.getSchoolDepartment());
         qb.optionalCriteria("lp.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", criteria.getCurriculumVersion());
         qb.optionalCriteria("lp.student_group_id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
+        
+        if (criteria.getTeacher() != null) {
+            qb.requiredCriteria("lp.id in (select lp.id from lesson_plan lp "
+                    + "join lesson_plan_module lpm on lp.id = lpm.lesson_plan_id "
+                    + "join journal_omodule_theme jot on lpm.id = jot.lesson_plan_module_id "
+                    + "join journal j on jot.journal_id = j.id "
+                    + "join journal_teacher jt on j.id = jt.journal_id "
+                    + "where jt.teacher_id = :teacherId)", "teacherId", criteria.getTeacher());
+        }
+        
+        String select = "lp.id, sg.code as student_group_code, cv.code, (select coalesce(sum(jc.hours), 0) "
+                + "from journal_capacity jc where jc.journal_id in "
+                + "(select j.id from journal j join journal_omodule_theme jot on j.id = jot.journal_id "
+                + "join lesson_plan_module lpm on jot.lesson_plan_module_id = lpm.id "
+                + "join lesson_plan lp2 on lpm.lesson_plan_id = lp2.id "
+                + "where lp.id = lp2.id)) as hours";
 
-        return JpaQueryUtil.pagingResult(qb, "lp.id, sg.code as student_group_code, cv.code", em, pageable).map(r -> {
-            return new LessonPlanSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2));
+        return JpaQueryUtil.pagingResult(qb, select, em, pageable).map(r -> {
+            return new LessonPlanSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3));
         });
     }
 
@@ -429,14 +496,8 @@ public class LessonPlanService {
                 fromForm.addAll(StreamUtil.toMappedList(cvomt -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModuleForSave, cvomt), lpg.getCurriculumVersionOccupationModuleThemes()));
             }
         }
-
-        EntityUtil.bindEntityCollection(oldThemes, jm -> EntityUtil.getId(jm.getCurriculumVersionOccupationModuleTheme()), fromForm, JournalOccupationModuleThemeHolder::getCvomt, jm -> {
-            JournalOccupationModuleTheme jmt = new JournalOccupationModuleTheme();
-            jmt.setJournal(jm.getJournal());
-            jmt.setLessonPlanModule(jm.getLessonPlanModule());
-            jmt.setCurriculumVersionOccupationModuleTheme(em.getReference(CurriculumVersionOccupationModuleTheme.class, jm.getCvomt()));
-            return jmt;
-        });
+        
+        setJournalOccupationModuleThemes(journal, oldThemes, fromForm);
         
         setTimetableObjectStudentGroups(journal, form, lessonPlanModule);
         
@@ -458,6 +519,30 @@ public class LessonPlanService {
     
     public Journal saveJournal(Journal journal, LessonPlanJournalForm form, HoisUserDetails user) {
         return saveJournal(journal, form, user, em.getReference(LessonPlanModule.class, form.getLessonPlanModuleId()));
+    }
+    
+    private void setJournalOccupationModuleThemes(Journal journal, List<JournalOccupationModuleTheme> oldThemes, List<JournalOccupationModuleThemeHolder> fromForm) {
+        if (!fromForm.isEmpty()) {
+            List<JournalOccupationModuleTheme> savedFormThemes = new ArrayList<>();
+            
+            for (JournalOccupationModuleThemeHolder jmth : fromForm) {
+                JournalOccupationModuleTheme oldTheme = oldThemes.stream()
+                        .filter(o -> EntityUtil.getId(o.getCurriculumVersionOccupationModuleTheme()).equals(jmth.getCvomt()) 
+                                && o.getLessonPlanModule().equals(jmth.getLessonPlanModule()))
+                        .findFirst().orElse(null);
+                if (oldTheme != null) {
+                    savedFormThemes.add(oldTheme);
+                } else {
+                    JournalOccupationModuleTheme jmt = new JournalOccupationModuleTheme();
+                    jmt.setJournal(jmth.getJournal());
+                    jmt.setLessonPlanModule(jmth.getLessonPlanModule());
+                    jmt.setCurriculumVersionOccupationModuleTheme(em.getReference(CurriculumVersionOccupationModuleTheme.class, jmth.getCvomt()));
+                    journal.getJournalOccupationModuleThemes().add(jmt);
+                    savedFormThemes.add(jmt);
+                }
+            }
+            oldThemes.removeIf(o -> !savedFormThemes.contains(o));
+        }
     }
     
     private void setTimetableObjectStudentGroups(Journal journal, LessonPlanJournalForm form, LessonPlanModule lessonPlanModule) {
@@ -656,6 +741,214 @@ public class LessonPlanService {
         if(school != null && !EntityUtil.getId(journal.getSchool()).equals(EntityUtil.getId(school))) {
             throw new AssertionFailedException("School mismatch");
         }
+    }
+    
+    public byte[] lessonplanAsExcel(LessonPlan lessonPlan) {
+        LessonPlanDto dto = get(lessonPlan);
+        List<LessonPlanXlsStudyPeriodDto> studyPeriods = lessonplanExcelStudyPeriods(dto.getStudyPeriods());
+        List<LessonPlanXlsModuleDto> modules = lessonplanExcelModules(dto);
+        LessonPlanXlsTotalsDto totals = lessonplanExcelTotals(modules, dto.getWeekNrs());
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("capacities", lessonplanExcelCapacities());
+
+        data.put("studyYearCode", dto.getStudyYearCode());
+        data.put("studentGroupCode", dto.getStudentGroupCode());
+        data.put("courseNr", dto.getCourseNr());
+        data.put("curriculumCode", dto.getCurriculumCode());
+        data.put("curriculumVersion", dto.getCurriculumVersion());
+        data.put("studyPeriodYears", Integer.valueOf(dto.getStudyPeriod().intValue() / 12));
+        data.put("studyPeriodMonths", Integer.valueOf(dto.getStudyPeriod().intValue() % 12));
+
+        data.put("studyPeriods", studyPeriods);
+        data.put("weekNrs", dto.getWeekNrs());
+        data.put("modules", modules);
+        data.put("totals", totals);
+        
+        return xlsService.generate("lessonplan.xls", data);
+    }
+
+    private List<Classifier> lessonplanExcelCapacities() {
+        List<Classifier> capacities = classifierService.findAllByMainClassCode(MainClassCode.MAHT);
+        capacities.sort(Comparator.comparing(Classifier::getCode, String.CASE_INSENSITIVE_ORDER));
+        return capacities;
+    }
+    
+    private static List<LessonPlanXlsStudyPeriodDto> lessonplanExcelStudyPeriods(List<StudyPeriodDto> inputPeriods) {
+        List<LessonPlanXlsStudyPeriodDto> studyPeriods = new ArrayList<>();
+        for (StudyPeriodDto sp : inputPeriods) {
+            LessonPlanXlsStudyPeriodDto studyPeriod = new LessonPlanXlsStudyPeriodDto();
+            studyPeriod.setNameEt(sp.getNameEt());
+            studyPeriod.setNameEn(sp.getNameEn());
+             
+            List<Short> colspanColumns = sp.getWeekNrs().size() > 0
+                    ? sp.getWeekNrs().subList(0, sp.getWeekNrs().size() - 1)
+                    : sp.getWeekNrs();
+            studyPeriod.setColspanColumns(colspanColumns);
+            studyPeriods.add(studyPeriod);
+        }
+        return studyPeriods;
+    }
+    
+    private List<LessonPlanXlsModuleDto> lessonplanExcelModules(LessonPlanDto dto) {
+        List<LessonPlanXlsModuleDto> modules = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        List<LessonPlanModuleDto> dtoModules = (List<LessonPlanModuleDto>) dto.getModules();
+        for (LessonPlanModuleDto m : dtoModules) {
+            LessonPlanXlsModuleDto module = new LessonPlanXlsModuleDto();
+            module.setNameEt(m.getNameEt());
+            module.setNameEn(m.getNameEn());
+            
+            AutocompleteResult teacher = m.getTeacher() != null
+                    ? AutocompleteResult.of(em.getReference(Teacher.class, m.getTeacher().getId()))
+                    : null;
+            module.setTeacher(teacher != null ? teacher.getNameEn() : null);
+        
+            List<LessonPlanXlsJournalDto> journals =  lessonplanExcelJournals(m, dto.getWeekNrs());
+            module.setJournals(journals);
+            modules.add(module);
+        }
+        return modules;
+    }
+    
+    private static List<LessonPlanXlsJournalDto> lessonplanExcelJournals(LessonPlanModuleDto module, List<Short> weekNrs) {
+        List<LessonPlanXlsJournalDto> journals = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        List<LessonPlanModuleJournalDto> dtoJournals = (List<LessonPlanModuleJournalDto>) module.getJournals();
+        for (LessonPlanModuleJournalDto j : dtoJournals) {
+            LessonPlanXlsJournalDto journal = new LessonPlanXlsJournalDto();
+            journal.setNameEt(j.getNameEt());
+            journal.setTeachers(StreamUtil.toMappedList(t -> t.getTeacher().getNameEt(), j.getTeachers()));
+            journal.setGroupProportion(j.getGroupProportion());
+            journal.setHours(sortCapacities(j.getHours()));
+            
+            List<Short> totalHours = grandTotals(j.getHours(), weekNrs);
+            journal.setTotalHours(totalHours);
+            journals.add(journal);
+        }
+        return journals;
+    }
+    
+    private LessonPlanXlsTotalsDto lessonplanExcelTotals(List<LessonPlanXlsModuleDto> modules, List<Short> weekNrs) {
+        LessonPlanXlsTotalsDto totals = new LessonPlanXlsTotalsDto();
+        
+        Map<String, List<Double>> hours = new HashMap<>();
+        modules.forEach(module -> module.getJournals().forEach(journal -> {
+            double groupProportion = 1 / Double.valueOf(em.getReference(Classifier.class, journal.getGroupProportion()).getValue()).doubleValue();
+            for (String capacity : journal.getHours().keySet()) {
+                if (!hours.containsKey(capacity)) {
+                    List<Double> weekHours = new ArrayList<>();
+                    for (Short hour : journal.getHours().get(capacity)) {
+                        weekHours.add(hour != null ? Double.valueOf(hour.shortValue() * groupProportion) : Double.valueOf(0));
+                    }
+                    hours.put(capacity, weekHours);
+                } else {
+                    List<Double> capacityHours = hours.get(capacity);
+                    List<Short> journalCapacityHours = journal.getHours().get(capacity);
+                    for (int i = 0; i < capacityHours.size(); i++) {
+                        double weekHours = capacityHours.get(i) != null ? capacityHours.get(i).doubleValue() : 0;
+                        double journalWeekHours = journalCapacityHours.get(i) != null ? journalCapacityHours.get(i).doubleValue() * groupProportion : 0;
+                        capacityHours.set(i, Double.valueOf(weekHours + journalWeekHours));
+                    }
+                }
+            }
+        }));
+        totals.setHours(sortTotalHourCapacities(hours));
+        
+        List<Double> totalHours = grandProportionTotals(totals.getHours(), weekNrs);
+        totals.setTotalHours(totalHours);
+        
+        return totals;
+    }
+    
+    private static List<Short> grandTotals(Map<String, List<Short>> capacityHours, List<Short> weekNrs) {
+        List<Short> totalHours = new ArrayList<>();
+        for (int i = 0; i < weekNrs.size(); i++) {
+            totalHours.add(Short.valueOf((short) 0));
+        }
+        
+        for (String capacity : capacityHours.keySet()) {
+            List<Short> hours = capacityHours.get(capacity);
+            for (int i = 0; i < hours.size() ; i++) {
+                Short weekHours = hours.get(i) != null ? hours.get(i) : Short.valueOf((short) 0);
+                totalHours.set(i, Short.valueOf((short) (totalHours.get(i).shortValue() + weekHours.shortValue())));
+            }
+        }
+        return totalHours;
+    }
+    
+    private static List<Double> grandProportionTotals(Map<String, List<Double>> capacityHours, List<Short> weekNrs) {
+        List<Double> totalHours = new ArrayList<>();
+        for (int i = 0; i < weekNrs.size(); i++) {
+            totalHours.add(Double.valueOf(0));
+        }
+        
+        for (String capacity : capacityHours.keySet()) {
+            List<Double> hours = capacityHours.get(capacity);
+            for (int i = 0; i < hours.size() ; i++) {
+                double weekHours = hours.get(i) != null ? hours.get(i).doubleValue() : 0;
+                totalHours.set(i, Double.valueOf(totalHours.get(i).doubleValue() + weekHours));
+            }
+        }
+        return totalHours;
+    }
+    
+    private static Map<String, List<Short>> sortCapacities(Map<String, List<Short>> hours) {
+        Map<String, List<Short>> sorted = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (String capacity : hours.keySet()) {
+            List<Short> capacityHours = new ArrayList<>();
+            for (Short hour : hours.get(capacity) ) {
+                capacityHours.add(hour != null ? Short.valueOf(hour.shortValue()) : null);
+            }
+            sorted.put(capacity, capacityHours);
+        }
+        return sorted;
+    }
+    
+    private static Map<String, List<Double>> sortTotalHourCapacities(Map<String, List<Double>> hours) {
+        Map<String, List<Double>> sorted = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (String capacity : hours.keySet()) {
+            sorted.put(capacity, hours.get(capacity));
+        }
+        return sorted;
+    }
+
+    public byte[] lessonplanByTeacherAsExcel(Teacher teacher, StudyYear studyYear) {
+        LessonPlanByTeacherDto dto = getByTeacher(teacher, studyYear);
+        List<LessonPlanXlsStudyPeriodDto> studyPeriods = lessonplanExcelStudyPeriods(dto.getStudyPeriods());
+        List<LessonPlanXlsJournalDto> journals = lessonplanExcelJournals(dto);
+
+        LessonPlanXlsModuleDto totalModule = new LessonPlanXlsModuleDto();
+        totalModule.setJournals(journals);
+        LessonPlanXlsTotalsDto totals = lessonplanExcelTotals(Collections.singletonList(totalModule), dto.getWeekNrs());
+        
+        Map<String, Object> data = new HashMap<>();
+        data.put("studyYearCode", dto.getStudyYearCode());
+        data.put("teacherName", dto.getTeacherName());
+        data.put("capacities", lessonplanExcelCapacities());
+        data.put("studyPeriods", studyPeriods);
+        data.put("weekNrs", dto.getWeekNrs());
+        data.put("journals", journals);
+        data.put("totals", totals);
+        
+        return xlsService.generate("lessonplanbyteacher.xls", data);
+    }
+
+    private static List<LessonPlanXlsJournalDto> lessonplanExcelJournals(LessonPlanByTeacherDto dto) {
+        List<LessonPlanXlsJournalDto> journals = new ArrayList<>();
+        for (LessonPlanModuleJournalDto j : dto.getJournals()) {
+            LessonPlanXlsJournalDto journal = new LessonPlanXlsJournalDto();
+            journal.setNameEt(j.getNameEt());
+            journal.setTeachers(StreamUtil.toMappedList(t -> t.getTeacher().getNameEt(), j.getTeachers()));
+            journal.setStudentGroups(j.getStudentGroups().stream().collect(Collectors.joining(" ")));
+            journal.setGroupProportion(j.getGroupProportion());
+            journal.setHours(sortCapacities(j.getHours()));
+            
+            List<Short> totalHours = grandTotals(j.getHours(), dto.getWeekNrs());
+            journal.setTotalHours(totalHours);
+            journals.add(journal);
+        }
+        return journals;
     }
 
     private static class JournalOccupationModuleThemeHolder {

@@ -292,6 +292,12 @@ public abstract class UserUtil {
         Long schoolId = user.getSchoolId();
         AssertionFailedException.throwIf(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(school)), "School mismatch");
     }
+    
+    public static void assertSameSchoolOrIsMainAdminOrExternalExpert(HoisUserDetails user, School school) {
+        Long schoolId = user.getSchoolId();
+        AssertionFailedException.throwIf(!isMainAdminOrExternalExpert(user)
+                && (schoolId == null || !schoolId.equals(EntityUtil.getNullableId(school))), "School mismatch");
+    }
 
     public static void assertIsMainAdminOrSchoolAdmin(HoisUserDetails user) {
         AssertionFailedException.throwIf(!user.isMainAdmin() && !user.isSchoolAdmin(), "User is not admin");

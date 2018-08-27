@@ -213,11 +213,16 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       return result;
     };
 
-    $scope.isUnderAllocatedLessons = function (journal) {
+    $scope.isUnderAllocatedWeekLessons = function (journal) {
       if ($scope.getTotalsByJournal(journal, 'thisPlannedLessons') >= $scope.getTotalsByJournal(journal, 'thisPlannedLessons') - $scope.getTotalsByJournal(journal, 'lessonsLeft')) {
-        if ($scope.getTotalsByJournal(journal, 'totalPlannedLessons') >= $scope.getTotalsByJournal(journal, 'totalAllocatedLessons')) {
-          return true;
-        }
+        return true;
+      }
+      return false;
+    };
+
+    $scope.isUnderAllocatedTotalLessons = function (journal) {
+      if ($scope.getTotalsByJournal(journal, 'totalPlannedLessons') >= $scope.getTotalsByJournal(journal, 'totalAllocatedLessons')) {
+        return true;
       }
       return false;
     };

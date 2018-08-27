@@ -53,14 +53,14 @@
         <div layout="row">
           <md-input-container ng-show="thesis.hasDraft" flex>
             <label>{{'finalThesis.draft' | translate}}</label>
-            <textarea ng-model="thesis.draft" md-maxlength="20000" max-rows="10" md-select-on-focus></textarea>
+            <textarea ng-model="thesis.draft" md-maxlength="20000" max-rows="10"></textarea>
           </md-input-container>
         </div>
 
         <div layout="row" flex>
           <md-input-container flex>
             <label>{{'finalThesis.addInfo' | translate}}</label>
-            <textarea ng-model="thesis.addInfo" md-maxlength="4000" max-rows="2" md-select-on-focus ng-disabled="auth.isStudent()"></textarea>
+            <textarea ng-model="thesis.addInfo" md-maxlength="4000" max-rows="2" ng-disabled="auth.isStudent()"></textarea>
           </md-input-container>
         </div>
         <br>

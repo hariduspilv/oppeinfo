@@ -34,7 +34,7 @@
       <tr>
         <td colspan="{{::formState.weekNrs.length+3}}">
           <span class="bold">{{::journal.nameEt}}:</span>&nbsp;
-          <span ng-repeat="theme in journal.themes">
+          <span ng-repeat="theme in getUniqueJournalThemes(journal.themes)">
             <span ng-if="!$first">,&nbsp;</span>{{::theme.nameEt}}&nbsp;{{::theme.credits}}&nbsp;{{'lessonplan.credits' | translate}} 
             &nbsp;(<span ng-repeat="(hourCap, hourCount) in theme.hours">{{::getCapacityByCode(hourCap).value.toUpperCase()}}{{hourCount}}{{$last ? "" : "/"}}</span>)</span>
           <div style="float: right;">
@@ -100,16 +100,16 @@
         </td>
         <td class="center">{{ct.value.toUpperCase()}}</td>
         <td class="center">{{formState.grandTotals._[ct.code]}}</td>
-        <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals[ct.code] track by $index" class="center">{{h}}</td>
+        <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals[ct.code] track by $index" class="center">{{h | hoisNumber:1}}</td>
         <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
-        class="center">{{formState.capGrandTotalsSp[ct.code][$index]}}</td>
+        class="center">{{formState.capGrandTotalsSp[ct.code][$index] | hoisNumber:1}}</td>
       </tr>
       <tr>
         <td>{{'lessonplan.total' | translate}}</td>
         <td class="center">{{formState.grandTotals.__}}</td>
-        <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index" class="center">{{h}}</td>
+        <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index" class="center">{{h | hoisNumber:1}}</td>
         <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
-        class="center">{{formState.grandTotalsSp[$index]}}</td>
+        class="center">{{formState.grandTotalsSp[$index] | hoisNumber:1}}</td>
       </tr>
     </tbody>
   </table>
@@ -146,4 +146,5 @@
 </div>
 <div>
   <md-button ng-href="#/lessonplans/vocational/byteacher" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  <md-button ng-href="{{excel(formState.xlsUrl)}}" class="md-raised">{{'main.button.print' | translate}}</md-button>
 </div>
