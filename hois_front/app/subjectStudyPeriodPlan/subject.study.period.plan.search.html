@@ -35,7 +35,7 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="{{currentLanguageNameField()}}">{{'subjectStudyPeriodPlan.curriculum' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguageNameField()}}">{{'subjectStudyPeriodPlan.subject' | translate}} / {{'subjectStudyPeriodPlan.curriculum' | translate}}</th>
             <th md-column>{{'subjectStudyPeriodPlan.studyForm' | translate}}</th>
             <th md-column class="center" ng-repeat="capacityType in capacityTypes">
                 {{capacityType.value.toUpperCase()}}

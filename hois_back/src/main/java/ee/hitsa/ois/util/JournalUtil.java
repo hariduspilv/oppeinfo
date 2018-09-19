@@ -65,6 +65,11 @@ public abstract class JournalUtil {
                 UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PAEVIK);
     }
 
+    public static boolean hasPermissionToReview(HoisUserDetails user, Journal journal) {
+        return UserUtil.isSchoolAdmin(user, journal.getSchool()) &&
+                UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PAEVIKYLE);
+    }
+
     public static boolean hasPermissionToConfirm(HoisUserDetails user, Journal journal) {
         return (UserUtil.isSchoolAdmin(user, journal.getSchool()) || 
                 UserUtil.isTeacher(user, journal.getSchool()) && teacherIsJournalConfirmer(user, journal)) &&
@@ -110,17 +115,7 @@ public abstract class JournalUtil {
     }
 
     public static boolean canRemoveStudent(HoisUserDetails user, Journal journal) {
-        if(!hasPermissionToChange(user, journal)) {
-            return false;
-        }
-        if(user.isTeacher() && !teacherCanRemoveStudent(journal)) {
-            return false;
-        }
-        return true;
-    }
-
-    public static boolean teacherCanRemoveStudent(Journal journal) {
-        return journal.getJournalEntries().isEmpty();
+        return UserUtil.isSchoolAdmin(user, journal.getSchool()) && hasPermissionToChange(user, journal);
     }
 
     /**
@@ -165,13 +160,15 @@ public abstract class JournalUtil {
         }
     }
 
+    public static void assertCanReview(HoisUserDetails user, Journal journal) {
+        if (!hasPermissionToReview(user, journal)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
     public static void assertCanRemoveStudent(HoisUserDetails user, Journal journal) {
         if (!canRemoveStudent(user, journal)) {
-            String message = "journal.messages.removingStudentIsNotAllowed";
-            if(user.isTeacher() && !teacherCanRemoveStudent(journal)) {
-                message = "journal.messages.removingStudentIsNotAllowedForTeacher";
-            }
-            throw new ValidationFailedException(message);
+            throw new ValidationFailedException("journal.messages.removingStudentIsNotAllowed");
         }
     }
 

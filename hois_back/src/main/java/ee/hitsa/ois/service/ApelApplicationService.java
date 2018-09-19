@@ -43,6 +43,8 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
+import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.message.ApelApplicationCreated;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApelApplicationUtil;
@@ -78,6 +80,8 @@ public class ApelApplicationService {
     private ApelSchoolService apelSchoolService;
     @Autowired
     private CurriculumVersionRepository curriculumVersionRepository;
+    @Autowired
+    private AutomaticMessageService automaticMessageService;
 
     private static final String RPM_FROM = "from apel_application aa"
             + " inner join student s on aa.student_id = s.id"
@@ -463,7 +467,11 @@ public class ApelApplicationService {
             throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
         }
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_E);
-        return EntityUtil.save(application, em);
+        application = EntityUtil.save(application, em);
+        ApelApplicationCreated data = new ApelApplicationCreated(application);
+        automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_VOTA, application.getStudent(), data);
+        automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_VOTA, application.getSchool(), data);
+        return application;
     }
 
     /**

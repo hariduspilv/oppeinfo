@@ -34,6 +34,11 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
         return;
       }
 
+      if ($scope.timetableEvent.startTime > $scope.timetableEvent.endTime) {
+        message.error('timetable.timetableEvent.error.endIsEarlierThanStart');
+        return;
+      }
+
       var occupiedQuery = timetableTimeOccupiedQuery();
       QueryUtils.endpoint(baseUrl + '/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
         if(result.occupied) {
@@ -60,6 +65,12 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
           return filtered;
         }, []);
       }
+      if ($scope.timetableEvent.studentGroups) {
+        occupiedQuery.studentGroups = $scope.timetableEvent.studentGroups.reduce(function (filtered, studentGroup) {
+          filtered.push(studentGroup.id);
+          return filtered;
+        }, []);
+      }
       var date = new Date($scope.timetableEvent.date);
       var startTime = $scope.timetableEvent.startTime;
       var endTime = $scope.timetableEvent.endTime;
@@ -76,6 +87,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
     function saveEvent() {
       if (id) {
         $scope.timetableEvent.$update().then(afterLoad).then(message.updateSuccess);
+        $scope.eventForm.$setPristine();
       } else {
         $scope.timetableEvent.$save().then(function () {
           message.info('main.messages.create.success');
@@ -110,7 +122,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       if ($scope.timetableEvent.teachers.some(function (teacher) {
           return teacher.id === $scope.timetableEvent.teacher.id;
         })) {
-        message.error('timetable.timetableEvent.duplicateTeacher');
+        message.error('timetable.timetableEvent.error.duplicateTeacher');
         return;
       }
       $scope.timetableEvent.teachers.push($scope.timetableEvent.teacher);
@@ -121,6 +133,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       var index = $scope.timetableEvent.teachers.indexOf(teacher);
       if (index !== -1) {
         $scope.timetableEvent.teachers.splice(index, 1);
+        $scope.eventForm.$setDirty();
       }
     };
 
@@ -137,7 +150,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       if ($scope.timetableEvent.rooms.some(function (room) {
           return room.id === $scope.timetableEvent.room.id;
         })) {
-        message.error('timetable.timetableEvent.duplicateroom');
+        message.error('timetable.timetableEvent.error.duplicateRoom');
         return;
       }
       $scope.timetableEvent.rooms.push($scope.timetableEvent.room);
@@ -148,6 +161,35 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       var index = $scope.timetableEvent.rooms.indexOf(room);
       if (index !== -1) {
         $scope.timetableEvent.rooms.splice(index, 1);
+        $scope.eventForm.$setDirty();
+      }
+    };
+
+    $scope.$watch('timetableEvent.studentGroup', function () {
+      if (angular.isDefined($scope.timetableEvent.studentGroup) && $scope.timetableEvent.studentGroup !== null) {
+        $scope.addStudentGroup();
+      }
+    });
+
+    $scope.addStudentGroup = function () {
+      if (!angular.isArray($scope.timetableEvent.studentGroups)) {
+        $scope.timetableEvent.studentGroups = [];
+      }
+      if ($scope.timetableEvent.studentGroups.some(function (studentGroup) {
+          return studentGroup.id === $scope.timetableEvent.studentGroup.id;
+        })) {
+        message.error('timetable.timetableEvent.error.duplicateStudentGroup');
+        return;
+      }
+      $scope.timetableEvent.studentGroups.push($scope.timetableEvent.studentGroup);
+      $scope.timetableEvent.studentGroup = undefined;
+    };
+
+    $scope.deleteStudentGroup = function (studentGroup) {
+      var index = $scope.timetableEvent.studentGroups.indexOf(studentGroup);
+      if (index !== -1) {
+        $scope.timetableEvent.studentGroups.splice(index, 1);
+        $scope.eventForm.$setDirty();
       }
     };
   }

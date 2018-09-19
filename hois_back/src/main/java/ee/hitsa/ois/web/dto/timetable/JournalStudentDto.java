@@ -1,8 +1,10 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.util.CurriculumUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StudentUtil;
 
@@ -14,6 +16,8 @@ public class JournalStudentDto {
     private String studentGroup;
     private String curriculum;
     private Boolean isMoodleRegistered;
+    private String status;
+    private Boolean isIndividualCurriculum;
     private Boolean canEdit;
 
     public static JournalStudentDto of(Student student) {
@@ -24,9 +28,11 @@ public class JournalStudentDto {
             dto.setStudentGroup(student.getStudentGroup().getCode());
         }
         if (student.getCurriculumVersion() != null) {
-            dto.setCurriculum(CurriculumUtil.versionName(student.getCurriculumVersion().getCode(),
-                    student.getCurriculumVersion().getCurriculum().getNameEt()));
+            CurriculumVersion cv = student.getCurriculumVersion();
+            dto.setCurriculum(CurriculumUtil.versionName(cv.getCode(), cv.getCurriculum().getNameEt()));
+            dto.setIsIndividualCurriculum(cv.getIndividual());
         }
+        dto.setStatus(EntityUtil.getCode(student.getStatus()));
         dto.setCanEdit(Boolean.valueOf(StudentUtil.isStudying(student)));
         return dto;
     }
@@ -84,6 +90,22 @@ public class JournalStudentDto {
 
     public void setIsMoodleRegistered(Boolean isMoodleRegistered) {
         this.isMoodleRegistered = isMoodleRegistered;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Boolean getIsIndividualCurriculum() {
+        return isIndividualCurriculum;
+    }
+
+    public void setIsIndividualCurriculum(Boolean isIndividualCurriculum) {
+        this.isIndividualCurriculum = isIndividualCurriculum;
     }
 
     public Boolean getCanEdit() {

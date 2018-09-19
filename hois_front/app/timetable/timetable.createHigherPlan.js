@@ -11,13 +11,12 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
     $scope.plan = {};
     $scope.timetableId = $route.current.params.id;
     $scope.weekday = ["daySun", "dayMon", "dayTue", "dayWed", "dayThu", "dayFri", "daySat"];
-    $scope.capacityTypes = Classifier.queryForDropdown({
-      mainClassCode: 'MAHT'
-    });
     var baseUrl = '/timetables';
     $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
 
     function initializeData(result) {
+      $scope.capacityTypes = result.timetableCapacities;
+
       $scope.plan = result;
       $scope.plan.selectAll = true;
       $scope.plan.capacitiesGrouped = groupBy($scope.plan.studentGroupCapacities, "subjectStudyPeriod");
@@ -46,10 +45,17 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
       setCapacities();
       setAllGroups(true);
       setCurrentDatesForTimetable();
+      setTimetableTimeRange();
       setTimetableForGroups($scope.plan.studentGroups, false);
       setTimetableForGroups($scope.plan.subjectTeacherPairs, false);
       setTeachersForStudentGroups($scope.plan.studentGroupCapacities, $scope.plan.studentGroups);
-      setTimetableTimeRange();
+
+      updateSelectedTimetables();
+      if ($route.current.params.groupId) {
+        $scope.plan.selectedGroup = 'GROU-' + $route.current.params.groupId;
+      } else if ($route.current.params.pairId) {
+        $scope.plan.selectedGroup = 'PAIR-' + $route.current.params.pairId;
+      }
     }
 
     QueryUtils.endpoint(baseUrl + '/:id/createHigherPlan').search({
@@ -73,9 +79,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
 
     $scope.$watch('plan.selectedWeek', function () {
       setCurrentDatesForTimetable();
-      setTimetableForGroups($scope.plan.studentGroups, false);
-      setTimetableForGroups($scope.plan.subjectTeacherPairs, false);
-      setTimetableTimeRange();
+      updatesResultingFromTimeRangeChange();
       checkAndUpdateSelectedTimetable();
     });
 
@@ -113,7 +117,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
       var result = $scope.capacityTypes.find(function (it) {
         return it.code === code;
       });
-      return result !== null ? result.value.toUpperCase() : "";
+      return result !== null && angular.isDefined(result) ? result.value.toUpperCase() : "";
     };
 
     $scope.getCapacityType = function (code) {
@@ -155,11 +159,18 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
     };
 
     $scope.lessonTimeStyle = function (lessonTime) {
+      var days = Object.keys($scope.lessonsInDay);
+      var lessonTimeDay = days.find(function (it) {
+        it = new Date(it);
+        return DataUtils.isSameDay(it, lessonTime.start);
+      });
+      var lessonsInDay = $scope.lessonsInDay[lessonTimeDay];
+
       var result = {};
       result['background-color'] = lessonTime.id ? $scope.getColorBySubjectStudyPeriod(lessonTime.subjectStudyPeriod) : 'transparent';
-      result.width = ((100 / $scope.lessonsInDay) * lessonTime.colspan).toString() + '%';
+      result.width = ((100 / lessonsInDay) * lessonTime.colspan).toString() + '%';
       if (lessonTime.marginleft) {
-        result['margin-left'] = ((100 / $scope.lessonsInDay) * lessonTime.marginleft).toString() + '%';
+        result['margin-left'] = ((100 / lessonsInDay) * lessonTime.marginleft).toString() + '%';
       }
       if (lessonTime.topmargin) {
         result['margin-top'] = lessonTime.topmargin.toString() + 'px';
@@ -204,6 +215,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
         dialogScope.lesson.startTime = new Date(currentEvent.start);
         dialogScope.lesson.endTime = new Date(currentEvent.end);
         dialogScope.lesson.eventRooms = currentEvent.rooms ? currentEvent.rooms : [];
+
         dialogScope.$watch('lesson.eventRoom', function () {
           if (angular.isDefined(dialogScope.lesson.eventRoom) && dialogScope.lesson.eventRoom !== null) {
             if (dialogScope.lesson.eventRooms.some(function (e) {
@@ -217,6 +229,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
             dialogScope.lesson.eventRoom = null;
           }
         });
+
         dialogScope.deleteEvent = function (toDelete) {
           QueryUtils.endpoint(baseUrl + '/deleteHigherEvent').save({
             timetableEventId: toDelete
@@ -233,10 +246,20 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
             }
             setTimetableForGroups([changedGroup], true);
             $scope.plan.studentGroupCapacities = result.studentGroupCapacities;
+            updatesResultingFromTimeRangeChange();
             checkAndUpdateSelectedTimetable();
             dialogScope.cancel();
           });
         };
+
+        dialogScope.saveEvent = function () {
+          if (dialogScope.lesson.startTime > dialogScope.lesson.endTime) {
+            message.error('timetable.timetableEvent.error.endIsEarlierThanStart');
+            return;
+          }
+          dialogScope.submit();
+        };
+        
       }, function (submittedDialogScope) {
         var query = {
           startTime: submittedDialogScope.lesson.startTime,
@@ -284,6 +307,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
         }
         setTimetableForGroups([changedGroup], true);
         $scope.plan.studentGroupCapacities = result.studentGroupCapacities;
+        updatesResultingFromTimeRangeChange();
         checkAndUpdateSelectedTimetable();
       });
     }
@@ -414,6 +438,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
       }
       setTimetableForGroups([changedGroup], true);
       $scope.plan.studentGroupCapacities = result.studentGroupCapacities;
+      updatesResultingFromTimeRangeChange();
       checkAndUpdateSelectedTimetable();
     }
 
@@ -478,6 +503,13 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
       }
     }
 
+    function updatesResultingFromTimeRangeChange() {
+      setTimetableTimeRange();
+      lessonTimeBuildingChanged($scope.plan.lessonTimeBuilding);
+      setTimetableForGroups($scope.plan.studentGroups, false);
+      setTimetableForGroups($scope.plan.subjectTeacherPairs, false);
+    }
+
     function checkAndUpdateSelectedTimetable() {
       if (angular.isDefined($scope.plan.selectedGroup)) {
         var selectedGroup = $scope.plan.currentStudentGroups.find(function (it) {
@@ -490,21 +522,86 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
     }
 
     function setTimetableTimeRange() {
-      $scope.lessonsInDay = [];
+      $scope.lessonsInDay = {};
+      $scope.dayTimeRanges = {};
       $scope.currentLessonTimes = [];
+
       for (var overallDateCounter = 0; overallDateCounter < $scope.plan.datesForTimetable.length; overallDateCounter++) {
+        var day = $scope.plan.datesForTimetable[overallDateCounter];
+        var dayTimeRange = getWeekdayTimeRange(day);
         var lessonsInDay = 0;
-        var overallStartTime = new Date(new Date($scope.plan.datesForTimetable[overallDateCounter].getTime()).setHours(7));
-        var overallEndTime = new Date(overallStartTime.getTime());
-        overallEndTime = new Date(overallEndTime.setHours(23));
-        while (overallStartTime.getTime() < overallEndTime.getTime()) {
-          $scope.currentLessonTimes.push(overallStartTime);
-          lessonsInDay += 1;
-          overallStartTime = new Date(overallStartTime.getTime() + MS_PER_FITEENMINUTES);
+      
+        if (dayTimeRange !== null) {
+          var overallStartTime = new Date(new Date(day.getTime()));
+          overallStartTime.setHours(dayTimeRange.start.getHours());
+          overallStartTime.setMinutes(dayTimeRange.start.getMinutes());
+          var overallEndTime = new Date(overallStartTime.getTime());
+          overallEndTime.setHours(dayTimeRange.end.getHours());
+          overallEndTime.setMinutes(dayTimeRange.end.getMinutes());
+          $scope.dayTimeRanges[day] = {start: overallStartTime, end: overallEndTime};
+
+          while (overallStartTime.getTime() < overallEndTime.getTime()) {
+            var nextStartTime = new Date(overallStartTime.getTime() + MS_PER_FITEENMINUTES);
+            $scope.currentLessonTimes.push({time: overallStartTime, endOfDay: nextStartTime.getTime() >= overallEndTime.getTime()});
+            lessonsInDay += 1;
+            overallStartTime = nextStartTime;
+          }
         }
-        $scope.lessonsInDay = lessonsInDay;
+        $scope.lessonsInDay[day] = lessonsInDay;
       }
-      //setLessonTimeLegend();
+    }
+
+    function getWeekdayTimeRange(day) {
+      var weekday = $scope.weekday[day.getDay()];
+
+      var startTimes = [];
+      var endTimes = [];
+
+      $scope.plan.lessonTimes.filter(function (it) {
+        return it[weekday];
+      }).forEach(function (it) {
+        startTimes.push(moment(it.startTime, "HH:mm"));
+        endTimes.push(moment(it.endTime, "HH:mm"));
+      });
+
+      var lessons = [];
+      var studentGroupLessons = getPlannedLessons($scope.plan.studentGroups, day);
+      var subjectTeacherPairLessons = getPlannedLessons($scope.plan.subjectTeacherPairs, day);
+      lessons = lessons.concat(studentGroupLessons);
+      lessons = lessons.concat(subjectTeacherPairLessons);
+      lessons.forEach(function (it) {
+        var start = new Date(it.start);
+        var end = new Date(it.end);
+        startTimes.push(moment({ hour: start.getHours(), minute: start.getMinutes() }));
+        endTimes.push(moment({ hour: end.getHours(), minute: end.getMinutes() }));
+      });
+
+      if (startTimes.length === 0 || endTimes.length === 0) {
+        return null;
+      }
+
+      var minStartTime = moment.min(startTimes).toDate();
+      minStartTime.setHours(Math.max(7, minStartTime.getHours()));
+      minStartTime.setMinutes(0);
+      minStartTime.setSeconds(0, 0);
+      var maxEndTime = moment.max(endTimes).toDate();
+      maxEndTime.setHours(Math.min(23, maxEndTime.getMinutes() > 0 ? maxEndTime.getHours() + 1 : maxEndTime.getHours()));
+      maxEndTime.setMinutes(0);
+      maxEndTime.setSeconds(0, 0);
+      return { start: minStartTime, end: maxEndTime };
+    }
+
+    function getPlannedLessons(type, weekday) {
+      var plannedLessons = [];
+      type.forEach(function (it) {
+        if (it.lessons) {
+          var weekDayLessons = it.lessons.filter(function (lesson) {
+            return DataUtils.isSameDay(weekday, new Date(lesson.start));
+          });
+          plannedLessons = plannedLessons.concat(weekDayLessons);
+        }
+      });
+      return plannedLessons;
     }
 
     function setTeachersForStudentGroups(capacities, groups) {
@@ -540,37 +637,44 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
           } else {
             initialLessons = [];
           }
-          var startTime = new Date(new Date($scope.plan.datesForTimetable[0].getTime()).setHours(7));
-          var endTime = new Date(new Date($scope.plan.datesForTimetable[$scope.plan.datesForTimetable.length - 1].getTime()).setHours(23));
-          initialLessons = initialLessons.filter(function (it) {
-            return it.start.getTime() >= startTime.getTime() && it.end.getTime() <= endTime.getTime();
-          });
-          initialLessons = initialLessons.sort(function (a, b) {
-            return a.start.getTime() - b.start.getTime();
-          });
+
           var finalLessons = {};
-          var startTimeDateString = startTime.getDate() + startTime.getMonth() + startTime.getFullYear();
-          var concurrentLessonsCount = 0;
-          if (!angular.isArray(finalLessons[startTimeDateString])) {
-            finalLessons[startTimeDateString] = [];
-          }
-          if (initialLessons.length > 0) {
-            for (var ilCount = 0; ilCount < initialLessons.length; ilCount++) {
-              var currEvent = initialLessons[ilCount];
-              var currEndTime;
-              var colspan = 0;
-              //dont draw the lesson if the current even is out of bounds
-              if(currEvent.start.getHours() < 7 || currEvent.end.getHours() < 7 || currEvent.start.getHours() === 23) {
-                continue;
-              }
-              //while the dates of current event starting and the block to draw are different
-              //draw blocks until the start time is the same as 
-              while (startTime.toDateString() !== currEvent.start.toDateString()) {
-                currEndTime = new Date(startTime.getTime());
-                currEndTime.setHours(23);
-                currEndTime.setMinutes(0);
+          for (var datePointer = 0; datePointer < $scope.plan.datesForTimetable.length; datePointer++) {
+            var currDayRange = $scope.dayTimeRanges[$scope.plan.datesForTimetable[datePointer]];
+            if (!currDayRange) {
+              continue;
+            }
+          
+            var startTime = new Date(currDayRange.start);
+            var endTime = new Date(currDayRange.end);
+
+            var currDayInitialLessons = initialLessons.filter(function (it) {
+              return DataUtils.isSameDay(it.start, startTime);
+            });
+            currDayInitialLessons = currDayInitialLessons.sort(function (a, b) {
+              return a.start.getTime() - b.start.getTime();
+            });
+
+            var startTimeDateString = startTime.getDate() + startTime.getMonth() + startTime.getFullYear();
+            var concurrentLessonsCount = 0;
+            if (!angular.isArray(finalLessons[startTimeDateString])) {
+              finalLessons[startTimeDateString] = [];
+            }
+
+            var currDayDrawnLessons = 0;
+            if (currDayInitialLessons.length > 0) {
+              for (var ilCount = 0; ilCount < currDayInitialLessons.length; ilCount++) {
+                currDayDrawnLessons = 0;
+                var currEvent = currDayInitialLessons[ilCount];
+                var colspan = 0;
+                //dont draw the lesson if the current even is out of bounds
+                if(currEvent.start.getHours() < 7 || currEvent.end.getHours() < 7 || currEvent.start.getHours() === 23) {
+                  continue;
+                }
+
+                //if we are editing the current row we make it draggable
                 if (draggable) {
-                  while (currEndTime.getTime() > startTime.getTime()) {
+                  while (startTime.getTime() < currEvent.start.getTime()) {
                     finalLessons[startTimeDateString].push({
                       start: new Date(startTime.getTime()),
                       colspan: 1,
@@ -579,79 +683,48 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
                     });
                     startTime = new Date(startTime.getTime() + MS_PER_FITEENMINUTES);
                   }
-                } else if (currEndTime.getTime() > startTime.getTime()) {
-                  colspan = (currEndTime.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES;
+                } else if (currEvent.start.getTime() >= startTime.getTime()) {
+                  colspan = (currEvent.start.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES;
                   finalLessons[startTimeDateString].push({
                     start: new Date(startTime.getTime()),
                     colspan: colspan
                   });
                 }
-                startTime.setDate(startTime.getDate() + 1);
-                startTime.setHours(7);
-                startTime.setMinutes(0);
-                startTimeDateString = startTime.getDate() + startTime.getMonth() + startTime.getFullYear();
-                if (!angular.isArray(finalLessons[startTimeDateString])) {
-                  finalLessons[startTimeDateString] = [];
-                }
-              }
-              currEndTime = new Date(startTime.getTime());
-              currEndTime.setHours(23);
-              currEndTime.setMinutes(0);
-              //if we are editing the current row we make it draggable
-              if (draggable) {
-                while (startTime.getTime() < currEvent.start.getTime()) {
-                  finalLessons[startTimeDateString].push({
-                    start: new Date(startTime.getTime()),
-                    colspan: 1,
-                    isSubjectTeacherPair: isSubjectTeacherPair,
-                    subjectStudyPeriod: currEvent.subjectStudyPeriod
+                //if event clashes with another one , give it a margin and add a custom parameter
+                if (currEvent.start.getTime() <= startTime.getTime()) {
+                  currEvent.colspan = (currEvent.end.getTime() - currEvent.start.getTime()) / MS_PER_FITEENMINUTES;
+                  currEvent.marginleft = (currEvent.start.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES;
+                  var concurrentLessons = finalLessons[startTimeDateString].filter(function (lesson) {
+                    return currEvent.start.getTime() >= lesson.start.getTime() && currEvent.start.getTime() < (lesson.start.getTime() + (lesson.colspan * MS_PER_FITEENMINUTES));
                   });
-                  startTime = new Date(startTime.getTime() + MS_PER_FITEENMINUTES);
-                }
-                //
-              } else if (currEvent.start.getTime() >= startTime.getTime()) {
-                colspan = (currEvent.start.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES;
-                finalLessons[startTimeDateString].push({
-                  start: new Date(startTime.getTime()),
-                  colspan: colspan
-                });
-              }
-              //if event clashes with another one , give it a margin and add a custom parameter
-              if (currEvent.start.getTime() <= startTime.getTime()) {
-                currEvent.colspan = (currEvent.end.getTime() - currEvent.start.getTime()) / MS_PER_FITEENMINUTES;
-                currEvent.marginleft = (currEvent.start.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES;
-                var concurrentLessons = finalLessons[startTimeDateString].filter(function (lesson) {
-                  return currEvent.start.getTime() >= lesson.start.getTime() && currEvent.start.getTime() < (lesson.start.getTime() + (lesson.colspan * MS_PER_FITEENMINUTES));
-                });
-                if (concurrentLessons.length > concurrentLessonsCount) {
-                  var prevLesson = finalLessons[startTimeDateString][finalLessons[startTimeDateString].length - 1];
-                  if (finalLessons[startTimeDateString].length > 0 && prevLesson.topmargin) {
-                    currEvent.topmargin = prevLesson.topmargin + CONCURRENT_TOP_MARGIN;
+                  if (concurrentLessons.length > concurrentLessonsCount) {
+                    var prevLesson = finalLessons[startTimeDateString][finalLessons[startTimeDateString].length - 1];
+                    if (finalLessons[startTimeDateString].length > 0 && prevLesson.topmargin) {
+                      currEvent.topmargin = prevLesson.topmargin + CONCURRENT_TOP_MARGIN;
+                    } else {
+                      currEvent.topmargin = CONCURRENT_TOP_MARGIN;
+                    }
+                    concurrentLessonsCount += 1;
                   } else {
-                    currEvent.topmargin = CONCURRENT_TOP_MARGIN;
+                    concurrentLessonsCount = 0;
                   }
-                  concurrentLessonsCount += 1;
                 } else {
-                  concurrentLessonsCount = 0;
+                  currEvent.colspan = (currEvent.end.getTime() - currEvent.start.getTime()) / MS_PER_FITEENMINUTES;
                 }
-              } else {
-                currEvent.colspan = (currEvent.end.getTime() - currEvent.start.getTime()) / MS_PER_FITEENMINUTES;
-              }
-              if (currEvent.end.getTime() >= currEndTime.getTime()) {
-                currEvent.colspan -= (currEvent.end.getTime() - currEndTime.getTime()) / MS_PER_FITEENMINUTES;
-              }
-              finalLessons[startTimeDateString].push(currEvent);
-              if (startTime.getTime() < currEvent.end.getTime()) {
-                startTime = new Date(currEvent.end.getTime());
-              }
-              //if current lesson is last make sure to add empty blocks until the end
-              if (initialLessons.length - 1 === ilCount) {
-                while (startTime.getTime() < endTime.getTime()) {
-                  var lastCurrEndTime = new Date(startTime.getTime());
-                  lastCurrEndTime.setHours(23);
-                  lastCurrEndTime.setMinutes(0);
+                //if current lesson is longer than day range, calculate colspan from event start to end of range
+                if (currEvent.end.getTime() >= endTime.getTime()) {
+                  currEvent.colspan -= (currEvent.end.getTime() - endTime.getTime()) / MS_PER_FITEENMINUTES;
+                }
+
+                finalLessons[startTimeDateString].push(currEvent);
+                if (startTime.getTime() < currEvent.end.getTime()) {
+                  startTime = new Date(currEvent.end.getTime());
+                }
+
+                //if current lesson is last make sure to add empty blocks until the end
+                if (currDayInitialLessons.length - 1 === ilCount) {
                   if (draggable) {
-                    while (lastCurrEndTime.getTime() > startTime.getTime()) {
+                    while (endTime.getTime() > startTime.getTime()) {
                       finalLessons[startTimeDateString].push({
                         start: new Date(startTime.getTime()),
                         colspan: 1,
@@ -661,29 +734,20 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
                       startTime = new Date(startTime.getTime() + MS_PER_FITEENMINUTES);
                     }
                   } else {
-                    colspan = (lastCurrEndTime.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES;
+                    colspan = (endTime.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES;
                     finalLessons[startTimeDateString].push({
                       start: new Date(startTime.getTime()),
                       colspan: colspan
                     });
                   }
-                  startTime.setDate(startTime.getDate() + 1);
-                  startTime.setHours(7);
-                  startTime.setMinutes(0);
-                  var startTimeDateString = startTime.getDate() + startTime.getMonth() + startTime.getFullYear();
-                  if (!angular.isArray(finalLessons[startTimeDateString])) {
-                    finalLessons[startTimeDateString] = [];
-                  }
                 }
+                currDayDrawnLessons++;
               }
             }
-          } else {
-            while (startTime.getTime() <= endTime.getTime()) {
-              var emptyCurrEndTime = new Date(startTime.getTime());
-              emptyCurrEndTime.setHours(23);
-              emptyCurrEndTime.setMinutes(0);
+
+            if (currDayDrawnLessons === 0) {
               if (draggable) {
-                while (startTime.getTime() <= emptyCurrEndTime.getTime()) {
+                while (startTime.getTime() < endTime.getTime()) {
                   finalLessons[startTimeDateString].push({
                     start: new Date(startTime.getTime()),
                     colspan: 1,
@@ -692,21 +756,15 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
                   startTime = new Date(startTime.getTime() + MS_PER_FITEENMINUTES);
                 }
               } else {
-                var emptyColspan = (emptyCurrEndTime.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES;
+                var emptyColspan = (endTime.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES;
                 finalLessons[startTimeDateString].push({
                   start: new Date(startTime.getTime()),
                   colspan: emptyColspan
                 });
               }
-              startTime.setDate(startTime.getDate() + 1);
-              startTime.setHours(7);
-              startTime.setMinutes(0);
-              startTimeDateString = startTime.getDate() + startTime.getMonth() + startTime.getFullYear();
-              if (!angular.isArray(finalLessons[startTimeDateString])) {
-                finalLessons[startTimeDateString] = [];
-              }
             }
           }
+
           //small hack - only pairs have teacherNamesShort param, so if this one has it, we search from pairs
           var group;
           if (angular.isDefined(studentGroups[sgCount].teacherNamesShort)) {
@@ -737,14 +795,13 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
 
     function lessonTimeBuildingChanged(buildingId) {
       if (angular.isDefined($scope.plan.datesForTimetable) && $scope.plan.datesForTimetable.length > 0) {
-        var startTime = new Date(new Date($scope.plan.datesForTimetable[0].getTime()).setHours(7));
+        var startTime = new Date($scope.dayTimeRanges[$scope.plan.datesForTimetable[0]].start);
         $scope.lessonTimeLegend = [];
 
         //datesForTimetable is an array of date objects currently shown in the timetable
         for (var datePointer = 0; datePointer < $scope.plan.datesForTimetable.length; datePointer++) {
           var colspan = 0;
           var currDate = $scope.plan.datesForTimetable[datePointer];
-          //    $scope.weekday = ["daySun", "dayMon", "dayTue", "dayWed", "dayThu", "dayFri", "daySat"];
           var currDay = $scope.weekday[currDate.getDay()];
           var currentLessons = $scope.plan.lessonTimes.filter(function (it) {
             return it[currDay] === true &&
@@ -769,15 +826,15 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
               continue;
             }
             if (currentLesson.lessonDateStart.getTime() > startTime.getTime()) {
-              colspan = (currentLesson.lessonDateStart.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES;
+              colspan = Math.round((currentLesson.lessonDateStart.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES);
               $scope.lessonTimeLegend.push({
                 colspan: colspan
               });
             }
             if (lessonPointer > 0 && currentLesson.lessonDateStart.getTime() < currentLessons[lessonPointer - 1].lessonDateEnd.getTime()) {
-              colspan = (currentLessons[lessonPointer - 1].lessonDateEnd.getTime() - currentLesson.lessonDateEnd.getTime()) / MS_PER_FITEENMINUTES;
+              colspan = Math.round((currentLessons[lessonPointer - 1].lessonDateEnd.getTime() - currentLesson.lessonDateEnd.getTime()) / MS_PER_FITEENMINUTES);
             } else {
-              colspan = (currentLesson.lessonDateEnd.getTime() - currentLesson.lessonDateStart.getTime()) / MS_PER_FITEENMINUTES;
+              colspan = Math.round((currentLesson.lessonDateEnd.getTime() - currentLesson.lessonDateStart.getTime()) / MS_PER_FITEENMINUTES);
             }
             $scope.lessonTimeLegend.push({
               lessonNr: currentLesson.lessonNr,
@@ -787,16 +844,28 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
               startTime = new Date(currentLesson.lessonDateEnd.getTime());
             }
           }
-          var currEndTime = new Date(startTime.getTime());
-          currEndTime.setHours(23);
-          currEndTime.setMinutes(0);
-          colspan = (currEndTime.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES;
-          $scope.lessonTimeLegend.push({
-            colspan: colspan
-          });
-          startTime.setDate(startTime.getDate() + 1);
-          startTime.setHours(7);
-          startTime.setMinutes(0);
+
+          var currEndTime = new Date($scope.dayTimeRanges[$scope.plan.datesForTimetable[datePointer]].end);
+          colspan = Math.round((currEndTime.getTime() - startTime.getTime()) / MS_PER_FITEENMINUTES);
+          
+          if (colspan > 0) {
+            $scope.lessonTimeLegend.push({
+              colspan: colspan,
+              endOfDay: true
+            });
+          } else {
+            if ($scope.lessonTimeLegend[$scope.lessonTimeLegend.length - 1]) {
+              $scope.lessonTimeLegend[$scope.lessonTimeLegend.length - 1].endOfDay = true;
+            }
+          }
+          
+          while (datePointer < $scope.plan.datesForTimetable.length - 1) {
+            if ($scope.dayTimeRanges[$scope.plan.datesForTimetable[datePointer + 1]]) {
+              startTime = new Date($scope.dayTimeRanges[$scope.plan.datesForTimetable[datePointer + 1]].start);
+              break;
+            }
+            datePointer++;
+          }
         }
       }
     }

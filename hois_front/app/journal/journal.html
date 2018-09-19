@@ -83,6 +83,32 @@
         </div>
       </div>
 
+      <fieldset ng-if="journal.hasJournalStudents">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'journal.review' | translate}}</legend>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container  flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'journal.isReviewOk' | translate}}</label>
+            <md-select ng-model="journal.isReviewOk" aria-label="{{'journal.isReviewOk' | translate}}" ng-disabled="!journal.canReview">
+              <md-option md-option-empty></md-option>
+              <md-option ng-value="true">{{'main.yes' | translate}}</md-option>
+              <md-option ng-value="false">{{'main.no' | translate}}</md-option>
+            </md-select>
+          </md-input-container>
+          <md-input-container  flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+            <label>{{'journal.reviewDate' | translate}}</label>
+            <input value="{{journal.reviewDate | hoisDate}}" disabled>
+          </md-input-container>
+        </div>
+        <div layout="column" flex>
+          <md-input-container flex>
+            <label>{{'journal.addInfo' | translate}}</label>
+            <textarea ng-model="journal.reviewInfo" md-maxlength="1000" max-rows="5" ng-required="journal.isReviewOk === false"
+              ng-disabled="!journal.canReview"></textarea>
+          </md-input-container>
+        </div>
+        <md-button ng-if="journal.canReview" class="md-raised md-primary" ng-click="saveReview()">{{'journal.saveReview' | translate}}</md-button>
+      </fieldset>
+
       <div ng-if="!journal.canEdit" class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="25" flex-sm="100" flex-xs="100">
           <label>{{'moodle.courseId' | translate}}</label>

@@ -8,11 +8,9 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
     var lessonPlanModule = $route.current.params.lessonPlanModule;
     var baseUrl = '/lessonplans/journals';
     $scope.formState = {
-      capacityTypes: Classifier.queryForDropdown({
-        mainClassCode: 'MAHT',
-        vocational: true
-      })
+      capacityTypes: QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({journalId: id, isHigher: false, isTimetable: true})
     };
+
     $scope.record = QueryUtils.endpoint(baseUrl).get({
       id: id || 'new',
       lessonPlan: lessonPlan,
@@ -75,6 +73,10 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       return true;
     }
 
+    $scope.orderByThemeName = function (themeId) {
+      return $scope.currentLanguageNameField($scope.formState.themeMap[themeId]);
+    };
+
     $scope.update = function () {
       
       if (!formIsValid()) {
@@ -90,7 +92,6 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       if ($scope.record.id) {
         $scope.record.$update().then(function (result) {
           message.updateSuccess();
-          $scope.journalForm.$setPristine();
           $scope.removedJournalTeacherIds = {};
           for (var i = 0; result.groups.length > i; i++) {
             result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({
@@ -100,6 +101,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
               curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule
             });
           }
+          $timeout(setJournalFormPristine);
         }).catch(angular.noop);
       } else {
         $scope.record.$save().then(function () {

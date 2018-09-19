@@ -8,6 +8,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -65,6 +66,11 @@ public abstract class JpaQueryUtil {
 
     public static <T> Page<T> pagingResult(JpaNativeQueryBuilder qb, String select, EntityManager em, Pageable pageable) {
         return pagingResult(qb.select(select, em), pageable, () -> qb.count(em));
+    }
+
+    public static <T> Page<T> pagingResult(JpaNativeQueryBuilder qb, String select, Map<String, Object> additionalParameters, 
+            EntityManager em, Pageable pageable) {
+        return pagingResult(qb.select(select, em, additionalParameters), pageable, () -> qb.count(em, additionalParameters));
     }
 
     public static <T> Page<T> pagingResult(JpaQueryBuilder<T> qb, EntityManager em, Pageable pageable) {

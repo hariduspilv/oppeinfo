@@ -22,7 +22,7 @@ import javax.xml.transform.stream.StreamResult;
 public abstract class SoapUtil {
 
     private static final Set<String> RTIP_MISSING_DATES = new HashSet<>(Arrays.asList("0000-00-00", "    -  -  "));
-    private static final DateTimeFormatter RTIP_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final DateTimeFormatter RTIP_DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final TransformerFactory transformerFactory = TransformerFactory.newInstance();
 
     public static String asPrettyString(SOAPMessage msg) throws IOException, SOAPException {
@@ -93,7 +93,7 @@ public abstract class SoapUtil {
      * @return
      */
     public static String printDate(LocalDate date) {
-        return date.toString();
+        return date.format(DateTimeFormatter.ISO_LOCAL_DATE);
     }
 
     /**

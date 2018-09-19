@@ -11,6 +11,7 @@ public class TimetableTimeOccupiedCommand {
     private LocalDateTime endTime;
     private List<Long> rooms;
     private List<Long> teachers;
+    private List<Long> studentGroups;
     
     private String repeatCode;
     private Long weekAmount;
@@ -64,6 +65,14 @@ public class TimetableTimeOccupiedCommand {
     
     public void setTeachers(List<Long> teachers) {
         this.teachers = teachers;
+    }
+
+    public List<Long> getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(List<Long> studentGroups) {
+        this.studentGroups = studentGroups;
     }
 
     public String getRepeatCode() {

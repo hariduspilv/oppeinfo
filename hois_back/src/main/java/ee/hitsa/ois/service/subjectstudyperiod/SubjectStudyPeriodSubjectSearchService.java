@@ -1,10 +1,13 @@
 package ee.hitsa.ois.service.subjectstudyperiod;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -12,14 +15,18 @@ import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.SubjectRepository;
+import ee.hitsa.ois.service.XlsService;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
@@ -33,6 +40,10 @@ public class SubjectStudyPeriodSubjectSearchService {
     
     @Autowired
     private SubjectRepository subjectRepository;
+    @Autowired
+    private EntityManager em;
+    @Autowired
+    private XlsService xlsService;
     
     public Page<SubjectStudyPeriodSearchDto> search(Long schoolId, SubjectStudyPeriodSearchCommand criteria,
             Pageable pageable) {
@@ -83,4 +94,13 @@ public class SubjectStudyPeriodSubjectSearchService {
         });
     }
 
+    public byte[] searchBySubjectAsExcel(Long schoolId, SubjectStudyPeriodSearchCommand criteria) {
+        List<SubjectStudyPeriodSearchDto> subjects = search(schoolId, criteria,
+                new PageRequest(0, Integer.MAX_VALUE, Direction.ASC, "code")).getContent();
+        
+        Map<String, Object> data = new HashMap<>();
+        data.put("studyPeriod", em.getReference(StudyPeriod.class, criteria.getStudyPeriod()));
+        data.put("subjects", subjects);
+        return xlsService.generate("searchBySubject.xls", data);
+    }
 }

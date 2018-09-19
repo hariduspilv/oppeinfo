@@ -1,0 +1,53 @@
+<hois-collapsable class="hois-collapse2" expanded="true" ng-if="lastResults.length > 0">
+    <hois-collapsable-header>
+        <span>{{'home.student.lastResults' | translate}}</span>
+    </hois-collapsable-header>
+    <md-table-container>
+        <table md-table>
+            <tbody md-body>
+                <tr md-row ng-if="result.entryCode" ng-repeat="result in lastResults" ng-init="$last && pageLoadingHandler.setFinish('lastResults')">
+                    <td md-cell width="10%">
+                        {{result.gradeInserted | hoisDateTimeMin}}
+                    </td>
+                    <td md-cell width="85%">
+                        <span style="font-weight: bold;">
+                            {{result.nameEt}}
+                            <md-tooltip ng-if="result.content || result.addInfo" hide-sm md-direction="bottom">{{result.content}}{{ result.content && result.addInfo ? " - ": ""}}{{result.addInfo}}</md-tooltip>
+                        </span>
+                        <span hide-gt-sm ng-if="result.content" style="font-style: italic"><br>({{result.content}})</span>
+                        <span hide-gt-sm ng-if="result.addInfo"><br>{{result.addInfo}}</span>
+                    </td>
+                    <td md-cell ng-class="{goodGrade: result.grade === '5', badGrade: result.grade === '2'}" style="font-weight: bold;">
+                        {{result.grade}}
+                    </td>
+                </tr>
+                <tr md-row ng-if="!result.entryCode" ng-repeat="result in lastResults" ng-init="$last && pageLoadingHandler.setFinish('lastResults')">
+                    <td md-cell width="10%">
+                        {{result.gradeInserted | hoisDateTimeMin}}
+                    </td>
+                    <td md-cell width="85%">
+                        <span style="font-weight: bold;">{{currentLanguageNameField(result)}}</span>
+                    </td>
+                    <td md-cell ng-class="{goodGrade: result.grade === '5', badGrade: result.grade === '2'}" style="font-weight: bold;">
+                        {{result.grade}}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </md-table-container>
+</hois-collapsable>
+<!-- <span ng-show="pageLoadingHandler.setFinish('lastResults') && false"></span> -->
+
+<style>
+    .goodGrade {
+        color: green !important;
+        font-weight: 500;
+        font-size: 105% !important;
+    }
+
+    .badGrade {
+        color: red !important;
+        font-weight: 500;
+        font-size: 105% !important;
+    }
+</style>

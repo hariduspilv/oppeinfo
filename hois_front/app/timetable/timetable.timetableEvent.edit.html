@@ -1,3 +1,4 @@
+
 <div class="ois-form-layout-padding" ng-cloak>
   <div flex>
     <form name="eventForm" ng-submit="eventForm.$valid && loadData()" novalidate>
@@ -68,6 +69,22 @@
           <div flex="50">{{room.nameEt}}</div>
           <div>
             <a ng-click="deleteRoom(room)" class="remove">&times;</a>
+          </div>
+        </div>
+      </div>
+
+      <div layout="row" flex="60" flex-sm="100" flex-xs="100">
+        <hois-autocomplete label="timetable.timetableEvent.studentGroup" ng-model="timetableEvent.studentGroup" method="studentgroups"
+          additional-query-params="{valid: true, occupied: true, date: timetableEvent.date, startTime: timetableEvent.startTime, endTime: timetableEvent.endTime, 
+            repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount, studentGroupTeacherId: auth.isTeacher() ? auth.teacher : undefined}" 
+          flex></hois-autocomplete>
+      </div>
+      <div layout="column" class="common-label" flex="55" ng-repeat="studentGroup in timetableEvent.studentGroups">
+        <div layout="row" flex layout-align="start center">
+          <div flex="5">&nbsp;</div>
+          <div flex="50">{{studentGroup.nameEt}}</div>
+          <div>
+            <a ng-click="deleteStudentGroup(studentGroup)" class="remove">&times;</a>
           </div>
         </div>
       </div>

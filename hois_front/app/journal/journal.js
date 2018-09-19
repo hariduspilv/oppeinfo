@@ -42,4 +42,18 @@ angular.module('hitsaOis').controller('JournalController', function ($scope, $ro
       $scope.moodleCourseId = $scope.journal.moodleCourseId;
     }).$promise.catch(angular.noop);
   };
+
+  $scope.saveReview = function () {
+    $scope.journalForm.$setSubmitted();
+    if (!$scope.journalForm.$valid) {
+      message.error('main.messages.form-has-errors');
+    } else {
+      QueryUtils.endpoint('/journals/' + entity.id + '/journalReview').save(
+        { isReviewOk: $scope.journal.isReviewOk, reviewInfo: $scope.journal.reviewInfo }, function (entity) {
+        message.info('main.messages.create.success');
+        $scope.journalForm.$setPristine();
+        entityToForm(entity);
+      });
+    }
+  };
 });

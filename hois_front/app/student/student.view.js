@@ -237,7 +237,9 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
 
         if (angular.isObject(it.theme)) {
           moduleResultById[it.module.id].themeResultById[it.theme.id] = it;
-          moduleResultById[it.module.id].totalSubmitted += it.credits;
+          if (VocationalGradeUtil.isPositive(it.grade.code)) {
+            moduleResultById[it.module.id].totalSubmitted += it.credits;
+          }
         } else {
           angular.extend(moduleResultById[it.module.id], it);
           //extra curricula module results
@@ -540,7 +542,7 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
       $scope.certificateTypes = Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK', filterValues: [CertificateType.TOEND_LIIK_MUU]});
     }
 
-    $scope.directivesCriteria = { size: 5, page: 1, order: 'headline', studentId: $scope.studentId };
+    $scope.directivesCriteria = { size: 5, page: 1, order: 'confirm_date, headline', studentId: $scope.studentId };
     $scope.directives = {};
     var directivesMapper = Classifier.valuemapper({ type: 'KASKKIRI', status: 'KASKKIRI_STAATUS' });
     $scope.afterDirectivesLoad = function (result) {

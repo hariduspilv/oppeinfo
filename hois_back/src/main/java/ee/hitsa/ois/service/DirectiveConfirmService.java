@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -57,6 +58,7 @@ import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.exception.SingleMessageWithParamsException;
 import ee.hitsa.ois.message.AcademicLeaveEnding;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
+import ee.hitsa.ois.message.StudentScholarshipEnding;
 import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -117,6 +119,13 @@ public class DirectiveConfirmService {
         List<DirectiveViewStudentDto> invalidStudents = new ArrayList<>();
         // validate each student's data for given directive
         long rowNum = 0;
+        directive.getStudents().sort(new Comparator<DirectiveStudent>() {
+
+            @Override
+            public int compare(DirectiveStudent arg0, DirectiveStudent arg1) {
+                return arg0.getPerson().getLastname().compareTo(arg1.getPerson().getLastname());
+            }
+        });
         for(DirectiveStudent ds : directive.getStudents()) {
             if(directiveType.validationGroup() != null) {
                 Set<ConstraintViolation<DirectiveStudent>> errors = validator.validate(ds, directiveType.validationGroup());
@@ -443,6 +452,13 @@ public class DirectiveConfirmService {
         // inform student about new directive
         StudentDirectiveCreated data = new StudentDirectiveCreated(directiveStudent);
         automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_UUS_KK, student, data);
+        if (DirectiveType.KASKKIRI_STIPTOETL.equals(directiveType)) {
+            ScholarshipApplication scholarshipApplication = directiveStudent.getScholarshipApplication();
+            if (scholarshipApplication != null) {
+                StudentScholarshipEnding scholarshipData = new StudentScholarshipEnding(scholarshipApplication);
+                automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_TOET_KATK, student, scholarshipData);
+            }
+        }
     }
 
     private void cancelDirective(Directive directive) {

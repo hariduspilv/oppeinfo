@@ -1,12 +1,15 @@
 'use strict';
 
 angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, $filter, $window, QueryUtils, ArrayUtils, DataUtils, Classifier, message, dialogService, VocationalGradeUtil, $q, oisFileService) {
+  $scope.auth = $route.current.locals.auth;
   $scope.gradeUtil = VocationalGradeUtil;
   var classifierMapper = Classifier.valuemapper({ entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE', absence: 'PUUDUMINE' });
 
-  var LESSONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  var LESSONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
 
-  $scope.formState = {};
+  $scope.formState = {
+    gradeInputAsSelect: true
+  };
   $scope.showAllStudentsModel = true;
 
   function loadUsedHours() {
@@ -42,29 +45,25 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     });
   }
 
-    $scope.finished=function ()
-    {
-      var hh, tb;
+  $scope.finished = function () {
+    /*
+    var hh, tb;
+    hh = angular.element(document.getElementsByClassName("journalTable"))[0].clientHeight;
+    tb = angular.element(document.getElementsByClassName("journalTable")).find("tbody")[0].clientHeight;
+    hh = 39 + tb;
 
-
-      hh = angular.element(document.getElementsByClassName("journalTable"))[0].clientHeight;
-      tb = angular.element(document.getElementsByClassName("journalTable")).find("tbody")[0].clientHeight;
-      hh=39+tb;
-
-      if($scope.journal.journalStudents && $scope.journal.journalStudents.length > 10)
-      {
-        angular.element(document.getElementsByClassName("container")).css('height', $scope.journal.journalStudents.length*32+39+18+ 'px');
-      }
-      else
-      {
-        angular.element(document.getElementsByClassName("container")).css('height', hh +18+ 'px');
-      }
-
-    };
+    if($scope.journal.journalStudents && $scope.journal.journalStudents.length > 10) {
+      angular.element(document.getElementsByClassName("container")).css('height', $scope.journal.journalStudents.length * 32 + 39 + 18 + 'px');
+    } else {
+      angular.element(document.getElementsByClassName("container")).css('height', hh + 18 + 'px');
+    }
+    */
+    angular.element(document.getElementsByClassName("container")).css('height', Math.min(10, $scope.journal.journalStudents.length) * 33 + 39 + 18 + 'px');
+  };
 
   angular.element($window).bind('resize', function(){
     $scope.windowHeight = $window.innerHeight;
- });
+  });
 
   function entityToForm(entity) {
     $scope.journal = entity;
@@ -176,7 +175,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   function loadJournalEntryDialogInitialData(dialogScope) {
     dialogScope.journalStudents = entity.journalStudents;
     dialogScope.absenceOptions = {};
-    dialogScope.capacityTypes =  Classifier.queryForDropdown({ mainClassCode: 'MAHT', vocational: true });
+    dialogScope.capacityTypes = QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({journalId: dialogScope.journal.id, entryTypes: true});
     dialogScope.lessonPlanDates = $scope.formState.lessonInfo.lessonPlanDates.map(function (it) {
       var value = $filter('hoisDate')(it);
       return { nameEt: value, nameEn: value, id: it };
@@ -220,16 +219,20 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   function showEntryDialog(editEntity) {
     dialogService.showDialog('journal/journal.addEntry.dialog.html', function (dialogScope) {
       dialogScope.journal = $scope.journal;
+      dialogScope.gradeInputAsSelect = $scope.formState.gradeInputAsSelect;
 
       dialogScope.$watch('journalEntry.entryType', function() {
         if (dialogScope.journalEntry.entryType === 'SISSEKANNE_L') {
           if ($scope.journal.isDistinctiveAssessment) {
             dialogScope.filterGrades = ['KUTSEHINDAMINE_X', 'KUTSEHINDAMINE_A', 'KUTSEHINDAMINE_MA'];
+            dialogScope.gradeInputRegex = '^1$|^2$|^3$|^4$|^5$';
           } else {
             dialogScope.filterGrades = ['KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_2', 'KUTSEHINDAMINE_3', 'KUTSEHINDAMINE_4', 'KUTSEHINDAMINE_5'];
+            dialogScope.gradeInputRegex = '^X$|^A$|^MA$';
           }
         } else {
           dialogScope.filterGrades = [];
+          dialogScope.gradeInputRegex = '^X$|^A$|^MA$|^1$|^2$|^3$|^4$|^5$';
         }
       });
 
@@ -255,11 +258,11 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
           if (js.hasAcceptedAbsence) {
             dialogScope.journalEntryStudents[js.id].excused = true;
-            dialogScope.journalEntryStudentAbsenceChanged(dialogScope.journalEntryStudents, js, dialogScope.journalEntryStudents[js.id].excused, 'PUUDUMINE_V');
+            dialogScope.journalEntryStudentAbsenceChanged(js, dialogScope.journalEntryStudents[js.id].excused, 'PUUDUMINE_V');
           } else {
             dialogScope.journalEntryStudents[js.id].excused = false;
             if (dialogScope.journalEntryStudents[js.id].absence === 'PUUDUMINE_V') {
-              dialogScope.journalEntryStudentAbsenceChanged(dialogScope.journalEntryStudents, js, null, null);
+              dialogScope.journalEntryStudentAbsenceChanged(js, null, null);
             }
           }
         });
@@ -298,6 +301,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         angular.extend(dialogScope.journalEntry, editEntity);
         dialogScope.entryDateCalendar = dialogScope.journalEntry.entryDate;
         editEntity.journalEntryStudents.forEach(function (it) {
+          it.gradeValue = it.grade ? VocationalGradeUtil.removePrefix(it.grade) : null;
           dialogScope.journalEntryStudents[it.journalStudent] = it;
           DataUtils.convertStringToDates(it.journalEntryStudentHistories, ["gradeInserted"]);
           classifierMapper.objectmapper(it.journalEntryStudentHistories);
@@ -327,43 +331,48 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
       setForbiddenTypes(dialogScope, editEntity);
 
-      function changeAbsenceCheckboxValues(journalEntryStudents, row, absence) {
+      function changeAbsenceCheckboxValues(row, absence) {
         switch (absence) {
           case "PUUDUMINE_V":
-            journalEntryStudents[row.id].withoutReason = false;
-            journalEntryStudents[row.id].late = false;
+            dialogScope.journalEntryStudents[row.id].withoutReason = false;
+            dialogScope.journalEntryStudents[row.id].late = false;
           break;
           case "PUUDUMINE_H":
-            journalEntryStudents[row.id].excused = false;
-            journalEntryStudents[row.id].withoutReason = false;
+            dialogScope.journalEntryStudents[row.id].excused = false;
+            dialogScope.journalEntryStudents[row.id].withoutReason = false;
             break;
           case "PUUDUMINE_P":
-            journalEntryStudents[row.id].excused = false;
-            journalEntryStudents[row.id].late = false;
+            dialogScope.journalEntryStudents[row.id].excused = false;
+            dialogScope.journalEntryStudents[row.id].late = false;
             break;
         }
       }
 
       dialogScope.changedJournalEntryStudents = [];
-      dialogScope.journalEntryStudentChanged = function (journalEntryStudents, row) {
-        if (!angular.isObject(journalEntryStudents[row.id])) {
-          journalEntryStudents[row.id] = {};
+      dialogScope.journalEntryStudentChanged = function (row) {
+        if (!angular.isObject(dialogScope.journalEntryStudents[row.id])) {
+          dialogScope.journalEntryStudents[row.id] = {};
         }
-        journalEntryStudents[row.id].journalStudent = row.id;
-        if (dialogScope.changedJournalEntryStudents.indexOf(journalEntryStudents[row.id]) === -1) {
-          dialogScope.changedJournalEntryStudents.push(journalEntryStudents[row.id]);
+
+        if (!dialogScope.gradeInputAsSelect) {
+          dialogScope.journalEntryStudents[row.id].grade = VocationalGradeUtil.addPrefix(dialogScope.journalEntryStudents[row.id].gradeValue);
+        }
+
+        dialogScope.journalEntryStudents[row.id].journalStudent = row.id;
+        if (dialogScope.changedJournalEntryStudents.indexOf(dialogScope.journalEntryStudents[row.id]) === -1) {
+          dialogScope.changedJournalEntryStudents.push(dialogScope.journalEntryStudents[row.id]);
         }
       };
-      dialogScope.journalEntryStudentAbsenceChanged = function (journalEntryStudents, row, checkboxValue, absence) {
-        if (!angular.isObject(journalEntryStudents[row.id])) {
-          journalEntryStudents[row.id] = {};
+      dialogScope.journalEntryStudentAbsenceChanged = function (row, checkboxValue, absence) {
+        if (!angular.isObject(dialogScope.journalEntryStudents[row.id])) {
+          dialogScope.journalEntryStudents[row.id] = {};
         }
-        journalEntryStudents[row.id].journalStudent = row.id;
-        journalEntryStudents[row.id].absence = checkboxValue ? absence : null;
-        if (dialogScope.changedJournalEntryStudents.indexOf(journalEntryStudents[row.id]) === -1) {
-          dialogScope.changedJournalEntryStudents.push(journalEntryStudents[row.id]);
+        dialogScope.journalEntryStudents[row.id].journalStudent = row.id;
+        dialogScope.journalEntryStudents[row.id].absence = checkboxValue ? absence : null;
+        if (dialogScope.changedJournalEntryStudents.indexOf(dialogScope.journalEntryStudents[row.id]) === -1) {
+          dialogScope.changedJournalEntryStudents.push(dialogScope.journalEntryStudents[row.id]);
         }
-        changeAbsenceCheckboxValues(journalEntryStudents, row, absence);
+        changeAbsenceCheckboxValues(row, absence);
       };
       dialogScope.setJournalEntryDefaultName = function (name) {
         var holder = { entryType: name };
@@ -371,6 +380,19 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         dialogScope.journalEntry.nameEt = holder.entryType.nameEt;
       };
       dialogScope.grades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
+
+      dialogScope.removeStudentHistory = function (row) {
+        if (!angular.isObject(dialogScope.journalEntryStudents[row.id])) {
+          dialogScope.journalEntryStudents[row.id] = {};
+        }
+        dialogScope.journalEntryStudents[row.id].journalStudent = row.id;
+        dialogScope.journalEntryStudents[row.id].removeStudentHistory = true;
+        dialogScope.journalEntryStudents[row.id].grade = null;
+        dialogScope.journalEntryStudents[row.id].gradeValue = null;
+        if (dialogScope.changedJournalEntryStudents.indexOf(dialogScope.journalEntryStudents[row.id]) === -1) {
+          dialogScope.changedJournalEntryStudents.push(dialogScope.journalEntryStudents[row.id]);
+        }
+      };
 
       dialogScope.delete = function () {
         dialogService.confirmDialog({prompt: 'journal.entryDeleteConfirm'}, function() {

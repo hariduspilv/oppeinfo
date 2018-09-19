@@ -18,7 +18,8 @@
                   <!--md-button class="md-button" md-colors="{background: 'background-200'}" ng-click="showTeacherWeek(row.teacherId)">
                     {{row.lastname}}, {{row.firstname}}
                   </md-button-->
-                  <a href="#/timetable/{{timetable.id}}/{{timetable.higher ? 'createHigherPlan' : 'createVocationalPlan'}}/{{group.id}}">{{group.code}}</a>
+                  <a ng-if="!timetable.higher" href="#/timetable/{{timetable.id}}/createVocationalPlan/{{group.id}}">{{group.code}}</a>
+                  <a ng-if="timetable.higher" href="#/timetable/{{timetable.id}}/createHigherPlan/group/{{group.id}}">{{group.code}}</a>
                 </md-grid-tile>
               </md-grid-list>
             </div>
@@ -34,7 +35,7 @@
           </thead>
           <tbody md-body>
           <tr md-row ng-repeat="pair in timetable.pairs | orderBy: ['code', currentLanguageNameField()]" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a href="#/timetable/{{timetable.id}}/{{timetable.higher ? 'createHigherPlan' : 'createVocationalPlan'}}">{{pair.code}} {{currentLanguageNameField(pair)}} / {{pair.teacherNames}}</a></td>
+            <td md-cell><a href="#/timetable/{{timetable.id}}/createHigherPlan/pair/{{pair.id}}">{{pair.code}} {{currentLanguageNameField(pair)}} / {{pair.teacherNames}}</a></td>
           </tr>
           </tbody>
         </table>

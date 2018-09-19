@@ -28,6 +28,7 @@ import ee.hitsa.ois.domain.MessageTemplate;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.MessageStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
@@ -117,6 +118,13 @@ public class AutomaticMessageService {
         if (message != null && StringUtils.hasText(to)) {
             Person automaticSender = em.getReference(Person.class, PersonUtil.AUTOMATIC_SENDER_ID);
             mailService.sendMail(automaticSender.getEmail(), to, message.getSubject(), message.getContent());
+        }
+    }
+
+    public void sendMessageToTeacher(MessageType type, Teacher teacher, Object dataBean) {
+        Message message = sendMessageToPersons(type, teacher.getSchool(), Collections.singletonList(teacher.getPerson()), dataBean);
+        if (message != null) {
+            mailService.sendMail(message, Collections.singletonList(teacher.getEmail()));
         }
     }
 

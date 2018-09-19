@@ -11,6 +11,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -35,10 +36,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import com.google.common.base.Objects;
+
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalCapacity;
 import ee.hitsa.ois.domain.timetable.JournalEntry;
@@ -49,9 +54,10 @@ import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.JournalStatus;
-import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.message.StudentRemarkCreated;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.JournalRepository;
 import ee.hitsa.ois.repository.StudentRepository;
@@ -66,9 +72,11 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.JournalEntryValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEndDateCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryStudentForm;
+import ee.hitsa.ois.web.commandobject.timetable.JournalReviewForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
@@ -101,13 +109,13 @@ import ee.hitsa.ois.web.dto.timetable.StudentJournalTaskListDto;
 public class JournalService {
 
     @Autowired
+    private AutocompleteService autocompleteService;
+    @Autowired
     private JournalRepository journalRepository;
     @Autowired
     private StudentRepository studentRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
-    @Autowired
-    private ClassifierService classifierService;
     @Autowired
     private EntityManager em;
     @Autowired
@@ -116,6 +124,8 @@ public class JournalService {
     private XlsService xlsService;
     @Autowired
     private StudyYearService studyYearService;
+    @Autowired
+    private AutomaticMessageService automaticMessageService;
     
     private static final List<String> journalAbsenceCodes = EnumUtil.toNameList(Absence.PUUDUMINE_P, Absence.PUUDUMINE_H);
     private static final List<String> testEntryTypeCodes = EnumUtil.toNameList(JournalEntryType.SISSEKANNE_H, JournalEntryType.SISSEKANNE_L,
@@ -139,7 +149,7 @@ public class JournalService {
             "string_agg(distinct p.firstname || ' ' || p.lastname, ', ') as teachers, " +
             "string_agg(distinct cm.name_et || ' - ' || cl.name_et || ' (' || c.code || ')', ', ') as modules_et, " +
             "string_agg(distinct cm.name_en || ' - ' || cl.name_en || ' (' || c.code || ')', ', ') as modules_en, " +
-            "j.status_code, string_agg(distinct c.code, ', ')";
+            "j.status_code, string_agg(distinct c.code, ', '), j.is_review_ok, j.review_date";
     
     public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(JOURNAL_LIST_FROM).sort(pageable);
@@ -161,7 +171,8 @@ public class JournalService {
                     "where lpm.teacher_id=" + command.getTeacher() + " or sg.teacher_id=" + command.getTeacher() +
                     " or jt.teacher_id=" + command.getTeacher() + ")");
         }
-        qb.optionalCriteria("j.id = :journalId", "journalId", command.getJournal());
+        
+        qb.optionalContains("j.name_et", "name", command.getJournalName());
         
         if (command.getStudentGroup() != null) {
             qb.filter("j.id in (select j.id from journal j " +
@@ -195,6 +206,8 @@ public class JournalService {
             dto.setModules(new AutocompleteResult(null, resultAsString(r, 4), resultAsString(r, 5)));
             dto.setStatus(resultAsString(r, 6));
             dto.setCurriculums(resultAsString(r, 7));
+            dto.setIsReviewOk(resultAsBoolean(r, 8));
+            dto.setReviewDate(resultAsLocalDate(r, 9));
             
             Journal journal = em.getReference(Journal.class, resultAsLong(r, 0));
             dto.setPlannedHours(Integer.valueOf(journal.getJournalCapacities().stream().mapToInt(it -> it.getHours() == null ? 0 : it.getHours().intValue()).sum()));
@@ -209,6 +222,7 @@ public class JournalService {
         dto.setCanBeConfirmed(Boolean.valueOf(JournalUtil.canConfirm(user, journal)));
         dto.setCanBeUnconfirmed(Boolean.valueOf(JournalUtil.canUnconfirm(user, journal)));
         dto.setCanEdit(Boolean.valueOf(JournalUtil.hasPermissionToChange(user, journal)));
+        dto.setCanReview(Boolean.valueOf(JournalUtil.hasPermissionToReview(user, journal)));
         dto.setLessonHours(usedHours(journal));
         return dto;
     }
@@ -333,6 +347,17 @@ public class JournalService {
         return EntityUtil.save(journal, em);
     }
 
+    public Journal saveJournalReview(Journal journal, JournalReviewForm journalReviewForm) {
+        if (Objects.equal(journal.getReviewOk(), journalReviewForm.getIsReviewOk())
+                && Objects.equal(journal.getReviewInfo(), journalReviewForm.getReviewInfo())) {
+            throw new ValidationFailedException("journal.messages.reviewIsNotChanged");
+        }
+        journal.setReviewOk(journalReviewForm.getIsReviewOk());
+        journal.setReviewInfo(journalReviewForm.getReviewInfo());
+        journal.setReviewDate(LocalDate.now());
+        return EntityUtil.save(journal, em);
+    }
+
     public Journal addStudentsToJournal(Journal journal, JournalStudentsCommand command) {
         Set<Long> existingStudents = journal.getJournalStudents().stream().map(js -> EntityUtil.getId(js.getStudent()))
                 .collect(Collectors.toSet());
@@ -357,17 +382,44 @@ public class JournalService {
                 "journalEntryStudents", "journalEntryCapacityTypes");
         journal.getJournalEntries().add(journalEntry);
         saveJournalEntryStudents(user, journalEntryForm, journalEntry);
-        return EntityUtil.save(journal, em);
+        journal = EntityUtil.save(journal, em);
+        sendRemarkMessages(getStudentsWithComments(journalEntry).values());
+        return journal;
     }
 
     public void updateJournalEntry(HoisUserDetails user, JournalEntryForm journalEntryForm, Long journalEntrylId) {
         validateJournalEntry(journalEntryForm);
         EntityUtil.setUsername(user.getUsername(), em);
         JournalEntry journalEntry = em.getReference(JournalEntry.class, journalEntrylId);
+        Map<Long, Student> existingComments = getStudentsWithComments(journalEntry);
         EntityUtil.bindToEntity(journalEntryForm, journalEntry, classifierRepository, "journalEntryStudents",
                 "journalEntryCapacityTypes");
         saveJournalEntryStudents(user, journalEntryForm, journalEntry);
-        EntityUtil.save(journalEntry, em);
+        journalEntry = EntityUtil.save(journalEntry, em);
+        Map<Long, Student> commentStudents = getStudentsWithComments(journalEntry);
+        commentStudents.keySet().removeAll(existingComments.keySet());
+        sendRemarkMessages(commentStudents.values());
+    }
+
+    private void sendRemarkMessages(Collection<Student> students) {
+        for (Student student : students) {
+            StudentRemarkCreated data = new StudentRemarkCreated(student);
+            automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_MARKUS, student, data);
+            StudentGroup studentGroup = student.getStudentGroup();
+            if (studentGroup != null) {
+                Teacher studentGroupTeacher = studentGroup.getTeacher();
+                if (studentGroupTeacher != null) {
+                    automaticMessageService.sendMessageToTeacher(MessageType.TEATE_LIIK_OP_MARKUS, studentGroupTeacher, data);
+                }
+            }
+        }
+    }
+
+    private static Map<Long, Student> getStudentsWithComments(JournalEntry journalEntry) {
+        return StreamUtil.toMap(EntityUtil::getId, 
+                journalEntry.getJournalEntryStudents().stream()
+                .filter(jes -> StringUtils.hasText(jes.getAddInfo()))
+                .map(jes -> jes.getJournalStudent().getStudent()));
     }
     
     public void deleteJournalEntry(HoisUserDetails user, JournalEntry entry) {
@@ -389,7 +441,13 @@ public class JournalService {
             JournalEntry journalEntry) {
         for (JournalEntryStudentForm journalEntryStudentForm : journalEntryForm.getJournalEntryStudents()) {
             if (journalEntryStudentForm.getId() != null) {
-                updateJournalStudentEntry(user, journalEntryStudentForm);
+                JournalEntryStudent journalEntryStudent = em.getReference(JournalEntryStudent.class, journalEntryStudentForm.getId());
+                assertJournalEntryStudentRules(journalEntryStudent.getJournalStudent());
+                
+                updateJournalStudentEntry(user, journalEntryStudent, journalEntryStudentForm);
+                if (Boolean.TRUE.equals(journalEntryStudentForm.getRemoveStudentHistory())) {
+                    removeStudentGradeHistory(user, journalEntryStudent);
+                }
             } else {
                 saveJournalStudentEntry(user, journalEntry, journalEntryStudentForm);
             }
@@ -403,11 +461,8 @@ public class JournalService {
                 });
     }
 
-    private void updateJournalStudentEntry(HoisUserDetails user, JournalEntryStudentForm journalEntryStudentForm) {
-        JournalEntryStudent journalEntryStudent = em.getReference(JournalEntryStudent.class, journalEntryStudentForm.getId());
-        assertJournalEntryStudentRules(journalEntryStudent.getJournalStudent());
-
-        if (journalEntryStudent.getGrade() != null
+    private void updateJournalStudentEntry(HoisUserDetails user, JournalEntryStudent journalEntryStudent, JournalEntryStudentForm journalEntryStudentForm) {
+        if (Boolean.FALSE.equals(journalEntryStudentForm.getRemoveStudentHistory()) && journalEntryStudent.getGrade() != null
                 && !EntityUtil.getCode(journalEntryStudent.getGrade()).equals(journalEntryStudentForm.getGrade())) {
             JournalEntryStudentHistory journalEntryStudentHistory = new JournalEntryStudentHistory();
             journalEntryStudentHistory.setGrade(journalEntryStudent.getGrade());
@@ -440,6 +495,11 @@ public class JournalService {
         if (!StudentUtil.isStudying(journaStudent.getStudent())) {
             throw new ValidationFailedException("journal.messages.changeIsNotAllowedStudentIsNotStudying");
         }
+    }
+
+    private void removeStudentGradeHistory(HoisUserDetails user, JournalEntryStudent journalEntryStudent) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        journalEntryStudent.getJournalEntryStudentHistories().clear();
     }
 
     private void saveJournalStudentEntry(HoisUserDetails user, JournalEntry journalEntry,
@@ -481,17 +541,18 @@ public class JournalService {
         jeQb.requiredCriteria("je.journal_id=:journalId", "journalId", journalId);
 
         return JpaQueryUtil.pagingResult(jeQb,
-                "je.id, je.entry_type_code, je.entry_date, je.name_et, je.content, je.homework, je.homework_duedate, je.moodle_grade_item_id, cmo.order_nr", em,
+                "je.id, je.entry_type_code, je.entry_date, je.lessons, je.name_et, je.content, je.homework, je.homework_duedate, je.moodle_grade_item_id, cmo.order_nr", em,
                 pageable).map(r -> {
                     JournalEntryTableDto dto = new JournalEntryTableDto();
                     dto.setId(resultAsLong(r, 0));
                     dto.setEntryType(resultAsString(r, 1));
                     dto.setEntryDate(resultAsLocalDate(r, 2));
-                    dto.setNameEt(resultAsString(r, 3));
-                    dto.setContent(resultAsString(r, 4));
-                    dto.setHomework(resultAsString(r, 5));
-                    dto.setHomeworkDuedate(resultAsLocalDate(r, 6));
-                    dto.setMoodleGradeItemId(resultAsLong(r, 7));
+                    dto.setLessons(resultAsLong(r, 3));
+                    dto.setNameEt(resultAsString(r, 4));
+                    dto.setContent(resultAsString(r, 5));
+                    dto.setHomework(resultAsString(r, 6));
+                    dto.setHomeworkDuedate(resultAsLocalDate(r, 7));
+                    dto.setMoodleGradeItemId(resultAsLong(r, 8));
                     return dto;
                 });
     }
@@ -607,7 +668,10 @@ public class JournalService {
         dto.setTotalUsedHours(calculateUsedHours(entries, null));
         
         List<CapacityHoursDto> capacityHours = new ArrayList<>();
-        List<Classifier> capacityTypes = classifierService.findAllByMainClassCode(MainClassCode.MAHT);
+        SchoolCapacityTypeCommand capacityCommand = new SchoolCapacityTypeCommand();
+        capacityCommand.setJournalId(journal.getId());
+        capacityCommand.setEntryTypes(Boolean.TRUE);
+        List<Classifier> capacityTypes = autocompleteService.schoolCapacityTypes(EntityUtil.getId(journal.getSchool()), capacityCommand);
         for (Classifier type : capacityTypes) {
             if (type.isVocational()) {
                 CapacityHoursDto typeHours = new CapacityHoursDto();
@@ -638,7 +702,9 @@ public class JournalService {
     }
 
     public byte[] journalAsExcel(Journal journal) {
-        return xlsService.generate("journal.xls", Collections.singletonMap("journal", JournalXlsDto.of(journal)));
+        JournalXlsDto dto = JournalXlsDto.of(journal);
+        dto.setLessonHours(usedHours(journal));
+        return xlsService.generate("journal.xls", Collections.singletonMap("journal", dto));
     }
 
     public Set<Long> journalStudentsWithAcceptedAbsence(Journal journal, LocalDate entryDate) {

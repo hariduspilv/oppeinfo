@@ -28,6 +28,8 @@
       "finish": "Lõpeta",
       "ok": "Ok",
       "print": "Trüki",
+      "printPdf": "Trüki pdf",
+      "printXls": "Trüki xls",
       "printGeneral": "Trüki põhiandmed",
       "printModules": "Trüki moodulid",
       "printCompetences": "Trüki kompetentsid",
@@ -146,6 +148,8 @@
     "months": "kuud",
     "yes": "Jah",
     "no": "Ei",
+    "confirm": "Kinnitatud",
+    "noConfirm": "Kinnitamata",
     "or": "Või",
     "validityPeriod": "Kehtivuse periood",
     "validFrom": "Kehtiv alates",
@@ -202,6 +206,8 @@
     "contactNumber": "Kontakttelefon",
     "email": "E-posti aadress",
     "sum": "Kokku",
+    "vocational": "Kutseõpe",
+    "higher": "Kõrgharidus",
     "menu": {
       "scholarships" : {
         "label": "Õppetoetused ja stipendiumid",
@@ -259,6 +265,7 @@
         "messageTemplates": "Automaat. teadete mallid",
         "studyLevels": "Õppetasemed",
         "studyYears": "Õppeperioodid",
+        "capacityTypes": "Õppetöö liigid",
         "classifiers": "Klassifikaatorid",
         "users": "Kasutajad",
         "saisClassifiers": "Klassifikaatorid SAISist",
@@ -490,6 +497,10 @@
     "student": {
       "homeworkAndTests": "Kodutööd ja kontrolltööd",
       "absences": "Puudumised ja hilinemised (30p)",
+      "absence": {
+        "absences": "Puudumised",
+        "beingLate": "Hilinemised"
+      },
       "declaredSubjects": "Hetkel deklareeritud ained",
       "lastResults": "Viimased hinded",
       "today": "Täna",
@@ -1159,8 +1170,10 @@
     "moduleTotal": "kokku",
     "plannedHoursTotal": "Planeeritud tundide arv kokku",
     "responsibleformodule": "Mooduli vastutaja",
+    "selectAll": "Vali kõik",
     "schoolDepartment": "Struktuuriüksus",
     "showCapacityTypes": "kuva mahtude jaotus",
+    "showPeriods" : "Kuva perioodid",
     "showTotals": "kuva kokku read",
     "showWeeks": "kuva nädalad",
     "studentGroup": "Õpperühm",
@@ -1204,7 +1217,8 @@
     },
     "event": {
       "studyPeriod": "Õppeperiood",
-      "studentGroups": "Õpperühm",
+      "studentGroup": "Õpperühm",
+      "studentGroups": "Õpperühmad",
       "name": "Sündmuse nimetus",
       "teachers": "Õpetajad",
       "otherTeacher": "Muu õpetaja",
@@ -2089,6 +2103,14 @@
       }
     }
   },
+  "schoolCapacityType": {
+    "type": "Õppetöö liik",
+    "isTimetable": "Kasutatakse tunniplaani koostamisel",
+    "teacherLoadPercentage": "Arvestatakse õpetaja koormuses koefitsiendiga (%)",
+    "studyYear": "Õppeaasta",
+    "loadPercentage": "Koormuse koefitsient %",
+    "removeUsableConfirm": "Kas soovid tühjendada kõik \"Arvestatakse õpetaja koormuses koefitsiendiga\" sisestatud vastava rea väljad?"
+  },
   "subjectStudyPeriod": {
     "label": {
       "options": "Koormuste otsingud õpperühmade-, õpetajate või õppeainete järgi",
@@ -2480,12 +2502,15 @@
     "deleteConfirm": "Kas oled kindel et soovid sündmust kustutada?",
     "roomIsOccupied": "Ruum \"{{rooms}}\" on valitud aegadel hõivatud",
     "teacherIsOccupied": "Õpetaja \"{{teachers}}\" on valitud aegadel hõivatud",
+    "studentGroupIsOccupied": "Õpperühm \"{{studentGroups}}\" on valitud aegadel hõivatud",
     "continue": "Kas soovid jätkata?",
     "lessonTime": {
       "validFrom": "Kehtivuse algus",
       "addNewBlock": "Lisa uus tundide aegade plokk",
       "deleteBlock": "Kustuta tundide aegade plokk",
-      "oneRowRequired": "Igal blokil peab olema defineeritud vähemalt üks tunni aeg"
+      "oneRowRequired": "Igal blokil peab olema defineeritud vähemalt üks tunni aeg",
+      "endIsEarlierThanStart": "Lõppkellaaeg ei tohi olla varasem algkellaajast",
+      "outOfTimeRange": "Tunni lõpp ja algus peavad jääma ajavahemikku 7-23"
     },
     "management": {
       "period": "Periood",
@@ -2530,7 +2555,8 @@
       "lessonTimes": "Tundide ajad",
       "timeClash": "Aeg kattub teise tunniga või on väljaspool ajavahemikku",
       "addForOtherGroups": "Kas lisada aine-õpetaja tund ka teistesse seotud rühmadesse?",
-      "displayPeriodLessons": "Kuva perioodi tunnid"
+      "displayPeriodLessons": "Kuva perioodi tunnid",
+      "displayLeftOverLessons": "Kuva jääktunnid"
     },
     "timetableEvent": {
       "name": "Sündmuse nimetus",
@@ -2544,9 +2570,15 @@
       "room": "Ruum",
       "otherRoom": "Õppeasutuse väline ruum",
       "rooms": "Ruumid",
+      "studentGroup": "Õpperühm",
+      "studentGroups": "Õpperühmad",
       "occupied": "Hõivatud",
-      "duplicateroom": "Ruum on juba olemas",
-      "duplicateTeacher": "Õpetaja on juba olemas"
+      "error": {
+        "duplicateRoom": "Ruum on juba olemas",
+        "duplicateTeacher": "Õpetaja on juba olemas",
+        "duplicateStudentGroup": "Õpperühm on juba olemas",
+        "endIsEarlierThanStart": "Lõppkellaaeg ei tohi olla varasem algkellaajast"
+      }
     },
     "subjectTeacherPairs": "Aine-õpetaja paarid",
     "search": {
@@ -2587,7 +2619,21 @@
     "addStudents": "Lisa õppijad",
     "addNewEntry": "Lisa uus sissekanne",
     "confirmJournal": "Kinnita päevik",
-    "entryTabelLegend": "H - hilinemine, P - põhjuseta puudumine, V - vabandatav puudumine",
+    "absencesLegend": "H - hilinemine, P - põhjuseta puudumine, V - vabandatav puudumine",
+    "entryTabelLegend": "AP - akad. puhkusel, IÕ - indivi. õppekava, E - eksmatrikuleeritud, L - lõpetanud",
+    "review": "Ülevaatamine",
+    "isReviewOk": "Korras",
+    "gradeInput": "Hinde sisestamine",
+    "asSelectField": "Valikuväljana",
+    "asInputField": "Sisestusväljana",
+    "reviewDate": "Ülevaatamise kp",
+    "addInfo": "Märkused",
+    "saveReview": "Salvesta ülevaatamine",
+    "academicLeaveAbbrev": "AP",
+    "individualCurriculumAbbrev": "IÕ",
+    "exmatriculatedAbbrev": "E",
+    "finishedAbbrev": "L",
+    "removeStudentHistory": "Eemalda eelmised tulemused",
     "entries": "Sissekanded",
     "curriculumVersionModuleOrThemeDescription": "Rakenduskava mooduli/teema kirjeldus",
     "studentDeleteconfirm": "Õppija kustutamisel kustutatakse ka kõik temaga seotud sissekanded. Olete kindel, et soovite õppija kustutada?",
@@ -2627,13 +2673,13 @@
       "dublicateJournalStudentInJournalEntry": "Õppija on juba päevikusse lisatud",
       "addingStudentIsNotAllowed": "Õppija lisamine päevikuse ei ole võimalik",
       "removingStudentIsNotAllowed": "Õppija kustutamine päevikust ei ole võimalik",
-      "removingStudentIsNotAllowedForTeacher": "Õpetaja saab kustutada õppijaid päevikust kuni ei ole tehtud ühtegi sissekannet",
       "confirmed": "Päevik on kinnitatud",
       "unconfirmed": "Kinnitus on võetud maha",
       "changeIsNotAllowedStudentIsNotStudying": "Mitteõppivate, kuid päevikuga seotud õppijate õppetulemusi muuta ei saa",
       "changingAbsenceIsNotAllowed": "Vabandatavat puudumist muuta ei saa",
       "confirmAllNotAllowed": "Kõikide päevikute kinnitamine pole lubatud",
-      "allConfirmed": "Kinnitati {{numberOfConfirmedJournals}} päeviku"
+      "allConfirmed": "Kinnitati {{numberOfConfirmedJournals}} päeviku",
+      "reviewIsNotChanged": "Ülevaatust ei ole muudetud"
     },
     "prompt": {
       "confirm": "Kas oled kindel, et soovid päeviku kinnitada? Peale kinnitamist saab tulemusi muuta ainult vastavate õigustega administratiivne töötaja",
@@ -2980,6 +3026,7 @@
     },
     "teachersload": {
       "actualhours": "Õpetaja tegelik tundide arv",
+      "coefficienthours": "Õpetaja planeeritud tundide arv koefitsientidega",
       "module": "Moodul",
       "plannedhours": "Õpetaja planeeritud tundide arv",
       "studyPeriod": "Õppeperiood",
@@ -3529,6 +3576,7 @@
     "isAcademicLeave": "Akadeemilisel puhkusel taotlemine lubatud",
     "studyForm": "Õppevorm",
     "isTeacherConfirm": "Vajab rühmajuhataja kinnitamist",
+    "needsConfirm": "Vajab kinnitamist",
     "isStudyBacklog": "Võlgnevustega õppijal taotlemine lubatud",
     "maxAbsences": "Puudumiste arv",
     "isFamilyIncomes": "Kuvada taotlemisel perekonna sissetuleku sektsiooni",
@@ -3561,7 +3609,8 @@
       "curriculumCompletion": "Õppek. täidetus",
       "absences": "Puudumised",
       "maxAbsences": "Puudumised",
-      "isTeacherConfirm": "Rühmajuh. kinnitamine",
+      "isTeacherConfirm": "Rühmajuh. kinnitus",
+      "needsConfirm": "Taotlus vajab rühmajuh. kinnitust",
       "apply": "Taotle",
       "decisionDate": "Otsuse kuupäev",
       "applications": "Taotlused",
@@ -3577,7 +3626,7 @@
       "familyIncome": "Perekonna sissetulek ühes kuus",
       "familyMembers": "Pereliikmete arv",
       "familyMembersAdult": "Sh täisealiste pereliikmete arv",
-      "addFamilyMember": "Lisa pereliige",
+      "addFamilyMember": "Lisa täiskasvanud pereliige",
       "status": "Staatus",
       "edit": "Muuda",
       "professionalAchievements": "Erialased saavutused",

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -67,6 +68,7 @@ import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.RoomsAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
@@ -79,6 +81,7 @@ import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModu
 import ee.hitsa.ois.web.commandobject.studymaterial.StudyMaterialAutocompleteCommand;
 import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.JournalAutocompleteResult;
@@ -142,14 +145,18 @@ public class AutocompleteService {
         qb.sort("b.code, r.code");
         
         List<?> data = qb.select("r.id, r.code as room_code, r.seats, b.code as building_code", em).getResultList();
-        Map<Long, OccupiedAutocompleteResult> roomsResult = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> {
-            Long seats = resultAsLong(r, 2);
-            String code = resultAsString(r, 3) + "-" + resultAsString(r, 1);
-            String nameEt = seats != null ? code + " (kohti " + seats.toString() + ")" : code;
-            String nameEn = seats != null ? code + " (seats " + seats.toString() + ")" : code;
-            return new OccupiedAutocompleteResult(resultAsLong(r, 0), nameEt, nameEn);
-        }, data);
         
+        Map<Long, OccupiedAutocompleteResult> roomsResult = new LinkedHashMap<>();
+        if (!data.isEmpty()) {
+            roomsResult = data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
+                Long seats = resultAsLong(r, 2);
+                String code = resultAsString(r, 3) + "-" + resultAsString(r, 1);
+                String nameEt = seats != null ? code + " (kohti " + seats.toString() + ")" : code;
+                String nameEn = seats != null ? code + " (seats " + seats.toString() + ")" : code;
+                return new OccupiedAutocompleteResult(resultAsLong(r, 0), nameEt, nameEn);
+            }, (v1, v2) -> v1, LinkedHashMap::new));
+        }
+
         if (Boolean.TRUE.equals(lookup.getOccupied()) && !roomsResult.isEmpty()) {
             if (lookup.getDate() != null && lookup.getStartTime() != null && lookup.getEndTime() != null) {
                 setRoomsOccupationStatus(lookup, roomsResult);
@@ -177,14 +184,7 @@ public class AutocompleteService {
                 + "join timetable_event_time tem on te.id = tem.timetable_event_id "
                 + "join timetable_event_room ter on tem.id = ter.timetable_event_time_id");
         occupiedQb.requiredCriteria("ter.room_id in (:roomIds)", "roomIds", roomIds);
-        String timeFilter = "";
-        for (int i = 0; i < starts.size(); i++) {
-            timeFilter += timeFilter.isEmpty() ? "(" : " or ";
-            timeFilter += "(tem.start < '" + JpaQueryUtil.parameterAsTimestamp(ends.get(i)) + "' and tem.end > '"
-                    + JpaQueryUtil.parameterAsTimestamp(starts.get(i)) + "')";
-        }
-        timeFilter += ")";
-        occupiedQb.filter(timeFilter);
+        occupiedQb.filter(getTimeFilter(starts, ends));
         
         List<?> occupiedRooms = occupiedQb.select("ter.room_id", em).getResultList();
         if (!occupiedRooms.isEmpty()) {
@@ -193,6 +193,17 @@ public class AutocompleteService {
                 roomsResult.get(id).setIsOccupied(Boolean.TRUE);
             }
         }
+    }
+    
+    private static String getTimeFilter(List<LocalDateTime> starts, List<LocalDateTime> ends) {
+        String timeFilter = "";
+        for (int i = 0; i < starts.size(); i++) {
+            timeFilter += timeFilter.isEmpty() ? "(" : " or ";
+            timeFilter += "(tem.start < '" + JpaQueryUtil.parameterAsTimestamp(ends.get(i)) + "' and tem.end > '"
+                    + JpaQueryUtil.parameterAsTimestamp(starts.get(i)) + "')";
+        }
+        timeFilter += ")";
+        return timeFilter;
     }
 
     public List<Classifier> classifierForAutocomplete(ClassifierSearchCommand classifierSearchCommand) {
@@ -245,6 +256,49 @@ public class AutocompleteService {
         }, data);
 
         return ClassifierUtil.sort(mainClassCodes, result);
+    }
+
+    public List<Classifier> schoolCapacityTypes(Long schoolId, SchoolCapacityTypeCommand command) {
+        String from = "from school_capacity_type sct join classifier c on sct.capacity_type_code = c.code";
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        qb.requiredCriteria("sct.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("sct.is_usable = :isUsable", "isUsable", Boolean.TRUE);
+        qb.optionalCriteria("sct.is_higher = :isHigher", "isHigher", command.getIsHigher());
+        qb.optionalCriteria("sct.is_timetable = :isTimetable", "isTimetable", command.getIsTimetable());
+        
+        if (command.getJournalId() != null && Boolean.TRUE.equals(command.getEntryTypes())) {
+            qb.filter("c.code in (select jct.capacity_type_code from journal_capacity_type jct where jct.journal_id = " + command.getJournalId() + ")");
+        }
+        
+        List<?> data = qb.select("c.code", em).getResultList();
+        Set<Classifier> result = StreamUtil.toMappedSet(r -> em.getReference(Classifier.class, resultAsString(r, 0)), data);
+        
+        if (command.getJournalId() != null) {
+            if (Boolean.TRUE.equals(command.getEntryTypes())) {
+                List<Classifier> entryCapacities = em.createQuery(
+                        "select ject.capacityType from JournalEntryCapacityType ject where ject.journalEntry.journal.id = ?1", Classifier.class)
+                        .setParameter(1, command.getJournalId())
+                        .getResultList();
+                result.addAll(entryCapacities);
+            } else {
+                List<Classifier> journalCapacities = em.createQuery(
+                        "select jct.capacityType from JournalCapacityType jct where jct.journal.id = ?1", Classifier.class)
+                        .setParameter(1, command.getJournalId())
+                        .getResultList();
+                result.addAll(journalCapacities);
+            }
+        }
+        
+        List<Classifier> types = new ArrayList<>();
+        types.addAll(result);
+        types.sort(Comparator.comparing(Language.EN.equals(command.getLang()) ? Classifier::getNameEn : Classifier::getNameEt,
+                String.CASE_INSENSITIVE_ORDER));
+        return types;
+    }
+
+    public List<ClassifierDto> schoolCapacityTypeDtos(Long schoolId, SchoolCapacityTypeCommand command) {
+        return StreamUtil.toMappedList(ClassifierDto::of, schoolCapacityTypes(schoolId, command));
     }
 
     public List<AutocompleteResult> curriculums(Long schoolId, CurriculumAutocompleteCommand term) {
@@ -622,16 +676,55 @@ public class AutocompleteService {
         qb.sort("sg.code");
 
         List<?> data = qb.select("sg.id, sg.code, c.id as c_id, cv.id as cv_id, sg.study_form_code, sg.language_code, sg.valid_from, sg.valid_thru", em).getResultList();
-        return StreamUtil.toMappedList(r -> {
-            StudentGroupResult dto = new StudentGroupResult(resultAsLong(r, 0), resultAsString(r, 1));
-            dto.setCurriculum(resultAsLong(r, 2));
-            dto.setCurriculumVersion(resultAsLong(r, 3));
-            dto.setStudyForm(resultAsString(r, 4));
-            dto.setLanguage(resultAsString(r, 5));
-            dto.setValidFrom(resultAsLocalDate(r, 6));
-            dto.setValidThru(resultAsLocalDate(r, 7));
-            return dto;
-        }, data);
+        
+        Map<Long, StudentGroupResult> studentGroupsResult = new LinkedHashMap<>();
+        if (!data.isEmpty()) {
+            studentGroupsResult = data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
+                StudentGroupResult dto = new StudentGroupResult(resultAsLong(r, 0), resultAsString(r, 1));
+                dto.setCurriculum(resultAsLong(r, 2));
+                dto.setCurriculumVersion(resultAsLong(r, 3));
+                dto.setStudyForm(resultAsString(r, 4));
+                dto.setLanguage(resultAsString(r, 5));
+                dto.setValidFrom(resultAsLocalDate(r, 6));
+                dto.setValidThru(resultAsLocalDate(r, 7));
+                return dto;
+            }, (v1, v2) -> v1, LinkedHashMap::new));
+        }
+
+        if (Boolean.TRUE.equals(lookup.getOccupied()) && !studentGroupsResult.isEmpty()) {
+            if (lookup.getDate() != null && lookup.getStartTime() != null && lookup.getEndTime() != null) {
+                setStudentGroupsOccupationStatus(lookup, studentGroupsResult);
+            }
+        }
+        return new ArrayList<>(studentGroupsResult.values());
+    }
+
+    private void setStudentGroupsOccupationStatus(StudentGroupAutocompleteCommand lookup, Map<Long, StudentGroupResult> studentGroupsResult) {
+        List<Long> studentGroupIds = studentGroupsResult.values().stream().map(t -> t.getId()).collect(Collectors.toList());
+        
+        List<LocalDateTime> starts = new ArrayList<>();
+        List<LocalDateTime> ends = new ArrayList<>();
+        starts.add(LocalDateTime.of(lookup.getDate(), 
+                LocalTime.of(lookup.getStartTime().getHour(), lookup.getStartTime().getMinute())));
+        ends.add(LocalDateTime.of(lookup.getDate(), 
+                LocalTime.of(lookup.getEndTime().getHour(), lookup.getEndTime().getMinute())));
+        if (lookup.getWeekAmount() != null) {
+            eventRepeatStartAndEndTimes(lookup.getRepeatCode(), lookup.getWeekAmount(), starts, ends);
+        }
+        
+        JpaNativeQueryBuilder occupiedQb = new JpaNativeQueryBuilder("from timetable_event te "
+                + "join timetable_event_time tem on te.id = tem.timetable_event_id "
+                + "join timetable_event_student_group tesg on tem.id = tesg.timetable_event_time_id");
+        occupiedQb.requiredCriteria("tesg.student_group_id in (:studentGroupIds)", "studentGroupIds", studentGroupIds);
+        occupiedQb.filter(getTimeFilter(starts, ends));
+        
+        List<?> occupiedRooms = occupiedQb.select("tesg.student_group_id", em).getResultList();
+        if (!occupiedRooms.isEmpty()) {
+            List<Long> occupiedRoomIds = StreamUtil.toMappedList(r -> resultAsLong(r, 0), occupiedRooms); 
+            for (Long id : occupiedRoomIds) {
+                studentGroupsResult.get(id).setIsOccupied(Boolean.TRUE);
+            }
+        }
     }
 
     public List<AutocompleteResult> students(Long schoolId, StudentAutocompleteCommand lookup) {
@@ -768,12 +861,15 @@ public class AutocompleteService {
 
         List<?> data = qb.select("t.id, p.firstname, p.lastname", em)
                 .setMaxResults(setMaxResults ? MAX_ITEM_COUNT : Integer.MAX_VALUE).getResultList();
-        
-        Map<Long, OccupiedAutocompleteResult> teachersResult = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> {
-            String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
-            return new OccupiedAutocompleteResult(resultAsLong(r, 0), name, name);
-        }, data);
-        
+
+        Map<Long, OccupiedAutocompleteResult> teachersResult = new LinkedHashMap<>();
+        if (!data.isEmpty()) {
+            teachersResult = data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
+                String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
+                return new OccupiedAutocompleteResult(resultAsLong(r, 0), name, name);
+            }, (v1, v2) -> v1, LinkedHashMap::new));
+        }
+
         if (Boolean.TRUE.equals(lookup.getOccupied()) && !teachersResult.isEmpty()) {
             if (lookup.getDate() != null && lookup.getStartTime() != null && lookup.getEndTime() != null) {
                 setTeachersOccupationStatus(lookup, teachersResult);
@@ -802,14 +898,7 @@ public class AutocompleteService {
                 + "join timetable_event_time tem on te.id = tem.timetable_event_id "
                 + "join timetable_event_teacher tet on tem.id = tet.timetable_event_time_id");
         occupiedQb.requiredCriteria("tet.teacher_id in (:teacherIds)", "teacherIds", teacherIds);
-        String timeFilter = "";
-        for (int i = 0; i < starts.size(); i++) {
-            timeFilter += timeFilter.isEmpty() ? "(" : " or ";
-            timeFilter += "(tem.start < '" + JpaQueryUtil.parameterAsTimestamp(ends.get(i)) + "' and tem.end > '"
-                    + JpaQueryUtil.parameterAsTimestamp(starts.get(i)) + "')";
-        }
-        timeFilter += ")";
-        occupiedQb.filter(timeFilter);
+        occupiedQb.filter(getTimeFilter(starts, ends));
         
         List<?> occupiedTeachers = occupiedQb.select("tet.teacher_id", em).getResultList();
         if (!occupiedTeachers.isEmpty()) {

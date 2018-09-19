@@ -16,6 +16,7 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
     private BigDecimal credits;
     private Boolean isTeacherConfirm;
     private String rejectComment;
+    private Boolean needsConfirm;
 
     private String compensationReason;
     private String compensationFrequency;
@@ -138,6 +139,14 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
 
     public void setRejectComment(String rejectComment) {
         this.rejectComment = rejectComment;
+    }
+    
+    public void setNeedsConfirm(boolean needsConfirm) {
+    	this.needsConfirm = needsConfirm;
+    }
+    
+    public Boolean getNeedsConfirm() {
+    	return this.needsConfirm;
     }
 
 }

@@ -20,7 +20,7 @@ public class TimetableEventTime extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, insertable = false, updatable = false)
     private TimetableEvent timetableEvent;
-
+ 
     private LocalDateTime start;
     //FIXME: rename in database
     @Column(name = "\"end\"")
@@ -35,6 +35,10 @@ public class TimetableEventTime extends BaseEntityWithId {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
     private List<TimetableEventRoom> timetableEventRooms = new ArrayList<>();
+    
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
+    private List<TimetableEventStudentGroup> timetableEventStudentGroups = new ArrayList<>();
 
     public TimetableEvent getTimetableEvent() {
         return timetableEvent;
@@ -92,5 +96,12 @@ public class TimetableEventTime extends BaseEntityWithId {
         this.timetableEventRooms = timetableEventRooms;
     }
 
+    public List<TimetableEventStudentGroup> getTimetableEventStudentGroups() {
+        return timetableEventStudentGroups;
+    }
+
+    public void setTimetableEventStudentGroups(List<TimetableEventStudentGroup> timetableEventStudentGroups) {
+        this.timetableEventStudentGroups = timetableEventStudentGroups;
+    }
 
 }

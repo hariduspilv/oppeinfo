@@ -49,6 +49,7 @@ public class SubjectStudyPeriodSubjectController {
         AssertionFailedException.throwIf(container.getSubject() == null,
                 "Subject must be specified");
         subjectStudyPeriodSubjectService.setSubjectStudyPeriodsToSubjectsContainer(user.getSchoolId(), container);
+        subjectStudyPeriodCapacitiesService.setCapacityTypes(user.getSchoolId(), container);
         return container;
     }
 
@@ -71,8 +72,14 @@ public class SubjectStudyPeriodSubjectController {
         return subjectStudyPeriodSubjectService.getSubjectsList(user.getSchoolId(), studyPeriodId);
     }
     
+    @GetMapping("/searchBySubject.xls")
+    public void searchBySubjectAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodSearchCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "searchBySubject.xls", subjectStudyPeriodSubjectSearchService.searchBySubjectAsExcel(user.getSchoolId(), criteria));
+    }
+    
     @GetMapping("/subjectstudyperiodsubject.xls")
-    public void lessonplanAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container, HttpServletResponse response) throws IOException {
+    public void subjectStudyPeriodAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container, HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
         HttpUtil.xls(response, "subjectstudyperiodsubject.xls", subjectStudyPeriodSubjectService.subjectStudyPeriodSubjectAsExcel(user.getSchoolId(), container));
     }

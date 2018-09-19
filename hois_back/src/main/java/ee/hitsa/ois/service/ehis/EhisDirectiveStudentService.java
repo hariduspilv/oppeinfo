@@ -115,9 +115,11 @@ public class EhisDirectiveStudentService extends EhisService {
     }
 
     private void changeStudyForm(DirectiveStudent directiveStudent) {
-        if (!Objects.equals(EntityUtil.getNullableCode(directiveStudent.getStudentHistory().getStudyForm()), EntityUtil.getNullableCode(directiveStudent.getStudyForm()))) {
+        Student student = directiveStudent.getStudent();
+        StudentHistory history = getStudentHistory(student);
+        if (!Objects.equals(EntityUtil.getNullableCode(history.getStudyForm()), EntityUtil.getNullableCode(directiveStudent.getStudyForm()))) {
             Directive directive = directiveStudent.getDirective();
-            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(directiveStudent.getStudent());
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
             KhlOppevormiMuutus khlOppevormiMuutus = new KhlOppevormiMuutus();
             khlOppevormiMuutus.setMuutusKp(date(directive.getConfirmDate()));
@@ -155,11 +157,12 @@ public class EhisDirectiveStudentService extends EhisService {
     private void changeCurriculum(DirectiveStudent directiveStudent) {
         Student student = directiveStudent.getStudent();
         Directive directive = directiveStudent.getDirective();
+        StudentHistory history = getStudentHistory(student);
 
         KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
         khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine()
-                .setOppekava(curriculumCode(directiveStudent.getStudentHistory().getCurriculumVersion().getCurriculum()));
+                .setOppekava(curriculumCode(history.getCurriculumVersion().getCurriculum()));
 
         KhlOppekavaMuutus khlOppekavaMuutus = new KhlOppekavaMuutus();
         khlOppekavaMuutus.setMuutusKp(date(directive.getConfirmDate()));
@@ -170,7 +173,7 @@ public class EhisDirectiveStudentService extends EhisService {
 
         khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
 
-        if (!Objects.equals(EntityUtil.getNullableCode(directiveStudent.getStudyForm()), EntityUtil.getNullableCode(directiveStudent.getStudentHistory().getStudyForm()))) {
+        if (!Objects.equals(EntityUtil.getNullableCode(directiveStudent.getStudyForm()), EntityUtil.getNullableCode(history.getStudyForm()))) {
             KhlOppur khlOppur = getKhlOppurMuutmine(student, true);
 
             KhlKorgharidusMuuda korgharidusMuuda = new KhlKorgharidusMuuda();
@@ -269,7 +272,7 @@ public class EhisDirectiveStudentService extends EhisService {
 
         khlKorgharidusMuuda.setEnnistamine(khlEnnistamine);
 
-        StudentHistory history = directiveStudent.getStudentHistory();
+        StudentHistory history = getStudentHistory(student);
         if (!Objects.equals(EntityUtil.getNullableCode(directiveStudent.getStudyForm()), EntityUtil.getNullableCode(history.getStudyForm())) ||
             !Objects.equals(EntityUtil.getNullableCode(directiveStudent.getFinSpecific()), EntityUtil.getNullableCode(history.getFinSpecific())) ||
             !Objects.equals(EntityUtil.getNullableCode(directiveStudent.getStudyLoad()), EntityUtil.getNullableCode(history.getStudyLoad()))) {
@@ -380,6 +383,14 @@ public class EhisDirectiveStudentService extends EhisService {
         } catch(Exception e) {
             return bindingException(directiveStudent.getDirective(), e);
         }
+    }
+    
+    private StudentHistory getStudentHistory(Student student) {
+        return em.createQuery("select sh from StudentHistory sh where sh.student = ?1"
+                + " and sh.id < ?2 order by sh.id desc", StudentHistory.class)
+                .setParameter(1, student)
+                .setParameter(2, EntityUtil.getId(student.getStudentHistory()))
+                .getResultList().get(0);
     }
 
     private WsEhisStudentLog makeRequest(Directive directive, KhlOppeasutusList khlOppeasutusList) {

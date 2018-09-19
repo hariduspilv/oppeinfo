@@ -127,7 +127,7 @@ public class SubjectStudyPeriodTeacherService {
         setSubjectStudyPeriodPlansToTeachersContainer(container);
         subjectStudyPeriodCapacitiesService.setSubjects(container);
         
-        List<Classifier> capacities = subjectStudyPeriodCapacitiesService.capacityClassifiers();
+        List<Classifier> capacities = subjectStudyPeriodCapacitiesService.capacityClassifiers(schoolId, container);
         List<String> capacityCodes = StreamUtil.toMappedList(c -> EntityUtil.getCode(c), capacities);
         
         List<Map<String, Object>> subjects = new ArrayList<>();

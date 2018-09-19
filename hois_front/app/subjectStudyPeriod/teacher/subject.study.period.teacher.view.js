@@ -9,13 +9,13 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherViewController',
     var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods/teachers/container');
     
     $scope.formState = {xlsUrl: 'subjectStudyPeriods/teachers/subjectstudyperiodteacher.xls'};
-    $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT'});
     $scope.studyPeriod = QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId});
 
     $scope.container = {studyPeriod: studyPeriodId, teacher: teacher, subjectStudyPeriodDtos: []};
     $scope.record = Endpoint.search($scope.container);
     $scope.record.$promise.then(function(response){
         $scope.capacitiesUtil = new SspCapacities(response);
+        $scope.capacityTypes = response.capacityTypes;
     });
 
     $scope.teacher = QueryUtils.endpoint('/subjectStudyPeriods/teacher/' + teacher).get();

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -36,6 +37,10 @@ public class Journal extends BaseEntityWithId {
     private Classifier status;
     private LocalDate endDate;
     private Long moodleCourseId;
+    @Column(name = "is_review_ok")
+    private Boolean reviewOk;
+    private LocalDate reviewDate;
+    private String reviewInfo;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
@@ -130,6 +135,30 @@ public class Journal extends BaseEntityWithId {
 
     public void setMoodleCourseId(Long moodleCourseId) {
         this.moodleCourseId = moodleCourseId;
+    }
+
+    public Boolean getReviewOk() {
+        return reviewOk;
+    }
+
+    public void setReviewOk(Boolean reviewOk) {
+        this.reviewOk = reviewOk;
+    }
+
+    public LocalDate getReviewDate() {
+        return reviewDate;
+    }
+
+    public void setReviewDate(LocalDate reviewDate) {
+        this.reviewDate = reviewDate;
+    }
+
+    public String getReviewInfo() {
+        return reviewInfo;
+    }
+
+    public void setReviewInfo(String reviewInfo) {
+        this.reviewInfo = reviewInfo;
     }
 
     public List<JournalTeacher> getJournalTeachers() {

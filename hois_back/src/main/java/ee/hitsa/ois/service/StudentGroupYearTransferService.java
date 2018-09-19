@@ -65,6 +65,8 @@ public class StudentGroupYearTransferService {
     private ClassifierService classifierService;
     @Autowired
     private StudyYearService studyYearService;
+    @Autowired
+    private StudentService studentService;
 
     public List<StudyYearSearchDto> studyYears(Long schoolId) {
         List<?> data = em.createNativeQuery("select c.code, c.name_et, c.name_en, sy.id, sy.start_date, sy.end_date, 0 as count"
@@ -397,14 +399,15 @@ public class StudentGroupYearTransferService {
             for (StudentGroupYearTransferLog studentLog : studentLogs) {
                 if (Boolean.FALSE.equals(studentLog.getIsMatching())) {
                     GroupMismatchReason reason = GroupMismatchReason.valueOf(EntityUtil.getCode(studentLog.getMismatch()));
-                    if (reason == GroupMismatchReason.OPPERYHM_EISOBI_E) {
-                        throw new ValidationFailedException("studentGroupYearTransfer.error.studentNotActive");
-                    }
                     Student student = studentLog.getStudent();
-                    StudentGroup newGroup = findNewGroup(student, command.getNewStudentGroups());
-                    AssertionFailedException.throwIf(newGroup == null, "Cannot find new group for student");
-                    student.setStudentGroup(newGroup);
-                    EntityUtil.save(student, em);
+                    if (reason == GroupMismatchReason.OPPERYHM_EISOBI_E) {
+                        student.setStudentGroup(null);
+                    } else {
+                        StudentGroup newGroup = findNewGroup(student, command.getNewStudentGroups());
+                        AssertionFailedException.throwIf(newGroup == null, "Cannot find new group for student");
+                        student.setStudentGroup(newGroup);
+                    }
+                    studentService.saveWithHistory(student);
                 }
             }
             StudentGroup group = groupLog.getStudentGroup();

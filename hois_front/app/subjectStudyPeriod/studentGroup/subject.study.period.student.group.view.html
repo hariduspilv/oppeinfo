@@ -73,7 +73,7 @@
                                 </span>
                             </td>
                             <td ng-repeat="type in capacityTypes">
-                                <span ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code }">
+                                <span ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code } : true">
                                     <span>{{capacity.hours}}</span>
                                 </span>
                             </td>

@@ -24,17 +24,17 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleThemeCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapacity;
-import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.VocationalGradeType;
 import ee.hitsa.ois.exception.EntityRemoveException;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.OccupationModuleCapacitiesUtil;
-import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleCapacityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeCapacityDto;
@@ -49,11 +49,15 @@ public class CurriculumVersionOccupationModuleService {
     private EntityManager em;
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private AutocompleteService autocompleteService;
     
     private static final int MIN_MODULES_FOR_DELETION = 2;
 
-    private List<Classifier> getCapacityTypes() {
-        return StreamUtil.toFilteredList(Classifier::isVocational, classifierRepository.findAllByMainClassCode(MainClassCode.MAHT.name()));
+    private List<Classifier> getCapacityTypes(Long schoolId) {
+        SchoolCapacityTypeCommand command = new SchoolCapacityTypeCommand();
+        command.setIsHigher(Boolean.FALSE);
+        return autocompleteService.schoolCapacityTypes(schoolId, command);
     }
 
     /**
@@ -62,7 +66,7 @@ public class CurriculumVersionOccupationModuleService {
     public CurriculumVersionOccupationModuleDto get(CurriculumVersionOccupationModule module) {
         CurriculumVersionOccupationModuleDto dto = CurriculumVersionOccupationModuleDto.of(module);
 
-        List<Classifier> capacityTypes = getCapacityTypes();
+        List<Classifier> capacityTypes = getCapacityTypes(EntityUtil.getId(module.getCurriculumVersion().getCurriculum().getSchool()));
 
         OccupationModuleCapacitiesUtil.setEmptyModuleCapacities(dto, capacityTypes);
         for(CurriculumVersionOccupationModuleThemeDto themeDto : dto.getThemes()) {
@@ -163,7 +167,7 @@ public class CurriculumVersionOccupationModuleService {
     }
 
     public CurriculumVersionOccupationModuleThemeDto getTheme(CurriculumVersionOccupationModuleTheme theme) {
-        List<Classifier> capacityTypes = getCapacityTypes();
+        List<Classifier> capacityTypes = getCapacityTypes(EntityUtil.getId(theme.getModule().getCurriculumVersion().getCurriculum().getSchool()));
 
         CurriculumVersionOccupationModuleThemeDto themeDto = CurriculumVersionOccupationModuleThemeDto.of(theme);
         OccupationModuleCapacitiesUtil.setEmptyThemeCapacities(themeDto, capacityTypes);
@@ -206,7 +210,8 @@ public class CurriculumVersionOccupationModuleService {
 
         CurriculumVersionOccupationModuleTheme saved = EntityUtil.save(theme, em);
 
-        OccupationModuleCapacitiesUtil.updateModuleCapacities(saved.getModule(), getCapacityTypes());
+        OccupationModuleCapacitiesUtil.updateModuleCapacities(saved.getModule(), 
+                getCapacityTypes(EntityUtil.getId(theme.getModule().getCurriculumVersion().getCurriculum().getSchool())));
         OccupationModuleCapacitiesUtil.updateModuleYearCapacitiesHours(saved.getModule());
         EntityUtil.save(saved.getModule(), em);
 
@@ -236,7 +241,8 @@ public class CurriculumVersionOccupationModuleService {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(theme, em);
 
-        OccupationModuleCapacitiesUtil.updateModuleCapacities(theme.getModule(), getCapacityTypes());
+        OccupationModuleCapacitiesUtil.updateModuleCapacities(theme.getModule(), 
+                getCapacityTypes(EntityUtil.getId(theme.getModule().getCurriculumVersion().getCurriculum().getSchool())));
         OccupationModuleCapacitiesUtil.updateModuleYearCapacitiesHours(theme.getModule());
         EntityUtil.save(theme.getModule(), em);
     }

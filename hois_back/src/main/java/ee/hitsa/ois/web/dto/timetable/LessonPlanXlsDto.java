@@ -8,11 +8,20 @@ import ee.hitsa.ois.util.Translatable;
 public class LessonPlanXlsDto {
 
     public static class LessonPlanXlsStudyPeriodDto implements Translatable {
-        
+
+        private Long id;
         private String nameEt;
         private String nameEn;
         private List<Short> colspanColumns;
         
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
         @Override
         public String getNameEt() {
             return nameEt;

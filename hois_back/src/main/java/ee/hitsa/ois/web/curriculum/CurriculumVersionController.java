@@ -73,6 +73,12 @@ public class CurriculumVersionController {
     public boolean isCodeUnique(HoisUserDetails user, UniqueCommand command) {
         return curriculumVersionService.isCodeUnique(user.getSchoolId(), command);
     }
+
+    @GetMapping("/valid/hourscredits/{id:\\d+}")
+    public boolean validHoursCredits(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion) {
+        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion);
+        return curriculumValidationService.validOccupationModuleThemesHoursAndCredits(curriculumVersion);
+    }
     
     @PostMapping
     public CurriculumVersionDto create(HoisUserDetails user, @Valid @RequestBody CurriculumVersionDto dto) {

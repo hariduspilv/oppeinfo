@@ -279,7 +279,7 @@ angular.module('hitsaOis')
           updateSuccess: 'curriculum.statuschange.implementationPlan.success.verified'
       };
       var SaveAndConfirmEndpoint = QueryUtils.endpoint("/curriculumVersion/saveAndConfirm");
-      changeStatus(SaveAndConfirmEndpoint, messages);
+      changeStatus(SaveAndConfirmEndpoint, messages, true);
     };
 
     $scope.confirm = function() {
@@ -288,7 +288,7 @@ angular.module('hitsaOis')
           updateSuccess: 'curriculum.statuschange.implementationPlan.success.verified'
       };
       var ConfirmEndpoint = QueryUtils.endpoint("/curriculumVersion/confirm");
-      changeStatus(ConfirmEndpoint, messages);
+      changeStatus(ConfirmEndpoint, messages, true);
     };
 
     $scope.setStatusClosed = function() {
@@ -297,15 +297,36 @@ angular.module('hitsaOis')
           updateSuccess: 'curriculum.statuschange.implementationPlan.success.closed'
       };
       var ClosingEndpoint = QueryUtils.endpoint("/curriculumVersion/close");
-      changeStatus(ClosingEndpoint, messages);
+      changeStatus(ClosingEndpoint, messages, false);
     };
 
-    function changeStatus(StatusChangeEndpoint, messages) {
+    function checkHoursAndCredits(StatusChangeEndpoint, messages) {
+      $http({
+        url: config.apiUrl + '/curriculumVersion/valid/hourscredits/' + id,
+        method: "GET"
+      }).then(function(response) {
+        if (!response.data) {
+          messages.extraPrompts = [messages.prompt];
+          messages.prompt = 'curriculum.error.themeCreditsAndHoursMismatch';
+        }
+        confirmChangeStatus(StatusChangeEndpoint, messages);
+      });
+    }
+
+    function changeStatus(StatusChangeEndpoint, messages, checkHours) {
       if (!validationPassed(messages)) {
         return;
       }
+      if (checkHours) {
+        checkHoursAndCredits(StatusChangeEndpoint, messages);
+      } else {
+        confirmChangeStatus(StatusChangeEndpoint, messages);
+      }
+    }
+
+    function confirmChangeStatus(StatusChangeEndpoint, messages) {
       setTimeout(function(){
-        dialogService.confirmDialog({ prompt: messages.prompt }, function () {
+        dialogService.confirmDialog({ prompt: messages.prompt, extraPrompts: messages.extraPrompts }, function () {
             new StatusChangeEndpoint($scope.implementationPlan).$update().then(function(response){
               var updateSuccess = messages && messages.updateSuccess ? messages.updateSuccess : 'main.messages.create.success';
               message.info(updateSuccess);

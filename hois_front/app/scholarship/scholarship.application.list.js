@@ -41,6 +41,20 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
       }
     });
 
+    angular.element(document).ready(function() {
+      $scope.applicationSearchForm.$setSubmitted();
+        if ($scope.applicationSearchForm.$valid) {
+          $scope.reloadTable();
+        } else {
+          window.setTimeout(function() {
+            $scope.applicationSearchForm.$setSubmitted();
+            if ($scope.applicationSearchForm.$valid) {
+              $scope.reloadTable();
+            }
+          }, 500);
+        }
+    });
+
     $scope.toStorage = function(key, criteria) {
       $sessionStorage[key] = JSON.stringify(criteria);
     };
@@ -74,7 +88,11 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     $scope.updateAllApplicationCheckBoxes = function (value) {
       $scope.applications.forEach(function (app, index) {
         if (index < $scope.allowedCount || !angular.isNumber($scope.allowedCount)) {
-          $scope.selected[app.id] = value;
+          if (app.needsConfirm && $scope.auth.isTeacher()) {
+            $scope.selected[app.id] = value;
+          } else if (!$scope.auth.isTeacher()){
+            $scope.selected[app.id] = value;
+          }
         }
       });
     };

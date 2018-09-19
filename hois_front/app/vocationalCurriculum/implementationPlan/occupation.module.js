@@ -48,12 +48,7 @@ angular.module('hitsaOis')
     $scope.backToEditForm = '#/vocationalCurriculum/' + curriculum + '/moduleImplementationPlan/' + curriculumVersion + '/edit';
     $scope.backToViewForm = '#/vocationalCurriculum/' + curriculum + '/moduleImplementationPlan/' + curriculumVersion + '/view';
 
-    var allCapacities = Classifier.queryForDropdown({ mainClassCode: 'MAHT', order: 'nameEt' });
-    allCapacities.$promise.then(function() {
-      $scope.capacities = allCapacities.filter(function (el) {
-        return el.vocational;
-      })
-    });
+    $scope.capacities = QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: false });
 
     var initial = {
       curriculumModule: curriculumModule,
@@ -164,7 +159,7 @@ angular.module('hitsaOis')
         $scope.occupationModule.requirementsEt = $scope.occupationModule.requirementsEt.trim();
       }
       if(!$scope.occupationModule.id) {
-        allCapacities.$promise.then(function () {
+        $scope.capacities.$promise.then(function () {
           $scope.occupationModule.capacities = $scope.capacities.map(classifierToCapacity);
         });
       }

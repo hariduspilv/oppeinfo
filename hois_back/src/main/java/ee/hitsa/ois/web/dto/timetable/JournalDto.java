@@ -40,9 +40,14 @@ public class JournalDto {
     private Boolean isDistinctiveAssessment;
     private Long moodleCourseId;
     
+    private Boolean isReviewOk;
+    private LocalDate reviewDate;
+    private String reviewInfo;
+    
     private Boolean canBeConfirmed;
     private Boolean canBeUnconfirmed;
     private Boolean canEdit;
+    private Boolean canReview;
 
     public static JournalDto of(Journal journal) {
         JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto(), "studyYear", "journalTeachers", "journalStudents", "journalEntries", "journalRooms");
@@ -85,6 +90,7 @@ public class JournalDto {
         dto.setHasJournalStudents(Boolean.valueOf(!journal.getJournalStudents().isEmpty()));
         dto.setModuleOutcomesAsEntries(journal.getAddModuleOutcomes());
         dto.setIsDistinctiveAssessment(Boolean.valueOf(VocationalGradeType.KUTSEHINDAMISVIIS_E.name().equals(journal.getAssessment().getCode())));
+        dto.setIsReviewOk(journal.getReviewOk());
         return dto;
     }
 
@@ -216,6 +222,30 @@ public class JournalDto {
         this.moodleCourseId = moodleCourseId;
     }
 
+    public Boolean getIsReviewOk() {
+        return isReviewOk;
+    }
+
+    public void setIsReviewOk(Boolean isReviewOk) {
+        this.isReviewOk = isReviewOk;
+    }
+
+    public LocalDate getReviewDate() {
+        return reviewDate;
+    }
+
+    public void setReviewDate(LocalDate reviewDate) {
+        this.reviewDate = reviewDate;
+    }
+
+    public String getReviewInfo() {
+        return reviewInfo;
+    }
+
+    public void setReviewInfo(String reviewInfo) {
+        this.reviewInfo = reviewInfo;
+    }
+
     public Boolean getCanBeConfirmed() {
         return canBeConfirmed;
     }
@@ -239,7 +269,14 @@ public class JournalDto {
     public void setCanEdit(Boolean canEdit) {
         this.canEdit = canEdit;
     }
-    
+
+    public Boolean getCanReview() {
+        return canReview;
+    }
+
+    public void setCanReview(Boolean canReview) {
+        this.canReview = canReview;
+    }
 }
 
 

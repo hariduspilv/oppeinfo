@@ -90,7 +90,7 @@
           <tr md-row ng-repeat="application in applications track by $index" ng-class-odd="'odd'" ng-class-even="'even'" ng-class="{'scholarship-bottom-border': $index + 1 === allowedCount}">
             <td md-cell>
               <md-input-container>
-                <md-checkbox ng-model="selected[application.id]" aria-label="mySchool">
+                <md-checkbox ng-model="selected[application.id]" ng-disabled="!application.needsConfirm && auth.isTeacher()" aria-label="mySchool">
                 </md-checkbox>
               </md-input-container>
             </td>
@@ -115,7 +115,7 @@
             <!-- only for soidu -->
             <td md-cell ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{application.compensationReason ? currentLanguageNameField(application.compensationReason) : '-'}}</td>
             <td md-cell ng-if="submittedType === 'STIPTOETUS_SOIDU'">{{application.compensationFrequency ? currentLanguageNameField(application.compensationFrequency) : '-'}}</td>
-            <td md-cell>{{application.isTeacherConfirm === true ? ('main.yes' | translate) : application.isTeacherConfirm === false ? ('main.no' | translate) : ''}}</td>
+            <td md-cell>{{application.isTeacherConfirm === null && application.needsConfirm ? ('stipend.needsConfirm' | translate) : application.isTeacherConfirm ? ("main.confirm" | translate) : application.needsConfirm ? ("main.noConfirm" | translate) : "-"}}</td>
             <td md-cell>{{currentLanguageNameField(application.status)}}
               <md-tooltip ng-if="['STIPTOETUS_STAATUS_L', 'STIPTOETUS_STAATUS_T'].indexOf(application.status.code) !== -1  && application.rejectComment">{{application.rejectComment}}</md-tooltip>
             </td>

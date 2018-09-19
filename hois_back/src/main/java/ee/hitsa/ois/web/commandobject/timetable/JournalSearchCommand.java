@@ -11,7 +11,7 @@ public class JournalSearchCommand {
     private Long studentGroup;
     private Long teacher;
     private List<Long> module;
-    private Long journal;
+    private String journalName;
 
     @ClassifierRestriction(MainClassCode.PAEVIK_STAATUS)
     private String status;
@@ -48,12 +48,12 @@ public class JournalSearchCommand {
         this.module = module;
     }
 
-    public Long getJournal() {
-        return journal;
+    public String getJournalName() {
+        return journalName;
     }
 
-    public void setJournal(Long journal) {
-        this.journal = journal;
+    public void setJournalName(String journalName) {
+        this.journalName = journalName;
     }
 
     public String getStatus() {

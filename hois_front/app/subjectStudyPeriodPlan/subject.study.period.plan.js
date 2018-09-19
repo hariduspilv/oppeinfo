@@ -4,7 +4,25 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
   function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier, USER_ROLES, AuthService) {
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINE);
 
-    QueryUtils.createQueryForm($scope, '/subjectStudyPeriodPlans', {order: 'id'});
+    var allCapacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true});
+    var schoolCapacityTypes = QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: true });
+
+    QueryUtils.createQueryForm($scope, '/subjectStudyPeriodPlans', {order: 'id'}, function (results) {
+        var showCapacities = {};
+        results.forEach(function (result) {
+            result.plans.forEach(function (plan) {
+                plan.capacities.forEach(function (capacity) {
+                    showCapacities[capacity.capacityType] = true;
+                });
+            });
+        });
+        schoolCapacityTypes.forEach(function (capacityType) {
+            showCapacities[capacityType.code] = true;
+        });
+        $scope.capacityTypes = allCapacityTypes.filter(function (capacityType) {
+            return showCapacities[capacityType.code];
+        });
+    });
 
     function setCurrentStudyPeriod() {
         if($scope.criteria && !$scope.criteria.studyPeriod) {
@@ -21,7 +39,6 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
     });
 
     $scope.curriculums = QueryUtils.endpoint('/subjectStudyPeriodPlans/curriculums').query();
-    $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true});
 
     $scope.$watch('criteria.subjectObject', function() {
             $scope.criteria.subject = $scope.criteria.subjectObject ? $scope.criteria.subjectObject.id : null;
@@ -108,7 +125,7 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
     }
 
     function setInitialCapacities() {
-        Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true}, function(response){
+        QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: true }, function(response){
             var capacities = [];
             for(var i = 0; i < response.length; i++) {
                 capacities.push({isContact: false, hours: null, capacityType: response[i].code});
@@ -128,7 +145,7 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
         if(!$scope.record.capacities) {
           $scope.record.capacities = [];
         }
-        Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true}, function(response){
+        QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: true }, function(response){
             for(var i = 0; i < response.length; i++) {
               if(!hasCapacity(response[i].code)) {
                 $scope.record.capacities.push({isContact: false, hours: null, capacityType: response[i].code});

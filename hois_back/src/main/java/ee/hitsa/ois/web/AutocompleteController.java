@@ -23,6 +23,7 @@ import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.RoomsAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
@@ -35,6 +36,7 @@ import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModu
 import ee.hitsa.ois.web.commandobject.studymaterial.StudyMaterialAutocompleteCommand;
 import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.JournalAutocompleteResult;
@@ -88,6 +90,11 @@ public class AutocompleteController {
             codes = Collections.singletonList(lookup.getMainClassCode());
         }
         return autocompleteService.classifiersWithParents(codes);
+    }
+
+    @GetMapping("/schoolCapacityTypes")
+    public List<ClassifierDto> schoolCapacityTypes(HoisUserDetails user, @Valid SchoolCapacityTypeCommand lookup) {
+        return autocompleteService.schoolCapacityTypeDtos(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/curriculums")

@@ -43,6 +43,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
+import ee.hitsa.ois.message.StudentApplicationCreated;
 import ee.hitsa.ois.message.StudentApplicationRejectedMessage;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -314,7 +315,12 @@ public class ApplicationService {
         } else {
             application.setNeedsRepresentativeConfirm(Boolean.TRUE);
         }
-        return EntityUtil.save(application, em);
+        application = EntityUtil.save(application, em);
+        if (!UserUtil.isSame(user, student)) {
+            StudentApplicationCreated data = new StudentApplicationCreated(application);
+            automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS, student, data);
+        }
+        return application;
     }
 
     public Application reject(Application application, ApplicationRejectForm applicationRejectForm) {

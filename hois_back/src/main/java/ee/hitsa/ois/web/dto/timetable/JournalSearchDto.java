@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import java.time.LocalDate;
+
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class JournalSearchDto {
@@ -13,6 +15,8 @@ public class JournalSearchDto {
     private Integer usedHours;
     private String status;
     private String curriculums;
+    private Boolean isReviewOk;
+    private LocalDate reviewDate;
     private Boolean canEdit;
     
     public Long getId() {
@@ -87,6 +91,22 @@ public class JournalSearchDto {
         this.curriculums = curriculums;
     }
     
+    public Boolean getIsReviewOk() {
+        return isReviewOk;
+    }
+
+    public void setIsReviewOk(Boolean isReviewOk) {
+        this.isReviewOk = isReviewOk;
+    }
+
+    public LocalDate getReviewDate() {
+        return reviewDate;
+    }
+
+    public void setReviewDate(LocalDate reviewDate) {
+        this.reviewDate = reviewDate;
+    }
+
     public Boolean getCanEdit() {
         return canEdit;
     }

@@ -57,6 +57,21 @@
         </md-table-container>
       </fieldset>
 
+      <br>
+
+      <fieldset flex="60" flex-sm="100" flex-xs="100" ng-if="timetableEvent.studentGroups.length > 0">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.studentGroups' | translate}}</legend>
+        <md-table-container>
+          <table md-table class="secondary-table">
+            <tbody md-body>
+              <tr md-row ng-repeat="studentGroup in timetableEvent.studentGroups | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{studentGroup.nameEt}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </fieldset>
+
       <div layout="row" flex="100">
         <md-button ng-href="#/lessonplans/events" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>

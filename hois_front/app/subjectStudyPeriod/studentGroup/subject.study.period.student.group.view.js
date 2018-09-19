@@ -15,6 +15,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewControl
     $scope.record = Endpoint.search($scope.container);
     $scope.record.$promise.then(function(response){
         $scope.capacitiesUtil = new SspCapacities(response);
+        $scope.capacityTypes = response.capacityTypes;
     });
     QueryUtils.endpoint('/studentgroups/' + studentGroup).get(function(response) {
         $scope.studentGroup = response;
@@ -35,6 +36,5 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewControl
         };
     }
 
-    $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT'});
     $scope.studyPeriod = QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId});
   });

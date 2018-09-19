@@ -46,6 +46,11 @@ public class JpaQueryBuilder<T> extends JpaNativeQueryBuilder {
     }
 
     @Override
+    public Number count(String expression, EntityManager em, Map<String, Object> additionalParameters) {
+        return count(expression, em);
+    }
+
+    @Override
     protected TypedQuery<T> buildQuery(String querySql, EntityManager em, Map<String, Object> additionalParameters) {
         return query(querySql, em, additionalParameters, resultClass);
     }

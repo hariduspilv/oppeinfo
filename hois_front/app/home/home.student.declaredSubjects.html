@@ -1,0 +1,33 @@
+<hois-collapsable class="hois-collapse2" expanded="true" ng-if="declaration.status">
+    <hois-collapsable-header>
+        <span>{{'home.student.declaredSubjects' | translate}}</span>
+    </hois-collapsable-header>
+    <md-table-container>
+        <table md-table>
+            <thead md-head>
+                <tr md-row>
+                    <th md-column>{{'declaration.subject' | translate}}</th>
+                    <th md-column>{{'declaration.teacher' | translate}}</th>
+                    <th md-column>{{'studyMaterial.label' | translate}}</th>
+                </tr>
+            </thead>
+            <tbody md-body>
+                <tr md-row ng-repeat="subject in declaration.subjects | orderBy: 'subject.' + currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'" ng-init="$last && pageLoadingHandler.setFinish('declaration')">
+                    <td md-cell>
+                        {{currentLanguageNameField(subject.subject)}} ({{subject.subject.code}})
+                        <span ng-show="subject.isDeclaredRepeatedly">&nbsp;*</span>
+                    </td>
+                    <td md-cell>
+                        <table>
+                            <tr ng-repeat="teacher in subject.teachers | orderBy">
+                                <td>{{teacher}}</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td md-cell><a ng-href="/#/studyMaterial/higher/{{subject.subjectStudyPeriod}}/view">{{'studyMaterial.openfolder' | translate}}</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </md-table-container>
+</hois-collapsable>
+<!-- <span ng-show="pageLoadingHandler.setFinish('declaration') && false"></span> -->

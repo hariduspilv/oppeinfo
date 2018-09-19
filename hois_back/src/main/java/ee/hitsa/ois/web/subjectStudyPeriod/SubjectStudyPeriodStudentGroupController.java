@@ -58,6 +58,7 @@ public class SubjectStudyPeriodStudentGroupController {
         subjectStudyPeriodStudentGroupService.setSubjectStudyPeriodsToStudentGroupsContainer(user.getSchoolId(), container);
         subjectStudyPeriodCapacitiesService.setSubjects(container);
         subjectStudyPeriodStudentGroupService.setSubjectStudyPeriodPlansToStudentGroupContainer(container);
+        subjectStudyPeriodCapacitiesService.setCapacityTypes(user.getSchoolId(), container);
         return container;
     }
     
@@ -95,9 +96,15 @@ public class SubjectStudyPeriodStudentGroupController {
     public List<CurriculumSearchDto> getCurricula(HoisUserDetails user) {
         return subjectStudyPeriodStudentGroupService.getCurricula(user.getSchoolId());
     }
+    
+    @GetMapping("/searchByStudentGroup.xls")
+    public void searchByStudentGroupAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodSearchCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "searchByStudentGroup.xls", subjectStudyPeriodStudentGroupSearchService.searchByStudentGroupAsExcel(user.getSchoolId(), criteria));
+    }
 
     @GetMapping("/subjectstudyperiodstudentgroup.xls")
-    public void lessonplanAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container, HttpServletResponse response) throws IOException {
+    public void subjectStudyPeriodAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container, HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
         HttpUtil.xls(response, "subjectstudyperiodstudentgroup.xls", subjectStudyPeriodStudentGroupService.subjectStudyPeriodStudentGroupAsExcel(user.getSchoolId(), container));
     }

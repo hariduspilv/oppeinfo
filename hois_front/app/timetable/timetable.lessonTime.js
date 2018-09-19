@@ -115,18 +115,36 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
       }
     }
   }
-
-  function eachBlockHasOneValidRow() {
+  
+  function eachBlockHasValidRows() {
     var valid = true;
-    //console.log($scope.blocks.length);
+    blocks:
     for(var i = 0; $scope.blocks.length > i; i++) {
       var currentValid = false;
       for(var j = 0; $scope.blocks[i].lessonTimes.length > j; j++) {
+        // each block has atleas one valid row
         if($scope.isLessonTimeRowFilled($scope.blocks[i].lessonTimes[j])) {
           currentValid = true;
         }
+
+        var lessonStart = $scope.blocks[i].lessonTimes[j].startTime;
+        var lessonEnd = $scope.blocks[i].lessonTimes[j].endTime;
+        if (lessonStart > lessonEnd) {
+          message.error('timetable.lessonTime.endIsEarlierThanStart');
+          valid = false;
+          break blocks;
+        }
+        if (lessonStart.getHours() < 7 || (lessonEnd.getHours() === 23 && lessonEnd.getMinutes() > 0)) {
+          message.error('timetable.lessonTime.outOfTimeRange');
+          valid = false;
+          break blocks;
+        }
       }
-      valid = !currentValid ? currentValid : valid;
+
+      if(!currentValid) {
+        message.error('timetable.lessonTime.oneRowRequired');
+        valid = false;
+      }
     }
     return valid;
   }
@@ -227,7 +245,7 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
 
   $scope.save = function() {
     $scope.lessonTimeForm.$setSubmitted();
-    if($scope.lessonTimeForm.$valid && eachBlockHasOneValidRow()) {
+    if($scope.lessonTimeForm.$valid && eachBlockHasValidRows()) {
       var LessonTimeEndpoint;
       if(isEdit()) {
         LessonTimeEndpoint = QueryUtils.endpoint('/lessontimes/');
@@ -250,10 +268,6 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
           }
         });
       }
-    } else if(!eachBlockHasOneValidRow()){
-      message.error('timetable.lessonTime.oneRowRequired');
-    } else {
-      //console.log($scope.lessonTimeForm.$error);
     }
   };
 });

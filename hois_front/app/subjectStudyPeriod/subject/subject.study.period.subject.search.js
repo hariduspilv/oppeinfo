@@ -6,6 +6,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectSearchController
 
     $scope.currentNavItem = 'subjects';
 
+    $scope.formState = {xlsUrl: 'subjectStudyPeriods/subjects/searchBySubject.xls'};
+
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods/subjects', {order: 'id'});
 
     function setCurrentStudyPeriod() {

@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,6 +15,7 @@ import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
 import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalForTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.StudyPeriodDto;
@@ -25,9 +28,12 @@ public class LessonPlanByTeacherDto {
     private final List<Short> weekNrs;
     private final List<LessonPlanModuleJournalDto> journals;
     private final List<LessonPlanByTeacherSubjectDto> subjects;
+    private final Map<Long, Map<String, Long>> subjectTotals;
     private final List<LocalDate> weekBeginningDates;
+    private List<ClassifierDto> lessonPlanCapacities;
 
-    public LessonPlanByTeacherDto(StudyYear studyYear, List<Journal> journals, List<LessonPlanByTeacherSubjectDto> subjects, Teacher teacher) {
+    public LessonPlanByTeacherDto(StudyYear studyYear, List<Journal> journals, List<LessonPlanByTeacherSubjectDto> subjects,
+            Map<Long, Map<String, Long>> subjectTotals, Teacher teacher) {
         studyYearCode = EntityUtil.getCode(studyYear.getYear());
         teacherName = teacher.getPerson().getFullname();
         studyPeriods = studyYear.getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList());
@@ -37,6 +43,7 @@ public class LessonPlanByTeacherDto {
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(studyYear);
         this.journals = journals.stream().map(r -> LessonPlanModuleJournalForTeacherDto.of(r, capacityMapper, teacher)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList());
         this.subjects = subjects;
+        this.subjectTotals = subjectTotals;
     }
 
     public String getStudyYearCode() {
@@ -63,15 +70,30 @@ public class LessonPlanByTeacherDto {
         return subjects;
     }
     
+    public Map<Long, Map<String, Long>> getSubjectTotals() {
+        return subjectTotals;
+    }
+    
     public List<LocalDate> getWeekBeginningDates() {
         return weekBeginningDates;
     }
+    
+    public List<ClassifierDto> getLessonPlanCapacities() {
+        return lessonPlanCapacities;
+    }
+
+    public void setLessonPlanCapacities(List<ClassifierDto> lessonPlanCapacities) {
+        this.lessonPlanCapacities = lessonPlanCapacities;
+    }
+
 
     public static class LessonPlanByTeacherSubjectDto {
         private final Long id;
         private final String nameEt;
         private final String nameEn;
-        private List<LessonPlanByTeacherSubjectStudentGroupDto> studentGroups;
+        private Map<Long, Map<String, Long>> hours = new HashMap<>();
+        private final List<LessonPlanByTeacherSubjectStudentGroupDto> studentGroups = new ArrayList<>();
+        private Map<Long, Map<String, Long>> capacityTotals = new HashMap<>();
 
         public LessonPlanByTeacherSubjectDto(Long id, String nameEt, String nameEn) {
             this.id = id;
@@ -90,23 +112,40 @@ public class LessonPlanByTeacherDto {
         public String getNameEn() {
             return nameEn;
         }
+        
+        public Map<Long, Map<String, Long>> getHours() {
+            return hours;
+        }
+        
+        public void setHours(Map<Long, Map<String, Long>> hours) {
+            this.hours = hours;
+        }
 
         public List<LessonPlanByTeacherSubjectStudentGroupDto> getStudentGroups() {
             return studentGroups;
         }
+
+        public Map<Long, Map<String, Long>> getCapacityTotals() {
+            return capacityTotals;
+        }
+
+        public void setCapacityTotals(Map<Long, Map<String, Long>> capacityTotals) {
+            this.capacityTotals = capacityTotals;
+        }
+        
     }
 
     public static class LessonPlanByTeacherSubjectStudentGroupDto {
-        private final String studentGroups;
+        private final List<String> studentGroups;
         // {study period: {capacity type: hours}}
         private final Map<Long, Map<String, Long>> hours;
 
-        LessonPlanByTeacherSubjectStudentGroupDto(String studentGroups, Map<Long, Map<String, Long>> hours) {
+        public LessonPlanByTeacherSubjectStudentGroupDto(List<String> studentGroups, Map<Long, Map<String, Long>> hours) {
             this.studentGroups = studentGroups;
             this.hours = hours;
         }
 
-        public String getStudentGroups() {
+        public List<String> getStudentGroups() {
             return studentGroups;
         }
 

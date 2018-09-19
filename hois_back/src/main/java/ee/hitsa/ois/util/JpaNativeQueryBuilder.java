@@ -191,17 +191,25 @@ public class JpaNativeQueryBuilder {
     }
 
     public Number count(EntityManager em) {
-        return count("count(*)", em);
+        return count(em, null);
+    }
+    
+    public Number count(EntityManager em, Map<String, Object> additionalParameters) {
+        return count("count(*)", em, additionalParameters);
     }
 
     public Number count(String expression, EntityManager em) {
+        return count(expression, em, null);
+    }
+    
+    public Number count(String expression, EntityManager em, Map<String, Object> additionalParameters) {
         String querySql;
         if(StringUtils.hasText(groupBy)) {
             querySql = "select " + Objects.requireNonNull(expression) +" from (" + querySql("1", false) + ") wrapped_count_query";
         } else {
             querySql = querySql(expression, false);
         }
-        return (Number)buildQuery(querySql, em, null).getSingleResult();
+        return (Number)buildQuery(querySql, em, additionalParameters).getSingleResult();
     }
 
     public String querySql(String projection, boolean ordered) {

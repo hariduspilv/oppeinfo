@@ -94,7 +94,7 @@ public class SubjectStudyPeriodSubjectService {
 
     public byte[] subjectStudyPeriodSubjectAsExcel(Long schoolId, SubjectStudyPeriodDtoContainer container) {
         setSubjectStudyPeriodsToSubjectsContainer(schoolId, container);
-        List<Classifier> capacities = subjectStudyPeriodCapacitiesService.capacityClassifiers();
+        List<Classifier> capacities = subjectStudyPeriodCapacitiesService.capacityClassifiers(schoolId, container);
         List<String> capacityCodes = StreamUtil.toMappedList(c -> EntityUtil.getCode(c), capacities);
         
         List<Map<String, Object>> subjectStudyPeriods = new ArrayList<>();
@@ -106,8 +106,7 @@ public class SubjectStudyPeriodSubjectService {
             period.put("groups", studyPeriod.getStudentGroupObjects().stream().map(g -> g.getNameEt()).collect(Collectors.joining(", ")));
             period.put("groupProportion", studyPeriod.getGroupProportion());
             
-            Map<String, Short> capacityHours = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-            capacityCodes.forEach(c -> capacityHours.put(c, null));
+            Map<String, Short> capacityHours = subjectStudyPeriodCapacitiesService.emptyOrderedCapacityHours(capacityCodes);
             
             for (SubjectStudyPeriodCapacityDto capacityDto : studyPeriod.getCapacities()) {
                 capacityHours.put(capacityDto.getCapacityType(), capacityDto.getHours());
@@ -119,12 +118,8 @@ public class SubjectStudyPeriodSubjectService {
             
             for (String capacity : capacityHours.keySet()) {
                 Short totalHours = totals.get(capacity) != null ? totals.get(capacity) : Short.valueOf((short) 0);
-                if (!totals.containsKey(capacity)) {
-                    totals.put(capacity, totalHours);
-                } else {
-                    Short periodHours = capacityHours.get(capacity) != null ? capacityHours.get(capacity) : Short.valueOf((short) 0);
-                    totals.put(capacity, Short.valueOf((short) (totalHours.shortValue() + periodHours.shortValue())));
-                }
+                Short periodHours = capacityHours.get(capacity) != null ? capacityHours.get(capacity) : Short.valueOf((short) 0);
+                totals.put(capacity, Short.valueOf((short) (totalHours.shortValue() + periodHours.shortValue())));
             }
         }
         

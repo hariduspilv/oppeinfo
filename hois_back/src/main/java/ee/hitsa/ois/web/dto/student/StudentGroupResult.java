@@ -15,6 +15,7 @@ public class StudentGroupResult extends AutocompleteResult {
     private String language;
     private LocalDate validFrom;
     private LocalDate validThru;
+    private Boolean isOccupied;
 
     public StudentGroupResult(Long id, String code) {
         super(id, code, code);
@@ -66,5 +67,13 @@ public class StudentGroupResult extends AutocompleteResult {
 
     public void setValidThru(LocalDate validThru) {
         this.validThru = validThru;
+    }
+
+    public Boolean getIsOccupied() {
+        return isOccupied;
+    }
+
+    public void setIsOccupied(Boolean isOccupied) {
+        this.isOccupied = isOccupied;
     }
 }

@@ -1,8 +1,10 @@
 package ee.hitsa.ois.report.certificate;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.util.DateUtils;
@@ -51,7 +53,7 @@ public class CertificateStudentResult {
         result.setGradeName(grade != null ? grade.getNameEt() : null);
         result.setGradeValue(grade != null ? grade.getValue() : null);
         result.setDate(DateUtils.date(dto.getDate()));
-        result.setAssessedBy(String.join(", ", StreamUtil.toMappedList(AutocompleteResult::getNameEt, dto.getTeachers())));
+        result.setAssessedBy(String.join(", ", StreamUtil.toMappedList(AutocompleteResult::getNameEt, dto.getTeachers().stream().filter(p->p.getNameEn()!=null).collect(Collectors.toList()))));
         return result;
     }
 

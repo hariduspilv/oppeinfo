@@ -11,6 +11,7 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.domain.Building;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
+import ee.hitsa.ois.domain.timetable.TimetableObject;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.Required;
@@ -31,6 +32,7 @@ public class TimetableSingleEventForm {
     private String repeatCode;
     private List<AutocompleteResult> rooms;
     private List<AutocompleteResult> teachers;
+    private List<AutocompleteResult> studentGroups;
     private Long weekAmount;
     private String otherTeacher;
     private String otherRoom;
@@ -59,6 +61,18 @@ public class TimetableSingleEventForm {
         form.setTeachers(
                 StreamUtil.toMappedList(r -> AutocompleteResult.of(r.getTeacher()), event.getTimetableEventTeachers()));
         form.setOtherTeacher(event.getOtherTeacher());
+
+        List<AutocompleteResult> studentGroups = StreamUtil.toMappedList(r -> AutocompleteResult.of(r.getStudentGroup()),
+                event.getTimetableEventStudentGroups());
+        
+        TimetableObject tobj = event.getTimetableEvent().getTimetableObject();
+        if (tobj != null) {
+            List<AutocompleteResult> tobjStudentGroups = StreamUtil.toMappedList(
+                    r -> AutocompleteResult.of(r.getStudentGroup()), tobj.getTimetableObjectStudentGroups());
+            studentGroups.addAll(tobjStudentGroups);
+        }
+        
+        form.setStudentGroups(studentGroups);
 
         LocalDateTime maxDate = event.getTimetableEvent().getTimetableEventTimes().stream()
                 .map(TimetableEventTime::getStart).max(LocalDateTime::compareTo).get();
@@ -136,6 +150,14 @@ public class TimetableSingleEventForm {
 
     public void setTeachers(List<AutocompleteResult> teachers) {
         this.teachers = teachers;
+    }
+
+    public List<AutocompleteResult> getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(List<AutocompleteResult> studentGroups) {
+        this.studentGroups = studentGroups;
     }
 
     public Long getWeekAmount() {

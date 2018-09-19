@@ -421,8 +421,9 @@
     };
 
     $scope.updateData = function () {
-      QueryUtils.endpoint('/teachers/' + id + '/rtip').save();
-      $scope.loadData();
+      QueryUtils.endpoint('/teachers/' + id + '/rtip').save().$promise.then(function () {
+        $scope.loadData();
+      });
     };
     
   }]).controller('TeacherRtipAbsenceEditController', ['$scope', '$route', '$translate', 'QueryUtils', function ($scope, $route, $translate, QueryUtils) {
@@ -452,8 +453,9 @@
     };
 
     $scope.updateData = function () {
-      QueryUtils.endpoint('/teachers/' + id + '/rtip').save();
-      $scope.loadData();
+      QueryUtils.endpoint('/teachers/' + id + '/rtip').save().$promise.then(function () {
+        $scope.loadData();
+      });
     };
 
   }]);

@@ -11,9 +11,6 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     $scope.plan = {};
     $scope.timetableId = $route.current.params.id;
     $scope.weekday = ["daySun", "dayMon", "dayTue", "dayWed", "dayThu", "dayFri", "daySat"];
-    $scope.capacityTypes = Classifier.queryForDropdown({
-      mainClassCode: 'MAHT'
-    });
     var baseUrl = '/timetables';
     $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
 
@@ -26,10 +23,14 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     });
 
     function initializeData(result, selectedGroupId, selectedGroups) {
+      $scope.capacityTypes = result.timetableCapacities;
+
       var displayPeriodLessons = $scope.plan.displayPeriodLessons ? $scope.plan.displayPeriodLessons : false;
+      var displayLeftOverLessons = $scope.plan.displayLeftOverLessons ? $scope.plan.displayLeftOverLessons : false;
       $scope.plan = result;
       $scope.plan.selectAll = false;
       $scope.plan.displayPeriodLessons = displayPeriodLessons;
+      $scope.plan.displayLeftOverLessons = displayLeftOverLessons;
       $scope.plan.journals.sort(function (a, b) {
         return a.id - b.id;
       });
@@ -94,17 +95,25 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       while ($scope.dayOrder[0] !== $scope.firstDay) {
         $scope.dayOrder[$scope.dayOrder.length - 1] = $scope.dayOrder.shift();
       }
+
+      //remove days that don't belong to given period
+      var daysInPeriod = moment($scope.plan.endDate).diff(moment($scope.plan.startDate), 'days') + 1;
+      $scope.dayOrder = $scope.dayOrder.slice(0, daysInPeriod);
+
       $scope.currentLessonTimes = [];
       for (var k = 0; $scope.dayOrder.length > k; k++) {
         var currDay = $scope.lessonsInDay[$scope.dayOrder[k]].slice();
-
           var hasLessons = false;
           while (angular.isDefined(currDay) && currDay.length > 0) {
             hasLessons = true;
-            $scope.currentLessonTimes.push(currDay.shift());
+            var lessonTime = angular.copy(currDay.shift());
+            if (currDay.length === 0) {
+              lessonTime.endOfDay = true;
+            }
+            $scope.currentLessonTimes.push(lessonTime);
           }
           if (!hasLessons) {
-            $scope.currentLessonTimes.push({noLessons: true});
+            $scope.currentLessonTimes.push({noLessons: true, endOfDay: true});
           }
       }
 
@@ -165,6 +174,14 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       }
     };
 
+    $scope.displayPeriodLessonsChanged = function () {
+      $scope.plan.displayLeftOverLessons = false;
+    };
+
+    $scope.displayLeftOverLessonsChanged = function () {
+      $scope.plan.displayPeriodLessons = false;
+    };
+
     $scope.orderBySelectedGroup = function (group) {
       return group.id !== $scope.plan.selectedGroup;
     };
@@ -195,13 +212,6 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       }
     }
 
-    $scope.getByJournal = function (journal, param) {
-      var capacity = $scope.plan.currentCapacities.find(function (it) {
-        return it.journal === journal.id;
-      });
-      return capacity[param];
-    };
-
     $scope.getTotalsByJournal = function (journal, param) {
       var allCapacities = $scope.plan.currentCapacities.filter(function (it) {
         return it.journal === journal.id;
@@ -213,8 +223,40 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       return result;
     };
 
+    $scope.showJournalPlannedLessons = function (journal) {
+      if (!($scope.plan.displayPeriodLessons || $scope.plan.displayLeftOverLessons)) {
+        return $scope.getTotalsByJournal(journal, 'thisPlannedLessons') > 0;
+      } else if ($scope.plan.displayPeriodLessons) {
+        return $scope.getTotalsByJournal(journal, 'totalPlannedLessons') > 0;
+      } else if ($scope.plan.displayLeftOverLessons) {
+        return $scope.getTotalsByJournal(journal, 'totalPlannedLessons') > 0 || $scope.getTotalsByJournal(journal, 'leftOverLessons') > 0;
+      }
+      return false;
+    };
+
+    $scope.showCurrentCapacitiesGrouped = function (capacities) {
+      if (!($scope.plan.displayPeriodLessons || $scope.plan.displayLeftOverLessons)) {
+        return areTherePlannedLessons(capacities, 'thisPlannedLessons');
+      } else if ($scope.plan.displayPeriodLessons) {
+        return areTherePlannedLessons(capacities, 'totalPlannedLessons');
+      } else if ($scope.plan.displayLeftOverLessons) {
+        return areTherePlannedLessons(capacities, 'totalPlannedLessons') || areTherePlannedLessons(capacities, 'leftOverLessons');
+      }
+      return false;
+    };
+
+    function areTherePlannedLessons(capacities, param) {
+      for (var i = 0; i < capacities.length; i++) {
+        if (capacities[i][param] > 0) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     $scope.isUnderAllocatedWeekLessons = function (journal) {
-      if ($scope.getTotalsByJournal(journal, 'thisPlannedLessons') >= $scope.getTotalsByJournal(journal, 'thisPlannedLessons') - $scope.getTotalsByJournal(journal, 'lessonsLeft')) {
+      if ($scope.getTotalsByJournal(journal, 'thisPlannedLessons') >= 
+        $scope.getTotalsByJournal(journal, 'thisPlannedLessons') - $scope.getTotalsByJournal(journal, 'lessonsLeft')) {
         return true;
       }
       return false;
@@ -222,6 +264,14 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
 
     $scope.isUnderAllocatedTotalLessons = function (journal) {
       if ($scope.getTotalsByJournal(journal, 'totalPlannedLessons') >= $scope.getTotalsByJournal(journal, 'totalAllocatedLessons')) {
+        return true;
+      }
+      return false;
+    };
+
+    $scope.isUnderLeftOverTotalLessons = function (journal) {
+      if ($scope.getTotalsByJournal(journal, 'totalPlannedLessons') + $scope.getTotalsByJournal(journal, 'leftOverLessons') >= 
+        $scope.getTotalsByJournal(journal, 'totalAllocatedLessons')) {
         return true;
       }
       return false;
@@ -366,6 +416,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         } else {
           dialogScope.lesson.eventRooms = [];
         }
+
         dialogScope.$watch('lesson.eventRoom', function () {
           if (angular.isDefined(dialogScope.lesson.eventRoom) && dialogScope.lesson.eventRoom !== null) {
             if (dialogScope.lesson.eventRooms.some(function (e) {
@@ -379,6 +430,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
             dialogScope.lesson.eventRoom = null;
           }
         });
+
         dialogScope.deleteEvent = function (toDelete) {
           bsave=true;
           QueryUtils.endpoint(baseUrl + '/deleteVocationalEvent').save({
@@ -387,6 +439,14 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
             initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
             dialogScope.cancel();
           });
+        };
+
+        dialogScope.saveEvent = function () {
+          if (dialogScope.lesson.startTime > dialogScope.lesson.endTime) {
+            message.error('timetable.timetableEvent.error.endIsEarlierThanStart');
+            return;
+          }
+          dialogScope.submit();
         };
       }, function (submittedDialogScope) {
         var query = {

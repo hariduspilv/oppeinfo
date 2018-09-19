@@ -70,7 +70,7 @@ public class TimetableEventController {
     @PostMapping
     public void create(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
         timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(), StreamUtil.toMappedList(t -> t.getId(), form.getTeachers()));
-        timetableEventService.createEvent(form, user.getSchoolId());
+        timetableEventService.createEvent(user, form);
     }
     
     @PutMapping("/{id:\\d+}")

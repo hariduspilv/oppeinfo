@@ -7,6 +7,7 @@ public class JournalEntryTableDto {
     private Long id;
     private String entryType;
     private LocalDate entryDate;
+    private Long lessons;
     private String nameEt;
     private String content;
     private String homework;
@@ -35,6 +36,14 @@ public class JournalEntryTableDto {
 
     public void setEntryDate(LocalDate entryDate) {
         this.entryDate = entryDate;
+    }
+
+    public Long getLessons() {
+        return lessons;
+    }
+
+    public void setLessons(Long lessons) {
+        this.lessons = lessons;
     }
 
     public String getNameEt() {

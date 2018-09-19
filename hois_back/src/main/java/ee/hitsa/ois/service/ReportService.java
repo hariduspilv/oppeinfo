@@ -434,6 +434,7 @@ public class ReportService {
         Map<Long, Map<Long, List<Object>>> subjectRecords = new HashMap<>();
         Map<Long, Map<Long, List<Object>>> moduleRecords = new HashMap<>();
         Map<Long, Map<Long, Long>> actualLoadHours = new HashMap<>();
+        Map<Long, Map<Long, BigDecimal>> coefficientLoadHours = new HashMap<>();
         if(!result.getContent().isEmpty()) {
             Set<Long> teachers = new HashSet<>();
             Set<Long> studyPeriods = new HashSet<>();
@@ -454,6 +455,29 @@ public class ReportService {
 
                 List<?> subjects = qb.select("distinct s.name_et, s.name_en, s.code, sspt.teacher_id, ssp.study_period_id", em).getResultList();
                 subjects.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 3), () -> subjectRecords, Collectors.groupingBy(r -> resultAsLong(r, 4))));
+
+                qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt"
+                        + " join subject_study_period_capacity sspc on sspc.subject_study_period_id = sspt.subject_study_period_id"
+                        + " join subject_study_period ssp on ssp.id = sspt.subject_study_period_id"
+                        + " join study_period sp on sp.id = ssp.study_period_id"
+                        + " join study_year sy on sy.id = sp.study_year_id"
+                        + " join school_capacity_type sct on sct.school_id = sy.school_id and sct.capacity_type_code = sspc.capacity_type_code and sct.is_higher = true"
+                        + " join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id and sctl.study_year_id = sp.study_year_id");
+
+                qb.requiredCriteria("sspt.teacher_id in (:teacher)", "teacher", teachers);
+                qb.requiredCriteria("ssp.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
+                qb.optionalCriteria("ssp.subject_id = :subject", "subject", criteria.getSubject());
+
+                qb.groupBy("sspt.teacher_id, ssp.study_period_id, sspc.capacity_type_code, sctl.load_percentage");
+                
+                String hoursByTypeQuery = qb.querySql("sspt.teacher_id, ssp.study_period_id, sctl.load_percentage * sum(sspc.hours) / 100.0 as hours", false);
+                Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
+
+                qb = new JpaNativeQueryBuilder("from (" + hoursByTypeQuery + ") bytype");
+                qb.groupBy("teacher_id, study_period_id");
+                
+                List<?> coefficientLoad = qb.select("teacher_id, study_period_id, sum(hours)", em, parameters).getResultList();
+                coefficientLoad.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), () -> coefficientLoadHours, Collectors.toMap(r -> resultAsLong(r, 1), r -> resultAsDecimal(r, 2))));
             } else {
                 // vocational: select modules by teacher and study period id
                 JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_teacher jt " +
@@ -473,6 +497,32 @@ public class ReportService {
 
                 List<?> modules = qb.select("distinct cm.name_et, cm.name_en, m.name_et as modulename_et, m.name_en as modulename_en, c.code, jt.teacher_id, sp.id", em).getResultList();
                 modules.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 5), () -> moduleRecords, Collectors.groupingBy(r -> resultAsLong(r, 6))));
+
+                qb = new JpaNativeQueryBuilder("from journal_teacher jt"
+                        + " join journal_capacity jc on jc.journal_id = jt.journal_id"
+                        + " join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id"
+                        + " join journal j on j.id = jc.journal_id"
+                        + " join study_period sp on sp.id = jc.study_period_id"
+                        + " join school_capacity_type sct on sct.school_id = j.school_id and sct.capacity_type_code = jct.capacity_type_code and sct.is_higher = false"
+                        + " join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id and sctl.study_year_id = sp.study_year_id");
+
+                qb.requiredCriteria("jt.teacher_id in (:teacher)", "teacher", teachers);
+                qb.requiredCriteria("jc.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
+                qb.optionalCriteria("jt.journal_id in (select jot.journal_id from journal_omodule_theme jot " +
+                        "join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id = cvot.id " +
+                        "join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "+
+                        "where cvo.curriculum_module_id = :module)", "module", criteria.getModule());
+
+                qb.groupBy("jt.teacher_id, jc.study_period_id, jct.capacity_type_code, sctl.load_percentage");
+                
+                String hoursByTypeQuery = qb.querySql("jt.teacher_id, jc.study_period_id, sctl.load_percentage * sum(jc.hours) / 100.0 as hours", false);
+                Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
+
+                qb = new JpaNativeQueryBuilder("from (" + hoursByTypeQuery + ") bytype");
+                qb.groupBy("teacher_id, study_period_id");
+                
+                List<?> coefficientLoad = qb.select("teacher_id, study_period_id, sum(hours)", em, parameters).getResultList();
+                coefficientLoad.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), () -> coefficientLoadHours, Collectors.toMap(r -> resultAsLong(r, 1), r -> resultAsDecimal(r, 2))));
             }
 
             // actual load
@@ -502,7 +552,10 @@ public class ReportService {
         return result.map(r -> {
             Long teacherId = resultAsLong(r, 7);
             Long studyPeriodId = resultAsLong(r, 8);
-            return new TeacherLoadDto(r, subjectRecords.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId), moduleRecords.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId), actualLoadHours.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId));
+            return new TeacherLoadDto(r, subjectRecords.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId), 
+                    moduleRecords.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId), 
+                    actualLoadHours.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId),
+                    coefficientLoadHours.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId));
         });
     }
 

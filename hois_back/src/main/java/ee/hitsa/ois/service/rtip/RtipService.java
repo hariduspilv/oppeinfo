@@ -156,11 +156,16 @@ public class RtipService {
         School school = teacher.getSchool();
         assertRtipSchoolCode(school);
 
+        ZABSENCE t = new ZABSENCE();
+        t.setPERNR(teacher.getRtipNr());
+        ZEMPLOEESRequestType.PUUDUMINE list = new ZEMPLOEESRequestType.PUUDUMINE();
+        list.getItem().add(t);
+
         ZEMPLOEESRequestType request = new ZEMPLOEESRequestType();
         request.setCOMPANYCODE(school.getRtipSchoolCode());
-        request.setLAHKUJAD(new ZEMPLOEESRequestType.LAHKUJAD());
-        request.setPUUDUMINE(new ZEMPLOEESRequestType.PUUDUMINE());
-        request.setTOOTAJAD(new ZEMPLOEESRequestType.TOOTAJAD());
+        request.setDATEFROM(LocalDate.now().minusYears(3));
+        request.setDATETO(LocalDate.now().plusYears(1));
+        request.setPUUDUMINE(list);
 
         withResponse(rtipClient.zEMPLOEES(rtipProperties.xroadHeader("Z_EMPLOEES"), request), school, (result) -> {
             syncAbsences(result, Collections.singletonMap(teacher.getRtipNr(), teacher.getId()));

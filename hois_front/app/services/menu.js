@@ -512,6 +512,11 @@ angular.module('hitsaOis')
             icon:"layers"
           },
           {
+            name: 'main.menu.settings.capacityTypes',
+            url: "/school/capacityTypes",
+            icon: "bubble_chart"
+          },
+          {
             name: 'main.menu.settings.generalmessages',
             url: "/generalmessages?_menu",
             icon:"notifications_none"

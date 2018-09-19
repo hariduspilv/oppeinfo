@@ -47,6 +47,7 @@
             <th md-column>{{'report.teachersload.module' | translate}}</th>
             <th md-column>{{'report.teachersload.plannedhours' | translate}}</th>
             <th md-column>{{'report.teachersload.actualhours' | translate}}</th>
+            <th md-column>{{'report.teachersload.coefficienthours' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
@@ -62,6 +63,7 @@
             </td>
             <td md-cell>{{::row.plannedHours}}</td>
             <td md-cell>{{::row.actualHours}}</td>
+            <td md-cell>{{::row.coefficientHours}}</td>
           </tr>
         </tbody>
       </table>

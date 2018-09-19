@@ -11,6 +11,7 @@ public class JournalEntryStudentForm {
     private String absence;
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMINE)
     private String grade;
+    private Boolean removeStudentHistory = Boolean.FALSE;
     private String addInfo;
 
     public Long getId() {
@@ -36,6 +37,12 @@ public class JournalEntryStudentForm {
     }
     public void setGrade(String grade) {
         this.grade = grade;
+    }
+    public Boolean getRemoveStudentHistory() {
+        return removeStudentHistory;
+    }
+    public void setRemoveStudentHistory(Boolean removeStudentHistory) {
+        this.removeStudentHistory = removeStudentHistory;
     }
     public String getAddInfo() {
         return addInfo;

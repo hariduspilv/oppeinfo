@@ -7,7 +7,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
     $scope.isEditing = studentGroup === null && studyPeriodId === null;
     var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/container');
 
-    $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true});
+    $scope.capacityTypes = QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: true });
 
     $scope.record = {};
 
@@ -27,9 +27,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
         $scope.record = Endpoint.search($scope.container);
         $scope.record.$promise.then(function(response){
             $scope.capacitiesUtil = new SspCapacities(response);
-            $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function() {
-              $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
-            });
+            $scope.capacityTypes = response.capacityTypes;
+            $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
         });
         $scope.studentGroup = QueryUtils.endpoint('/studentgroups/' + studentGroup).get(function(response) {
             $scope.studentGroup.nameEt = response.code;

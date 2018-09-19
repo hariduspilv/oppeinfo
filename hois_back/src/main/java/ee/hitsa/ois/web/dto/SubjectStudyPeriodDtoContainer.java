@@ -28,6 +28,8 @@ public class SubjectStudyPeriodDtoContainer {
     private List<AutocompleteResult> subjects;
 
     private List<SubjectStudyPeriodPlanDto> subjectStudyPeriodPlans;
+    
+    private List<ClassifierDto> capacityTypes;
 
     public Long getSubject() {
         return subject;
@@ -59,6 +61,14 @@ public class SubjectStudyPeriodDtoContainer {
 
     public void setSubjectStudyPeriodPlans(List<SubjectStudyPeriodPlanDto> subjectStudyPeriodPlans) {
         this.subjectStudyPeriodPlans = subjectStudyPeriodPlans;
+    }
+
+    public List<ClassifierDto> getCapacityTypes() {
+        return capacityTypes;
+    }
+
+    public void setCapacityTypes(List<ClassifierDto> capacityTypes) {
+        this.capacityTypes = capacityTypes;
     }
 
     public List<SubjectStudyPeriodDto> getSubjectStudyPeriodDtos() {

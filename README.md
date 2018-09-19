@@ -1,4 +1,4 @@
-VERSIOON: 1.0.2/20180827
+VERSIOON: 1.0.3/20180918
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.0.1/20180810
+EELDUS: ver. 1.0.2/20180827
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skripti on db/install20180827.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skripti on db/install20180918.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
 1. käivitada install20180827.sql skript, nt
    
-   psql -h devhois -f install20180827.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20180918.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20180827.sql - install faili nimi
+   -f install20180918.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
@@ -38,7 +38,14 @@ RAKENDUSE INSTALLEERIMINE:
 1. Backendi paigaldamiseks
 	1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta
 	2. veenduda, et /opt/hois kaustas on olemas muudetud application.properties fail	
-	3. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
+	3. Lisada application.properties faili järgmised read (job, mis saadab automaatteateid lapsevanematele, kelle lapsed saavad parameetris näidatud päevade arvu pärast 18-aastaseks):
+		# every day at 01:45
+		hois.jobs.message.cron=0 45 1 * * *
+		hois.jobs.message.representative.days=14
+		
+		
+		
+	4. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
 	
 2. Frontendi paigaldamiseks
 	1. Kustutada vanad html jms failid: käivitada käsk "rm -Rf /opt/hois/html/*" (nginxist vana seisu tühjendamiseks)

@@ -159,10 +159,9 @@
           In addition, extra logic in providing options required -->
 					<md-input-container flex="50" flex-offset="5">
             <label>
-              {{'curriculum.structuralUnitResponsible' | translate}} {{getStar()}}
+              {{'curriculum.structuralUnitResponsible' | translate}}
              </label>
-            <hois-select ng-model="curriculum.schoolDepartments" multiple values="schoolDepartments"
-            ng-required="strictValidation()"></hois-select>
+            <hois-select ng-model="curriculum.schoolDepartments" multiple values="schoolDepartments" required></hois-select>
            </md-input-container>
 			</div>
 			<div layout="row" flex>

@@ -8,6 +8,7 @@ public class ScholarshipApplicationStudentDto extends ScholarshipApplicationBase
     private Boolean isTeacherConfirm;
     private LocalDate decisionDate;
     private String rejectComment;
+    private Boolean needsConfirm;
     
     public Long getTermId() {
         return termId;
@@ -40,8 +41,17 @@ public class ScholarshipApplicationStudentDto extends ScholarshipApplicationBase
     public String getRejectComment() {
         return rejectComment;
     }
+    
     public void setRejectComment(String rejectComment) {
         this.rejectComment = rejectComment;
+    }
+    
+    public void setNeedsConfirm(Boolean needsConfirm) {
+    	this.needsConfirm = needsConfirm;
+    }
+    
+    public Boolean getNeedsConfirm() {
+    	return this.needsConfirm;
     }
     
 }

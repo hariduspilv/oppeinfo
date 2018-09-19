@@ -89,6 +89,10 @@ angular.module('hitsaOis').factory('DataUtils',
         return teacher.nameEt;
       }).join(', ');
 
+      var studentGroups = occupiedTime.studentGroups.map(function(studentGroup) {
+        return studentGroup;
+      }).join(', ');
+
       var prompts = [];
       if (rooms.length > 0) {
         prompts.push('timetable.roomIsOccupied');
@@ -96,9 +100,12 @@ angular.module('hitsaOis').factory('DataUtils',
       if (teachers.length > 0) {
         prompts.push('timetable.teacherIsOccupied');
       }
+      if (studentGroups.length > 0) {
+        prompts.push('timetable.studentGroupIsOccupied');
+      }
       prompts.push('timetable.continue');
 
-      return {extraPrompts: prompts, rooms: rooms, teachers: teachers};
+      return {extraPrompts: prompts, rooms: rooms, teachers: teachers, studentGroups: studentGroups};
     }
 
     return {
@@ -141,8 +148,14 @@ angular.module('hitsaOis').factory('DataUtils',
       creditsToHours: function(credits) {
         return Math.round(HOURS_PER_CREDIT_POINT * credits);
       },
+
       hoursToCredits: function(hours) {
         return Math.round((hours / HOURS_PER_CREDIT_POINT) * 10) / 10;
+      },
+
+      isSameDay: function(date1, date2) {
+        return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && 
+          date1.getDate() === date2.getDate();
       }
     };
   }

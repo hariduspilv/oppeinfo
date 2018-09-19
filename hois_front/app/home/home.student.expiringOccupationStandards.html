@@ -1,0 +1,31 @@
+<hois-collapsable expanded="true" class="hois-collapse2" ng-if="expiringOccupationStandards && expiringOccupationStandards.length > 0" 
+  label="('home.expiringOccupationStandards.title' | translate)" link="(numberOfOccupationStandards? 'main.button.view' : 'main.button.hide')|translate" 
+  action="toggleNumberOfOccupationStandards()" ngif="expiringOccupationStandards && expiringOccupationStandards.length > 3">
+  <!--span ng-if="expiringOccupationStandards && expiringOccupationStandards.length > 3">
+    <md-button class="md-primary" ng-click="toggleNumberOfOccupationStandards()">{{(numberOfOccupationStandards? 'main.button.view' : 'main.button.hide')|translate}}</md-button>
+  </span-->
+  <!--md-content>
+    <md-list>
+      <md-list-item class="md-3-line" ng-repeat="row in expiringOccupationStandards | limitTo:numberOfOccupationStandards">
+        <div class="md-list-item-text" layout="row" flex>
+          <div flex="40">{{::currentLanguageNameField(row)}}</div>
+          <div flex="20">{{::row.validThru | hoisDate}}</div>
+          <div flex="40">{{'home.expiringOccupationStandards.curriculum' | translate}}&nbsp;{{::row.curriculums.join(', ')}}</div>
+        </div>
+        <md-divider></md-divider>
+      </md-list-item>
+    </md-list>
+  </md-content-->
+  <md-table-container>
+    <table md-table>
+      <tbody md-body>
+        <tr md-row ng-repeat="row in expiringOccupationStandards | limitTo:numberOfOccupationStandards" ng-init="$last && pageLoadingHandler.setFinish('expiringOccupationStandards')">
+          <td md-cell width="40%">{{::currentLanguageNameField(row)}}</td>
+          <td md-cell width="10%">{{::row.validThru | hoisDate}}</td>
+          <td md-cell>{{'home.expiringOccupationStandards.curriculum' | translate}}&nbsp;{{::row.curriculums.join(', ')}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
+</hois-collapsable>
+<!-- <span ng-show="pageLoadingHandler.setFinish('expiringOccupationStandards') && false"></span> -->

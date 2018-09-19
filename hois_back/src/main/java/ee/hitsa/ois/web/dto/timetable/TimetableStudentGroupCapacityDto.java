@@ -10,6 +10,7 @@ public class TimetableStudentGroupCapacityDto {
     // default value if the value is any different you need to set it with the
     // setter
     private Long totalAllocatedLessons = Long.valueOf(0);
+    private Long leftOverLessons = Long.valueOf(0);
     private String capacityType;
 
     public TimetableStudentGroupCapacityDto(Long studentGroup, Long journal, Long totalPlannedLessons,
@@ -84,6 +85,14 @@ public class TimetableStudentGroupCapacityDto {
 
     public void setTotalLessonsLeft(Long totalLessonsLeft) {
         this.totalLessonsLeft = totalLessonsLeft;
+    }
+
+    public Long getLeftOverLessons() {
+        return leftOverLessons;
+    }
+
+    public void setLeftOverLessons(Long leftOverLessons) {
+        this.leftOverLessons = leftOverLessons;
     }
 
     public String getCapacityType() {

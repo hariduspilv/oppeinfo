@@ -16,6 +16,8 @@ angular.module('hitsaOis').constant('VocationalGrade', {
   var DISTINCTIVE_GRADES = [VocationalGrade.KUTSEHINDAMINE_2,
     VocationalGrade.KUTSEHINDAMINE_3, VocationalGrade.KUTSEHINDAMINE_4, VocationalGrade.KUTSEHINDAMINE_5];
 
+  var VOCATIONAL_GRADE_PREFIX = 'KUTSEHINDAMINE_';
+
   return {
     isPositive: function(gradeCode) {
       return ArrayUtils.includes(POSITIVE_GRADES, gradeCode);
@@ -23,5 +25,11 @@ angular.module('hitsaOis').constant('VocationalGrade', {
     isDistinctive: function(gradeCode) {
       return ArrayUtils.includes(DISTINCTIVE_GRADES, gradeCode);
     },
+    removePrefix: function(gradeCode) {
+      return gradeCode.replace(VOCATIONAL_GRADE_PREFIX, '');
+    },
+    addPrefix: function(gradeValue) {
+      return VOCATIONAL_GRADE_PREFIX + gradeValue;
+    }
   };
 });

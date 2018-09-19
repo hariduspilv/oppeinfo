@@ -26,7 +26,8 @@
             </md-input-container>
           </div>
 
-          <div layout="column" class="common-label" flex="95" ng-repeat="theme in record.journalOccupationModuleThemes">
+          <div layout="column" class="common-label" flex="95" 
+            ng-repeat="theme in record.journalOccupationModuleThemes | orderBy: orderByThemeName">
             <div layout="row" flex layout-align="start center">
               <div flex="5">&nbsp;</div>
               <div flex="50">{{currentLanguageNameField(formState.themeMap[theme])}}</div>

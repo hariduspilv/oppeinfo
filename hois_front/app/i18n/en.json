@@ -146,6 +146,8 @@
     "months": "months",
     "yes": "Yes",
     "no": "No",
+    "confirm": "Confirmed",
+    "noConfirm": "Not confirmed",
     "or": "Or",
     "validityPeriod": "Validity period",
     "validFrom": "Valid from",
@@ -490,6 +492,10 @@
     "student": {
       "homeworkAndTests": "Homework and tests",
       "absences": "Absences and being late (30d)",
+      "absence": {
+        "absences": "Absences",
+        "beingLate": "Being late"
+      },
       "declaredSubjects": "Subjects declared at the moment",
       "lastResults": "Latest grades",
       "today": "Today",
@@ -3470,6 +3476,7 @@
     "isAcademicLeave": "Applying while on academic leave allowed",
     "studyForm": "Form of study",
     "isTeacherConfirm": "Needs confirmation by group leader",
+    "needsConfirm": "Needs confirmation",
     "isStudyBacklog": "Applying allowed for learner with overdues",
     "maxAbsences": "Number of absences",
     "isFamilyIncomes": "Display family income section when applying",

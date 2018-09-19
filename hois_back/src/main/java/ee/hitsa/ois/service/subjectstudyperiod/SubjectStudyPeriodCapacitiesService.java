@@ -5,8 +5,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -22,14 +22,18 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
+import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.SubjectService;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodCapacityDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDtoContainer;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanCapacityDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanDto;
 
 @Transactional
@@ -46,6 +50,8 @@ public class SubjectStudyPeriodCapacitiesService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private ClassifierService classifierService;
+    @Autowired
+    private AutocompleteService autocompleteService;
 
     /**
      * TODO: method and class does not match each other (by name at least by name),
@@ -82,10 +88,35 @@ public class SubjectStudyPeriodCapacitiesService {
         subjectStudyPeriodRepository.save(ssps);
     }
     
-    public List<Classifier> capacityClassifiers() {
-        List<Classifier> capacities = classifierService.findAllByMainClassCode(MainClassCode.MAHT);
+    public List<Classifier> capacityClassifiers(Long schoolId, SubjectStudyPeriodDtoContainer container) {
+        List<Classifier> allCapacityTypes = classifierService.findAllByMainClassCode(MainClassCode.MAHT);
+
+        SchoolCapacityTypeCommand command = new SchoolCapacityTypeCommand();
+        command.setIsHigher(Boolean.TRUE);
+        List<Classifier> schoolCapacityTypes = autocompleteService.schoolCapacityTypes(schoolId, command);
+        
+        Set<String> validCapacities = StreamUtil.toMappedSet(EntityUtil::getCode, schoolCapacityTypes);
+        for (SubjectStudyPeriodDto subjectStudyPeriodDto : container.getSubjectStudyPeriodDtos()) {
+            for (SubjectStudyPeriodCapacityDto capacityDto : subjectStudyPeriodDto.getCapacities()) {
+                validCapacities.add(capacityDto.getCapacityType());
+            }
+        }
+        List<SubjectStudyPeriodPlanDto> subjectStudyPeriodPlans = container.getSubjectStudyPeriodPlans();
+        if (subjectStudyPeriodPlans != null) {
+            for (SubjectStudyPeriodPlanDto planDto : subjectStudyPeriodPlans) {
+                for (SubjectStudyPeriodPlanCapacityDto capacityDto : planDto.getCapacities()) {
+                    validCapacities.add(capacityDto.getCapacityType());
+                }
+            }
+        }
+        
+        List<Classifier> capacities = StreamUtil.toFilteredList(c -> validCapacities.contains(EntityUtil.getCode(c)), allCapacityTypes);
         capacities.sort(Comparator.comparing(Classifier::getCode, String.CASE_INSENSITIVE_ORDER));
         return capacities;
+    }
+    
+    public void setCapacityTypes(Long schoolId, SubjectStudyPeriodDtoContainer container) {
+        container.setCapacityTypes(StreamUtil.toMappedList(ClassifierDto::of, capacityClassifiers(schoolId, container)));
     }
     
     public Map<String, Short> emptyOrderedCapacityHours(List<String> capacityCodes) {

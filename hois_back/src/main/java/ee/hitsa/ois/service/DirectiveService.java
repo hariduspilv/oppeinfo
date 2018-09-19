@@ -75,6 +75,7 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
@@ -85,6 +86,7 @@ import ee.hitsa.ois.enums.ScholarshipStatus;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.EntityRemoveException;
+import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.ekis.EkisService;
@@ -169,6 +171,8 @@ public class DirectiveService {
     private PersonRepository personRepository;
     @Autowired
     private Validator validator;
+    @Autowired
+    private AutomaticMessageService automaticMessageService;
 
     /**
      * get directive record for editing
@@ -383,6 +387,7 @@ public class DirectiveService {
                     occupations(fetchedStudentIds, directive.getIsHigher().booleanValue()) : Collections.emptyMap();
             Map<Long, List<String>> partOccupations = !fetchedStudentIds.isEmpty() && KASKKIRI_LOPET.equals(directiveType) ?
                     partOccupations(fetchedStudentIds, directive.getIsHigher().booleanValue()) : Collections.emptyMap();
+            List<DirectiveStudent> messagesToStudents = new ArrayList<>();
             for(DirectiveFormStudent formStudent : StreamUtil.nullSafeList(form.getStudents())) {
                 Long directiveStudentId = formStudent.getId();
                 DirectiveStudent directiveStudent = directiveStudentId != null ? studentMapping.remove(directiveStudentId) : null;
@@ -404,6 +409,7 @@ public class DirectiveService {
                         setApplication(studentId, formStudent.getApplication(), directiveStudent);
                     }
                     students.add(directiveStudent);
+                    messagesToStudents.add(directiveStudent);
                 }
 
                 if(KASKKIRI_IMMAT.equals(directiveType)) {
@@ -448,6 +454,12 @@ public class DirectiveService {
             // remove possible existing directive students not included in update command
             students.removeAll(studentMapping.values());
             studentMapping.values().forEach(this::studentRemovedFromDirective);
+            if(!DirectiveType.KASKKIRI_IMMAT.equals(directiveType) && !DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
+                for (DirectiveStudent directiveStudent : messagesToStudents) {
+                    StudentDirectiveCreated data = new StudentDirectiveCreated(directiveStudent);
+                    automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_KASKKIRI, directiveStudent.getStudent(), data);
+                }
+            }
         }
         return EntityUtil.save(directive, em);
     }

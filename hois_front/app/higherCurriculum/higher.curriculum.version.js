@@ -10,8 +10,8 @@ angular.module('hitsaOis')
       strictValidation: false
     };
     var SpecialityEndpoint = QueryUtils.endpoint('/curriculum/' + $scope.curriculum.id + '/speciality');
-    var SubjectEndpoint = QueryUtils.endpoint('/higherModule/subject/');
-    var ModuleCreditsEndpoint = QueryUtils.endpoint('/higherModule/credits/');
+    var SubjectEndpoint = QueryUtils.endpoint('/higherModule/subject');
+    var ModuleCreditsEndpoint = QueryUtils.endpoint('/higherModule/credits');
 
     var Endpoint = QueryUtils.endpoint('/curriculumVersion');
     var id = $route.current.params.versionId;

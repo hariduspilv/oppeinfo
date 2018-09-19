@@ -1,0 +1,33 @@
+<hois-collapsable class="hois-collapse2" ng-show="showGeneralMessages" label="('home.generalmessages' | translate)" expanded="true">
+    <md-table-container>
+        <table md-table md-progress="generalmessages.$promise">
+            <tbody md-body>
+                <tr md-row ng-repeat-start="row in generalmessages.content" ng-click="openCloseDetails(row)" 
+                aria-label="{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}" ng-style="{'cursor': row.content ? 'pointer' : 'default'}"
+                ng-init="$last && pageLoadingHandler.setFinish('generalMessages')">
+                    <td md-cell width="10%">{{::row.inserted | hoisDate}}</td>
+                    <td md-cell width="90%">
+                        <p style="color: rgb(13, 71, 161);">{{::row.title}}</p>
+                    </td>
+                    <td md-cell>
+                        <md-button style="margin: 0;" ng-if="row.content">
+                            <md-icon md-font-set="material-icons md-dark">
+                                {{row.clicked ? "keyboard_arrow_up" : "keyboard_arrow_down"}}
+                            </md-icon>
+                        </md-button>
+                    </td>
+                </tr>
+                <tr ng-repeat-end ng-show="row.clicked">
+                    <td style="border: none"></td>
+                    <td md-cell style="border: none">
+                        <pre>{{::row.content}}</pre>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]" ng-if="generalmessages.totalElements > criteria.size"
+        md-page="criteria.page" md-total="{{generalmessages.totalElements}}" md-on-paginate="loadGeneralMessages"
+        md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+</hois-collapsable>
+<!-- <span ng-show="pageLoadingHandler.setFinish('generalMessages') && false"></span> -->

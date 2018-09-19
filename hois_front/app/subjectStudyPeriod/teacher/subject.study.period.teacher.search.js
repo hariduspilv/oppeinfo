@@ -7,6 +7,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN);
     $scope.currentNavItem = 'teachers';
 
+    $scope.formState = {xlsUrl: 'subjectStudyPeriods/teachers/searchByTeacher.xls'};
+
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods/teachers', {order: 'id'});
 
     function setCurrentStudyPeriod() {

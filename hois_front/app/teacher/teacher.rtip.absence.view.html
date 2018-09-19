@@ -37,7 +37,7 @@
   md-page-select></md-table-pagination>
 
   <div layout="row" ng-if="!auth.isTeacher() && rtipPage">
-    <md-button ng-if="teacher.canEdit" ng-click="updateData()" class="md-raised md-primary">{{'teacher.rtipAbsence.updateData' | translate}}</md-button>
+    <md-button ng-if="teacher.canEdit && teacher.rtipNr" ng-click="updateData()" class="md-raised md-primary">{{'teacher.rtipAbsence.updateData' | translate}}</md-button>
     <md-button ng-click="back('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

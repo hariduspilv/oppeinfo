@@ -1,0 +1,69 @@
+<hois-collapsable class="hois-collapse2" expanded="true" ng-if="studentAbsences.length > 0">
+    <hois-collapsable-header>
+        <span>{{'home.student.absences' | translate}}</span>
+    </hois-collapsable-header>
+
+    <md-table-container>
+        <table md-table class="absence-table" ng-init="groups = getGroupedValues(studentAbsences, 'entryDate', 'hoisDate')">
+            <tbody md-body>
+                <tr md-row class="header">
+                    <td md-cell>{{'academicCalendar.date' | translate}}</td>
+                    <td md-cell>{{'home.student.absence.beingLate' | translate}}</td>
+                    <td md-cell>{{'home.student.absence.absences' | translate}}</td>
+                    <td md-cell></td>
+                </tr>
+            </tbody>
+            <tbody md-body ng-init="absenceGroup = getGroupedValues(group, 'absenceCode', null)" ng-repeat-start="(key, group) in groups" ng-click="openCloseDetails(absenceGroup)" style="cursor:pointer">
+                <tr md-row>
+                    <td md-cell>{{key || '-'}}</td>
+                    <td md-cell class="sub-header">{{absenceGroup['PUUDUMINE_H'].length}}</td>
+                    <td md-cell class="sub-header">{{absenceGroup['PUUDUMINE_P'].length}}</td>
+                    <td md-cell>
+                        <md-button style="margin: 0;">
+                            <md-icon md-font-set="material-icons md-dark">
+                                {{absenceGroup.clicked ? "keyboard_arrow_up" : "keyboard_arrow_down"}}
+                            </md-icon>
+                        </md-button>
+                    </td>
+                </tr>
+            </tbody>
+            <tbody md-body ng-repeat-end ng-show="absenceGroup.clicked" ng-init="absenceArray = translateObjectToArray(absenceGroup)">
+                <tr class="add-info" md-row ng-repeat="absence in absenceArray | orderBy: '+startLessonNr'" ng-init="$last && pageLoadingHandler.setFinish('studentAbsences')">
+                    <td md-cell ng-if="absence.startLessonNr">{{absence.startLessonNr}}. {{'home.student.lesson' | translate}}</td>
+                    <td md-cell ng-if="!absence.startLessonNr"></td>
+                    <td md-cell>{{absence.absenceCode === 'PUUDUMINE_H' ? absence.journalName : ""}}</td>
+                    <td md-cell>{{absence.absenceCode === 'PUUDUMINE_P' ? absence.journalName : ""}}</td>
+                    <td md-cell></td>
+                </tr>
+            </tbody>
+        </table>
+    </md-table-container>
+</hois-collapsable>
+<!-- <span ng-show="pageLoadingHandler.setFinish('studentAbsences') && false"></span> -->
+
+<style>
+    table.absence-table tr.header > td {
+        font-size: 15px !important;
+        font-style: normal;
+        font-weight: normal;
+        color: #ADADAD !important;
+    }
+    table.absence-table tr.add-info > td {
+        font-weight: bold;
+    }
+    table.absence-table td {
+        max-width: 35%;
+        text-align: center !important;
+    }
+    table.absence-table td.sub-header {
+        color: #0D47A1 !important;
+    }
+    table.absence-table td:first-child {
+        width: 15% !important;
+        text-align: start !important;
+    }
+    table.absence-table td:last-child {
+        width: 15% !important;
+        text-align: end !important;
+    }
+</style>

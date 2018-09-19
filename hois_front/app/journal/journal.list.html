@@ -31,10 +31,10 @@
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
-          <div flex="45" flex-sm="100">
-            <hois-autocomplete label="journal.label" ng-model="criteria.journalObject" method="journals" 
-              additional-query-params="{studyYear: criteria.studyYear}"></hois-autocomplete>
-          </div>
+          <md-input-container flex="45" flex-sm="100">
+            <label class="textInput">{{'journal.label' | translate}}</label>
+            <input ng-model="criteria.journalName" type="text">
+          </md-input-container>
 
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'journal.status' | translate}}</label>
@@ -65,6 +65,8 @@
             <th md-column>{{'journal.plannedAndEnteredLessonsCount1' | translate}}<br>{{'journal.plannedAndEnteredLessonsCount2' | translate}}</th>
             <th md-column md-order-by="7">{{'main.status' | translate}}</th>
             <th md-column md-order-by="8">{{'curriculum.code' | translate}}</th>
+            <th md-column md-order-by="9">{{'journal.isReviewOk' | translate}}</th>
+            <th md-column md-order-by="10">{{'journal.reviewDate' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
@@ -80,6 +82,8 @@
             <td md-cell>{{row.plannedHours}}/{{row.usedHours}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>{{row.curriculums}}</td>
+            <td md-cell>{{row.isReviewOk !== null ? (row.isReviewOk ? ('main.yes' | translate) :  ('main.no' | translate)) : ''}}</td>
+            <td md-cell>{{row.reviewDate | hoisDate}}</td>
             <td md-cell>
               <md-button ng-if="row.canEdit" md-no-ink class="md-primary change-button" ng-href="#/journal/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>

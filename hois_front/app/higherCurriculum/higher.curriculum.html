@@ -144,10 +144,10 @@
           In addition, extra logic in providing options required -->
 					<md-input-container flex="50" flex-offset="5">
            <label>
-             {{'curriculum.structuralUnitResponsible' | translate}} {{getStar()}}
+             {{'curriculum.structuralUnitResponsible' | translate}}
             </label>
-           <hois-select ng-model="curriculum.schoolDepartments" multiple values="schoolDepartments"
-           ng-required="strictValidation()" ng-disabled="formState.readOnly"></hois-select>
+						<hois-select ng-model="curriculum.schoolDepartments" multiple values="schoolDepartments"
+						required ng-disabled="formState.readOnly"></hois-select>
           </md-input-container>
 				</div>
 			</fieldset>
@@ -156,10 +156,10 @@
 		<fieldset tabindex="4">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.commonData' | translate}}</legend>
 			<div layout="column">
-                <md-input-container flex>
-                    <label>{{'stateCurriculum.enter.objectivesEt' | translate}}{{getStar()}}</label>
-                    <textarea ng-model="curriculum.objectivesEt" ng-required="strictValidation()" md-maxlength="20000" max-rows="10" ng-readonly="formState.readOnly"></textarea>
-                </md-input-container>
+				<md-input-container flex>
+						<label>{{'stateCurriculum.enter.objectivesEt' | translate}}{{getStar()}}</label>
+						<textarea ng-model="curriculum.objectivesEt" ng-required="strictValidation()" md-maxlength="20000" max-rows="10" ng-readonly="formState.readOnly"></textarea>
+				</md-input-container>
 				<md-input-container flex>
 				  <label>{{'stateCurriculum.enter.objectivesEn' | translate}}{{getStar()}}</label>
 				  <textarea ng-model="curriculum.objectivesEn" ng-required="strictValidation()" md-maxlength="20000" max-rows="10" ng-readonly="formState.readOnly"></textarea>

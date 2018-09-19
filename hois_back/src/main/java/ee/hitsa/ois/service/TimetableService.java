@@ -78,6 +78,7 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.TimetableCopyForm;
 import ee.hitsa.ois.web.commandobject.TimetableRoomAndTimeForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEditForm;
@@ -85,6 +86,7 @@ import ee.hitsa.ois.web.commandobject.timetable.TimetableEventHigherForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventVocationalForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.RoomDto;
 import ee.hitsa.ois.web.dto.timetable.DateRangeDto;
 import ee.hitsa.ois.web.dto.timetable.GroupTimetableDto;
@@ -178,6 +180,7 @@ public class TimetableService {
         dto.setSubjectTeacherPairs(getPlannedLessonsForHigherTimetableSsp(timetable, dto.getSubjectTeacherPairs()));
         dto.setWeeks(getTimetableWeekRanges(timetable));
         dto.setBuildings(autocompleteService.buildings(EntityUtil.getId(timetable.getSchool())));
+        dto.setTimetableCapacities(higherTimetableCapacities(timetable, dto.getStudentGroupCapacities()));
         return dto;
     }
 
@@ -295,6 +298,7 @@ public class TimetableService {
                 getJournalsForPlanning(StreamUtil.toMappedList(r -> (r.getId()), dto.getStudentGroups()), timetable));
         dto.setLessonTimes(getLessonTimesForPlanning(timetable));
         dto.setPlannedLessons(getPlannedLessonsForVocationalTimetable(timetable));
+        dto.setTimetableCapacities(vocationalTimetableCapacities(timetable, dto.getStudentGroupCapacities()));
         return dto;
     }
 
@@ -1117,15 +1121,15 @@ public class TimetableService {
                 + " join lesson_plan lp on lp.id = lpm.lesson_plan_id"
                 + " join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id");
 
-        qb.requiredCriteria("lp.study_year_id = :studyYearId", "studyYearId",
-                EntityUtil.getId(timetable.getStudyPeriod().getStudyYear()));
+        qb.requiredCriteria("jc.study_period_id = :studyPeriodId", "studyPeriodId", EntityUtil.getId(timetable.getStudyPeriod()));
         qb.filter("lp.is_usable = true");
         qb.requiredCriteria("lp.student_group_id in (:studentGroupIds)", "studentGroupIds", studentGroupIds);
         qb.groupBy("j.id, lp.student_group_id, jct.id");
-        String subselect = "(select sum(jc.hours)"
+        
+        String subselect = "(select coalesce(sum(jc.hours), 0)"
                 + " from journal_capacity jc where jc.journal_id = j.id and jc.journal_capacity_type_id = jct.id and "
                 + "jc.week_nr in (" + currentWeekNr + "))";
-        qb.filter(subselect + " is not null");
+        
         String select = "j.id as journal_id, sum(jc.hours) as total_hours, lp.student_group_id, " + subselect
                 + " as current_week_hours, jct.capacity_type_code";
         List<?> data = qb.select(select, em).getResultList();
@@ -1134,8 +1138,10 @@ public class TimetableService {
                 .toMappedList(r -> new TimetableStudentGroupCapacityDto(resultAsLong(r, 2), resultAsLong(r, 0),
                         resultAsLong(r, 1), resultAsLong(r, 3), resultAsString(r, 4)), data);
         
+        Map<Long, Map<String, LeftOverLessons>> leftOverLessons = leftOverLessons(studentGroupIds, timetable);
         Map<Long, Map<String, AllocatedLessons>> allocatedCapacities = getAllocatedLessonsForByJournalAndCapacity(
                 timetable);
+        
         for (TimetableStudentGroupCapacityDto dto : result) {
             Map<String, AllocatedLessons> groupAllocatedLessons = allocatedCapacities.get(dto.getJournal());
             if (groupAllocatedLessons != null) {
@@ -1156,8 +1162,79 @@ public class TimetableService {
             } else {
                 dto.setTotalLessonsLeft(dto.getTotalPlannedLessons());
             }
+            setLeftOverLessonsGroupCapacities(dto, leftOverLessons);
         }
+        setPeriodExternalJournalCapacities(result, leftOverLessons);
+        
         return result;
+    }
+    
+    private static void setLeftOverLessonsGroupCapacities(TimetableStudentGroupCapacityDto dto, Map<Long, Map<String, LeftOverLessons>> leftOverLessons) {
+        Map<String, LeftOverLessons> groupLeftOverLessons = leftOverLessons.get(dto.getJournal());
+        if (groupLeftOverLessons != null) {
+            LeftOverLessons capacityLeftOvers = groupLeftOverLessons.remove(dto.getStudentGroup() + "/" + dto.getCapacityType());
+            if (capacityLeftOvers != null) {
+                dto.setLeftOverLessons(Long.valueOf(capacityLeftOvers.getTotalHours().longValue()
+                        - capacityLeftOvers.getOutsidePeriodAllocated().longValue()));
+            }
+            
+            if (groupLeftOverLessons.isEmpty()) {
+                leftOverLessons.remove(dto.getJournal());
+            }
+        }
+    }
+    
+    private static void setPeriodExternalJournalCapacities(List<TimetableStudentGroupCapacityDto> studentGroupCapacities,
+            Map<Long, Map<String, LeftOverLessons>> leftOverLessons) {
+        for (Long journalId : leftOverLessons.keySet()) {
+            Map<String, LeftOverLessons> journalCapacities = leftOverLessons.get(journalId);
+            
+            for (LeftOverLessons capacityLeftOvers : journalCapacities.values()) {
+                TimetableStudentGroupCapacityDto dto = new TimetableStudentGroupCapacityDto(capacityLeftOvers.getStudentGroup(), 
+                        journalId, Long.valueOf(0), Long.valueOf(0), capacityLeftOvers.getCapacityType());
+                dto.setLeftOverLessons(Long.valueOf(capacityLeftOvers.getTotalHours().longValue()
+                        - capacityLeftOvers.getOutsidePeriodAllocated().longValue()));
+                dto.setTotalAllocatedLessons(capacityLeftOvers.getPeriodAllocated());
+                dto.setLessonsLeft(Long.valueOf(dto.getThisPlannedLessons().longValue()
+                        - capacityLeftOvers.getCurrentWeekAllocated().longValue()));
+                studentGroupCapacities.add(dto);
+            }
+        }
+    }
+
+    private Map<Long, Map<String, LeftOverLessons>> leftOverLessons(List<Long> studentGroupIds, Timetable timetable) {
+        Long currentTimetableSpId = EntityUtil.getId(timetable.getStudyPeriod());
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j" + " join journal_capacity jc on jc.journal_id = j.id"
+                + " join (select distinct ot.lesson_plan_module_id, journal_id from journal_omodule_theme ot) jot on jot.journal_id = j.id"
+                + " join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id"
+                + " join lesson_plan lp on lp.id = lpm.lesson_plan_id"
+                + " join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id");
+
+        qb.requiredCriteria("lp.study_year_id = :studyYearId", "studyYearId",
+                EntityUtil.getId(timetable.getStudyPeriod().getStudyYear()));
+        qb.requiredCriteria("jc.study_period_id != :studyPeriodId", "studyPeriodId", currentTimetableSpId);
+        qb.filter("lp.is_usable = true");
+        qb.requiredCriteria("lp.student_group_id in (:studentGroupIds)", "studentGroupIds", studentGroupIds);
+        qb.groupBy("j.id, lp.student_group_id, jct.id");
+        
+        String totalAllocatedSelect = "(select count(*) from timetable_event te "
+                + "join timetable_object too on too.id = te.timetable_object_id and too.journal_id is not null "
+                + "join timetable_object_student_group tsog on tsog.timetable_object_id = too.id "
+                + "join timetable t on t.id = too.timetable_id "
+                + "where too.journal_id = j.id and tsog.student_group_id = lp.student_group_id and te.capacity_type_code = jct.capacity_type_code";
+        String outsidePeriodAllocated = " and t.study_period_id != " + currentTimetableSpId + ") as outside_period_allocated";
+        String periodAllocated = " and t.study_period_id = " + currentTimetableSpId + ") as period_allocated";
+        String currentAllocated = " and t.id = " + EntityUtil.getId(timetable) + ") as current_allocated";
+
+        String select = "j.id as journal_id, lp.student_group_id, jct.capacity_type_code, sum(jc.hours) as total_hours, " + totalAllocatedSelect
+                + outsidePeriodAllocated + "," + totalAllocatedSelect + periodAllocated + "," + totalAllocatedSelect + currentAllocated;
+        List<?> data = qb.select(select, em).getResultList();
+        
+        return !data.isEmpty() ? data.stream()
+                .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.toMap(
+                        r -> resultAsLong(r, 1).toString() + "/" + resultAsString(r, 2),
+                        r -> new LeftOverLessons(resultAsLong(r, 3), resultAsLong(r, 4), resultAsLong(r, 5),  resultAsLong(r, 6), resultAsLong(r, 1), resultAsString(r, 2)))))
+                : new HashMap<>();
     }
 
     private Map<Long, Map<String, AllocatedLessons>> getAllocatedLessonsForByJournalAndCapacity(
@@ -1315,7 +1392,15 @@ public class TimetableService {
                 + " join timetable tt on tobj.timetable_id=tt.id"
                 + " join study_period sp on tt.study_period_id=sp.id"
                 + " join study_year sy on sp.study_year_id = sy.id"
-                + " where tt.school_id=?1 and sy.id=?2 and tt.status_code in (:shownStatusCodes) order by 2");
+                + " where tt.school_id=?1 and sy.id=?2 and tt.status_code in (:shownStatusCodes)"
+                + " union"
+                + " select distinct sg.id, sg.code from timetable_event te"
+                + " join timetable_event_time tet on te.id = tet.timetable_event_id"
+                + " join timetable_event_student_group tesg on tet.id = tesg.timetable_event_time_id"
+                + " join student_group sg on tesg.student_group_id = sg.id"
+                + " join study_year sy on sy.id = ?2"
+                + " where te.school_id=?1 and te.timetable_object_id is null and (tet.start <= sy.end_date and tet.end >= sy.start_date)"
+                + " order by 2");
         q.setParameter(1, schoolId);
         q.setParameter(2, current);
         q.setParameter("shownStatusCodes", shownStatusCodes());
@@ -1336,7 +1421,9 @@ public class TimetableService {
                 + " join journal j on jt.journal_id = j.id"
                 + " join timetable_object tobj on j.id = tobj.journal_id"
                 + " join timetable tt on tt.id = tobj.timetable_id"
-                + " where tt.school_id=?1 and tt.status_code in (:shownStatusCodes)"
+                + " join study_period sp on tt.study_period_id=sp.id"
+                + " join study_year sy on sp.study_year_id = sy.id"
+                + " where tt.school_id=?1 and sy.id=?2 and tt.status_code in (:shownStatusCodes)"
                 + " union"
                 + " select distinct t.id, p.firstname, p.lastname from teacher t"
                 + " join person p on t.person_id = p.id"
@@ -1344,16 +1431,20 @@ public class TimetableService {
                 + " join subject_study_period ssp on ssp.id=sspp.subject_study_period_id"
                 + " join timetable_object tobj on tobj.subject_study_period_id=ssp.id"
                 + " join timetable tt on tt.id=tobj.timetable_id"
-                + " where tt.school_id=?1 and tt.status_code in (:shownStatusCodes)"
+                + " join study_period sp on tt.study_period_id=sp.id"
+                + " join study_year sy on sp.study_year_id = sy.id"
+                + " where tt.school_id=?1 and sy.id=?2 and tt.status_code in (:shownStatusCodes)"
                 + " union"
                 + " select distinct t.id, p.firstname, p.lastname  from timetable_event te"
                 + " join timetable_event_time tet on te.id = tet.timetable_event_id"
                 + " join timetable_event_teacher teta on tet.id = teta.timetable_event_time_id"
                 + " join teacher t on teta.teacher_id = t.id"
+                + " join study_year sy on sy.id = ?2"
                 + " join person p on t.person_id = p.id and te.timetable_object_id is null"
-                + " where te.school_id=?1 and te.timetable_object_id is null"
+                + " where te.school_id=?1 and te.timetable_object_id is null and (tet.start <= sy.end_date and tet.end >= sy.start_date)"
                 + " order by lastname");
         q.setParameter(1, schoolId);
+        q.setParameter(2, current);
         q.setParameter("shownStatusCodes", shownStatusCodes());
         
         List<?> data = q.getResultList();
@@ -1367,15 +1458,26 @@ public class TimetableService {
         }
         
         Query q = em.createNativeQuery("select distinct r.id, b.code as building_code, r.code as room_code from room r"
+                + " join building b on r.building_id = b.id"
                 + " join timetable_event_room ter on r.id=ter.room_id"
                 + " join timetable_event_time tet on ter.timetable_event_time_id=tet.id"
                 + " join timetable_event te on tet.timetable_event_id=te.id"
-                + " left join timetable_object tobj on te.timetable_object_id=tobj.id"
-                + " left join timetable tt on tobj.timetable_id=tt.id"
+                + " join timetable_object tobj on te.timetable_object_id=tobj.id"
+                + " join timetable tt on tobj.timetable_id=tt.id"
+                + " join study_period sp on tt.study_period_id=sp.id"
+                + " join study_year sy on sp.study_year_id = sy.id"
+                + " where te.school_id=?1 and sy.id = ?2 and tt.status_code in (:shownStatusCodes)"
+                + " union"
+                + " select distinct r.id, b.code as building_code, r.code as room_code from room r"
                 + " join building b on r.building_id = b.id"
-                + " where te.school_id=?1 and (tt.status_code in (:shownStatusCodes) or te.timetable_object_id is null)"
-                + " order by r.code");
+                + " join timetable_event_room ter on r.id=ter.room_id"
+                + " join timetable_event_time tet on ter.timetable_event_time_id=tet.id"
+                + " join timetable_event te on tet.timetable_event_id=te.id"
+                + " join study_year sy on sy.id = ?2"
+                + " where te.school_id=?1 and te.timetable_object_id is null and (tet.start <= sy.end_date and tet.end >= sy.start_date)"
+                + " order by room_code");
         q.setParameter(1, schoolId);
+        q.setParameter(2, current);
         q.setParameter("shownStatusCodes", shownStatusCodes());
         
         List<?> data = q.getResultList();
@@ -1512,6 +1614,37 @@ public class TimetableService {
             }
         }
     }
+    
+    private List<ClassifierDto> vocationalTimetableCapacities(Timetable timetable, List<TimetableStudentGroupCapacityDto> studentGroupCapacities) {
+        List<ClassifierDto> schoolCapacities = timetableSchoolCapacityTypeDtos(timetable);
+        Set<String> groupCapacityCodes = StreamUtil.toMappedSet(sgc -> sgc.getCapacityType(), studentGroupCapacities);
+        addMissingGroupCapacities(schoolCapacities, groupCapacityCodes);
+        return schoolCapacities;
+    }
+
+    private List<ClassifierDto> higherTimetableCapacities(Timetable timetable, List<HigherTimetableStudentGroupCapacityDto> studentGroupCapacities) {
+        List<ClassifierDto> schoolCapacities = timetableSchoolCapacityTypeDtos(timetable);
+        Set<String> groupCapacityCodes = StreamUtil.toMappedSet(sgc -> sgc.getCapacityType(), studentGroupCapacities);
+        addMissingGroupCapacities(schoolCapacities, groupCapacityCodes);
+        return schoolCapacities;
+    }
+    
+    private List<ClassifierDto> timetableSchoolCapacityTypeDtos(Timetable timetable) {
+        SchoolCapacityTypeCommand command = new SchoolCapacityTypeCommand();
+        command.setIsHigher(timetable.getIsHigher());
+        command.setIsTimetable(Boolean.TRUE);
+        
+        return autocompleteService.schoolCapacityTypeDtos(EntityUtil.getId(timetable.getSchool()), command);
+    }
+    
+    private void addMissingGroupCapacities(List<ClassifierDto> schoolCapacities, Set<String> groupCapacityCodes) {
+        Set<String> schoolCapacityCodes = StreamUtil.toMappedSet(sc -> sc.getCode(), schoolCapacities);
+        for (String code : groupCapacityCodes) {
+            if (!schoolCapacityCodes.contains(code)) {
+                schoolCapacities.add(ClassifierDto.of(em.getReference(Classifier.class, code)));
+            }
+        }
+    }
 
     static HoisUserDetails userFromPrincipal() {
         Principal principal = SecurityContextHolder.getContext().getAuthentication();
@@ -1538,6 +1671,49 @@ public class TimetableService {
 
         public Long getTotalAllocated() {
             return totalAllocated;
+        }
+
+        public String getCapacityType() {
+            return capacityType;
+        }
+    }
+    
+    private static class LeftOverLessons {
+        private final Long totalHours;
+        private final Long outsidePeriodAllocated;
+        private final Long periodAllocated;
+        private final Long currentWeekAllocated;
+        private final Long studentGroup;
+        private final String capacityType;
+        
+        public LeftOverLessons(Long totalHours, Long outsidePeriodAllocated, Long periodAllocated, Long currentWeekAllocated, 
+                Long studentGroup, String capacityType) {
+            this.totalHours = totalHours;
+            this.outsidePeriodAllocated = outsidePeriodAllocated;
+            this.periodAllocated = periodAllocated;
+            this.currentWeekAllocated = currentWeekAllocated;
+            this.studentGroup = studentGroup;
+            this.capacityType = capacityType;
+        }
+
+        public Long getTotalHours() {
+            return totalHours;
+        }
+
+        public Long getOutsidePeriodAllocated() {
+            return outsidePeriodAllocated;
+        }
+
+        public Long getPeriodAllocated() {
+            return periodAllocated;
+        }
+
+        public Long getCurrentWeekAllocated() {
+            return currentWeekAllocated;
+        }
+
+        public Long getStudentGroup() {
+            return studentGroup;
         }
 
         public String getCapacityType() {

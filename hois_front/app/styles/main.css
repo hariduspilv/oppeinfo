@@ -1275,6 +1275,13 @@ label.required::after {
   content: ' *';
 }
 
+.teacher-lessonplan {
+  font-size: 12px;
+	border-collapse: collapse;
+  border-top:1px solid #ccc;
+  border-left:1px solid #ccc;
+}
+
 .lessonplan
 {
 	font-size: 12px;
@@ -1282,14 +1289,14 @@ label.required::after {
 	/*width: 100%;*/
 }
 
-.lessonplan  td, .lessonplan  th
+.lessonplan td, .lessonplan th, .teacher-lessonplan td, .teacher-lessonplan th
 {
   border-bottom: 1px solid #ccc;
   border-right: 1px solid #ccc;
 	padding: 3px;
 }
 
-.lessonplan  th
+.lessonplan th, .teacher-lessonplan th
 {
   font-weight: normal;
 }
@@ -1495,6 +1502,13 @@ div[ois-drag="true"] {
     font-size: 13px;
 }
 
+#timetableCreation .higher thead th {
+  padding-left: 5px !important;
+}
+
+#timetableCreation .higher thead th:nth-child(even) {
+  background: #1E88E5;
+}
 
 #timetableCreation .higher tr:first-child > td{
   font-size: 11px!important;
@@ -1609,7 +1623,8 @@ md-grid-tile {
   font-size: 20px;
 }
 
-.md-nav-bar li a {
+.md-nav-bar li a, 
+.md-nav-bar li ._md-nav-button-text {
   text-transform: uppercase;
 }
 
@@ -2083,7 +2098,6 @@ label.ui-btn {
   height: 16px;
   width: 16px;
   border-radius: 50%;
-  font-size: 12px;
 }
 
 .timetableVocationalPlan tr td {
@@ -2104,6 +2118,9 @@ label.ui-btn {
   background: #eee;
 }
 
+.dividerBorder {
+  border-right: 1px solid #777 !important;
+}
 
 .container {
   width: 100%;
@@ -2157,6 +2174,7 @@ label.ui-btn {
 {
   border-bottom: 1px solid #ccc;
   border-right: 1px solid #ccc;
+  height: 30px;
   /*padding: 3px;*/
 }
 
@@ -2165,7 +2183,12 @@ label.ui-btn {
   text-align:center;
 }
 
-.journalTable  td:first-child, .journalTable  th:first-child
+.journalTable td:nth-child(1), th:nth-child(1)
+{
+  min-width: unset;
+}
+
+.journalTable td:nth-child(2), .journalTable  th:nth-child(2)
 {
   text-align:left;
 }
@@ -2173,8 +2196,6 @@ label.ui-btn {
 .journalTable  th
 {
   padding: 5px;
-  max-height: 39px;
-  min-height: 39px;
 }
 
 
@@ -2193,7 +2214,7 @@ label.ui-btn {
   border-bottom: 1px solid #eee;
 }
 
-#showGroups md-checkbox
+#showAll md-checkbox
 {
   margin-bottom:2px;
 }
@@ -2308,4 +2329,13 @@ label.ui-btn {
 
 .student-group-teacher-table td:not(:first-child) {
   text-align: center;
+}
+
+.curriculum-fulfillment-result div:nth-child(1) {
+  word-break: break-all;
+}
+
+.curriculum-fulfillment-result div:nth-child(2) {
+  display: flex;
+  align-items: center;
 }

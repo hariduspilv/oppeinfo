@@ -208,7 +208,18 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
     })
-    .when('/timetable/:id/createHigherPlan/:groupId', {
+    .when('/timetable/:id/createHigherPlan/group/:groupId', {
+      templateUrl: 'timetable/timetable.createHigherPlan.html',
+      controller: 'HigherTimetablePlanController',
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
+      }
+    })
+    .when('/timetable/:id/createHigherPlan/pair/:pairId', {
       templateUrl: 'timetable/timetable.createHigherPlan.html',
       controller: 'HigherTimetablePlanController',
       controllerAs: 'controller',

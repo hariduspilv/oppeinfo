@@ -3,11 +3,14 @@ package ee.hitsa.ois.web.dto.timetable;
 import java.time.LocalDate;
 import java.util.List;
 
+import ee.hitsa.ois.web.dto.ClassifierDto;
+
 public class TimetablePlanDto {
     private LocalDate startDate;
     private LocalDate endDate;
     private List<TimetableEventDto> plannedLessons;
     private List<LessonTimeDto> lessonTimes;
+    private List<ClassifierDto> timetableCapacities;
 
     public LocalDate getStartDate() {
         return startDate;
@@ -39,6 +42,14 @@ public class TimetablePlanDto {
 
     public void setLessonTimes(List<LessonTimeDto> lessonTimes) {
         this.lessonTimes = lessonTimes;
+    }
+
+    public List<ClassifierDto> getTimetableCapacities() {
+        return timetableCapacities;
+    }
+
+    public void setTimetableCapacities(List<ClassifierDto> timetableCapacities) {
+        this.timetableCapacities = timetableCapacities;
     }
 
 }

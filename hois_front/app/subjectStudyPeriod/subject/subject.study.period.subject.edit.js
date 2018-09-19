@@ -26,10 +26,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectEditController',
         $scope.record = Endpoint.search($scope.container);
         $scope.record.$promise.then(function(response){
             $scope.capacitiesUtil = new SspCapacities(response);
-            Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function(response){
-              $scope.capacityTypes = response;
-              $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
-            });
+            $scope.capacityTypes = response.capacityTypes;
+            $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
         });
         $scope.subject = QueryUtils.endpoint('/subjectStudyPeriods/subject/' + subject).get();
         $scope.formState = {xlsUrl: 'subjectStudyPeriods/subjects/subjectstudyperiodsubject.xls'};

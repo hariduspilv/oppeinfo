@@ -45,68 +45,66 @@
     <div><span class="label">{{ "diploma.outcomes" | translate }}: </span></div>
     <div>{{ content.outcomes }}</div>
     
-    <div class="page-break-avoid">
-        <div class="margin-top page-break-after-avoid"><span class="label">{{ "diploma.studyResults" | translate }}: </span></div>
-        <table class="study-results margin-top">
-            <thead class="page-break-after-avoid">
-                <tr>
-                    <th class="center">{{ "diploma.results.orderNr" | translate }}</th>
-                    <th>{{ "diploma.results.name" | translate }}</th>
-                    <th class="center">{{ "diploma.results.credits" | translate }}</th>
-                    <th>{{ "diploma.results.grade" | translate }}</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for result in content.studyResults %}
-                <tr>
-                    <td class="study-results-order center">{{ loop.index + 1 }}</td>
-                    <td>{{ result.name }}</td>
-                    <td class="study-results-credits center">{{ result.credits }}</td>
-                    <td class="study-results-grade">{{ result.grade }} ({{ result.gradeName }})</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        {% if content.finalResults is not empty %}
-        <div class="margin-top page-break-after-avoid"><span class="label">{{ "diploma.examResults" | translate }}: </span></div>
-        <table class="study-results margin-top">
-            <tbody>
-            {% for result in content.finalResults %}
-                <tr>
-                    <td class="study-results-order"></td>
-                    <td>{{ result.name }}</td>
-                    <td class="study-results-credits center">
-                    {% if result.credits > 0 %}
-                    {{ result.credits }}
-                    {% endif %}
-                    </td>
-                    <td class="study-results-grade">{{ result.grade }} ({{ result.gradeName }})</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        {% endif %}
-        <table class="study-results margin-top">
-            <tbody>
-                <tr>
-                    <td>{{ "diploma.totalSubjectCredits" | translate }}</td>
-                    <td class="study-results-credits center">{{ content.totalCredits }}</td>
-                    <td class="study-results-grade"></td>
-                </tr>
-            </tbody>
-        </table>
-        {% for apel in content.apels %}
-        <div>
-            *{{ loop.index + 1 }}
-            {% if apel.isFormal %}
-            {{ "diploma.transferred" | translate }}
-            {% else %}
-            {{ "diploma.apel" | translate }}
-            {% endif %}
-            {{ apel.name }}
-        </div>
+    <div class="margin-top page-break-after-avoid"><span class="label">{{ "diploma.studyResults" | translate }}: </span></div>
+    <table class="study-results margin-top">
+        <thead class="page-break-after-avoid">
+            <tr>
+                <th class="center">{{ "diploma.results.orderNr" | translate }}</th>
+                <th>{{ "diploma.results.name" | translate }}</th>
+                <th class="center">{{ "diploma.results.credits" | translate }}</th>
+                <th>{{ "diploma.results.grade" | translate }}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for result in content.studyResults %}
+            <tr>
+                <td class="study-results-order center">{{ loop.index + 1 }}</td>
+                <td>{{ result.name }}</td>
+                <td class="study-results-credits center">{{ result.credits }}</td>
+                <td class="study-results-grade">{{ result.grade }} ({{ result.gradeName }})</td>
+            </tr>
         {% endfor %}
+        </tbody>
+    </table>
+    {% if content.finalResults is not empty %}
+    <div class="margin-top page-break-after-avoid"><span class="label">{{ "diploma.examResults" | translate }}: </span></div>
+    <table class="study-results margin-top">
+        <tbody>
+        {% for result in content.finalResults %}
+            <tr>
+                <td class="study-results-order"></td>
+                <td>{{ result.name }}</td>
+                <td class="study-results-credits center">
+                {% if result.credits > 0 %}
+                {{ result.credits }}
+                {% endif %}
+                </td>
+                <td class="study-results-grade">{{ result.grade }} ({{ result.gradeName }})</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    <table class="study-results margin-top">
+        <tbody>
+            <tr>
+                <td>{{ "diploma.totalSubjectCredits" | translate }}</td>
+                <td class="study-results-credits center">{{ content.totalCredits }}</td>
+                <td class="study-results-grade"></td>
+            </tr>
+        </tbody>
+    </table>
+    {% for apel in content.apels %}
+    <div>
+        *{{ loop.index + 1 }}
+        {% if apel.isFormal %}
+        {{ "diploma.transferred" | translate }}
+        {% else %}
+        {{ "diploma.apel" | translate }}
+        {% endif %}
+        {{ apel.name }}
     </div>
+    {% endfor %}
     <div class="page-break-avoid margin-top">
         <div><span class="label">{{ "diploma.evaluationDescription" | translate }}: </span></div>
         <table class="evaluation-description">

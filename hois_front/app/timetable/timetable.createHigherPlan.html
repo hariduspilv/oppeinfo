@@ -13,7 +13,7 @@
         <hois-value value="(plan.startDate | hoisDate) + '-'+(plan.endDate | hoisDate)" />
       </md-input-container>
       <div flex layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
-        <span ng-repeat="c in capacityTypes">
+        <span ng-repeat="c in capacityTypes | orderBy: currentLanguageNameField()">
           <span ng-if="!$first">|</span>
           {{::c.value.toUpperCase()}} - {{currentLanguageNameField(c)}}
         </span>
@@ -135,32 +135,32 @@
         <thead md-head>
           <tr md-row>
             <th md-column></th>
-            <th md-column ng-repeat="date in plan.datesForTimetable" colspan="{{lessonsInDay}}">
+            <th md-column ng-if="lessonsInDay[date] > 0" ng-repeat="date in plan.datesForTimetable" colspan="{{lessonsInDay[date]}}">
               {{'timetable.timetablePlan.' + weekday[date.getDay()] | translate}}
             </th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-class-odd="'odd'" ng-class-even="'even'">
-            <td rowspan="2"></td>
-            <td ng-repeat="lessonTime in currentLessonTimes track by $index" colspan="2" ng-if="$even">
-              <span> {{lessonTime | hoisTimeMin}} </span>
+            <td rowspan="2" class="dividerBorder"></td>
+            <td ng-if="$even" ng-repeat="lessonTime in currentLessonTimes track by $index" colspan="2" ng-class="{dividerBorder: currentLessonTimes[$index + 1].endOfDay}">
+              <span> {{lessonTime.time | hoisTimeMin}} </span>
             </td>
           </tr>
           <tr>
-            <td ng-repeat="lessonTime in currentLessonTimes track by $index" colspan="1">
+            <td ng-repeat="lessonTime in currentLessonTimes track by $index" colspan="1" ng-class="{dividerBorder: lessonTime.endOfDay}">
               <span>&nbsp;</span>
             </td>
           </tr>
           <tr md-row ng-class="'even'" ng-if="plan.showLessonTimes">
-            <td>{{'timetable.timetablePlan.lessonTimes' | translate}}</td>
-            <td ng-repeat="lessonTime in lessonTimeLegend" colspan="{{lessonTime.colspan}}" class="higher-timetable-lesson-time">
+            <td class="dividerBorder">{{'timetable.timetablePlan.lessonTimes' | translate}}</td>
+            <td ng-repeat="lessonTime in lessonTimeLegend" colspan="{{lessonTime.colspan}}" class="higher-timetable-lesson-time" ng-class="{dividerBorder: lessonTime.endOfDay}">
               <div layout="center">{{lessonTime.lessonNr}}</div>
             </td>
           </tr>
           <tr md-row ng-repeat="group in plan.currentStudentGroups | orderBy: orderBySelectedGroup" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td>{{group.code}}</td>
-            <td ng-repeat="date in plan.datesForTimetable" colspan="{{lessonsInDay}}">
+            <td class="dividerBorder">{{group.code}}</td>
+            <td ng-if="lessonsInDay[date] > 0" ng-repeat="date in plan.datesForTimetable" colspan="{{lessonsInDay[date]}}" class="dividerBorder">
               <div ng-repeat="lessonTime in group.currentLessons[date.getDate() + date.getMonth() + date.getFullYear()]" old-event-id="{{lessonTime.id}}"
                 ng-class="{'timetable-higher-drop' : (plan.selectedGroup === group.dropdownValue && plan.repeatCode && plan.lessonAmount), 'timetable-higher-drag' : lessonTime.id ? true : false, 'timetable-higher' : true}"
                 drop-fn="saveEventAfterClashCheck(data)" ng-click="changeEvent(lessonTime)" ng-attr-ois-higher-drop="{{plan.selectedGroup === group.dropdownValue}}"

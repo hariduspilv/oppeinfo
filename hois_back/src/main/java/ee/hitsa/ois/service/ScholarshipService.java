@@ -46,6 +46,7 @@ import ee.hitsa.ois.domain.scholarship.ScholarshipTermStudyForm;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTermStudyLoad;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -274,6 +275,8 @@ public class ScholarshipService {
             dto.setStatus(EntityUtil.getCode(sa.getStatus()));
             dto.setDecisionDate(sa.getDecisionDate());
             dto.setRejectComment(sa.getRejectComment());
+            dto.setIsTeacherConfirm(sa.getIsTeacherConfirmed());
+            dto.setNeedsConfirm(sa.getScholarshipTerm().getIsTeacherConfirm());
             return dto;
         }, stipends);
     }
@@ -375,7 +378,8 @@ public class ScholarshipService {
 
     private StudentResults getVocationalResults(Student student) {
         StudentResults results = new StudentResults();
-        BigDecimal credits = studentService.getStudentCurriculumCompletion(student).getCredits();
+        StudentCurriculumCompletion studentCurriculumCompletion = studentService.getStudentCurriculumCompletion(student);
+        BigDecimal credits = studentCurriculumCompletion == null ? null : studentCurriculumCompletion.getCredits();
         results.setCredits(credits == null ? BigDecimal.ZERO : credits);
         LocalDateTime currentTime = LocalDateTime.now();
         results.setAverageMark(getAverageGrade(student, currentTime));
@@ -594,7 +598,8 @@ public class ScholarshipService {
                         + " join student s on s.id = sa.student_id" 
                         + " join person p on p.id = s.person_id"
                         + " join student_group sg on sg.id = sa.student_group_id"
-                        + " join curriculum c on c.id = sg.curriculum_id");
+                        + " join curriculum_version cv on sa.curriculum_version_id = cv.id"
+                        + " join curriculum c on c.id = cv.curriculum_id");
 
         qb.requiredCriteria("st.school_id = :schoolId", "schoolId", user.getSchoolId());
         if (user.isTeacher()) {
@@ -608,8 +613,9 @@ public class ScholarshipService {
         qb.optionalCriteria("st.study_period_id = :studyPeriod", "studyPeriod", command.getStudyPeriod());
         qb.optionalCriteria("sa.scholarship_term_id in (select scholarship_term_id from scholarship_term_course where " 
                 + "course_code in (:courseCodes))", "courseCodes", command.getCourses());
-        qb.optionalCriteria("sa.scholarship_term_id in (select scholarship_term_id from scholarship_term_curriculum where "
-                + "curriculum_id in (:curriculumIds))", "curriculumIds", command.getCurriculum());
+        qb.optionalCriteria("c.id in (:curriculumIds)", "curriculumIds", command.getCurriculum());
+        /*qb.optionalCriteria("sa.scholarship_term_id in (select scholarship_term_id from scholarship_term_curriculum where "
+                + "curriculum_id in (:curriculumIds))", "curriculumIds", command.getCurriculum());*/
         qb.optionalContains(Arrays.asList("sg.code"), "studentGroup", command.getStudentGroup());
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname"), "personName", command.getStudentName());
 
@@ -619,7 +625,7 @@ public class ScholarshipService {
         String select = "sa.id as application_id, st.type_code, st.id as term_id, st.name_et, c.code, s.id as student_id"
                 + ", p.firstname, p.lastname, p.idcode, sa.average_mark, sa.last_period_mark , sa.curriculum_completion"
                 + ", sa.is_teacher_confirmed, sa.status_code, sa.compensation_reason_code, sa.compensation_frequency_code"
-                + ", sa.credits, sa.absences, sa.reject_comment"
+                + ", sa.credits, sa.absences, sa.reject_comment, st.is_teacher_confirm"
                 + ", (select case when s.study_start > date(now()) - interval '" + SAIS_POINTS_MONTHS + " months'"
                 + " then sais.points else null end"
                 + " from directive_student ds"
@@ -627,7 +633,7 @@ public class ScholarshipService {
                 + " where ds.canceled = false and ds.student_id = s.id) as sais_points";
         List<?> data = qb.select(select, em).getResultList();
         return StreamUtil.toMappedList(r -> {
-            ScholarshipApplicationSearchDto dto = new ScholarshipApplicationSearchDto();
+        	ScholarshipApplicationSearchDto dto = new ScholarshipApplicationSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setType(resultAsString(r, 1));
             dto.setTerm(resultAsLong(r, 2));
@@ -648,7 +654,8 @@ public class ScholarshipService {
             dto.setCredits(resultAsDecimal(r, 16));
             dto.setAbsences(resultAsLong(r, 17));
             dto.setRejectComment(resultAsString(r, 18));
-            dto.setSaisPoints(resultAsDecimal(r, 19));
+            dto.setNeedsConfirm(resultAsBoolean(r, 19));
+            dto.setSaisPoints(resultAsDecimal(r, 20));
             return dto;
         }, data);
     }

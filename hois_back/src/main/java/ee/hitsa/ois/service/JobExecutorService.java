@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,6 +25,7 @@ import ee.hitsa.ois.service.kutseregister.KutseregisterService;
 import ee.hitsa.ois.service.rtip.RtipService;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 
 /**
  * job execution service
@@ -52,6 +54,11 @@ public class JobExecutorService {
     private KutseregisterService kutseregisterService;
     @Autowired
     private RtipService rtipService;
+    @Autowired
+    private StudentRepresentativeService studentRepresentativeService;
+
+    @Value("${hois.jobs.message.representative.days}")
+    private Integer representativeMessageDays;
 
     /**
      * Handler for practice contract ended jobs
@@ -106,8 +113,10 @@ public class JobExecutorService {
     @Scheduled(cron = "${hois.jobs.rtip.cron}")
     public void syncRtip() {
         withAuthentication(() -> {
+            LocalDate to = LocalDate.now();
+            LocalDate from = to.minusDays(1);
             for(School school : rtipService.rtipSchools()) {
-                rtipService.syncSchool(school, null, null);
+                rtipService.syncSchool(school, from, to);
             }
         }, AUTHENTICATION_MSG);
     }
@@ -124,6 +133,16 @@ public class JobExecutorService {
     }
 
     /**
+     * Automatic task to send automatic messages
+     */
+    @Scheduled(cron = "${hois.jobs.message.cron}")
+    public void sendMessages() {
+        withAuthentication(() -> {
+            studentRepresentativeService.sendRepresentativeEndingMessages(representativeMessageDays);
+        }, AUTHENTICATION_MSG);
+    }
+
+    /**
      * Job execution wrapper.
      * If actual handler returns without exception, job is marked as done, otherwise failed (and exception is logged).
      *
@@ -132,6 +151,7 @@ public class JobExecutorService {
      * @param types
      */
     private void handleJobs(Consumer<Job> handler, Authentication authentication, JobType... types) {
+        log.info("Executing jobs with types: {}", EnumUtil.toNameList(types));
         withAuthentication(() -> {
             for(Job job : jobService.findExecutableJobs(types)) {
                 try {

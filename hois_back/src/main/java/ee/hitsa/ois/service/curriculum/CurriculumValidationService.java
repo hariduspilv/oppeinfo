@@ -366,12 +366,24 @@ public class CurriculumValidationService {
     }
 
     private static void assertThemeIsValid(CurriculumVersionOccupationModuleTheme theme) {
-        if(!hoursAndCreditsMatch(theme)) {
+        /*if(!hoursAndCreditsMatch(theme)) {
             throw new ValidationFailedException("curriculum.error.themeCreditsAndHoursMismatch");
-        }
+        }*/
         if(!hoursAndCapacitiesMatch(theme)) {
             throw new ValidationFailedException("curriculum.error.themeCapacitiesAndHoursMismatch");
         }
+    }
+
+    public boolean validOccupationModuleThemesHoursAndCredits(CurriculumVersion curriculumVersion) {
+        for(CurriculumVersionOccupationModule occupationModule : curriculumVersion.getOccupationModules()) {
+            
+            for(CurriculumVersionOccupationModuleTheme theme : occupationModule.getThemes()) {
+                if(!hoursAndCreditsMatch(theme)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private static boolean hoursAndCreditsMatch(CurriculumVersionOccupationModuleTheme theme) {

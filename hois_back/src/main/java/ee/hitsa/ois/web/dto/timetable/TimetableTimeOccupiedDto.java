@@ -10,6 +10,7 @@ public class TimetableTimeOccupiedDto {
     private Boolean occupied;
     private Set<AutocompleteResult> teachers = new HashSet<>();
     private Set<String> rooms = new HashSet<>();
+    private Set<String> studentGroups = new HashSet<>();
     
     public Boolean getOccupied() {
         return occupied;
@@ -33,6 +34,14 @@ public class TimetableTimeOccupiedDto {
     
     public void setRooms(Set<String> rooms) {
         this.rooms = rooms;
+    }
+
+    public Set<String> getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(Set<String> studentGroups) {
+        this.studentGroups = studentGroups;
     }
     
 }

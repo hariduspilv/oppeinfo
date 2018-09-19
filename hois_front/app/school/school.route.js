@@ -150,6 +150,18 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPETASE]
       }
     })
+    .when('/school/capacityTypes', {
+      templateUrl: 'school/school.capacity.type.html',
+      controller: 'SchoolCapacityTypeController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPETOOLIIK]
+      }
+    })
     .when('/school/finaldocsigners', {
       templateUrl: 'school/final.doc.signer.search.html',
       controller: 'SimpleListController',

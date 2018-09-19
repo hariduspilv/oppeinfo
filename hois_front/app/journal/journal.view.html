@@ -67,20 +67,48 @@
   </div>
 </div>
 
-<div layout-padding>
-  <div flex>
-    <div layout="row">
-      <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
-      <a ng-attr-href="{{excel(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
-    </div>
+<div class="ois-form-layout-padding">
+  <fieldset>
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'journal.review' | translate}}</legend>
+    <div class="form-readonly">
+      <br>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container  flex="45" flex-sm="100" flex-xs="100">
+          <label>{{'journal.isReviewOk' | translate}}</label>
+          <hois-value value="journal.isReviewOk !== null ? (journal.isReviewOk ? ('main.yes' | translate) :  ('main.no' | translate)) : ''"></hois-value>
+        </md-input-container>
+        <md-input-container  flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+          <label>{{'journal.reviewDate' | translate}}</label>
+          <hois-value value="journal.reviewDate | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="column" flex>
+        <md-input-container flex>
+          <label>{{'journal.addInfo' | translate}}</label>
+          <hois-value value="journal.reviewInfo"></hois-value>
+        </md-input-container>
+      </div>
   </div>
+  </fieldset>
 </div>
 
 <div ng-controller="JournalEditController as journalEditController">
   <div layout-padding>
     <div flex>
+      <div layout="row">
+        <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
+        <a ng-attr-href="{{excel(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+      </div>
+    </div>
+  </div>
+  
+  <div layout-padding>
+    <div flex>
       <div layout="row" flex>
-        <div class="common-label" flex>{{'journal.entryTabelLegend' | translate}}</div>
+        <div flex="50" layout="column" layout-align="start">
+          <div class="common-label" flex>{{'journal.absencesLegend' | translate}}</div>
+          <div class="common-label" flex>{{'journal.entryTabelLegend' | translate}}</div>
+        </div>
         <div flex="50" layout="row" layout-align="end">
           <md-input-container>
             <md-checkbox ng-model="showAllStudentsModel" aria-label="show all students" ng-change="showAllStudents(showAllStudentsModel)">
@@ -89,10 +117,12 @@
           </md-input-container>
         </div>
       </div>
-      <div class="container" fixed-column-table fixed-columns="1" ng-style="{'max-height': (journal.journalStudents.length > 10) ? windowHeight-250+'px':'inherit', 'overflow-y': journal.journalStudents.length < 11 ? 'hidden':'scroll'}">
+      <br>
+      <div class="container" fixed-column-table fixed-columns="1" ng-style="{'overflow-y': journal.journalStudents.length < 11 ? 'hidden':'scroll'}">
         <table class="journalTable">
           <thead>
             <tr flex>
+              <th>{{'main.nr' | translate}}</th>
               <th style="padding-right:11em;"><span>{{'student.label' | translate}}, {{'journal.studentGroup' | translate}}</span></th>
               <th class="bordered" style="padding-left:1em;"
                 md-colors="{background: getEntryColor(journalEntry.entryType.code)}" 
@@ -116,9 +146,21 @@
           </thead>
           <tbody md-body>
             <tr ng-repeat="row in journal.journalStudents" ng-class-odd="'odd'" ng-class-even="'even'" ng-init="$last && finished()">
+              <td width="5%">{{$index + 1}}</td>
               <td width="10%" height="30px">
-                <a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}
-                <span ng-if="row.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
+                <span>
+                  <i>
+                    <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'journal.academicLeaveAbbrev' | translate}}</span>
+                    <span ng-if="row.status === 'OPPURSTAATUS_L'">{{'journal.finishedAbbrev' | translate}}</span>
+                    <span ng-if="row.status === 'OPPURSTAATUS_K'">{{'journal.exmatriculatedAbbrev' | translate}}</span>
+                    <span ng-if="row.isIndividualCurriculum">
+                      <span ng-if="row.status !== 'OPPURSTAATUS_O' && row.status !== 'OPPURSTAATUS_V'">, </span>
+                      <span>{{'journal.individualCurriculumAbbrev' | translate}}</span>
+                    </span>
+                  </i>
+                  <a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}
+                  <span ng-if="row.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
+                </span>
               </td>
               <td class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate">
                 <div layout="row" style="padding-left:1em;">
@@ -197,6 +239,7 @@
             <tr md-row>
               <th md-column> </th>
               <th md-column>{{'journal.entry.date' | translate}}</th>
+              <th md-column>{{'journal.entry.lessons' | translate}}</th>
               <th md-column>{{'journal.entry.nameContent' | translate}}</th>
               <th md-column>{{'journal.entry.homework' | translate}}</th>
               <th md-column>{{'journal.entry.homeworkDuedate' | translate}}</th>
@@ -207,6 +250,7 @@
               ng-class-even="'even'" md-colors="{background: getEntryColor(row.entryType)}">
               <td md-cell><span ng-if="row.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span> </td>
               <td md-cell>{{row.entryDate ? (row.entryDate | hoisDate) : '-'}}</td>
+              <td md-cell>{{row.lessons ? row.lessons : '-'}}</td>
               <td md-cell>
                 <span ng-if="row.nameEt">{{row.nameEt}}</span>
                 <span ng-if="row.nameEt && row.content">/</span>

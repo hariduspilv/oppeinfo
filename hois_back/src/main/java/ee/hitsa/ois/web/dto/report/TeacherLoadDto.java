@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto.report;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -17,15 +18,17 @@ public class TeacherLoadDto {
     private final String teacher;
     private final Long plannedHours;
     private final Long actualHours;
+    private final BigDecimal coefficientHours;
     private final List<TeacherLoadSubjectDto> subjects;
     private final List<TeacherLoadModuleDto> modules;
 
-    public TeacherLoadDto(Object record, List<Object> subjectRecords, List<Object> moduleRecords, Long actualLoad) {
+    public TeacherLoadDto(Object record, List<Object> subjectRecords, List<Object> moduleRecords, Long actualLoad, BigDecimal coefficientLoad) {
         studyYear = new AutocompleteResult(null, resultAsString(record, 0), resultAsString(record, 1));
         studyPeriod = new AutocompleteResult(null, resultAsString(record, 2), resultAsString(record, 3));
         teacher = PersonUtil.fullname(resultAsString(record, 4), resultAsString(record, 5));
         plannedHours = resultAsLong(record, 6);
         actualHours = actualLoad;
+        coefficientHours = coefficientLoad;
         subjects = StreamUtil.toMappedList(TeacherLoadSubjectDto::new, subjectRecords);
         modules = StreamUtil.toMappedList(TeacherLoadModuleDto::new, moduleRecords);
     }
@@ -48,6 +51,10 @@ public class TeacherLoadDto {
 
     public Long getActualHours() {
         return actualHours;
+    }
+    
+    public BigDecimal getCoefficientHours() {
+        return coefficientHours;
     }
 
     public List<TeacherLoadSubjectDto> getSubjects() {

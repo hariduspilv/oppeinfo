@@ -1,0 +1,49 @@
+<div ng-cloak ng-if="auth.higher && auth.vocational">
+  <div ng-include="'school/school.capacity.type.navbar.html'"></div>
+</div>
+
+<div layout="column" layout-padding>
+  <div>
+    <form name="schoolStudyLevelsForm">
+      <md-tablecontainer>
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column>
+                <md-checkbox ng-model="selectAll" ng-change="updateAllCheckBoxes(selectAll)">
+                </md-checkbox>
+              </th>
+              <th md-column>{{'schoolCapacityType.type' | translate}}</th>
+              <th md-column>{{'schoolCapacityType.isTimetable' | translate}}</th>
+              <th md-column>{{'schoolCapacityType.teacherLoadPercentage' | translate}}</th>
+              <th md-column>&nbsp;</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="capacityType in capacityTypes" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>
+                <md-checkbox ng-model="capacityType.isUsable" ng-change="isUsableChanged(capacityType)">
+                </md-checkbox>
+              </td>
+              <td md-cell>{{currentLanguageNameField(capacityMap[capacityType.typeCode])}}</td>
+              <td md-cell>
+                <md-checkbox ng-model="capacityType.isTimetable" ng-disabled="!capacityType.isUsable">
+                </md-checkbox>
+              </td>
+              <td md-cell>
+                <div ng-repeat="load in capacityType.loads">
+                  {{load.loadPercentage}} ({{currentLanguageNameField(studyYearMap[load.studyYearId])}})
+                </div>
+              </td>
+              <td md-cell>
+                <md-button md-no-ink class="md-primary change-button" ng-if="canEdit && capacityType.id && capacityType.isUsable" 
+                  ng-click="changeLoads(capacityType)">{{'main.button.change' | translate}}</md-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-tablecontainer>
+    </form>
+    <md-button ng-if="canEdit" ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+  </div>
+</div>

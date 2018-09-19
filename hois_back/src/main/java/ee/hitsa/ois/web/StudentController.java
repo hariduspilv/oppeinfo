@@ -131,7 +131,7 @@ public class StudentController {
         if(user.isStudent()) {
             result.put("applicationTypesApplicable", applicationService.applicableApplicationTypes(student));
         }
-        result.put("directives", directives(user, student, new PageRequest(0, pagesize, null, "headline")));
+        result.put("directives", directives(user, student, new PageRequest(0, pagesize, null, "confirm_date, headline")));
         result.put("practiceContracts", practiceContracts(user, student, new PageRequest(0, pagesize, null, "contract_nr")));
         Map<String, Object> studentDto = new HashMap<>();
         studentDto.put("isVocational", Boolean.valueOf(StudentUtil.isVocational(student)));

@@ -7,6 +7,13 @@
       <md-button class="md-raised" ng-click="unconfirm()" ng-if="journal.canBeUnconfirmed">{{'journal.button.unconfirm' | translate}}</md-button>
       <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
       <a ng-href="{{excel(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+      <md-input-container>
+        <span class="common-label">{{'journal.gradeInput' | translate}}</span>
+        <md-radio-group layout-gt-sm="row" ng-model="formState.gradeInputAsSelect">
+          <md-radio-button ng-value="true">{{'journal.asSelectField' | translate}}</md-radio-button>
+          <md-radio-button ng-value="false">{{'journal.asInputField' | translate}}</md-radio-button>
+        </md-radio-group>
+      </md-input-container>
     </div>
     <div layout="row" ng-if="$parent.$parent.moodleCourseId">
       <md-button class="md-raised" ng-click="enrollStudents()">{{'moodle.enrollStudents' | translate}}</md-button>

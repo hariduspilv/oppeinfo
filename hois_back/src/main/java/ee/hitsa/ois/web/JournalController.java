@@ -41,6 +41,7 @@ import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.JournalStudentHasAbsenceCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEndDateCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
+import ee.hitsa.ois.web.commandobject.timetable.JournalReviewForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
@@ -103,6 +104,12 @@ public class JournalController {
     public void saveEndDate(HoisUserDetails user, @WithEntity Journal journal, @RequestBody JournalEndDateCommand command) {
         JournalUtil.asssertCanConfirm(user, journal);
         journalService.saveEndDate(journal, command);
+    }
+
+    @PostMapping("/{id:\\d+}/journalReview")
+    public JournalDto saveJournalReview(HoisUserDetails user, @WithEntity Journal journal, @RequestBody JournalReviewForm journalReviewForm) {
+        JournalUtil.assertCanReview(user, journal);
+        return journalService.get(user, journalService.saveJournalReview(journal, journalReviewForm));
     }
 
     @GetMapping("/{id:\\d+}/journalEntry")

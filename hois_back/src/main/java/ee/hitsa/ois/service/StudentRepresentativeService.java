@@ -32,6 +32,7 @@ import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationAccepted;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationCreated;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationRejectedMessage;
+import ee.hitsa.ois.message.StudentRepresentativeEnding;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -262,6 +263,27 @@ public class StudentRepresentativeService {
     private static void assertRepresentativeApplicationAllowed(Student student) {
         if(StudentUtil.isAdultAndDoNotNeedRepresentative(student)) {
             throw new ValidationFailedException("student.representative.application.adult");
+        }
+    }
+    
+    public void sendRepresentativeEndingMessages(Integer daysBefore) {
+        List<?> studentIds = em.createNativeQuery("select s.id"
+                + " from student s"
+                + " join person p on p.id = s.person_id"
+                + " where s.is_representative_mandatory = false"
+                + " and s.status_code in ?1"
+                + " and cast(extract(day from (p.birthdate + interval '18 year' - current_date)) as integer) = ?2")
+                .setParameter(1, StudentStatus.STUDENT_STATUS_ACTIVE)
+                .setParameter(2, daysBefore)
+                .getResultList();
+        if (!studentIds.isEmpty()) {
+            List<Student> students = em.createQuery("select s from Student s where s.id in ?1", Student.class)
+                    .setParameter(1, StreamUtil.toMappedSet(r -> resultAsLong(r, 0), studentIds))
+                    .getResultList();
+            for (Student student : students) {
+                StudentRepresentativeEnding data = new StudentRepresentativeEnding(student);
+                automaticMessageService.sendMessageToStudentRepresentatives(MessageType.TEATE_LIIK_OP_ESINDAJA_LOPP, student, data);
+            }
         }
     }
 }
