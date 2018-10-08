@@ -27,6 +27,7 @@ import ee.hitsa.ois.domain.studymaterial.StudyMaterial;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
+import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EnterpriseUtil;
@@ -127,8 +128,8 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     public static AutocompleteResult of(CurriculumVersionOccupationModule curriculumVersionOccupationModule) {
         CurriculumModule curriculumModule = curriculumVersionOccupationModule.getCurriculumModule();
         return new AutocompleteResult(curriculumVersionOccupationModule.getId(),
-                CurriculumUtil.moduleName(curriculumModule.getNameEt(), curriculumModule.getModule().getNameEt(), curriculumModule.getCurriculum().getCode()),
-                CurriculumUtil.moduleName(curriculumModule.getNameEn(), curriculumModule.getModule().getNameEn(), curriculumModule.getCurriculum().getCode()));
+                CurriculumUtil.moduleName(curriculumModule.getNameEt(), curriculumModule.getModule().getNameEt(), curriculumVersionOccupationModule.getCurriculumVersion().getCode()),
+                CurriculumUtil.moduleName(curriculumModule.getNameEn(), curriculumModule.getModule().getNameEn(), curriculumVersionOccupationModule.getCurriculumVersion().getCode()));
     }
 
     public static AutocompleteResult of(Directive directive) {
@@ -218,5 +219,9 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
 
     public static AutocompleteResult of(CurriculumVersionOccupationModuleTheme theme) {
         return new AutocompleteResult(EntityUtil.getId(theme), theme.getNameEt(), theme.getNameEt());        
+    }
+    
+    public static AutocompleteResult of(Journal journal) {
+        return new AutocompleteResult(journal.getId(), journal.getNameEt(), journal.getNameEt());
     }
 }

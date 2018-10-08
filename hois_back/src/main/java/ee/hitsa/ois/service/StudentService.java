@@ -8,6 +8,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -61,6 +63,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentAbsenceUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
@@ -96,7 +99,7 @@ public class StudentService {
             "inner join curriculum curriculum on curriculum_version.curriculum_id=curriculum.id "+
             "inner join classifier status on s.status_code=status.code "+
             "left outer join student_group student_group on s.student_group_id=student_group.id "+
-            "left outer join classifier study_form on s.study_form_code=study_form.code";
+            "left outer join classifier study_form on s.study_form_code=study_form.code ";
     
     private static final List<String> JOURNAL_RESULT_ENTRY_TYPES = EnumUtil.toNameList(JournalEntryType.SISSEKANNE_L,
             JournalEntryType.SISSEKANNE_O, JournalEntryType.SISSEKANNE_R, JournalEntryType.SISSEKANNE_H);
@@ -119,7 +122,23 @@ public class StudentService {
      * @return
      */
     public Page<StudentSearchDto> search(HoisUserDetails user, StudentSearchCommand criteria, Pageable pageable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_LIST_FROM).sort(pageable);
+        StringBuilder select = new StringBuilder(STUDENT_LIST_SELECT);
+        StringBuilder from = new StringBuilder(STUDENT_LIST_FROM);
+        final boolean isJournalUsed = !CollectionUtils.isEmpty(criteria.getJournalId());
+        final boolean isSubjectUsed = !CollectionUtils.isEmpty(criteria.getSubjectId());
+        if (isJournalUsed) {
+            select.append(", j.id as journal_id, j.name_et as journal_name");
+            from.append("left join journal_student js on js.student_id = s.id ");
+            from.append("left join journal j on j.id = js.journal_id ");
+        }
+        if (isSubjectUsed) {
+            select.append(", sj.id as subject_id, sj.name_et as subject_name_et, sj.name_en as subject_name_en");
+            from.append("left join declaration d on d.student_id = s.id ");
+            from.append("left join declaration_subject ds on ds.declaration_id = d.id ");
+            from.append("left join subject_study_period ssp on ssp.id = ds.subject_study_period_id ");
+            from.append("left join subject sj on sj.id = ssp.subject_id ");
+        }
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable);
 
         if (user.isStudent()) {
             // student can search active students only
@@ -139,8 +158,10 @@ public class StudentService {
         qb.optionalCriteria("s.student_group_id in (:studentGroup)", "studentGroup", criteria.getStudentGroupId());
         qb.optionalCriteria("s.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("s.status_code in (:status)", "status", criteria.getStatus());
+        qb.optionalCriteria("j.id in (:journalIds)", "journalIds", criteria.getJournalId());
+        qb.optionalCriteria("sj.id in (:subjectIds)", "subjectIds", criteria.getSubjectId());
 
-        return JpaQueryUtil.pagingResult(qb, STUDENT_LIST_SELECT, em, pageable).map(r -> {
+        return JpaQueryUtil.pagingResult(qb, select.toString(), em, pageable).map(r -> {
             StudentSearchDto dto = new StudentSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
@@ -154,6 +175,14 @@ public class StudentService {
             dto.setStudyForm(resultAsString(r, 11));
             dto.setStatus(resultAsString(r, 12));
             dto.setPersonId(user.isStudent() ? null : resultAsLong(r, 13));
+            if (isJournalUsed) {
+                dto.setJournal(new AutocompleteResult(resultAsLong(r, 14), resultAsString(r, 15), resultAsString(r, 15)));
+                if (isSubjectUsed) {
+                    dto.setSubject(new AutocompleteResult(resultAsLong(r, 16), resultAsString(r, 17), resultAsString(r, 18)));
+                }
+            } else if (isSubjectUsed) {
+                dto.setSubject(new AutocompleteResult(resultAsLong(r, 14), resultAsString(r, 15), resultAsString(r, 16)));
+            }
             return dto;
         });
     }
@@ -185,6 +214,16 @@ public class StudentService {
 
         EntityUtil.bindToEntity(form, student, classifierRepository, "person");
         student.setEmail(form.getSchoolEmail());
+        student.setLanguage(form.getStudyLanguage() != null ? 
+                classifierRepository.getOne(form.getStudyLanguage())
+                : null);
+
+        LocalDate studyStart = student.getStudyStart();
+        LocalDate nominalStudyEnd = student.getNominalStudyEnd();
+        if (studyStart != null && nominalStudyEnd != null && nominalStudyEnd.isBefore(studyStart)) {
+            throw new ValidationFailedException("student.error.nominalStudyEndIsBeforeStudyStart");
+        }
+        
         return saveWithHistory(student);
     }
     

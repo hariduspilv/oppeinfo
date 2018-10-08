@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('HigherCurriculumController', function ($scope, Classifier, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, DataUtils, $rootScope, config, Session) {
-
+    $scope.auth = $route.current.locals.auth;
     $scope.STATUS = Curriculum.STATUS;
 
     $scope.maxStydyYears = {max: 100};
@@ -44,6 +44,7 @@ angular.module('hitsaOis')
       studyLanguages: [],
       departments: [],
       versions: [],
+      addresses: [],
       jointPartners: [],
       higher: true,
       status: Curriculum.STATUS.ENTERING,
@@ -53,6 +54,9 @@ angular.module('hitsaOis')
       abroad: false,
       studyPeriodMonths: 0,
       validFrom: new Date()
+    };
+    $scope.validation = {
+      addressesLength: 0
     };
 
     // --- Get and Set Data
@@ -115,6 +119,7 @@ angular.module('hitsaOis')
         setStudyPeriod();
         setAreaOfStudy();
         $scope.getAreasOfStudy();
+        updateAddresses();
         getJointPartners();
         $scope.formState.jointDisabled = disableJoint();
         getEhisSchoolsSelection();
@@ -408,6 +413,26 @@ angular.module('hitsaOis')
         return jointPartner.ehisSchool || jointPartner.nameEt || jointPartner.nameEn;
     };
 
+    $scope.addAddress = function () {
+      $scope.curriculum.addresses.push($scope.formState.address);
+      $scope.formState.address = {};
+      updateAddresses();
+    };
+
+    function updateAddresses() {
+      if (angular.isArray($scope.curriculum.addresses)) {
+        $scope.validation.addressesLength = $scope.curriculum.addresses.length;
+      }
+    }
+
+    $scope.removeAddress = function(item) {
+      dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
+        ArrayUtils.remove($scope.curriculum.addresses, item);
+        $scope.higherCurriculumForm.$setDirty();
+        updateAddresses();
+      });
+    };
+
     // --- Dialog Windows
 
     function deleteListItem(list, scope, editedItem, ItemEndpoint) {
@@ -587,15 +612,15 @@ angular.module('hitsaOis')
       });
     };
 
-    $scope.sendToEhis = function() {
+    $scope.sendToEhis = function(isTest) {
       dialogService.confirmDialog({ prompt: 'curriculum.ehisconfirm' }, function () {
-        var SendToEhisEndpoint = QueryUtils.endpoint("/curriculum/sendToEhis");
+        var SendToEhisEndpoint = QueryUtils.endpoint("/curriculum/sendToEhis" + (isTest ? "/test" : ""));
         changeStatus(SendToEhisEndpoint, {updateSuccess: 'curriculum.sentToEhis'});
       });
     };
 
-    $scope.updateFromEhis = function() {
-      var UpdateFromEhisEndpoint = QueryUtils.endpoint("/curriculum/updateFromEhis");
+    $scope.updateFromEhis = function(isTest) {
+      var UpdateFromEhisEndpoint = QueryUtils.endpoint("/curriculum/updateFromEhis" + (isTest ? "/test" : ""));
       changeStatus(UpdateFromEhisEndpoint, {updateSuccess: 'curriculum.message.ehisStatusUpdated'});
     };
 

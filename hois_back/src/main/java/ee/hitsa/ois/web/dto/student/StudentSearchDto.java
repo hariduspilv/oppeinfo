@@ -9,7 +9,10 @@ public class StudentSearchDto {
     private String idcode;
     private AutocompleteResult curriculumVersion;
     private AutocompleteResult curriculum;
+    private Boolean higher;
     private AutocompleteResult studentGroup;
+    private AutocompleteResult journal;
+    private AutocompleteResult subject;
     private String studyForm;
     private String status;
     private Long personId;
@@ -53,6 +56,14 @@ public class StudentSearchDto {
     public void setCurriculum(AutocompleteResult curriculum) {
         this.curriculum = curriculum;
     }
+    
+    public Boolean getHigher() {
+        return higher;
+    }
+    
+    public void setHigher(Boolean higher) {
+        this.higher = higher;
+    }
 
     public AutocompleteResult getStudentGroup() {
         return studentGroup;
@@ -60,6 +71,22 @@ public class StudentSearchDto {
 
     public void setStudentGroup(AutocompleteResult studentGroup) {
         this.studentGroup = studentGroup;
+    }
+    
+    public AutocompleteResult getJournal() {
+        return journal;
+    }
+
+    public void setJournal(AutocompleteResult journal) {
+        this.journal = journal;
+    }
+
+    public AutocompleteResult getSubject() {
+        return subject;
+    }
+
+    public void setSubject(AutocompleteResult subject) {
+        this.subject = subject;
     }
 
     public String getStudyForm() {

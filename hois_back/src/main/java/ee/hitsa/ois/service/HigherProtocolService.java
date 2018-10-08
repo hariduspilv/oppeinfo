@@ -284,8 +284,7 @@ public class HigherProtocolService extends AbstractProtocolService {
                     + "join protocol_hdata ph on p.id = ph.protocol_id "
                     + "left join protocol_student ps on p.id = ps.protocol_id "
                     + "where ph.type_code = '" + ProtocolType.PROTOKOLLI_LIIK_P.name() + "' "
-                    + "and ph.subject_study_period_id = ds.subject_study_period_id and ps.student_id = s.id "
-                    + "and (ps.grade_code is null or ps.grade_code != '" + HigherAssessment.KORGHINDAMINE_MI.name() + "'))");
+                    + "and ph.subject_study_period_id = ds.subject_study_period_id and ps.student_id = s.id)");
         }
 
         qb.sort("p.firstname, p.lastname");

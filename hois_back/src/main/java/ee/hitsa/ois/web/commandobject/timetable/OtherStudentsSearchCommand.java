@@ -2,10 +2,11 @@ package ee.hitsa.ois.web.commandobject.timetable;
 
 import java.util.Set;
 
-public class StudentNameSearchCommand {
+public class OtherStudentsSearchCommand {
 
     private String studentName;
     private Set<Long> studentId;
+    private Long studentGroupId;
 
     public String getStudentName() {
         return studentName;
@@ -19,4 +20,11 @@ public class StudentNameSearchCommand {
     public void setStudentId(Set<Long> studentId) {
         this.studentId = studentId;
     }
+    public Long getStudentGroupId() {
+        return studentGroupId;
+    }
+    public void setStudentGroupId(Long studentGroupId) {
+        this.studentGroupId = studentGroupId;
+    }
+    
 }

@@ -78,14 +78,20 @@ public class SubjectStudyPeriodService {
         subjectStudyPeriod.setTeachers(newTeachers);
     }
 
-    private void updateStudentGroups(SubjectStudyPeriod subjectStudyPeriod, List<Long> newStudentGroups) {
-        EntityUtil.bindEntityCollection(subjectStudyPeriod.getStudentGroups(),
-                s -> EntityUtil.getId(s.getStudentGroup()), newStudentGroups, newStudentGroupId -> {
-                    SubjectStudyPeriodStudentGroup sg = new SubjectStudyPeriodStudentGroup();
-                    sg.setSubjectStudyPeriod(subjectStudyPeriod);
-                    sg.setStudentGroup(em.getReference(StudentGroup.class, newStudentGroupId));
-                    return sg;
-                });
+    private void updateStudentGroups(SubjectStudyPeriod subjectStudyPeriod, List<Long> newStudentGroupIds) {
+        Map<Long, SubjectStudyPeriodStudentGroup> oldStudentGroupsMap = StreamUtil.toMap(t -> EntityUtil.getId(t.getStudentGroup()),
+                subjectStudyPeriod.getStudentGroups());
+        List<SubjectStudyPeriodStudentGroup> newStudentGroups = new ArrayList<>();
+        for (Long studentGroupId : newStudentGroupIds) {
+            SubjectStudyPeriodStudentGroup studentGroup = oldStudentGroupsMap.get(studentGroupId);
+            if (studentGroup == null) {
+                studentGroup = new SubjectStudyPeriodStudentGroup();
+                studentGroup.setSubjectStudyPeriod(subjectStudyPeriod);
+                studentGroup.setStudentGroup(em.getReference(StudentGroup.class, studentGroupId));
+            }
+            newStudentGroups.add(studentGroup);
+        }
+        subjectStudyPeriod.setStudentGroups(newStudentGroups);
     }
 
     public void delete(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {

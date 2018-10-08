@@ -249,7 +249,7 @@ public class StudentRepresentativeService {
         // send message to new representative
         Student student = representative.getStudent();
         StudentRepresentativeApplicationAccepted data = new StudentRepresentativeApplicationAccepted(representative);
-        automaticMessageService.sendMessageToPerson(MessageType.TEATE_LIIK_OP_ESINDAJA, student.getSchool(), student.getPerson(), data);
+        automaticMessageService.sendMessageToPersons(MessageType.TEATE_LIIK_OP_ESINDAJA, student.getSchool(), Arrays.asList(student.getPerson(), representative.getPerson()), data);
     }
 
     private void setApplicationStatus(StudentRepresentativeApplication application, StudentRepresentativeApplicationStatus status) {

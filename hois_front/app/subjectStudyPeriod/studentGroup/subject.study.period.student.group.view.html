@@ -1,12 +1,5 @@
 <div layout="column" layout-padding>
     <form name="subjectStudyPeriodPlanStudentGroupEditForm">
-        <p class="md-body-1">
-            <span ng-repeat="capacity in capacityTypes">
-                <span ng-if="$index !== 0">|</span>
-                {{capacity.value.toUpperCase()}} - {{currentLanguageNameField(capacity)}}
-            </span>
-        </p>
-        <br>
         <div layout="column" class="form-readonly">
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="25" flex-sm="100" flex-xs="100">
@@ -40,7 +33,13 @@
                     <hois-value value="'subjectStudyPeriod.curriculumStudyPeriod.value' | translate:curriculumStudyPeriod"></hois-value>
                 </md-input-container>
             </div>
-            <br>
+            <div flex="70" layout="row" class="common-label" md-colors="{color: 'background-400'}">
+              <span ng-repeat="capacity in capacityTypes">
+                <span ng-if="!$first">|</span>
+                {{capacity.value.toUpperCase()}} - {{currentLanguageNameField(capacity)}}
+              </span>
+            </div>
+            <div>&nbsp;</div>
             <md-table-container>
                 <table class="subject-study-period">
                     <thead>

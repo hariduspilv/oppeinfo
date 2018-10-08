@@ -24,6 +24,11 @@ angular.module('hitsaOis')
       canSend: $scope.auth.isAdmin() || $scope.auth.isTeacher() || $scope.auth.isStudent() || $scope.auth.isParent()
     };
 
+    angular.element(document).ready(function() {
+        var scrollAmount = document.getElementsByName('message.sent')[0].offsetLeft;
+        document.getElementById('scrolling_div').scrollLeft += scrollAmount;
+    });
+
 }]).controller('messageAutomaticSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route',function ($scope, QueryUtils, DataUtils, $route) {
     $scope.currentNavItem = 'message.automaticSent';
     QueryUtils.createQueryForm($scope, '/message/sent/automatic', {order: "-inserted"});
@@ -42,6 +47,10 @@ angular.module('hitsaOis')
         }
         return name;
     };
+    angular.element(document).ready(function() {
+        var scrollAmount = document.getElementsByName('message.automaticSent')[0].offsetLeft;
+        document.getElementById('scrolling_div').scrollLeft += scrollAmount;
+    });
 
 }]).controller('messageReceivedController', ['$scope', 'QueryUtils', 'DataUtils', '$route', '$rootScope', function ($scope, QueryUtils, DataUtils, $route, $rootScope) {
     $scope.currentNavItem = 'message.received';
@@ -134,7 +143,8 @@ angular.module('hitsaOis')
         }
         $scope.record.$save(afterSend);
     };
-}]).controller('messageNewController', ['$scope', 'QueryUtils', '$route', 'message', '$location', 'ArrayUtils', '$resource', 'config', '$rootScope', '$q', function ($scope, QueryUtils, $route, message, $location, ArrayUtils, $resource, config, $rootScope, $q) {
+}]).controller('messageNewController', ['$scope', 'QueryUtils', '$route', 'message', '$location', 'ArrayUtils', '$resource', 'config', '$rootScope', '$q', '$translate', 
+function ($scope, QueryUtils, $route, message, $location, ArrayUtils, $resource, config, $rootScope, $q, $translate) {
 
     var baseUrl = '/message';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -142,11 +152,27 @@ angular.module('hitsaOis')
     $scope.auth = $route.current.locals.auth;
     $scope.formState = {};
 
-    if($scope.auth.isAdmin()) {
+    if ($scope.auth.isAdmin()) {
         $scope.targetGroups = ['ROLL_O', 'ROLL_T', 'ROLL_L', 'ROLL_P'];
-    } else  if($scope.auth.isTeacher()) {
+    } else if ($scope.auth.isTeacher()) {
         $scope.targetGroups = ['ROLL_T', 'ROLL_L'];
-    } else  if ($scope.auth.isParent() || $scope.auth.isStudent()) {
+        $scope.groupSearchTypes = [{
+            code: 'SEARCH_STUDENT_GROUP',
+            name: $translate.instant("message.searchTypeByGroups")
+        }];
+        if ($scope.auth.school.vocational) {
+            $scope.groupSearchTypes.push({
+                code:'SEARCH_JOURNAL',
+                name: $translate.instant("message.searchTypeByJournals")
+            })
+        }
+        if ($scope.auth.school.higher) {
+            $scope.groupSearchTypes.push({
+                code:'SEARCH_SUBJECTS',
+                name: $translate.instant("message.searchTypeBySubjects")
+            })
+        }
+    } else if ($scope.auth.isParent() || $scope.auth.isStudent()) {
         $scope.targetGroups = ['ROLL_O'];
     } else {
         $scope.targetGroups = [];
@@ -159,16 +185,46 @@ angular.module('hitsaOis')
     $scope.studentGroup = [];
     $scope.curriculum = [];
     $scope.studyGroupStudentsParents = [];
+    $scope.journalStudent = [];
+    $scope.journalStudentParent = [];
+    $scope.subjectStudent = [];
+    $scope.subjectStudentParent = [];
 
     function getStudentGroups() {
       QueryUtils.endpoint(baseUrl + '/studentgroups').query({curriculums: $scope.curriculum, studyForm: $scope.studyForm}).$promise.then(function(response) {
         $scope.studentGroups = response.map(function(sg) {
-          return { id: sg.id, nameEt: sg.code, nameEn: sg.code };
+          return { id: sg.id, nameEt: sg.code, nameEn: sg.code, isHigher: sg.higher };
         });
         var studentGroupIds = response.map(function(sg){return sg.id;});
         $scope.studentGroup = $scope.studentGroup.filter(function(sg){return studentGroupIds.indexOf(sg) !== -1;});
      });
     }
+
+    function getJournals() {
+        QueryUtils.endpoint(baseUrl + '/teacherjournals').query().$promise.then(function (response) {
+            $scope.journals = response.map(function (r) {
+                return {
+                    id: r.id,
+                    nameEt: r.nameEt,
+                    nameEn: r.nameEn
+                };
+            });
+        });
+    }
+
+    function getSubjects() {
+        QueryUtils.endpoint(baseUrl + '/teachersubjects').query().$promise.then(function (response) {
+            $scope.subjects = response.map(function (r) {
+                return {
+                    id: r.id,
+                    code: r.code,
+                    nameEt: r.nameEt,
+                    nameEn: r.nameEn
+                };
+            });
+        });
+    }
+
     if($scope.targetGroups.indexOf('ROLL_T') !== -1) {
         getStudentGroups();
     }
@@ -184,6 +240,8 @@ angular.module('hitsaOis')
                 role: $scope.targetGroup ? [$scope.targetGroup] : receiver.role,
                 curriculum: receiver.curriculum,
                 studentGroup: receiver.studentGroup,
+                journal: receiver.journal,
+                subject: receiver.subject,
                 addedWithAutocomplete: true
             };
             if($scope.auth.isTeacher()) {
@@ -191,7 +249,7 @@ angular.module('hitsaOis')
                 newReceiver.studentGroupObject = receiver.studentGroup;
             }
             $scope.receivers.push(newReceiver);
-            if($scope.targetGroup === 'ROLL_T') {
+            if($scope.targetGroup === 'ROLL_T' && (receiver === null || !receiver.higher)) {
                 getHisParents(newReceiver);
             }
         }
@@ -200,8 +258,7 @@ angular.module('hitsaOis')
 
     function getHisParents(newReceiver) {
         $resource(config.apiUrl + '/message/' +newReceiver.studentId + '/parents').query().$promise.then(function(response){
-            var list = parentsPageToReceiverOptionList(response, true).filter(function(p){return !isPersonAdded(p.personId);});
-            $scope.receivers = $scope.receivers.concat(list);
+            groupRepeatsIntoReceivers(parentsPageToReceiverOptionList(response, true).filter(function(p){return !isPersonAdded(p.personId);}));
         });
     }
 
@@ -221,37 +278,122 @@ angular.module('hitsaOis')
         }
     };
 
-    function getStudents(query) {
-      query.size = 1000;
-      $resource(config.apiUrl + baseUrl + "/students", query).query().$promise.then(function(response) {
-        var list = studentListToReceiverOption(response).filter(function(s) {
-          var existing = $scope.receivers.filter(function(r) { return r.personId === s.personId;} );
-          if(!existing.length) {
-            return true;
-          }
-          var receiver = existing[0];
-          if(isStudent(receiver)) {
-            // group add overrides autocomplete add
-            receiver.addedWithAutocomplete = false;
-          }
-          return false;
-        });
-        $scope.receivers = $scope.receivers.concat(list);
-      });
+    /**
+     * Finds out if the target is a part of object.
+     * 
+     * @param {Object} object
+     * @param {Object} target 
+     * @param {String} key 
+     */
+    function isSamePartOfByKey(object, target, key) {
+        var keyPath = key;
+        if (typeof key === "string") {
+            keyPath = key.split(".");
+        }
+        var objValue = object;
+        var targetValue = target;
+        for (var i = 0; i < keyPath.length; i++) {
+            if (angular.isArray(objValue)) {
+                if (objValue.length > 1) {
+                    for (var x = 0; x < objValue.length; x++) {
+                        if (isSamePartOfByKey(objValue[x], targetValue, keyPath.slice(i))) {
+                            return true;
+                        }
+                    }
+                    return false;
+                } else if (objValue.length === 1) {
+                    objValue = objValue[0];
+                }
+            }
+            if (angular.isArray(targetValue)) {
+                targetValue = targetValue[0];
+            }
+
+            if ((angular.isUndefined(objValue) || objValue === null) || (angular.isUndefined(targetValue) || targetValue === null)) {
+                return objValue === targetValue;
+            }
+            objValue = keyPath[i] in objValue ? objValue[keyPath[i]] : null;
+            targetValue = keyPath[i] in targetValue ? targetValue[keyPath[i]] : null;
+        }
+        return objValue === targetValue;
     }
 
-    function studentListToReceiverOption(response) {
+    /**
+     * 
+     * @param {Object} source 
+     * @param {Object} container 
+     * @param {Function} fDuplicateCheck Function. Checks for existing values. Arguments: [element in container]; this: [element from source].
+     * @param {Function} fExists Function. Executed when there is any existing value. Arguments: [existing item in container], [duplicate item from source].
+     */
+    function groupItems (source, container, fDuplicateCheck, fExists) {
+        for (var i = 0; i < source.length; i++) {
+            var existing = container.filter(fDuplicateCheck, source[i]); // supposed that here we have only 1 element... Hope so
+            if (existing.length > 0) {
+                fExists(existing[0], source[i]);
+            } else {
+                container.push(source[i]);
+            }
+        }
+    }
+
+    /**
+     * Groups elements in array
+     * Used mainly for students/parents
+     * 
+     * @param {Array} list 
+     */
+    function groupRepeatsIntoReceivers(list) {
+        groupItems(list, $scope.receivers,
+            function (r) {
+                return r.personId === this.personId && r.role[0] === this.role[0];
+            },
+            function (existing, duplicate) {
+                if (!isSamePartOfByKey(existing, duplicate, "curriculum.id")) {
+                    existing.curriculum.push(duplicate.curriculum[0]);
+                }
+                if (!isSamePartOfByKey(existing, duplicate, "studentGroup.id")) {
+                    existing.studentGroup.push(duplicate.studentGroup[0]);
+                }
+                if (!isSamePartOfByKey(existing, duplicate, "journal.id")) {
+                    existing.journal.push(duplicate.journal[0]);
+                }
+                if (!isSamePartOfByKey(existing, duplicate, "subject.id")) {
+                    existing.subject.push(duplicate.subject[0]);
+                }
+            }
+        );
+    }
+
+    function getStudents(query) {
+        query.size = 1000;
+        $resource(config.apiUrl + baseUrl + "/students", query).query().$promise.then(function(response) {
+            // It returns their parents as well.
+            // HITSAOIS-54 8
+            // if there are repeated values in the current list then append new values to them and group
+            groupRepeatsIntoReceivers(studentAndParentListToReceiverOption(response).filter(function(r) {
+                if (r.higher && r.role[0] === 'ROLL_L') {
+                    return false;
+                }
+                return true;
+            }));
+        });
+    }
+
+    function studentAndParentListToReceiverOption(response) {
         var list = response.map(function(s){
             return {
                 studentId: s.id,
                 personId: s.personId,
                 idcode: s.idcode,
                 fullname: s.fullname,
+                higher: s.higher,
                 // role: ["ROLL_T"],
                 role: s.role,
                 studyForm: s.studyForm,
-                curriculum: s.curriculum,
-                studentGroup: s.studentGroup,
+                journal: s.journal !== null ? [s.journal] : [],
+                subject: s.subject !== null ? [s.subject] : [],
+                curriculum: [s.curriculum], // HITSAOIS-54 8 for grouping
+                studentGroup: [s.studentGroup] // HITSAOIS-54 8 for grouping
             };
         });
         return list;
@@ -264,7 +406,11 @@ angular.module('hitsaOis')
             includesOrEmpty($scope.curriculum, r.curriculum ? r.curriculum.id : null) &&
             includesOrEmpty($scope.studentGroup, r.studentGroup ? r.studentGroup.id : null) &&
             includesOrEmpty($scope.studyForm, r.studyForm) &&
-            includesOrEmpty($scope.studyGroupStudentsParents, r.studentGroup ? r.studentGroup.id : null));
+            includesOrEmpty($scope.studyGroupStudentsParents, r.studentGroup ? r.studentGroup.id : null) &&
+            includesOrEmpty($scope.journalStudent, r.journal ? r.journal.id : null) &&
+            includesOrEmpty($scope.journalStudentParent, r.journal ? r.journal.id : null) &&
+            includesOrEmpty($scope.subjectStudent, r.subject ? r.subject.id : null) &&
+            includesOrEmpty($scope.subjectStudentParent, r.subject ? r.subject.id : null));
         });
     }
     /**
@@ -287,6 +433,23 @@ angular.module('hitsaOis')
         $scope.studentGroup = [];
         $scope.studyForm = [];
         $scope.studyGroupStudentsParents = [];
+        $scope.journalStudent = [];
+        $scope.journalStudentParent = [];
+        $scope.subjectStudent = [];
+        $scope.subjectStudentParent = [];
+    };
+
+    $scope.searchTypeChanged = function() {
+        //$scope.receivers = $scope.receivers.filter(function (r) { return r.addedWithAutocomplete });
+        filterReceivers();
+        $scope.curriculum = [];
+        $scope.studentGroup = [];
+        $scope.studyForm = [];
+        $scope.studyGroupStudentsParents = [];
+        $scope.journalStudent = [];
+        $scope.journalStudentParent = [];
+        $scope.subjectStudent = [];
+        $scope.subjectStudentParent = [];
     };
 
     function includesOrEmpty(array, item) {
@@ -294,7 +457,9 @@ angular.module('hitsaOis')
     }
 
     function anyFilterApplied() {
-        return $scope.studyForm.length > 0 || $scope.studentGroup.length > 0 || $scope.curriculum.length > 0 || $scope.studyGroupStudentsParents.length > 0;
+        return $scope.studyForm.length > 0 || $scope.studentGroup.length > 0 || $scope.curriculum.length > 0 ||
+            $scope.studyGroupStudentsParents.length > 0 || $scope.journalStudent.length > 0 || $scope.journalStudentParent.length > 0 ||
+            $scope.subjectStudent.length > 0 || $scope.subjectStudentParent.length > 0;
     }
 
     var previousCurriculum = false;
@@ -302,7 +467,7 @@ angular.module('hitsaOis')
             if(!previousCurriculum) {
                 previousCurriculum = true;
             } else {
-                getStudentGroups();
+                getGroups();
                 filterReceivers();
                 if(anyFilterApplied()) {
                     getStudents({studyForm: $scope.studyForm, studentGroupId: $scope.studentGroup, curriculum: $scope.curriculum});
@@ -313,41 +478,77 @@ angular.module('hitsaOis')
         }
     );
 
-    var previousStudentGroup = false;
+    function clearAndApply(fApply, oData) {
+        filterReceivers();
+        if(anyFilterApplied()) {
+            fApply(oData);
+        } else {
+            removeAllStudents();
+        }
+    }
+
+    /*
+     * We have to block the first run in $watch because when page is loaded then watch is fired.
+     */
+
+    var blockLoadingJournalStudent = true;
+    $scope.$watch('journalStudent', function() {
+        if (blockLoadingJournalStudent) {
+            blockLoadingJournalStudent = false;
+        } else {
+            clearAndApply(getStudents, {journalId: $scope.journalStudent});
+        }
+    });
+
+    var blockLoadingJournalStudentParent = true;
+    $scope.$watch('journalStudentParent', function() {
+        if (blockLoadingJournalStudentParent) {
+            blockLoadingJournalStudentParent = false;
+        } else {
+            clearAndApply(getParents, {journalId: $scope.journalStudentParent});
+        } 
+    });
+    
+    var blockLoadingSubjectStudent = true;
+    $scope.$watch('subjectStudent', function() {
+        if (blockLoadingSubjectStudent) {
+            blockLoadingSubjectStudent = false;
+        } else {
+            clearAndApply(getStudents, {subjectId: $scope.subjectStudent});
+        }
+    });
+    
+    var blockLoadingSubjectStudentParent = true;
+    $scope.$watch('subjectStudentParent', function() {
+        if (blockLoadingSubjectStudentParent) {
+            blockLoadingSubjectStudentParent = false;
+        } else {
+            clearAndApply(getParents, {subjectId: $scope.subjectStudentParent});
+        }
+    });
+
+    var blockLoadingStudentGroup = true;
     $scope.$watch('studentGroup', function() {
-            if(!previousStudentGroup) {
-                previousStudentGroup = true;
-            } else {
-                filterReceivers();
-                if(anyFilterApplied()) {
-                    getStudents({studyForm: $scope.studyForm, studentGroupId: $scope.studentGroup, curriculum: $scope.curriculum});
-                } else {
-                    removeAllStudents();
-                }
-            }
+        if (blockLoadingStudentGroup) {
+            blockLoadingStudentGroup = false;
+        } else {
+            clearAndApply(getStudents, {studyForm: $scope.studyForm, studentGroupId: $scope.studentGroup, curriculum: $scope.curriculum});
         }
-    );
+    });
 
-    var previousStudentGroupParents = false;
+    var blockLoadingStudentGroupStudentsParents = true;
     $scope.$watch('studyGroupStudentsParents', function() {
-            if(!previousStudentGroupParents) {
-                previousStudentGroupParents = true;
-            } else {
-                filterReceivers();
-                if(anyFilterApplied()) {
-                    getParents({studentGroupId: $scope.studyGroupStudentsParents});
-                } else {
-                    removeAllStudents();
-                }
-            }
+        if (blockLoadingStudentGroupStudentsParents) {
+            blockLoadingStudentGroupStudentsParents = false;
+        } else {
+            clearAndApply(getParents, {studentGroupId: $scope.studyGroupStudentsParents});
         }
-    );
+    });
 
     function getParents(query) {
         $resource(config.apiUrl + '/message/parents', query).query().$promise.then(function(response){
-            //TODO: array.map is not needed anymore
-            var list = parentsPageToReceiverOptionList(response, false).filter(function(p){return !isPersonAdded(p.personId);});
-            $scope.receivers = $scope.receivers.concat(list);
+            // HITSAOIS-54 8
+            groupRepeatsIntoReceivers(parentsPageToReceiverOptionList(response, false));
         });
     }
 
@@ -359,10 +560,11 @@ angular.module('hitsaOis')
                 idcode: p.idcode,
                 fullname: p.fullname,
                 role: ['ROLL_L'],
-                studentGroup: p.studentGroup,
-                curriculum: p.curriculum,
-                addedWithAutocomplete: addedWithAutocomplete,
-                hideLearning: true
+                journal: p.journal !== null ? [p.journal] : [],
+                subject: p.subject !== null ? [p.subject] : [],
+                studentGroup: [p.studentGroup],
+                curriculum: [p.curriculum],
+                addedWithAutocomplete: addedWithAutocomplete
             };
         });
         return list;
@@ -373,7 +575,7 @@ angular.module('hitsaOis')
             if(!previousStudyForm) {
                 previousStudyForm = true;
             } else {
-                getStudentGroups();
+                getGroups();
                 filterReceivers();
                 if(anyFilterApplied()) {
                     getStudents({studyForm: $scope.studyForm, studentGroupId: $scope.studentGroup, curriculum: $scope.curriculum});
@@ -383,6 +585,28 @@ angular.module('hitsaOis')
             }
         }
     );
+
+    function getGroups() {
+        if ($scope.auth.isTeacher()) {
+            if (angular.isDefined($scope.groupSearchType) && $scope.groupSearchType !== null) {
+                switch ($scope.groupSearchType) {
+                    case "SEARCH_STUDENT_GROUP":
+                        getStudentGroups();
+                        break;
+                    case "SEARCH_JOURNAL":
+                        getJournals();
+                        break;
+                    case "SEARCH_SUBJECTS":
+                        getSubjects();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        } else {
+            getStudentGroups();
+        }
+    }
 
     function removeAllStudents() {
         $scope.receivers = $scope.receivers.filter(function (r){return r.addedWithAutocomplete;});
@@ -395,7 +619,33 @@ angular.module('hitsaOis')
             role: $scope.targetGroup,
             name: text
         }, function (data) {
-            deferred.resolve(data);
+            for (var i = 0; i < data.length; i++) {
+                data[i].curriculum = [data[i].curriculum];
+                data[i].studentGroup = [data[i].studentGroup];
+                data[i].journal = [data[i].journal];
+                data[i].subject = [data[i].subject];
+            }
+            var container = [];
+            groupItems(data, container,
+                function (r) {
+                    return r.personId === this.personId && r.role[0] === this.role[0];
+                },
+                function (existing, duplicate) {
+                    if (!isSamePartOfByKey(existing, duplicate, "curriculum.id")) {
+                        existing.curriculum.push(duplicate.curriculum[0]);
+                    }
+                    if (!isSamePartOfByKey(existing, duplicate, "studentGroup.id")) {
+                        existing.studentGroup.push(duplicate.studentGroup[0]);
+                    }
+                    if (!isSamePartOfByKey(existing, duplicate, "journal.id")) {
+                        existing.journal.push(duplicate.journal[0]);
+                    }
+                    if (!isSamePartOfByKey(existing, duplicate, "subject.id")) {
+                        existing.subject.push(duplicate.subject[0]);
+                    }
+                }
+            );
+            deferred.resolve(container);
         });
         return deferred.promise;
     };

@@ -23,21 +23,14 @@ public class StudentViewDto extends StudentForm {
     private String status;
     private Long curriculum;
     private AutocompleteResult curriculumVersion;
-    private String studyLanguage;
     private AutocompleteResult curriculumSpeciality;
     private AutocompleteResult studentGroup;
     private Short course;
     private LocalDate studyStart;
-    private LocalDate nominalStudyEnd;
     private LocalDate studyEnd;
     private String studyForm;
     private String studyLoad;
     private String fin;
-    private String finSpecific;
-    private String studyCompany;
-    private String boardingSchool;
-    private String previousSchoolName;
-    private LocalDate  previousSchoolEndDate;
     private Boolean isVocational;
     private Boolean userCanEditStudent;
     private Boolean userCanAddRepresentative;
@@ -96,14 +89,6 @@ public class StudentViewDto extends StudentForm {
         this.curriculumVersion = curriculumVersion;
     }
 
-    public String getStudyLanguage() {
-        return studyLanguage;
-    }
-
-    public void setStudyLanguage(String studyLanguage) {
-        this.studyLanguage = studyLanguage;
-    }
-
     public AutocompleteResult getCurriculumSpeciality() {
         return curriculumSpeciality;
     }
@@ -136,14 +121,6 @@ public class StudentViewDto extends StudentForm {
         this.studyStart = studyStart;
     }
 
-    public LocalDate getNominalStudyEnd() {
-        return nominalStudyEnd;
-    }
-
-    public void setNominalStudyEnd(LocalDate nominalStudyEnd) {
-        this.nominalStudyEnd = nominalStudyEnd;
-    }
-
     public String getStudyForm() {
         return studyForm;
     }
@@ -166,46 +143,6 @@ public class StudentViewDto extends StudentForm {
 
     public void setFin(String fin) {
         this.fin = fin;
-    }
-
-    public String getFinSpecific() {
-        return finSpecific;
-    }
-
-    public void setFinSpecific(String finSpecific) {
-        this.finSpecific = finSpecific;
-    }
-
-    public String getStudyCompany() {
-        return studyCompany;
-    }
-
-    public void setStudyCompany(String studyCompany) {
-        this.studyCompany = studyCompany;
-    }
-
-    public String getBoardingSchool() {
-        return boardingSchool;
-    }
-
-    public void setBoardingSchool(String boardingSchool) {
-        this.boardingSchool = boardingSchool;
-    }
-
-    public String getPreviousSchoolName() {
-        return previousSchoolName;
-    }
-
-    public void setPreviousSchoolName(String previousSchoolName) {
-        this.previousSchoolName = previousSchoolName;
-    }
-
-    public LocalDate getPreviousSchoolEndDate() {
-        return previousSchoolEndDate;
-    }
-
-    public void setPreviousSchoolEndDate(LocalDate previousSchoolEndDate) {
-        this.previousSchoolEndDate = previousSchoolEndDate;
     }
 
     public Boolean getIsVocational() {
@@ -311,9 +248,6 @@ public class StudentViewDto extends StudentForm {
         private String fullname;
         private String idcode;
         private String sex;
-        private String citizenship;
-        private String language;
-        private String bankaccount;
 
         public String getFirstname() {
             return firstname;
@@ -353,30 +287,6 @@ public class StudentViewDto extends StudentForm {
 
         public void setSex(String sex) {
             this.sex = sex;
-        }
-
-        public String getCitizenship() {
-            return citizenship;
-        }
-
-        public void setCitizenship(String citizenship) {
-            this.citizenship = citizenship;
-        }
-
-        public String getLanguage() {
-            return language;
-        }
-
-        public void setLanguage(String language) {
-            this.language = language;
-        }
-
-        public String getBankaccount() {
-            return bankaccount;
-        }
-
-        public void setBankaccount(String bankaccount) {
-            this.bankaccount = bankaccount;
         }
     }
 }

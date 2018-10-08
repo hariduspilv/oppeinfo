@@ -44,7 +44,7 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalReviewForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
-import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
+import ee.hitsa.ois.web.commandobject.timetable.OtherStudentsSearchCommand;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.moodle.EnrollResult;
 import ee.hitsa.ois.web.dto.studymaterial.JournalLessonHoursDto;
@@ -156,7 +156,7 @@ public class JournalController {
     }
 
     @GetMapping("/{id:\\d+}/otherStudents")
-    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, @PathVariable("id") Long journalId, StudentNameSearchCommand command, Pageable pageable) {
+    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, @PathVariable("id") Long journalId, OtherStudentsSearchCommand command, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return journalService.otherStudents(user, journalId, command, pageable);
     }

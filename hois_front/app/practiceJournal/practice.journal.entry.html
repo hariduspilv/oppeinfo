@@ -38,7 +38,7 @@
           </md-input-container>
         </div>
 
-        <div ng-if="practiceJournal.subject" layout="row" flex>
+        <div ng-if="practiceJournal.subject" layout="row" layout-xs="column" flex>
           <md-input-container flex>
             <label>{{'practiceJournal.subject' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.subject)"></hois-value>
@@ -63,23 +63,31 @@
             <hois-value value="practiceJournal.contract.supervisorName"></hois-value>
           </md-input-container>
         </div>
-        <div layout="row" flex>
-          <md-input-container flex>
-            <label>{{'practiceJournal.startDate' | translate}}</label>
-            <hois-value value="practiceJournal.startDate | hoisDate"></hois-value>
-          </md-input-container>
-          <md-input-container flex>
-            <label>{{'practiceJournal.endDate' | translate}}</label>
-            <hois-value value="practiceJournal.endDate | hoisDate"></hois-value>
-          </md-input-container>
-          <md-input-container flex>
-            <label>{{'practiceJournal.practicePlace' | translate}}</label>
-            <hois-value value="practiceJournal.practicePlace"></hois-value>
-          </md-input-container>
-          <md-input-container flex>
-            <label>{{'practiceJournal.schoolSupervisor' | translate}}</label>
-            <hois-value value="currentLanguageNameField(practiceJournal.teacher)"></hois-value>
-          </md-input-container>
+        <div layout="row" layout-xs="column" flex>
+          <div layout="row" flex>
+            <md-input-container flex>
+              <label>{{'practiceJournal.startDate' | translate}}</label>
+              <hois-value value="practiceJournal.startDate | hoisDate"></hois-value>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'practiceJournal.endDate' | translate}}</label>
+              <hois-value value="practiceJournal.endDate | hoisDate"></hois-value>
+            </md-input-container>
+          </div>
+          <div layout="row" flex>
+            <md-input-container flex>
+              <label>{{'practiceJournal.practicePlace' | translate}}</label>
+              <hois-value value="practiceJournal.practicePlace"></hois-value>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'practiceJournal.schoolSupervisor' | translate}}</label>
+              <hois-value value="currentLanguageNameField(practiceJournal.teacher)"></hois-value>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'practiceJournal.status' | translate}}</label>
+              <hois-classifier-value ng-model="practiceJournal.status" main-classifier-code="PAEVIK_STAATUS"></hois-classifier-value>
+            </md-input-container>
+          </div>
         </div>
       </div>
 
@@ -91,18 +99,18 @@
           <table md-table md-progress="entries.$promise">
             <thead md-head md-on-reorder="loadEntries">
               <tr md-row flex>
-                <th md-column>{{'practiceJournal.practiceJournalEntry.practiceDate' | translate}}</th>
-                <th md-column>{{'practiceJournal.practiceJournalEntry.description' | translate}}</th>
-                <th md-column>{{'practiceJournal.practiceJournalEntry.hours' | translate}}</th>
-                <th ng-if="practiceJournal.contract" md-column>{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}</th>
-                <th md-column>{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}</th>
+                <th md-column class="padding-y-5" style="width: 10%; min-width: 50px;">{{'practiceJournal.practiceJournalEntry.practiceDate' | translate}}</th>
+                <th md-column style="padding: 0 100px 0 5px !important">{{'practiceJournal.practiceJournalEntry.description' | translate}}</th>
+                <th md-column class="padding-y-5" style="width: 10%; min-width: 50px;">{{'practiceJournal.practiceJournalEntry.hours' | translate}}</th>
+                <th ng-if="practiceJournal.contract" md-column class="padding-y-5">{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}</th>
+                <th md-column class="padding-y-5">{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}</th>
               </tr>
             </thead>
             <tbody md-body>
               <tr md-row ng-repeat="row in practiceJournal.practiceJournalEntries | orderBy: 'practiceDate'" ng-class-odd="'odd'" ng-class-even="'even'"
-                md-colors="{background: getEntryColor(row)}">
-                <td md-cell>
-                  <md-input-container ng-show="row.isStudentEntry && auth.isStudent()">
+                md-colors="{background: getEntryColor(row)}" flex>
+                <td md-cell class="padding-y-5">
+                  <md-input-container ng-show="row.isStudentEntry && auth.isStudent()" style="width: 100%;">
                     <md-datepicker ng-model="row.practiceDate" md-min-date="practiceJournal.startDate" md-max-date="practiceJournal.endDate"
                       required aria-label="{{'practiceJournal.practiceJournalEntry.practiceDate' | translate}}"></md-datepicker>
                   </md-input-container>
@@ -110,15 +118,15 @@
                     <hois-value value="row.practiceDate | hoisDate"></hois-value>
                   </div>
                 </td>
-                <td md-cell>
-                  <md-input-container ng-if="row.isStudentEntry && auth.isStudent()">
+                <td md-cell class="padding-y-5">
+                  <md-input-container ng-if="row.isStudentEntry && auth.isStudent()" class="padding-y-5" style="width: 100%;">
                     <input ng-model="row.description" type="text" aria-label="{{'practiceJournal.practiceJournalEntry.description' | translate}}" md-maxlength="10000">
                   </md-input-container>
                   <div ng-if="!(row.isStudentEntry && auth.isStudent())">
                     <hois-value value="row.description"></hois-value>
                   </div>
                 </td>
-                <td md-cell>
+                <td md-cell class="padding-y-5">
                   <md-input-container ng-if="row.isStudentEntry && auth.isStudent()">
                     <input ng-model="row.hours" type="number" aria-label="{{'practiceJournal.practiceJournalEntry.hours' | translate}}" min="0" max="24" name="hours" step="1" pattern="^\d+$">
                     <div ng-messages="practiceJournalEntryForm.hours.$error" ng-show="practiceJournalEntryForm.hours.$dirty">
@@ -154,7 +162,7 @@
         </md-table-container>
       </div>
 
-      <br>
+      <div>&nbsp;</div>
 
       <div ng-if="auth.isStudent()" layout="row" flex>
         <md-input-container flex>
@@ -177,7 +185,7 @@
         </md-input-container>
       </div>
 
-      <br>
+      <div>&nbsp;</div>
 
       <div ng-if="practiceJournal.contract" class="form-readonly" layout="row">
         <md-input-container flex>
@@ -190,39 +198,41 @@
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practiceJournal.supervisorOpinionFile' | translate}}</legend>
           <md-button ng-if="!auth.isStudent()" class="md-raised" href="" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
-          <table md-table class="secondary-table">
-            <thead md-head>
-              <tr md-row>
-                <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
-                <th md-column><span>{{'file.additionDate' | translate}}</span></th>
-                <th md-column>{{'file.addedBy' | translate}}</th>
-                <th md-column ng-if="!auth.isStudent()"></th>
-              </tr>
-            </thead>
-            <tbody md-body>
-              <tr md-row ng-repeat="file in practiceJournal.practiceJournalFiles | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>
-                  {{file.oisFile.fname}}
-                  <a ng-href="{{getUrl(file.oisFile, 'practicejournal')}}" target="_blank" rel="noopener noreferrer">
-                    <md-icon md-font-set="material-icons">file_download</md-icon>
-                  </a>
-                </td>
-                <td md-cell>
-                  {{file.inserted | hoisDateTime}}
-                </td>
-                <td md-cell>
-                  {{file.insertedBy}}
-                </td>
-                <td md-cell ng-if="!auth.isStudent()">
-                  <md-button class="remove nomargin" ng-click="deleteFile(file)">&times;</md-button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <md-table-container>
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
+                  <th md-column><span>{{'file.additionDate' | translate}}</span></th>
+                  <th md-column>{{'file.addedBy' | translate}}</th>
+                  <th md-column ng-if="!auth.isStudent()"></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="file in practiceJournal.practiceJournalFiles | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>
+                    {{file.oisFile.fname}}
+                    <a ng-href="{{getUrl(file.oisFile, 'practicejournal')}}" target="_blank" rel="noopener noreferrer">
+                      <md-icon md-font-set="material-icons">file_download</md-icon>
+                    </a>
+                  </td>
+                  <td md-cell>
+                    {{file.inserted | hoisDateTime}}
+                  </td>
+                  <td md-cell>
+                    {{file.insertedBy}}
+                  </td>
+                  <td md-cell ng-if="!auth.isStudent()">
+                    <md-button class="remove nomargin" ng-click="deleteFile(file)">&times;</md-button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
         </fieldset>
       </div>
 
-      <br>
+      <div>&nbsp;</div>
 
       <div ng-if="auth.isStudent()" class="form-readonly" layout="row">
         <md-input-container flex>
@@ -238,7 +248,7 @@
         </md-input-container>
       </div>
 
-      <br>
+      <div>&nbsp;</div>
 
       <div ng-if="practiceJournal.contract" class="form-readonly" layout="row">
         <md-input-container flex>
@@ -254,7 +264,7 @@
         </md-input-container>
       </div>
 
-      <br>
+      <div>&nbsp;</div>
 
       <div layout="row">
         <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
@@ -262,7 +272,7 @@
       </div>
     </form>
 
-    <br>
+    <div>&nbsp;</div>
 
     <div flex>
       <hois-collapsable label="('contract.practicePlan' | translate)" expanded="false">

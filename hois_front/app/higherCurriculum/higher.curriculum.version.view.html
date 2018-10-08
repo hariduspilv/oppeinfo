@@ -233,8 +233,8 @@
       <md-button class="md-raised md-default" ng-if="version.canChange" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
     </div>
 
-    <a href="{{formState.curriculumPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="version.id">{{'main.button.print' | translate}}</a>
-    <a href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised" ng-if="version.id">XML</a>
+    <a ng-show="showPrintButton()" href="{{formState.curriculumPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
+    <a ng-show="showPrintButton()" href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised">XML</a>
 
     <md-button class="md-raised md-default" ng-click="back('#/higherCurriculum/' + version.curriculum + '/view', higherCurriculumVersionForm)">{{'main.button.back' | translate}}</md-button>
   </div>

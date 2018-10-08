@@ -7,30 +7,28 @@
     </div>
 
     <div layout="column">
-      <div flex>
-        <fieldset tabindex="1">
-          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.capacityDistribution' | translate}}</legend>
-          <div layout="row" style="padding-bottom:1em" flex class="secondary-table-header">
-            <div flex="30">&nbsp;</div>
-            <div flex="30">{{'module.capacity' | translate}}</div>
-            <div flex="40" layout="row">{{'module.contactStudy' | translate}}</div>
-          </div>
+      <fieldset tabindex="1">
+        <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.capacityDistribution' | translate}}</legend>
+        <div layout="row" style="padding-bottom:1em" flex class="secondary-table-header">
+          <div flex="30">&nbsp;</div>
+          <div flex="30">{{'module.capacity' | translate}}</div>
+          <div flex="40" layout="row">{{'module.contactStudy' | translate}}</div>
+        </div>
 
-          <div ng-repeat="item in occupationModule.capacities | orderBy: 'nameEt' track by item.capacityType" layout="row" class="secondary-table-row">
-            <div flex="30" class="occupation-module-capacity">{{currentLanguageNameField(item)}}</div>
-            <div flex="30">
-              <md-input-container flex>
-                <input ng-model="item.hours" type="number" min="0" max="9999" pattern="^\d+$" aria-label="capacity hours" class="small-input"
-                  ng-readonly="hasThemes()" ng-required="item.contact">
-              </md-input-container>
-            </div>
-            <div flex="40" layout="row">
-              <md-checkbox ng-model="item.contact" aria-label="capacity contact" ng-disabled="hasThemes()"
-              class="occupation-module-capacity-contact"></md-checkbox>
-            </div>
+        <div ng-repeat="item in occupationModule.capacities | orderBy: 'nameEt' track by item.capacityType" layout="row" class="secondary-table-row">
+          <div flex="30" class="occupation-module-capacity">{{currentLanguageNameField(item)}}</div>
+          <div flex="30">
+            <md-input-container flex>
+              <input ng-model="item.hours" type="number" min="0" max="9999" pattern="^\d+$" aria-label="capacity hours" class="small-input"
+                ng-readonly="hasThemes()" ng-required="item.contact">
+            </md-input-container>
           </div>
-        </fieldset>
-      </div>
+          <div flex="40" layout="row">
+            <md-checkbox ng-model="item.contact" aria-label="capacity contact" ng-disabled="hasThemes()"
+            class="occupation-module-capacity-contact"></md-checkbox>
+          </div>
+        </div>
+      </fieldset>
       <div>&nbsp;</div>
       <md-input-container flex>
         <label>{{'module.requirements' | translate}}</label>
@@ -61,121 +59,113 @@
         <textarea ng-model="occupationModule.studyMaterials" md-maxlength="20000" max-rows="2"></textarea>
       </md-input-container>
       <div>&nbsp;</div>
-      <div flex>
-        <fieldset tabindex="2" layout="column">
-          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.gradeFormation' | translate}}</legend>
-          <div flex layout="row">
-            <span flex="30" class="common-label">{{'module.assessmentType' | translate}}</span>
-            <hois-classifier-radio layout="row" ng-model="occupationModule.assessment" model-value-attr="code" main-classifier-code="KUTSEHINDAMISVIIS"
-              required class="md-primary"></hois-classifier-radio>
-          </div>
-          <div>&nbsp;</div>
+      <fieldset tabindex="2" layout="column">
+        <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.gradeFormation' | translate}}</legend>
+        <div flex layout="row">
+          <span flex="30" class="common-label">{{'module.assessmentType' | translate}}</span>
+          <hois-classifier-radio layout="row" ng-model="occupationModule.assessment" model-value-attr="code" main-classifier-code="KUTSEHINDAMISVIIS"
+            required class="md-primary"></hois-classifier-radio>
+        </div>
+        <div>&nbsp;</div>
+        <md-input-container flex>
+          <label>{{'module.totalGradeDescription' | translate}}</label>
+          <textarea ng-model="occupationModule.totalGradeDescription" md-maxlength="20000" max-rows="2" required
+            ></textarea>
+        </md-input-container>
+        <div>&nbsp;</div>
+        <div ng-show="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'" layout="column">
           <md-input-container flex>
-            <label>{{'module.totalGradeDescription' | translate}}</label>
-            <textarea ng-model="occupationModule.totalGradeDescription" md-maxlength="20000" max-rows="2" required
-             ></textarea>
+            <label>{{'module.grade3Description' | translate}}</label>
+            <textarea ng-model="occupationModule.grade3Description" md-maxlength="20000" max-rows="2" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
+              ></textarea>
           </md-input-container>
-          <div>&nbsp;</div>
-          <div ng-show="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'" layout="column">
-            <md-input-container flex>
-              <label>{{'module.grade3Description' | translate}}</label>
-              <textarea ng-model="occupationModule.grade3Description" md-maxlength="20000" max-rows="2" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
-               ></textarea>
-            </md-input-container>
-            <md-input-container flex>
-              <label>{{'module.grade4Description' | translate}}</label>
-              <textarea ng-model="occupationModule.grade4Description" md-maxlength="20000" max-rows="2" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
-               ></textarea>
-            </md-input-container>
-            <md-input-container flex>
-              <label>{{'module.grade5Description' | translate}}</label>
-              <textarea ng-model="occupationModule.grade5Description" md-maxlength="20000" max-rows="2" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
-               ></textarea>
-            </md-input-container>
-          </div>
+          <md-input-container flex>
+            <label>{{'module.grade4Description' | translate}}</label>
+            <textarea ng-model="occupationModule.grade4Description" md-maxlength="20000" max-rows="2" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
+              ></textarea>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'module.grade5Description' | translate}}</label>
+            <textarea ng-model="occupationModule.grade5Description" md-maxlength="20000" max-rows="2" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'"
+              ></textarea>
+          </md-input-container>
+        </div>
 
-          <div ng-show="occupationModule.assessment === 'KUTSEHINDAMISVIIS_M'" layout="column" flex>
-            <md-input-container flex>
-              <label>{{'module.gradeADescription' | translate}}</label>
-              <textarea ng-model="occupationModule.passDescription" md-maxlength="20000" max-rows="10" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_M'"
-               ></textarea>
-            </md-input-container>
-          </div>
-        </fieldset>
-      </div>
+        <div ng-show="occupationModule.assessment === 'KUTSEHINDAMISVIIS_M'" layout="column" flex>
+          <md-input-container flex>
+            <label>{{'module.gradeADescription' | translate}}</label>
+            <textarea ng-model="occupationModule.passDescription" md-maxlength="20000" max-rows="10" ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_M'"
+              ></textarea>
+          </md-input-container>
+        </div>
+      </fieldset>
       <div>&nbsp;</div>
-      <div flex>
-        <fieldset tabindex="3">
-          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.themes' | translate}}</legend>
-          <div layout="column">
-            <div flex="10">
-              <md-button class="md-raised" ng-click="openAddThemeDialog()" ng-if="occupationModule.id">{{'main.button.add' | translate}}</md-button>
-            </div>
-            <div flex>
-              <table md-table class="secondary-table">
-                <thead md-head>
-                  <tr md-row>
-                    <th md-column>{{'module.themeName' | translate}}</th>
-                    <th md-column>{{'module.capacityEkapPerHour' | translate}}</th>
-                    <th md-column>{{'module.subthemes' | translate}}</th>
-                    <th md-column>{{'module.studyYear' | translate}}</th>
-                    <th md-column></th>
-                  </tr>
-                </thead>
-                <tbody md-body>
-                  <tr md-row ng-repeat="theme in occupationModule.themes | orderBy: currentLanguageNameField()">
-                    <td md-cell>
-                      <a class="md-primary one-row" ng-click="openAddThemeDialog(theme)">{{currentLanguageNameField(theme)}}</a>
-                    </td>
-                    <td md-cell>
-                      {{theme.credits}}/{{theme.hours}}
-                    </td>
-                    <td md-cell>
-                      <p class="scrollable">{{theme.subthemes}}</p>
-                    </td>
-                    <td md-cell>
-                      {{theme.studyYearNumber}}
-                    </td>
-                    <td md-cell>
-                      <a class="remove" ng-click="deleteTheme(theme)">
-                        &times;
-                      </a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+      <fieldset tabindex="3">
+        <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.themes' | translate}}</legend>
+        <div layout="column">
+          <div flex="10">
+            <md-button class="md-raised" ng-click="openAddThemeDialog()" ng-if="occupationModule.id">{{'main.button.add' | translate}}</md-button>
           </div>
-        </fieldset>
-      </div>
+          <div flex>
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'module.themeName' | translate}}</th>
+                  <th md-column>{{'module.capacityEkapPerHour' | translate}}</th>
+                  <th md-column>{{'module.subthemes' | translate}}</th>
+                  <th md-column>{{'module.studyYear' | translate}}</th>
+                  <th md-column></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="theme in occupationModule.themes | orderBy: currentLanguageNameField()">
+                  <td md-cell>
+                    <a class="md-primary one-row" ng-click="openAddThemeDialog(theme)">{{currentLanguageNameField(theme)}}</a>
+                  </td>
+                  <td md-cell>
+                    {{theme.credits}}/{{theme.hours}}
+                  </td>
+                  <td md-cell>
+                    <p class="scrollable">{{theme.subthemes}}</p>
+                  </td>
+                  <td md-cell>
+                    {{theme.studyYearNumber}}
+                  </td>
+                  <td md-cell>
+                    <a class="remove" ng-click="deleteTheme(theme)">
+                      &times;
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </fieldset>
       <div flex>&nbsp;</div>
-      <div flex>
-        <fieldset tabindex="4" layout="column">
-          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.proportionPerStudyYear' | translate}}</legend>
-          <div layout="row">
-            <md-input-container flex ng-repeat="yc in studyYears track by $index">
-              <label>{{$index+1}}.&nbsp;{{'module.studyYearLowercase' | translate}}</label>
-              <input ng-disabled="occupationModule.themes.length > 0" ng-model="occupationModule.yearCapacities[$index].credits"
-                type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" aria-label="year capacity credits"
-                name="yearCapacities{{$index}}" required>
-              <div ng-messages="dialogForm['yearCapacities'+$index].$error" ng-show="dialogForm['yearCapacities'+$index].$dirty">
-                <div ng-message="min">
-                  {{'main.messages.error.positive' | translate}}
-                </div>
-                <div ng-message="max">
-                  {{'curriculum.error.max999' | translate}}
-                </div>
-                <div ng-message="pattern">
-                  {{'stateCurriculum.error.decimalPresision' | translate}}
-                </div>
+      <fieldset tabindex="4" layout="column">
+        <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.proportionPerStudyYear' | translate}}</legend>
+        <div layout="row">
+          <md-input-container flex ng-repeat="yc in studyYears track by $index">
+            <label>{{$index+1}}.&nbsp;{{'module.studyYearLowercase' | translate}}</label>
+            <input ng-disabled="occupationModule.themes.length > 0" ng-model="occupationModule.yearCapacities[$index].credits"
+              type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" aria-label="year capacity credits"
+              name="yearCapacities{{$index}}" required>
+            <div ng-messages="dialogForm['yearCapacities'+$index].$error" ng-show="dialogForm['yearCapacities'+$index].$dirty">
+              <div ng-message="min">
+                {{'main.messages.error.positive' | translate}}
               </div>
-            </md-input-container>
-          </div>
-        </fieldset>
-      </div>
-
-      <br/>
-
+              <div ng-message="max">
+                {{'curriculum.error.max999' | translate}}
+              </div>
+              <div ng-message="pattern">
+                {{'stateCurriculum.error.decimalPresision' | translate}}
+              </div>
+            </div>
+          </md-input-container>
+        </div>
+      </fieldset>
+      <div flex>&nbsp;</div>
       <md-input-container flex>
         <label>{{'module.supervisor' | translate}}</label>
         <input ng-model="occupationModule.supervisor" type="text" md-maxlength="100" required>

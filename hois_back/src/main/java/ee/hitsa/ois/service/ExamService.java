@@ -40,7 +40,6 @@ import ee.hitsa.ois.domain.timetable.TimetableEventRoom;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.ExamType;
-import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.ProtocolType;
 import ee.hitsa.ois.enums.TimetableEventRepeat;
@@ -57,15 +56,16 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.exam.ExamForm;
 import ee.hitsa.ois.web.commandobject.exam.ExamSearchForm;
 import ee.hitsa.ois.web.commandobject.exam.StudentExamSearchForm;
 import ee.hitsa.ois.web.commandobject.exam.StudentSearchCriteria;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.exam.ExamDto;
+import ee.hitsa.ois.web.dto.exam.ExamSearchDto;
 import ee.hitsa.ois.web.dto.exam.ExamStudentRegistrationDto;
 import ee.hitsa.ois.web.dto.exam.SubjectStudyPeriodDto;
-import ee.hitsa.ois.web.dto.exam.ExamSearchDto;
 
 @Transactional
 @Service
@@ -75,6 +75,12 @@ public class ExamService {
             "join protocol_student ps on ps.protocol_id = ph.protocol_id and ps.student_id = d.student_id " +
             "where ph.subject_study_period_id = ds.subject_study_period_id " +
             "and ph.type_code = '"+ProtocolType.PROTOKOLLI_LIIK_P.name()+"'";
+    
+    private static final String REGISTERED_EXAM_SUBJECTS = " select sspe2.subject_study_period_id from subject_study_period_exam sspe2 " +
+            "join subject_study_period_exam_student sspes2 on sspe2.id = sspes2.subject_study_period_exam_id " +
+            "join declaration_subject ds2 on sspes2.declaration_subject_id = ds2.id " +
+            "join declaration d2 on ds2.declaration_id = d2.id " +
+            "where d2.student_id = d.student_id and sspe2.type_code = '" +ExamType.SOORITUS_P.name() + "'";
 
     @Autowired
     private EntityManager em;
@@ -202,7 +208,8 @@ public class ExamService {
                 "join timetable_event te on sspe.timetable_event_id = te.id " +
                 "join classifier tp on sspe.type_code = tp.code " +
                 "join classifier sm on s.assessment_code = sm.code " +
-                "left join subject_study_period_exam_student sspes on ds.id = sspes.declaration_subject_id and sspes.subject_study_period_exam_id = sspe.id").sort(pageable);
+                "left join subject_study_period_exam_student sspes on ds.id = sspes.declaration_subject_id and sspes.subject_study_period_exam_id = sspe.id")
+                .sort(pageable);
         qb.requiredCriteria("d.student_id = :studentId", "studentId", user.getStudentId());
         qb.requiredCriteria("d.status_code = :status", "status", DeclarationStatus.OPINGUKAVA_STAATUS_K);
         qb.requiredCriteria("te.start >= :start", "start", DateUtils.firstMomentOfDay(now));
@@ -211,8 +218,8 @@ public class ExamService {
         qb.requiredCriteria("(sspes.id is not null or sspe.deadline is null or sspe.deadline >= :now)", "now", now);
         // grade logic
         qb.filter("(sspes.id is not null or (" +
-                "(sspe.type_code = '"+ExamType.SOORITUS_P.name()+"' and not exists("+ FIRST_RESULT + " and ps.grade != 'MI')) or "+
-                "(sspe.type_code = '"+ExamType.SOORITUS_K.name()+"' and exists(" + FIRST_RESULT + " and ps.grade != 'MI')" +
+                "(sspe.type_code = '"+ExamType.SOORITUS_P.name()+"' and sspe.subject_study_period_id not in (" + REGISTERED_EXAM_SUBJECTS + ")) or " +
+                "(sspe.type_code = '"+ExamType.SOORITUS_K.name()+"' and exists(" + FIRST_RESULT + " and ps.grade is not null)" +
                 " and not exists(select 1 from subject_study_period_exam_student s2 " +
                     "join subject_study_period_exam e2 on s2.subject_study_period_exam_id = e2.id " +
                     "left join protocol_student ps on ps.subject_study_period_exam_student_id = s2.id " +
@@ -221,7 +228,12 @@ public class ExamService {
 
         Page<Object> result = JpaQueryUtil.pagingResult(qb, "sspe.id, s.code, s.name_et, s.name_en, s.assessment_code, te.start, sspe.type_code, " +
                 "sspes.id as student_id, sspe.subject_study_period_id, sspe.deadline, sspe.add_info, sspe.places, (select count(*) " +
-                "from subject_study_period_exam_student sspes2 where sspes2.subject_study_period_exam_id = sspe.id), ds.id as ds_id", em, pageable);
+                "from subject_study_period_exam_student sspes2 where sspes2.subject_study_period_exam_id = sspe.id), ds.id as ds_id, " +
+                "(select phdata.protocol_id from protocol_hdata phdata " + 
+                "join protocol_student pstu on phdata.protocol_id = pstu.protocol_id " + 
+                "join subject_study_period_exam ssexam on phdata.subject_study_period_id = ssexam.subject_study_period_id " + 
+                "join subject_study_period_exam_student ssexams on ssexam.id = ssexams.subject_study_period_exam_id " + 
+                "where ssexam.id = sspe.id and pstu.subject_study_period_exam_student_id = ssexams.id) as protocol_id", em, pageable);
         Map<Long, List<String>> teachers = teachersForSubjectStudyPeriods(StreamUtil.toMappedSet(r -> resultAsLong(r, 8), result.getContent()));
         Map<Long, List<AutocompleteResult>> rooms = roomsForExams(StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result.getContent()));
         Map<Long, List<Grade>> grades = gradesForDeclarationSubjects(StreamUtil.toMappedSet(r -> resultAsLong(r, 13), result.getContent()));
@@ -240,6 +252,7 @@ public class ExamService {
             Long places = resultAsLong(r, 11);
             Long booked = resultAsLong(r, 12);
             dto.setFreePlaces(places != null ? Long.valueOf(Math.max(places.longValue() - booked.longValue(), 0)) : null);
+            dto.setProtocol(resultAsLong(r, 14));
             boolean registered = resultAsLong(r, 7) != null;
             dto.setRegistered(Boolean.valueOf(registered));
             dto.setCanChange(Boolean.valueOf(isBeforeDeadline(dto.getDeadline(), dto.getStart()) && (!registered || !hasGrade(grades.get(resultAsLong(r, 13)), dto.getId(), dto.getType()))));
@@ -295,16 +308,16 @@ public class ExamService {
         qb.requiredCriteria("s.school_id = :school", "school", user.getSchoolId());
         if(ExamType.SOORITUS_P.name().equals(criteria.getType())) {
             // first exam
-            // students who have no result for first exam (ignoring MI)
-            qb.filter("not exists(" + FIRST_RESULT +  "and ps.grade != 'MI')");
+            // students who have already registered to a subject exam
+            qb.filter("ds.subject_study_period_id not in (" + REGISTERED_EXAM_SUBJECTS + ")");
         } else if(ExamType.SOORITUS_K.name().equals(criteria.getType())) {
             // repeating exam
             // students who have result for first exam
-            qb.filter("exists(" + FIRST_RESULT + " and ps.grade != 'MI')");
+            qb.filter("exists(" + FIRST_RESULT + " and ps.grade is not null)");
             // and no registration for repeating exam without result
             String sql = "select 1 from subject_study_period_exam_student s2 " +
                     "join subject_study_period_exam e2 on s2.subject_study_period_exam_id = e2.id " +
-                    "left join protocol_student ps on ps.subject_study_period_exam_student_id = s2.id and ps.grade is null " +
+                    "left join protocol_student ps on ps.subject_study_period_exam_student_id = s2.id " +
                     "where s2.declaration_subject_id = ds.id and ps.grade is null and e2.type_code = '"+ExamType.SOORITUS_K.name()+"' and e2.id != :exam";
             qb.requiredCriteria("not exists(" + sql +")", "exam", examId);
         } else {
@@ -340,8 +353,11 @@ public class ExamService {
         if(students.stream().anyMatch(r -> dsId.equals(EntityUtil.getId(r.getDeclarationSubject())))) {
             throw new ValidationFailedException("exam.message.studentalreadyregistered");
         }
-        List<Grade> grades = gradesForDeclarationSubjects(Collections.singletonList(dsId)).get(dsId);
-        checkGrades(exam, grades);
+        
+        List<Long> declarationSubjects = Collections.singletonList(dsId);
+        List<Grade> grades = gradesForDeclarationSubjects(declarationSubjects).get(dsId);
+        List<ExamRegistration> registrations = registrationsForDeclarationSubjects(declarationSubjects).get(dsId);
+        checkPreviousRegistrations(exam, registrations, grades);
 
         SubjectStudyPeriodExamStudent s = new SubjectStudyPeriodExamStudent();
         s.setDeclarationSubject(ds);
@@ -372,6 +388,12 @@ public class ExamService {
         List<Grade> grades = gradesForDeclarationSubjects(Collections.singletonList(dsId)).get(dsId);
         if(hasGrade(grades, examId, EntityUtil.getCode(exam.getType()))) {
             throw new ValidationFailedException("exam.message.studenthasgrade");
+        }
+
+        // check that student exam is not connected to a protocol already
+        List<ExamRegistration> registrations = registrationsForDeclarationSubjects(Collections.singletonList(dsId)).get(dsId);
+        if (hasConnectedProtocol(registrations, examId)) {
+            throw new ValidationFailedException("exam.message.studentconnectedprotocol");
         }
 
         if(!exam.getStudents().removeIf(r -> dsId.equals(EntityUtil.getId(r.getDeclarationSubject())))) {
@@ -461,19 +483,16 @@ public class ExamService {
         }
         tet.setStart(te.getStart());
         tet.setEnd(te.getEnd());
-        List<TimetableEventRoom> rooms = tet.getTimetableEventRooms();
-        if(rooms == null) {
-            tet.setTimetableEventRooms(rooms = new ArrayList<>());
-        }
-        TimetableEventRoom ter;
-        if(rooms.isEmpty()) {
-            ter = new TimetableEventRoom();
-            ter.setTimetableEventTime(tet);
-            rooms.add(ter);
-        } else {
-            ter = rooms.get(0);
-        }
-        ter.setRoom(EntityUtil.getOptionalOne(Room.class, form.getRoom(), em));
+                
+        List<EntityConnectionCommand> formRooms = new ArrayList<>();
+        formRooms.add(form.getRoom());
+        EntityUtil.bindEntityCollection(tet.getTimetableEventRooms(), r -> EntityUtil.getId(r.getRoom()), formRooms,
+                r -> r.getId(), r -> {
+                    TimetableEventRoom ter = new TimetableEventRoom();
+                    ter.setRoom(em.getReference(Room.class, r.getId()));
+                    ter.setTimetableEventTime(tet);
+                    return ter;
+                });
     }
 
     /**
@@ -499,7 +518,9 @@ public class ExamService {
         }
 
         Set<Long> oldStudentIds = StreamUtil.toMappedSet(r -> EntityUtil.getId(r.getDeclarationSubject()), exam.getStudents());
-        Map<Long, List<Grade>> grades = gradesForDeclarationSubjects(Stream.of(oldStudentIds, studentIds).flatMap(Collection::stream).collect(Collectors.toSet()));
+        Set<Long> declarationSubjects = Stream.of(oldStudentIds, studentIds).flatMap(Collection::stream).collect(Collectors.toSet());
+        Map<Long, List<Grade>> grades = gradesForDeclarationSubjects(declarationSubjects);
+        Map<Long, List<ExamRegistration>> registrations = registrationsForDeclarationSubjects(declarationSubjects);
         Long examId = exam.getId();
         if(examId != null) {
             String examType = EntityUtil.getCode(exam.getType());
@@ -511,12 +532,16 @@ public class ExamService {
                 // FIXME better error reporting - for each student?
                 throw new ValidationFailedException("exam.message.studenthasgrade");
             }
+            
+            if(removedStudents.stream().anyMatch(r -> hasConnectedProtocol(registrations.get(r), examId))) {
+                throw new ValidationFailedException("exam.message.studentconnectedprotocol");
+            }
         }
 
         for(Long dsId : studentIds) {
             if(!oldStudentIds.contains(dsId)) {
                 // check for first/repeating exam and if student has already result for new registrations
-                checkGrades(exam, grades.get(dsId));
+                checkPreviousRegistrations(exam, registrations.get(dsId), grades.get(dsId));
             }
         }
         // registration deadline is not validated for admin and teacher
@@ -562,10 +587,12 @@ public class ExamService {
             return Collections.emptyMap();
         }
 
-        List<?> data = em.createNativeQuery("select sspe.id, r.id as r_id, r.code from subject_study_period_exam sspe " +
+        List<?> data = em.createNativeQuery("select sspe.id, r.id as r_id, b.code || '-' || r.code from subject_study_period_exam sspe " +
                 "join timetable_event_time tet on sspe.timetable_event_id = tet.timetable_event_id " +
                 "join timetable_event_room ter on tet.id = ter.timetable_event_time_id " +
-                "join room r on ter.room_id = r.id where sspe.id in (?1) order by r.code")
+                "join room r on ter.room_id = r.id " +
+                "join building b on r.building_id = b.id " +
+                "where sspe.id in (?1) order by r.code")
             .setParameter(1, examIds)
             .getResultList();
         return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
@@ -601,7 +628,29 @@ public class ExamService {
                 "where ds.id in (?1)")
              .setParameter(1, declarationSubjectIds)
              .getResultList();
-        return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> new Grade(resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 3)), Collectors.toList())));
+        return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(
+                r -> new Grade(resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 3)), Collectors.toList())));
+    }
+
+    private Map<Long, List<ExamRegistration>> registrationsForDeclarationSubjects(Collection<Long> declarationSubjectIds) {
+        if(declarationSubjectIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<?> data = em.createNativeQuery("select ds.id, sspes.subject_study_period_exam_id, sspe.type_code, sspe.subject_study_period_id, " +
+                "(select ssexams.id from protocol_hdata phdata " + 
+                "join protocol_student pstu on phdata.protocol_id = pstu.protocol_id " + 
+                "join subject_study_period_exam ssexam on phdata.subject_study_period_id = ssexam.subject_study_period_id " + 
+                "join subject_study_period_exam_student ssexams on ssexam.id = ssexams.subject_study_period_exam_id " + 
+                "where ssexam.id = sspe.id and pstu.subject_study_period_exam_student_id = ssexams.id) as subject_study_period_exam_student_id " +
+                "from subject_study_period_exam_student sspes " +
+                "join subject_study_period_exam sspe on sspes.subject_study_period_exam_id = sspe.id " +
+                "join declaration_subject ds on sspes.declaration_subject_id = ds.id " + 
+                "where ds.id in (?1)")
+             .setParameter(1, declarationSubjectIds)
+             .getResultList();
+        return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(
+                r -> new ExamRegistration(resultAsLong(r, 1), resultAsString(r, 2), resultAsLong(r, 3), resultAsLong(r, 4)), Collectors.toList())));
     }
 
     private SubjectStudyPeriodExam exam(HoisUserDetails user, Long examId) {
@@ -636,18 +685,13 @@ public class ExamService {
         return String.join(" ", SubjectUtil.subjectName(subject.getCode(), subject.getNameEt()), exam.getType().getNameEt().toLowerCase());
     }
 
-    private static void checkGrades(SubjectStudyPeriodExam exam, List<Grade> grades) {
+    private static void checkPreviousRegistrations(SubjectStudyPeriodExam exam, List<ExamRegistration> registrations, List<Grade> grades) {
         Long examId = EntityUtil.getId(exam);
         if(ClassifierUtil.equals(ExamType.SOORITUS_P, exam.getType())) {
             // first exam
-            if(grades != null && grades.stream().anyMatch(r -> ProtocolType.PROTOKOLLI_LIIK_P.name().equals(r.protocolType) && r.grade == null)) {
-                // there is already registration for first exam
+            if (registrations != null && registrations.stream().anyMatch(r -> ExamType.SOORITUS_P.name().equals(r.examType)
+                    && !EntityUtil.getId(exam).equals(r.examId) && EntityUtil.getId(exam.getSubjectStudyPeriod()).equals(r.subjectStudyPeriod))) {
                 throw new ValidationFailedException("exam.message.duplicatefirstexam");
-            }
-
-            if(grades != null && grades.stream().anyMatch(r -> ProtocolType.PROTOKOLLI_LIIK_P.name().equals(r.protocolType) && r.grade != null && !HigherAssessment.KORGHINDAMINE_MI.name().equals(r.grade))) {
-                // there is already result
-                throw new ValidationFailedException("exam.message.firstexamhasresult");
             }
         } else {
             // repeating exam
@@ -687,6 +731,13 @@ public class ExamService {
                 // for main protocol any grade, for repeating same exam
                 (!repeating || examId.equals(r.examId)) && StringUtils.hasText(r.grade));
     }
+    
+    private static boolean hasConnectedProtocol(List<ExamRegistration> registrations, Long examId) {
+        if(registrations == null) {
+            return false;
+        }
+        return registrations.stream().anyMatch(r -> examId.equals(r.examId) && r.subjectStudyPeriodExamStudent != null);
+    }
 
     static class Grade {
         final Long examId;
@@ -697,6 +748,21 @@ public class ExamService {
             this.examId = examId;
             this.protocolType = protocolType;
             this.grade = grade;
+        }
+    }
+    
+    static class ExamRegistration {
+        final Long examId;
+        final String examType;
+        final Long subjectStudyPeriod;
+        final Long subjectStudyPeriodExamStudent;
+        
+        public ExamRegistration(Long examId, String examType, Long subjectStudyPeriod,
+                Long subjectStudyPeriodExamStudent) {
+            this.examId = examId;
+            this.examType = examType;
+            this.subjectStudyPeriod = subjectStudyPeriod;
+            this.subjectStudyPeriodExamStudent = subjectStudyPeriodExamStudent;
         }
     }
 }

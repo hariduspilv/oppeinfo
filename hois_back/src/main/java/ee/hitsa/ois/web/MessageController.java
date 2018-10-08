@@ -29,7 +29,9 @@ import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.MessageDto;
 import ee.hitsa.ois.web.dto.MessageReceiverDto;
 import ee.hitsa.ois.web.dto.MessageSearchDto;
+import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
+import ee.hitsa.ois.web.dto.studymaterial.JournalDto;
 
 @RestController
 @RequestMapping("/message")
@@ -104,6 +106,18 @@ public class MessageController {
     public List<StudentGroupSearchDto> studentGroups(HoisUserDetails user, @Valid StudentGroupSearchCommand criteria) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return messageService.searchStudentGroups(user, criteria);
+    }
+    
+    @GetMapping("/teacherjournals")
+    public List<JournalDto> getTeacherJournals(HoisUserDetails user) {
+        UserUtil.assertIsTeacher(user);
+        return messageService.searchTeacherJournals(user);
+    }
+    
+    @GetMapping("/teachersubjects")
+    public List<SubjectDto> getTeacherSubjects(HoisUserDetails user) {
+        UserUtil.assertIsTeacher(user);
+        return messageService.searchTeacherSubjects(user);
     }
 
     @GetMapping("/{studentId:\\d+}/parents")

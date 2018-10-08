@@ -45,7 +45,35 @@ md-checkbox.md-checked .md-icon {
   margin-bottom: 18px;
 }
 
+@media (max-width: 359px) {
+  .mobileColumnLayout {
+    -webkit-box-orient: vertical!important;
+    -webkit-box-direction: normal!important;
+    -webkit-flex-direction: column!important;
+    flex-direction: column!important;
+    box-sizing: border-box!important;
+    display: -webkit-box!important;
+    display: -webkit-flex!important;
+    display: flex!important;
+  }
+
+  .mobileAlignStartStart {
+    -webkit-box-align: start!important;
+    -webkit-align-items: flex-start!important;
+    align-items: flex-start!important;
+    -webkit-align-content: flex-start!important;
+    align-content: flex-start!important;
+    -webkit-box-pack: start!important;
+    -webkit-justify-content: flex-start!important;
+    justify-content: flex-start!important;
+  }
+}
+
 @media (max-width: 600px) {
+  .flex-offset-xs-0 {
+    margin-left: 0% !important;
+  }
+
   .hois-collapse-button {
     min-width: 60px;
   }
@@ -1061,7 +1089,8 @@ table.md-table thead.md-head > tr.md-row  {
 
 .secondary-table tbody.md-body > tr.md-row, table.md-table tfoot.md-foot > tr.md-row,
 .secondary-table-row {
-    height: 32px!important;
+    padding-top: 8px;
+    padding-bottom: 8px;
     font-size: 13px;
     font-weight: normal!important;
 }
@@ -1214,6 +1243,10 @@ mdp-time-picker button {
 
 .md-icon-button + .md-datepicker-input-container {
 	margin-left: 0px;
+}
+
+._md-datepicker-floating-label._md-datepicker-has-calendar-icon .md-input-message-animation {
+  margin-left: 0px;
 }
 
 ._md-datepicker-floating-label._md-datepicker-has-calendar-icon > label:not(.md-no-float):not(.md-container-ignore) {
@@ -1373,9 +1406,14 @@ label.required::after {
 /*
 * Hides arrows from number input
 */
-.subject-study-period input::-webkit-outer-spin-button,
-.subject-study-period input::-webkit-inner-spin-button {
+.subject-study-period input[type=number]::-webkit-outer-spin-button,
+.subject-study-period input[type=number]::-webkit-inner-spin-button {
     -webkit-appearance: none;
+    margin: 0;
+}
+
+.subject-study-period input[type=number] {
+    -moz-appearance:textfield;
 }
 
 .bold
@@ -1412,9 +1450,19 @@ md-chips-wrap {
   min-width: 300px;
 }
 
+.removePadding {
+  padding: 0 0 0 0 !important;
+}
+
 @media (max-width: 800px) {
   .md-chips .md-chip-input-container {
     width: 100%;
+  }
+  .noPadding {
+    padding: 0 0 0 0 !important;
+  }
+  .disableTableData {
+    display: none;
   }
 }
 
@@ -2214,11 +2262,6 @@ label.ui-btn {
   border-bottom: 1px solid #eee;
 }
 
-#showAll md-checkbox
-{
-  margin-bottom:2px;
-}
-
 .schoolList md-grid-tile
 {
   border: 1px solid #dedede;
@@ -2338,4 +2381,19 @@ label.ui-btn {
 .curriculum-fulfillment-result div:nth-child(2) {
   display: flex;
   align-items: center;
+}
+
+.padding-y-0 {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.padding-y-2 {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+}
+
+.padding-y-5 {
+  padding-left: 5px !important;
+  padding-right: 5px !important;
 }

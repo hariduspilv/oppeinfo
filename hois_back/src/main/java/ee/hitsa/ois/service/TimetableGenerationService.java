@@ -52,11 +52,29 @@ import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupDto;
 @Service
 public class TimetableGenerationService {
 
-    private static final String ICalBegin = "BEGIN:VCALENDAR\r\nVERSION: 2.0\r\nPRODID:-//HOIS//NONSGML v2.0//UTF8\r\n";
-    private static final String ICalEnd = "END:VCALENDAR";
-    private static final String eventStart = "BEGIN:VEVENT\r\n";
-    private static final String eventEnd = "END:VEVENT\r\n";
-    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+    private static final String ICAL_BEGIN = "BEGIN:VCALENDAR\r\nVERSION: 2.0\r\nPRODID:-//HOIS//NONSGML v2.0//UTF8\r\n";
+    private static final String ICAL_END = "END:VCALENDAR";
+    private static final String TIMEZONE = "BEGIN:VTIMEZONE\r\n"
+            + "TZID:Europe/Tallinn\r\n" 
+            + "X-LIC-LOCATION:Europe/Tallinn\r\n" 
+            + "BEGIN:DAYLIGHT\r\n" 
+            + "TZOFFSETFROM:+0200\r\n" 
+            + "TZOFFSETTO:+0300\r\n" 
+            + "TZNAME:EEST\r\n" 
+            + "DTSTART:19700329T030000\r\n"
+            + "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU\r\n" 
+            + "END:DAYLIGHT\r\n" 
+            + "BEGIN:STANDARD\r\n"
+            + "TZOFFSETFROM:+0300\r\n" 
+            + "TZOFFSETTO:+0200\r\n" 
+            + "TZNAME:EET\r\n" 
+            + "DTSTART:19701025T040000\r\n"
+            + "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU\r\n" 
+            + "END:STANDARD\r\n" 
+            + "END:VTIMEZONE\r\n";
+    private static final String EVENT_START = "BEGIN:VEVENT\r\n";
+    private static final String EVENT_END = "END:VEVENT\r\n";
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
 
     private static final EnumMap<Day, Function<LessonTimeDto, Boolean>> DAY_MAPPING = new EnumMap<>(Day.class);
     static {
@@ -100,49 +118,8 @@ public class TimetableGenerationService {
     }
 
     private static String getICalContent(List<TimetableEventSearchDto> events, Language lang) {
-        String timezones = getICalTimezones();
         String calEvents = getICalEvents(events, lang);
-        return ICalBegin + timezones + calEvents + ICalEnd;
-    }
-
-    private static String getICalTimezones() {
-        String summerTz = "BEGIN:VTIMEZONE\r\n" + 
-                "TZID:EST-Estonia-suvi\r\n" + 
-                "LAST-MODIFIED:19870101T000000Z\r\n" + 
-                "BEGIN:STANDARD\r\n" + 
-                "DTSTART:19911026T020000\r\n" + 
-                "RDATE:19911026T020000\r\n" + 
-                "TZOFFSETFROM:+0200\r\n" + 
-                "TZOFFSETTO:+0300\r\n" + 
-                "TZNAME:EDT\r\n" + 
-                "END:STANDARD\r\n" + 
-                "BEGIN:DAYLIGHT\r\n" + 
-                "DTSTART:19911026T020000\r\n" + 
-                "RDATE:19910406T020000\r\n" + 
-                "TZOFFSETFROM:+0200\r\n" + 
-                "TZOFFSETTO:+0300\r\n" + 
-                "TZNAME:EDT\r\n" + 
-                "END:DAYLIGHT\r\n" + 
-                "END:VTIMEZONE\r\n";
-        String winterTz = "BEGIN:VTIMEZONE\r\n" + 
-                "TZID:EST-Estonia-talv\r\n" + 
-                "LAST-MODIFIED:19870101T000000Z\r\n" + 
-                "BEGIN:STANDARD\r\n" + 
-                "DTSTART:19911026T020000\r\n" + 
-                "RDATE:19911026T020000\r\n" + 
-                "TZOFFSETFROM:+0200\r\n" + 
-                "TZOFFSETTO:+0200\r\n" + 
-                "TZNAME:EDT\r\n" + 
-                "END:STANDARD\r\n" + 
-                "BEGIN:DAYLIGHT\r\n" + 
-                "DTSTART:19911026T020000\r\n" + 
-                "RDATE:19910406T020000\r\n" + 
-                "TZOFFSETFROM:+0200\r\n" + 
-                "TZOFFSETTO:+0200\r\n" + 
-                "TZNAME:EDT\r\n" + 
-                "END:DAYLIGHT\r\n" + 
-                "END:VTIMEZONE\r\n";
-        return summerTz + winterTz;
+        return ICAL_BEGIN + TIMEZONE + calEvents + ICAL_END;
     }
 
     private static String getICalEvents(List<TimetableEventSearchDto> events, Language lang) {
@@ -163,19 +140,19 @@ public class TimetableGenerationService {
                 + getEventStudentGroups(event.getStudentGroups(), lang) + "\r\n";
         String location = "LOCATION:" + getEventLocation(event.getRooms(), lang) + "\r\n";
 
-        return eventStart + uid + dtStart + dtEnd + summary + description + location + eventEnd;
+        return EVENT_START + uid + dtStart + dtEnd + summary + description + location + EVENT_END;
     }
 
     private static String getEventUID(Long eventId) {
         LocalDateTime currentTime = LocalDateTime.now();
-        String timeString = currentTime.format(formatter);
+        String timeString = currentTime.format(FORMATTER);
 
         return eventId.toString() + ";" + timeString + "@hois";
     }
 
     private static String getEventTime(LocalDate date, LocalTime time) {
         LocalDateTime eventTime = LocalDateTime.of(date, time);
-        return eventTime.format(formatter);
+        return eventTime.format(FORMATTER);
     }
 
     private static String getEventTeachers(List<TimetableEventSearchTeacherDto> teachers, Language lang) {

@@ -253,12 +253,12 @@
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container flex="25" flex-sm="100" flex-xs="100" ng-if="teacherPositionEhis.isVocational">
                 <label>{{'teacher.teacherPositionEhis.contractType' | translate}}</label>
-                <hois-classifier-select ng-model="teacherPositionEhis.contractType" main-classifier-code="EHIS_LEPING" model-value-attr="code"
+                <hois-classifier-select ng-model="teacherPositionEhis.contractType" name="teacherPositionEhis[{{$index}}].contractType" main-classifier-code="EHIS_LEPING" model-value-attr="code"
                   required criteria="{vocational: true}"></hois-classifier-select>
               </md-input-container>
               <md-input-container flex="25" flex-sm="100" flex-xs="100" ng-if="!teacherPositionEhis.isVocational">
                 <label>{{'teacher.teacherPositionEhis.contractType' | translate}}</label>
-                <hois-classifier-select ng-model="teacherPositionEhis.contractType" main-classifier-code="EHIS_LEPING" model-value-attr="code"
+                <hois-classifier-select ng-model="teacherPositionEhis.contractType" name="teacherPositionEhis[{{$index}}].contractType" main-classifier-code="EHIS_LEPING" model-value-attr="code"
                   required criteria="{higher: true}"></hois-classifier-select>
               </md-input-container>
               <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -274,13 +274,13 @@
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container flex="25" flex-sm="100" flex-xs="100">
                 <label>{{'teacher.teacherPositionEhis.load' | translate}}</label>
-                <input ng-model="teacherPositionEhis.load" name="teacherPositionEhis[{{$index}}].load" type="number" required max="5" min="0" step="0.1">
+                <input ng-model="teacherPositionEhis.load" name="teacherPositionEhis[{{$index}}].load" type="number" required max="5" ng-min="{{teacherForm['teacherPositionEhis['+$index+'].contractType'].$viewValue === 'EHIS_LEPING_TL' ? 0.1 : 0}}" step="0.1">
                 <div ng-messages="teacherForm['teacherPositionEhis['+$index+'].load'].$error">
                   <div ng-message="max">
                     {{'main.messages.error.max' | translate: {max: 5} }}
                   </div>
                   <div ng-message="min">
-                    {{'main.messages.error.min' | translate: {min: 0} }}
+                    {{'main.messages.error.min' | translate: teacherForm['teacherPositionEhis['+$index+'].contractType'].$viewValue === 'EHIS_LEPING_TL' ? {min:0.1} : {min:0} }}
                   </div>
                 </div>
               </md-input-container>
@@ -380,7 +380,9 @@
 
       <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
       <md-button ng-click="back('#/teachers', teacherForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
-      <md-button ng-if="teacher.id && teacher.teacherPositionEhis && teacher.teacherPositionEhis.length" ng-click="sendToEhis()" class="md-raised">{{'main.button.sendToEhis' | translate}}</md-button>
       <md-button ng-if="teacher.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+      <md-button ng-if="teacher.id && teacher.teacherPositionEhis && teacher.teacherPositionEhis.length" ng-click="sendToEhis()" class="md-raised">{{'main.button.sendToEhis' | translate}}</md-button>
+      <span ng-if="teacher.ehisLastSuccessfulDate && teacher.teacherPositionEhis.length > 0" style="font-size: 13px">{{'teacher.ehisSendOperation.success' | translate: {day: (teacher.ehisLastSuccessfulDate | hoisDateTime)} }}</span>
+      <span ng-if="!teacher.ehisLastSuccessfulDate && teacher.teacherPositionEhis.length > 0" style="font-size: 13px">{{'teacher.ehisSendOperation.fail' | translate}}</span>
     </form>
   </div>

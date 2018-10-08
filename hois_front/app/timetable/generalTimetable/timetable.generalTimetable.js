@@ -20,7 +20,6 @@
 
         this.getCurrentWeekIndex = function (weeks) {
           var currentTime = moment();
-          console.log(currentTime);
 
           for (var i = 0; i <= weeks.length - 1; i++) {
             var weekStartDate = moment(weeks[i].start).startOf('day')
@@ -33,7 +32,7 @@
 
           // if current week doesn't exist, then return first week index if current date is before first week start date
           // else return last week index
-          if (weeks) {
+          if (weeks && weeks.length > 0) {
             return currentTime < moment(weeks[0].start).startOf('day') ? 0 : weeks.length - 1;
           }
         }
@@ -58,35 +57,44 @@
       $scope.currentNavItem = "search";
       $scope.generalTimetableUtils = new GeneralTimetableUtils();      
       $scope.auth = $route.current.locals.auth;
-      $scope.schoolId = $scope.auth.school.id;
       $scope.formState = {};
-      var storageKey = 'timetableSearch';
-      var state = $scope.generalTimetableUtils.loadState($scope.schoolId);
       
-      function saveCriteria() {
-        var storedCriteria = $scope.fromStorage(storageKey) || {};
-        var storedSchoolCriteria = storedCriteria[$scope.schoolId] || {};
-        var schoolCriteria = {};
-        schoolCriteria[$scope.schoolId] = angular.extend(storedSchoolCriteria, {
-          roomObject: $scope.criteria.roomObject,
-          teacher: $scope.criteria.teacher,
-          studentGroup: $scope.criteria.studentGroup,
-          subjectObject: $scope.criteria.subjectObject
-        });
+      if ($route.current.params.schoolId) {
+        $scope.schoolId = $route.current.params.schoolId  
+      } else {
+        if ($scope.auth) {
+          $scope.schoolId = $scope.auth.school.id;
+        } else {
+          $location.url('/timetables');
+        }
+      }
 
-        $scope.toStorage(storageKey, angular.extend(storedCriteria, schoolCriteria));
+      QueryUtils.endpoint('/timetableevents/timetableSearch/searchFormData/' + $scope.schoolId).search().$promise.then(function (result) {
+        $scope.formState.teachers = result.teachers ? result.teachers : [];
+        $scope.formState.studentGroups = result.studentGroups ? result.studentGroups : [];
+        $scope.formState.rooms = result.rooms ? result.rooms : [];
+        $scope.formState.subjects = result.subjects ? result.subjects : [];
+      });
+
+      function saveCriteria() {
+        $scope.generalTimetableUtils.changeState({
+          roomObject: $scope.criteria.roomObject,
+          teacherObject: $scope.criteria.teacherObject,
+          studentGroupObject: $scope.criteria.studentGroupObject,
+          subjectObject: $scope.criteria.subjectObject
+        }, $scope.schoolId);
       }
 
       function loadCriteria() {
-        var storedCriteria = $scope.fromStorage(storageKey) || {};
-        angular.extend($scope.criteria, storedCriteria[$scope.schoolId]);
+        angular.extend($scope.criteria, $scope.generalTimetableUtils.loadState($scope.schoolId));
       }
 
       QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query().$promise.then(function (weeks) {
-        $scope.weeks = weeks;
-        var shownWeekIndex = state.weekIndex ? state.weekIndex : $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-        $scope.shownWeek = $scope.weeks[shownWeekIndex];
         loadCriteria();
+        setCriteria();
+        $scope.weeks = weeks;
+        var shownWeekIndex = angular.isDefined($scope.criteria.weekIndex) ? $scope.criteria.weekIndex : $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
+        $scope.shownWeek = $scope.weeks[shownWeekIndex];
         $scope.search();
       });
 
@@ -94,7 +102,7 @@
         if ($scope.shownWeek) {
           if ($scope.criteria.room || $scope.criteria.teachers || $scope.criteria.studentGroups || $scope.criteria.subject) {
             saveCriteria();
-            QueryUtils.endpoint('/timetableevents/timetableSearch').query(
+            QueryUtils.endpoint('/timetableevents/timetableSearch/' + $scope.schoolId).query(
               {room: $scope.criteria.room, teachers: $scope.criteria.teachers, studentGroups: $scope.criteria.studentGroups,
               journalOrSubjectId: $scope.criteria.subject, from: $scope.shownWeek.start, thru: $scope.shownWeek.end})
               .$promise.then(function(result) {
@@ -106,20 +114,36 @@
         }
       };
 
-      $scope.clearCriteria = function() {
+      $scope.clearSearchParameters = function() {
         $scope.criteria = {};
+        $scope.teacherSearchText = null;
+        $scope.studentGroupSearchText = null;
+        $scope.roomSearchText = null;
+        $scope.subjectSearchText = null;
       };
+
+      $scope.parameterSearch = function (searchText, formData) {
+        searchText = (searchText || '').toUpperCase();
+        return formData.filter(function (it) { return $scope.currentLanguageNameField(it).toUpperCase().indexOf(searchText) !== -1; });
+      };
+
+      function setCriteria() {
+        $scope.criteria.room = $scope.criteria.roomObject ? $scope.criteria.roomObject.id : null;
+        $scope.criteria.teachers = $scope.criteria.teacherObject ? $scope.criteria.teacherObject.id : null;
+        $scope.criteria.studentGroups = $scope.criteria.studentGroupObject ? $scope.criteria.studentGroupObject.id : null;
+        $scope.criteria.subject = $scope.criteria.subjectObject ? $scope.criteria.subjectObject.id : null;
+      }
 
       $scope.$watch('criteria.roomObject', function() {
         $scope.criteria.room = $scope.criteria.roomObject ? $scope.criteria.roomObject.id : null;
       });
 
-      $scope.$watch('criteria.teacher', function() {
-        $scope.criteria.teachers = $scope.criteria.teacher ? $scope.criteria.teacher.id : null;
+      $scope.$watch('criteria.teacherObject', function() {
+        $scope.criteria.teachers = $scope.criteria.teacherObject ? $scope.criteria.teacherObject.id : null;
       });
 
-      $scope.$watch('criteria.studentGroup', function() {
-        $scope.criteria.studentGroups = $scope.criteria.studentGroup ? $scope.criteria.studentGroup.id : null;
+      $scope.$watch('criteria.studentGroupObject', function() {
+        $scope.criteria.studentGroups = $scope.criteria.studentGroupObject ? $scope.criteria.studentGroupObject.id : null;
       });
 
       $scope.$watch('criteria.subjectObject', function() {

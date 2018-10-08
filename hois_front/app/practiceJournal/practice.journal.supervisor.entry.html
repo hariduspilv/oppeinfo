@@ -55,6 +55,10 @@
             <label>{{'practiceJournal.hours' | translate}}</label>
             <hois-value value="practiceJournal.hours"></hois-value>
           </md-input-container>
+            <md-input-container flex>
+              <label>{{'practiceJournal.status' | translate}}</label>
+              <hois-classifier-value ng-model="practiceJournal.status" main-classifier-code="PAEVIK_STAATUS"></hois-classifier-value>
+            </md-input-container>
         </div>
 
         <div layout="row" flex>
@@ -76,9 +80,13 @@
             <label>{{'practiceJournal.endDate' | translate}}</label>
             <hois-value value="practiceJournal.endDate | hoisDate"></hois-value>
           </md-input-container>
-          <md-input-container flex="50">
+          <md-input-container flex="25">
             <label>{{'practiceJournal.schoolSupervisor' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.teacher)"></hois-value>
+          </md-input-container>
+          <md-input-container flex="25">
+            <label>{{'practiceJournal.status' | translate}}</label>
+            <hois-classifier-value ng-model="practiceJournal.status" main-classifier-code="PAEVIK_STAATUS"></hois-classifier-value>
           </md-input-container>
         </div>
       </div>

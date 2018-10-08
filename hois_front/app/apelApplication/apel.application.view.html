@@ -56,44 +56,46 @@
     <div layout="column" flex>
       <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
-        <table md-table class="secondary-table">
-          <thead md-head>
-            <tr md-row>
-              <th md-column width="60%">
-                <span>{{'file.nameAndFile' | translate}}</span>
-              </th>
-              <th md-column width="20%">
-                <span>{{'file.additionDate' | translate}}</span>
-              </th>
-              <th md-column width="20%">{{'file.addedBy' | translate}}</th>
-            </tr>
-          </thead>
-          <tbody md-body>
-            <tr md-row ng-repeat="file in application.files | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
-              <td md-cell>
-                <div layout="row" flex>
-                  <div>
-                    {{file.oisFile.fname}}
+        <md-table-container>
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column width="60%">
+                  <span>{{'file.nameAndFile' | translate}}</span>
+                </th>
+                <th md-column width="20%">
+                  <span>{{'file.additionDate' | translate}}</span>
+                </th>
+                <th md-column width="20%">{{'file.addedBy' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="file in application.files | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>
+                  <div layout="row" flex>
+                    <div>
+                      {{file.oisFile.fname}}
+                    </div>
+                    <div flex>
+                      <a ng-href="{{getUrl(file.oisFile, 'apelapplication')}}" target="_blank" rel="noopener noreferrer">
+                        <md-icon md-font-set="material-icons">file_download</md-icon>
+                      </a>
+                    </div>
                   </div>
-                  <div flex>
-                    <a ng-href="{{getUrl(file.oisFile, 'apelapplication')}}" target="_blank" rel="noopener noreferrer">
-                      <md-icon md-font-set="material-icons">file_download</md-icon>
-                    </a>
-                  </div>
-                </div>
-              </td>
-              <td md-cell>
-                {{file.inserted | hoisDateTime}}
-              </td>
-              <td md-cell>
-                {{file.insertedBy}}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+                <td md-cell>
+                  {{file.inserted | hoisDateTime}}
+                </td>
+                <td md-cell>
+                  {{file.insertedBy}}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
       </fieldset>
 
-      <div layout="row">
+      <div layout="row" layout-xs="column">
         <md-button ng-if="application.status !== 'VOTA_STAATUS_C' && application.status !== 'VOTA_STAATUS_Y' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_VOTA')" class="md-raised md-primary" ng-href="#/apelApplication/{{::applicationId}}/edit">{{'main.button.edit' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-if="application.status === 'VOTA_STAATUS_E' && auth.isAdmin()" ng-click="sendToConfirm()">{{'apel.sendToConfirm' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-if="application.status === 'VOTA_STAATUS_E' && auth.isAdmin()" ng-click="sendBackToCreation()">{{'apel.sendBackToCreation' | translate}}</md-button>

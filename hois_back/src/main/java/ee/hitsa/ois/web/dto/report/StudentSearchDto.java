@@ -17,11 +17,14 @@ import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 public class StudentSearchDto {
 
     private final Long id;
+    private final String firstName;
+    private final String lastName;
     private final String fullName;
     private final String idcode;
     private final LocalDate studyStart;
     private final String studyLevel;
     private final AutocompleteResult curriculumVersion;
+    private final String merCode;
     private final String studentGroup;
     private final String studyLoad;
     private final String studyForm;
@@ -29,29 +32,42 @@ public class StudentSearchDto {
     private final String fin;
     private final String finSpecific;
     private final String language;
+    private final String email;
     private final BigDecimal credits;
     private List<StudentOccupationCertificateDto> occupationCertificates;
 
     public StudentSearchDto(Object record) {
         id = resultAsLong(record, 0);
-        fullName = PersonUtil.fullname(resultAsString(record, 1), resultAsString(record, 2));
+        firstName = resultAsString(record, 1);
+        lastName = resultAsString(record, 2);
+        fullName = PersonUtil.fullname(firstName, lastName);
         idcode = resultAsString(record, 3);
         studyStart = resultAsLocalDate(record, 4);
         studyLevel = resultAsString(record, 5);
         String code = resultAsString(record, 6);
         curriculumVersion = new AutocompleteResult(null, CurriculumUtil.versionName(code, resultAsString(record, 7)), CurriculumUtil.versionName(code, resultAsString(record, 8)));
-        studentGroup = resultAsString(record, 9);
-        studyLoad = resultAsString(record, 10);
-        studyForm = resultAsString(record, 11);
-        status = resultAsString(record, 12);
-        fin = resultAsString(record, 13);
-        finSpecific = resultAsString(record, 14);
-        language = resultAsString(record, 15);
-        credits = resultAsDecimal(record, 16);
+        merCode = resultAsString(record, 9);
+        studentGroup = resultAsString(record, 10);
+        studyLoad = resultAsString(record, 11);
+        studyForm = resultAsString(record, 12);
+        status = resultAsString(record, 13);
+        fin = resultAsString(record, 14);
+        finSpecific = resultAsString(record, 15);
+        language = resultAsString(record, 16);
+        email = resultAsString(record, 17);
+        credits = resultAsDecimal(record, 18);
     }
 
     public Long getId() {
         return id;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
     }
 
     public String getFullName() {
@@ -72,6 +88,10 @@ public class StudentSearchDto {
 
     public AutocompleteResult getCurriculumVersion() {
         return curriculumVersion;
+    }
+
+    public String getMerCode() {
+        return merCode;
     }
 
     public String getStudentGroup() {
@@ -100,6 +120,10 @@ public class StudentSearchDto {
 
     public String getLanguage() {
         return language;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     public BigDecimal getCredits() {

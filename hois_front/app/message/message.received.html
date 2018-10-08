@@ -1,9 +1,10 @@
-<md-nav-bar md-selected-nav-item="currentNavItem">
-  <md-nav-item md-nav-href="#/messages/received?_menu" name="message.received">{{'message.received' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/messages/sent?_menu" name="message.sent">{{'message.sent' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/messages/automatic/sent?_menu" name="message.automaticSent" ng-if="auth.isAdmin()">{{'message.automaticSent' | translate}}</md-nav-item>
-</md-nav-bar>
-
+<div id="scrolling_div" style="overflow: auto;">
+    <md-nav-bar md-selected-nav-item="currentNavItem">
+        <md-nav-item md-nav-href="#/messages/received?_menu" name="message.received">{{'message.received' | translate}}</md-nav-item>
+        <md-nav-item md-nav-href="#/messages/sent?_menu" name="message.sent">{{'message.sent' | translate}}</md-nav-item>
+        <md-nav-item md-nav-href="#/messages/automatic/sent?_menu" name="message.automaticSent" ng-if="auth.isAdmin()">{{'message.automaticSent' | translate}}</md-nav-item>
+    </md-nav-bar>
+</div>
 
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
     <form ng-submit="loadData()" layout="column" novalidate>
@@ -16,7 +17,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="20" flex-sm="100" flex-xs="100">
                 <label>{{'message.sentDatesRange' | translate}}</label>
-                <input type="hidden">
+                <input style="visibility: hidden;">
             </md-input-container>
             <div flex="33">
                 <md-input-container flex>
@@ -35,7 +36,7 @@
                 <input ng-model="criteria.sender" type="text">
             </md-input-container>
         </div>
-        <div layout="row">
+        <div layout="row" layout-xs="column">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
             <md-button class="md-raised" ng-if="formState.canSend" ng-href="/#/message/new">{{'message.send' | translate}}</md-button>

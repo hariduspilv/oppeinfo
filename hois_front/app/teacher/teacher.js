@@ -56,11 +56,15 @@
         $scope.teacherForm.idcode.$setValidity('teacherIdCode', true);
       };
 
-      if (id) {
-        $scope.teacher = Endpoint.get({id: id}, afterLoad);
-      } else {
-        $scope.teacher = new Endpoint({isActive: true, isStudyPeriodScheduleLoad: true, scheduleLoad: 0, person: {citizenship: 'RIIK_EST'}});
+      function loadTeacher (id) {
+        if (angular.isDefined(id) && id !== null) {
+          $scope.teacher = Endpoint.get({id: id}, afterLoad);
+        } else {
+          $scope.teacher = new Endpoint({isActive: true, isStudyPeriodScheduleLoad: true, scheduleLoad: 0, person: {citizenship: 'RIIK_EST'}});
+        }
       }
+      
+      loadTeacher(id);
 
       if (!angular.isArray($scope.teacher.teacherPositionEhis)) {
         $scope.teacher.teacherPositionEhis = [];
@@ -140,8 +144,11 @@
           dialogService.confirmDialog({ prompt: 'teacher.ehisconfirm' }, function () {
             QueryUtils.endpoint(baseUrl + '/' + $scope.teacher.id + '/sendToEhis').put({}, $scope.teacher).$promise.then(function() {
               message.info('teacher.sentToEhis');
-              $location.url(baseUrl + '/' + $scope.teacher.id + '/edit?_noback');
-            }).catch(angular.noop);
+              $location.url(baseUrl + '/' + $scope.teacher.id + '/edit?_noback'); // Didn't work for reloading for some reason. Added loadTeacher function to update data.
+              loadTeacher($scope.teacher.id);
+            }).catch(function () {
+              $scope.teacher.ehisLastSuccessfulDate = null;
+            });
           });
         });
       };
@@ -425,6 +432,9 @@
         $scope.loadData();
       });
     };
+    
+    $scope.loadData(); // HITSAOIS-219. Fixes the jumping button
+    // (problem with md-dynamic-height because after changing tab it starts to change height but data is not loaded yet)
     
   }]).controller('TeacherRtipAbsenceEditController', ['$scope', '$route', '$translate', 'QueryUtils', function ($scope, $route, $translate, QueryUtils) {
     var id = $route.current.params.id;

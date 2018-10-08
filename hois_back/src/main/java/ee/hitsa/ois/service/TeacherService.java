@@ -21,6 +21,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -429,6 +430,14 @@ public class TeacherService {
 
         TeacherDto dto = TeacherDto.of(teacher);
         dto.setCanEdit(Boolean.valueOf(TeacherUserRights.canEdit(user, teacher) || TeacherUserRights.canEditAsTeacher(user, teacher)));
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_ehis_teacher_log ehis").sort(Sort.Direction.DESC, "inserted").limit(1);
+        qb.requiredCriteria("ehis.teacher_id = :teacherId and not(ehis.has_xtee_errors or ehis.has_other_errors) ", "teacherId", teacher.getId());
+        List<?> result = qb.select("ehis.inserted", em).getResultList();
+        if (result.size() > 0) {
+            dto.setEhisLastSuccessfulDate(resultAsLocalDateTime(result.get(0), 0));
+        }
+        
         return dto;
     }
 }

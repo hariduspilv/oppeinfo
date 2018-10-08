@@ -176,7 +176,8 @@ public class LessonPlanService {
         dto.setLessonPlanCapacities(schoolCapacities);
     }
     
-    private void setTeacherLessonPlanCapacities(LessonPlanByTeacherDto dto, Long schoolId, List<Journal> journals) {
+    private void setTeacherLessonPlanCapacities(LessonPlanByTeacherDto dto, Long schoolId,
+            List<Journal> journals, List<LessonPlanByTeacherSubjectDto> subjects) {
         List<ClassifierDto> schoolCapacities = lessonPlanSchoolCapacityTypeDtos(schoolId, null);
         
         if (journals != null) {
@@ -184,6 +185,13 @@ public class LessonPlanService {
             journalCapacities.addAll(journals.stream().map(j -> j.getJournalCapacityTypes())
                     .flatMap(j -> j.stream()).map(jct -> jct.getCapacityType().getCode()).collect(Collectors.toSet()));
             addMissingJournalCapacities(schoolCapacities, journalCapacities);
+        }
+        
+        if (subjects != null) {
+            Set<String> subjectCapacities = new HashSet<>();
+            subjectCapacities.addAll(subjects.stream().map(s -> s.getCapacityTotals()).flatMap(s -> s.values().stream())
+                    .flatMap(s -> s.keySet().stream()).collect(Collectors.toSet()));
+            addMissingJournalCapacities(schoolCapacities, subjectCapacities);
         }
 
         schoolCapacities.sort(Comparator.comparing(ClassifierDto::getNameEt, String.CASE_INSENSITIVE_ORDER));
@@ -360,7 +368,7 @@ public class LessonPlanService {
                 .collect(Collectors.toList());
         
         LessonPlanByTeacherDto dto = new LessonPlanByTeacherDto(studyYear, journals, subjects, getSubjectTotals(subjects), teacher);
-        setTeacherLessonPlanCapacities(dto, EntityUtil.getId(teacher.getSchool()), journals);
+        setTeacherLessonPlanCapacities(dto, EntityUtil.getId(teacher.getSchool()), journals, subjects);
         return dto;
     }
 
@@ -408,7 +416,7 @@ public class LessonPlanService {
         
         qb.sort("s.name_et");
 
-        List<?> teacherSubjects = qb.select("distinct s.id, s.name_et, s.name_en, sg.student_group_id, sg.code, ssp.id as ssp_id", em).getResultList();
+        List<?> teacherSubjects = qb.select("distinct s.id, s.name_et, s.name_en, sg.student_group_id, sg.code, ssp.id as ssp_id, ssp.group_proportion_code", em).getResultList();
         
         Query capacityQuery = em.createNativeQuery("select ssp.study_period_id, sspc.capacity_type_code, sspc.hours"
                 + " from subject_study_period_capacity sspc"
@@ -423,6 +431,7 @@ public class LessonPlanService {
             Long subjectId = resultAsLong(r, 0);
             LessonPlanByTeacherSubjectDto subject = subjects.computeIfAbsent(subjectId, 
                     k -> new LessonPlanByTeacherSubjectDto(subjectId, resultAsString(r, 1), resultAsString(r, 2)));
+            subject.setGroupProportion(resultAsString(r, 6));
             String studentGroupCode = resultAsString(r, 4);
             Long subjectStudyPeriodId = resultAsLong(r, 5);
             if (studentGroupCode != null) {
@@ -738,9 +747,9 @@ public class LessonPlanService {
     
     private void addJournalOutcomeEntries(Journal journal, List<Long> curriculumVersionOmoduleThemeIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_module_outcomes cmo "
-                + "inner join curriculum_version_omodule cvo on cvo.curriculum_module_id = cmo.curriculum_module_id "
-                + "inner join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id ");
-        qb.requiredCriteria("cvot.id in (:curriculumVersionOmoduleThemes)", "curriculumVersionOmoduleThemes", curriculumVersionOmoduleThemeIds);
+                + "join curriculum_version_omodule_outcomes cvoo on cmo.id = cvoo.curriculum_module_outcomes_id");
+        qb.requiredCriteria("cvoo.curriculum_version_omodule_theme_id in (:curriculumVersionOmoduleThemes)",
+                "curriculumVersionOmoduleThemes", curriculumVersionOmoduleThemeIds);
 
         List<?> moduleOutcomesResult = qb.select("distinct cmo.id, cmo.outcome_et", em).getResultList();
         Map<Long, String> moduleOutcomes = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> resultAsString(r, 1), moduleOutcomesResult);
@@ -766,7 +775,7 @@ public class LessonPlanService {
         
         // entries left over from previously connected group themes
         if (oldEntries != null && !oldEntries.isEmpty()) {
-            removePreviouslyConnectedGroupThemsOutcomeEntries(journal, oldEntries);
+            removePreviouslyConnectedGroupThemeOutcomeEntries(journal, oldEntries);
         }
         
     }
@@ -797,7 +806,7 @@ public class LessonPlanService {
         return null;
     }
     
-    private void removePreviouslyConnectedGroupThemsOutcomeEntries(Journal journal, Map<Long, JournalEntry> oldEntries) {
+    private void removePreviouslyConnectedGroupThemeOutcomeEntries(Journal journal, Map<Long, JournalEntry> oldEntries) {
         Query q = em.createNativeQuery("select je.id from journal_entry je "
                 + "join journal_entry_student jes on je.id=jes.journal_entry_id "
                 + "where je.entry_type_code = 'SISSEKANNE_O' and je.journal_id = ?1 and jes.journal_entry_id in (?2)");

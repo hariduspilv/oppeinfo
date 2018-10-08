@@ -1,11 +1,4 @@
 <div class="ois-form-layout-padding" layout="column" ng-cloak>
-  <!--table md-table>
-  <thead md-head>
-  <tr md-row>
-    <th md-column>{{'timetable.timetablePlan.createTimetable' | translate}}</th>
-  </tr>
-  </thead>
-</table-->
   <div id="groupSelection" layout="column">
     <div layout="row" class="form-readonly">
       <md-input-container flex="30">
@@ -20,8 +13,6 @@
       </div>
     </div>
 
-    <!--label>{{'timetable.timetablePlan.timetablePeriod' | translate}} {{plan.startDate | hoisDate}} -
-    {{plan.endDate | hoisDate}}</label-->
     <div flex>
       <fieldset tabindex="1">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetablePlan.showGroupsSubject' | translate}}</legend>
@@ -29,7 +20,7 @@
           <md-checkbox ng-model="plan.selectAll" flex-offset="5">
             {{'timetable.timetablePlan.selectAll' | translate}}
           </md-checkbox>
-          <md-grid-list ng-app="app" md-cols="5" md-gutter="1em" md-row-height="36px" flex>
+          <md-grid-list ng-app="app" md-cols="5" md-gutter="1em" md-row-height="6:1" flex>
             <md-grid-tile ng-repeat="group in plan.studentGroups">
               <md-checkbox ng-model="group._selected" ng-change="updateGroups()">
                 {{group.code}} </md-checkbox>

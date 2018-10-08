@@ -12,6 +12,7 @@
       "add": "Lisa",
       "addExisting": "Lisa olemasolev",
       "addRow": "Lisa rida",
+      "archive": "Arhiveeri konkursid",
       "back": "Tagasi",
       "cancel": "Katkesta",
       "change": "Muuda",
@@ -37,12 +38,14 @@
       "hide": "Peida",
       "save": "Salvesta",
       "search": "Otsi",
-      "sendToEhis": "Saada EHISesse",
+      "sendToEhis": "Saada EHISesse (LIVE)",
+      "sendToEhisTest": "Saada EHISesse TEST",
       "sendToEkis": "Saada EKISesse",
       "send": "Saada",
       "update": "Uuenda",
       "uploadFile": "Lae fail",
-      "updateFromEhis": "Uuenda staatust EHISest",
+      "updateFromEhis": "Uuenda staatust EHISest (LIVE)",
+      "updateFromEhisTest": "Uuenda staatust EHISest TEST",
       "submit": "Esita",
       "allowSubmit": "Luba esitada",
       "reject": "Lükka tagasi",
@@ -72,6 +75,7 @@
     "messages": {
       "confirm": "Kas oled kindel?",
       "confirmFormDataNotSaved": "Vormil olevad andmed on salvestamata, kas oled kindel?",
+      "confirmSave": "Kas oled kindel, et soovid vormil olevad andmed salvestada?",
       "sessionIsTimingOut": "Teie sessioon hakkab aeguma. Värskenda sessiooni?",
       "sessionHasTimedOut": "Teie sessioon on aegunud.",
       "update": {
@@ -105,6 +109,7 @@
         "max": "Maksimaalne väärtus {{max}}",
         "maxlength": "Tekst liiga pikk",
         "min": "Minimaalne väärtus {{min}}",
+        "studentExists": "Õppija juba eksisteerib",
         "time": "Vigane kellaaeg",
         "InvalidEstonianIdCode": "Isikukood ei vasta standardile"
       },
@@ -312,7 +317,8 @@
         "saisApplication": {
           "label": "Vastuvõtu avaldused",
           "search": "Vastuvõtu avalduste otsing",
-          "importSais": "Avaldused SAISist"
+          "importSais": "Avaldused SAISist",
+          "delete": "Kas olete kindel et soovite avalduse kustutada?"
         }
       },
       "reports": {
@@ -544,6 +550,7 @@
     "type": "Soorituse liik",
     "unregister": "Tühista",
     "when": "Toimumise aeg",
+    "connectedProtocol": "Seotud protokolliga",
     "message": {
       "deadline": "Eksamiks registreerimise aeg on möödas",
       "deadlineafterstart": "Registreerimise tähtaeg peale eksami algust",
@@ -563,7 +570,8 @@
       "studentnotregistered": "Õppija ei ole eksamile registreeritud",
       "subjectnotdeclared": "Õppijal pole antud õppeaine deklareeritud",
       "unregisterconfirmation": "Kas oled kindel, et soovid {{exam}} registreerumist tühistada?",
-      "unregistered": "Eksamile registreerimine tühistatud"
+      "unregistered": "Eksamile registreerimine tühistatud",
+      "studentconnectedprotocol": "Õppija eksami registreering on juba seotud protokolliga"
     },
     "student": {
       "curriculum": "Õppekava",
@@ -698,7 +706,8 @@
     "studyEnd": "Õpingute lõpp",
     "studyLevel": "Õppetase",
     "error": {
-      "addressRequired": "Aadress on kohustuslik"
+      "addressRequired": "Aadress on kohustuslik",
+      "cannotBeBeforeStudyStart": "Ei saa olla varasem õpingute alustamise kuupäevast: {{studyStart}}"
     },
     "absence": {
       "cause": "Puudumise põhjus",
@@ -1263,7 +1272,17 @@
     "studyGroupStudents": "Õpperühma õppijad",
     "studyFormStudents": "Õppevormi õppijad",
     "studyGroupStudentsParents": "Õpperühma õppijate lapsevanemad",
-    "studentGroup": "Õpperühm"
+    "studentGroup": "Õpperühm",
+    "journalLabel": "Päevik",
+    "journalStudent": "Päeviku õppijad",
+    "journalStudentParent": "Päeviku õppijate lapsevanemad",
+    "subjectLabel": "Õppeaine",
+    "subjectStudent": "Õppeaine õppijad",
+    "subjectStudentParent": "Õppeaine õppijate lapsevanemad",
+    "searchType": "Otsingu liik",
+    "searchTypeByGroups": "Õpperühma järgi",
+    "searchTypeByJournals": "Päeviku järgi",
+    "searchTypeBySubjects": "Õppeaine järgi"
   },
   "messageTemplate": {
     "deleteconfirm": "Kas oled kindel, et soovid malli kustutada?",
@@ -1492,6 +1511,7 @@
     "addOccupation": "Lisa kutse",
     "addPartOccupation": "Lisa osakutse",
     "specialityOpportunities": "Spetsialiseerumise võimalused",
+    "address": "Toimumiskohad",
     "isJoint": "Ühisõppekava",
     "isJointYesNo": "Ühisõppekava (jah/ei)",
     "jointSchool": "Ühisõppekava partnerkool",
@@ -1666,6 +1686,7 @@
       "noOccupation": "Vähemalt üks kutse/osakutse peab olema lisatud õppekavasse",
       "noPModules": "Igale kutsele/osakutsele/spetsialiseerumisele peab olema lisatud vähemalt üks põhiõpingute moodul",
       "noModule": "Vähemalt üks moodul peab olema lisatud õppekavasse",
+      "noSummaryFile": "Puudub õppekava koondfail PDF formaadis EHISesse saatmiseks",
       "moduleOccupations": "Üks ja sama moodul ei tohi olla samaaegselt seotud nii kutse/osakutsega ja spetsialiseerumisega",
       "occupationNotSelected": "Vähemalt üks kutse või osakutse peab olema valitud",
       "fileSize": "Fail on liiga suur (max 10MB)",
@@ -1785,6 +1806,10 @@
     "phone": "Kontakttelefon",
     "rtipNr": "RTIP nr",
     "sentToEhis": "Õpetaja on EHISesse saadetud",
+    "ehisSendOperation": {
+      "success": "Saadetud: {{day}}",
+      "fail": "Saatmata!"
+    },
     "studyPeriodLoad": "Õppeperioodi koormus",
     "studyYearLoad": "Õppeaasta koormus",
     "person": {
@@ -2343,7 +2368,7 @@
       "code": "Konkursi kood",
       "language": "Konkursi keel",
       "places": "Kohtade arv",
-      "saisImportRange": "Konkursi sisestamise/muutmise kuupäevade vahemik",
+      "saisImportRange": "Konkursi muutmise kuupäevade vahemik",
       "saisImportAdmissions": "IMPORDI SAISist",
       "failedImport": "Ebaõnnestunud",
       "error": "Teade",
@@ -2388,6 +2413,16 @@
       "admissionCode": "Konkursi kood",
       "importFinished": "Importimine lõpetatud",
       "form-has-errors": "Üks kolmest kohustuslikust väljast peab olema täidetud"
+    },
+    "archive": {
+      "archiveDateTo": "Arhiveeri kõik konkursid, mille lõppkuupäev on varasem kui",
+      "archiveConfirm": "Kas olete kindel et soovite arhiveerida kõik konkursid enne ",
+      "displayArchived": "Kuva arhiveeritud",
+      "archivedAdmission": "Konkursid arhiveeritud",
+      "archived": "Arhiveeritud",
+      "revertArchived": "Võta arhiivist tagasi",
+      "revertedArchived": "Võetud arhiivist tagasi",
+      "error": "Sama koodiga mittearhiveeritud konkurs juba eksisteerib"
     }
   },
   "studyYearSchedule": {
@@ -2621,6 +2656,7 @@
     "confirmJournal": "Kinnita päevik",
     "absencesLegend": "H - hilinemine, P - põhjuseta puudumine, V - vabandatav puudumine",
     "entryTabelLegend": "AP - akad. puhkusel, IÕ - indivi. õppekava, E - eksmatrikuleeritud, L - lõpetanud",
+    "assessment":"Hindamisviis",
     "review": "Ülevaatamine",
     "isReviewOk": "Korras",
     "gradeInput": "Hinde sisestamine",
@@ -2973,14 +3009,16 @@
     "excel": "Excelisse",
     "student": {
       "birthdate": "Sünnikuupäev",
-	  "birthdate_from": "Sünnikp. alates",
-	  "birthdate_thru": "Sünnikp. kuni",
+      "birthdate_from": "Sünnikp. alates",
+      "birthdate_thru": "Sünnikp. kuni",
       "credits": "Tehtud ainepunktide arv",
       "curriculum": "Õppekava",
+      "email": "E-posti aadress",
       "fin": "Finantseerimise allikas",
       "finSpecific": "Finantseerimise allika täpsustus",
       "idcode": "Isikukood",
       "language": "Õppekeel",
+      "merCode": "Õppekava HTM kood",
       "name": "Õppija nimi",
       "occupationcertificate": "Kutsetunnistus",
       "status": "Õppija staatus",
@@ -2989,8 +3027,8 @@
       "studyLevel": "Õppetase",
       "studyLoad": "Õppekoormus",
       "studyStart": "Õpingute alguse kuupäev",
-	  "studyStart_from": "Õpingute alg. kp. alates",
-	  "studyStart_thru": "Õpingute alg. kp. kuni"
+      "studyStart_from": "Õpingute alg. kp. alates",
+      "studyStart_thru": "Õpingute alg. kp. kuni"
     },
     "curriculumscompletion": {
       "curriculum": "Õppekava",
@@ -3407,7 +3445,7 @@
   },
   "finalProtocol": {
     "addFinalExamProtocol": "Lisa lõpueksami protokoll",
-    "addFinalThesisProtocol": "Lisa lõputöö protokolli",
+    "addFinalThesisProtocol": "Lisa lõputöö protokoll",
     "changeReason": "Muutmise põhjus",
     "studyYear": "Õppeaasta",
     "teacher": "Õpetaja",

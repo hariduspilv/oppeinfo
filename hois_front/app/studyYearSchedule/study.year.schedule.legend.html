@@ -4,46 +4,47 @@
     <span class="common-label">{{'studyYearScheduleLegend.defaultLegend' | translate}}</span>
   </div>
 
-
-<table md-table class="secondary-table">
-    <thead md-head>
-    <tr md-row>
-        <th md-column>{{'studyYearScheduleLegend.code' | translate}}</th>
-        <th md-column>{{'studyYearScheduleLegend.nameEt' | translate}}</th>
-        <th md-column>{{'studyYearScheduleLegend.nameEn' | translate}}</th>
-        <th md-column>{{'studyYearScheduleLegend.color' | translate}}</th>
-        <th md-column></th>
-    </tr>
-    </thead>
-    <tbody md-body>
-        <tr md-row ng-repeat="item in legends" ng-class-odd="'odd'" ng-class-even="'even'" ng-click="changeEditable(item)">
-            <td md-cell>
-                <span ng-class="{invalid: formSubmitted && !codeIsValid(item)}" ng-if="!item.edited">{{item.code}}</span>
-                <md-input-container ng-if="item.edited">
-                    <input ng-model="item.code" type="text" max="2" md-max-length="2">
-                </md-input-container>
-            </td>
-            <td md-cell>
-                <span ng-class="{invalid: formSubmitted && !nameEtIsValid(item)}" ng-if="!item.edited">{{item.nameEt}}</span>
-                <md-input-container ng-if="item.edited">
-                    <input ng-model="item.nameEt" type="text">
-                </md-input-container>
-            </td>
-            <td md-cell>
-                <span ng-class="{invalid: formSubmitted && !nameEnIsValid(item)}" ng-if="!item.edited">{{item.nameEn}}</span>
-                <md-input-container ng-if="item.edited">
-                    <input ng-model="item.nameEn" type="text">
-                </md-input-container>
-            </td>
-            <td md-cell>
-                <input ng-model="item.color" type="color" ng-disabled="!canEdit">
-            </td>
-            <td md-cell>
-                <md-button class="remove nomargin" ng-if="canEdit" ng-click="remove(item)">&times;</md-button>
-            </td>
+<md-table-container>
+    <table md-table class="secondary-table">
+        <thead md-head>
+        <tr md-row>
+            <th md-column>{{'studyYearScheduleLegend.code' | translate}}</th>
+            <th md-column>{{'studyYearScheduleLegend.nameEt' | translate}}</th>
+            <th md-column>{{'studyYearScheduleLegend.nameEn' | translate}}</th>
+            <th md-column>{{'studyYearScheduleLegend.color' | translate}}</th>
+            <th md-column></th>
         </tr>
-    </tbody>
-</table>
+        </thead>
+        <tbody md-body>
+            <tr md-row ng-repeat="item in legends" ng-class-odd="'odd'" ng-class-even="'even'" ng-click="changeEditable(item)">
+                <td md-cell>
+                    <span ng-class="{invalid: formSubmitted && !codeIsValid(item)}" ng-if="!item.edited">{{item.code}}</span>
+                    <md-input-container ng-if="item.edited">
+                        <input ng-model="item.code" type="text" max="2" md-max-length="2">
+                    </md-input-container>
+                </td>
+                <td md-cell>
+                    <span ng-class="{invalid: formSubmitted && !nameEtIsValid(item)}" ng-if="!item.edited">{{item.nameEt}}</span>
+                    <md-input-container ng-if="item.edited">
+                        <input ng-model="item.nameEt" type="text">
+                    </md-input-container>
+                </td>
+                <td md-cell>
+                    <span ng-class="{invalid: formSubmitted && !nameEnIsValid(item)}" ng-if="!item.edited">{{item.nameEn}}</span>
+                    <md-input-container ng-if="item.edited">
+                        <input ng-model="item.nameEn" type="text">
+                    </md-input-container>
+                </td>
+                <td md-cell>
+                    <input ng-model="item.color" type="color" ng-disabled="!canEdit">
+                </td>
+                <td md-cell>
+                    <md-button class="remove nomargin" ng-if="canEdit" ng-click="remove(item)">&times;</md-button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</md-table-container>
 <md-button class="md-primary" ng-if="canEdit" ng-click="addRow()">{{'main.button.addNewRow' | translate}}</md-button>
 <br><br>
 <md-button class="md-raised md-primary" ng-if="canEdit" ng-click="checkErrorsAndSave()">{{'main.button.save' | translate}}</md-button>

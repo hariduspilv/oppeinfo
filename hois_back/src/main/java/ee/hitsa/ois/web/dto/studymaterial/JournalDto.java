@@ -11,6 +11,7 @@ public class JournalDto {
 
     private Long id;
     private String nameEt;
+    private String nameEn; // TODO: There is no nameEn in DB. Before nameEn appears in DB here will be nameEt as nameEn as well.
     private AutocompleteResult studyYear;
     private List<AutocompleteResult> teachers;
     
@@ -47,6 +48,14 @@ public class JournalDto {
     }
     public void setTeachers(List<AutocompleteResult> teachers) {
         this.teachers = teachers;
+    }
+
+    public String getNameEn() {
+        return nameEn;
+    }
+
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
     }
 
 }

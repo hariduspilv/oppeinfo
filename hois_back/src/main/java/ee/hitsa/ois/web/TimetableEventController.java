@@ -56,7 +56,7 @@ public class TimetableEventController {
      */
     @GetMapping("/{id:\\d+}")
     public TimetableSingleEventForm get(HoisUserDetails user, @WithEntity TimetableEventTime eventTime) {
-        timetableEventService.isAdminOrIsTeachersEvent(user, eventTime);
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
         return timetableEventService.get(eventTime);
     }
 
@@ -86,15 +86,20 @@ public class TimetableEventController {
         timetableEventService.delete(user, timetableEventTime);
     }
 
-    @GetMapping("/timetableSearch")
-    public List<TimetableEventSearchDto> searchTimetable(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria) {
-        return timetableEventService.searchTimetable(criteria, user.getSchoolId());
+    @GetMapping("/timetableSearch/{school:\\d+}")
+    public List<TimetableEventSearchDto> searchTimetable(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria) {
+        return timetableEventService.searchTimetable(criteria, school);
     }
     
-    @GetMapping("/timetableSearch/calendar")
-    public TimetableCalendarDto searchTimetableIcs(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria,
+    @GetMapping("/timetableSearch/calendar/{school:\\d+}")
+    public TimetableCalendarDto searchTimetableIcs(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
-        return timetableEventService.getSearchCalendar(criteria, language, user.getSchoolId());
+        return timetableEventService.getSearchCalendar(criteria, language, school);
+    }
+    
+    @GetMapping("/timetableSearch/searchFormData/{school:\\d+}")
+    public Map<String, ?> searchTimetableFormData(@PathVariable("school") Long school) {
+        return timetableEventService.searchTimetableFormData(school);
     }
     
     @GetMapping("/timetableByGroup/{school:\\d+}")

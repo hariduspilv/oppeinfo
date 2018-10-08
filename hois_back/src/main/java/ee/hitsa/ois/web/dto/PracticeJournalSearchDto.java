@@ -23,6 +23,7 @@ public class PracticeJournalSearchDto {
     private Boolean canStudentAddEntries;
     private Boolean canAddEntries;
     private AutocompleteResult subject;
+    private String contractStatus;
 
     public Long getId() {
         return id;
@@ -166,5 +167,13 @@ public class PracticeJournalSearchDto {
 
     public void setCanAddEntries(Boolean canAddEntries) {
         this.canAddEntries = canAddEntries;
+    }
+
+    public String getContractStatus() {
+        return contractStatus;
+    }
+
+    public void setContractStatus(String contractStatus) {
+        this.contractStatus = contractStatus;
     }
 }

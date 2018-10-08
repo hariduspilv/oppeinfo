@@ -8,6 +8,7 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAddressForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -57,6 +58,7 @@ public class CurriculumDto extends CurriculumForm {
         dto.setNameEn(curriculum.getNameEn());
         dto.setCode(curriculum.getCode());
         dto.setCredits(curriculum.getCredits());
+        dto.setStatus(EntityUtil.getNullableCode(curriculum.getStatus()));
         dto.setOccupation(curriculum.getOccupation());
         dto.setStudyPeriod(curriculum.getStudyPeriod());
         //TODO: autocomplete result here would be better
@@ -78,12 +80,13 @@ public class CurriculumDto extends CurriculumForm {
     public static CurriculumDto of(Curriculum curriculum) {
         CurriculumDto dto = EntityUtil.bindToDto
                 (curriculum, new CurriculumDto(), 
-                 "versions", "studyLanguages", "studyForms", "schoolDepartments", "files", 
+                 "versions", "studyLanguages", "studyForms", "addresses", "schoolDepartments", "files", 
                  "jointPartners", "specialities", "modules", "occupations", "grades", "stateCurriculum");
                 
         dto.setStudyLanguages(StreamUtil.toMappedSet(lang -> EntityUtil.getNullableCode(lang.getStudyLang()), curriculum.getStudyLanguages()));
         dto.setStudyForms(StreamUtil.toMappedSet(f -> EntityUtil.getNullableCode(f.getStudyForm()), curriculum.getStudyForms()));
         dto.setSchoolDepartments(StreamUtil.toMappedSet(d -> EntityUtil.getNullableId(d.getSchoolDepartment()), curriculum.getDepartments()));
+        dto.setAddresses(StreamUtil.toMappedSet(CurriculumAddressForm::of, curriculum.getAddresses()));
         dto.setJointPartners(StreamUtil.toMappedSet(CurriculumJointPartnerDto::of, curriculum.getJointPartners()));
         dto.setSpecialities(StreamUtil.toMappedSet(CurriculumSpecialityDto::of, curriculum.getSpecialities()));
         //TODO: use partial dto

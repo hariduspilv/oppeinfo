@@ -30,6 +30,7 @@ public class JpaNativeQueryBuilder {
     private final Map<String, Object> parameters = new HashMap<>();
     private final StringBuilder where = new StringBuilder();
     private String groupBy;
+    private long limit;
 
     public JpaNativeQueryBuilder(String from) {
         this.from = Objects.requireNonNull(from);
@@ -43,6 +44,10 @@ public class JpaNativeQueryBuilder {
     public JpaNativeQueryBuilder sort(String... sortFields) {
         return sort(new Sort(sortFields));
     }
+    
+    public JpaNativeQueryBuilder sort(Sort.Direction direction, String... sortFields) {
+        return sort(new Sort(direction, sortFields));
+    }
 
     public JpaNativeQueryBuilder sort(Pageable pageable) {
         return sort(pageable != null ? pageable.getSort() : null);
@@ -50,6 +55,11 @@ public class JpaNativeQueryBuilder {
 
     public JpaNativeQueryBuilder groupBy(String groupByFields) {
         this.groupBy = groupByFields;
+        return this;
+    }
+    
+    public JpaNativeQueryBuilder limit(long limitValue) {
+        this.limit = limitValue;
         return this;
     }
 
@@ -189,6 +199,14 @@ public class JpaNativeQueryBuilder {
     public Query select(String projection, EntityManager em, Map<String, Object> additionalParameters) {
         return buildQuery(querySql(projection, true), em, additionalParameters);
     }
+    
+    public Query select(String projection, EntityManager em, Map<String, Object> additionalParameters, boolean distinct) {
+        return buildQuery(querySql(projection, true, distinct), em, additionalParameters);
+    }
+    
+    public Query select(String projection, EntityManager em, boolean distinct) {
+        return select(projection, em, null, distinct);
+    }
 
     public Number count(EntityManager em) {
         return count(em, null);
@@ -211,9 +229,16 @@ public class JpaNativeQueryBuilder {
         }
         return (Number)buildQuery(querySql, em, additionalParameters).getSingleResult();
     }
-
+    
     public String querySql(String projection, boolean ordered) {
+        return querySql(projection, ordered, false);
+    }
+
+    public String querySql(String projection, boolean ordered, boolean distinct) {
         StringBuilder sql = new StringBuilder("select ");
+        if (distinct) {
+            sql.append("distinct ");
+        }
         sql.append(Objects.requireNonNull(projection));
         sql.append(' ');
         sql.append(from);
@@ -246,6 +271,10 @@ public class JpaNativeQueryBuilder {
                 sql.append(" order by ");
                 sql.append(orderBy);
             }
+        }
+        if (limit > 0L) {
+            sql.append(" limit ");
+            sql.append(limit);
         }
         return sql.toString();
     }

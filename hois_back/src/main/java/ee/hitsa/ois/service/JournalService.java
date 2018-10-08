@@ -79,7 +79,7 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalEntryStudentForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalReviewForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
-import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
+import ee.hitsa.ois.web.commandobject.timetable.OtherStudentsSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.studymaterial.CapacityHoursDto;
@@ -139,6 +139,7 @@ public class JournalService {
             "join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id=cvot.id " +
             "join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id=cvo.id " +
             "join curriculum_module cm on cvo.curriculum_module_id=cm.id " +
+            "join curriculum_version cv on cvo.curriculum_version_id=cv.id " +
             "join curriculum c on cm.curriculum_id=c.id " +
             "join classifier cl on cm.module_code=cl.code " +
             "left join journal_teacher jt on j.id=jt.journal_id " +
@@ -147,8 +148,8 @@ public class JournalService {
     
     private static final String JOURNAL_LIST_SELECT = "j.id, string_agg(distinct sg.code, ', ') as student_groups, j.name_et, " +
             "string_agg(distinct p.firstname || ' ' || p.lastname, ', ') as teachers, " +
-            "string_agg(distinct cm.name_et || ' - ' || cl.name_et || ' (' || c.code || ')', ', ') as modules_et, " +
-            "string_agg(distinct cm.name_en || ' - ' || cl.name_en || ' (' || c.code || ')', ', ') as modules_en, " +
+            "string_agg(distinct cm.name_et || ' - ' || cl.name_et || ' (' || cv.code || ')', ', ') as modules_et, " +
+            "string_agg(distinct cm.name_en || ' - ' || cl.name_en || ' (' || cv.code || ')', ', ') as modules_en, " +
             "j.status_code, string_agg(distinct c.code, ', '), j.is_review_ok, j.review_date";
     
     public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
@@ -187,10 +188,9 @@ public class JournalService {
             String modules = command.getModule().stream().map(m -> String.valueOf(m)).collect(Collectors.joining(","));
             qb.filter("j.id in (select j.id from journal j " +
             "join journal_omodule_theme jot on j.id=jot.journal_id " +
-            "join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id=cvot.id " + 
-            "join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id=cvo.id " + 
-            "join curriculum_module cm on cvo.curriculum_module_id=cm.id " + 
-            "where cm.id in (" + modules + "))"); 
+            "join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id=cvot.id " +
+            "join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id=cvo.id " +
+            "where cvo.id in (" + modules + "))"); 
         }
         
         qb.optionalCriteria("j.status_code = :status", "status", command.getStatus());
@@ -237,7 +237,7 @@ public class JournalService {
         return EntityUtil.save(journal, em);
     }
 
-    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, Long journalId, StudentNameSearchCommand command,
+    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, Long journalId, OtherStudentsSearchCommand command,
             Pageable pageable) {
         return studentRepository.findAll((root, query, cb) -> {
             root.join("person", JoinType.INNER);
@@ -246,7 +246,9 @@ public class JournalService {
 
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
-            filters.add(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()));
+            filters.add(cb.or(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_A.name()),
+                    cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()),
+                    cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_V.name())));
             filters.add(cb.equal(root.get("curriculumVersion").get("curriculum").get("higher"), Boolean.FALSE));
 
             if (StringUtils.hasText(command.getStudentName())) {
@@ -264,6 +266,10 @@ public class JournalService {
             
             if(!CollectionUtils.isEmpty(command.getStudentId())) {
                 filters.add(cb.not(root.get("id").in(command.getStudentId())));
+            }
+            
+            if (command.getStudentGroupId() != null) {
+                filters.add(cb.equal(root.get("studentGroup").get("id"), command.getStudentGroupId()));
             }
 
             Subquery<Long> studentsQuery = query.subquery(Long.class);
@@ -302,8 +308,9 @@ public class JournalService {
 
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
-            //TODO: add StudentStatus.OPPURSTAATUS_A
-            filters.add(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()));
+            filters.add(cb.or(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_A.name()),
+                    cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()),
+                    cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_V.name())));
 
             Subquery<Long> studentGroupsQuery = query.subquery(Long.class);
             Root<Journal> journalRoot = studentGroupsQuery.from(Journal.class);
@@ -490,9 +497,7 @@ public class JournalService {
     }
 
     private static void assertJournalEntryStudentRules(JournalStudent journaStudent) {
-
-        // cannot change results of not studying students
-        if (!StudentUtil.isStudying(journaStudent.getStudent())) {
+        if (!StudentUtil.isActive(journaStudent.getStudent())) {
             throw new ValidationFailedException("journal.messages.changeIsNotAllowedStudentIsNotStudying");
         }
     }
@@ -589,7 +594,7 @@ public class JournalService {
             
             for (JournalEntryStudent journalEntryStudent : journalEntry.getJournalEntryStudents()) {
                 if (Boolean.TRUE.equals(allStudents)
-                        || StudentUtil.isStudying(journalEntryStudent.getJournalStudent().getStudent())) {
+                        || StudentUtil.isActive(journalEntryStudent.getJournalStudent().getStudent())) {
                     List<JournalEntryStudentResultDto> studentresults = journalEntryByDateDto.getJournalStudentResults()
                             .computeIfAbsent(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
                                     id -> new ArrayList<>());
@@ -613,42 +618,54 @@ public class JournalService {
             }
             result.add(journalEntryByDateDto);
         }
-        
+        setOutcomeEntriesUnqiueOrderNrs(result);
+        orderJournalEntriesByDate(result);
+        return result;
+    }
+    
+    private static void setOutcomeEntriesUnqiueOrderNrs(List<JournalEntryByDateDto> entries) {
         // order outcomes by curriculum module id and their order nr and then give outcomes from different modules a unique outcome order nr
-        Collections.sort(result,Comparator.comparing(JournalEntryByDateDto::getCurriculumModule, Comparator.nullsFirst(Comparator.naturalOrder()))
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateDto::getCurriculumModule, Comparator.nullsFirst(Comparator.naturalOrder()))
                 .thenComparing(JournalEntryByDateDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
         List<Long> orderNrs = new ArrayList<>();
-        for (int i = 0; i < result.size(); i++) {
-            Long entryOrderNr = result.get(i) != null && result.get(i).getOutcomeOrderNr() != null ? result.get(i).getOutcomeOrderNr() : null;
+        for (int i = 0; i < entries.size(); i++) {
+            Long entryOrderNr = entries.get(i) != null && entries.get(i).getOutcomeOrderNr() != null ? entries.get(i).getOutcomeOrderNr() : null;
             if (entryOrderNr != null) {
                 if (!orderNrs.contains(entryOrderNr)) {
                     orderNrs.add(entryOrderNr);
                 } else {
                     Long newOrderNr = Long.valueOf(orderNrs.stream().max(Comparator.comparing(nr -> nr)).get().longValue() + 1);
-                    result.get(i).setOutcomeOrderNr(newOrderNr);
+                    entries.get(i).setOutcomeOrderNr(newOrderNr);
                     orderNrs.add(newOrderNr);
                 }
             }
         }
+    }
+    
+    private static void orderJournalEntriesByDate(List<JournalEntryByDateDto> entries) {
+        // order day entries by lesson nr
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(JournalEntryByDateDto::getStartLessonNr, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(JournalEntryByDateDto::getLessons, Comparator.nullsFirst(Comparator.naturalOrder())));
+        
+        // outcome entries that don't have a date are ordered last among entries without date, all other entries are ordered by date
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder())));
 
-        // order entries by entry date
-        Collections.sort(result, Comparator.comparing(JournalEntryByDateDto::getEntryDate, Comparator.nullsLast(Comparator.naturalOrder())));
-                
         // put final results to the end of the list
-        Collections.sort(result, (JournalEntryByDateDto o1, JournalEntryByDateDto o2) -> {
-            if(isFinalResult(o1) && !isFinalResult(o2)) {
+        Collections.sort(entries, (JournalEntryByDateDto o1, JournalEntryByDateDto o2) -> {
+            if (isFinalResult(o1) && !isFinalResult(o2)) {
                 return 1;
-            } else if(!isFinalResult(o1) && isFinalResult(o2)) {
+            } else if (!isFinalResult(o1) && isFinalResult(o2)) {
                 return -1;
             }
             return 0;
         });
-        return result;
     }
 
     public List<JournalStudentDto> journalStudents(Journal journal, Boolean allStudents) {
         List<JournalStudent> students = journal.getJournalStudents().stream()
-                .filter(jt -> Boolean.TRUE.equals(allStudents) || StudentUtil.isStudying(jt.getStudent()))
+                .filter(jt -> Boolean.TRUE.equals(allStudents) || StudentUtil.isActive(jt.getStudent()))
                 .collect(Collectors.toList());
         students.sort(Comparator
                 .comparing(js -> ((JournalStudent) js).getStudent().getStudentGroup() != null ? ((JournalStudent) js).getStudent().getStudentGroup().getCode(): null, 

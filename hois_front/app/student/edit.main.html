@@ -59,6 +59,26 @@
 
       <hois-collapsable label="('student.study' | translate)" ng-if="student.userIsSchoolAdmin || student.userIsStudentGroupTeacher">
 
+        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin">
+          <label>{{'student.studyLanguage' | translate}}</label>
+          <hois-classifier-select ng-model="student.studyLanguage" name="studyLanguage" main-classifier-code="OPPEKEEL" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+
+        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin">
+          <label>{{'student.nominalStudyEnd' | translate}}</label>
+          <md-datepicker class="wider-datepicker" name="nominalStudyEnd" ng-model="student.nominalStudyEnd" md-min-date="student.studyStart"></md-datepicker>
+          <div ng-messages="studentEditForm.nominalStudyEnd.$error">
+            <div ng-message="mindate">
+              {{'student.error.cannotBeBeforeStudyStart' | translate:errorParams}}
+            </div>
+          </div>
+        </md-input-container>
+
+        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin">
+          <label>{{'student.finSpecific' | translate}}</label>
+          <hois-classifier-select ng-model="student.finSpecific" name="finSpecific" main-classifier-code="FINTAPSUSTUS" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+
         <md-input-container class="md-block">
           <label>{{'student.studentCard' | translate}}</label>
           <input ng-model="student.studentCard" name="studentCard" type="text" md-maxlength="100">

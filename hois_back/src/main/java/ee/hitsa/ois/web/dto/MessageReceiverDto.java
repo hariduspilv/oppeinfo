@@ -20,6 +20,8 @@ public class MessageReceiverDto extends StudentSearchDto {
         dto.setStudentGroup(studentSearchDto.getStudentGroup());
         dto.setCurriculumVersion(studentSearchDto.getCurriculumVersion());
         dto.setRole(Arrays.asList(Role.ROLL_T.name()));
+        dto.setJournal(studentSearchDto.getJournal());
+        dto.setSubject(studentSearchDto.getSubject());
         return dto;
     }
     

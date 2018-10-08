@@ -74,7 +74,10 @@ angular.module('hitsaOis')
 	$scope.toggleLeft = buildToggler('left');
 	$scope.lockLeft = true;
 	$scope.isLeftOpen = function() {
-		return $mdSidenav('left').isOpen();
+    if(window.innerWidth > 800) {
+      return $mdSidenav('left').isOpen();
+    }
+    return false;
 	};
 
 

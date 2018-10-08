@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +39,8 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.sais.SaisApplicationGraduatedSchool;
@@ -119,13 +122,7 @@ public class DirectiveConfirmService {
         List<DirectiveViewStudentDto> invalidStudents = new ArrayList<>();
         // validate each student's data for given directive
         long rowNum = 0;
-        directive.getStudents().sort(new Comparator<DirectiveStudent>() {
-
-            @Override
-            public int compare(DirectiveStudent arg0, DirectiveStudent arg1) {
-                return arg0.getPerson().getLastname().compareTo(arg1.getPerson().getLastname());
-            }
-        });
+        directive.getStudents().sort(Comparator.comparing(DirectiveStudent::getId));
         for(DirectiveStudent ds : directive.getStudents()) {
             if(directiveType.validationGroup() != null) {
                 Set<ConstraintViolation<DirectiveStudent>> errors = validator.validate(ds, directiveType.validationGroup());
@@ -192,9 +189,29 @@ public class DirectiveConfirmService {
                 if(ds.getNominalStudyEnd() == null) {
                     allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "nominalStudyEnd")));
                 }
-                // check by hand because it is required only in higher study
-                if(ds.getStudyLoad() == null && ds.getCurriculumVersion() != null && CurriculumUtil.isHigher(ds.getCurriculumVersion().getCurriculum())) {
-                    allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "studyLoad")));
+                CurriculumVersion curriculumVersion = ds.getCurriculumVersion();
+                if (curriculumVersion != null) {
+                    Curriculum curriculum = curriculumVersion.getCurriculum();
+                    // check by hand because it is required only in higher study
+                    if(ds.getStudyLoad() == null && CurriculumUtil.isHigher(curriculum)) {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "studyLoad")));
+                    }
+                    Set<Long> uniqueRows = new LinkedHashSet<>();
+                    if (directiveService.studentExists(EntityUtil.getId(directive.getSchool()), EntityUtil.getId(ds.getPerson()), 
+                            EntityUtil.getId(curriculum))) {
+                        uniqueRows.add(Long.valueOf(rowNum));
+                    }
+                    for (DirectiveStudent ds2 : directive.getStudents()) {
+                        if (!ds2.equals(ds) && ds2.getCurriculumVersion() != null) {
+                            if (ds.getPerson().equals(ds2.getPerson()) 
+                                    && curriculum.equals(ds2.getCurriculumVersion().getCurriculum())) {
+                                uniqueRows.add(Long.valueOf(rowNum));
+                            }
+                        }
+                    }
+                    for (Long existRow : uniqueRows) {
+                        allErrors.add(createStudentExistsError(existRow.longValue()));
+                    }
                 }
             } else if(DirectiveType.KASKKIRI_STIPTOET.equals(directiveType)) {
                 // check students which do not qualify for directive
@@ -234,11 +251,16 @@ public class DirectiveConfirmService {
         if(!ekis) {
             setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL);
         }
+        directive.getStudents().sort(Comparator.comparing(ds -> ds.getPerson().getLastname()));
         directive = EntityUtil.save(directive, em);
         if(ekis) {
             ekisService.registerDirective(EntityUtil.getId(directive));
         }
         return directive;
+    }
+
+    public static ErrorForField createStudentExistsError(long rowNum) {
+        return new ErrorForField("studentExists", propertyPath(rowNum, "idcode"));
     }
 
     public Directive rejectByEkis(long directiveId, String rejectComment, String preamble, long wdId) {

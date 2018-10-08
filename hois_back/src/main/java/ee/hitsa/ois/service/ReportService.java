@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -101,8 +102,8 @@ public class ReportService {
         qb.optionalCriteria("s.language_code = :language", "language", criteria.getLanguage());
 
         Page<StudentSearchDto> result = JpaQueryUtil.pagingResult(qb, "s.id, p.firstname, p.lastname, coalesce(p.idcode, p.foreign_idcode) as idcode, s.study_start, c.orig_study_level_code, " +
-                "cv.code, c.name_et, c.name_en, sg.code as student_group_code, s.study_load_code, s.study_form_code, s.status_code, " +
-                "s.fin_code, s.fin_specific_code, s.language_code, scc.credits"
+                "cv.code, c.name_et, c.name_en, c.mer_code, sg.code as student_group_code, s.study_load_code, s.study_form_code, s.status_code, " +
+                "s.fin_code, s.fin_specific_code, s.language_code, s.email, scc.credits"
         , em, pageable).map(r -> new StudentSearchDto(r));
 
         Set<Long> studentIds = result.getContent().stream().map(StudentSearchDto::getId).collect(Collectors.toSet());
@@ -150,7 +151,7 @@ public class ReportService {
                 groupingField = "sh.study_form_code";
             } else if(MainClassCode.OPPURSTAATUS.name().equals(criteria.getResult())) {
                 groupingField = "sh.status_code";
-            } else if(criteria.getResult() == null) {
+            } else if(StringUtils.isEmpty(criteria.getResult())) {
                 groupingField = null;
             } else {
                 throw new AssertionFailedException("Unknown result classifier");
@@ -191,7 +192,7 @@ public class ReportService {
             } else if(StudentStatus.OPPURSTAATUS_L.name().equals(criteria.getResult())) {
                 groupingField = "cast(ds.is_cum_laude as varchar)";
                 directiveTypes = EnumUtil.toNameList(DirectiveType.KASKKIRI_LOPET);
-            } else if(criteria.getResult() == null) {
+            } else if(StringUtils.isEmpty(criteria.getResult())) {
                 groupingField = null;
                 directiveTypes = EnumUtil.toNameList(DirectiveType.KASKKIRI_EKSMAT, DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_LOPET);
             } else {

@@ -6,6 +6,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudentJournalEntryDto {
 
+    private Long id;
     private AutocompleteResult journal;
     private String entryType;
     private LocalDate entryDate;
@@ -15,12 +16,15 @@ public class StudentJournalEntryDto {
     private String absence;
     private LocalDate absenceInserted;
     private String addInfo;
+    // either gradeInserted or absenceInserted date, used for ordering entries outside of query
+    private LocalDate orderDate;
     
     public StudentJournalEntryDto() {
         
     }
     
     public StudentJournalEntryDto(StudentJournalEntryDto entry) {
+        this.id = entry.getId();
         this.journal = entry.getJournal();
         this.entryType = entry.getEntryType();
         this.entryDate = entry.getEntryDate();
@@ -30,8 +34,17 @@ public class StudentJournalEntryDto {
         this.absence = entry.getAbsence();
         this.absenceInserted = entry.getAbsenceInserted();
         this.addInfo = entry.getAddInfo();
+        this.orderDate = entry.getOrderDate();
     }
-    
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public AutocompleteResult getJournal() {
         return journal;
     }
@@ -102,6 +115,14 @@ public class StudentJournalEntryDto {
     
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public LocalDate getOrderDate() {
+        return orderDate;
+    }
+
+    public void setOrderDate(LocalDate orderDate) {
+        this.orderDate = orderDate;
     }
     
 }

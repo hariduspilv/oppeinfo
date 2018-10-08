@@ -14,10 +14,14 @@
       <div class="md-dialog-content">
         <div flex>
             <div layout="row" layout-sm="column" layout-xs="column">
-              <md-input-container flex>
+              <md-input-container flex="45" flex-sm="100" flex-xs="100">
                 <label>{{'student.name' | translate}}</label>
                 <input type="text" ng-model="criteria.studentName" md-autofocus>
               </md-input-container>
+              <div flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <hois-autocomplete ng-model="criteria.studentGroupObject" method="studentgroups" 
+                  additional-query-params="{higher: false}" label="journal.studentGroup" flex></hois-autocomplete>
+              </div>
             </div>
             <div layout="row">
               <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
@@ -38,7 +42,12 @@
                 </thead>
                 <tbody md-body>
                   <tr md-row md-select="row.studentId" md-auto-select ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
-                    <td md-cell>{{row.fullname}}</td>
+                    <td md-cell>
+                      <i>
+                        <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'journal.academicLeaveAbbrev' | translate}}</span>
+                      </i>
+                      <span>{{row.fullname}}</span>
+                    </td>
                     <td md-cell>{{row.studentGroup}}</td>
                     <td md-cell>{{row.curriculum}}</td>
                   </tr>

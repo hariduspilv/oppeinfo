@@ -13,7 +13,12 @@
             </thead>
             <tbody md-body>
               <tr md-row md-select="row.studentId" ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>{{row.fullname}}</td>
+                <td md-cell>
+                  <i>
+                    <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'journal.academicLeaveAbbrev' | translate}}</span>
+                  </i>
+                  <span>{{row.fullname}}</span>
+                </td>
                 <td md-cell>{{row.studentGroup}}</td>
                 <td md-cell>{{row.curriculum}}</td>
                 <td md-cell layout="row" layout-align="end">

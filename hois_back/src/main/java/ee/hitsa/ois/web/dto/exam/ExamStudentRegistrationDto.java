@@ -17,6 +17,7 @@ public class ExamStudentRegistrationDto {
     private LocalDateTime deadline;
     private String addInfo;
     private Long freePlaces;
+    private Long protocol;
     private Boolean registered;
     private Boolean canChange;
 
@@ -98,6 +99,14 @@ public class ExamStudentRegistrationDto {
 
     public void setFreePlaces(Long freePlaces) {
         this.freePlaces = freePlaces;
+    }
+
+    public Long getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(Long protocol) {
+        this.protocol = protocol;
     }
 
     public Boolean getRegistered() {

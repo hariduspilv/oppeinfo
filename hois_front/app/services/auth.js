@@ -211,6 +211,7 @@ angular.module('hitsaOis')
     '/timetable/generalTimetableByGroup/:schoolId?',
     '/timetable/generalTimetableByTeacher/:schoolId?',
     '/timetable/generalTimetableByRoom/:schoolId?',
+    '/timetable/searchGeneralTimetable/:schoolId?',
     '/timetable/group/:schoolId/:groupId/:weekIndex?',
     '/timetable/teacher/:schoolId/:teacherId/:weekIndex?',
     '/timetable/room/:schoolId/:roomId/:weekIndex?',

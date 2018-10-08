@@ -105,7 +105,7 @@ public abstract class JournalUtil {
      */
     public static List<JournalStudentDto> withoutFinalResult(Journal journal) {
         List<JournalStudent> result = journal.getJournalStudents().stream()
-                .filter(js -> StudentUtil.isStudying(js.getStudent()))
+                .filter(js -> StudentUtil.isActive(js.getStudent()))
                 .filter(js -> js.getJournalEntryStudents().stream()
                        .filter(jes -> jes.getGrade() != null)
                        .allMatch(jes -> !ClassifierUtil

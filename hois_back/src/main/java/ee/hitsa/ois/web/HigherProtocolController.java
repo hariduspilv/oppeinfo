@@ -193,18 +193,6 @@ public class HigherProtocolController {
         }
         return get(user, protocol);
     }
-    
-    /* TODO: remove if admin's can't confirm without ID card or mobile ID log in
-    @PutMapping("/confirm/{id:\\d+}")
-    public HigherProtocolDto confirm(HoisUserDetails user,
-            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
-            @NotNull @Valid @RequestBody HigherProtocolSaveForm form) {
-        HigherProtocolUtil.assertCanChange(user, protocol);
-        HigherProtocolUtil.assertCanConfirm(user, protocol);
-        HigherProtocolUtil.validate(form, protocol);
-        return get(user, higherProtocolService.confirm(user, protocol, form));
-    }
-    */
 
     @GetMapping("/{id:\\d+}/calculate")
     public List<ProtocolStudentResultDto> calculateGrades(HoisUserDetails user,

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -334,6 +335,46 @@ public class DirectiveService {
                 rowNum++;
             }
         }
+        if (DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
+            long rowNum = 0;
+            Map<Long, Long> curriculumVersionCurriculum = new HashMap<>();
+            Set<Long> uniqueRows = new LinkedHashSet<>();
+            for (DirectiveFormStudent dfs : StreamUtil.nullSafeList(form.getStudents())) {
+                String idcode = dfs.getIdcode();
+                Long curriculumVersionId = dfs.getCurriculumVersion();
+                if (StringUtils.hasText(idcode) && curriculumVersionId != null) {
+                    Long curriculumId = em.createQuery("select cv.curriculum.id from CurriculumVersion cv"
+                            + " where cv.id = ?1", Long.class)
+                            .setParameter(1, curriculumVersionId)
+                            .getSingleResult();
+                    curriculumVersionCurriculum.put(curriculumVersionId, curriculumId);
+                    Person person = personRepository.findByIdcode(idcode);
+                    if (person != null) {
+                        if (studentExists(EntityUtil.getId(directive.getSchool()), EntityUtil.getId(person), curriculumId)) {
+                            uniqueRows.add(Long.valueOf(rowNum));
+                        }
+                    }
+                }
+                rowNum++;
+            }
+            rowNum = 0;
+            for (DirectiveFormStudent dfs : StreamUtil.nullSafeList(form.getStudents())) {
+                if (StringUtils.hasText(dfs.getIdcode())) {
+                    for (DirectiveFormStudent dfs2 : form.getStudents()) {
+                        if (!dfs2.equals(dfs) && dfs.getIdcode().equals(dfs2.getIdcode())) {
+                            if (dfs.getCurriculumVersion() != null && dfs2.getCurriculumVersion() != null
+                                    && curriculumVersionCurriculum.get(dfs.getCurriculumVersion()).equals(curriculumVersionCurriculum.get(dfs2.getCurriculumVersion()))) {
+                                uniqueRows.add(Long.valueOf(rowNum));
+                            }
+                        }
+                    }
+                }
+                rowNum++;
+            }
+            for (Long existRow : uniqueRows) {
+                errors.add(DirectiveConfirmService.createStudentExistsError(existRow.longValue()));
+            }
+        }
         if(!errors.isEmpty()) {
             throw new ValidationFailedException(errors);
         }
@@ -462,6 +503,17 @@ public class DirectiveService {
             }
         }
         return EntityUtil.save(directive, em);
+    }
+
+    public boolean studentExists(Long schoolId, Long personId, Long curriculumId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s"
+                + " join curriculum_version cv on cv.id = s.curriculum_version_id");
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("s.person_id = :personId", "personId", personId);
+        qb.requiredCriteria("s.status_code in :status", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
+        qb.requiredCriteria("cv.curriculum_id = :curriculumId", "curriculumId", curriculumId);
+        List<?> result = qb.select("s.id", em).getResultList();
+        return !result.isEmpty();
     }
 
     private void saveOccupations(DirectiveStudent directiveStudent, Stream<String> codes) {

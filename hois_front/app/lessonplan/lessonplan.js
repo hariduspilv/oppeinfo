@@ -355,7 +355,7 @@
         grandTotals[capacityType][index] = sum;
         updateTotals($scope, grandTotals, capacityType, index);
       }
-
+      
       var copyOfRecord;
       QueryUtils.loadingWheel($scope, true);
       QueryUtils.endpoint(baseUrl).get({
@@ -425,24 +425,22 @@
         $scope.$broadcast('refreshFixedColumns');
       });
 
-
-
+      /*
       $scope.finished = function () {
-
         var tb;
         tb = angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].clientHeight+340+18;
-        /*console.log(document.getElementById('ng-repeat-table-test').getBoundingClientRect());
-        console.log("x: "+angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].clientHeight+"_"+tb);
-        console.log("x: "+angular.element(document.getElementsByClassName("lessonplan"))[0].offsetHeight+"_"+tb);
-        console.log("x: "+angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].offsetHeight+"_"+tb);
-        *///angular.element(document.getElementsByClassName("container")).css('height', (tb > $window.innerHeight ? $window.innerHeight : tb) -250 + 'px');
+        //console.log(document.getElementById('ng-repeat-table-test').getBoundingClientRect());
+        //console.log("x: "+angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].clientHeight+"_"+tb);
+        //console.log("x: "+angular.element(document.getElementsByClassName("lessonplan"))[0].offsetHeight+"_"+tb);
+        //console.log("x: "+angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].offsetHeight+"_"+tb);
+        //angular.element(document.getElementsByClassName("container")).css('height', (tb > $window.innerHeight ? $window.innerHeight : tb) -250 + 'px');
         $scope.tb=tb;
       };
-
+      */
 
       angular.element($window).bind('resize', function(){
-        $scope.windowWidth = $window.innerWidth;
-        angular.element(document.getElementsByClassName("container")).css('height', ($scope.tb > $window.innerHeight ? $window.innerHeight : $scope.tb)-340 + 'px');
+        //angular.element(document.getElementsByClassName("container")).css('height', ($scope.tb > $window.innerHeight ? $window.innerHeight : $scope.tb)-340 + 'px');
+        angular.element(document.getElementsByClassName("container")).css('height', $window.innerHeight - 340 + 'px');
       });
 
       function setSelectedStudyPeriods(selectedStudyPeriods) {
@@ -632,7 +630,7 @@
 
       $scope.delete = function () {
         dialogService.confirmDialog({prompt: 'lessonplan.prompt.deleteLessonplan'}, function() {
-          $scope.record.$delete().then(message.updateSuccess).then(function() {
+          $scope.record.$delete().then(function() {
             message.info('main.messages.delete.success');
             redirectBack();
           }).catch(angular.noop);
@@ -664,6 +662,7 @@
   ]).controller('LessonplanTeacherViewController', ['$location', '$mdDialog', '$route', '$scope', 'message', 'Classifier', 'QueryUtils',
 
     function ($location, $mdDialog, $route, $scope, message, Classifier, QueryUtils) {
+      $scope.auth = $route.current.locals.auth;
       var id = $route.current.params.id;
       var studyYearId = $route.current.params.studyYear;
       var baseUrl = '/lessonplans/byteacher';
@@ -696,16 +695,18 @@
       };
 
       $scope.sumSubjectHours = function(hours) {
-        return $scope.formState.subjectCapacityTypes.reduce(function(total, sct) {
-          var periodHours = hours[sct.studyPeriod];
-          if (periodHours) {
-            var capacityHours = periodHours[sct.code];
-            if (capacityHours) {
-              total += capacityHours;
+        if (angular.isDefined($scope.formState.subjectCapacityTypes)) {
+          return $scope.formState.subjectCapacityTypes.reduce(function(total, sct) {
+            var periodHours = hours[sct.studyPeriod];
+            if (periodHours) {
+              var capacityHours = periodHours[sct.code];
+              if (capacityHours) {
+                total += capacityHours;
+              }
             }
-          }
-          return total;
-        }, 0);
+            return total;
+          }, 0);
+        }
       };
 
       QueryUtils.endpoint(baseUrl + '/:id/:studyYear').search({

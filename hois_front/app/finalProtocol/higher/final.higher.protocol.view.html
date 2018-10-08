@@ -3,8 +3,6 @@
     <form layout="column" name="finalProtocolForm">
       <div ng-include="'finalProtocol/templates/final.higher.protocol.header.tmpl.html'"></div>
 
-      <br>
-      <br>
       <div class="form-readonly">
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
@@ -39,7 +37,8 @@
           </table>
         </md-table-container>
       </fieldset>
-      <br>
+      
+      <div>&nbsp;</div>
 
       <div>
         <div flex>
@@ -84,7 +83,7 @@
         </div>
       </div>
 
-      <br/>
+      <div>&nbsp;</div>
 
       <div layout="row">
         <md-button ng-if="formState.canEditProtocol" class="md-primary md-raised" ng-href="#/finalHigherProtocols/{{::protocol.id}}/edit">{{'main.button.change' | translate}}</md-button>

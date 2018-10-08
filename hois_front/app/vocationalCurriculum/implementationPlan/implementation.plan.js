@@ -15,6 +15,7 @@ angular.module('hitsaOis')
 
     var HOURS_PER_EKAP = 26;
 
+    $scope.CURRICULUM_STATUS = Curriculum.STATUS;
     $scope.VERSION_STATUS = Curriculum.VERSION_STATUS;
 
     $scope.formState = {
@@ -418,5 +419,9 @@ angular.module('hitsaOis')
       }
     });
 
+    $scope.showPrintButton = function() {
+      return angular.isDefined($scope.implementationPlan.id) && ($scope.auth.isAdmin() || $scope.implementationPlan.status === $scope.VERSION_STATUS.K &&
+        curriculumEntity.status === $scope.CURRICULUM_STATUS.VERIFIED);
+    };
 
   });

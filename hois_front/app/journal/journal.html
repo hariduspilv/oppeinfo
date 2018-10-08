@@ -24,7 +24,7 @@
         <div ng-if="journal.canBeConfirmed" flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <md-input-container style="margin-top:-1em;">
             <label>{{'journal.endDate' | translate}}</label>
-            <md-datepicker ng-model="journal.endDate"></md-datepicker>
+            <md-datepicker ng-model="journal.endDate" md-min-date="journal.studyYearStartDate"></md-datepicker>
           </md-input-container>
           <a href="" class="md-button md-raised" style="margin-top:-1em;" ng-click="saveEndDate()">{{'journal.saveEndDate' | translate}}</a>
         </div>
@@ -61,6 +61,23 @@
         </md-input-container>
       </div>
 
+      <div ng-if="journal.canEdit" class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label>{{'journal.assessment' | translate}}</label>
+          <hois-classifier-value ng-model="journal.assessment" main-classifier-code="KUTSEHINDAMISVIIS"></hois-classifier-value>
+        </md-input-container>
+
+        <md-input-container class="md-input-has-value" flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'journal.capacitiesPlannedAndEnteredLessonsCount' | translate}}</label>
+          <div class="md-body-1">
+            <span ng-repeat="type in journal.lessonHours.capacityHours | orderBy: 'capacity'">
+              <span>{{capacityTypes[type.capacity].value.toUpperCase()}}:</span>
+              <span>{{type.plannedHours + '/' + type.usedHours}}</span>
+            </span>
+          </div>
+        </md-input-container>
+      </div>
+
       <div ng-if="journal.canEdit" layout="row" layout-sm="column" layout-xs="column">
         <div flex="30" flex-sm="100" flex-xs="100">
           <md-input-container>
@@ -68,18 +85,6 @@
             <input type="number" ng-model="journal.moodleCourseId">
           </md-input-container>
           <md-button class="md-button md-raised" ng-disabled="!journal.moodleCourseId" ng-click="saveMoodleCourseId()">{{'moodle.saveCourseId' | translate}}</md-button>
-        </div>
-
-        <div class="form-readonly" flex="30" flex-sm="100" flex-xs="100">
-          <md-input-container class="md-input-has-value" style="width: 100%; margin-top: 20px">
-            <label class="textInput">{{'journal.capacitiesPlannedAndEnteredLessonsCount' | translate}}</label>
-            <div class="md-body-1">
-              <span ng-repeat="type in journal.lessonHours.capacityHours | orderBy: 'capacity'">
-                <span>{{type.capacity.substr(-1).toUpperCase()}}:</span>
-                <span>{{type.plannedHours + '/' + type.usedHours}}</span>
-              </span>
-            </div>
-          </md-input-container>
         </div>
       </div>
 
@@ -111,20 +116,28 @@
 
       <div ng-if="!journal.canEdit" class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="25" flex-sm="100" flex-xs="100">
-          <label>{{'moodle.courseId' | translate}}</label>
-          <hois-value value="journal.moodleCourseId"></hois-value>
+          <label>{{'journal.assessment' | translate}}</label>
+          <hois-classifier-value ng-model="journal.assessment" main-classifier-code="KUTSEHINDAMISVIIS"></hois-classifier-value>
         </md-input-container>
 
         <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" class="md-input-has-value">
           <label class="textInput">{{'journal.capacitiesPlannedAndEnteredLessonsCount' | translate}}</label>
           <div class="md-body-1">
             <span ng-repeat="type in journal.lessonHours.capacityHours | orderBy: 'capacity'">
-              <span>{{type.capacity.substr(-1).toUpperCase()}}:</span>
+              <span>{{capacityTypes[type.capacity].value.toUpperCase()}}:</span>
               <span>{{type.plannedHours + '/' + type.usedHours}}</span>
             </span>
           </div>
         </md-input-container>
       </div>
+
+      <div ng-if="!journal.canEdit" class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label>{{'moodle.courseId' | translate}}</label>
+          <hois-value value="journal.moodleCourseId"></hois-value>
+        </md-input-container>
+      </div>  
+
     </form>
   </div>
 </div>

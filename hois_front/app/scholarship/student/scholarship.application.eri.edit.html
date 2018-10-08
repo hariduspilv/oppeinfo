@@ -131,15 +131,15 @@
             </md-input-container>
           </div>
 
-          <div layout="row">
+          <div layout="row" layout-xs="column">
             <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
               <label>{{'stipend.student.stipToetusEriPeriod' | translate}}</label>
-              <input type="hidden">
+              <input style="visibility:hidden">
             </md-input-container>
-            <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+            <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0">
               <md-datepicker ng-model="application.scholarshipFrom" md-max-date="application.scholarshipThru" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
             </md-input-container>
-            <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+            <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0">
               <md-datepicker ng-model="application.scholarshipThru" md-min-date="application.scholarshipFrom" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
             </md-input-container>
           </div>
@@ -154,7 +154,7 @@
           <div ng-include="'scholarship/student/scholarship.family.table.edit.html'"></div>
           <br/>
           <div ng-include="'scholarship/scholarship.relatedFiles.edit.html'"></div>
-          <div layout="row">
+          <div layout="row" layout-xs="column">
             <md-button class="md-raised md-primary" ng-if="application.canApply" ng-click="update(applicationForm)">{{'main.button.save' | translate}}</md-button>
             <md-button class="md-raised" ng-if="application.canApply" ng-click="apply(applicationForm)">{{'stipend.student.apply' | translate}}</md-button>
             <md-button class="md-raised" ng-click="back('#/scholarships/myData/grants', applicationForm)">{{'main.button.back' | translate}}</md-button>

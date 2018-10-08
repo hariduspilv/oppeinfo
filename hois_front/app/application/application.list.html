@@ -60,7 +60,7 @@
         </div>
 
 
-        <div layout="row">
+        <div layout="row" layout-xs="column">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
             <md-button ng-href="#/applications/new" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS')" class="md-raised">{{'application.makeApplication' | translate}}</md-button>

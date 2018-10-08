@@ -809,7 +809,7 @@ public class ScholarshipService {
             return true;
         }
         StudentResults results = getStudentResults(term, student);
-        if (term.getAverageMark() != null) {
+        if (term.getAverageMark() != null && BigDecimal.ZERO.compareTo(term.getAverageMark()) != 0) {
             BigDecimal comparable = useSaisPoints(term, student) ? getSaisPoints(student) : results.getAverageMark();
             if (comparable == null || comparable.compareTo(term.getAverageMark()) < 0) {
                 return false;

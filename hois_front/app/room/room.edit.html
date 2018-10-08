@@ -35,8 +35,11 @@
       <div layout="row" flex>
         <md-input-container class="md-block" flex="20">
           <label class="textInput">{{'room.seats' | translate}}</label>
-          <input ng-model="record.seats" name="seats" type="number" min="0">
+          <input ng-model="record.seats" name="seats" type="number" min="0" max="100000000">
           <div ng-messages="roomForm.seats.$error">
+            <div ng-message="max">
+              {{'main.messages.error.max' | translate: {max: 100000000} }}
+            </div>
             <div ng-message="min">
               {{'main.messages.error.min' | translate: {min: 0} }}
             </div>

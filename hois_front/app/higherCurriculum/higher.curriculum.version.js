@@ -2,6 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('HigherCurriculumVersionController', function ($scope, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, $translate, $rootScope, $routeParams, DataUtils, config) {
+    $scope.auth = $route.current.locals.auth;
 
     var baseUrl = '/curriculum';
     $scope.curriculum = $route.current.locals.curriculum;
@@ -16,6 +17,7 @@ angular.module('hitsaOis')
     var Endpoint = QueryUtils.endpoint('/curriculumVersion');
     var id = $route.current.params.versionId;
 
+    $scope.STATUS = Curriculum.STATUS;
     $scope.VERSION_STATUS = Curriculum.VERSION_STATUS;
 
     var initialVersion = {
@@ -406,5 +408,10 @@ angular.module('hitsaOis')
       }
       $location.path(url);
     }
+
+    $scope.showPrintButton = function() {
+      return angular.isDefined($scope.version.id) && ($scope.auth.isAdmin() || ($scope.curriculum.status === $scope.STATUS.VERIFIED &&
+        $scope.version.status === $scope.VERSION_STATUS.K));
+    };
 
   });

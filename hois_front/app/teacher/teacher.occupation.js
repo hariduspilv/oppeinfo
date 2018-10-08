@@ -23,10 +23,11 @@ angular.module('hitsaOis').controller('TeacherOccupationEditController', ['$loca
 
       if($scope.teacherOccupation.id) {
         $scope.teacherOccupation.$update().then(message.updateSuccess);
+        $scope.teacherOccupationForm.$setPristine();
       }else{
         $scope.teacherOccupation.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.url(baseUrl + '/' + $scope.teacherOccupation.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.teacherOccupation.id + '/edit?_noback');
         });
       }
     };

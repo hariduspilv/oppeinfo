@@ -26,11 +26,11 @@
         <div flex="100">
           <md-input-container flex>
             <label>{{'school.department.validFrom' | translate}}</label>
-			<md-datepicker ng-model="schoolDepartment.validFrom" required></md-datepicker>
+			      <md-datepicker ng-model="schoolDepartment.validFrom" md-max-date="schoolDepartment.validThru" required></md-datepicker>
           </md-input-container>
           <md-input-container flex>
             <label>{{'school.department.validThru' | translate}}</label>
-			<md-datepicker ng-model="schoolDepartment.validThru" md-min-date="schoolDepartment.validFrom"></md-datepicker>
+			      <md-datepicker ng-model="schoolDepartment.validThru" md-min-date="schoolDepartment.validFrom"></md-datepicker>
           </md-input-container>
         </div>
       </div>

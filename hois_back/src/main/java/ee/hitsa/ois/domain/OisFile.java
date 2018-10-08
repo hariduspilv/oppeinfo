@@ -8,6 +8,7 @@ public class OisFile extends BaseEntityWithId {
     private byte[] fdata;
     private String fname;
     private String ftype;
+    private String fdescription;
 
     public byte[] getFdata() {
         return fdata;
@@ -31,6 +32,14 @@ public class OisFile extends BaseEntityWithId {
 
     public void setFtype(String ftype) {
         this.ftype = ftype;
+    }
+
+    public String getFdescription() {
+        return fdescription;
+    }
+
+    public void setFdescription(String fdescription) {
+        this.fdescription = fdescription;
     }
 
     @Override

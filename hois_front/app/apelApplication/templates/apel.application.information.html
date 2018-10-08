@@ -5,7 +5,7 @@
         <label>{{'apel.student' | translate}}</label>
         <hois-value value="application.person.firstname + ' ' + application.person.lastname"></hois-value>
       </md-input-container>
-      <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+      <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
         <label ng-if="application.isVocational">{{'apel.curriculumVersionVocational' | translate}}</label>
         <label ng-if="!application.isVocational">{{'apel.curriculumVersionHigher' | translate}}</label>
         <hois-value value="currentLanguageNameField(application.curriculumVersion)"></hois-value>
@@ -13,19 +13,19 @@
     </div>
 
     <div layout="row" layout-sm="column" layout-xs="column">
-      <md-input-container flex="20" flex-sm="100">
+      <md-input-container flex="20" flex-sm="100" flex-xs="100">
         <label>{{'apel.insertedDate' | translate}}</label>
         <hois-value value="application.inserted | hoisDate"></hois-value>
       </md-input-container>
-      <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+      <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
         <label>{{'apel.inserter' | translate}}</label>
         <hois-value value="application.insertedBy"></hois-value>
       </md-input-container>
-      <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+      <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
         <label>{{'apel.confirmedDate' | translate}}</label>
         <hois-value value="application.confirmed | hoisDate"></hois-value>
       </md-input-container>
-      <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+      <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
         <label>{{'apel.confirmer' | translate}}</label>
         <hois-value value="application.confirmedBy"></hois-value>
       </md-input-container>

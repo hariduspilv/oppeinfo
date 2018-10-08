@@ -169,6 +169,7 @@ public class CurriculumForm extends VersionedCommand {
     private Set<String> studyLanguages;
     @NotEmpty(groups = {ConfirmedVocational.class})
     private Set<String> studyForms;
+    private Set<CurriculumAddressForm> addresses;
     @NotEmpty(groups = {Confirmed.class})
     private Set<Long> schoolDepartments;
     private Set<CurriculumFileUpdateDto> files;
@@ -234,6 +235,14 @@ public class CurriculumForm extends VersionedCommand {
 
     public void setStudyForms(Set<String> studyForms) {
         this.studyForms = studyForms;
+    }
+
+    public Set<CurriculumAddressForm> getAddresses() {
+        return addresses != null ? addresses : (addresses = new HashSet<>());
+    }
+
+    public void setAddresses(Set<CurriculumAddressForm> addresses) {
+        this.addresses = addresses;
     }
 
     public Set<Long> getSchoolDepartments() {

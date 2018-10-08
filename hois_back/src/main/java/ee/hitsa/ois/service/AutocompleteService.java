@@ -36,6 +36,7 @@ import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.Timetable;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
@@ -67,7 +68,7 @@ import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
-import ee.hitsa.ois.web.commandobject.RoomsAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.RoomAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
@@ -132,7 +133,7 @@ public class AutocompleteService {
         }, data);
     }
 
-    public List<OccupiedAutocompleteResult> rooms(Long schoolId, RoomsAutocompleteCommand lookup) {
+    public List<OccupiedAutocompleteResult> rooms(Long schoolId, RoomAutocompleteCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from room r inner join building b on b.id = r.building_id");
 
         qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
@@ -165,7 +166,7 @@ public class AutocompleteService {
         return new ArrayList<>(roomsResult.values());
     }
     
-    private void setRoomsOccupationStatus(RoomsAutocompleteCommand lookup, Map<Long, OccupiedAutocompleteResult> roomsResult) {
+    private void setRoomsOccupationStatus(RoomAutocompleteCommand lookup, Map<Long, OccupiedAutocompleteResult> roomsResult) {
         List<Long> roomIds = roomsResult.values().stream().map(t -> t.getId()).collect(Collectors.toList());
         
         List<LocalDateTime> starts = new ArrayList<>();
@@ -1065,12 +1066,32 @@ public class AutocompleteService {
 
         return JpaQueryUtil.pagingResult(qb, em, pageable).map(AutocompleteResult::of);
     }
+    
+    public Page<AutocompleteResult> vocationalOccupationModules(Long schoolId, SearchCommand lookup) {
+        String nameField = Language.EN.equals(lookup.getLang()) ? "nameEn" : "nameEt";
+        PageRequest pageable = sortAndLimit(nameField);
+        JpaQueryBuilder<CurriculumVersionOccupationModule> qb = new JpaQueryBuilder<>(CurriculumVersionOccupationModule.class, "cvo");
+        qb.requiredCriteria("cvo.curriculumModule.curriculum.school.id = :schoolId", "schoolId", schoolId);
+        qb.filter("cvo.curriculumModule.curriculum.higher = false");
+        qb.optionalContains("cvo.curriculumModule." + nameField, "name", lookup.getName());
+        qb.sort("cvo.curriculumModule." + nameField);
+
+        return JpaQueryUtil.pagingResult(qb, em, pageable).map(AutocompleteResult::of);
+    }
 
     public List<JournalAutocompleteResult> journals(HoisUserDetails user, JournalAutocompleteCommand lookup) {
+        return journals(user.getSchoolId(), user.getTeacherId(), lookup);
+    }
+    
+    public List<JournalAutocompleteResult> journals(Long schoolId, JournalAutocompleteCommand lookup) {
+        return journals(schoolId, null, lookup);
+    }
+    
+    private List<JournalAutocompleteResult> journals(Long schoolId, Long teacherId, JournalAutocompleteCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j");
-        qb.requiredCriteria("j.school_id = :schoolId", "schoolId", user.getSchoolId());
-        if (user.isTeacher()) {
-            qb.requiredCriteria("j.id in (select jt.journal_id from journal_teacher jt where jt.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
+        qb.requiredCriteria("j.school_id = :schoolId", "schoolId", schoolId);
+        if (teacherId != null) {
+            qb.requiredCriteria("j.id in (select jt.journal_id from journal_teacher jt where jt.teacher_id = :teacherId)", "teacherId", teacherId);
         }
         qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", lookup.getStudyYear());
         qb.optionalContains("j.name_et",  "name_et", lookup.getName());
@@ -1104,14 +1125,14 @@ public class AutocompleteService {
         }, data);
     }
     
-    public List<AutocompleteResult> journalsAndSubjects(HoisUserDetails user, JournalAndSubjectAutocompleteCommand lookup) {        
+    public List<AutocompleteResult> journalsAndSubjects(Long schoolId, JournalAndSubjectAutocompleteCommand lookup) {
         JournalAutocompleteCommand journalLookup = new JournalAutocompleteCommand();
         journalLookup.setStudyYear(lookup.getStudyYear());
         if (lookup.getName() != null) {
             journalLookup.setLang(lookup.getLang());
             journalLookup.setName(lookup.getName());
         }
-        List<JournalAutocompleteResult> journalsList = journals(user, journalLookup);
+        List<JournalAutocompleteResult> journalsList = journals(schoolId, journalLookup);
         // Change journal ids to negative to differentiate between journal and subject ids
         for (AutocompleteResult journal : journalsList) {
             journal.setId(Long.valueOf(-journal.getId().longValue()));
@@ -1123,7 +1144,7 @@ public class AutocompleteService {
             subjectLookup.setName(lookup.getName());
         }
         subjectLookup.setPractice(lookup.getPractice());
-        List<SubjectResult> subjectsList = subjects(user.getSchoolId(), subjectLookup);
+        List<SubjectResult> subjectsList = subjects(schoolId, subjectLookup);
         
         List<AutocompleteResult> journalsAndSubjects = new ArrayList<>();
         journalsAndSubjects.addAll(journalsList);

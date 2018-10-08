@@ -53,6 +53,7 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
 
     QueryUtils.createQueryForm($scope, '/reports/students/statistics', {result: 'OPPEVORM'}, function() {
       var resultType = $scope.criteria.result;
+      $scope.savedCriteria = angular.copy($scope.criteria);
       if($scope.formState.resultType !== resultType) {
         $scope.formState.resultType = resultType;
         if(resultType) {

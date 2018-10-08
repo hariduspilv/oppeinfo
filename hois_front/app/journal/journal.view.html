@@ -50,18 +50,25 @@
 
     <div layout="row" layout-sm="column" layout-xs="column">
       <md-input-container flex="25" flex-sm="100" flex-xs="100">
-        <label>{{'moodle.courseId' | translate}}</label>
-        <hois-value value="journal.moodleCourseId"></hois-value>
+        <label>{{'journal.assessment' | translate}}</label>
+        <hois-classifier-value ng-model="journal.assessment" main-classifier-code="KUTSEHINDAMISVIIS"></hois-classifier-value>
       </md-input-container>
 
       <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" class="md-input-has-value">
         <label class="textInput">{{'journal.capacitiesPlannedAndEnteredLessonsCount' | translate}}</label>
         <div class="md-body-1">
           <span ng-repeat="type in journal.lessonHours.capacityHours | orderBy: 'capacity'">
-            <span>{{type.capacity.substr(-1).toUpperCase()}}:</span>
+            <span>{{capacityTypes[type.capacity].value.toUpperCase()}}:</span>
             <span>{{type.plannedHours + '/' + type.usedHours}}</span>
           </span>
         </div>
+      </md-input-container>
+    </div>
+
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label>{{'moodle.courseId' | translate}}</label>
+        <hois-value value="journal.moodleCourseId"></hois-value>
       </md-input-container>
     </div>
   </div>

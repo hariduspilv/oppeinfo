@@ -50,39 +50,41 @@
         <label>{{'module.nameEn' | translate}}</label>
         <input ng-model="data.nameEn" type="text" readonly>
       </md-input-container>
-      <md-input-container>
+      <md-input-container flex>
         <label>{{'module.objectivesEt' | translate}}</label>
         <textarea ng-model="data.objectivesEt" readonly></textarea>
       </md-input-container>
-      <md-input-container>
+      <md-input-container flex>
         <label>{{'module.objectivesEn' | translate}}</label>
         <textarea ng-model="data.objectivesEn" readonly></textarea>
       </md-input-container>
-      <md-input-container>
+      <md-input-container flex>
         <label>{{'module.studyOutcomesEt' | translate}}</label>
         <textarea ng-model="data.outcomesEt" readonly></textarea>
       </md-input-container>
-      <md-input-container>
+      <md-input-container flex>
         <label>{{'module.studyOutcomesEn' | translate}}</label>
         <textarea ng-model="data.outcomesEn" readonly></textarea>
       </md-input-container>
-      <div flex>
-        <fieldset ng-show="formState.moduleMustHaveSubjects">
-          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.optionals' | translate}}</legend>
-          <div ng-repeat="electiveModule in data.electiveModules | orderBy: 'nameEt'" class="secondary-table-row" flex layout="row">
-            <div flex>
-              <p class="elective-module">{{currentLanguageNameField(electiveModule)}}</p>
-            </div>
+      
+      <div ng-show="formState.moduleMustHaveSubjects">&nbsp;</div>
+      <fieldset ng-show="formState.moduleMustHaveSubjects" flex>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.optionals' | translate}}</legend>
+        <div ng-repeat="electiveModule in data.electiveModules | orderBy: 'nameEt'" class="secondary-table-row" flex layout="row">
+          <div flex>
+            <p class="elective-module">{{currentLanguageNameField(electiveModule)}}</p>
           </div>
-        </fieldset>
-      </div>
-      <div>&nbsp;</div>
+        </div>
+      </fieldset>
+      <div ng-show="formState.moduleMustHaveSubjects">&nbsp;</div>
 
       <md-input-container flex ng-show="formState.moduleMustHaveSubjects">
         <label>{{'module.optionalModulesNumber' | translate}}</label>
         <input name="electiveModulesNumber" ng-model="data.electiveModulesNumber" type="number" readonly>
       </md-input-container>
-      <div flex>
+      <div ng-show="formState.moduleMustHaveSubjects">&nbsp;</div>
+
+      <div>
         <fieldset ng-show="formState.moduleMustHaveSubjects">
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.version.subjects' | translate}}&nbsp;</legend>
           <table md-table class="secondary-table" ng-show="data.subjects.length > 0">
@@ -122,6 +124,7 @@
           </table>
         </fieldset>
       </div>
+      <div>&nbsp;</div>
       <div>&nbsp;</div>
 
       <md-input-container flex>

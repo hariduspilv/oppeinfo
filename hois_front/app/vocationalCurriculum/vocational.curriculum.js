@@ -5,7 +5,8 @@ angular.module('hitsaOis')
     message, oisFileService, QueryUtils, $route, DataUtils, $location, Curriculum, $q, config, $rootScope, Session) {
       var baseUrl = '/curriculum';
       var clMapper = Classifier.valuemapper({occupations: 'KUTSE', partOccupations: 'OSAKUTSE', specialities: 'SPETSKUTSE'});
-      $scope.school = $route.current.locals.auth ? $route.current.locals.auth.school : null;
+      $scope.auth = $route.current.locals.auth;
+      $scope.school = $scope.auth ? $scope.auth.school : null;
       var id = $route.current.params.id;
       var OccupationEndpoint = QueryUtils.endpoint('/curriculumOccupation');
 
@@ -91,6 +92,7 @@ angular.module('hitsaOis')
 
       $q.all(promises).then(function() {
         angular.extend(scope.curriculum, curriculum);
+        updateAddresses();
       });
 
     };/*mapDtoToModel*/
@@ -109,6 +111,7 @@ angular.module('hitsaOis')
       modules: [],
       occupations: [],
       files: [],
+      addresses: [],
       jointPartners: [],
       studyLanguageClassifiers: [],
       studyFormClassifiers: [],
@@ -823,6 +826,26 @@ angular.module('hitsaOis')
       }
     }
 
+    $scope.addAddress = function () {
+      $scope.curriculum.addresses.push($scope.formState.address);
+      $scope.formState.address = {};
+      updateAddresses();
+    };
+
+    function updateAddresses() {
+      if (angular.isArray($scope.curriculum.addresses)) {
+        $scope.validation.addressesLength = $scope.curriculum.addresses.length;
+      }
+    }
+
+    $scope.removeAddress = function(item) {
+      dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
+        ArrayUtils.remove($scope.curriculum.addresses, item);
+        $scope.vocationalCurriculumForm.$setDirty();
+        updateAddresses();
+      });
+    };
+
     function emptyModulesCreditsAreValid() {
       var modules = $scope.curriculum.modules.filter(function(el){
         return el.module !== 'KUTSEMOODUL_V';
@@ -1108,15 +1131,15 @@ angular.module('hitsaOis')
       });
     };
 
-    $scope.sendToEhis = function() {
+    $scope.sendToEhis = function(isTest) {
       dialogService.confirmDialog({ prompt: 'curriculum.ehisconfirm' }, function () {
-        var SendToEhisEndpoint = QueryUtils.endpoint("/curriculum/sendToEhis");
+        var SendToEhisEndpoint = QueryUtils.endpoint("/curriculum/sendToEhis" + (isTest ? "/test" : ""));
         changeStatus(SendToEhisEndpoint, {updateSuccess: 'curriculum.sentToEhis'});
       });
     };
 
-    $scope.updateFromEhis = function() {
-      var UpdateFromEhisEndpoint = QueryUtils.endpoint("/curriculum/updateFromEhis");
+    $scope.updateFromEhis = function(isTest) {
+      var UpdateFromEhisEndpoint = QueryUtils.endpoint("/curriculum/updateFromEhis" + (isTest ? "/test" : ""));
       changeStatus(UpdateFromEhisEndpoint, {updateSuccess: 'curriculum.message.ehisStatusUpdated'});
     };
 
@@ -1318,6 +1341,10 @@ angular.module('hitsaOis')
 
     $scope.occupationCanBeChanged = function() {
         return $scope.curriculum.draft !== 'OPPEKAVA_LOOMISE_VIIS_RIIKLIK';
+    };
+
+    $scope.showPrintButton = function () {
+      return angular.isDefined($scope.curriculum.id) && ($scope.auth.isAdmin() || $scope.curriculum.status === $scope.STATUS.VERIFIED);
     };
 
   });

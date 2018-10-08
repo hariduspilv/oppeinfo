@@ -16,6 +16,7 @@
           value: "=ngModel",
           adsOid: "=adsOidModel",
           address: "=addressModel",
+          ov: "=?ovModel",
           required:'@',
           ngRequired:'=',
         },
@@ -36,6 +37,7 @@
               scope.value = info.koodaadress;
               scope.adsOid = info.ads_oid;
               scope.address = info.aadress;
+              scope.ov = info.ehakov;
             });
             inAadressService.getInAds().hideResult();
           });

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumAddress;
 import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
@@ -57,6 +58,7 @@ import ee.hitsa.ois.util.StudyLevelUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAddressForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumFileForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSchoolDepartmentCommand;
@@ -135,7 +137,7 @@ public class CurriculumService {
         EntityUtil.setUsername(user.getUsername(), em);
         Integer oldStudyPeriod = curriculum.getStudyPeriod();
         EntityUtil.bindToEntity(curriculumForm, curriculum, classifierRepository, "draft", "higher",
-              "versions", "studyLanguages", "studyForms", "schoolDepartments", "files",
+              "versions", "studyLanguages", "studyForms", "addresses", "schoolDepartments", "files",
               "jointPartners", "specialities", "modules", "occupations", "grades");
 
         if(curriculum.getId() != null) {
@@ -143,6 +145,7 @@ public class CurriculumService {
         }
         updateDepartments(curriculum, curriculumForm.getSchoolDepartments());
         updateLanguages(curriculum, curriculumForm.getStudyLanguages());
+        updateAddresses(curriculum, curriculumForm.getAddresses());
         updateJointPartners(curriculum, curriculumForm.getJointPartners());
         if(CurriculumUtil.isVocational(curriculum)) {
             updateStudyForms(curriculum, curriculumForm.getStudyForms());
@@ -219,6 +222,19 @@ public class CurriculumService {
 
     private CurriculumJointPartner updateJointPartner(CurriculumJointPartnerDto dto, CurriculumJointPartner partner) {
         return EntityUtil.bindToEntity(dto, partner, classifierRepository);
+    }
+
+    private void updateAddresses(Curriculum curriculum, Set<CurriculumAddressForm> addresses) {
+        EntityUtil.bindEntityCollection(curriculum.getAddresses(), CurriculumAddress::getId, 
+                addresses, CurriculumAddressForm::getId, dto -> {
+            CurriculumAddress address = new CurriculumAddress();
+            address.setCurriculum(curriculum);
+            return updateAddress(dto, address);
+        }, this::updateAddress);
+    }
+
+    private CurriculumAddress updateAddress(CurriculumAddressForm form, CurriculumAddress address) {
+        return EntityUtil.bindToEntity(form, address, classifierRepository);
     }
 
     /**
@@ -328,15 +344,15 @@ public class CurriculumService {
         return EntityUtil.save(curriculum, em);
     }
 
-    public Curriculum sendToEhis(HoisUserDetails user, Curriculum curriculum) {
-        ehisCurriculumService.sendToEhis(user, curriculum);
+    public Curriculum sendToEhis(HoisUserDetails user, Curriculum curriculum, boolean isTest) {
+        ehisCurriculumService.sendToEhis(user, curriculum, isTest);
         curriculum.setEhisStatus(em.getReference(Classifier.class, CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_A.name()));
         curriculum.setEhisChanged(LocalDate.now());
         return EntityUtil.save(curriculum, em);
     }
 
-    public Curriculum updateFromEhis(HoisUserDetails user, Curriculum curriculum) {
-        ehisCurriculumService.updateFromEhis(user, curriculum);
+    public Curriculum updateFromEhis(HoisUserDetails user, Curriculum curriculum, boolean isTest) {
+        ehisCurriculumService.updateFromEhis(user, curriculum, isTest);
         return EntityUtil.save(curriculum, em);
     }
 

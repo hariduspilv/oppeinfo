@@ -113,7 +113,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
     })
-    .when('/timetable/searchGeneralTimetable', {
+    .when('/timetable/searchGeneralTimetable/:schoolId?', {
       templateUrl: 'timetable/generalTimetable/timetable.generalTimetable.search.html',
       controller: 'GeneralTimetableSearchController',
       controllerAs: 'controller',
@@ -124,9 +124,6 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) {
           return AuthResolver.resolve();
         }
-      },
-      data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
     })
     .when('/timetable/timetableManagement', {

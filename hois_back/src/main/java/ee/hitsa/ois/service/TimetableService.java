@@ -402,7 +402,7 @@ public class TimetableService {
             }
             List<Long> tosgIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudentGroup()), copyObject.getTimetableObjectStudentGroups());
             for(TimetableObjectStudentGroup tosg : originalObject.getTimetableObjectStudentGroups()) {
-                if(!tosgIds.contains(EntityUtil.getId(tosg))) {
+                if(!tosgIds.contains(EntityUtil.getId(tosg.getStudentGroup()))) {
                     TimetableObjectStudentGroup copyTosg = new TimetableObjectStudentGroup();
                     copyTosg.setStudentGroup(tosg.getStudentGroup());
                     copyTosg.setTimetableObject(copyObject);

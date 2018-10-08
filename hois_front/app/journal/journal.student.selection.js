@@ -31,6 +31,10 @@ angular.module('hitsaOis').controller('JournalStudentSelectionController', funct
       }
       $route.current.params._menu = true;
 
+      dialogScope.$watch('criteria.studentGroupObject', function() {
+        dialogScope.criteria.studentGroupId = dialogScope.criteria.studentGroupObject ? dialogScope.criteria.studentGroupObject.id : null;
+      });
+
       QueryUtils.createQueryForm(dialogScope, '/journals/' + entity.id + '/otherStudents', {
         studentId: students
       });

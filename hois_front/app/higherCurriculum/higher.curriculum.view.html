@@ -323,6 +323,17 @@
     </fieldset>
 
     <div>&nbsp;</div>
+    <fieldset tabindex="9">
+       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.address' | translate}}</legend>
+       <div layout="column" flex class="common-label">
+         <div layout="row" ng-repeat="item in curriculum.addresses | orderBy: 'address'" class="align-center">
+           <div>{{::item.address}}</div>
+         </div>
+       </div>
+    </fieldset>
+
+
+    <div>&nbsp;</div>
     <fieldset tabindex="12">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.specialty.label' | translate}}</legend>
       <div ng-repeat="item in curriculum.specialities | orderBy: currentLanguageNameField()" layout="column">
@@ -421,17 +432,20 @@
       </div>
       <div ng-show="curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis">
         <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="sendToEhis()" ng-if="curriculum.canConfirm">{{'main.button.sendToEhis' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="sendToEhis(true)" ng-if="curriculum.canConfirm">{{'main.button.sendToEhisTest' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="sendToEhis(false)" ng-if="curriculum.canConfirm">{{'main.button.sendToEhis' | translate}}</md-button>
         <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
       </div>
       <div ng-show="curriculum.status === STATUS.PROCEEDING && formState.sentToEhis">
-        <md-button class="md-raised md-default" ng-click="updateFromEhis()" ng-if="curriculum.canConfirm">{{'main.button.updateFromEhis' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="updateFromEhis(true)" ng-if="curriculum.canConfirm">{{'main.button.updateFromEhisTest' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="updateFromEhis(false)" ng-if="curriculum.canConfirm">{{'main.button.updateFromEhis' | translate}}</md-button>
       </div>
       <div ng-show="curriculum.status === STATUS.VERIFIED">
         <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
         <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
       </div>
-      <a href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised">XML</a>
+      <a ng-show="curriculum.id && (auth.isAdmin() || curriculum.status === STATUS.VERIFIED)"
+        href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised">XML</a>
       <md-button class="md-raised md-default" ng-click="back('#/curriculum')">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>

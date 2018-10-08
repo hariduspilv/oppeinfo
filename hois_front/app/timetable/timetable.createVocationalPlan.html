@@ -13,22 +13,19 @@
       </div>
     </div>
     <hois-collapsable expanded="false" label="('timetable.timetablePlan.showGroups' | translate)">
-        <div flex id="showAll">
-            <md-checkbox ng-model="plan.selectAll" flex-offset="5" ng-change="selectAllChanged()">
-                {{'timetable.timetablePlan.selectAll' | translate}}
-              </md-checkbox>
-            <fieldset tabindex="1">
-              <!--legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetablePlan.showGroups' | translate}}</legend-->
-              <div layout="column">
-                <md-grid-list ng-app="app" md-cols="8" md-gutter="1em" md-row-height="25px" flex>
-                  <md-grid-tile ng-repeat="group in plan.studentGroups">
-                    <md-checkbox ng-model="group._selected" ng-change="updateGroups()">
-                      {{group.code}} </md-checkbox>
-                  </md-grid-tile>
-                </md-grid-list>
-              </div>
-            </fieldset>
-          </div>
+      <fieldset tabindex="1">
+        <div layout="column">
+          <md-checkbox ng-model="plan.selectAll" flex-offset="5" ng-change="selectAllChanged()">
+            {{'timetable.timetablePlan.selectAll' | translate}}
+          </md-checkbox>
+          <md-grid-list ng-app="app" md-cols="5" md-gutter="1em" md-row-height="6:1" flex>
+            <md-grid-tile ng-repeat="group in plan.studentGroups">
+              <md-checkbox ng-model="group._selected" ng-change="updateGroups()">
+                {{group.code}} </md-checkbox>
+            </md-grid-tile>
+          </md-grid-list>
+        </div>
+      </fieldset>
     </hois-collapsable>
 
     <div layout="row">
@@ -38,8 +35,6 @@
       <md-checkbox ng-model="plan.displayLeftOverLessons" flex="10" ng-change="displayLeftOverLessonsChanged()">
         {{'timetable.timetablePlan.displayLeftOverLessons' | translate}}
       </md-checkbox>
-      <!--label layout-padding>{{'timetable.timetablePlan.planGroupLessons'
-      | translate}}</label-->
       <md-input-container flex="85" flex-sm="100" flex-xs="100" flex-offset="5">
         <label>{{'timetable.timetablePlan.planGroupLessons' | translate}}</label>
         <hois-select ng-model="plan.selectedGroup" values="plan.studentGroups" show-property="code" value-property="id"></hois-select>
@@ -135,12 +130,6 @@
                   <br>
                   <span style=";{{currentEvent.rooms.length !== 0 ? '' : 'color:red;font-weight: bold;'}}">{{currentEvent.rooms.length !== 0 ? getRoomCodes(currentEvent.rooms) : "?"}}</span>
                 </div>
-                <!--
-                <div ng-if="!getEventsForLesson($index, lessonTime, group)" ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" index-value="{{$index}}"
-                  drop-fn="saveEvent(data)" id="{{group.id + '-' + $index}}" class="timetable-drop" title="{{getTeacherLesson($index, lessonTime, group, true).join(', ')}}">
-                  {{getTeacherLesson($index, lessonTime, group, false).join(", ")}}
-                </div>
-                -->
                 <div ng-if="!getEventsForLesson($index, lessonTime, group)" ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" index-value="{{$index}}"
                   drop-fn="saveEvent(data)" id="{{group.id + '-' + $index}}" class="timetable-drop">
                 </div>

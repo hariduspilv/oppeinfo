@@ -156,14 +156,14 @@ public class RtipService {
         School school = teacher.getSchool();
         assertRtipSchoolCode(school);
 
-        ZABSENCE t = new ZABSENCE();
-        t.setPERNR(teacher.getRtipNr());
+        ZABSENCE absence = new ZABSENCE();
+        absence.setPERNR(teacher.getRtipNr());
         ZEMPLOEESRequestType.PUUDUMINE list = new ZEMPLOEESRequestType.PUUDUMINE();
-        list.getItem().add(t);
+        list.getItem().add(absence);
 
         ZEMPLOEESRequestType request = new ZEMPLOEESRequestType();
         request.setCOMPANYCODE(school.getRtipSchoolCode());
-        request.setDATEFROM(LocalDate.now().minusYears(3));
+        request.setDATEFROM(LocalDate.now().minusMonths(1));
         request.setDATETO(LocalDate.now().plusYears(1));
         request.setPUUDUMINE(list);
 

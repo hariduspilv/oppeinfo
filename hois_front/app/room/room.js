@@ -72,6 +72,7 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
 
         if($scope.record.id) {
           $scope.record.$update().then(afterLoad).then(message.updateSuccess).catch(angular.noop);
+          $scope.roomForm.$setPristine();
         } else {
           $scope.record.$save().then(function() {
             message.info('main.messages.create.success');

@@ -230,7 +230,7 @@ public class StudentGroupTeacherReportService {
                 " join student_group sg on s.student_group_id = sg.id");
         qb.requiredCriteria("sg.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
         qb.optionalCriteria("pj.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
-        qb.filter("pj.grade_code is not null");
+        qb.filter("pj.curriculum_version_omodule_id is not null and pj.grade_code is not null");
         
         if (Boolean.TRUE.equals(criteria.getJournalsWithEntries())) {
             qb.optionalCriteria("pj.grade_inserted >= :from", "from", criteria.getFrom(), DateUtils::firstMomentOfDay);
@@ -389,6 +389,85 @@ public class StudentGroupTeacherReportService {
     
     private Map<Long, List<StudentJournalEntryDto>> studentJournalEntries(
             StudentGroupTeacherCommand criteria, List<Long> studentIds, List<Long> journalIds) {
+        Map<Long, List<StudentJournalEntryDto>> studentGrades = studentJournalEntryGrades(criteria, studentIds, journalIds);
+        Map<Long, List<StudentJournalEntryDto>> studentAbsences = studentJournalEntryAbsences(criteria, studentIds, journalIds);
+        
+        Map<Long, List<StudentJournalEntryDto>> studentJournalEntries = new HashMap<>(studentGrades);
+        for (Long studentId : studentAbsences.keySet()) {
+            if (!studentJournalEntries.containsKey(studentId)) {
+                studentJournalEntries.put(studentId, studentAbsences.get(studentId));
+            } else {
+                addAbsencesToStudentGradeEntries(studentId, studentJournalEntries, studentAbsences);
+            }
+            Collections.sort(studentJournalEntries.get(studentId),
+                    StreamUtil.comparingWithNullsLast(StudentJournalEntryDto::getOrderDate));
+        }
+        return studentJournalEntries;
+    }
+    
+    private Map<Long, List<StudentJournalEntryDto>> studentJournalEntryGrades(StudentGroupTeacherCommand criteria,
+            List<Long> studentIds, List<Long> journalIds) {
+        Map<Long, List<StudentJournalEntryDto>> studentGrades = new HashMap<>();
+
+        if (criteria.getEntryTypes() != null) {
+            JpaNativeQueryBuilder qb = studentJournalEntriesQuery(criteria, studentIds, journalIds);
+            qb.requiredCriteria("je.entry_type_code in (:entryTypeCodes)", "entryTypeCodes", criteria.getEntryTypes());
+
+            List<?> grades = qb.select(
+                    "distinct s.id as student_id, jes.id as student_entry_id, j.id as journal_id, j.name_et, "
+                            + "je.entry_type_code, je.entry_date, jes.grade_code, jes.grade_inserted, "
+                            + "coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by, jes.add_info",
+                    em).getResultList();
+            
+            if (!grades.isEmpty()) {
+                studentGrades = grades.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
+                    StudentJournalEntryDto journalEntry = new StudentJournalEntryDto();
+                    journalEntry.setId(resultAsLong(r, 1));
+                    journalEntry.setJournal(new AutocompleteResult(resultAsLong(r, 2), resultAsString(r, 3), resultAsString(r, 3)));
+                    journalEntry.setEntryType(resultAsString(r, 4));
+                    journalEntry.setEntryDate(resultAsLocalDate(r, 5));
+                    journalEntry.setGrade(resultAsString(r, 6));
+                    journalEntry.setGradeInserted(resultAsLocalDate(r, 7));
+                    journalEntry.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 8)));
+                    journalEntry.setAddInfo(resultAsString(r, 9));
+                    journalEntry.setOrderDate(resultAsLocalDate(r, 7));
+                    return journalEntry;
+                }, Collectors.toList())));
+            }
+        }
+        return studentGrades;
+    }
+    
+    private Map<Long, List<StudentJournalEntryDto>> studentJournalEntryAbsences(StudentGroupTeacherCommand criteria,
+            List<Long> studentIds, List<Long> journalIds) {
+        Map<Long, List<StudentJournalEntryDto>> studentAbsences = new HashMap<>();
+
+        JpaNativeQueryBuilder qb = studentJournalEntriesQuery(criteria, studentIds, journalIds);
+        qb.filter("jes.absence_code is not null");
+
+        List<?> absences = qb.select(
+                "distinct s.id as student_id, jes.id as student_entry_id, j.id as journal_id, j.name_et, je.entry_type_code, je.entry_date, jes.absence_code, "
+                        + "jes.absence_inserted, jes.add_info",
+                em).getResultList();
+        
+        if (!absences.isEmpty()) {
+            studentAbsences = absences.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
+                StudentJournalEntryDto journalEntry = new StudentJournalEntryDto();
+                journalEntry.setId(resultAsLong(r, 1));
+                journalEntry.setJournal(new AutocompleteResult(resultAsLong(r, 2), resultAsString(r, 3), resultAsString(r, 3)));
+                journalEntry.setEntryType(resultAsString(r, 4));
+                journalEntry.setEntryDate(resultAsLocalDate(r, 5));
+                journalEntry.setAbsence(resultAsString(r, 6));
+                journalEntry.setAbsenceInserted(resultAsLocalDate(r, 7));
+                journalEntry.setAddInfo(resultAsString(r, 8));
+                journalEntry.setOrderDate(resultAsLocalDate(r, 7));
+                return journalEntry;
+            }, Collectors.toList())));
+        }
+        return studentAbsences;
+    }
+    
+    private static JpaNativeQueryBuilder studentJournalEntriesQuery(StudentGroupTeacherCommand criteria, List<Long> studentIds, List<Long> journalIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s " +
                 "join journal_student js on js.student_id = s.id " +
                 "join journal_entry_student jes on js.id = jes.journal_student_id " +
@@ -398,41 +477,37 @@ public class StudentGroupTeacherReportService {
                 "join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id = cvot.id");
         qb.requiredCriteria("s.id in (:studentIds)", "studentIds", studentIds);
         qb.requiredCriteria("j.id in (:journalIds)", "journalIds", journalIds);
-
+        
         qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
-        qb.optionalCriteria("je.entry_date >= :entryFrom", "entryFrom", criteria.getFrom(), DateUtils::firstMomentOfDay);
-        qb.optionalCriteria("je.entry_date <= :entryThru", "entryThru", criteria.getThru(), DateUtils::lastMomentOfDay);
-        qb.optionalCriteria("je.entry_type_code in (:entryTypeCodes)", "entryTypeCodes", criteria.getEntryTypes());
+        qb.optionalCriteria("coalesce(je.entry_date, jes.grade_inserted, jes.absence_inserted) >= :entryFrom",
+                "entryFrom", criteria.getFrom(), DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("coalesce(je.entry_date, jes.grade_inserted, jes.absence_inserted) <= :entryThru",
+                "entryThru", criteria.getThru(), DateUtils::lastMomentOfDay);
         
         if (criteria.getStudyPeriod() != null) {
-            qb.filter("je.entry_date >= '" + criteria.getStudyPeriodStart() + "' and je.entry_date <= '"
+            qb.filter("coalesce(je.entry_date, jes.grade_inserted, jes.absence_inserted) >= '"
+                    + criteria.getStudyPeriodStart()
+                    + "' and coalesce(je.entry_date, jes.grade_inserted, jes.absence_inserted) <= '"
                     + criteria.getStudyPeriodEnd() + "'");
         }
         
-        qb.sort("grade_inserted, absence_inserted");
-        List<?> data = qb.select(
-                "distinct s.id as student_id, j.id as journal_id, j.name_et, je.entry_type_code, je.entry_date, jes.grade_code, jes.grade_inserted, "
-                + "coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by, jes.absence_code, "
-                + "jes.absence_inserted, jes.add_info",
-                em).getResultList();
-        
-        Map<Long, List<StudentJournalEntryDto>> studentJournalEntries = new HashMap<>();
-        if (!data.isEmpty()) {
-            studentJournalEntries = data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
-                StudentJournalEntryDto journalEntry = new StudentJournalEntryDto();
-                journalEntry.setJournal(new AutocompleteResult(resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 2)));
-                journalEntry.setEntryType(resultAsString(r, 3));
-                journalEntry.setEntryDate(resultAsLocalDate(r, 4));
-                journalEntry.setGrade(resultAsString(r, 5));
-                journalEntry.setGradeInserted(resultAsLocalDate(r, 6));
-                journalEntry.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 7)));
-                journalEntry.setAbsence(resultAsString(r, 8));
-                journalEntry.setAbsenceInserted(resultAsLocalDate(r, 9));
-                journalEntry.setAddInfo(resultAsString(r, 10));
-                return journalEntry;
-            }, Collectors.toList())));
+        return qb;
+    }
+    
+    private static void addAbsencesToStudentGradeEntries(Long studentId, Map<Long, List<StudentJournalEntryDto>> studentJournalEntries,
+            Map<Long, List<StudentJournalEntryDto>> studentAbsences) {
+        Map<Long, StudentJournalEntryDto> entries = StreamUtil.toMap(e -> e.getId(), e -> e,
+                studentJournalEntries.get(studentId));
+
+        for (StudentJournalEntryDto absence : studentAbsences.get(studentId)) {
+            if (!entries.containsKey(absence.getId())) {
+                studentJournalEntries.get(studentId).add(absence);
+            } else {
+                StudentJournalEntryDto entry = entries.get(absence.getId());
+                entry.setAbsence(absence.getAbsence());
+                entry.setAbsenceInserted(absence.getAbsenceInserted());
+            }
         }
-        return studentJournalEntries;
     }
     
     private static void setStudentJournalEntries(StudentGroupTeacherCommand criteria,

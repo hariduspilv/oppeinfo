@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
@@ -12,6 +13,8 @@ public class JournalStudentDto {
 
     private Long id;
     private Long studentId;
+    private String firstname;
+    private String lastname;
     private String fullname;
     private String studentGroup;
     private String curriculum;
@@ -23,7 +26,12 @@ public class JournalStudentDto {
     public static JournalStudentDto of(Student student) {
         JournalStudentDto dto = new JournalStudentDto();
         dto.setStudentId(student.getId());
-        dto.setFullname(PersonUtil.fullname(student.getPerson()));
+        
+        Person person = student.getPerson();
+        dto.setFirstname(person.getFirstname());
+        dto.setLastname(person.getLastname());
+        dto.setFullname(PersonUtil.fullname(person));
+        
         if (student.getStudentGroup() != null) {
             dto.setStudentGroup(student.getStudentGroup().getCode());
         }
@@ -33,7 +41,7 @@ public class JournalStudentDto {
             dto.setIsIndividualCurriculum(cv.getIndividual());
         }
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
-        dto.setCanEdit(Boolean.valueOf(StudentUtil.isStudying(student)));
+        dto.setCanEdit(Boolean.valueOf(StudentUtil.isActive(student)));
         return dto;
     }
 
@@ -58,6 +66,22 @@ public class JournalStudentDto {
 
     public void setStudentId(Long studentId) {
         this.studentId = studentId;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+
+    public String getLastname() {
+        return lastname;
+    }
+
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
     }
 
     public String getFullname() {

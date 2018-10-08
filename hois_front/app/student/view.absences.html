@@ -6,7 +6,7 @@
   <div flex>
     <md-table-container>
       <table md-table md-progress="tabledata.$promise" class="secondary-table">
-        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+        <thead md-head md-order="absencesCriteria.order" md-on-reorder="loadAbsences">
           <tr md-row>
             <th md-column md-order-by="validFrom">{{'student.absence.validFrom' | translate}}</th>
             <th md-column md-order-by="validThru">{{'student.absence.validThru' | translate}}</th>
@@ -32,10 +32,9 @@
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
-                         md-page="criteria.page" md-total="{{directives.totalElements}}" md-on-paginate="loadData"
+    <md-table-pagination md-limit="absencesCriteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="absencesCriteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadAbsences"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
-
 
     <md-button ng-click="editAbsence({})" class="md-primary md-raised" ng-if="tabledata.canAddAbsence">{{'main.button.create' | translate}}</md-button>
     <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>

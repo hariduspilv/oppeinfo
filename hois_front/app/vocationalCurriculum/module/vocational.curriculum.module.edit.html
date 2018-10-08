@@ -1,42 +1,40 @@
 <div class="ois-form-layout-padding nomargin">
   <form ng-cloak name="vocationalCurriculumModuleForm">
     <div layout="column" ng-cloak>
-      <div flex>
-        <fieldset tabindex="1" ng-if="module.canHaveOccupations">
-          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{module.occupation ? 'module.occupationPartOccupationSpecialize' : 'module.partOccupation' | translate}}</legend>
-          <div layout="column">
-              <div ng-repeat="item in module.curriculumOccupations | orderBy: 'occupation'">
-                  <md-checkbox ng-model="occupationsSelected[item.occupation]" ng-change="validateOccupations()"
-                >
-                <hois-classifier-value ng-model="item.occupation" main-classifier-codes="KUTSE,OSAKUTSE" class="inline"></hois-classifier-value>
-              </md-checkbox>
-              <div layout="column">
-                <div ng-repeat="partOccupation in item.partOccupations | orderBy" flex layout="row">
-                  <div flex="5">&nbsp;</div>
-                  <md-checkbox ng-model="occupationsSelected[partOccupation]" ng-change="validateOccupations()"
-                    >
-                    <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE" class="inline"></hois-classifier-value>
-                  </md-checkbox>
-                </div>
+      <fieldset tabindex="1" ng-if="module.canHaveOccupations">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{module.occupation ? 'module.occupationPartOccupationSpecialize' : 'module.partOccupation' | translate}}</legend>
+        <div layout="column">
+            <div ng-repeat="item in module.curriculumOccupations | orderBy: 'occupation'">
+                <md-checkbox ng-model="occupationsSelected[item.occupation]" ng-change="validateOccupations()"
+              >
+              <hois-classifier-value ng-model="item.occupation" main-classifier-codes="KUTSE,OSAKUTSE" class="inline"></hois-classifier-value>
+            </md-checkbox>
+            <div layout="column">
+              <div ng-repeat="partOccupation in item.partOccupations | orderBy" flex layout="row">
+                <div flex="5">&nbsp;</div>
+                <md-checkbox ng-model="occupationsSelected[partOccupation]" ng-change="validateOccupations()"
+                  >
+                  <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE" class="inline"></hois-classifier-value>
+                </md-checkbox>
               </div>
+            </div>
 
-              <div layout="column">
-                <div ng-repeat="speciality in item.specialities | orderBy" layout="row">
-                  <div flex="5">&nbsp;</div>
-                  <md-checkbox ng-model="specialitiesSelected[speciality]" ng-change="validateOccupations()"
-                    >
-                    <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE" class="inline"></hois-classifier-value>
-                  </md-checkbox>
-                </div>
+            <div layout="column">
+              <div ng-repeat="speciality in item.specialities | orderBy" layout="row">
+                <div flex="5">&nbsp;</div>
+                <md-checkbox ng-model="specialitiesSelected[speciality]" ng-change="validateOccupations()"
+                  >
+                  <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE" class="inline"></hois-classifier-value>
+                </md-checkbox>
               </div>
             </div>
           </div>
-          <md-input-container hide>
-            <input ng-model="occupationsValid" type="text" required>
-          </md-input-container>
-          <p ng-show="vocationalCurriculumModuleForm.$submitted && !occupationsValid" class="invalid">{{'curriculum.error.moduleOccupations' | translate}}</p>
-        </fieldset>
-      </div>
+        </div>
+        <md-input-container hide>
+          <input ng-model="occupationsValid" type="text" required>
+        </md-input-container>
+        <p ng-show="vocationalCurriculumModuleForm.$submitted && !occupationsValid" class="invalid">{{'curriculum.error.moduleOccupations' | translate}}</p>
+      </fieldset>
       <div>&nbsp;</div>
       <div layout="row" flex>
         <md-input-container flex="45">
@@ -76,54 +74,51 @@
         <label>{{'module.objectivesEn' | translate}}</label>
         <textarea ng-model="module.objectivesEn" md-maxlength="10000" max-rows="10" ></textarea>
       </md-input-container>
-      <div flex>
-        <fieldset tabindex="4">
-          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}} *</legend>
-          <input style="display:none" type="number" readonly name="outcomesLength" ng-model="module.outcomes.length" min="1" />
-          <div class="invalid" ng-if="vocationalCurriculumModuleForm.$submitted" ng-messages="vocationalCurriculumModuleForm.outcomesLength.$error">
-            <div ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
-          </div>
-          <div layout="row" flex>
-            <md-input-container flex="45">
-              <label>{{'studyOutcome.nameEt' | translate}} *</label>
-              <textarea ng-model="outcomeEt" md-maxlength="1000" max-rows="10" ></textarea>
-            </md-input-container>
-            <md-input-container flex="40" flex-offset="5">
-              <label>{{'studyOutcome.nameEn' | translate}}</label>
-              <textarea ng-model="outcomeEn" md-maxlength="1000" max-rows="10" ></textarea>
-            </md-input-container>
-            <md-button class="md-primary" ng-click="addOutcome()" ng-if="!isEditingOutcome">{{'main.button.add' | translate}}</md-button>
-            <md-button class="md-primary" ng-click="saveOutcome()" ng-if="isEditingOutcome">{{'main.button.change' | translate}}</md-button>
-          </div>
-          <div layout="column">
-            <div ng-repeat="item in module.outcomes track by $index" class="occupation-row align-center" layout="row" flex>
-              <div flex="45">
-                <a ng-click="editOutcome(item)">
-                  <p class="scrollable">{{item.outcomeEt}}</p>
-                </a>
-              </div>
-              <div flex="40" flex-offset="5">
-                <a ng-click="editOutcome(item)">
-                  <p class="scrollable">{{item.outcomeEn}}</p>
-                </a>
-              </div>
-              <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-              <div>
-                <a class="remove" ng-click="removeFromArray(module.outcomes, item)">&times;&nbsp;&nbsp;</a>
-              </div>
-              <div>
-                <p ng-if="$first" class="link-disabled">&#9650;&nbsp;</p>
-                <a ng-if="!$first" class="link-no-underline" ng-click="swap($index, $index - 1)">&#9650;&nbsp;</a>
-              </div>
-              <div>
-                <p ng-if="$last" class="link-disabled">&#9660;&nbsp;</p>
-                <a ng-if="!$last" class="link-no-underline" ng-click="swap($index, $index + 1)">&#9660;&nbsp;</a>
-              </div>
+      <fieldset tabindex="4">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}} *</legend>
+        <input style="display:none" type="number" readonly name="outcomesLength" ng-model="module.outcomes.length" min="1" />
+        <div class="invalid" ng-if="vocationalCurriculumModuleForm.$submitted" ng-messages="vocationalCurriculumModuleForm.outcomesLength.$error">
+          <div ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
+        </div>
+        <div layout="row" flex>
+          <md-input-container flex="45">
+            <label>{{'studyOutcome.nameEt' | translate}} *</label>
+            <textarea ng-model="outcomeEt" md-maxlength="1000" max-rows="10" ></textarea>
+          </md-input-container>
+          <md-input-container flex="40" flex-offset="5">
+            <label>{{'studyOutcome.nameEn' | translate}}</label>
+            <textarea ng-model="outcomeEn" md-maxlength="1000" max-rows="10" ></textarea>
+          </md-input-container>
+          <md-button class="md-primary" ng-click="addOutcome()" ng-if="!isEditingOutcome">{{'main.button.add' | translate}}</md-button>
+          <md-button class="md-primary" ng-click="saveOutcome()" ng-if="isEditingOutcome">{{'main.button.change' | translate}}</md-button>
+        </div>
+        <div layout="column">
+          <div ng-repeat="item in module.outcomes track by $index" class="occupation-row align-center" layout="row" flex>
+            <div flex="45">
+              <a ng-click="editOutcome(item)">
+                <p class="scrollable">{{item.outcomeEt}}</p>
+              </a>
+            </div>
+            <div flex="40" flex-offset="5">
+              <a ng-click="editOutcome(item)">
+                <p class="scrollable">{{item.outcomeEn}}</p>
+              </a>
+            </div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+            <div>
+              <a class="remove" ng-click="removeFromArray(module.outcomes, item)">&times;&nbsp;&nbsp;</a>
+            </div>
+            <div>
+              <p ng-if="$first" class="link-disabled">&#9650;&nbsp;</p>
+              <a ng-if="!$first" class="link-no-underline" ng-click="swap($index, $index - 1)">&#9650;&nbsp;</a>
+            </div>
+            <div>
+              <p ng-if="$last" class="link-disabled">&#9660;&nbsp;</p>
+              <a ng-if="!$last" class="link-no-underline" ng-click="swap($index, $index + 1)">&#9660;&nbsp;</a>
             </div>
           </div>
-
-        </fieldset>
-      </div>
+        </div>
+      </fieldset>
       <div>&nbsp;</div>
       <md-input-container flex>
         <label>{{'stateCurriculum.enter.module.criteriaEt' | translate}}</label>

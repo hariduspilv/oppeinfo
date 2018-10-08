@@ -106,6 +106,11 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   $scope.searchStudent = function () {
     dialogService.showDialog('journal/journal.searchStudent.dialog.html', function (dialogScope) {
       dialogScope.selectedStudents = [];
+
+      dialogScope.$watch('criteria.studentGroupObject', function() {
+        dialogScope.criteria.studentGroupId = dialogScope.criteria.studentGroupObject ? dialogScope.criteria.studentGroupObject.id : null;
+      });
+
       QueryUtils.createQueryForm(dialogScope, '/journals/' + entity.id + '/otherStudents', {});
       dialogScope.loadData();
     }, function (submittedDialogScope) {

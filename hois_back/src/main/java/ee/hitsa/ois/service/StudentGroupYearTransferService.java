@@ -249,14 +249,7 @@ public class StudentGroupYearTransferService {
 
     private Map<Long, GroupMismatchReason> getMismatches(StudyYear studyYear, CalculateCommand command) {
         Map<Long, GroupMismatchReason> mismatchMap = new HashMap<>();
-        List<?> result = em.createNativeQuery("select id"
-                + " from student"
-                + " where student_group_id in ?1 and status_code not in ?2")
-                .setParameter(1, command.getStudentGroupIds())
-                .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
-                .getResultList();
-        addMismatches(mismatchMap, result, GroupMismatchReason.OPPERYHM_EISOBI_E);
-        result = em.createNativeQuery("select s.id"
+        List<?> result = em.createNativeQuery("select s.id"
                 + " from student s"
                 + " join student_group sg on sg.id = s.student_group_id"
                 + " join curriculum_version cv on cv.id = s.curriculum_version_id"
@@ -342,6 +335,13 @@ public class StudentGroupYearTransferService {
                     .getResultList();
             addMismatches(mismatchMap, result, GroupMismatchReason.OPPERYHM_EISOBI_V);
         }
+        result = em.createNativeQuery("select id"
+                + " from student"
+                + " where student_group_id in ?1 and status_code not in ?2")
+                .setParameter(1, command.getStudentGroupIds())
+                .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
+                .getResultList();
+        addMismatches(mismatchMap, result, GroupMismatchReason.OPPERYHM_EISOBI_E);
         return mismatchMap;
     }
 

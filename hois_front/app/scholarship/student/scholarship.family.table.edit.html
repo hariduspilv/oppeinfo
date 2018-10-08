@@ -14,33 +14,34 @@
   </div>
 
   <md-button class="md-raised" ng-click="addFamilyMember()" ng-if="editable">{{'stipend.student.addFamilyMember' | translate}}</md-button>
-
-  <table md-table class="secondary-table">
-    <thead md-head>
-      <tr md-row>
-        <th md-column>{{'stipend.family.name' | translate}}</th>
-        <th md-column>{{'stipend.family.netSalary' | translate}}</th>
-        <th md-column>{{'stipend.family.pension' | translate}}</th>
-        <th md-column>{{'stipend.family.stateBenefit' | translate}}</th>
-        <th md-column>{{'stipend.family.otherIncome' | translate}}</th>
-        <th md-column>{{'stipend.family.unemployedBenefit' | translate}}</th>
-        <th md-column>{{'main.sum' | translate}}</th>
-        <th md-column ng-if="editable"></th>
-      </tr>
-    </thead>
-    <tbody md-body>
-      <tr md-row ng-repeat="member in application.family" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell>{{member.name}}</td>
-        <td md-cell>{{member.netSalary ? member.netSalary : '-'}}</td>
-        <td md-cell>{{member.pension ? member.pension : '-'}}</td>
-        <td md-cell>{{member.stateBenefit ? member.stateBenefit : '-'}}</td>
-        <td md-cell>{{member.otherIncome ? member.otherIncome : '-'}}</td>
-        <td md-cell>{{member.unemployedBenefit ? member.unemployedBenefit : '-'}}</td>
-        <td md-cell>{{member.sum ? member.sum : '-'}}</td>
-        <td md-cell ng-if="editable">
-          <md-button class="remove nomargin" ng-click="removeFromArray(application.family, member)">&times;</md-button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <md-table-container>
+    <table md-table class="secondary-table">
+      <thead md-head>
+        <tr md-row>
+          <th md-column>{{'stipend.family.name' | translate}}</th>
+          <th md-column>{{'stipend.family.netSalary' | translate}}</th>
+          <th md-column>{{'stipend.family.pension' | translate}}</th>
+          <th md-column>{{'stipend.family.stateBenefit' | translate}}</th>
+          <th md-column>{{'stipend.family.otherIncome' | translate}}</th>
+          <th md-column>{{'stipend.family.unemployedBenefit' | translate}}</th>
+          <th md-column>{{'main.sum' | translate}}</th>
+          <th md-column ng-if="editable"></th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="member in application.family" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>{{member.name}}</td>
+          <td md-cell>{{member.netSalary ? member.netSalary : '-'}}</td>
+          <td md-cell>{{member.pension ? member.pension : '-'}}</td>
+          <td md-cell>{{member.stateBenefit ? member.stateBenefit : '-'}}</td>
+          <td md-cell>{{member.otherIncome ? member.otherIncome : '-'}}</td>
+          <td md-cell>{{member.unemployedBenefit ? member.unemployedBenefit : '-'}}</td>
+          <td md-cell>{{member.sum ? member.sum : '-'}}</td>
+          <td md-cell ng-if="editable">
+            <md-button class="remove nomargin" ng-click="removeFromArray(application.family, member)">&times;</md-button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
 </fieldset>

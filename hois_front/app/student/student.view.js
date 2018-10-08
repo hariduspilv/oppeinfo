@@ -614,7 +614,8 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
     $scope.currentNavItem = 'student.timetable';
     $scope.auth = $route.current.locals.auth;
 
-  }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'oisFileService', 'QueryUtils', function ($location, $route, $scope, message, oisFileService, QueryUtils) {
+  }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'oisFileService', 'QueryUtils', 'DataUtils', 'dialogService', 'hoisDateFilter',
+    function ($location, $route, $scope, message, oisFileService, QueryUtils, DataUtils, dialogService, hoisDateFilter) {
     var id = $route.current.params.id;
 
     function afterLoad() {
@@ -623,6 +624,10 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
       } else {
         $scope.student.imageUrl = '?' + new Date().getTime();
       }
+      DataUtils.convertStringToDates($scope.student, ['studyStart']);
+      $scope.errorParams = {
+        studyStart: hoisDateFilter($scope.student.studyStart)
+      };
     }
 
     function isAddressFilled(person) {
@@ -658,11 +663,12 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
         message.error('main.messages.form-has-errors');
         return;
       }
-
-      withPhoto(function() {
-        $scope.student.$update().then(function () {
-          message.updateSuccess();
-          $location.path('/students/' + id + '/main');
+      dialogService.confirmDialog({prompt: 'main.messages.confirmSave'}, function() {
+        withPhoto(function() {
+          $scope.student.$update().then(function () {
+            message.updateSuccess();
+            $location.path('/students/' + id + '/main');
+          });
         });
       });
     };
@@ -670,20 +676,23 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
     function ($mdDialog, $route, $scope, dialogService, message, QueryUtils) {
       $scope.auth = $route.current.locals.auth;
       $scope.studentId = $route.current.params.id;
+      $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
       $scope.currentNavItem = 'student.absences';
-      QueryUtils.createQueryForm($scope, '/students/' + $scope.studentId + '/absences', { order: 'validFrom'});
 
-      var oldAfterLoadData = $scope.afterLoadData;
+      $scope.absencesCriteria = { size: 20, page: 1, order: 'validFrom, validThru' };
+
+      $scope.loadAbsences = function () {
+        var query = QueryUtils.getQueryParams($scope.absencesCriteria);
+        QueryUtils.endpoint('/students/' + $scope.studentId + '/absences').search(query, $scope.afterLoadData);
+      };
+
       $scope.afterLoadData = function(resultData) {
-        $scope.tabledata.studentName = resultData.studentName;
-        $scope.tabledata.studentGroup = resultData.studentGroup;
-        $scope.tabledata.canAddAbsence = resultData.canAddAbsence;
-        oldAfterLoadData(resultData);
+        $scope.tabledata = resultData;
       };
 
       $scope.editAbsence = function (absence) {
         var AbsenceEndpoint = QueryUtils.endpoint('/students/' + $scope.studentId + '/absences');
-        var loadAbsences = $scope.loadData;
+        var loadAbsences = $scope.loadAbsences;
 
         absence = angular.copy(absence, {});
         absence.studentName = $scope.tabledata.studentName;
@@ -726,5 +735,5 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
         });
       };
 
-      $scope.loadData();
+      $scope.loadAbsences();
     }]);

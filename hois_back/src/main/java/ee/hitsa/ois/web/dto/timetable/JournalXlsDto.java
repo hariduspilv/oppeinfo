@@ -73,7 +73,9 @@ public class JournalXlsDto extends JournalDto {
             dto.getJournalStudents().add(JournalStudentDto.of(journalStudent));
         }
         Collections.sort(dto.getJournalStudents(),
-                Comparator.comparing(JournalStudentDto::getFullname, Comparator.nullsLast(Comparator.naturalOrder())));
+                Comparator.comparing(JournalStudentDto::getStudentGroup, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(JournalStudentDto::getLastname, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(JournalStudentDto::getFirstname, String.CASE_INSENSITIVE_ORDER));
 
         if (dto.getEndDate() == null) {
             dto.setEndDate(journalDto.getStudyYearEndDate());

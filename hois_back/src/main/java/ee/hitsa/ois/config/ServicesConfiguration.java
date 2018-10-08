@@ -52,6 +52,7 @@ public class ServicesConfiguration {
     @PostConstruct
     public void postConstruct() {
         bus.setProperty("jaxb-reader-validation-event-handler", new CustomValidationEventHandler());
+        //bus.setProperty("mtom-enabled", Boolean.TRUE);
     }
     
     /**

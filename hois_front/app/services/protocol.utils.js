@@ -33,10 +33,10 @@ angular.module('hitsaOis')
         if (result.challengeID) {
           $rootScope.signVersion = result.version;
           $mdDialog.show({
-            controller: function ($rootScope) {
-              $rootScope.challengeID = result.challengeID;
+            controller: function ($scope) {
+              $scope.challengeID = result.challengeID;
             },
-            templateUrl: 'finalProtocol/final.protocol.mobile.sign.dialog.html',
+            templateUrl: 'finalProtocol/templates/final.protocol.mobile.sign.dialog.html',
             parent: angular.element(document.body),
             clickOutsideToClose: false
           });
@@ -45,7 +45,7 @@ angular.module('hitsaOis')
         } else {
           message.error('main.messages.error.mobileIdSignFailed');
         }
-      }).catch(angular.noop);
+      });
     };
 
     function pollMobileSignStatus(endpoint, confirmMessage, callback) {
@@ -62,7 +62,9 @@ angular.module('hitsaOis')
           } else if (response.status === 'OUTSTANDING_TRANSACTION') {
             $rootScope.mobileIdPolls++;
             if ($rootScope.mobileIdPolls < config.mobileIdMaxPolls) {
-              $timeout(pollMobileSignStatus, config.mobileIdPollInterval);
+              $timeout(function () {
+                pollMobileSignStatus(endpoint, confirmMessage, callback);
+              }, config.mobileIdPollInterval);
             }
           } else {
             $mdDialog.hide();

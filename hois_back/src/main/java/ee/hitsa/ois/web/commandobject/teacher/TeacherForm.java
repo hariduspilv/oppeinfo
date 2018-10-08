@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.commandobject.teacher;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import javax.validation.Valid;
@@ -44,6 +45,7 @@ public class TeacherForm extends VersionedCommand {
     private String rtipNr;
     @Size(max = 1000)
     private String addInfo;
+    private LocalDateTime ehisLastSuccessfulDate;
 
     public Boolean getIsStudyPeriodScheduleLoad() {
         return isStudyPeriodScheduleLoad;
@@ -139,6 +141,14 @@ public class TeacherForm extends VersionedCommand {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+    
+    public LocalDateTime getEhisLastSuccessfulDate() {
+        return this.ehisLastSuccessfulDate;
+    }
+    
+    public void setEhisLastSuccessfulDate(LocalDateTime ehisLastSuccessfulDate) {
+        this.ehisLastSuccessfulDate = ehisLastSuccessfulDate;
     }
 
     public static class TeacherPersonForm {

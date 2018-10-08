@@ -24,16 +24,18 @@ function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, USER_ROLES
     $scope.roleDefs = Classifier.toMap($scope.roleDefs);
     $scope.loadData();
   });
-}]).controller('GeneralMessageEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
-  function ($location, $route, $scope, dialogService, message, Classifier, QueryUtils) {
+}]).controller('GeneralMessageEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'DataUtils', 'QueryUtils',
+  function ($location, $route, $scope, dialogService, message, Classifier, DataUtils, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/generalmessages';
 
     function afterLoad() {
       Classifier.setSelectedCodes($scope.roleDefs, $scope.record.targets || []);
+      DataUtils.convertStringToDates($scope.record, ['validFrom', 'validThru']);
     }
 
-    $scope.roleDefs = Classifier.queryForDropdown({mainClassCode: 'ROLL', filterValues: ['ROLL_H', 'ROLL_P', 'ROLL_V']}, function() {
+    Classifier.queryForDropdown({mainClassCode: 'ROLL', filterValues: ['ROLL_H', 'ROLL_P', 'ROLL_V']}).$promise.then(function(result) {
+      $scope.roleDefs = result;
       var Endpoint = QueryUtils.endpoint(baseUrl);
       if(id) {
         $scope.record = Endpoint.get({id: id}, afterLoad);
@@ -68,10 +70,11 @@ function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, USER_ROLES
 
       if($scope.record.id) {
         $scope.record.$update(afterLoad).then(message.updateSuccess);
+        $scope.generalMessageForm.$setPristine();
       }else{
         $scope.record.$save(afterLoad).then(function() {
           message.info('main.messages.create.success');
-          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
         });
       }
     };

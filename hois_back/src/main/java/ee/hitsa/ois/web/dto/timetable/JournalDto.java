@@ -24,6 +24,7 @@ public class JournalDto {
 
     private Long id;
     private String studyYear;
+    private LocalDate studyYearStartDate;
     private LocalDate studyYearEndDate;
     private String nameEt;
     private List<String> studentGroups = new ArrayList<>();
@@ -37,6 +38,7 @@ public class JournalDto {
     private Boolean hasJournalStudents;
     private List<AutocompleteResult> journalRooms = new ArrayList<>();
     private Boolean moduleOutcomesAsEntries;
+    private String assessment;
     private Boolean isDistinctiveAssessment;
     private Long moodleCourseId;
     
@@ -52,6 +54,7 @@ public class JournalDto {
     public static JournalDto of(Journal journal) {
         JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto(), "studyYear", "journalTeachers", "journalStudents", "journalEntries", "journalRooms");
         dto.setStudyYear(EntityUtil.getCode(journal.getStudyYear().getYear()));
+        dto.setStudyYearStartDate(journal.getStudyYear().getStartDate());
         dto.setStudyYearEndDate(journal.getStudyYear().getEndDate());
         
         if (journal.getJournalOccupationModuleThemes().get(0) != null) {
@@ -69,7 +72,7 @@ public class JournalDto {
             CurriculumVersionOccupationModuleTheme cvomt = theme.getCurriculumVersionOccupationModuleTheme();
             
             dto.getStudentGroups().add(theme.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode());
-            dto.getCurriculumModules().add(AutocompleteResult.of(cvomt.getModule().getCurriculumModule()));
+            dto.getCurriculumModules().add(AutocompleteResult.of(cvomt.getModule()));
 
             if (cvomt.getAssessment() != null) {
                 JournalModuleDescriptionDto themeDescription = EntityUtil.bindToDto(cvomt, new JournalModuleDescriptionDto());
@@ -89,7 +92,8 @@ public class JournalDto {
 
         dto.setHasJournalStudents(Boolean.valueOf(!journal.getJournalStudents().isEmpty()));
         dto.setModuleOutcomesAsEntries(journal.getAddModuleOutcomes());
-        dto.setIsDistinctiveAssessment(Boolean.valueOf(VocationalGradeType.KUTSEHINDAMISVIIS_E.name().equals(journal.getAssessment().getCode())));
+        dto.setAssessment(EntityUtil.getCode(journal.getAssessment()));
+        dto.setIsDistinctiveAssessment(Boolean.valueOf(VocationalGradeType.KUTSEHINDAMISVIIS_E.name().equals(dto.getAssessment())));
         dto.setIsReviewOk(journal.getReviewOk());
         return dto;
     }
@@ -108,6 +112,14 @@ public class JournalDto {
 
     public void setStudyYear(String studyYear) {
         this.studyYear = studyYear;
+    }
+
+    public LocalDate getStudyYearStartDate() {
+        return studyYearStartDate;
+    }
+
+    public void setStudyYearStartDate(LocalDate studyYearStartDate) {
+        this.studyYearStartDate = studyYearStartDate;
     }
 
     public LocalDate getStudyYearEndDate() {
@@ -204,6 +216,14 @@ public class JournalDto {
 
     public void setModuleOutcomesAsEntries(Boolean moduleOutcomesAsEntries) {
         this.moduleOutcomesAsEntries = moduleOutcomesAsEntries;
+    }
+
+    public String getAssessment() {
+        return assessment;
+    }
+
+    public void setAssessment(String assessment) {
+        this.assessment = assessment;
     }
 
     public Boolean getIsDistinctiveAssessment() {

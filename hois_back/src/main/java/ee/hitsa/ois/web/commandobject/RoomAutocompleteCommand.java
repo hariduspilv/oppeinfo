@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class RoomsAutocompleteCommand extends SearchCommand {
+public class RoomAutocompleteCommand extends SearchCommand {
 
     private List<Long> buildingIds;
     private Boolean isStudy;

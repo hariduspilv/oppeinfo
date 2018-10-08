@@ -1,12 +1,5 @@
 <div layout="column" layout-padding>
     <form name="subjectStudyPeriodTeacherEditForm">
-        <p class="md-body-1">
-            <span ng-repeat="capacity in capacityTypes">
-                <span ng-if="$index !== 0">|</span>
-                {{capacity.value.toUpperCase()}} - {{currentLanguageNameField(capacity)}}
-            </span>
-        </p>
-        <br>
         <div layout="column">
             <div layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
                 <md-input-container flex="25" flex-sm="100" flex-xs="100">
@@ -18,7 +11,13 @@
                     <hois-value value="teacher.nameEt"></hois-value>
                 </md-input-container>
             </div>
-            <br>
+            <div flex="70" layout="row" class="common-label" md-colors="{color: 'background-400'}">
+              <span ng-repeat="capacity in capacityTypes">
+                <span ng-if="!$first">|</span>
+                {{capacity.value.toUpperCase()}} - {{currentLanguageNameField(capacity)}}
+              </span>
+            </div>
+            <div>&nbsp;</div>
             <md-table-container>
                 <table class="subject-study-period">
                     <thead>
@@ -70,7 +69,7 @@
                     </tr>
                 </table>
             </md-table-container>
-            <br>
+            <div>&nbsp;</div>
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-href="#/subjectStudyPeriods/teachers/{{teacher.id}}/{{studyPeriod.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>

@@ -6,28 +6,73 @@
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
       <form name="timetableSearchForm" ng-submit="loadData()" novalidate class="nomargin">
         <div layout="row" layout-sm="column" layout-xs="column">
-          <div flex="50" flex-sm="100" flex-xs="100">
-            <hois-autocomplete flex ng-model="criteria.teacher" method="teachers" name="teacher" label="timetable.search.teacher"></hois-autocomplete>
-          </div>
-          <div flex="50" flex-sm="100" flex-xs="100">
-            <hois-autocomplete flex ng-model="criteria.studentGroup" method="studentgroups" name="studentGroups" label="timetable.search.studentGroup"></hois-autocomplete>
-          </div>
+          <md-autocomplete flex="45" flex-sm="100" flex-xs="100"
+            md-search-text="teacherSearchText"
+            md-selected-item="criteria.teacherObject"
+            md-items="item in parameterSearch(teacherSearchText, formState.teachers)"
+            md-item-text="currentLanguageNameField(item)"
+            md-selected-item-change="selectedTeacherChanged(item)"
+            md-min-length="1"
+            md-floating-label="{{'timetable.search.teacher' | translate}}"
+            md-require-match
+            md-no-cache>
+            <md-item-template>
+              <span md-highlight-text="teacherSearchText">{{currentLanguageNameField(item)}}</span>
+            </md-item-template>
+          </md-autocomplete>
+
+          <md-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
+            md-search-text="studentGroupSearchText"
+            md-selected-item="criteria.studentGroupObject"  
+            md-items="item in parameterSearch(studentGroupSearchText, formState.studentGroups)" 
+            md-item-text="currentLanguageNameField(item)"
+            md-selected-item-change="selectedStudentGroupChanged(item)"
+            md-min-length="1"
+            md-floating-label="{{'timetable.search.studentGroup' | translate}}"
+            md-require-match
+            md-no-cache>
+            <md-item-template>
+              <span md-highlight-text="studentGroupSearchText">{{currentLanguageNameField(item)}}</span>
+            </md-item-template>
+          </md-autocomplete>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
-          <div flex="50" flex-sm="100" flex-xs="100">
-            <hois-autocomplete flex ng-model="criteria.roomObject" method="rooms" name="rooms" label="timetable.search.room"></hois-autocomplete>
-          </div>
-          <div flex="50" flex-sm="100" flex-xs="100">
-            <hois-autocomplete flex ng-model="criteria.subjectObject" method="journalsAndSubjects" name="subject" label="timetable.search.subject"></hois-autocomplete>
-          </div>
-        </div>
+          <md-autocomplete flex="45" flex-sm="100" flex-xs="100"
+            md-search-text="roomSearchText"
+            md-selected-item="criteria.roomObject"
+            md-items="item in parameterSearch(roomSearchText, formState.rooms)"
+            md-item-text="currentLanguageNameField(item)"
+            md-selected-item-change="selectedRoomChanged(item)"
+            md-min-length="1"
+            md-floating-label="{{'timetable.search.room' | translate}}"
+            md-require-match
+            md-no-cache>
+            <md-item-template>
+              <span md-highlight-text="roomSearchText">{{currentLanguageNameField(item)}}</span>
+            </md-item-template>
+          </md-autocomplete>
 
+          <md-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
+            md-search-text="subjectSearchText"
+            md-selected-item="criteria.subjectObject"  
+            md-items="item in parameterSearch(subjectSearchText, formState.subjects)" 
+            md-item-text="currentLanguageNameField(item)"
+            md-selected-item-change="selectedSubjectChanged(item)"
+            md-min-length="1"
+            md-floating-label="{{'timetable.search.subject' | translate}}"
+            md-require-match
+            md-no-cache>
+            <md-item-template>
+              <span md-highlight-text="subjectSearchText">{{currentLanguageNameField(item)}}</span>
+            </md-item-template>
+          </md-autocomplete>
+        </div>
+        
         <div layout="row">
           <md-button ng-click="search()" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearSearchParameters()">{{'main.button.clear' | translate}}</md-button>
         </div>
-        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
     </fieldset>
   </div>

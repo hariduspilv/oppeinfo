@@ -128,7 +128,7 @@ public class AutomaticMessageService {
         }
     }
 
-    private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean) {
+    public Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean) {
         return sendMessageToPersons(type, school, persons, dataBean, null);
     }
 

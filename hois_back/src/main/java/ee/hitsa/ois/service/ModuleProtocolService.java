@@ -53,7 +53,7 @@ import ee.hitsa.ois.web.commandobject.ModuleProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolStudentSaveForm;
 import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.ProtocolVdataForm;
-import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
+import ee.hitsa.ois.web.commandobject.timetable.OtherStudentsSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ModuleProtocolOccupationalModuleDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolSearchDto;
@@ -324,7 +324,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
             + "where ps.protocol_id = :protocolId)";
     
     public Page<ModuleProtocolStudentSelectDto> otherStudents(HoisUserDetails user, Protocol protocol,
-            StudentNameSearchCommand command, Pageable pageable) {
+            OtherStudentsSearchCommand command, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s " +
                 " join person p on s.person_id = p.id " + 
                 " join student_group as sg on s.student_group_id = sg.id " + 

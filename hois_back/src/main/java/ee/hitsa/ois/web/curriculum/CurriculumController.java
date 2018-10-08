@@ -218,20 +218,38 @@ public class CurriculumController {
 
     @PutMapping("/sendToEhis/{id:\\d+}")
     public CurriculumDto sendToEhis(HoisUserDetails user, @WithEntity Curriculum curriculum) {
+        return sendToEhis(user, curriculum, false);
+    }
+
+    @PutMapping("/sendToEhis/test/{id:\\d+}")
+    public CurriculumDto sendToEhisTest(HoisUserDetails user, @WithEntity Curriculum curriculum) {
+        return sendToEhis(user, curriculum, true);
+    }
+    
+    private CurriculumDto sendToEhis(HoisUserDetails user, @WithEntity Curriculum curriculum, boolean isTest) {
         
         CurriculumUtil.assertCanConfirm(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         curriculumValidationService.validateCurriculum(curriculum);
         
-        return get(user, curriculumService.sendToEhis(user, curriculum));
+        return get(user, curriculumService.sendToEhis(user, curriculum, isTest));
     }
 
     @PutMapping("/updateFromEhis/{id:\\d+}")
     public CurriculumDto updateFromEhis(HoisUserDetails user, @WithEntity Curriculum curriculum) {
+        return updateFromEhis(user, curriculum, false);
+    }
+
+    @PutMapping("/updateFromEhis/test/{id:\\d+}")
+    public CurriculumDto updateFromEhisTest(HoisUserDetails user, @WithEntity Curriculum curriculum) {
+        return updateFromEhis(user, curriculum, true);
+    }
+    
+    private CurriculumDto updateFromEhis(HoisUserDetails user, @WithEntity Curriculum curriculum, boolean isTest) {
 
         CurriculumUtil.assertCanConfirm(user, schoolService.getEhisSchool(user.getSchoolId()), curriculum);
         curriculumValidationService.validateCurriculum(curriculum);
         
-        return get(user, curriculumService.updateFromEhis(user, curriculum));
+        return get(user, curriculumService.updateFromEhis(user, curriculum, isTest));
     }
 
     @GetMapping("/unique/code")

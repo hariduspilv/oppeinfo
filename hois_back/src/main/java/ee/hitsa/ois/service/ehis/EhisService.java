@@ -41,7 +41,8 @@ public abstract class EhisService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String ERROR_MARKER = "Viga!";
+    private static final String ERROR_MARKER_RESULT = "Viga!";
+    private static final String ERROR_MARKER_MSG = "VIGA";
     static final String LAE_KORGHARIDUS_SERVICE_CODE = "laeKorgharidus";
     public static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERVICE_CODE;
     private static final String BIRTH_DATE_ENTERED = "SS";
@@ -266,6 +267,10 @@ public abstract class EhisService {
      * @return
      */
     protected boolean resultHasError(List<String> result) {
-        return StreamUtil.nullSafeList(result).stream().anyMatch(r -> r != null && r.contains(ERROR_MARKER));
+        return StreamUtil.nullSafeList(result).stream().anyMatch(r -> r != null && r.contains(ERROR_MARKER_RESULT));
+    }
+    
+    protected boolean messageHasError(String msg) {
+        return msg == null || msg.contains(ERROR_MARKER_MSG);
     }
 }

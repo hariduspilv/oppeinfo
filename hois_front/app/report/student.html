@@ -109,9 +109,11 @@
           <tr md-row>
             <th md-column md-order-by="p.lastname,p.firstname">{{'report.student.name' | translate}}</th>
             <th md-column md-order-by="p.idcode">{{'report.student.idcode' | translate}}</th>
+            <th md-column md-order-by="s.email">{{'report.student.email' | translate}}</th>
             <th md-column md-order-by="s.studyStart">{{'report.student.studyStart' | translate}}</th>
             <th md-column>{{'report.student.studyLevel' | translate}}</th>
             <th md-column md-order-by="cv.code">{{'report.student.curriculum' | translate}}</th>
+            <th md-column md-order-by="c.merCode">{{'report.student.merCode' | translate}}</th>
             <th md-column md-order-by="sg.code">{{'report.student.studentGroup' | translate}}</th>
             <th md-column ng-if="auth.higher">{{'report.student.studyLoad' | translate}}</th>
             <th md-column>{{'report.student.studyForm' | translate}}</th>
@@ -129,9 +131,11 @@
               <a md-no-ink class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullName}}</a>
             </td>
             <td md-cell>{{::row.idcode}}</td>
+            <td md-cell>{{::row.email}}</td>
             <td md-cell>{{row.studyStart | hoisDate}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyLevel)}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+            <td md-cell>{{::row.merCode}}</td>
             <td md-cell>{{::row.studentGroup}}</td>
             <td md-cell ng-if="auth.higher">{{currentLanguageNameField(row.studyLoad)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>

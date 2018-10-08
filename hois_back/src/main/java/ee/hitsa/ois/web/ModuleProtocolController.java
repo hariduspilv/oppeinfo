@@ -48,7 +48,7 @@ import ee.hitsa.ois.web.commandobject.ModuleProtocolSignForm;
 import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
-import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
+import ee.hitsa.ois.web.commandobject.timetable.OtherStudentsSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EntityMobileSignDto;
 import ee.hitsa.ois.web.dto.EntitySignDto;
@@ -141,7 +141,7 @@ public class ModuleProtocolController {
 
     @GetMapping("/{id:\\d+}/otherStudents")
     public Page<ModuleProtocolStudentSelectDto> otherStudents(HoisUserDetails user, @WithEntity Protocol protocol,
-            StudentNameSearchCommand command, Pageable pageable) {
+            OtherStudentsSearchCommand command, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return moduleProtocolService.otherStudents(user, protocol, command, pageable);
     }
@@ -239,16 +239,6 @@ public class ModuleProtocolController {
         }
         return get(user, protocol);
     }
-
-    /* TODO: remove if admin's can't confirm without ID card or mobile ID log in
-    @PostMapping("/{id:\\d+}/confirm")
-    public ModuleProtocolDto confirm(HoisUserDetails user,
-            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
-            @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
-        ModuleProtocolUtil.assertCanEdit(user, protocol);
-        return get(user, moduleProtocolService.confirm(user, protocol, moduleProtocolSaveForm));
-    }
-    */
 
     @GetMapping("/{id:\\d+}/print/protocol.pdf")
     public void print(HoisUserDetails user, @WithEntity Protocol protocol, HttpServletResponse response)

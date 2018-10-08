@@ -63,6 +63,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/timetableevents/timetableByGroup/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetableevents/timetableByTeacher/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetableevents/timetableByRoom/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/timetableevents/timetableSearch/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/oisfile/get/studymaterial/**").permitAll()
                 .anyRequest().authenticated()
                 .and()

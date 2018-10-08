@@ -22,7 +22,7 @@ import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
-import ee.hitsa.ois.web.commandobject.RoomsAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.RoomAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
@@ -70,7 +70,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/rooms")
-    public Page<OccupiedAutocompleteResult> rooms(HoisUserDetails user, RoomsAutocompleteCommand lookup) {
+    public Page<OccupiedAutocompleteResult> rooms(HoisUserDetails user, RoomAutocompleteCommand lookup) {
         return asPage(autocompleteService.rooms(user.getSchoolId(), lookup));
     }
 
@@ -239,6 +239,11 @@ public class AutocompleteController {
     public Page<AutocompleteResult> vocationalModules(HoisUserDetails user, SearchCommand lookup) {
         return autocompleteService.vocationalModules(user.getSchoolId(), lookup);
     }
+    
+    @GetMapping("/vocationaloccupationmodules")
+    public Page<AutocompleteResult> vocationalOccupationModules(HoisUserDetails user, SearchCommand lookup) {
+        return autocompleteService.vocationalOccupationModules(user.getSchoolId(), lookup);
+    }
 
     @GetMapping("/journals")
     public List<JournalAutocompleteResult> journals(HoisUserDetails user, JournalAutocompleteCommand lookup) {
@@ -247,7 +252,7 @@ public class AutocompleteController {
 
     @GetMapping("/journalsAndSubjects")
     public Page<AutocompleteResult> journalsAndSubjects(HoisUserDetails user, JournalAndSubjectAutocompleteCommand lookup) {
-        return asPage(autocompleteService.journalsAndSubjects(user, lookup));
+        return asPage(autocompleteService.journalsAndSubjects(user.getSchoolId(), lookup));
     }
     
     @GetMapping("/enterprises")

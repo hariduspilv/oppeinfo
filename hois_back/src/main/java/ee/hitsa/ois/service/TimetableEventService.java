@@ -36,6 +36,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
@@ -66,6 +67,8 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.RoomAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventSearchCommand;
@@ -103,6 +106,8 @@ public class TimetableEventService {
     private EntityManager em;
     @Autowired
     private AutomaticMessageService automaticMessageService;
+    @Autowired
+    private StudyYearService studyYearService;
 
     public Map<String, ?> searchFormData(Long schoolId) {
         Map<String, Object> data = new HashMap<>();
@@ -331,18 +336,22 @@ public class TimetableEventService {
      * @return TimetableByStudentDto
      */
     public TimetableByStudentDto studentTimetable(TimetableEventSearchCommand command, Long schoolId) {
-        JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(command, schoolId);
-        List<TimetableEventSearchDto> eventResultList = getTimetableEventsList(qb);
-        setRoomsTeachersAndGroupsForSearchDto(eventResultList);
-        setShowStudyMaterials(eventResultList);
-        eventResultList = filterTimetableSingleEvents(eventResultList);
-
-        Query studentQuery = em.createNativeQuery("select s.id, p.firstname, p.lastname, c.is_higher from student s "
+        Query studentQuery = em.createNativeQuery("select s.id, p.firstname, p.lastname, c.is_higher, s.student_group_id from student s "
                 + "join person p on s.person_id=p.id "
                 + "join curriculum_version cv on s.curriculum_version_id = cv.id "
                 + "join curriculum c on cv.curriculum_id = c.id where s.id=?1");
         studentQuery.setParameter(1, command.getStudent());
         Object student = studentQuery.getSingleResult();
+        
+        List<TimetableEventSearchDto> eventResultList = new ArrayList<>();
+        // get events only if student is in student group
+        if (resultAsLong(student, 4) != null) {
+            JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(command, schoolId);
+            eventResultList = getTimetableEventsList(qb);
+            setRoomsTeachersAndGroupsForSearchDto(eventResultList);
+            setShowStudyMaterials(eventResultList);
+            eventResultList = filterTimetableSingleEvents(eventResultList);
+        }
 
         return new TimetableByStudentDto(getStudyPeriods(schoolId, command.getFrom(), command.getThru()),
                 eventResultList, resultAsLong(student, 0), resultAsString(student, 1), resultAsString(student, 2), resultAsBoolean(student, 3));
@@ -406,7 +415,7 @@ public class TimetableEventService {
     // Student can see exam time single events and his/her student group single events
     private List<TimetableEventSearchDto> hideStudentSingleEventsData(List<TimetableEventSearchDto> events, Long studentId) {
         Student student = em.getReference(Student.class, studentId);
-        Long studentGroupId = EntityUtil.getId(student.getStudentGroup());
+        Long studentGroupId = EntityUtil.getNullableId(student.getStudentGroup());
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_exam spe "
                 + "join subject_study_period_exam_student spes on spes.subject_study_period_exam_id = spe.id "
@@ -420,7 +429,8 @@ public class TimetableEventService {
         for (TimetableEventSearchDto event : events) {
             List<Long> eventStudentGroups = StreamUtil.toMappedList(sg -> sg.getId(), event.getStudentGroups());
             if (Boolean.TRUE.equals(event.getSingleEvent())
-                    && !(examSubjectStudyPeriods.contains(event.getSubjectStudyPeriodId()) || eventStudentGroups.contains(studentGroupId))) {
+                    && !(examSubjectStudyPeriods.contains(event.getSubjectStudyPeriodId())
+                            || studentGroupId != null && eventStudentGroups.contains(studentGroupId))) {
                 hideSingleEventData(event);
             }
         }
@@ -439,7 +449,7 @@ public class TimetableEventService {
     
     private static boolean isTeachersEvent(List<TimetableEventSearchTeacherDto> eventTeachers, Long teacherId) {
         for (TimetableEventSearchTeacherDto eventTeacher : eventTeachers) {
-            if (eventTeacher.getId().equals(teacherId)) {
+            if (teacherId.equals(eventTeacher.getId())) {
                 return true;
             }
         }
@@ -496,7 +506,7 @@ public class TimetableEventService {
             from += " left join (subject_study_period ssp join subject subj on subj.id = ssp.subject_id) on ssp.id = tobj.subject_study_period_id";
         }
         
-        if (student != null) {
+        if (student != null && student.getStudentGroup() != null) {
             if (higherstudent) {
                 from += " left join subject_study_period_exam sspe on sspe.timetable_event_id = te.id";
                 from += " left join (subject_study_period ssp join subject subj on subj.id = ssp.subject_id) on (ssp.id = tobj.subject_study_period_id or ssp.id = sspe.subject_study_period_id)";
@@ -525,21 +535,20 @@ public class TimetableEventService {
         qb.requiredCriteria("(te.school_id = :schoolId or t.school_id = :schoolId)", "schoolId", schoolId);
         qb.requiredCriteria("(te.timetable_object_id is null or t.status_code in (:shownStatusCodes))", "shownStatusCodes", timetableService.shownStatusCodes());
         
-        if (criteria.getStudentGroups() != null && !criteria.getStudentGroups().isEmpty()) {
-            qb.filter("tet.id in (select tet.id from timetable_event_time tet "
-                    + "join timetable_event te on tet.timetable_event_id = te.id "
-                    + "left join timetable_object tobj on te.timetable_object_id = tobj.id "
-                    + "left join timetable_object_student_group tosg on tobj.id = tosg.timetable_object_id "
-                    + "left join timetable_event_student_group tesg on tet.id = tesg.timetable_event_time_id "
-                    + "where tosg.student_group_id in (" + StringUtils.join(criteria.getStudentGroups(), ", ") + ") "
-                    + "or tesg.student_group_id in (" + StringUtils.join(criteria.getStudentGroups(), ", ") + "))");
+        String studentGroupEvents = "select tet.id from timetable_event_time tet "
+                + "join timetable_event te on tet.timetable_event_id = te.id "
+                + "left join timetable_object tobj on te.timetable_object_id = tobj.id "
+                + "left join timetable_object_student_group tosg on tobj.id = tosg.timetable_object_id "
+                + "left join timetable_event_student_group tesg on tet.id = tesg.timetable_event_time_id "
+                + "where tosg.student_group_id in (" + StringUtils.join(criteria.getStudentGroups(), ", ") + ") "
+                + "or tesg.student_group_id in (" + StringUtils.join(criteria.getStudentGroups(), ", ") + ")";
+        
+        if (student == null && criteria.getStudentGroups() != null && !criteria.getStudentGroups().isEmpty()) {
+            qb.filter("tet.id in (" + studentGroupEvents + ")");
         }
 
-        if (student != null) {
-            qb.filter("(s.id = " + criteria.getStudent() + " or tet.id in "
-                    + "(select tet.id from timetable_event_time tet "
-                    + "join timetable_event_student_group tesg on tet.id = tesg.timetable_event_time_id "
-                    + "where tesg.student_group_id = " + EntityUtil.getId(student.getStudentGroup()) + "))");
+        if (student != null && student.getStudentGroup() != null) {
+            qb.filter("(s.id = " + criteria.getStudent() + " or tet.id in (" + studentGroupEvents + "))");
         }
 
         if (higherstudent) {
@@ -657,6 +666,7 @@ public class TimetableEventService {
         List<TimetableEventSearchDto> eventResultList = getTimetableEventsList(qb);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList);
         setShowStudyMaterials(eventResultList);
+        filterTimetableSingleEvents(eventResultList);
         return eventResultList;
     }
 
@@ -825,6 +835,32 @@ public class TimetableEventService {
     public TimetableCalendarDto getSearchCalendar(TimetableEventSearchCommand command, String language, Long schoolId) {
         List<TimetableEventSearchDto> searchResult = searchTimetable(command, schoolId);
         return timetableGenerationService.getICal(searchResult, getLanguage(language));
+    }
+    
+    public Map<String, ?> searchTimetableFormData(Long schoolId) {
+        StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        if (studyYear == null) {
+            return null;
+        }
+        
+        Map<String, Object> data = new HashMap<>();
+        
+        StudentGroupAutocompleteCommand studentGroupLookup = new StudentGroupAutocompleteCommand();
+        studentGroupLookup.setValid(Boolean.TRUE);
+        data.put("studentGroups", autocompleteService.studentGroups(schoolId, studentGroupLookup))
+        ;
+        TeacherAutocompleteCommand teacherLookup = new TeacherAutocompleteCommand();
+        teacherLookup.setValid(Boolean.TRUE);
+        data.put("teachers", autocompleteService.teachers(schoolId, teacherLookup, false));
+        
+        RoomAutocompleteCommand roomLookup = new RoomAutocompleteCommand();
+        data.put("rooms", autocompleteService.rooms(schoolId, roomLookup));
+        
+        JournalAndSubjectAutocompleteCommand journalSubjectLookup = new JournalAndSubjectAutocompleteCommand();
+        journalSubjectLookup.setStudyYear(EntityUtil.getId(studyYear));
+        data.put("subjects", autocompleteService.journalsAndSubjects(schoolId, journalSubjectLookup));
+        
+        return data;
     }
     
     private static Language getLanguage(String language) {

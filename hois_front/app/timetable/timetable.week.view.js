@@ -237,6 +237,7 @@
         $scope.capacityTypes = capacityTypes;
       });
       $scope.timetableSearch = true;
+      $scope.schoolId = $route.current.params.schoolId ? $route.current.params.schoolId : $scope.auth.school.id;
 
       $scope.weeks = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/' + $scope.schoolId).query();
 
@@ -274,7 +275,7 @@
 
       $scope.generateCalendar = function () {
         if ($scope.shownWeek) {
-          QueryUtils.endpoint('/timetableevents/timetableSearch/calendar').search({
+          QueryUtils.endpoint('/timetableevents/timetableSearch/calendar/' + $scope.schoolId).search({
             room: $scope.weekCriteria.room,
             teachers: $scope.weekCriteria.teachers,
             studentGroups: $scope.weekCriteria.studentGroups,
@@ -304,7 +305,7 @@
         $scope.timetableEvents = null;
         if ($scope.shownWeek) {
           QueryUtils.loadingWheel($scope, true);
-          QueryUtils.endpoint('/timetableevents/timetableSearch').query({
+          QueryUtils.endpoint('/timetableevents/timetableSearch/' + $scope.schoolId).query({
               room: $scope.weekCriteria.room,
               teachers: $scope.weekCriteria.teachers,
               studentGroups: $scope.weekCriteria.studentGroups,

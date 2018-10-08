@@ -57,13 +57,43 @@
 
             <!--  view for teacher   -->
             <md-input-container flex="50" flex-sm="100" flex-xs="100"
-            ng-show="targetGroup && targetGroup === 'ROLL_T' && auth.isTeacher()">
+            ng-show="targetGroup && auth.isTeacher()">
+                <label>{{'message.searchType' | translate}}</label>
+                <hois-select ng-model="groupSearchType" values="groupSearchTypes" value-property="code" show-property="name" ng-change="searchTypeChanged()"></hois-select>
+            </md-input-container>
+
+            <md-input-container flex="50" flex-sm="100" flex-xs="100"
+            ng-show="targetGroup && targetGroup === 'ROLL_T' && groupSearchType === 'SEARCH_JOURNAL' && auth.isTeacher()">
+                <label>{{'message.journalStudent' | translate}}</label>
+                <hois-select multiple ng-model="journalStudent" values="journals"></hois-select>
+            </md-input-container>
+
+            <md-input-container flex="50" flex-sm="100" flex-xs="100"
+            ng-show="targetGroup && targetGroup === 'ROLL_L' && groupSearchType === 'SEARCH_JOURNAL' && auth.isTeacher()">
+                <label>{{'message.journalStudentParent' | translate}}</label>
+                <hois-select multiple ng-model="journalStudentParent" values="journals"></hois-select>
+            </md-input-container>
+            
+            <md-input-container flex="50" flex-sm="100" flex-xs="100"
+            ng-show="targetGroup && targetGroup === 'ROLL_T' && groupSearchType === 'SEARCH_SUBJECTS' && auth.isTeacher()">
+                <label>{{'message.subjectStudent' | translate}}</label>
+                <hois-select multiple ng-model="subjectStudent" values="subjects"></hois-select>
+            </md-input-container>
+            
+            <md-input-container flex="50" flex-sm="100" flex-xs="100"
+            ng-show="targetGroup && targetGroup === 'ROLL_L' && groupSearchType === 'SEARCH_SUBJECTS' && auth.isTeacher()">
+                <label>{{'message.subjectStudentParent' | translate}}</label>
+                <hois-select multiple ng-model="subjectStudentParent" values="subjects"></hois-select>
+            </md-input-container>
+
+            <md-input-container flex="50" flex-sm="100" flex-xs="100"
+            ng-show="targetGroup && targetGroup === 'ROLL_T' && groupSearchType === 'SEARCH_STUDENT_GROUP' && auth.isTeacher()">
                 <label>{{'message.studyGroupStudents' | translate}}</label>
                 <hois-select multiple ng-model="studentGroup" values="studentGroups"></hois-select>
             </md-input-container>
 
             <md-input-container flex="50" flex-sm="100" flex-xs="100"
-            ng-show="targetGroup && targetGroup === 'ROLL_L' && auth.isTeacher()">
+            ng-show="targetGroup && targetGroup === 'ROLL_L' && groupSearchType === 'SEARCH_STUDENT_GROUP' && auth.isTeacher()">
                 <label>{{'message.studyGroupStudentsParents' | translate}}</label>
                 <hois-select multiple ng-model="studyGroupStudentsParents" values="studentGroups"></hois-select>
             </md-input-container>
@@ -76,8 +106,10 @@
                         <th md-column>{{'message.receiver' | translate}}</th>
                         <th md-column ng-if="auth.isAdmin()">{{'student.idcode' | translate}}</th>
                         <th md-column ng-if="auth.isAdmin() || auth.isTeacher()">{{'message.targetGroup' | translate}}</th>
-                        <th md-column ng-if="auth.isTeacher()">{{'message.curriculum' | translate}}</th>
-                        <th md-column ng-if="auth.isTeacher()">{{'message.studentGroup' | translate}}</th>
+                        <th md-column ng-if="auth.isTeacher() && groupSearchType === 'SEARCH_STUDENT_GROUP'">{{'message.curriculum' | translate}}</th>
+                        <th md-column ng-if="auth.isTeacher() && groupSearchType === 'SEARCH_STUDENT_GROUP'">{{'message.studentGroup' | translate}}</th>
+                        <th md-column ng-if="auth.isTeacher() && groupSearchType === 'SEARCH_JOURNAL'">{{'message.journalLabel' | translate}}</th>
+                        <th md-column ng-if="auth.isTeacher() && groupSearchType === 'SEARCH_SUBJECTS'">{{'message.subjectLabel' | translate}}</th>
                         <th md-column></th>
                     </tr>
                 </thead>
@@ -92,11 +124,17 @@
                             <hois-classifier-value ng-model="role" main-classifier-code="ROLL"></hois-classifier-value>
                         </p>
                     </td>
-                    <td md-cell ng-if="auth.isTeacher()">
-                        <span ng-if="!receiver.hideLearning">{{currentLanguageNameField(receiver.curriculum)}}</span>
+                    <td md-cell ng-if="auth.isTeacher() && groupSearchType === 'SEARCH_STUDENT_GROUP'">
+                        <span>{{currentLanguageNameField(receiver.curriculum)}}</span>
                     </td>
-                    <td md-cell ng-if="auth.isTeacher()">
-                        <span ng-if="!receiver.hideLearning">{{currentLanguageNameField(receiver.studentGroup)}}</span>
+                    <td md-cell ng-if="auth.isTeacher() && groupSearchType === 'SEARCH_STUDENT_GROUP'">
+                        <span>{{currentLanguageNameField(receiver.studentGroup)}}</span>
+                    </td>
+                    <td md-cell ng-if="auth.isTeacher() && groupSearchType === 'SEARCH_JOURNAL'">
+                        <span>{{currentLanguageNameField(receiver.journal)}}</span>
+                    </td>
+                    <td md-cell ng-if="auth.isTeacher() && groupSearchType === 'SEARCH_SUBJECTS'">
+                        <span>{{currentLanguageNameField(receiver.subject)}}</span>
                     </td>
                     <td md-cell>
                       <md-button ng-if="receiver.addedWithAutocomplete" ng-click="removeReceiver(receiver)" class="remove nomargin">&times;</md-button>

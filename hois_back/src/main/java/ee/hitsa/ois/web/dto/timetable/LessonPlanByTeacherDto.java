@@ -91,6 +91,7 @@ public class LessonPlanByTeacherDto {
         private final Long id;
         private final String nameEt;
         private final String nameEn;
+        private String groupProportion;
         private Map<Long, Map<String, Long>> hours = new HashMap<>();
         private final List<LessonPlanByTeacherSubjectStudentGroupDto> studentGroups = new ArrayList<>();
         private Map<Long, Map<String, Long>> capacityTotals = new HashMap<>();
@@ -123,6 +124,14 @@ public class LessonPlanByTeacherDto {
 
         public List<LessonPlanByTeacherSubjectStudentGroupDto> getStudentGroups() {
             return studentGroups;
+        }
+        
+        public String getGroupProportion() {
+            return this.groupProportion;
+        }
+        
+        public void setGroupProportion(String groupProportion) {
+            this.groupProportion = groupProportion;
         }
 
         public Map<Long, Map<String, Long>> getCapacityTotals() {

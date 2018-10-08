@@ -13,6 +13,7 @@ public class StudentGroupSearchDto {
     private String studyForm;
     private String teacher;
     private Integer course;
+    private Boolean higher;
     private Long studentCount;
     private List<Long> schoolDepartments;
     // Planned number of hours in studyPeriod
@@ -42,6 +43,14 @@ public class StudentGroupSearchDto {
 
     public void setCurriculum(AutocompleteResult curriculum) {
         this.curriculum = curriculum;
+    }
+    
+    public Boolean isHigher() {
+        return higher;
+    }
+    
+    public void setHigher(Boolean higher) {
+        this.higher = higher;
     }
 
     public String getStudyForm() {

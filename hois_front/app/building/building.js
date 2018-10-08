@@ -16,6 +16,7 @@ angular.module('hitsaOis').controller('BuildingEditController', ['$route', '$sco
 
     $scope.update = function() {
       FormUtils.saveRecord($scope.buildingForm, $scope.record, baseUrl);
+      $scope.buildingForm.$setPristine();
     };
 
     $scope.delete = function() {

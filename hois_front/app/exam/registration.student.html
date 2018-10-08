@@ -46,7 +46,8 @@
             <td md-cell>{{row.addInfo}}</td>
             <td md-cell>
               <md-button ng-if="!row.registered && row.canChange && (row.freePlaces === null || row.freePlaces > 0)" md-no-ink class="md-primary change-button" ng-click="register(row)">{{'exam.register' | translate}}</md-button>
-              <md-button ng-if="row.registered && row.canChange" md-no-ink class="md-primary change-button" ng-click="unregister(row)">{{'exam.unregister' | translate}}</md-button>
+              <md-button ng-if="row.registered && row.canChange && row.protocol === null" md-no-ink class="md-primary change-button" ng-click="unregister(row)">{{'exam.unregister' | translate}}</md-button>
+              <span ng-if="row.registered && row.protocol !== null">{{'exam.connectedProtocol' | translate}}</span>
             </td>
           </tr>
         </tbody>

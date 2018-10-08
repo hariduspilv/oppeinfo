@@ -145,6 +145,9 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumStudyLanguage> studyLanguages = new HashSet<>();
 
+    @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CurriculumAddress> addresses = new HashSet<>();
+
     @NotEmpty(groups = {Confirmed.class})
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
@@ -684,6 +687,15 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     public void setStudyLanguages(Set<CurriculumStudyLanguage> studyLanguages) {
         getStudyLanguages().clear();
         getStudyLanguages().addAll(studyLanguages);
+    }
+
+    public Set<CurriculumAddress> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(Set<CurriculumAddress> addresses) {
+        this.addresses.clear();
+        this.addresses.addAll(addresses);
     }
 
     public Set<CurriculumDepartment> getDepartments() {

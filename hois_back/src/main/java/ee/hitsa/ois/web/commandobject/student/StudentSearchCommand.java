@@ -14,6 +14,8 @@ public class StudentSearchCommand {
     @Size(max = 100)
     private String studentGroup;
     private List<Long> studentGroupId;
+    private List<Long> journalId;
+    private List<Long> subjectId;
     private List<String> studyForm;
     private List<String> status;
 
@@ -79,5 +81,21 @@ public class StudentSearchCommand {
 
     public void setStatus(List<String> status) {
         this.status = status;
+    }
+
+    public List<Long> getJournalId() {
+        return journalId;
+    }
+
+    public void setJournalId(List<Long> journalId) {
+        this.journalId = journalId;
+    }
+
+    public List<Long> getSubjectId() {
+        return subjectId;
+    }
+
+    public void setSubjectId(List<Long> subjectId) {
+        this.subjectId = subjectId;
     }
 }

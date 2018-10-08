@@ -20,6 +20,11 @@ public class StudentForm extends VersionedCommand {
     private StudentPersonForm person;
 
     // study
+    @ClassifierRestriction(MainClassCode.OPPEKEEL)
+    private String studyLanguage;
+    private LocalDate nominalStudyEnd;
+    @ClassifierRestriction(MainClassCode.FINTAPSUSTUS)
+    private String finSpecific;
     @Size(max = 100)
     private String studentCard;
     @Size(max = 255)
@@ -47,6 +52,30 @@ public class StudentForm extends VersionedCommand {
 
     public void setPerson(StudentPersonForm person) {
         this.person = person;
+    }
+
+    public String getStudyLanguage() {
+        return studyLanguage;
+    }
+
+    public void setStudyLanguage(String studyLanguage) {
+        this.studyLanguage = studyLanguage;
+    }
+
+    public LocalDate getNominalStudyEnd() {
+        return nominalStudyEnd;
+    }
+
+    public void setNominalStudyEnd(LocalDate nominalStudyEnd) {
+        this.nominalStudyEnd = nominalStudyEnd;
+    }
+
+    public String getFinSpecific() {
+        return finSpecific;
+    }
+
+    public void setFinSpecific(String finSpecific) {
+        this.finSpecific = finSpecific;
     }
 
     public String getStudentCard() {

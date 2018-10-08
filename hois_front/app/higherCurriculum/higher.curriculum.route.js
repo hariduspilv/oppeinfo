@@ -17,6 +17,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'HigherCurriculumController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); },
           checkAccess: checkRightsToEdit
         },
@@ -29,6 +30,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'HigherCurriculumController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); },
           checkAccess: checkRightsToEdit
         },
@@ -41,6 +43,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'HigherCurriculumController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
@@ -51,6 +54,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'HigherCurriculumVersionController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); },
           curriculum: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/curriculumVersion/curriculum').get({id: $route.current.params.id}).$promise;
@@ -65,6 +69,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'HigherCurriculumVersionController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); },
           curriculum: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/curriculumVersion/curriculum').get({id: $route.current.params.id}).$promise;
@@ -79,6 +84,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'HigherCurriculumVersionController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); },
           curriculum: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/curriculumVersion/curriculum').get({id: $route.current.params.id}).$promise;
