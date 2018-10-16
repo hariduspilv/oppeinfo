@@ -50,3 +50,9 @@ RAKENDUSE INSTALLEERIMINE:
 		mobileIdInitialDelay - mobiil-ID sisselogimisel mitme millisekundi pärast esimest korda küsitakse (nt 5000)
 		mobileIdPollInterval - mobiil-ID sisselogimisel pollimise intervaal millisekundites (nt 4000)
 		mobileIdMaxPolls - mobiil-ID sisselogimisel mitu korda maksimaalselt pollitakse, nt 15
+	4. Muuta /opt/hois/html/index.html õigeks:
+		PLUMBR_ACCOUNT_ID  - Plumbr account'i id
+		PLUMBR_APP_NAME - Plumbp rakenduse nimi
+	NB! valede parameetrite puhul rakendus töötab pisut aeglasemalt ja konsool annab vigu:
+		OPTIONS https://bdr.plumbr.io/api/browser/data/xhr?accountId=PLUMBR_ACCOUNT_ID 401
+		Failed to load https://bdr.plumbr.io/api/browser/data/xhr?accountId=PLUMBR_ACCOUNT_ID: Response for preflight does not have HTTP ok status.
