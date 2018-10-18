@@ -16,7 +16,7 @@
     </div>
     <br>
     
-    <div class="container" fixed-column-table fixed-columns="1" ng-style="{'overflow-y': journal.journalStudents.length < 11 ? 'hidden':'scroll'}">
+    <div class="container" fixed-column-table fixed-columns="2" ng-style="{'overflow-y': journal.journalStudents.length < 11 ? 'hidden':'scroll'}">
       <table class="journalTable">
         <thead>
           <tr flex>
@@ -66,7 +66,7 @@
                 <div ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
                   <span>
                     {{result.absence.value}}
-                    <md-tooltip ng-if="result.absence.value">
+                    <md-tooltip ng-if="result.absence.value" class="entryWithAddInfoTootlip">
                       {{journalEntry.entryDate  ? (journalEntry.entryDate | hoisDate) : '-'}}
                       <span ng-if="result.addInfo">,&nbsp;
                         {{result.addInfo}}
@@ -91,7 +91,7 @@
                     <span ng-class="{journalFinalResult: journalEntry.entryType.code === 'SISSEKANNE_L',
                                     badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
                     <span ng-if="!result.grade && result.journalEntryStudentHistories.length > 0"> - </span>
-                    <md-tooltip ng-if="result.grade.value">
+                    <md-tooltip ng-if="result.grade.value" class="entryWithAddInfoTootlip">
                       {{result.gradeInserted | hoisDate}}, &nbsp; {{result.gradeInsertedBy}} 
                       <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
                     </md-tooltip>
