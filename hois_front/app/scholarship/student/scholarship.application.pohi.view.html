@@ -21,22 +21,22 @@
           <hois-value value="stipend.amountPaid"></hois-value>
         </md-input-container>
       </div>
-      <div layout="row" flex>
-        <md-input-container flex="45">
+      <div layout="row" layout-xs="column" flex>
+        <md-input-container flex="45" flex-xs="100">
           <label class="textInput">{{'stipend.studyForm' | translate}}</label>
           <hois-classifier-value ng-model="stipend.studyForms" main-classifier-code="OPPEVORM" multiple></hois-classifier-value>
         </md-input-container>
-        <md-input-container flex="50" flex-offset="5">
+        <md-input-container flex="50" flex-xs="100" flex-offset-xs="0" flex-offset="5">
           <label class="textInput">{{'stipend.averageMark' | translate}}</label>
           <hois-value value="stipend.averageMark"></hois-value>
         </md-input-container>
       </div>
-      <div layout="row" flex>
-        <md-input-container flex="45">
+      <div layout="row" layout-xs="column" flex>
+        <md-input-container flex="45" flex-xs="100">
           <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
           <hois-value value="stipend.curriculumCompletion"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-offset="5">
+        <md-input-container flex="50" flex-xs="100" flex-offset-xs="0" flex-offset="5">
           <label class="textInput">{{'stipend.lastPeriodMark' | translate}}</label>
           <hois-value value="stipend.lastPeriodMark"></hois-value>
         </md-input-container>
@@ -53,7 +53,7 @@
         </div>
       </div>
       <div layout="row" flex>
-        <md-input-container flex="45">
+        <md-input-container flex="45" flex-xs="100">
           <label class="textInput">{{'stipend.studyPeriodDates' | translate}}</label>
           <hois-value value="stipend.matriculationRange"></hois-value>
         </md-input-container>
@@ -67,42 +67,42 @@
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{isStudent() ? 'stipend.student.myData' : 'stipend.student.studentData' | translate}}</legend>
 
     <div class="form-readonly ois-form-layout-padding">
-      <div layout="row" flex>
-        <md-input-container flex="45">
+      <div layout="row" layout-xs="column" flex>
+        <md-input-container flex="45" flex-xs="100">
           <label class="textInput">{{'stipend.averageMark' | translate}}</label>
           <hois-value value="application.averageMark"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-offset="5">
+        <md-input-container flex="50" flex-xs="100" flex-offset-xs="0" flex-offset="5">
           <label>{{'stipend.lastPeriodMark' | translate}}</label>
           <hois-value value="application.lastPeriodMark"></hois-value>
         </md-input-container>
       </div>
-      <div layout="row" flex>
-        <md-input-container flex="45">
+      <div layout="row" layout-xs="column" flex>
+        <md-input-container flex="45" flex-xs="100">
           <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
           <hois-value value="application.curriculumCompletion"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-offset="5">
+        <md-input-container flex="50" flex-xs="100" flex-offset-xs="0" flex-offset="5">
           <label>{{'stipend.maxAbsences' | translate}}</label>
           <hois-value value="application.absences"></hois-value>
         </md-input-container>
       </div>
-      <div layout="row" flex>
-        <md-input-container flex="45">
+      <div layout="row" layout-xs="column" flex>
+        <md-input-container flex="45" flex-xs="100">
           <label class="textInput">{{'stipend.student.studentGroup' | translate}}</label>
           <hois-value value="application.studentGroupCode"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-offset="5">
+        <md-input-container flex="50" flex-xs="100" flex-offset-xs="0" flex-offset="5">
           <label class="textInput">{{'main.contactNumber' | translate}}</label>
           <hois-value value="application.phone"></hois-value>
         </md-input-container>
       </div>
-      <div layout="row" flex>
-        <md-input-container flex="45">
+      <div layout="row" layout-xs="column" flex>
+        <md-input-container flex="45" flex-xs="100">
           <label class="textInput">{{'stipend.student.address' | translate}}</label>
           <hois-value value="application.address"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-offset="5">
+        <md-input-container flex="50" flex-xs="100" flex-offset-xs="0" flex-offset="5">
           <label class="textInput">{{'main.email' | translate}}</label>
           <hois-value value="application.email"></hois-value>
         </md-input-container>
@@ -131,7 +131,7 @@
 
         <div layout="row">
           <md-button class="md-raised md-primary" ng-if="canManage" ng-click="accept()">{{'main.button.accept' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="back(isStudent ? '#/scholarships/myData/grants' : '#/scholarships/applications/grants')">{{'main.button.back' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="back(isStudent() ? '#/scholarships/myData/grants' : '#/scholarships/applications/grants')">{{'main.button.back' | translate}}</md-button>
         </div>
 
       </div>

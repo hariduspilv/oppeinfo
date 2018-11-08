@@ -41,7 +41,6 @@
         </md-input-container>
       </div>
 
-
       <md-input-container flex>
         <label>{{'module.nameEt' | translate}}</label>
         <input ng-model="data.nameEt" type="text" readonly>
@@ -68,14 +67,16 @@
       </md-input-container>
       
       <div ng-show="formState.moduleMustHaveSubjects">&nbsp;</div>
-      <fieldset ng-show="formState.moduleMustHaveSubjects" flex>
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.optionals' | translate}}</legend>
-        <div ng-repeat="electiveModule in data.electiveModules | orderBy: 'nameEt'" class="secondary-table-row" flex layout="row">
-          <div flex>
-            <p class="elective-module">{{currentLanguageNameField(electiveModule)}}</p>
+      <div>
+        <fieldset ng-show="formState.moduleMustHaveSubjects" flex>
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.optionals' | translate}}</legend>
+          <div ng-repeat="electiveModule in data.electiveModules | orderBy: 'nameEt'" class="secondary-table-row" flex layout="row">
+            <div flex>
+              <p class="elective-module">{{currentLanguageNameField(electiveModule)}}</p>
+            </div>
           </div>
-        </div>
-      </fieldset>
+        </fieldset>
+      </div>
       <div ng-show="formState.moduleMustHaveSubjects">&nbsp;</div>
 
       <md-input-container flex ng-show="formState.moduleMustHaveSubjects">

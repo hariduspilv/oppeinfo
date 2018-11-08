@@ -61,7 +61,7 @@ public class FinalVocationalProtocolDto extends VersionedCommand {
             });
         }
         if (protocol.getOisFile() != null) {
-            dto.setOisFile(EntityUtil.bindToDto(protocol.getOisFile(), new OisFileViewDto()));
+        	dto.setOisFile(OisFileViewDto.of(protocol.getOisFile()));
         }
         dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(protocol.getConfirmer()));
         

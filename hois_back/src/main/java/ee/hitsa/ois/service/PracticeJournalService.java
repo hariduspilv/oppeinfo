@@ -99,7 +99,7 @@ public class PracticeJournalService {
             + "(select max(pje.inserted) from practice_journal_entry pje where pje.practice_journal_id = pj.id) as student_last_entry_date, "
             + "cvo.id as cvo_id, cv.code as cv_code, cm.name_et as cm_name_et, mcl.name_et as mcl_name_et, cm.name_en as cm_name_en, mcl.name_en as mcl_name_en, "
             + "cvot.id as cvot_id, cvot.name_et as cvot_name_et, length(trim(coalesce(pj.supervisor_opinion, ''))) > 0 as has_supervisor_opinion, "
-            + "subject.id as subject_id, subject.name_et as subject_name_et, subject.name_en as subject_name_en, contract.status_code as contract_status";
+            + "subject.id as subject_id, subject.name_et as subject_name_et, subject.name_en as subject_name_en";
 
     public Page<PracticeJournalSearchDto> search(HoisUserDetails user, PracticeJournalSearchCommand command,
             Pageable pageable) {
@@ -125,10 +125,9 @@ public class PracticeJournalService {
             dto.setPracticePlace(resultAsString(r, 3));
             dto.setStatus(resultAsString(r, 4));
 
-            dto.setContractStatus(resultAsString(r, 27));
             Boolean hasSupervisorOpinion = resultAsBoolean(r, 23);
             dto.setCanStudentAddEntries(Boolean.valueOf(PracticeJournalUserRights.canStudentAddEntries(dto.getStatus(),
-                    dto.getContractStatus(), dto.getEndDate(), hasSupervisorOpinion)));
+                    dto.getEndDate(), hasSupervisorOpinion)));
 
             dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate())));
             dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate())));

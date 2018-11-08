@@ -2,8 +2,10 @@ package ee.hitsa.ois.web.dto.sais;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SaisAdmissionUtil;
@@ -30,6 +32,7 @@ public class SaisApplicationDto {
     private LocalDate saisChanged;
     private String saisAdmissionCode;
     private Boolean isHigher;
+    private Boolean relatedToDirective;
     private Set<SaisApplicationGraduatedSchoolDto> graduatedSchools;
     private Set<SaisApplicationGradeDto> grades;
     private Set<SaisApplicationOtherDataDto> otherData;
@@ -219,6 +222,14 @@ public class SaisApplicationDto {
     public void setIsHigher(Boolean isHigher) {
         this.isHigher = isHigher;
     }
+
+	public Boolean getRelatedToDirective() {
+		return relatedToDirective;
+	}
+
+	public void setRelatedToDirective(Boolean relatedToDirective) {
+		this.relatedToDirective = relatedToDirective;
+	}
 
 
 }

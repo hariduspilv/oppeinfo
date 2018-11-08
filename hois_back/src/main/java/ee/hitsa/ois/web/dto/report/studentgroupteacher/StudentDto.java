@@ -1,16 +1,16 @@
 package ee.hitsa.ois.web.dto.report.studentgroupteacher;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class StudentDto {
     
     private Long id;
     private String fullname;
     private List<StudentResultColumnDto> resultColumns = new ArrayList<>();
-    private Short absenceH;
-    private Short absenceP;
-    private Short absenceV;
+    private Map<String, Short> absences = new HashMap<>();
     private Boolean hasAddInfo;
     
     public Long getId() {
@@ -37,28 +37,12 @@ public class StudentDto {
         this.resultColumns = resultColumns;
     }
 
-    public Short getAbsenceH() {
-        return absenceH;
+    public Map<String, Short> getAbsences() {
+        return absences;
     }
 
-    public void setAbsenceH(Short absenceH) {
-        this.absenceH = absenceH;
-    }
-
-    public Short getAbsenceP() {
-        return absenceP;
-    }
-
-    public void setAbsenceP(Short absenceP) {
-        this.absenceP = absenceP;
-    }
-
-    public Short getAbsenceV() {
-        return absenceV;
-    }
-
-    public void setAbsenceV(Short absenceV) {
-        this.absenceV = absenceV;
+    public void setAbsences(Map<String, Short> absences) {
+        this.absences = absences;
     }
 
     public Boolean getHasAddInfo() {

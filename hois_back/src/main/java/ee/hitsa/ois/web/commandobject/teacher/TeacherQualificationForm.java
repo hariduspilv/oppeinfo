@@ -34,7 +34,6 @@ public class TeacherQualificationForm extends VersionedCommand {
     private String language;
     @Size(max = 255)
     private String qualificationOther;
-    @NotNull
     @Min(1000)
     @Max(3000)
     private Short year;
@@ -42,6 +41,7 @@ public class TeacherQualificationForm extends VersionedCommand {
     private String schoolOther;
     @Size(max = 100)
     private String diplomaNr;
+    @NotNull
     private LocalDate endDate;
     @Size(max = 255)
     private String specialty;

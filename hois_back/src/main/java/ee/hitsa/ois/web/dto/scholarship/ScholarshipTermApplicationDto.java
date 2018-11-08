@@ -25,7 +25,7 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
                 term.getScholarshipTermStudyForms()));
         if (term.getStudyStartPeriodStart() != null) {
             dto.setMatriculationRange(term.getStudyStartPeriodStart().format(formatter) + "-"
-                    + term.getStudyStartPeriodEnd().format(formatter));
+                    + (term.getStudyStartPeriodEnd() != null ? term.getStudyStartPeriodEnd().format(formatter) : ""));
         }
         dto.setStudyLoads(StreamUtil.toMappedList(t -> EntityUtil.getCode(t.getStudyLoad()),
                 term.getScholarshipTermStudyLoads()));

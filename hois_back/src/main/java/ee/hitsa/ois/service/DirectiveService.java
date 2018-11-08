@@ -19,13 +19,11 @@ import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_A;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_K;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_O;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_V;
-import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -81,7 +79,6 @@ import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.ProtocolStatus;
-import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.SaisApplicationStatus;
 import ee.hitsa.ois.enums.ScholarshipStatus;
 import ee.hitsa.ois.enums.StudentStatus;
@@ -820,6 +817,7 @@ public class DirectiveService {
         qb.optionalCriteria("sa.saisAdmission.curriculumVersion.id in (:curriculumVersion)", "curriculumVersion", cmd.getCurriculumVersion());
         qb.optionalCriteria("sa.saisAdmission.studyLevel.code in (:studyLevel)", "studyLevel", cmd.getStudyLevel());
         qb.filter("not exists(select ds2 from DirectiveStudent ds2 where ds2.canceled = false and ds2.saisApplication.id = sa.id)");
+        qb.filter("(sa.saisAdmission.is_archived is null or sa.saisAdmission.is_archived = false)");
 
         List<DirectiveStudentDto> students = StreamUtil.toMappedList(DirectiveStudentDto::of, qb.select(em).setMaxResults(STUDENTS_MAX).getResultList());
 
@@ -1174,17 +1172,9 @@ public class DirectiveService {
         return result;
     }
     
-    private boolean userCanConfirm(HoisUserDetails user, Directive directive) {
-        Timestamp now = parameterAsTimestamp(LocalDate.now());
+    private static boolean userCanConfirm(HoisUserDetails user, Directive directive) {
         return UserUtil.isSchoolAdmin(user, directive.getSchool()) &&
-               UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_KASKKIRI) &&
-             !em.createNativeQuery("select true from user_ u where u.person_id = ?1 and (u.valid_from is null or u.valid_from <= ?2) and (u.valid_thru is null or u.valid_thru >= ?3) and u.role_code = ?4")
-            .setParameter(1, user.getPersonId())
-            .setParameter(2, now)
-            .setParameter(3, now)
-            .setParameter(4, Role.ROLL_P.name())
-            .setMaxResults(1)
-            .getResultList().isEmpty();
+               UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_KASKKIRI_EKISETA);
     }
 
     private static StudentGroup findStudentGroup(DirectiveStudentDto directiveStudent, List<StudentGroup> groups, Map<Long, Integer> addedCount) {

@@ -115,7 +115,7 @@
         </md-input-container>
       </div>
 
-      <div layout="row">
+      <div layout="row" layout-xs="column">
         <md-button ng-if="!practiceJournal.id || (practiceJournal.status !== 'PAEVIK_STAATUS_K' && practiceJournal.canEdit)" 
           class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="practiceJournal.canConfirm" class="md-raised md-primary" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>

@@ -32,11 +32,19 @@
                   main-classifier-code="FINALLIKAS"></hois-classifier-select>
             </md-input-container>
         </div>
-
+        <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
+            <md-input-container>
+              <md-checkbox
+                ng-model="criteria.archived" aria-label="{{'reception.archive.displayArchived' | translate}}">
+                  {{'reception.archive.displayArchived' | translate}}
+              </md-checkbox>
+            </md-input-container>
+          </div>
 
         <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="#/reception/saisAdmission/archive" ng-if="archiveButton">{{'main.button.archive' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -56,6 +64,7 @@
           <th md-column md-order-by="periodStart">{{'studyYear.startDate' | translate}}</th>
           <th md-column md-order-by="periodEnd">{{'studyYear.endDate' | translate}}</th>
           <th md-column md-order-by="studyForm.{{currentLanguageNameField()}}">{{'student.studyForm' | translate}}</th>
+          <th md-column md-order-by="archived">{{'reception.archive.archived' | translate}}</th>
         </tr>
         </thead>
         <tbody md-body>
@@ -67,6 +76,7 @@
           <td md-cell>{{row.periodStart | hoisDate}}</td>
           <td md-cell>{{row.periodEnd | hoisDate}}</td>
           <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
+          <td md-cell>{{row.archived ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
         </tr>
         </tbody>
       </table>

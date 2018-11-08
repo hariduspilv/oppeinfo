@@ -1,22 +1,24 @@
 <!--FIXME: type color is not supported in IE 11-->
-<table md-table class="secondary-table" ng-if="legends.length > 0">
-  <thead md-head>
-  <tr md-row>
-    <th md-column>{{'studyYearScheduleLegend.code' | translate}}</th>
-    <th md-column>{{'studyYearScheduleLegend.nameEt' | translate}}</th>
-    <th md-column>{{'studyYearScheduleLegend.nameEn' | translate}}</th>
-    <th md-column>{{'studyYearScheduleLegend.color' | translate}}</th>
-  </tr>
-  </thead>
-  <tbody md-body>
-  <tr md-row ng-repeat="item in legends" ng-class-odd="'odd'" ng-class-even="'even'">
-    <td md-cell>{{item.code}}</td>
-    <td md-cell>{{item.nameEt}}</td>
-    <td md-cell>{{item.nameEn}}</td>
-    <td md-cell><input ng-model="item.color" type="color" disabled></td>
-  </tr>
-  </tbody>
-</table>
+<md-table-container>
+  <table md-table class="secondary-table" ng-if="legends.length > 0">
+    <thead md-head>
+    <tr md-row>
+      <th md-column>{{'studyYearScheduleLegend.code' | translate}}</th>
+      <th md-column>{{'studyYearScheduleLegend.nameEt' | translate}}</th>
+      <th md-column>{{'studyYearScheduleLegend.nameEn' | translate}}</th>
+      <th md-column>{{'studyYearScheduleLegend.color' | translate}}</th>
+    </tr>
+    </thead>
+    <tbody md-body>
+    <tr md-row ng-repeat="item in legends" ng-class-odd="'odd'" ng-class-even="'even'">
+      <td md-cell>{{item.code}}</td>
+      <td md-cell>{{item.nameEt}}</td>
+      <td md-cell>{{item.nameEn}}</td>
+      <td md-cell><input ng-model="item.color" type="color" disabled></td>
+    </tr>
+    </tbody>
+  </table>
+</md-table-container>
 
 
 <!--FIXME: this form is slow in IE-->
@@ -26,7 +28,7 @@
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="50" flex-sm="100" flex-xs="100">
           <label>{{'studyYearSchedule.studyYear' | translate}}</label>
-          <md-select ng-model="criteria.studyYear">
+          <md-select ng-model="criteria.studyYear" md-on-close="yearSelectionTrigger()">
             <md-option ng-value="option" ng-repeat="option in studyYears">
               <hois-classifier-value ng-model="option.year" main-classifier-code="OPPEAASTA"></hois-classifier-value>
             </md-option>
@@ -48,17 +50,17 @@
         </div>
         <br>
       </div>
-      <md-table-container ng-cloak layout-padding>
-        <table class="schedule">
+      <md-table-container style="overflow: auto" ng-cloak class="container" fixed-column-table fixed-columns="3">
+        <table ng-cloak class="lessonplan">
           <thead>
             <tr class="schedule">
-              <th class="studentGroup schedule"></th>
-              <th class="schedule" ng-repeat="studyPeriod in criteria.studyYear.studyPeriods" colspan="{{studyPeriod.weeks}}">
+              <th class="studentGroup schedule" colspan="3"></th>
+              <th class="schedule hois-collapse-header" ng-repeat="studyPeriod in criteria.studyYear.studyPeriods" colspan="{{studyPeriod.weeks}}">
                 {{currentLanguageNameField(studyPeriod)}}
               </th>
             </tr>
             <tr>
-              <th class="schedule studentGroup"></th>
+              <th class="schedule studentGroup" colspan="3"></th>
               <th class="schedule weekCell weekNr" ng-repeat="week in weeks">
                 {{$index + 1}}
                 <md-tooltip>
@@ -69,10 +71,11 @@
           </thead>
           <tbody ng-repeat="department in schoolDepartments | filter: filterSchoolDepartments">
             <tr>
-              <td colspan="{{weeks.length + 1}}" class="schedule schoolDepartment">{{currentLanguageNameField(department)}}</td>
+              <td colspan="3" colspan="{{weeks.length + 1}}" class="hois-collapse-header fixed-cell dividerBorder">{{currentLanguageNameField(department)}}</td>
+              <td colspan="53" class="dividerBorder" style="border-right: 1px solid #ccc !important;"></td>
             </tr>
-            <tr ng-repeat="sg in studentGroups | filter: filterStudentGroups(department)">
-              <td class="schedule studentGroup">{{sg.code}}</td>
+            <tr class="dividerBorder" ng-repeat="sg in studentGroups | filter: filterStudentGroups(department)" ng-init="refreshHeight()">
+              <td colspan="3" class="schedule fixed-cell dividerBorder">{{sg.code}}</td>
               <!--
                                 style="background: { getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color}"
                                 Was not used insted of ng-style as VS code marked curly braces as error(css property expected),
@@ -80,11 +83,11 @@
 
                                 ng-if="!isPastStudyYear" was used, because in case of past study year, it should not become bold when clicked
                             -->
-              <td ng-if="!isPastStudyYear" class="schedule weekCell" ng-repeat="week in weeks" ng-click="openAddScheduleDialog(sg, week, getSchedule(sg.id, week.weekNr))"
+              <td ng-if="!isPastStudyYear" style="color:white"  ng-repeat="week in weeks" ng-click="openAddScheduleDialog(sg, week, getSchedule(sg.id, week.weekNr))"
                 ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }" title="{{getSchedule(sg.id, week.weekNr).addInfo}}">
                 {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
               </td>
-              <td ng-if="isPastStudyYear" class="schedule weekCell" ng-repeat="week in weeks"
+              <td ng-if="isPastStudyYear" ng-repeat="week in weeks"
                 ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }" title="{{getSchedule(sg.id, week.weekNr).addInfo}}">
                 {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
               </td>
@@ -94,18 +97,26 @@
       </md-table-container>
       <div layout="row">
         <md-button class="md-raised md-primary" ng-if="canEdit" ng-click="save()" ng-show="!isPastStudyYear">{{'main.button.save' | translate}}</md-button>
+        <a ng-href="{{exportUrl(formState.pdfUrl)}}" target="_blank" class="md-button md-raised">
+          {{'main.button.printPdf' | translate}}
+        </a>
+        <a ng-href="{{exportUrl(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">
+          {{'main.button.printXls' | translate}}
+        </a>
       </div>
     </div>
   </form>
 </div>
 
 <style>
+
   table.schedule,
+  
   th.schedule,
   td.schedule {
-    border: 1px solid #1cb3ff;
     border-collapse: collapse;
   }
+
 
   .studentGroup {
     width: 100px;

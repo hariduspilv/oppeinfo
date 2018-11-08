@@ -25,8 +25,8 @@ public class OisFileController {
      * Method for downloading or displaying files. Firstly was used on
      * higher/vocational curriculum forms
      */
-    @GetMapping("/get/{type}/{id:\\d+}")
-    public void get(@PathVariable("type") String type, @PathVariable("id") Long id, HttpServletResponse response) throws IOException {
+    @GetMapping("/get/{type}/{id}")
+    public void get(@PathVariable("type") String type, @PathVariable("id") String id, HttpServletResponse response) throws IOException {
         oisFileService.get(type, id, response);
     }
 }

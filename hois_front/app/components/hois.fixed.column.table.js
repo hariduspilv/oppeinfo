@@ -17,7 +17,7 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout) {
         var colspan;
         var rowElement;
 
-        arrayItems.forEach(function (row, i) {
+        arrayItems.forEach(function (row) {
           rowElement = angular.element(row);
           var numFixedColumns = scope.fixedColumns;
           for (var j = 0; j < numFixedColumns; j++) {

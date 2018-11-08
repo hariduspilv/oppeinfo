@@ -17,7 +17,8 @@
     "moment": "2.18.1",
     "ng-storage": "0.4.2",
     "angular-cache": "^4.6.0",
-    "hwcrypto": "0.0.11"
+    "hwcrypto": "0.0.11",
+    "angularjs-color-picker": "3.4.8"
   },
   "overrides": {
     "hwcrypto":  {

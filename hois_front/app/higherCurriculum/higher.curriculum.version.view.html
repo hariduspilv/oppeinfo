@@ -64,7 +64,7 @@
             <div>{{'subject.mandatory' | translate}}</div>
           </div>
           <div ng-repeat="subject in module.subjects | filter: {optional: false} | orderBy: currentLanguageNameField()" layout="row"
-            flex class="secondary-table-row" layout-align="start center">
+            flex class="higher-curriculum-subject-row" layout-align="start center">
             <div flex="5">&nbsp;</div>
             <div flex="35">{{currentLanguageNameField(subject)}}</div>
             <div flex="10">{{subject.code}}</div>
@@ -85,7 +85,7 @@
           </div>
           <div ng-repeat="subject in module.subjects |
                         filter: {optional: true} | filter: {electiveModule: '!'} | orderBy: currentLanguageNameField()"
-            layout="row" flex class="secondary-table-row" layout-align="start center">
+            layout="row" flex class="higher-curriculum-subject-row" layout-align="start center">
             <div flex="5">&nbsp;</div>
             <div flex="35">{{currentLanguageNameField(subject)}}</div>
             <div flex="10">{{subject.code}}</div>
@@ -103,7 +103,7 @@
             </div>
             <div ng-repeat="subject in module.subjects | filter: {optional: true} |
                                 filter: {electiveModule: electiveModule.referenceNumber} | orderBy: currentLanguageNameField()"
-              layout="row" flex class="secondary-table-row" layout-align="start center">
+              layout="row" flex class="higher-curriculum-subject-row" layout-align="start center">
               <div flex="5">&nbsp;</div>
               <div flex="35">{{currentLanguageNameField(subject)}}</div>
               <div flex="10">{{subject.code}}</div>
@@ -139,7 +139,7 @@
           <div>{{'subject.mandatory' | translate}}</div>
         </div>
         <div ng-repeat="subject in module.subjects | filter: {optional: false} | orderBy: currentLanguageNameField()" layout="row"
-          flex class="secondary-table-row" layout-align="start center">
+          flex class="higher-curriculum-subject-row" layout-align="start center">
           <div flex="5">&nbsp;</div>
           <div flex="35">{{currentLanguageNameField(subject)}}</div>
           <div flex="10">{{subject.code}}</div>
@@ -160,7 +160,7 @@
         </div>
         <div ng-repeat="subject in module.subjects |
                         filter: {optional: true} | filter: {electiveModule: '!'} | orderBy: currentLanguageNameField()"
-          layout="row" flex class="secondary-table-row" layout-align="start center">
+          layout="row" flex class="higher-curriculum-subject-row" layout-align="start center">
           <div flex="5">&nbsp;</div>
           <div flex="35">{{currentLanguageNameField(subject)}}</div>
           <div flex="10">{{subject.code}}</div>
@@ -176,7 +176,7 @@
           </div>
           <div ng-repeat="subject in module.subjects | filter: {optional: true} |
                                 filter: {electiveModule: electiveModule.referenceNumber} | orderBy: currentLanguageNameField()"
-            layout="row" flex class="secondary-table-row" layout-align="start center">
+            layout="row" flex class="higher-curriculum-subject-row" layout-align="start center">
             <div flex="5">&nbsp;</div>
             <div flex="35">{{currentLanguageNameField(subject)}}</div>
             <div flex="10">{{subject.code}}</div>

@@ -2,11 +2,12 @@ package ee.hitsa.ois.enums;
 
 public enum Absence {
 
-    /**Hilinemine*/
+    /**Late to lesson*/
     PUUDUMINE_H,
-    /**Vabandatav puudumine*/
+    /**Absence with reason*/
     PUUDUMINE_V,
-    /**Põhjuseta puudumine*/
-    PUUDUMINE_P
-
+    /**Absence without reason*/
+    PUUDUMINE_P,
+    /**Absence as a result of practice contract*/
+    PUUDUMINE_PR
 }

@@ -6,7 +6,6 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.domain.CommitteeMember;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.CommitteeMemberValidator.External;
-import ee.hitsa.ois.validation.CommitteeMemberValidator.Internal;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 
@@ -22,8 +21,8 @@ public class CommitteeMemberDto extends VersionedCommand {
     @Size(max=100)
     private String memberName;
 
-    @NotNull(groups = {Internal.class})
     private Long teacher;
+    private AutocompleteResult person;
     
     public static CommitteeMemberDto of(CommitteeMember member) {
         CommitteeMemberDto dto = EntityUtil.bindToDto(member, new CommitteeMemberDto(), "teacher");
@@ -61,5 +60,11 @@ public class CommitteeMemberDto extends VersionedCommand {
     }
     public void setTeacher(Long teacher) {
         this.teacher = teacher;
+    }
+    public AutocompleteResult getPerson() {
+        return person;
+    }
+    public void setPerson(AutocompleteResult person) {
+        this.person = person;
     }
 }

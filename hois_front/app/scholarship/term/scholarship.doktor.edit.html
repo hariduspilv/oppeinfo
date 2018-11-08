@@ -83,6 +83,12 @@
     </md-input-container>
   </div>
 </div>
+<div layout="row" flex>
+  <md-input-container flex="45">
+    <label class="textInput">{{'stipend.committee' | translate}}</label>
+    <hois-select ng-model="stipend.committee" values="formState.committees"></hois-select>
+  </md-input-container>
+</div>
 <div layout="row">
   <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id" ng-click="publish()">{{'main.button.publishtoStudents' | translate}}</md-button>

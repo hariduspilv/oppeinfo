@@ -27,6 +27,7 @@ import ee.hitsa.ois.validation.ApplicationValidation.Akad;
 import ee.hitsa.ois.validation.ApplicationValidation.Akadk;
 import ee.hitsa.ois.validation.ApplicationValidation.Eksmat;
 import ee.hitsa.ois.validation.ApplicationValidation.Finm;
+import ee.hitsa.ois.validation.ApplicationValidation.Muu;
 import ee.hitsa.ois.validation.ApplicationValidation.Okava;
 import ee.hitsa.ois.validation.ApplicationValidation.Ovorm;
 import ee.hitsa.ois.validation.ApplicationValidation.Valis;
@@ -43,16 +44,16 @@ public class Application extends BaseEntityWithId implements Period {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
-    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class})
+    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class, Muu.class})
     private Student student;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class})
+    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class, Muu.class})
     private Classifier status;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
-    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class})
+    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class, Muu.class})
     private Classifier type;
 
     private LocalDateTime submitted;
@@ -130,6 +131,9 @@ public class Application extends BaseEntityWithId implements Period {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @Required(groups = {Valis.class})
     private Classifier abroadProgramme;
+
+    @Required(groups = {Muu.class})
+    private String otherText;
 
     private Boolean needsRepresentativeConfirm = Boolean.FALSE;
 
@@ -363,6 +367,14 @@ public class Application extends BaseEntityWithId implements Period {
 
     public void setAbroadProgramme(Classifier abroadProgramme) {
         this.abroadProgramme = abroadProgramme;
+    }
+
+    public String getOtherText() {
+        return otherText;
+    }
+
+    public void setOtherText(String otherText) {
+        this.otherText = otherText;
     }
 
     public Boolean getNeedsRepresentativeConfirm() {

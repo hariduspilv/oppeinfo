@@ -72,7 +72,7 @@ angular.module('hitsaOis').controller('FinalVocationalProtocolNewController', fu
     new FinalProtocolEndpoint(entity)
       .$save().then(function (result) {
         message.info('main.messages.create.success');
-        $location.path(endpoint + '/' + result.id + '/edit');
+        $location.url(endpoint + '/' + result.id + '/edit?_noback');
       }).catch(angular.noop);
   };
   

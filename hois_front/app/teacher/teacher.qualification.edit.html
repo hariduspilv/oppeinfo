@@ -38,16 +38,8 @@
                                 required></hois-classifier-select>
                         </md-input-container>
                         <md-input-container flex="20" flex-offset="5" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
-                            <label>{{'teacher.qualification.year' | translate}}</label>
-                            <input ng-model="qualification.year" name="qualification[{{$index}}].year" type="number" min="0" max="99999" required>
-                            <div ng-messages="qualificationsForm['qualification['+$index+'].year'].$error">
-                              <div ng-message="max">
-                                {{'main.messages.error.max' | translate: {max: 99999} }}
-                              </div>
-                              <div ng-message="min">
-                                {{'main.messages.error.min' | translate: {min: 0} }}
-                              </div>
-                            </div>
+                            <label>{{'teacher.qualification.endDate' | translate}}</label>
+                            <md-datepicker ng-model="qualification.endDate" md-open-on-focus required></md-datepicker>
                         </md-input-container>
                         <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                             <label>{{'teacher.qualification.qualificationOther' | translate}}</label>
@@ -96,10 +88,6 @@
                       <label>{{'teacher.qualification.studyLevel' | translate}}</label>
                       <hois-classifier-select ng-model="qualification.studyLevel"
                                               main-classifier-code="EHIS_EDUCATION_LEVEL" model-value-attr="code"></hois-classifier-select>
-                    </md-input-container>
-                    <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                      <label>{{'teacher.qualification.endDate' | translate}}</label>
-                      <md-datepicker ng-model="qualification.endDate" md-open-on-focus></md-datepicker>
                     </md-input-container>
                   </div>
                   <div layout="row" layout-sm="column" layout-xs="column">

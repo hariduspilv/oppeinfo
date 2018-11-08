@@ -30,7 +30,7 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
     assertPermissionToEdit(entity);
     
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
-    $scope.formState.isHigher = angular.isObject(entity.subject);
+    $scope.formState.isHigher = entity.isHigher;
     DataUtils.convertObjectToIdentifier(entity, ['module', 'theme', 'teacher', 'subject']);
     $scope.practiceJournal = entity;
   }
@@ -199,8 +199,7 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
       } else {
         practiceJournal.$save().then(function () {
           message.info('main.messages.create.success');
-          entityToForm(practiceJournal);
-          $scope.practiceJournalForm.$setPristine();
+          $location.path('/practiceJournals/' + practiceJournal.id + '/edit');
         });
       }
     }

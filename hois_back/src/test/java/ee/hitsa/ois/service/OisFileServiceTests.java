@@ -17,7 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class OisFileServiceTests {
 
-    private static final Long MISSING_FILE_ID = Long.valueOf(0);
+    private static final String MISSING_FILE_ID = "0";
 
     @Autowired
     private OisFileService oisFileService;

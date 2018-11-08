@@ -20,11 +20,13 @@ public class CommitteeMember extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Teacher teacher;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Person person;
     private String memberName;
 
     @Transient
     public String getMemberFullname() {
-        return teacher != null ? teacher.getPerson().getFullname() : memberName;
+        return teacher != null ? teacher.getPerson().getFullname() : person != null ? person.getFullname() : memberName;
     }
 
     public Committee getCommittee() {
@@ -57,6 +59,14 @@ public class CommitteeMember extends BaseEntityWithId {
 
     public void setTeacher(Teacher teacher) {
         this.teacher = teacher;
+    }
+
+    public Person getPerson() {
+        return person;
+    }
+
+    public void setPerson(Person person) {
+        this.person = person;
     }
 
     public String getMemberName() {

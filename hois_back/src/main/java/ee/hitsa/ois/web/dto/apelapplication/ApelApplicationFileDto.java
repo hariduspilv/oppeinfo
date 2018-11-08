@@ -17,7 +17,7 @@ public class ApelApplicationFileDto extends InsertedChangedVersionDto {
 
     public static ApelApplicationFileDto of(ApelApplicationFile applicationFile) {
         ApelApplicationFileDto dto = EntityUtil.bindToDto(applicationFile, new ApelApplicationFileDto(), "oisFile");
-        dto.setOisFile(EntityUtil.bindToDto(applicationFile.getOisFile(), new OisFileViewDto()));
+        dto.setOisFile(OisFileViewDto.of(applicationFile.getOisFile()));
         return dto;
     }
 

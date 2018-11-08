@@ -14,16 +14,18 @@
       <div layout-padding>
         <form name="supervisorForm" novalidate>
           <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container>
               <md-radio-group layout-gt-sm="row" ng-model="supervisor.isExternal" ng-change="typeChanged(supervisor.isExternal)" required>
+                <md-input-container>
                 <md-radio-button ng-value="false" aria-label="passedModule">
                   {{'finalThesis.inSchool' | translate}}
                 </md-radio-button>
+                </md-input-container>
+                <md-input-container>
                 <md-radio-button ng-value="true" aria-label="curriculumModule">
                   {{'finalThesis.external' | translate}}
                 </md-radio-button>
+              </md-input-container>
               </md-radio-group>
-            </md-input-container>
           </div>
 
           <div ng-if="supervisor.isExternal == true || supervisor.isExternal == false">

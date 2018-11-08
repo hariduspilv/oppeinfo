@@ -55,13 +55,16 @@
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="30" flex-sm="100" flex-xs="100">
-            <md-checkbox ng-model="criteria.singleEvent">{{'lessonplan.event.single-event' | translate}}</md-checkbox>
+            <md-checkbox ng-model="criteria.singleEvent">{{'lessonplan.event.singleEvent' | translate}}</md-checkbox>
+          </md-input-container>
+          <md-input-container flex="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="criteria.showOnlySubstitutes">{{'lessonplan.event.showOnlySubstitutes' | translate}}</md-checkbox>
           </md-input-container>
         </div>
 
         <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearEventCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button class="md-raised" ng-if="canEdit" ng-href="#/timetable/timetableEvent/new">{{'main.button.create' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
@@ -81,7 +84,7 @@
             <th md-column>{{'lessonplan.event.teachers' | translate}}</th>
             <th md-column>{{'lessonplan.event.rooms' | translate}}</th>
             <th md-column>{{'lessonplan.event.studentGroups' | translate}}</th>
-            <th md-column>{{'lessonplan.event.single-event' | translate}}</th>
+            <th md-column>{{'lessonplan.event.singleEvent' | translate}}</th>
             <th></th>
           </tr>
         </thead>

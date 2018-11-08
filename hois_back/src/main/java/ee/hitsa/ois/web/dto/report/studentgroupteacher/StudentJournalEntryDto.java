@@ -1,8 +1,11 @@
 package ee.hitsa.ois.web.dto.report.studentgroupteacher;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentLessonAbsenceDto;
 
 public class StudentJournalEntryDto {
 
@@ -15,9 +18,12 @@ public class StudentJournalEntryDto {
     private String gradeInsertedBy;
     private String absence;
     private LocalDate absenceInserted;
+    private List<JournalEntryStudentLessonAbsenceDto> lessonAbsences = new ArrayList<>();
     private String addInfo;
     // either gradeInserted or absenceInserted date, used for ordering entries outside of query
     private LocalDate orderDate;
+    private Long lessonNr;
+    private Long lessons;
     
     public StudentJournalEntryDto() {
         
@@ -33,8 +39,14 @@ public class StudentJournalEntryDto {
         this.gradeInsertedBy = entry.getGradeInsertedBy();
         this.absence = entry.getAbsence();
         this.absenceInserted = entry.getAbsenceInserted();
+        for (JournalEntryStudentLessonAbsenceDto lessonAbsence : entry.getLessonAbsences()) {
+            this.lessonAbsences.add(new JournalEntryStudentLessonAbsenceDto(lessonAbsence));
+        }
+        
         this.addInfo = entry.getAddInfo();
         this.orderDate = entry.getOrderDate();
+        this.lessonNr = entry.getLessonNr();
+        this.lessons = entry.getLessons();
     }
 
     public Long getId() {
@@ -109,6 +121,14 @@ public class StudentJournalEntryDto {
         this.absenceInserted = absenceInserted;
     }
     
+    public List<JournalEntryStudentLessonAbsenceDto> getLessonAbsences() {
+        return lessonAbsences;
+    }
+    
+    public void setLessonAbsences(List<JournalEntryStudentLessonAbsenceDto> lessonAbsences) {
+        this.lessonAbsences = lessonAbsences;
+    }
+    
     public String getAddInfo() {
         return addInfo;
     }
@@ -124,5 +144,21 @@ public class StudentJournalEntryDto {
     public void setOrderDate(LocalDate orderDate) {
         this.orderDate = orderDate;
     }
-    
+
+    public Long getLessonNr() {
+        return lessonNr;
+    }
+
+    public void setLessonNr(Long lessonNr) {
+        this.lessonNr = lessonNr;
+    }
+
+    public Long getLessons() {
+        return lessons;
+    }
+
+    public void setLessons(Long lessons) {
+        this.lessons = lessons;
+    }
+
 }

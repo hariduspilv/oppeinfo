@@ -283,7 +283,7 @@
                     <div flex="20">{{currentLanguageNameField(type)}}</div>
                     <div layout="column" flex="75">
                         <div flex="100" ng-repeat="module in curriculum.modules | filter: filterEmptyModulesByType(type.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
-                            <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                            <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                             <span flex="10">{{module.credits}}&nbsp; EKAP</span>
                         </div>
                     </div>
@@ -302,7 +302,7 @@
                         <div flex="20">{{currentLanguageNameField(type)}}</div>
                         <div layout="column" flex="75">
                             <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, occupation.occupation.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
-                                <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                                <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                                 <span flex="10">{{module.credits}}&nbsp; EKAP</span>
                             </div>
                         </div>
@@ -317,7 +317,7 @@
                             <div flex="20">{{currentLanguageNameField(type)}}</div>
                             <div layout="column" flex="75">
                                 <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, partOccupation.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
-                                    <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                                    <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                                     <span flex="10">{{module.credits}}&nbsp; EKAP</span>
                                 </div>
                             </div>
@@ -333,7 +333,7 @@
                             <div flex="20">{{currentLanguageNameField(type)}}</div>
                             <div layout="column" flex="75">
                                 <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, speciality.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
-                                    <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                                    <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                                     <span flex="10">{{module.credits}}&nbsp; EKAP</span>
                                 </div>
                             </div>
@@ -489,12 +489,12 @@
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.approvalInfo' | translate}}</legend>
 			<div layout="row" flex="100">
 				<md-input-container flex="30" flex-sm="100" flex-xs="100">
-					<label>{{'curriculum.approvalDocumentNr' | translate}}</label>
-					<input ng-model="curriculum.approvalDokNr" type="text" md-maxlength="50">
+					<label>{{'curriculum.approvalDocumentNr' | translate}}{{getStar()}}</label>
+					<input ng-model="curriculum.approvalDokNr" type="text" md-maxlength="50" ng-required="strictValidation()">
 				</md-input-container>
 				<md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4">
-					<label>{{'curriculum.approvalDate' | translate}}</label>
-					<md-datepicker ng-model="curriculum.approval" md-open-on-focus></md-datepicker>
+					<label>{{'curriculum.approvalDate' | translate}}{{getStar()}}</label>
+					<md-datepicker ng-model="curriculum.approval" md-open-on-focus ng-required="strictValidation()"></md-datepicker>
 				</md-input-container>
 			</div>
 		</fieldset>
@@ -534,7 +534,7 @@
 
 		<div ng-if="curriculum.id">&nbsp;</div>
 		<fieldset tabindex="12" ng-if="curriculum.id">
-			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
+			<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !hasRequiredFiles()}">{{'main.relatedFiles' | translate}}</legend>
 			<md-button class="md-raised" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
 			<table md-table class="secondary-table">
 			  <thead md-head>
@@ -615,8 +615,8 @@
 				<md-button class="md-raised md-default" ng-click="delete()" ng-if="curriculum.canDelete">{{'main.button.delete' | translate}}</md-button>
 			</span>
 			<span ng-show="curriculum.status === STATUS.PROCEEDING && formState.sentToEhis">
-				<md-button class="md-raised md-default" ng-click="updateFromEhis(true)" ng-if="curriculum.canConfirm">{{'main.button.updateFromEhisTest' | translate}}</md-button>
-				<md-button class="md-raised md-default" ng-click="updateFromEhis(false)" ng-if="curriculum.canConfirm">{{'main.button.updateFromEhis' | translate}}</md-button>
+				<md-button class="md-raised md-default" ng-click="updateFromEhis(true)" ng-if="curriculum.canConfirm">{{'curriculum.button.updateFromEhisTest' | translate}}</md-button>
+				<md-button class="md-raised md-default" ng-click="updateFromEhis(false)" ng-if="curriculum.canConfirm">{{'curriculum.button.updateFromEhis' | translate}}</md-button>
 			</span>
 			<span ng-show="curriculum.status === STATUS.VERIFIED">
 				<md-button class="md-raised md-primary" ng-click="save()" ng-if="curriculum.canChange">{{'main.button.save' | translate}}</md-button>

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,6 +51,7 @@ import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.domain.timetable.JournalEntryCapacityType;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudentHistory;
+import ee.hitsa.ois.domain.timetable.JournalEntryStudentLessonAbsence;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.JournalEntryType;
@@ -76,27 +78,33 @@ import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEndDateCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryStudentForm;
+import ee.hitsa.ois.web.commandobject.timetable.JournalEntryStudentLessonAbsenceForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalReviewForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.OtherStudentsSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
+import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.studymaterial.CapacityHoursDto;
 import ee.hitsa.ois.web.dto.studymaterial.JournalLessonHoursDto;
 import ee.hitsa.ois.web.dto.timetable.JournalDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentAcceptedAbsenceDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentHistoryDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentLessonAbsenceDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentResultDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryTableDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
+import ee.hitsa.ois.web.dto.timetable.JournalStudentApelResultDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 import ee.hitsa.ois.web.dto.timetable.JournalXlsDto;
 import ee.hitsa.ois.web.dto.timetable.StudentJournalAbsenceDto;
 import ee.hitsa.ois.web.dto.timetable.StudentJournalDto;
 import ee.hitsa.ois.web.dto.timetable.StudentJournalEntryDto;
+import ee.hitsa.ois.web.dto.timetable.StudentJournalEntryLessonAbsenceDto;
 import ee.hitsa.ois.web.dto.timetable.StudentJournalEntryPreviousResultDto;
 import ee.hitsa.ois.web.dto.timetable.StudentJournalResultDto;
 import ee.hitsa.ois.web.dto.timetable.StudentJournalStudyDto;
@@ -127,7 +135,6 @@ public class JournalService {
     @Autowired
     private AutomaticMessageService automaticMessageService;
     
-    private static final List<String> journalAbsenceCodes = EnumUtil.toNameList(Absence.PUUDUMINE_P, Absence.PUUDUMINE_H);
     private static final List<String> testEntryTypeCodes = EnumUtil.toNameList(JournalEntryType.SISSEKANNE_H, JournalEntryType.SISSEKANNE_L,
             JournalEntryType.SISSEKANNE_E, JournalEntryType.SISSEKANNE_I, JournalEntryType.SISSEKANNE_R, JournalEntryType.SISSEKANNE_P);
     
@@ -365,15 +372,62 @@ public class JournalService {
         return EntityUtil.save(journal, em);
     }
 
-    public Journal addStudentsToJournal(Journal journal, JournalStudentsCommand command) {
+    public Journal addStudentsToJournal(HoisUserDetails user, Journal journal, JournalStudentsCommand command) {
         Set<Long> existingStudents = journal.getJournalStudents().stream().map(js -> EntityUtil.getId(js.getStudent()))
                 .collect(Collectors.toSet());
+        
+        // if final result entry exists already and student has transferred
+        // journal module results then set transferred result as final result
+        JournalEntry finalResultEntry = journalFinalResultEntry(journal);
+        Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResults = new HashMap<>();
+        if (finalResultEntry != null) {
+            Set<Long> omodules = StreamUtil.toMappedSet(
+                    t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule()),
+                    journal.getJournalOccupationModuleThemes());
+            journalStudentApelResults = !command.getStudents().isEmpty()
+                    ? journalStudentApelResults(omodules, StreamUtil.toMappedSet(r -> r, command.getStudents()))
+                    : new HashMap<>();
+        }
+        
         for (Long student : command.getStudents()) {
             if (!existingStudents.contains(student)) {
-                journal.getJournalStudents().add(JournalStudent.of(em.getReference(Student.class, student)));
+                JournalStudent js = JournalStudent.of(em.getReference(Student.class, student));
+                journal.getJournalStudents().add(js);
+                EntityUtil.save(js, em);
+                if (finalResultEntry != null) {
+                    setApelResultAsFinalResult(user, finalResultEntry, js, journalStudentApelResults);
+                }
             }
         }
         return EntityUtil.save(journal, em);
+    }
+
+    private JournalEntry journalFinalResultEntry(Journal journal) {
+        List<JournalEntry> data = em
+                .createQuery("select je from JournalEntry je where je.journal.id = ?1 and je.entryType.code = ?2",
+                        JournalEntry.class)
+                .setParameter(1, EntityUtil.getId(journal))
+                .setParameter(2, JournalEntryType.SISSEKANNE_L.name())
+                .getResultList();
+        return data.isEmpty() ? null : data.get(0);
+    }
+
+    private void setApelResultAsFinalResult(HoisUserDetails user, JournalEntry finalResultEntry,
+            JournalStudent addedStudent, Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResults) {
+        List<JournalStudentApelResultDto> results = journalStudentApelResults
+                .get(EntityUtil.getId(addedStudent.getStudent()));
+        results = StreamUtil.toFilteredList(r -> Boolean.TRUE.equals(r.getIsModule()), results);
+        if (!results.isEmpty()) {
+            JournalEntryStudent jes = new JournalEntryStudent();
+            jes.setJournalEntry(finalResultEntry);
+            jes.setJournalStudent(addedStudent);
+            // if there are more than one module that has results, set grade as 'KUTSEHINDAMINE_A'
+            String gradeCode = results.size() == 1 ? results.get(0).getGrade() : OccupationalGrade.KUTSEHINDAMINE_A.name();
+            jes.setGrade(em.getReference(Classifier.class, gradeCode));
+            jes.setGradeInserted(LocalDateTime.now());
+            jes.setGradeInsertedBy(user.getUsername());
+            finalResultEntry.getJournalEntryStudents().add(jes);
+        }
     }
 
     public Journal removeStudentsFromJournal(HoisUserDetails user, Journal journal, JournalStudentsCommand command) {
@@ -451,12 +505,12 @@ public class JournalService {
                 JournalEntryStudent journalEntryStudent = em.getReference(JournalEntryStudent.class, journalEntryStudentForm.getId());
                 assertJournalEntryStudentRules(journalEntryStudent.getJournalStudent());
                 
-                updateJournalStudentEntry(user, journalEntryStudent, journalEntryStudentForm);
+                updateJournalStudentEntry(user, journalEntryStudent, journalEntryStudentForm, journalEntryForm.getLessons());
                 if (Boolean.TRUE.equals(journalEntryStudentForm.getRemoveStudentHistory())) {
                     removeStudentGradeHistory(user, journalEntryStudent);
                 }
             } else {
-                saveJournalStudentEntry(user, journalEntry, journalEntryStudentForm);
+                saveJournalStudentEntry(user, journalEntry, journalEntryStudentForm, journalEntryForm.getLessons());
             }
         }
         EntityUtil.bindEntityCollection(journalEntry.getJournalEntryCapacityTypes(),
@@ -468,7 +522,8 @@ public class JournalService {
                 });
     }
 
-    private void updateJournalStudentEntry(HoisUserDetails user, JournalEntryStudent journalEntryStudent, JournalEntryStudentForm journalEntryStudentForm) {
+    private void updateJournalStudentEntry(HoisUserDetails user, JournalEntryStudent journalEntryStudent,
+            JournalEntryStudentForm journalEntryStudentForm, Long lessons) {
         if (Boolean.FALSE.equals(journalEntryStudentForm.getRemoveStudentHistory()) && journalEntryStudent.getGrade() != null
                 && !EntityUtil.getCode(journalEntryStudent.getGrade()).equals(journalEntryStudentForm.getGrade())) {
             JournalEntryStudentHistory journalEntryStudentHistory = new JournalEntryStudentHistory();
@@ -493,7 +548,9 @@ public class JournalService {
             journalEntryStudent.setGradeInsertedBy(user.getUsername());
         }
         EntityUtil.bindToEntity(journalEntryStudentForm, journalEntryStudent, classifierRepository,
-                "journalEntryStudentHistories", "gradeInserted");
+                "journalEntryStudentHistories", "gradeInserted", "absence", "absenceInserted", "absenceAccepted",
+                "journalEntryStudentLessonAbsences");
+        updateStudentEntryAbsences(journalEntryStudent, journalEntryStudentForm, lessons);
     }
 
     private static void assertJournalEntryStudentRules(JournalStudent journaStudent) {
@@ -508,12 +565,14 @@ public class JournalService {
     }
 
     private void saveJournalStudentEntry(HoisUserDetails user, JournalEntry journalEntry,
-            JournalEntryStudentForm journalEntryStudentForm) {
+            JournalEntryStudentForm journalEntryStudentForm, Long lessons) {
         JournalStudent journalStudent = em.getReference(JournalStudent.class, journalEntryStudentForm.getJournalStudent());
         assertJournalEntryStudentRules(journalStudent);
 
         JournalEntryStudent journalEntryStudent = EntityUtil.bindToEntity(journalEntryStudentForm,
-                new JournalEntryStudent(), classifierRepository, "journalEntryStudentHistories", "gradeInserted");
+                new JournalEntryStudent(), classifierRepository, "journalEntryStudentHistories", "gradeInserted",
+                "absence", "absenceInserted", "absenceAccepted", "journalEntryStudentLessonAbsences");
+        updateStudentEntryAbsences(journalEntryStudent, journalEntryStudentForm, lessons);
 
         journalEntryStudent.setJournalStudent(journalStudent);
         if (journalEntryStudentForm.getGrade() != null) {
@@ -526,6 +585,51 @@ public class JournalService {
             throw new ValidationFailedException("journal.messages.dublicateJournalStudentInJournalEntry");
         }
         journalEntry.getJournalEntryStudents().add(journalEntryStudent);
+    }
+    
+    private void updateStudentEntryAbsences(JournalEntryStudent journalEntryStudent, JournalEntryStudentForm form, Long lessons) {
+        journalEntryStudent.setIsLessonAbsence(form.getIsLessonAbsence());
+        
+        if (Boolean.TRUE.equals(form.getIsLessonAbsence())) {
+            updateStudentEntryLessonAbsences(journalEntryStudent, form, lessons);
+        } else {
+            if (form.getAbsence() != null && !form.getAbsence().equals(EntityUtil.getNullableCode(journalEntryStudent.getAbsence()))) {
+                journalEntryStudent.setAbsenceInserted(LocalDateTime.now());
+            } else {
+                journalEntryStudent.setAbsenceInserted(null);
+            }
+            journalEntryStudent.setAbsence(EntityUtil.getOptionalOne(form.getAbsence(), em));
+            journalEntryStudent.getJournalEntryStudentLessonAbsences().clear();
+        }
+    }
+    
+    private void updateStudentEntryLessonAbsences(JournalEntryStudent journalEntryStudent, JournalEntryStudentForm form,
+            Long lessons) {
+        journalEntryStudent.setAbsence(null);
+        journalEntryStudent.setAbsenceInserted(null);
+        journalEntryStudent.setAbsenceAccepted(null);
+        
+        List<JournalEntryStudentLessonAbsenceForm> formLessonAbsences = StreamUtil.toFilteredList(
+                r -> r != null && r.getAbsence() != null && r.getLessonNr().longValue() <= lessons.longValue(),
+                form.getLessonAbsences().values());
+        List<Long> formLessonNrs = StreamUtil.toMappedList(r -> r.getLessonNr(), formLessonAbsences);
+        journalEntryStudent.getJournalEntryStudentLessonAbsences().removeIf(r -> !formLessonNrs.contains(r.getLessonNr()));
+        
+        Map<Long, JournalEntryStudentLessonAbsence> savedLessonAbsences = StreamUtil.toMap(r -> r.getLessonNr(),
+                journalEntryStudent.getJournalEntryStudentLessonAbsences());
+        for (JournalEntryStudentLessonAbsenceForm absenceForm : formLessonAbsences) {
+            JournalEntryStudentLessonAbsence lessonAbsence = savedLessonAbsences.get(absenceForm.getLessonNr());
+            if (lessonAbsence == null) {
+                lessonAbsence = new JournalEntryStudentLessonAbsence();
+                lessonAbsence.setLessonNr(absenceForm.getLessonNr());
+                journalEntryStudent.getJournalEntryStudentLessonAbsences().add(lessonAbsence);
+            }
+            
+            if (!absenceForm.getAbsence().equals(EntityUtil.getNullableCode(lessonAbsence.getAbsence()))) {
+                lessonAbsence.setAbsenceInserted(LocalDateTime.now());
+            }
+            lessonAbsence.setAbsence(em.getReference(Classifier.class, absenceForm.getAbsence()));
+        }
     }
 
     public JournalEntryLessonInfoDto journalEntryLessonInfo(Journal journal) {
@@ -569,10 +673,6 @@ public class JournalService {
         }
         return null;
     }
-    
-    private static boolean isFinalResult(JournalEntryByDateDto dto) {
-        return JournalEntryType.SISSEKANNE_L.name().equals(dto.getEntryType());
-    }
 
     public List<JournalEntryByDateDto> journalEntriesByDate(Journal journal, Boolean allStudents) {
         List<JournalEntryByDateDto> result = new ArrayList<>();
@@ -599,7 +699,7 @@ public class JournalService {
                             .computeIfAbsent(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
                                     id -> new ArrayList<>());
                     JournalEntryStudentResultDto dto = EntityUtil.bindToDto(journalEntryStudent,
-                            new JournalEntryStudentResultDto(), "gradeInsertedBy", "journalEntryStudentHistories");
+                            new JournalEntryStudentResultDto(), "gradeInsertedBy", "journalEntryStudentHistories", "lessonAbsences");
                     
                     String insertedBy;
                     if (journalEntryStudent.getGradeInsertedBy() != null) {
@@ -613,6 +713,8 @@ public class JournalService {
                     dto.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(insertedBy));
                     dto.setJournalEntryStudentHistories(StreamUtil.toMappedList(JournalEntryStudentHistoryDto::new,
                             journalEntryStudent.getJournalEntryStudentHistories()));
+                    dto.setLessonAbsences(StreamUtil.toMappedList(JournalEntryStudentLessonAbsenceDto::new,
+                            journalEntryStudent.getJournalEntryStudentLessonAbsences()));
                     studentresults.add(dto);
                 }
             }
@@ -623,6 +725,7 @@ public class JournalService {
         return result;
     }
     
+    // similar method in JournalXlsDto
     private static void setOutcomeEntriesUnqiueOrderNrs(List<JournalEntryByDateDto> entries) {
         // order outcomes by curriculum module id and their order nr and then give outcomes from different modules a unique outcome order nr
         Collections.sort(entries, Comparator.comparing(JournalEntryByDateDto::getCurriculumModule, Comparator.nullsFirst(Comparator.naturalOrder()))
@@ -642,6 +745,7 @@ public class JournalService {
         }
     }
     
+    // similar ordering JournalXlsDto
     private static void orderJournalEntriesByDate(List<JournalEntryByDateDto> entries) {
         // order day entries by lesson nr
         Collections.sort(entries, Comparator.comparing(JournalEntryByDateDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder()))
@@ -651,12 +755,21 @@ public class JournalService {
         // outcome entries that don't have a date are ordered last among entries without date, all other entries are ordered by date
         Collections.sort(entries, Comparator.comparing(JournalEntryByDateDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
         Collections.sort(entries, Comparator.comparing(JournalEntryByDateDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder())));
+        
+        Collections.sort(entries, (JournalEntryByDateDto o1, JournalEntryByDateDto o2) -> {
+            if (JournalUtil.isOutcomeEntryWithoutDate(o1) && !JournalUtil.isOutcomeEntryWithoutDate(o2)) {
+                return 1;
+            } else if (!JournalUtil.isOutcomeEntryWithoutDate(o1) && JournalUtil.isOutcomeEntryWithoutDate(o2)) {
+                return -1;
+            }
+            return 0;
+        });
 
         // put final results to the end of the list
         Collections.sort(entries, (JournalEntryByDateDto o1, JournalEntryByDateDto o2) -> {
-            if (isFinalResult(o1) && !isFinalResult(o2)) {
+            if (JournalUtil.isFinalResult(o1) && !JournalUtil.isFinalResult(o2)) {
                 return 1;
-            } else if (!isFinalResult(o1) && isFinalResult(o2)) {
+            } else if (!JournalUtil.isFinalResult(o1) && JournalUtil.isFinalResult(o2)) {
                 return -1;
             }
             return 0;
@@ -667,15 +780,81 @@ public class JournalService {
         List<JournalStudent> students = journal.getJournalStudents().stream()
                 .filter(jt -> Boolean.TRUE.equals(allStudents) || StudentUtil.isActive(jt.getStudent()))
                 .collect(Collectors.toList());
-        students.sort(Comparator
-                .comparing(js -> ((JournalStudent) js).getStudent().getStudentGroup() != null ? ((JournalStudent) js).getStudent().getStudentGroup().getCode(): null, 
-                        Comparator.nullsLast(Comparator.naturalOrder()))
-                .thenComparing(js -> ((JournalStudent) js).getStudent().getPerson().getLastname(), String.CASE_INSENSITIVE_ORDER)
-                .thenComparing(Comparator.comparing(js -> ((JournalStudent) js).getStudent().getPerson().getFirstname(), String.CASE_INSENSITIVE_ORDER)));
         
-        return students.stream().map(JournalStudentDto::of).collect(Collectors.toList());
+        Map<Long, JournalStudentDto> mappedStudentDtos = students.stream().map(JournalStudentDto::of)
+                .collect(Collectors.toMap(r -> r.getStudentId(), r -> r));
+
+        Set<Long> omodules = StreamUtil.toMappedSet(t -> EntityUtil.getId(
+                t.getCurriculumVersionOccupationModuleTheme().getModule()), journal.getJournalOccupationModuleThemes());
+        Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResuts = !mappedStudentDtos.isEmpty()
+                ? journalStudentApelResults(omodules, mappedStudentDtos.keySet())
+                : new HashMap<>();
+        for (Long studentId : journalStudentApelResuts.keySet()) {
+            mappedStudentDtos.get(studentId).setApelResults(journalStudentApelResuts.get(studentId));
+        }
+
+        List<JournalStudentDto> studentDtos = new ArrayList<>();
+        studentDtos.addAll(mappedStudentDtos.values());
+        studentDtos.sort(Comparator
+                .comparing(JournalStudentDto::getStudentGroup, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(JournalStudentDto::getLastname, String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(JournalStudentDto::getFirstname, String.CASE_INSENSITIVE_ORDER));
+        
+        return studentDtos;
     }
     
+    private Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResults(Set<Long> omodules, Set<Long> students) {
+        String informalApelResults = "select aa.student_id, " +
+            "case when aai.curriculum_version_omodule_theme_id is not null then false else true end as module, " +
+            "case when aai.curriculum_version_omodule_theme_id is not null then cvot.name_et || ' (' || cm.name_et || ' - ' || mcl.name_et || ')' " + 
+                "else cm.name_et || ' - ' || mcl.name_et end as my_theme, " + 
+            "case when aai.curriculum_version_omodule_theme_id is not null then cvot.name_et || ' (' || cm.name_en || ' - ' || mcl.name_en || ')' " + 
+                "else cm.name_en || ' - ' || mcl.name_en end as my_theme_en, " + 
+            "aai.grade_code, aa.confirmed, false as is_formal_learning from apel_application aa " + 
+            "join apel_application_record aar on aa.id=aar.apel_application_id " + 
+            "join apel_application_informal_subject_or_module aai on aar.id=aai.apel_application_record_id " + 
+            "join curriculum_version_omodule cvo on aai.curriculum_version_omodule_id=cvo.id " + 
+            "left join curriculum_version_omodule_theme cvot on aai.curriculum_version_omodule_theme_id=cvot.id " + 
+            "join curriculum_module cm on cvo.curriculum_module_id=cm.id " + 
+            "join classifier mcl on mcl.code = cm.module_code " + 
+            "where aa.student_id in (:studentIds) and cvo.id in (:moduleIds) and aa.status_code='VOTA_STAATUS_C' and aai.transfer = true ";
+        
+        String formalApelResults = "select distinct aa.student_id, true as module, cm.name_et || ' - ' || mcl.name_et as module_et, " +
+            "cm.name_en || ' - ' || mcl.name_en as module_en, " +
+                "(case when (select count( aaf2.grade_code ) from apel_application_formal_subject_or_module aaf2 " +
+                "where aaf2.apel_application_record_id = aar.id and aaf2.transfer = true) = 1 then " +
+                "(select aaf2.grade_code from apel_application_formal_subject_or_module aaf2 where aaf2.apel_application_record_id = aar.id " +
+                "and aaf2.transfer = true ) else 'KUTSEHINDAMINE_A' end), " +
+                "aa.confirmed, true as is_formal_learning " +
+            "from apel_application aa " +
+            "join apel_application_record aar on aa.id = aar.apel_application_id " +
+            "join apel_application_formal_subject_or_module aaf on aar.id = aaf.apel_application_record_id " +
+            "join apel_application_formal_replaced_subject_or_module aafr on aar.id = aafr.apel_application_record_id " +
+            "join curriculum_version_omodule cvo on aafr.curriculum_version_omodule_id=cvo.id " +
+            "join curriculum_module cm on cvo.curriculum_module_id=cm.id " +
+            "join classifier mcl on mcl.code = cm.module_code " +
+            "where aa.student_id in (:studentIds) and cvo.id in (:moduleIds) and aa.status_code='VOTA_STAATUS_C' and aaf.transfer = true";
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
+                "from (" + informalApelResults + " union all " + formalApelResults + ") as apel_results");
+        qb.parameter("studentIds", students);
+        qb.parameter("moduleIds", omodules);
+        List<?> data = qb.select("*",em).getResultList();
+        
+        Map<Long, List<JournalStudentApelResultDto>> result = data.stream()
+                .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
+                    JournalStudentApelResultDto dto = new JournalStudentApelResultDto();
+                    dto.setIsModule(resultAsBoolean(r, 1));
+                    dto.setName(new AutocompleteResult(null, resultAsString(r, 2), resultAsString(r, 3)));
+                    dto.setGrade(resultAsString(r, 4));
+                    dto.setConfirmed(resultAsLocalDate(r, 5));
+                    dto.setIsFormalLearning(resultAsBoolean(r, 6));
+                    return dto;
+                }, Collectors.toList())));
+        return result;
+}
+    
+     
     public JournalLessonHoursDto usedHours(Journal journal) {
         List<JournalCapacity> capacities = journal.getJournalCapacities();
         Set<JournalEntry> entries = journal.getJournalEntries();
@@ -724,26 +903,62 @@ public class JournalService {
         return xlsService.generate("journal.xls", Collections.singletonMap("journal", dto));
     }
 
-    public Set<Long> journalStudentsWithAcceptedAbsence(Journal journal, LocalDate entryDate) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(" from journal_student js ");
-        qb.requiredCriteria("js.journal_id = :journalId", "journalId", EntityUtil.getId(journal));
-        qb.requiredCriteria(
-                "exists("
-                + "select sa.id "
-                + "from student_absence sa "
-                + "where sa.is_accepted "
-                + "and sa.student_id = js.student_id "
-                + "and sa.valid_from <= :entryDate "
-                + "and case "
-                    +   "when sa.valid_thru is null "
-                        +  "then sa.valid_from = :entryDate "
-                    +  "else "
-                        + "sa.valid_thru >= :entryDate "
-                +  "end ) ", "entryDate", entryDate);
-        List<?> result = qb.select("js.id", em).getResultList();
-        return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result);
+    public List<JournalEntryStudentAcceptedAbsenceDto> journalStudentsWithAcceptedAbsences(Journal journal, LocalDate entryDate) {
+        Map<Long, JournalEntryStudentAcceptedAbsenceDto> acceptedAbsences = new HashMap<>();
+        Map<Long, List<StudentAbsenceDto>> wholeDayAbsences = wholeDayAcceptedAbsences(journal, entryDate);
+        Map<Long, Set<Long>> lessonAbsences = lessonAbsences(journal, entryDate);
+        
+        for (Long journalStudent : wholeDayAbsences.keySet()) {
+            boolean practice = wholeDayAbsences.get(journalStudent).stream().anyMatch(a -> a.getContractId() != null);
+            
+            JournalEntryStudentAcceptedAbsenceDto dto = new JournalEntryStudentAcceptedAbsenceDto();
+            dto.setJournalStudent(journalStudent);
+            dto.setWholeDay(Boolean.TRUE);
+            dto.setPractice(Boolean.valueOf(practice));
+            acceptedAbsences.put(journalStudent, dto);
+        }
+        
+        for (Long journalStudent : lessonAbsences.keySet()) {
+            JournalEntryStudentAcceptedAbsenceDto dto = acceptedAbsences.get(journalStudent);
+            if (dto == null) {
+                dto = new JournalEntryStudentAcceptedAbsenceDto();
+                dto.setJournalStudent(journalStudent);
+                dto.setWholeDay(Boolean.FALSE);
+                acceptedAbsences.put(journalStudent, dto);
+            }
+            dto.setLessons(lessonAbsences.get(journalStudent));
+        }
+        return new ArrayList<>(acceptedAbsences.values());
     }
     
+    private Map<Long, List<StudentAbsenceDto>> wholeDayAcceptedAbsences(Journal journal, LocalDate entryDate) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_student js "
+                + "join student_absence sa on sa.student_id = js.student_id");
+        qb.requiredCriteria("js.journal_id = :journalId", "journalId", EntityUtil.getId(journal));
+        qb.requiredCriteria("sa.valid_from <= :entryDate", "entryDate", entryDate);
+        qb.requiredCriteria("coalesce(sa.valid_thru, sa.valid_from) >= :entryDate", "entryDate", entryDate);
+        qb.filter("coalesce(sa.is_lesson_absence, false) = false");
+        qb.filter("sa.is_accepted = true");
+
+        List<?> result = qb.select("js.id as student_id, sa.id as absence_id, sa.contract_id", em).getResultList();
+        return result.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
+            StudentAbsenceDto dto = new StudentAbsenceDto();
+            dto.setId(resultAsLong(r, 1));
+            dto.setContractId(resultAsLong(r, 2));
+            return dto;
+        }, Collectors.toList())));
+    }
+    
+    private Map<Long, Set<Long>> lessonAbsences(Journal journal, LocalDate entryDate) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_student js join student_absence sa on js.student_id = sa.student_id join student_absence_lesson sal on sa.id = sal.student_absence_id");
+        qb.requiredCriteria("js.journal_id = :journalId", "journalId", EntityUtil.getId(journal));
+        qb.requiredCriteria("sal.absence = :entryDate", "entryDate", entryDate);
+        qb.filter("sa.is_accepted");
+        
+        List<?> result = qb.select("js.id, sal.lesson_nr", em).getResultList();
+        return result.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toSet())));
+    }
     
     /**
      * Get study years for view
@@ -801,9 +1016,13 @@ public class JournalService {
             dto.setModuleOutcomesAsEntries(resultAsBoolean(r, 4));
             dto.setTeachers(resultAsString(r, 5));
             dto.setModules(new AutocompleteResult(null, resultAsString(r, 6), resultAsString(r, 7)));
-            dto.setAbsenceH(Long.valueOf(0));
-            dto.setAbsenceP(Long.valueOf(0));
-            dto.setAbsencePV(Long.valueOf(0));
+            
+            Map<String, Long> absences = new HashMap<>();
+            for (Absence absence : Absence.values()) {
+                absences.put(absence.name(), (Long.valueOf(0)));
+            }
+            dto.setAbsences(absences);
+            
             return dto;
         }, result);
         
@@ -815,29 +1034,47 @@ public class JournalService {
         List<Long> journalIds = StreamUtil.toMappedList(StudentJournalDto::getId, journals);
         
         if (!journalIds.isEmpty()) {
-            Query absencesQuery = em.createNativeQuery("select j.id, jes.absence_code from journal_entry je"
+            Query absencesQuery = em.createNativeQuery("select j.id, jes.absence_code, je.lessons, jesla.absence_code as lesson_absence_code"
+                    + " from journal_entry je"
                     + " join journal_entry_student jes on jes.journal_entry_id=je.id"
+                    + " left join journal_entry_student_lesson_absence jesla on jesla.journal_entry_student_id = jes.id"
                     + " join journal_student js on jes.journal_student_id = js.id "
                     + " join journal j  on j.id = js.journal_id "
-                    + " where j.id in (?1) and js.student_id =?2 and jes.absence_code is not null");
+                    + " where j.id in (?1) and js.student_id =?2 and (jes.absence_code is not null or jesla.absence_code is not null)");
             absencesQuery.setParameter(1, journalIds);
             absencesQuery.setParameter(2, studentId);
             List<?> data = absencesQuery.getResultList();
             
             if (!data.isEmpty()) {
-                Map<Long, List<String>> absencesByJournal = data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
-                        Collectors.mapping(r -> resultAsString(r, 1), Collectors.toList())));
+                Map<Long, List<StudentJournalAbsenceDto>> absencesByJournal = data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                        Collectors.mapping(r -> {
+                            StudentJournalAbsenceDto absence = new StudentJournalAbsenceDto();
+                            if (resultAsString(r, 1) != null) {
+                                absence.setAbsenceCode(resultAsString(r, 1));
+                                absence.setLessons(resultAsShort(r, 2));
+                            } else {
+                                absence.setAbsenceCode(resultAsString(r, 3));
+                            }
+                            return absence;
+                        }, Collectors.toList())));
                 
                 for (StudentJournalDto journal : journals) {
-                    List<String> journalAbsences = absencesByJournal.get(journal.getId());
+                    List<StudentJournalAbsenceDto> journalAbsences = absencesByJournal.get(journal.getId());
                     
                     if (journalAbsences != null) {
-                        journal.setAbsenceH(Long.valueOf(
-                                journalAbsences.stream().filter(a -> a.equals(Absence.PUUDUMINE_H.name())).count()));
-                        journal.setAbsenceP(Long.valueOf(
-                                journalAbsences.stream().filter(a -> a.equals(Absence.PUUDUMINE_P.name())).count()));
-                        journal.setAbsencePV(Long.valueOf(journalAbsences.stream()
-                                .filter(a -> a.equals(Absence.PUUDUMINE_P.name()) || a.equals(Absence.PUUDUMINE_V.name())).count()));
+                        for (String absenceType : journal.getAbsences().keySet()) {
+                            List<StudentJournalAbsenceDto> journalAbsenceOfType = StreamUtil
+                                    .toFilteredList(a -> absenceType.equals(a.getAbsenceCode()), journalAbsences);
+                            int count = 0;
+                            for (StudentJournalAbsenceDto absence : journalAbsenceOfType) {
+                                if (absence.getLessons() != null) {
+                                    count += absence.getLessons().intValue();
+                                } else {
+                                    count++;
+                                }
+                            }
+                            journal.getAbsences().put(absenceType, Long.valueOf(count));
+                        }
                     }
                 }
             }
@@ -849,13 +1086,13 @@ public class JournalService {
         
         if (!journalIds.isEmpty()) {
             Query entriesQuery = em.createNativeQuery("select je.id, je.journal_id, je.entry_type_code, je.entry_date, je.content,"
-                    + " ( select value from classifier where code = jes.grade_code ),"
+                    + " (select value from classifier where code = jes.grade_code),"
                     + " jes.grade_inserted, coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by,"
                     + " jes.add_info, je.homework, je.homework_duedate, jes.absence_code from journal j"
-                    + " inner join journal_entry je on j.id = je.journal_id"
-                    + " inner join journal_student js on j.id = js.journal_id"
+                    + " join journal_entry je on j.id = je.journal_id"
+                    + " join journal_student js on j.id = js.journal_id"
                     + " left join journal_entry_student jes on je.id = jes.journal_entry_id and jes.journal_student_id = js.id"
-                    + " inner join student s on js.student_id = s.id"
+                    + " join student s on js.student_id = s.id"
                     + " where j.id in (?1) and s.id = ?2"
                     + " order by je.entry_date is null, je.entry_date desc");
             entriesQuery.setParameter(1, journalIds);
@@ -867,6 +1104,7 @@ public class JournalService {
                     PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 7)), resultAsString(r, 8), resultAsString(r, 9), 
                     resultAsLocalDate(r, 10), resultAsString(r, 11)), data);
             entries = getEntriesWithPreviousResults(entries, studentId);
+            entries = getEntriesWithLessonAbsences(entries, studentId);
             Map<Long, List<StudentJournalEntryDto>> journalEntries = entries.stream().collect(Collectors.groupingBy(r -> r.getJournalId()));
             
             for (StudentJournalDto journal : journals) {
@@ -880,19 +1118,19 @@ public class JournalService {
     private List<StudentJournalEntryDto> getEntriesWithPreviousResults(List<StudentJournalEntryDto> entries, Long studentId) {
         Set<Long> entriesIds = StreamUtil.toMappedSet(StudentJournalEntryDto::getId, entries.stream());
         if(!entriesIds.isEmpty()) {
-            Query previousResultQuerys = em.createNativeQuery("select je.id, ( select value from classifier where code = jesh.grade_code ),"
+            Query previousResultsQuery = em.createNativeQuery("select je.id, (select value from classifier where code = jesh.grade_code),"
                     + " jesh.grade_inserted, coalesce(jesh.grade_inserted_by, jesh.changed_by, jesh.inserted_by) as grade_inserted_by from journal j"
-                    + " inner join journal_entry je on je.journal_id = j.id"
-                    + " inner join journal_student js on js.journal_id = j.id"
-                    + " inner join student s on s.id=js.student_id"
-                    + " inner join journal_entry_student jes on je.id=jes.journal_entry_id and jes.journal_student_id=js.id"
-                    + " inner join journal_entry_student_history jesh on jesh.journal_entry_student_id=jes.id"
+                    + " join journal_entry je on je.journal_id = j.id"
+                    + " join journal_student js on js.journal_id = j.id"
+                    + " join student s on s.id=js.student_id"
+                    + " join journal_entry_student jes on je.id=jes.journal_entry_id and jes.journal_student_id=js.id"
+                    + " join journal_entry_student_history jesh on jesh.journal_entry_student_id=jes.id"
                     + " where je.id in(:entries) and s.id=:studentId"
                     + " order by je.entry_date is null, je.entry_date desc");
-            previousResultQuerys.setParameter("entries", entriesIds);
-            previousResultQuerys.setParameter("studentId", studentId);
+            previousResultsQuery.setParameter("entries", entriesIds);
+            previousResultsQuery.setParameter("studentId", studentId);
             
-            List<?> previousResultQueryResult = previousResultQuerys.getResultList();
+            List<?> previousResultQueryResult = previousResultsQuery.getResultList();
             Map<Long, List<StudentJournalEntryPreviousResultDto>> previousResults = previousResultQueryResult.stream().collect(
                     Collectors.groupingBy(r -> resultAsLong(r, 0), 
                     Collectors.mapping(r -> new StudentJournalEntryPreviousResultDto(resultAsString(r, 1), 
@@ -900,6 +1138,30 @@ public class JournalService {
                     Collectors.toList())));
             for(StudentJournalEntryDto dto : entries) {
                 dto.setPreviousResults(previousResults.get(dto.getId()));
+            }
+        }
+        return entries;
+    }
+    
+    private List<StudentJournalEntryDto> getEntriesWithLessonAbsences(List<StudentJournalEntryDto> entries, Long studentId) {
+        Set<Long> entriesIds = StreamUtil.toMappedSet(StudentJournalEntryDto::getId, entries.stream());
+        if(!entriesIds.isEmpty()) {
+            Query lessonAbsencesQuery = em.createNativeQuery("select je.id, jesla.lesson_nr + coalesce(je.start_lesson_nr - 1, 0) as lesson_nr,"
+                    + " jesla.absence_code from journal_entry_student jes"
+                    + " join journal_entry_student_lesson_absence jesla on jesla.journal_entry_student_id = jes.id"
+                    + " join journal_entry je on je.id = jes.journal_entry_id"
+                    + " join journal_student js on js.id = jes.journal_student_id"
+                    + " where je.id in(:entries) and js.student_id=:studentId");
+            lessonAbsencesQuery.setParameter("entries", entriesIds);
+            lessonAbsencesQuery.setParameter("studentId", studentId);
+            
+            List<?> lessonAbsencesQueryResult = lessonAbsencesQuery.getResultList();
+            Map<Long, List<StudentJournalEntryLessonAbsenceDto>> lessonAbsences = lessonAbsencesQueryResult.stream().collect(
+                    Collectors.groupingBy(r -> resultAsLong(r, 0), 
+                    Collectors.mapping(r -> new StudentJournalEntryLessonAbsenceDto(resultAsLong(r, 1), resultAsString(r, 2)),
+                    Collectors.toList())));
+            for(StudentJournalEntryDto dto : entries) {
+                dto.setLessonAbsences(lessonAbsences.get(dto.getId()));
             }
         }
         return entries;
@@ -917,15 +1179,18 @@ public class JournalService {
             return null;
         }
 
-        Query q = em.createNativeQuery("select je.id, je.entry_type_code, j.name_et, coalesce(je.homework_duedate, je.entry_date) as task_date,"
-                + " coalesce(je.homework, je.content) as task_content"
-                + " from journal_entry je inner join journal j on j.id=je.journal_id"
-                + " inner join journal_student js on j.id=js.journal_id"
-                + " inner join student s on js.student_id=s.id"
-                + " where j.study_year_id=?1 and s.id=?2 and"
-                + " (je.homework_duedate is not null and coalesce(je.homework,'x')!='x' or"
-                + " je.entry_type_code in (:testEntryTypes)"
-                + " and coalesce(je.content,'x')!='x' and je.entry_date is not null)"
+        Query q = em.createNativeQuery("select je.id, 'SISSEKANNE_T' as entry_type_code, j.name_et, je.homework_duedate task_date, je.homework AS task_content"
+                + " from journal_entry je join journal j on j.id=je.journal_id"
+                + " join journal_student js on j.id=js.journal_id"
+                + " join student s on js.student_id=s.id"
+                + " where j.study_year_id=?1 and s.id=?2"
+                + " and je.homework_duedate is not null and coalesce(je.homework, 'x') != 'x'"
+                + " union select je.id, je.entry_type_code, j.name_et, je.entry_date as task_date, je.content as task_content"
+                + " from journal_entry je join journal j on j.id=je.journal_id"
+                + " join journal_student js on j.id=js.journal_id"
+                + " join student s on js.student_id=s.id"
+                + " where j.study_year_id=?1 and s.id=?2 and je.entry_type_code in (:testEntryTypes)"
+                + " and je.entry_date is not null and coalesce(je.content, 'x') != 'x'"
                 + " order by task_date desc");
         q.setParameter(1, studyYear.getId());
         q.setParameter(2, studentId);
@@ -960,10 +1225,10 @@ public class JournalService {
     }
 
     /**
-     * Get student's last 30 absences for view.
+     * Get student's last 30 days absences for view.
      * @param schoolId
      * @param studentId
-     * @return list of student's absences, or null if there is no current study year
+     * @return list of student's absences without reason and latenesses, or null if there is no current study year
      */
     public List<StudentJournalAbsenceDto> studentAbsences(Long schoolId, Long studentId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
@@ -971,25 +1236,29 @@ public class JournalService {
             return null;
         }
 
-        Query q = em.createNativeQuery("select je.id, je.entry_date, j.name_et, jes.absence_code, je.start_lesson_nr,"
-                + " STRING_AGG(p.firstname || ' ' || p.lastname, ', ') as teachers from journal j"
-                + " inner join journal_entry je on je.journal_id=j.id"
-                + " inner join journal_teacher jt on jt.journal_id=j.id"
-                + " inner join teacher t on t.id=jt.teacher_id"
-                + " inner join person p on p.id=t.person_id"
-                + " inner join journal_student js on js.journal_id=j.id"
-                + " inner join journal_entry_student jes on jes.journal_entry_id=je.id and jes.journal_student_id=js.id"
-                + " inner join student s on s.id=js.student_id"
-                + " where j.study_year_id=?1 and s.id=?2 and jes.absence_code in (:absenceCodes)"
-                + " group by je.id, jes.absence_code, j.name_et"
-                + " order by je.entry_date limit 30");
+        LocalDate today = LocalDate.now();
+        Query q = em.createNativeQuery("select je.id, je.entry_date, j.name_et, coalesce(jesla.absence_code, jes.absence_code),"
+                + " je.start_lesson_nr, je.lessons, jesla.lesson_nr from journal j"
+                + " join journal_entry je on je.journal_id=j.id"
+                + " join journal_student js on js.journal_id=j.id"
+                + " join journal_entry_student jes on jes.journal_entry_id=je.id and jes.journal_student_id=js.id"
+                + " left join journal_entry_student_lesson_absence jesla on jesla.journal_entry_student_id = jes.id"
+                + " join student s on s.id=js.student_id"
+                + " where j.study_year_id= ?1 and s.id= ?2 and (jes.absence_code in (:absenceCodes) or jesla.absence_code in (:absenceCodes))"
+                + " and (je.entry_date is null or (je.entry_date >= ?3 and je.entry_date <= ?4))"
+                + " group by j.name_et, je.id, jes.absence_code, jesla.absence_code, jesla.lesson_nr"
+                + " order by je.entry_date desc nulls last, jesla.lesson_nr");
         q.setParameter(1, studyYear.getId());
         q.setParameter(2, studentId);
-        q.setParameter("absenceCodes", journalAbsenceCodes);
+        q.setParameter(3, JpaQueryUtil.parameterAsTimestamp(today.minusDays(30)));
+        q.setParameter(4, JpaQueryUtil.parameterAsTimestamp(today));
+        q.setParameter("absenceCodes", EnumUtil.toNameList(Absence.PUUDUMINE_P, Absence.PUUDUMINE_H));
         List<?> data = q.getResultList();
         
-        return StreamUtil.toMappedList(r -> new StudentJournalAbsenceDto(resultAsLong(r, 0), resultAsLocalDate(r, 1), resultAsString(r, 2),
-                resultAsString(r, 3), resultAsShort(r, 4), resultAsString(r, 5)), data);
+        return StreamUtil.toMappedList(
+                r -> new StudentJournalAbsenceDto(resultAsLong(r, 0), resultAsLocalDate(r, 1), resultAsString(r, 2),
+                        resultAsString(r, 3), resultAsShort(r, 4), resultAsShort(r, 5), resultAsShort(r, 6)),
+                data);
     }
     
     /**

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.scholarship;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseDto {
     private Long place;
@@ -17,6 +18,9 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
     private Boolean isTeacherConfirm;
     private String rejectComment;
     private Boolean needsConfirm;
+    private Long decisionId;
+    private LocalDate decisionDecided;
+    private Boolean hasDirective;
 
     private String compensationReason;
     private String compensationFrequency;
@@ -147,6 +151,30 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
     
     public Boolean getNeedsConfirm() {
     	return this.needsConfirm;
+    }
+
+    public Long getDecisionId() {
+        return decisionId;
+    }
+
+    public void setDecisionId(Long decisionId) {
+        this.decisionId = decisionId;
+    }
+
+    public LocalDate getDecisionDecided() {
+        return decisionDecided;
+    }
+
+    public void setDecisionDecided(LocalDate decisionDecided) {
+        this.decisionDecided = decisionDecided;
+    }
+
+    public Boolean getHasDirective() {
+        return hasDirective;
+    }
+
+    public void setHasDirective(Boolean hasDirective) {
+        this.hasDirective = hasDirective;
     }
 
 }

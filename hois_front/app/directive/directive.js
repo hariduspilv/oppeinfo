@@ -477,8 +477,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       });
     };
   }
-]).controller('DirectiveViewController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'Session',
-  function ($location, $route, $scope, dialogService, message, Classifier, QueryUtils, Session) {
+]).controller('DirectiveViewController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'FormUtils', 'Session',
+  function ($location, $route, $scope, dialogService, message, Classifier, QueryUtils, FormUtils, Session) {
     var id = $route.current.params.id;
     var baseUrl = '/directives';
     var clMapper = Classifier.valuemapper({status: 'KASKKIRI_STAATUS'});
@@ -515,17 +515,23 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       });
     };
 
+    $scope.userCanConfirm = function() {
+      return $scope.record.status === 'KASKKIRI_STAATUS_KINNITAMISEL' && $scope.record.userCanConfirm;
+    };
+
     // for testing only
     $scope.confirmDirective = function() {
-      QueryUtils.endpoint(baseUrl + '/checkForConfirm').get({id: $scope.record.id}).$promise.then(function(check) {
-        var template = (check.templateName || []).join('", "');
-        dialogService.confirmDialog({prompt: (check.templateExists ? 'directive.confirmconfirm' : 'directive.confirmconfirmTemplateMissing'), template: template}, function() {
-          QueryUtils.endpoint(baseUrl + '/confirm').update($scope.record).$promise.then(function() {
-            message.info('directive.confirmed');
-            $route.reload();
-          }).catch(angular.noop);
-        });
-      }).catch(angular.noop);
+      FormUtils.withValidForm($scope.directiveForm, function() {
+        QueryUtils.endpoint(baseUrl + '/checkForConfirm').get({id: $scope.record.id}).$promise.then(function(check) {
+          var template = (check.templateName || []).join('", "');
+          dialogService.confirmDialog({prompt: (check.templateExists ? 'directive.confirmconfirm' : 'directive.confirmconfirmTemplateMissing'), template: template}, function() {
+            QueryUtils.endpoint(baseUrl + '/confirm/' + $scope.record.id).update($scope.confirmRecord).$promise.then(function() {
+              message.info('directive.confirmed');
+              $route.reload();
+            }).catch(angular.noop);
+          });
+        }).catch(angular.noop);
+      });
     };
   }
 ]).controller('DirectiveListController', ['$q', '$scope', 'Classifier', 'QueryUtils', 'Session',

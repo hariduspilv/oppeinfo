@@ -15,7 +15,7 @@ public class PracticeJournalFileDto {
 
     public static PracticeJournalFileDto of(PracticeJournalFile practiceJournalFile) {
         PracticeJournalFileDto dto = EntityUtil.bindToDto(practiceJournalFile, new PracticeJournalFileDto(), "oisFile");
-        dto.setOisFile(EntityUtil.bindToDto(practiceJournalFile.getOisFile(), new OisFileViewDto()));
+        dto.setOisFile(OisFileViewDto.of(practiceJournalFile.getOisFile()));
         return dto;
     }
 

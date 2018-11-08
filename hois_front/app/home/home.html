@@ -1,5 +1,13 @@
 <div layout-padding>
   <div ng-if="state.currentUser" ng-controller="AuthenticatedHomeController as ctrl" layout="column">
+    <div ng-if="hasExpiredBaseModules.length">
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'warn'}">
+          <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+          <span>{{'basemodule.youHaveExpiredBaseModules' | translate}} <a ng-href="/#/basemodule?_menu">{{'main.button.view' | translate}}</a></span>
+        </div>
+      </md-whiteframe>
+    </div>
     <div ng-if="hasUnacceptedAbsences">
       <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
         <div md-colors="{color: 'warn'}">
@@ -18,8 +26,8 @@
       </md-whiteframe>
       <br>
     </div>
-    <div layout-gt-md="row" layout-margin layout="column">
-      <div id="column-1" flex="{{ sessionStudentId ? '50' : '100' }}" flex-sm="100" flex-xs="100" flex-md="100">
+    <div layout="column" layout-gt-md="row" layout-margin>
+      <div id="column-1" flex-gt-md="{{ sessionStudentId ? '50' : '100' }}" flex="100">
         <!--div style="margin-bottom: 8px;" layout="row" >
           <a style="font-size: 13px; font-weight: normal; min-height: inherit; line-height: inherit; padding: 0;" class="md-primary md-hue-2 md-button md-ink-ripple" ng-href="/#/studentrepresentatives/applications/new?_menu">{{'home.represantiveApplication' | translate}}</a>
         </div-->
@@ -33,7 +41,7 @@
         <div ng-if="sessionStudentId" ng-include="'home/home.student.lastResults.html'"></div>
         <div ng-if="sessionStudentId" ng-include="'home/home.student.declaredSubjects.html'"></div>
       </div>
-      <div ng-if="sessionStudentId" id="column-2" flex="50" flex-sm="100" flex-xs="100" flex-md="100">
+      <div ng-if="sessionStudentId" id="column-2" flex-gt-md="50" flex="100">
       </div>
     </div>
   </div>

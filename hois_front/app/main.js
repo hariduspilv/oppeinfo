@@ -6,6 +6,14 @@ angular.module('hitsaOis')
     $rootScope.state = {};
     var self = this;
 
+    $scope.windowWidth = $window.innerWidth;
+
+    $window.onresize = function() {
+      $timeout(function() {
+        $scope.windowWidth = $window.innerWidth;
+      });
+    };
+
     function closeMenu() {
       $timeout(function() { $mdSidenav('left').close(); });
     }

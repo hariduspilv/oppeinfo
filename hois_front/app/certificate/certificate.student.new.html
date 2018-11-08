@@ -13,9 +13,14 @@
                 <label>{{'certificate.whom' | translate}}</label>
                 <input type="text" ng-model="record.whom" md-maxlength="255">
             </md-input-container>
+            <md-input-container ng-if="record.type === 'TOEND_LIIK_SOOR' && !record.id">
+                <md-checkbox ng-model="record.addOutcomes" ng-change="addOutcomesChanged()">{{'certificate.addOutcomes' | translate}}</md-checkbox>
+            </md-input-container>
             <md-input-container>
                 <label class="common-label" ng-show="record.content">{{'certificate.content' | translate}}</label>
-                <div id="content" class="md-body-1"></div>
+                <md-table-container>
+                    <div id="content" class="md-body-1"></div>
+                </md-table-container>
             </md-input-container>
         </div>
         <div layout="row">

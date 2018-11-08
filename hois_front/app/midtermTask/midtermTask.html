@@ -168,7 +168,7 @@
     <div layout="row">
         <md-button class="md-raised md-primary" ng-click="save()" ng-show="record.canBeEdited">{{'main.button.save' | translate}}</md-button>
         <md-button class="md-raised" ng-click="openCopyDialog()" ng-show="record.canBeEdited">{{'midtermTask.copy' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/' + subjectStudyPeriodId + '/midtermTasks/studentResults')">{{'main.button.back' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/' + subjectStudyPeriodId + '/midtermTasks/studentResults', midtermTaskForm)">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>
 </div>

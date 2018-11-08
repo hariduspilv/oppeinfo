@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -78,6 +79,8 @@ public class EhisTeacherExportService extends EhisService {
     private static final String EHIS_TOOSUHE_MUU = "EHIS_TOOSUHE_MUU";
     private static final String EHIS_KVALIFIKATSIOON_NIMI_MUU = "EHIS_KVALIFIKATSIOON_NIMI_MUU";
     private static final String EHIS_AMETIKOHT_MUU = "EHIS_AMETIKOHT_MUU";
+    
+    private static final LocalDate DONT_SEND_QUALIFICATION_AFTER = LocalDate.of(2004, 12, 31);
 
     @Autowired
     private StudyYearService studyYearService;
@@ -306,7 +309,10 @@ public class EhisTeacherExportService extends EhisService {
                 oKvalifikatsioon.setKvalifikatsioonNimetusMuu(hoisQualification.getQualificationOther());
             }
             oKvalifikatsioon.setKlRiik(value2(hoisQualification.getState()));
-            oKvalifikatsioon.setAasta(BigInteger.valueOf(hoisQualification.getYear().longValue()));
+            LocalDate endDate = hoisQualification.getEndDate();
+            if (endDate != null) {
+                oKvalifikatsioon.setAasta(BigInteger.valueOf(endDate.getYear()));
+            }
             oKvalifikatsioon.setKlEestiOppeasutus(ehisValue(hoisQualification.getSchool()));
             oKvalifikatsioon.setKlEestiOppeasutusEndine(ehisValue(hoisQualification.getExSchool()));
             oKvalifikatsioon.setOppeasutusMuu(hoisQualification.getSchoolOther());
@@ -333,6 +339,7 @@ public class EhisTeacherExportService extends EhisService {
         Person person = teacher.getPerson();
         Pedagoog pedagoog = new Pedagoog();
         pedagoog.setIsikukood(person.getIdcode());
+        pedagoog.setKlEmakeel(ehisValue(teacher.getNativeLanguage()));
 
         for(TeacherPositionEhis position : teacher.getTeacherPositionEhis()) {
             if(!Boolean.TRUE.equals(position.getIsVocational())) {
@@ -392,6 +399,10 @@ public class EhisTeacherExportService extends EhisService {
         }
         // pedagoogTasemekoolitus
         for(TeacherQualification q : teacher.getTeacherQualification()) {
+            if (ClassifierUtil.isEstonia(q.getState()) && q.getEndDate() != null 
+                    && q.getEndDate().isAfter(DONT_SEND_QUALIFICATION_AFTER)) {
+                continue;
+            }
             PedagoogTasemekoolitus koolitus = new PedagoogTasemekoolitus();
             koolitus.setKlKvalDok(ehisValue(q.getQualification()));
             if(q.getQualification() != null) {

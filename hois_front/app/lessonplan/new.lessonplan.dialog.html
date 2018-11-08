@@ -20,6 +20,21 @@
         <label class="textInput">{{'lessonplan.studentGroup' | translate}}</label>
         <hois-select values="formState.studentGroupMap[record.studyYear]" ng-model="record.studentGroup" required></hois-select>
       </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'lessonplan.copyLessonplan' | translate}}</label>
+        <md-select ng-model="record.previousLessonplan" aria-label="{{'lessonplan.copyLessonplan' | translate}}" ng-disabled="!record.studentGroup">
+          <md-option md-option-empty></md-option>
+          <md-option ng-value="value.lessonplan" ng-repeat="value in formState.previousLessonplans">{{::value.name}}</md-option>
+        </md-select>
+      </md-input-container>
+
+      <div>&nbsp;</div>
+      <md-input-container>
+        <md-checkbox ng-model="record.copyLessons" aria-label="{{'lessonplan.copyLessons' | translate}}" ng-disabled="!record.previousLessonplan">
+          {{'lessonplan.copyLessons' | translate}}
+        </md-checkbox>
+      </md-input-container>
     </div>
   </md-dialog-content>
 

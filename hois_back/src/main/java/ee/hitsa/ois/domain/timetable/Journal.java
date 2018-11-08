@@ -41,6 +41,7 @@ public class Journal extends BaseEntityWithId {
     private Boolean reviewOk;
     private LocalDate reviewDate;
     private String reviewInfo;
+    private String untisCode;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
@@ -162,7 +163,7 @@ public class Journal extends BaseEntityWithId {
     }
 
     public List<JournalTeacher> getJournalTeachers() {
-        return journalTeachers;
+        return journalTeachers != null ?  journalTeachers : (journalTeachers = new ArrayList<>());
     }
 
     public void setJournalTeachers(List<JournalTeacher> journalTeachers) {
@@ -170,7 +171,7 @@ public class Journal extends BaseEntityWithId {
     }
 
     public List<JournalRoom> getJournalRooms() {
-        return journalRooms;
+        return journalRooms != null ?  journalRooms : (journalRooms = new ArrayList<>());
     }
 
     public void setJournalRooms(List<JournalRoom> journalRooms) {
@@ -194,7 +195,7 @@ public class Journal extends BaseEntityWithId {
     }
 
     public List<JournalCapacity> getJournalCapacities() {
-        return journalCapacities;
+        return journalCapacities != null ? journalCapacities : (journalCapacities = new ArrayList<>());
     }
 
     public void setJournalCapacities(List<JournalCapacity> journalCapacities) {
@@ -202,7 +203,7 @@ public class Journal extends BaseEntityWithId {
     }
 
     public List<JournalCapacityType> getJournalCapacityTypes() {
-        return journalCapacityTypes;
+        return journalCapacityTypes != null ? journalCapacityTypes : (journalCapacityTypes = new ArrayList<>());
     }
 
     public void setJournalCapacityTypes(List<JournalCapacityType> journalCapacityTypes) {
@@ -224,5 +225,13 @@ public class Journal extends BaseEntityWithId {
     public void setAddModuleOutcomes(Boolean addModuleOutcomes) {
         this.addModuleOutcomes = addModuleOutcomes;
     }
+
+	public String getUntisCode() {
+		return untisCode;
+	}
+
+	public void setUntisCode(String untisCode) {
+		this.untisCode = untisCode;
+	}
     
 }

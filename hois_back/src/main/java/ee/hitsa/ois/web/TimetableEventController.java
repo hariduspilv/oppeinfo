@@ -149,8 +149,7 @@ public class TimetableEventController {
     }
     
     @GetMapping("/timetableTimeOccupied")
-    public TimetableTimeOccupiedDto timetableTimeOccupied(HoisUserDetails user, TimetableTimeOccupiedCommand command) {
-        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(), command.getTeachers());
+    public TimetableTimeOccupiedDto timetableTimeOccupied(TimetableTimeOccupiedCommand command) {
         return timetableEventService.timetableTimeOccupied(command);
     }
     

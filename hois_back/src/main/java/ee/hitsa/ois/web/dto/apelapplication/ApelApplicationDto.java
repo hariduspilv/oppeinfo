@@ -22,7 +22,19 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
     private List<ApelApplicationRecordDto> records;
     private List<ApelApplicationCommentDto> comments;
     private List<ApelApplicationFileDto> files;
-    
+    private AutocompleteResult committee;
+    private String decision;
+    private Boolean canEdit;
+    private Boolean canReview;
+    private Boolean canSendToConfirm;
+    private Boolean canSendToCommittee;
+    private Boolean canSendBackToCreation;
+    private Boolean canSendBack;
+    private Boolean canReject;
+    private Boolean canConfirm;
+    private Boolean canRemoveConfirmation;
+    private Boolean canChangeTransferStatus;
+
     public static ApelApplicationDto of(ApelApplication application) {
         if (application == null) {
             return null;
@@ -114,5 +126,101 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
     public void setFiles(List<ApelApplicationFileDto> files) {
         this.files = files;
     }
-    
+
+    public AutocompleteResult getCommittee() {
+        return committee;
+    }
+
+    public String getDecision() {
+        return decision;
+    }
+
+    public void setDecision(String decision) {
+        this.decision = decision;
+    }
+
+    public void setCommittee(AutocompleteResult committee) {
+        this.committee = committee;
+    }
+
+    public Boolean getCanReview() {
+        return canReview;
+    }
+
+    public void setCanReview(Boolean canReview) {
+        this.canReview = canReview;
+    }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
+
+    public Boolean getCanSendToConfirm() {
+        return canSendToConfirm;
+    }
+
+    public void setCanSendToConfirm(Boolean canSendToConfirm) {
+        this.canSendToConfirm = canSendToConfirm;
+    }
+
+    public Boolean getCanSendToCommittee() {
+        return canSendToCommittee;
+    }
+
+    public void setCanSendToCommittee(Boolean canSendToCommittee) {
+        this.canSendToCommittee = canSendToCommittee;
+    }
+
+    public Boolean getCanSendBackToCreation() {
+        return canSendBackToCreation;
+    }
+
+    public void setCanSendBackToCreation(Boolean canSendBackToCreation) {
+        this.canSendBackToCreation = canSendBackToCreation;
+    }
+
+    public Boolean getCanSendBack() {
+        return canSendBack;
+    }
+
+    public void setCanSendBack(Boolean canSendBack) {
+        this.canSendBack = canSendBack;
+    }
+
+    public Boolean getCanReject() {
+        return canReject;
+    }
+
+    public void setCanReject(Boolean canReject) {
+        this.canReject = canReject;
+    }
+
+    public Boolean getCanConfirm() {
+        return canConfirm;
+    }
+
+    public void setCanConfirm(Boolean canConfirm) {
+        this.canConfirm = canConfirm;
+    }
+
+    public Boolean getCanRemoveConfirmation() {
+        return canRemoveConfirmation;
+    }
+
+    public void setCanRemoveConfirmation(Boolean canRemoveConfirmation) {
+        this.canRemoveConfirmation = canRemoveConfirmation;
+    }
+
+    public Boolean getCanChangeTransferStatus() {
+        return canChangeTransferStatus;
+    }
+
+    public void setCanChangeTransferStatus(Boolean canChangeTransferStatus) {
+        this.canChangeTransferStatus = canChangeTransferStatus;
+    }
+
 }

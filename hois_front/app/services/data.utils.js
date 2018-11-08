@@ -156,6 +156,11 @@ angular.module('hitsaOis').factory('DataUtils',
       isSameDay: function(date1, date2) {
         return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && 
           date1.getDate() === date2.getDate();
+      },
+
+      isWeekend: function(date) {
+        var day = date.getDay();
+        return day === 6 || day === 0;
       }
     };
   }

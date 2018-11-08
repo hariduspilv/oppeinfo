@@ -28,8 +28,4 @@ angular.module('hitsaOis').controller('FinalThesisListController', function ($sc
   $scope.$watch('criteria.studentGroupObject', function () {
     $scope.criteria.studentGroup = $scope.criteria.studentGroupObject ? $scope.criteria.studentGroupObject.id : null;
   });
-
-  $scope.clearCriteria = function () {
-    $scope.criteria = {};
-  };
 });

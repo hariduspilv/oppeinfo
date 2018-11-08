@@ -1,11 +1,14 @@
 package ee.hitsa.ois.web.dto;
 
 import ee.hitsa.ois.domain.Building;
+import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.basemodule.BaseModule;
+import ee.hitsa.ois.domain.basemodule.BaseModuleOutcomes;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
@@ -82,6 +85,14 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     @Override
     public String getNameEn() {
         return nameEn;
+    }
+    
+    public static AutocompleteResult of(BaseModule baseModule) {
+        return new AutocompleteResult(baseModule.getId(), baseModule.getNameEt(), baseModule.getNameEn());
+    }
+    
+    public static AutocompleteResult of(BaseModuleOutcomes outcome) {
+        return new AutocompleteResult(outcome.getId(), outcome.getOutcomeEt(), outcome.getOutcomeEn());
     }
 
     public static AutocompleteResult of(Building building) {
@@ -218,10 +229,14 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     }
 
     public static AutocompleteResult of(CurriculumVersionOccupationModuleTheme theme) {
-        return new AutocompleteResult(EntityUtil.getId(theme), theme.getNameEt(), theme.getNameEt());        
+        return new AutocompleteResult(EntityUtil.getId(theme), theme.getNameEt(), theme.getNameEt());
     }
-    
+
     public static AutocompleteResult of(Journal journal) {
         return new AutocompleteResult(journal.getId(), journal.getNameEt(), journal.getNameEt());
+    }
+
+    public static AutocompleteResult of(Committee committee) {
+        return new AutocompleteResult(committee.getId(), committee.getNameEt(), committee.getNameEt());
     }
 }

@@ -3,6 +3,7 @@ package ee.hitsa.ois.service.curriculum;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.basemodule.BaseModule;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleCompetence;
@@ -25,12 +27,14 @@ import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.BaseModuleUtil;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumModuleForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumModuleTypesCommand;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
@@ -54,10 +58,19 @@ public class CurriculumModuleService {
 
     public CurriculumModule update(HoisUserDetails user, CurriculumModule module, CurriculumModuleForm dto) {
         EntityUtil.setUsername(user.getUsername(), em);
-        EntityUtil.bindToEntity(dto, module, classifierRepository, "occupations", "competences", "outcomes");
+        if ((dto.getBaseModule() != null && dto.getBaseModule().getId() != null) && !(module.getBaseModule() != null && module.getBaseModule().getId().equals(dto.getBaseModule().getId()))) {
+            BaseModule baseModule = em.getReference(BaseModule.class, dto.getBaseModule().getId());
+            module.setBaseModule(baseModule);
+        }
+        if (module.getBaseModule() == null) {
+            EntityUtil.bindToEntity(dto, module, classifierRepository, "baseModule", "occupations", "competences", "outcomes");
+            updateOutcomes(module, dto.getOutcomes());
+        } else {
+            EntityUtil.bindToEntity(dto, module, classifierRepository, "baseModule", "occupations", "competences", "outcomes", "nameEt", "nameEn", "credits", "objectivesEt", "objectivesEn", "assessmentsEt", "assessmentsEn");
+            BaseModuleUtil.updateReferences(module.getBaseModule(), Collections.singleton(module), Collections.emptySet(), em);
+        }
         updateOccupations(module, dto.getOccupations());
         updateCompetences(module, dto.getCompetences());
-        updateOutcomes(module, dto.getOutcomes());
         return EntityUtil.save(module, em);
     }
 
@@ -76,8 +89,20 @@ public class CurriculumModuleService {
     }
 
     private void updateOutcomes(CurriculumModule module, List<CurriculumModuleOutcomeDto> outcomes) {
-        EntityUtil.bindEntityCollection(module.getOutcomes(), CurriculumModuleOutcome::getId, outcomes, 
-                CurriculumModuleOutcomeDto::getId, this::createOutcome, this::updateOutcome);
+        EntityUtil.bindEntityCollection(module.getOutcomes(), CurriculumModuleOutcome::getId,
+            outcomes, CurriculumModuleOutcomeDto::getId,
+            this::createOutcome, this::updateOutcome,
+            outcome -> {
+                JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_module_outcomes cmo").limit(1);
+                qb.requiredCriteria("cmo.id = :outcomeId and ("
+                        + "exists (select je.id from journal_entry je where je.curriculum_module_outcomes_id = cmo.id) "
+                        + "or exists (select a.id from apel_application_informal_subject_or_module_outcomes a where a.curriculum_module_outcomes_id = cmo.id)"
+                        + ")"
+                        , "outcomeId", outcome.getId());
+                if (!qb.select("cmo.id", em).getResultList().isEmpty()) {
+                    throw new ValidationFailedException("module.messages.error.outcomeHasConnection");
+                }
+        });
     }
 
     private CurriculumModuleOutcome createOutcome(CurriculumModuleOutcomeDto dto) {

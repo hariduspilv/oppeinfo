@@ -39,11 +39,15 @@ public class JournalEntryStudent extends BaseEntityWithId {
     private LocalDateTime gradeInserted;
     private String gradeInsertedBy;
     private String addInfo;
+    private Boolean isLessonAbsence;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_entry_student_id", nullable = false, updatable = false, insertable = true)
     private Set<JournalEntryStudentHistory> journalEntryStudentHistories = new HashSet<>();
-
+    
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_entry_student_id", nullable = false, updatable = false, insertable = true)
+    private Set<JournalEntryStudentLessonAbsence> journalEntryStudentLessonAbsences = new HashSet<>();
 
     public JournalEntry getJournalEntry() {
         return journalEntry;
@@ -117,12 +121,29 @@ public class JournalEntryStudent extends BaseEntityWithId {
         this.addInfo = addInfo;
     }
 
+    public Boolean getIsLessonAbsence() {
+        return isLessonAbsence;
+    }
+
+    public void setIsLessonAbsence(Boolean isLessonAbsence) {
+        this.isLessonAbsence = isLessonAbsence;
+    }
+
     public Set<JournalEntryStudentHistory> getJournalEntryStudentHistories() {
         return journalEntryStudentHistories;
     }
 
     public void setJournalEntryStudentHistories(Set<JournalEntryStudentHistory> journalEntryStudentHistories) {
         this.journalEntryStudentHistories = journalEntryStudentHistories;
+    }
+
+    public Set<JournalEntryStudentLessonAbsence> getJournalEntryStudentLessonAbsences() {
+        return journalEntryStudentLessonAbsences;
+    }
+
+    public void setJournalEntryStudentLessonAbsences(
+            Set<JournalEntryStudentLessonAbsence> journalEntryStudentLessonAbsences) {
+        this.journalEntryStudentLessonAbsences = journalEntryStudentLessonAbsences;
     }
 
 }

@@ -13,6 +13,7 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 
@@ -32,8 +33,12 @@ public class ApelApplication extends BaseEntityWithId {
     
     private String confirmedBy;
     private LocalDateTime confirmed;
-    
     private Boolean isVocational;
+    private String decision;
+    
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true)
+    private Committee committee;
     
     @OneToMany(mappedBy="apelApplication", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ApelApplicationRecord> records = new ArrayList<>();
@@ -86,6 +91,22 @@ public class ApelApplication extends BaseEntityWithId {
 
     public void setIsVocational(Boolean isVocational) {
         this.isVocational = isVocational;
+    }
+
+    public String getDecision() {
+        return decision;
+    }
+
+    public void setDecision(String decision) {
+        this.decision = decision;
+    }
+
+    public Committee getCommittee() {
+        return committee;
+    }
+
+    public void setCommittee(Committee committee) {
+        this.committee = committee;
     }
 
     public void setConfirmed(LocalDateTime confirmed) {

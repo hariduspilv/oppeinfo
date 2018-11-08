@@ -13,6 +13,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
@@ -36,6 +37,9 @@ public class Teacher extends BaseEntityWithId {
     private Boolean isActive;
     private String rtipNr;
     private String addInfo;
+    private String untisCode;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier nativeLanguage;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private TeacherOccupation teacherOccupation;
@@ -140,6 +144,14 @@ public class Teacher extends BaseEntityWithId {
         this.addInfo = addInfo;
     }
 
+    public Classifier getNativeLanguage() {
+        return nativeLanguage;
+    }
+
+    public void setNativeLanguage(Classifier nativeLanguage) {
+        this.nativeLanguage = nativeLanguage;
+    }
+
     public TeacherOccupation getTeacherOccupation() {
         return teacherOccupation;
     }
@@ -196,4 +208,12 @@ public class Teacher extends BaseEntityWithId {
     public void setSubjectStudyPeriods(List<SubjectStudyPeriodTeacher> subjectStudyPeriods) {
         this.subjectStudyPeriods = subjectStudyPeriods;
     }
+
+	public String getUntisCode() {
+		return untisCode;
+	}
+
+	public void setUntisCode(String untisCode) {
+		this.untisCode = untisCode;
+	}
 }

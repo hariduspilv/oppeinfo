@@ -62,10 +62,10 @@
         <div layout="row">
           <md-button class="md-raised md-primary" ng-click="search()">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <a ng-href="{{pdf(formState.pdfUrl, criteria)}}" target="_blank" class="md-button md-raised"
-            ng-disabled="!criteria.studentGroup || (!criteria.studyYear && !criteria.from)">{{'report.studentGroupTeacher.printPdf' | translate}}</a>
-          <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised" 
-            ng-disabled="!criteria.studentGroup || (!criteria.studyYear && !criteria.from)">{{'report.studentGroupTeacher.printXls' | translate}}</a>
+          <md-button ng-href="{{pdf(formState.pdfUrl, criteria)}}" class="md-button md-raised"
+            ng-disabled="!criteria.studentGroup || (!criteria.studyYear && !criteria.from)">{{'report.studentGroupTeacher.printPdf' | translate}}</md-button>
+          <md-button ng-href="{{excel(formState.xlsUrl, criteria)}}" class="md-button md-raised" 
+            ng-disabled="!criteria.studentGroup || (!criteria.studyYear && !criteria.from)">{{'report.studentGroupTeacher.printXls' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -73,7 +73,7 @@
   </div>
 </div>
 <div layout-padding ng-if="record">
-  <div flex>
+  <div flex class="student-group-teacher-container">
     <div class="container" fixed-column-table fixed-columns="1" ng-style="{height: (record.students.length > 15) ? 15*32 + 210 + 'px' : record.students.length * 32 + 210 + 'px'}">
       <table ng-if="record.moduleTypes.length > 0" class="student-group-teacher-table">
         <thead>
@@ -127,9 +127,10 @@
                   </md-tooltip>
                 </div>
                 <div></div>
-                <div ng-if="resultColumn.journalResult.absenceH">H: {{resultColumn.journalResult.absenceH}}</div>
-                <div ng-if="resultColumn.journalResult.absenceP">P: {{resultColumn.journalResult.absenceP}}</div>
-                <div ng-if="resultColumn.journalResult.absenceV">V: {{resultColumn.journalResult.absenceV}}</div>
+                <div ng-if="resultColumn.journalResult.absences['PUUDUMINE_H']">H: {{resultColumn.journalResult.absences['PUUDUMINE_H']}}</div>
+                <div ng-if="resultColumn.journalResult.absences['PUUDUMINE_P']">P: {{resultColumn.journalResult.absences['PUUDUMINE_P']}}</div>
+                <div ng-if="resultColumn.journalResult.absences['PUUDUMINE_V']">V: {{resultColumn.journalResult.absences['PUUDUMINE_V']}}</div>
+                <div ng-if="resultColumn.journalResult.absences['PUUDUMINE_PR']">PR: {{resultColumn.journalResult.absences['PUUDUMINE_PR']}}</div>
               </div>
               <div ng-if="resultColumn.practiceModuleThemeResult">
                 <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.practiceModuleThemeResult.grade.code)}">{{resultColumn.practiceModuleThemeResult.grade.value}}</div>
@@ -150,10 +151,10 @@
                 </md-tooltip>
               </div>
             </td>
-            <td>{{row.absenceP + row.absenceV}}</td>
-            <td>{{row.absenceP}}</td>
-            <td>{{row.absenceV}}</td>
-            <td>{{row.absenceH}}</td>
+            <td>{{row.absences['PUUDUMINE_P'] + row.absences['PUUDUMINE_V'] + row.absences['PUUDUMINE_PR']}}</td>
+            <td>{{row.absences['PUUDUMINE_P']}}</td>
+            <td>{{row.absences['PUUDUMINE_V'] + row.absences['PUUDUMINE_PR']}}</td>
+            <td>{{row.absences['PUUDUMINE_H']}}</td>
           </tr>
         </tbody>
       </table>

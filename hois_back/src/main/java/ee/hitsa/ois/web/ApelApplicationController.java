@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -26,6 +27,7 @@ import ee.hitsa.ois.report.apelapplication.ApelApplicationReport;
 import ee.hitsa.ois.service.ApelApplicationService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ApelApplicationUtil;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -36,6 +38,7 @@ import ee.hitsa.ois.web.commandobject.apelapplication.ApelApplicationCommentForm
 import ee.hitsa.ois.web.commandobject.apelapplication.ApelApplicationForm;
 import ee.hitsa.ois.web.commandobject.apelapplication.ApelApplicationRecordForm;
 import ee.hitsa.ois.web.commandobject.apelapplication.ApelApplicationSearchCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationFileDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationSearchDto;
@@ -52,16 +55,16 @@ public class ApelApplicationController {
 
     @GetMapping
     public Page<ApelApplicationSearchDto> search(@Valid ApelApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdminOrStudent(user);
+        ApelApplicationUtil.canSearch(user);
         return apelApplicationService.search(user, command, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
     public ApelApplicationDto get(HoisUserDetails user, @WithEntity ApelApplication application) {
-        if (!UserUtil.canViewApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canView(user, application)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
-        return apelApplicationService.get(application);
+        return apelApplicationService.get(user, application);
     }
 
     @PostMapping
@@ -75,7 +78,7 @@ public class ApelApplicationController {
     public ApelApplicationDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) ApelApplication application,
             @Valid @RequestBody ApelApplicationForm applicationForm) {
-        if (!UserUtil.canViewApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canView(user, application)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
         return get(user, apelApplicationService.save(user, application,  applicationForm));
@@ -85,7 +88,7 @@ public class ApelApplicationController {
     public void delete(HoisUserDetails user,
             @WithVersionedEntity(versionRequestParam = "version") ApelApplication application,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        if (!UserUtil.canEditApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canEdit(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         apelApplicationService.delete(user, application);
@@ -93,7 +96,7 @@ public class ApelApplicationController {
 
     @PutMapping("/{id:\\d+}/submit")
     public ApelApplicationDto submit(HoisUserDetails user, @WithEntity ApelApplication application) {
-        if (!UserUtil.canSubmitApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canSubmit(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         ApelApplication submittedApplication = apelApplicationService.submit(application);
@@ -103,25 +106,38 @@ public class ApelApplicationController {
     @PutMapping("/{id:\\d+}/sendToConfirm")
     public ApelApplicationDto sendToConfirm(HoisUserDetails user, @WithEntity ApelApplication application,
             @Valid @RequestBody ApelApplicationForm applicationForm) {
-        if (!UserUtil.canSendToConfirmApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canSendToConfirm(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
-        ApelApplication sentToConfirmApplication = apelApplicationService.sendToConfirm(application);
+        ApelApplication sentToConfirmApplication = apelApplicationService.sendToConfirm(application, applicationForm);
         return get(user, apelApplicationService.save(user, sentToConfirmApplication,  applicationForm));
     }
 
-    @PutMapping("/{id:\\d+}/sendBackToCreation")
-    public ApelApplicationDto sendBackToCreation(HoisUserDetails user, @WithEntity ApelApplication application) {
-        if (!UserUtil.canSendBackToCreation(user, application)) {
+    @PutMapping("/{id:\\d+}/sendToCommittee")
+    public ApelApplicationDto sendToCommittee(HoisUserDetails user, @WithEntity ApelApplication application,
+            @Valid @RequestBody ApelApplicationForm applicationForm) {
+        if (!ApelApplicationUtil.canSendToCommittee(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
-        ApelApplication sentBackToCreationApplication = apelApplicationService.sendBackToCreation(application);
+        ApelApplication sendToCommitteeApplication = apelApplicationService.sendToCommittee(application,
+                applicationForm);
+        return get(user, apelApplicationService.save(user, sendToCommitteeApplication, applicationForm));
+    }
+
+    @PutMapping("/{id:\\d+}/sendBackToCreation")
+    public ApelApplicationDto sendBackToCreation(HoisUserDetails user, @WithEntity ApelApplication application,
+            @Valid @RequestBody ApelApplicationCommentForm applicationCommentForm) {
+        if (!ApelApplicationUtil.canSendBackToCreation(user, application)) {
+            throw new ValidationFailedException("apel.error.nopermission");
+        }
+        ApelApplication sentBackToCreationApplication = apelApplicationService.sendBackToCreation(application,
+                applicationCommentForm);
         return get(user, sentBackToCreationApplication);
     }
 
     @PutMapping("/{id:\\d+}/confirm")
     public ApelApplicationDto confirm(HoisUserDetails user, @WithEntity ApelApplication application) {
-        if (!UserUtil.canConfirmApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canConfirm(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         ApelApplication confirmedApplication = apelApplicationService.confirm(user, application);
@@ -130,7 +146,7 @@ public class ApelApplicationController {
 
     @PutMapping("/{id:\\d+}/sendBack")
     public ApelApplicationDto sendBack(HoisUserDetails user, @WithEntity ApelApplication application) {
-        if (!UserUtil.canSendBackApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canSendBack(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         ApelApplication sentBackApplication = apelApplicationService.sendBack(application);
@@ -140,7 +156,7 @@ public class ApelApplicationController {
     @PutMapping("/{id:\\d+}/reject")
     public ApelApplicationDto reject(HoisUserDetails user, @WithEntity ApelApplication application,
             @Valid @RequestBody ApelApplicationCommentForm applicationCommentForm) {
-        if (!UserUtil.canRejectApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canReject(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         ApelApplication rejectedApplication = apelApplicationService.reject(application, applicationCommentForm);
@@ -149,7 +165,7 @@ public class ApelApplicationController {
 
     @PutMapping("/{id:\\d+}/removeConfirmation")
     public ApelApplicationDto removeConfirmation(HoisUserDetails user, @WithEntity ApelApplication application) {
-        if (!UserUtil.canRemoveConfirmationApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canRemoveConfirmation(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         ApelApplication removedConfirmationApplication = apelApplicationService.removeConfirmation(application);
@@ -160,7 +176,7 @@ public class ApelApplicationController {
     public ApelApplicationDto createRecord(HoisUserDetails user,
             @Valid @RequestBody ApelApplicationRecordForm recordForm,
             @WithEntity("applicationId") ApelApplication application) {
-        if (!UserUtil.canEditApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canEdit(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         apelApplicationService.createRecord(user, application, recordForm);
@@ -172,7 +188,7 @@ public class ApelApplicationController {
             @Valid @RequestBody ApelApplicationRecordForm recordForm,
             @WithEntity("applicationId") ApelApplication application,
             @WithEntity ApelApplicationRecord record) {
-        if (!UserUtil.canEditApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canEdit(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         apelApplicationService.updateRecord(user, recordForm, record);
@@ -183,7 +199,7 @@ public class ApelApplicationController {
     public ApelApplicationDto deleteRecord(HoisUserDetails user, @WithEntity("applicationId") ApelApplication application,
             @WithVersionedEntity(versionRequestParam = "version") ApelApplicationRecord record,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        if (!UserUtil.canEditApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canEdit(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         apelApplicationService.deleteRecord(user, record);
@@ -194,7 +210,7 @@ public class ApelApplicationController {
     public ApelApplicationFileDto createFile(HoisUserDetails user,
             @Valid @RequestBody OisFileForm fileForm,
             @WithEntity("applicationId") ApelApplication application) {
-        if (!UserUtil.canEditApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canEdit(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         return ApelApplicationFileDto.of(apelApplicationService.createFile(application, fileForm));
@@ -204,7 +220,7 @@ public class ApelApplicationController {
     public void deleteFile(HoisUserDetails user,
             @WithEntity("applicationId") ApelApplication application,
             @WithEntity("fileId") ApelApplicationFile file) {
-        if (!UserUtil.canEditApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canEdit(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         apelApplicationService.deleteFile(user, file);
@@ -214,23 +230,10 @@ public class ApelApplicationController {
     public ApelApplicationDto createComment(HoisUserDetails user,
             @Valid @RequestBody ApelApplicationCommentForm commentForm,
             @WithEntity("applicationId") ApelApplication application) {
-        if (!UserUtil.canEditApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canEdit(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         apelApplicationService.createComment(application, commentForm);
-        return get(user, application);
-    }
-
-    /* TODO: not used right now an might never be */
-    @PutMapping("/{applicationId:\\d+}/comment/{id:\\d+}")
-    public ApelApplicationDto updateComment(HoisUserDetails user,
-            @Valid @RequestBody ApelApplicationCommentForm commentForm,
-            @WithEntity("applicationId") ApelApplication application,
-            @WithEntity ApelApplicationComment comment) {
-        if (!UserUtil.canEditApelApplication(user, application)) {
-            throw new ValidationFailedException("apel.error.nopermission");
-        }
-        apelApplicationService.updateComment(commentForm, comment);
         return get(user, application);
     }
 
@@ -238,7 +241,7 @@ public class ApelApplicationController {
     public ApelApplicationDto deleteComment(HoisUserDetails user, @WithEntity("applicationId") ApelApplication application,
             @WithVersionedEntity(versionRequestParam = "version") ApelApplicationComment comment,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        if (!UserUtil.canEditApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canEdit(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
         apelApplicationService.deleteComment(user, comment);
@@ -248,7 +251,7 @@ public class ApelApplicationController {
     @GetMapping("/print/{id:\\d+}/application.pdf")
     public void print(HoisUserDetails user, @WithEntity ApelApplication application, HttpServletResponse response)
             throws IOException {
-        if (!UserUtil.canViewApelApplication(user, application)) {
+        if (!ApelApplicationUtil.canView(user, application)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
 
@@ -263,5 +266,12 @@ public class ApelApplicationController {
     public CurriculumVersionHigherModuleDto subjectModule(HoisUserDetails user, @WithEntity("subjectId") Subject subject) {
         UserUtil.assertIsSchoolAdminOrStudent(user);
         return apelApplicationService.subjectModule(subject);
+    }
+
+    @GetMapping("/{applicationId:\\d+}/committees")
+    public List<AutocompleteResult> committees(HoisUserDetails user,
+            @WithEntity("applicationId") ApelApplication application) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return apelApplicationService.committeesForSelection(user, application);
     }
 }

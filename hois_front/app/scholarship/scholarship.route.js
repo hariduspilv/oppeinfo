@@ -351,6 +351,38 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
       }
     })
+    .when('/scholarships/decision/:type', {
+      templateUrl: 'scholarship/scholarship.decision.edit.html',
+      controller: 'ScholarshipDecisionController',
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        },
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
+      }
+    })
+    .when('/scholarships/decision/:type/:id', {
+      templateUrl: 'scholarship/scholarship.decision.view.html',
+      controller: 'ScholarshipDecisionViewController',
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        },
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+      }
+    })
     .when('/scholarships/applications/:id', {
       templateUrl: 'scholarship/student/scholarship.application.edit.html',
       controller: 'StudentScholarshipApplicationViewController',

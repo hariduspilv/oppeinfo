@@ -26,6 +26,7 @@ public class LessonPlanJournalForm extends VersionedCommand {
     @NotNull
     private Long occupationModuleId;
     private Long lessonPlanModuleId;
+    private String untisCode;
 
     @Required
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMISVIIS)
@@ -146,7 +147,15 @@ public class LessonPlanJournalForm extends VersionedCommand {
         this.addModuleOutcomes = addModuleOutcomes;
     }
 
-    public static class LessonPlanGroupForm {
+    public String getUntisCode() {
+		return untisCode;
+	}
+
+	public void setUntisCode(String untisCode) {
+		this.untisCode = untisCode;
+	}
+
+	public static class LessonPlanGroupForm {
 
         private Long studentGroup;
         @NotNull

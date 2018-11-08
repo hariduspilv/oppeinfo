@@ -4,7 +4,7 @@
     </hois-collapsable-header>
 
     <md-table-container>
-        <table md-table class="absence-table" ng-init="groups = getGroupedValues(studentAbsences, 'entryDate', 'hoisDate')">
+        <table md-table class="absence-table">
             <tbody md-body>
                 <tr md-row class="header">
                     <td md-cell>{{'academicCalendar.date' | translate}}</td>
@@ -13,24 +13,25 @@
                     <td md-cell></td>
                 </tr>
             </tbody>
-            <tbody md-body ng-init="absenceGroup = getGroupedValues(group, 'absenceCode', null)" ng-repeat-start="(key, group) in groups" ng-click="openCloseDetails(absenceGroup)" style="cursor:pointer">
+            <tbody md-body ng-repeat-start="(key, group) in absenceGroups" ng-click="openCloseDetails(group)" style="cursor:pointer">
                 <tr md-row>
                     <td md-cell>{{key || '-'}}</td>
-                    <td md-cell class="sub-header">{{absenceGroup['PUUDUMINE_H'].length}}</td>
-                    <td md-cell class="sub-header">{{absenceGroup['PUUDUMINE_P'].length}}</td>
+                    <td md-cell class="sub-header">{{group.PUUDUMINE_H}}</td>
+                    <td md-cell class="sub-header">{{group.PUUDUMINE_P}}</td>
                     <td md-cell>
                         <md-button style="margin: 0;">
                             <md-icon md-font-set="material-icons md-dark">
-                                {{absenceGroup.clicked ? "keyboard_arrow_up" : "keyboard_arrow_down"}}
+                                {{group.clicked ? "keyboard_arrow_up" : "keyboard_arrow_down"}}
                             </md-icon>
                         </md-button>
                     </td>
                 </tr>
             </tbody>
-            <tbody md-body ng-repeat-end ng-show="absenceGroup.clicked" ng-init="absenceArray = translateObjectToArray(absenceGroup)">
-                <tr class="add-info" md-row ng-repeat="absence in absenceArray | orderBy: '+startLessonNr'" ng-init="$last && pageLoadingHandler.setFinish('studentAbsences')">
-                    <td md-cell ng-if="absence.startLessonNr">{{absence.startLessonNr}}. {{'home.student.lesson' | translate}}</td>
-                    <td md-cell ng-if="!absence.startLessonNr"></td>
+            <tbody md-body ng-repeat-end ng-show="group.clicked">
+                <tr class="add-info" md-row ng-repeat="absence in group | orderBy: ['lessonNrStart', 'lessonNrEnd']" ng-init="$last && pageLoadingHandler.setFinish('studentAbsences')">
+                    <td md-cell ng-if="absence.lessonNrStart && !absence.lessonNrEnd">{{absence.lessonNrStart}}. {{'home.student.lesson' | translate}}</td>
+                    <td md-cell ng-if="absence.lessonNrStart && absence.lessonNrEnd">{{absence.lessonNrStart}} - {{absence.lessonNrEnd}}. {{'home.student.lesson' | translate}}</td>
+                    <td md-cell ng-if="!absence.lessonNrStart && !absence.lessonNrEnd"></td>
                     <td md-cell>{{absence.absenceCode === 'PUUDUMINE_H' ? absence.journalName : ""}}</td>
                     <td md-cell>{{absence.absenceCode === 'PUUDUMINE_P' ? absence.journalName : ""}}</td>
                     <td md-cell></td>

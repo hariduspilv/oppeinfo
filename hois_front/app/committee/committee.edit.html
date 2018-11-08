@@ -2,6 +2,12 @@
 
   <form layout="column" name="committeeEditForm">
 
+    <div layout="row" ng-if="showName">
+      <md-input-container flex>
+        <label>{{'committee.name' | translate}}</label>
+        <input type="text" ng-model="record.nameEt" md-maxlength="255">
+      </md-input-container>
+    </div>
     <div layout="row" layout-sm="column" layout-xs="column">
       <md-input-container flex>
         <label>{{'committee.addInfo' | translate}}</label>
@@ -14,12 +20,28 @@
         <div layout="row" layout-sm="column" layout-xs="column" >
           <md-input-container flex flex-sm="100" flex-xs="100">
             <label>{{'main.from' | translate}}</label>
-            <md-datepicker ng-model="record.validFrom" required></md-datepicker>
+            <md-datepicker ng-model="record.validFrom" md-max-date="record.validThru" required></md-datepicker>
           </md-input-container>
           <md-input-container flex flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
             <label>{{'main.thru' | translate}}</label>
             <md-datepicker ng-model="record.validThru" md-min-date="record.validFrom" required></md-datepicker>
           </md-input-container>
+        </div>
+      </div>
+    </div>
+
+    <div ng-if="committeeType === 'KOMISJON_T'">
+      <div layout="row" flex="100">
+        <hois-autocomplete flex ng-model="formState.curriculum" method="curriculums" label="committee.curriculums"
+          md-selected-item-change="curriculumSelected()"></hois-autocomplete>
+      </div>
+      <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in record.curriculums">
+        <div layout="row" flex layout-align="start center">
+          <div flex="5">&nbsp;</div>
+          <div flex="50">{{curriculum.nameEt}}</div>
+          <div>
+            <a ng-click="deleteCurriculum(curriculum)" class="remove">&times;</a>
+          </div>
         </div>
       </div>
     </div>
@@ -31,7 +53,7 @@
         <thead md-head>
           <tr md-row>
             <th md-column>{{'committee.isChairman' | translate}}</th>
-            <th md-column>{{'committee.external' | translate}}</th>
+            <th md-column ng-if="!showPersonSearch">{{'committee.external' | translate}}</th>
             <th md-column>{{'committee.name' | translate}}</th>
             <th md-column></th>
           </tr>
@@ -44,7 +66,7 @@
                         aria-label="{{'committee.isChairman' | translate}} {{member.memberName}}">
                 </md-checkbox>
               </td>
-              <td md-cell>
+              <td md-cell ng-if="!showPersonSearch">
                 <md-checkbox ng-model="member.isExternal"
                         aria-label="{{'committee.external' | translate}} {{member.memberName}}">
                 </md-checkbox>
@@ -53,9 +75,12 @@
                 <md-input-container ng-if="member.isExternal">
                   <input type="text" ng-model="member.memberName" md-maxlength="100" aria-label="{{'committee.name' | translate}} {{member.memberName}}" required>
                 </md-input-container>
-                <md-input-container ng-if="!member.isExternal">
+                <md-input-container ng-if="!member.isExternal && !showPersonSearch">
                   <hois-select ng-model="member.teacher" type="teacher" aria-label="{{'committee.name' | translate}} {{member.memberName}}" required></hois-select>
                 </md-input-container>
+                <div layout="row" flex="100" ng-if="showPersonSearch">
+                  <hois-autocomplete flex ng-model="member.person" method="allpersons" no-paging="true" label="committee.name" aria-label="{{'committee.name' | translate}} {{member.memberName}}" required></hois-autocomplete>
+                </div>
               </td>
               <td md-cell><a class="remove nomargin" ng-click="removeMember(member)">&times;</a></td>
             </ng-form>
@@ -71,7 +96,7 @@
     <div>
       <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
       <md-button class="md-raised" ng-click="delete()" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="back('#/committees', committeeEditForm)">{{'main.button.back' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="back('#/committees/' + committeeType, committeeEditForm)">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>
 </div>

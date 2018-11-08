@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import java.util.List;
+
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
@@ -21,6 +23,7 @@ public class JournalStudentDto {
     private Boolean isMoodleRegistered;
     private String status;
     private Boolean isIndividualCurriculum;
+    private List<JournalStudentApelResultDto> apelResults;
     private Boolean canEdit;
 
     public static JournalStudentDto of(Student student) {
@@ -130,6 +133,14 @@ public class JournalStudentDto {
 
     public void setIsIndividualCurriculum(Boolean isIndividualCurriculum) {
         this.isIndividualCurriculum = isIndividualCurriculum;
+    }
+
+    public List<JournalStudentApelResultDto> getApelResults() {
+        return apelResults;
+    }
+
+    public void setApelResults(List<JournalStudentApelResultDto> apelResults) {
+        this.apelResults = apelResults;
     }
 
     public Boolean getCanEdit() {

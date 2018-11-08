@@ -33,6 +33,7 @@ public class ContractDto extends VersionedCommand {
     private String practicePlan;
     private AutocompleteResult subject;
     private Long wdId;
+    private Boolean isPracticeAbsence;
 
     public static ContractDto of(Contract contract) {
         if (contract == null) {
@@ -231,6 +232,14 @@ public class ContractDto extends VersionedCommand {
 
     public void setWdId(Long wdId) {
         this.wdId = wdId;
+    }
+
+    public Boolean getIsPracticeAbsence() {
+        return isPracticeAbsence;
+    }
+
+    public void setIsPracticeAbsence(Boolean isPracticeAbsence) {
+        this.isPracticeAbsence = isPracticeAbsence;
     }
 
 }

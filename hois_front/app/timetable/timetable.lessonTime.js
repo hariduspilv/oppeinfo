@@ -1,8 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableLessonTimeController', function ($scope, $q, QueryUtils, Classifier, DataUtils, ArrayUtils, $route, message, $timeout, $location) {
+angular.module('hitsaOis').controller('TimetableLessonTimeController', function ($scope, $rootScope, $q, QueryUtils, Classifier, DataUtils, ArrayUtils, $route, message, $timeout, $location) {
   var INITIAL_BLOCK_COUNT = 10;
-
+  $rootScope.replaceLastUrl("#/timetable/lessonTime/search");
   $scope.buildings = QueryUtils.endpoint('/autocomplete/buildings').query();
   $scope.blocks = [];
   $scope.usedBuildings = {};
@@ -22,7 +22,7 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
         } else {
           DataUtils.convertStringToDates(result, ["minValidFrom"]);
           $scope.minValidFrom = result.minValidFrom;
-          if ($scope.validFrom < $scope.minValidFrom) {
+          if ($scope.validFrom < $scope.minValidFrom + 1) {
             $scope.validFrom = undefined;
           }
         }
@@ -129,15 +129,17 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
 
         var lessonStart = $scope.blocks[i].lessonTimes[j].startTime;
         var lessonEnd = $scope.blocks[i].lessonTimes[j].endTime;
-        if (lessonStart > lessonEnd) {
-          message.error('timetable.lessonTime.endIsEarlierThanStart');
-          valid = false;
-          break blocks;
-        }
-        if (lessonStart.getHours() < 7 || (lessonEnd.getHours() === 23 && lessonEnd.getMinutes() > 0)) {
-          message.error('timetable.lessonTime.outOfTimeRange');
-          valid = false;
-          break blocks;
+        if (typeof lessonStart !== 'undefined' && typeof lessonEnd !== 'undefined') {
+          if (lessonStart > lessonEnd) {
+            message.error('timetable.lessonTime.endIsEarlierThanStart');
+            valid = false;
+            break blocks;
+          }
+          if (lessonStart.getHours() < 7 || (lessonEnd.getHours() === 23 && lessonEnd.getMinutes() > 0)) {
+            message.error('timetable.lessonTime.outOfTimeRange');
+            valid = false;
+            break blocks;
+          }
         }
       }
 
@@ -187,8 +189,10 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
     var value = Math.round(((endTime - startTime) / 2700000.0) * 100) / 100;
     return value >= 0 ? value : 0;
   };
+
   $scope.buildingChanged = function(building, block) {
     selectBuilding(building, block, block.selectedBuildings[building.id]);
+    $scope.blocks.$setDirty();
   };
   $scope.isBuildingDisabled = function(building, block) {
     if (angular.isDefined($scope.usedBuildings[building.id])) {
@@ -252,6 +256,7 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
         var updatedEntity = dtoToEntity($scope);
         new LessonTimeEndpoint(updatedEntity).$update().then(function(result) {
           message.info('main.messages.create.success');
+          $scope.lessonTimeForm.$setPristine();
           entityToForm(result);
         });
       } else {
@@ -259,6 +264,7 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
         var newEntity = dtoToEntity($scope);
         new LessonTimeEndpoint(newEntity).$save().then(function(result) {
           message.info('main.messages.create.success');
+          $scope.lessonTimeForm.$setPristine();
           if (angular.isArray(result.lessonTimeBuildingGroups)) {
             result.lessonTimeBuildingGroups.forEach(function(lessonTimeBuildingGroup) {
               if (angular.isArray(lessonTimeBuildingGroup.lessonTimes) && lessonTimeBuildingGroup.lessonTimes.length > 0) {

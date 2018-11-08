@@ -19,7 +19,7 @@
           <br>
         </div>
 
-        <div ng-if="!practiceJournal.subject" layout="row" flex>
+        <div ng-if="!practiceJournal.isHigher" layout="row" layout-xs="column" flex>
           <md-input-container flex>
             <label>{{'practiceJournal.module' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.module)"></hois-value>
@@ -29,7 +29,7 @@
             <hois-value value="currentLanguageNameField(practiceJournal.theme)"></hois-value>
           </md-input-container>
           <md-input-container flex>
-            <label>{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
+            <label>{{'practiceJournal.creditsEKAP' | translate}}</label>
             <hois-value value="practiceJournal.credits"></hois-value>
           </md-input-container>
           <md-input-container flex>
@@ -38,13 +38,13 @@
           </md-input-container>
         </div>
 
-        <div ng-if="practiceJournal.subject" layout="row" layout-xs="column" flex>
+        <div ng-if="practiceJournal.isHigher" layout="row" layout-xs="column" flex>
           <md-input-container flex>
             <label>{{'practiceJournal.subject' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.subject)"></hois-value>
           </md-input-container>
           <md-input-container flex>
-            <label>{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
+            <label>{{'practiceJournal.creditsEAP' | translate}}</label>
             <hois-value value="practiceJournal.credits"></hois-value>
           </md-input-container>
           <md-input-container flex>
@@ -100,7 +100,7 @@
             <thead md-head md-on-reorder="loadEntries">
               <tr md-row flex>
                 <th md-column class="padding-y-5" style="width: 10%; min-width: 50px;">{{'practiceJournal.practiceJournalEntry.practiceDate' | translate}}</th>
-                <th md-column style="padding: 0 100px 0 5px !important">{{'practiceJournal.practiceJournalEntry.description' | translate}}</th>
+                <th md-column style="padding: 0 300px 0 5px !important">{{'practiceJournal.practiceJournalEntry.description' | translate}}</th>
                 <th md-column class="padding-y-5" style="width: 10%; min-width: 50px;">{{'practiceJournal.practiceJournalEntry.hours' | translate}}</th>
                 <th ng-if="practiceJournal.contract" md-column class="padding-y-5">{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}</th>
                 <th md-column class="padding-y-5">{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}</th>
@@ -118,7 +118,7 @@
                     <hois-value value="row.practiceDate | hoisDate"></hois-value>
                   </div>
                 </td>
-                <td md-cell class="padding-y-5">
+                <td md-cell class="padding-y-5" colspan="1.5">
                   <md-input-container ng-if="row.isStudentEntry && auth.isStudent()" class="padding-y-5" style="width: 100%;">
                     <input ng-model="row.description" type="text" aria-label="{{'practiceJournal.practiceJournalEntry.description' | translate}}" md-maxlength="10000">
                   </md-input-container>

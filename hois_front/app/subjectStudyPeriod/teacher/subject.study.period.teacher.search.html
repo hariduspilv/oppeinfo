@@ -43,8 +43,10 @@
             <td md-cell><a ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{criteria.studyPeriod}}/view">{{row.name}}</a></td>
             <td md-cell>{{row.hours}}</td>
             <td md-cell>
-                <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}
-                    </md-button></td>
+              <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{criteria.studyPeriod}}/edit">
+                {{'main.button.change' | translate}}
+              </md-button>
+            </td>
           </tr>
         </tbody>
       </table>

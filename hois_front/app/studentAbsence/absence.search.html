@@ -82,10 +82,10 @@
             </td>
             <td md-cell>{{row.acceptor}}</td>
             <td md-cell>
-              <span ng-if="row.canChangeStatus">
-                <md-button md-no-ink class="md-primary change-button" ng-click="accept(row)">{{'absence.accept' | translate}}</md-button>
-                <md-button md-no-ink class="md-primary change-button" ng-click="reject(row)">{{'absence.reject' | translate}}</md-button>
-              </span>
+              <md-button ng-if="row.canAccept" md-no-ink class="md-primary change-button" ng-click="accept(row)">{{'absence.accept' | translate}}</md-button>
+              <md-button ng-if="row.canAccept" md-no-ink class="md-primary change-button" ng-click="acceptByLessons(row)">{{'absence.acceptByLessons' | translate}}</md-button>
+              <md-button ng-if="row.isAccepted && row.isLessonAbsence" md-no-ink class="md-primary change-button" ng-click="viewAcceptedLessons(row)">{{'absence.viewAcceptedLessons' | translate}}</md-button>
+              <md-button ng-if="row.canReject" md-no-ink class="md-primary change-button" ng-click="reject(row)">{{'absence.reject' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

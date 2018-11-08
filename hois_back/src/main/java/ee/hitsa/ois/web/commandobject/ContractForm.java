@@ -67,6 +67,7 @@ public class ContractForm extends VersionedCommand {
     @NotNull(groups = ContractValidation.Higher.class)
     private Long subject;
     private Boolean isHigher;
+    private Boolean isPracticeAbsence;
 
     public AutocompleteResult getStudent() {
         return student;
@@ -235,4 +236,13 @@ public class ContractForm extends VersionedCommand {
     public void setIsHigher(Boolean isHigher) {
         this.isHigher = isHigher;
     }
+
+    public Boolean getIsPracticeAbsence() {
+        return isPracticeAbsence;
+    }
+
+    public void setIsPracticeAbsence(Boolean isPracticeAbsence) {
+        this.isPracticeAbsence = isPracticeAbsence;
+    }
+
 }

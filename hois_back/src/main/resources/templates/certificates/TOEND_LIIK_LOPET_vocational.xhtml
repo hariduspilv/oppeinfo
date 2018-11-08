@@ -10,8 +10,8 @@
  (kood {{ content.student.curriculum.code }}) 
  ja tema õppevorm oli {{ content.student.studyForm != null ? content.student.studyForm : "määramata"}}.
  <br> 
-Õpilane lõpetas kooli (lõputunnistuse nr: <b>TODO: tunnistus_nr</b>). 
-Talle on omistatud kutse: <b>TODO</b>.
+Õpilane lõpetas kooli (lõputunnistuse nr: <b>{{ content.student.diplomaNr }}</b>). 
+Talle on omistatud kutse: <b>{{ content.student.occupationText }} {{ content.student.partoccupationText }}</b>.
 
 
 </p>

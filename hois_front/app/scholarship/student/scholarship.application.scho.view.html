@@ -105,7 +105,7 @@
       <br/>
       <div layout="row">
         <md-button class="md-raised md-primary" ng-if="canManage" ng-click="accept()">{{'main.button.accept' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="back(isStudent ? '#/scholarships/myData/scholarships' : '#/scholarships/applications/grants')">{{'main.button.back' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="back(isStudent() ? '#/scholarships/myData/scholarships' : '#/scholarships/applications/grants')">{{'main.button.back' | translate}}</md-button>
       </div>
     </div>
   </fieldset>

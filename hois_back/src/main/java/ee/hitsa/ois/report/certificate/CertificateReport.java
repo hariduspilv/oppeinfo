@@ -13,6 +13,7 @@ public class CertificateReport {
     private String studyYear;
     private List<CertificateReportSession> sessions;
     private CertificateReportSession lastSession;
+    private Boolean addOutcomes;
     
     public static CertificateReport of(Student student) {
         CertificateReport report = new CertificateReport();
@@ -72,4 +73,13 @@ public class CertificateReport {
     public void setStudent(CertificateReportStudent student) {
         this.student = student;
     }
+
+    public Boolean getAddOutcomes() {
+        return addOutcomes;
+    }
+
+    public void setAddOutcomes(Boolean addOutcomes) {
+        this.addOutcomes = addOutcomes;
+    }
+    
 }

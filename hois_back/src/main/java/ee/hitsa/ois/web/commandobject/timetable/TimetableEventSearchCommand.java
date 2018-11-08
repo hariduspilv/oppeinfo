@@ -20,6 +20,7 @@ public class TimetableEventSearchCommand {
     private Boolean higher;
     private Boolean vocational;
     private Long journalOrSubjectId;
+    private Boolean showOnlySubstitutes;
 
     public String getName() {
         return name;
@@ -135,10 +136,18 @@ public class TimetableEventSearchCommand {
 
     public Long getJournalOrSubjectId() {
         return journalOrSubjectId;
-        }
+    }
 
     public void setJournalOrSubjectId(Long journalOrSubjectId) {
         this.journalOrSubjectId = journalOrSubjectId;
-        }
-    
+    }
+
+    public Boolean getShowOnlySubstitutes() {
+        return showOnlySubstitutes;
+    }
+
+    public void setShowOnlySubstitutes(Boolean showOnlySubstitutes) {
+        this.showOnlySubstitutes = showOnlySubstitutes;
+    }
+
 }

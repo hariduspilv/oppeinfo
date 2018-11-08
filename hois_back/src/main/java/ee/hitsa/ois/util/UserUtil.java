@@ -8,16 +8,16 @@ import org.springframework.security.access.AccessDeniedException;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
-import ee.hitsa.ois.domain.apelapplication.ApelApplication;
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.basemodule.BaseModule;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.domain.teacher.Teacher;
-import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Permission;
@@ -53,92 +53,15 @@ public abstract class UserUtil {
         return false;
     }
 
-    public static boolean canUpdateInformalSubjectOrModuleTransferStatus(HoisUserDetails user, ApelApplication application) {
+    public static boolean canConfirmApplication(HoisUserDetails user, Application application) {
+        String type = EntityUtil.getCode(application.getType());
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
-        if (!(ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status))) {
-            return Boolean.TRUE.equals(Boolean.valueOf(isSchoolAdmin(user, student.getSchool())
-                    && hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_VOTA)));
-        }
-        return false;
-    }
-
-    public static boolean canViewApelApplication(HoisUserDetails user, ApelApplication application) {
-        return isSchoolAdmin(user, application.getSchool()) || isSame(user, application.getStudent());
-    }
-
-    public static boolean canEditApelApplication(HoisUserDetails user, ApelApplication application) {
-        String status = EntityUtil.getCode(application.getStatus());
-        Student student = application.getStudent();
-        if (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status) || ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
-            return isSchoolAdmin(user, student.getSchool()) || isSame(user, student);
-        }
-        return false;
-    }
-
-    public static boolean canSubmitApelApplication(HoisUserDetails user, ApelApplication application) {
-        String status = EntityUtil.getCode(application.getStatus());
-        Student student = application.getStudent();
-        if (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)) {
-            return isSchoolAdmin(user, student.getSchool()) || isSame(user, student);
-        }
-        return false;
-    }
-
-    public static boolean canSendToConfirmApelApplication(HoisUserDetails user, ApelApplication application) {
-        String status = EntityUtil.getCode(application.getStatus());
-        Student student = application.getStudent();
-        if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
-            return isSchoolAdmin(user, student.getSchool());
-        }
-        return false;
-    }
-
-    public static boolean canSendBackToCreation(HoisUserDetails user, ApelApplication application) {
-        String status = EntityUtil.getCode(application.getStatus());
-        Student student = application.getStudent();
-        if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
-            return isSchoolAdmin(user, student.getSchool());
-        }
-        return false;
-    }
-
-    public static boolean canConfirmApelApplication(HoisUserDetails user, ApelApplication application) {
-        String status = EntityUtil.getCode(application.getStatus());
-        Student student = application.getStudent();
-        if (ApelApplicationStatus.VOTA_STAATUS_Y.name().equals(status)) {
-            return Boolean.TRUE.equals(Boolean.valueOf(isSchoolAdmin(user, student.getSchool())
-                    && hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_VOTA)));
-        }
-        return false;
-    }
-
-    public static boolean canRemoveConfirmationApelApplication(HoisUserDetails user, ApelApplication application) {
-        String status = EntityUtil.getCode(application.getStatus());
-        Student student = application.getStudent();
-        if (ApelApplicationStatus.VOTA_STAATUS_C.name().equals(status)) {
-            return Boolean.TRUE.equals(Boolean.valueOf(isSchoolAdmin(user, student.getSchool())
-                    && hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_VOTA)));
-        }
-        return false;
-    }
-
-    public static boolean canSendBackApelApplication(HoisUserDetails user, ApelApplication application) {
-        String status = EntityUtil.getCode(application.getStatus());
-        Student student = application.getStudent();
-        if (ApelApplicationStatus.VOTA_STAATUS_Y.name().equals(status)) {
-            return isSchoolAdmin(user, student.getSchool());
-        }
-        return false;
-    }
-
-    public static boolean canRejectApelApplication(HoisUserDetails user, ApelApplication application) {
-        String status = EntityUtil.getCode(application.getStatus());
-        Student student = application.getStudent();
-        if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status) || ApelApplicationStatus.VOTA_STAATUS_Y.name().equals(status)) {
-            return isSchoolAdmin(user, student.getSchool());
-        }
-        return false;
+        return ApplicationType.AVALDUS_LIIK_MUU.name().equals(type)
+                && (ApplicationStatus.AVALDUS_STAATUS_ESIT.name().equals(status) 
+                        || ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name().equals(status)) 
+                && isSchoolAdmin(user, student.getSchool()) 
+                && hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_AVALDUS);
     }
 
     public static boolean canCancelDirective(HoisUserDetails user, Directive directive) {
@@ -209,6 +132,22 @@ public abstract class UserUtil {
         }
         return false;
     }
+
+    public static boolean canViewBaseModule(HoisUserDetails user) {
+        return hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_BAASMOODUL);
+    }
+    
+    public static boolean canEditBaseModule(HoisUserDetails user) {
+        return hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_BAASMOODUL);
+    }
+    
+    public static boolean canDeleteBaseModule(HoisUserDetails user, BaseModule module) {
+        if (hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_BAASMOODUL) && module.getCurriculumModules().isEmpty()) {
+            return true;
+        }
+        return false;
+    }
+    
 
     /**
      * Is given user admin of given school?

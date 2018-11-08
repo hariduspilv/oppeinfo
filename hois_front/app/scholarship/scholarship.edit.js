@@ -36,10 +36,24 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       });
     };
 
+    function reloadCommittees() {
+      $scope.formState.committees = QueryUtils.endpoint(baseUrl + "/committees").query({
+        validDate: $scope.stipend.applicationEnd,
+        curriculums: $scope.stipend.curriculums.map(function (curriculum) {
+          return curriculum.id;
+        })
+      });
+    }
+
+    $scope.applicationEndChanged = function () {
+      reloadCommittees();
+    };
+
     function afterLoad(result) {
       $scope.formState.allowedStipendTypes = [result.type];
       $scope.stipend = result;
       $scope.stipendTypeChanged();
+      $scope.applicationEndChanged();
       $scope.stipendForm.$setPristine();
     }
 
@@ -88,6 +102,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
           $scope.missingCurriculums = false;
         }
         $scope.formState.curriculum = undefined;
+        reloadCommittees();
       }
     });
 
@@ -99,6 +114,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       if($scope.stipend.curriculums.length === 0) {
         $scope.missingCurriculums = true;
       }
+      reloadCommittees();
     };
 
     $scope.publish = function () {
@@ -189,6 +205,12 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(function (studyPeriods) {
         $scope.formState.readonlyStudyPeriod = studyPeriods.find(function (it) {
           return it.id === $scope.stipend.studyPeriod;
+        });
+      });
+
+      QueryUtils.endpoint(baseUrl + "/committees").query(function (committees) {
+        $scope.formState.committee = committees.find(function (it) {
+          return it.id === $scope.stipend.committee;
         });
       });
     }

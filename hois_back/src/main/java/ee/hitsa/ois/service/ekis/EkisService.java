@@ -51,6 +51,7 @@ import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.repository.PersonRepository;
+import ee.hitsa.ois.service.StudentAbsenceService;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -90,6 +91,8 @@ public class EkisService {
     private EkisClient ekis;
     @Autowired
     private EkisLogService ekisLogService;
+    @Autowired
+    private StudentAbsenceService studentAbsenceService;
     @Autowired
     private PersonRepository personRepository;
     @Autowired
@@ -259,6 +262,7 @@ public class EkisService {
         return withResponse(ekis.registerPracticeContract(ctx(), request), (result) -> {
             contract.setWdId(Long.valueOf(result.getWdId()));
             contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_Y.name()));
+            studentAbsenceService.createContractAbsence(contract);
             return save(contract);
         }, contract.getStudent().getSchool(), contract, l -> l.setContract(contract));
     }

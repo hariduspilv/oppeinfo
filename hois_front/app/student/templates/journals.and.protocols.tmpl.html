@@ -12,7 +12,8 @@
         <td md-cell>
           <a ng-if="entity.type === 'journal'" ng-href="#/journal/{{entity.entityId}}/view">{{currentLanguageNameField(entity)}}</a>
           <a ng-if="entity.type === 'protocol'" ng-href="#/moduleProtocols/{{entity.entityId}}/view"><b>{{currentLanguageNameField(entity)}}</b></a>
-          <a ng-if="entity.type === 'apel'" ng-href="#/apelApplication/{{entity.entityId}}/view">{{currentLanguageNameField(entity)}}</a>
+          <a ng-if="entity.type === 'apel' && auth.isAdmin()" ng-href="#/apelApplication/{{entity.entityId}}/view">{{currentLanguageNameField(entity)}}</a>
+          <span ng-if="entity.type === 'apel' && auth.isTeacher()">{{currentLanguageNameField(entity)}}</span>
         </td>
         <td md-cell>
           <hois-classifier-value ng-if="entity.type !== 'apel'" ng-model="entity.yearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>

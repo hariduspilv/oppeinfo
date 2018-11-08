@@ -10,7 +10,11 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     var stipend = $route.current.locals.params.stipend;
     $scope.auth = $route.current.locals.auth;
     $scope.canManage = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS);
+    $scope.isStudentGroupTeacher = $scope.auth.isTeacher() && $scope.auth.teacherGroupIds.length > 0;
 
+    $scope.applicationsTable = {
+      showSelect: true
+    };
     $scope.selected = {};
 
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
@@ -90,7 +94,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
         if (index < $scope.allowedCount || !angular.isNumber($scope.allowedCount)) {
           if (app.needsConfirm && $scope.auth.isTeacher()) {
             $scope.selected[app.id] = value;
-          } else if (!$scope.auth.isTeacher()){
+          } else if (!$scope.auth.isTeacher() && !app.hasDirective){
             $scope.selected[app.id] = value;
           }
         }
@@ -177,6 +181,26 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
       }
     };
 
+    $scope.committeeDecision = function () {
+      var applications = chosenApplications();
+      if (applications.length > 0) {
+        QueryUtils.endpoint(baseUrl + '/decision/canCreate').get({
+          ids: applications
+        }, function (result) {
+          if (result.canCreate) {
+            $location.path('/scholarships/decision/' + $scope.scholarshipType).search({
+              ids: applications,
+              stipend: stipend
+            });
+          } else {
+            message.error('stipend.messages.error.cannotCreateDecision');
+          }
+        });
+      } else {
+        message.error('stipend.messages.error.noStudentsSelected');
+      }
+    };
+
     var previousType;
     $scope.resetCurriculum = function () {
       if (previousType === 'STIPTOETUS_POHI') {
@@ -221,4 +245,107 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
 
     $scope.removeFromArray = ArrayUtils.remove;
   }
+]).controller('ScholarshipDecisionController', ['$scope', '$location', '$q', 'message', 'QueryUtils', '$route', 'Classifier',
+function ($scope, $location, $q, message, QueryUtils, $route, Classifier) {
+  var baseUrl = '/scholarships';
+  $scope.scholarshipType = $route.current.params.type;
+  $scope.formState = {
+    committees: QueryUtils.endpoint(baseUrl + "/committees").query()
+  };
+  var clMapper = Classifier.valuemapper({
+    status: 'STIPTOETUS_STAATUS',
+    type: 'STIPTOETUS',
+    compensationFrequency: 'STIPTOETUS_HYVITAMINE',
+    compensationReason: 'STIPTOETUS_HYVITAMINE_POHJUS'
+  });
+  QueryUtils.endpoint(baseUrl + '/decision').get({
+    ids: $route.current.params.ids
+  }, function (result) {
+    $scope.formState.committee = result.committeeId;
+    $scope.selectedCommitteeChanged();
+    $scope.submittedType = result.applications[0].type;
+    $q.all(clMapper.promises).then(function () {
+      $scope.applications = clMapper.objectmapper(result.applications);
+    });
+  });
+  function getPresentCommitteeMembers(committeeMembers) {
+    if (committeeMembers) {
+      return committeeMembers.filter(function (member) {
+        return member.isPresent;
+      }).map(function (member) {
+        return member.id;
+      });
+    }
+    return [];
+  }
+
+  $scope.selectedCommitteeChanged = function () {
+    if ($scope.formState.committee) {
+      QueryUtils.endpoint("/committees").get({ id: $scope.formState.committee }, function (committee) {
+        $scope.formState.committeeMembers = committee.members;
+      });
+    }
+  };
+
+  $scope.decide = function () {
+    $scope.decisionForm.$setSubmitted();
+    if (!$scope.decisionForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      return;
+    }
+    angular.extend($scope.decision, {
+      presentCommitteeMembers: getPresentCommitteeMembers($scope.formState.committeeMembers),
+      applicationIds: $route.current.params.ids
+    });
+    QueryUtils.endpoint(baseUrl + '/decide').save($scope.decision, function () {
+      message.info('main.messages.update.success');
+      $location.path('/scholarships/applications/' + $scope.scholarshipType);
+    });
+  };
+}
+]).controller('ScholarshipDecisionViewController', ['$scope', '$location', '$q', 'message', 'QueryUtils', '$route', 'Classifier', 'dialogService',
+function ($scope, $location, $q, message, QueryUtils, $route, Classifier, dialogService) {
+  var baseUrl = '/scholarships/decision';
+  $scope.scholarshipType = $route.current.params.type;
+  $scope.formState = {
+    committees: QueryUtils.endpoint("/scholarships/committees").query()
+  };
+  var id = $route.current.params.id;
+
+  var Endpoint = QueryUtils.endpoint(baseUrl);
+
+  var clMapper = Classifier.valuemapper({
+    status: 'STIPTOETUS_STAATUS',
+    type: 'STIPTOETUS',
+    compensationFrequency: 'STIPTOETUS_HYVITAMINE',
+    compensationReason: 'STIPTOETUS_HYVITAMINE_POHJUS'
+  });
+
+  $scope.decision = Endpoint.get({id: id}, function (result) {
+    $scope.decision.committee = result.committeeId;
+    $scope.submittedType = result.applications[0].type;
+    $q.all(clMapper.promises).then(function () {
+      $scope.applications = clMapper.objectmapper(result.applications);
+    });
+    QueryUtils.endpoint("/committees").get({ id: $scope.decision.committee }, function (committee) {
+      $scope.decision.committeeMembers = committee.members;
+      if (result.presentCommitteeMembers) {
+        $scope.decision.committeeMembers.forEach(function (it) {
+          if (result.presentCommitteeMembers.indexOf(it.id) !== -1) {
+            it.isPresent = true;
+          }
+        });
+      }
+    });
+  });
+
+  $scope.delete = function () {
+    dialogService.confirmDialog({ prompt: 'stipend.decision.deleteconfirm' }, function () {
+      $scope.decision.$delete().then(function() {
+        message.info('main.messages.delete.success');
+        $scope.back('/scholarships/applications/' + $scope.scholarshipType);
+      }).catch(angular.noop);
+    });
+  };
+}
 ]);

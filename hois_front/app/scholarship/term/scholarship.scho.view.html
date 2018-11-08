@@ -130,6 +130,13 @@
             </md-checkbox>
           </div>
 
+          <div layout="row" flex>
+            <md-input-container flex="45">
+              <label>{{'stipend.committee' | translate}}</label>
+              <hois-value value="currentLanguageNameField(formState.committee)"></hois-value>
+            </md-input-container>
+          </div>
+
           <div layout="row">
             <div layout="row">
               <md-button class="md-raised md-primary" ng-if="canEdit" ng-click="changeStipend(stipend)">{{'main.button.edit' | translate}}</md-button>

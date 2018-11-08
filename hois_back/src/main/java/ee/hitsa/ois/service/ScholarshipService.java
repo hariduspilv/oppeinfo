@@ -32,6 +32,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Committee;
+import ee.hitsa.ois.domain.CommitteeMember;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
@@ -39,6 +41,8 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplicationFamily;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplicationFile;
+import ee.hitsa.ois.domain.scholarship.ScholarshipDecision;
+import ee.hitsa.ois.domain.scholarship.ScholarshipDecisionCommitteeMember;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTermCourse;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTermCurriculum;
@@ -48,6 +52,8 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
 import ee.hitsa.ois.enums.Absence;
+import ee.hitsa.ois.enums.CommitteeType;
+import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.Priority;
@@ -71,13 +77,16 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshiApplicationRejectionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationListSubmitForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipDecisionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipStudentApplicationForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipTermForm;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ScholarshipTermApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationStudentDto;
+import ee.hitsa.ois.web.dto.scholarship.ScholarshipDecisionDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipStudentRejectionDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermApplicationDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermDto;
@@ -90,6 +99,10 @@ public class ScholarshipService {
 
     private static final int SAIS_POINTS_MONTHS = 6;
     private static final int RESULT_PERIOD_MONTHS = 5;
+    private static final List<String> VALID_DIRECTIVE_STATUSES = EnumUtil.toNameList(
+            DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL,
+            DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL,
+            DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
     private static final String STUDENT_JOURNAL_RESULTS = " from journal_entry_student jes"
             + " join journal_entry je on je.id = jes.journal_entry_id"
             + " join journal_student js on js.id = jes.journal_student_id"
@@ -145,6 +158,8 @@ public class ScholarshipService {
     public ScholarshipTerm save(ScholarshipTerm scholarshipTerm, ScholarshipTermForm form) {
         EntityUtil.bindToEntity(form, scholarshipTerm, classifierRepository, "curriculums", "studyLoads", "courses");
         scholarshipTerm.setStudyPeriod(em.getReference(StudyPeriod.class, form.getStudyPeriod()));
+        Long committeeId = form.getCommittee();
+        scholarshipTerm.setCommittee(committeeId != null ? em.getReference(Committee.class, committeeId) : null);
         bindFormArraysToEntity(form, scholarshipTerm);
         return EntityUtil.save(scholarshipTerm, em);
     }
@@ -211,6 +226,154 @@ public class ScholarshipService {
         scholarshipTerm.setIsOpen(Boolean.TRUE);
         return EntityUtil.save(scholarshipTerm, em);
     }
+    
+    public List<AutocompleteResult> committeesForSelection(HoisUserDetails user, LocalDate validDate, List<Long> curriclumIds) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from committee c"
+                + " left join committee_member cm on c.id = cm.committee_id"
+                + " left join person p on p.id = cm.person_id ");
+
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("c.type_code = :type", "type", CommitteeType.KOMISJON_T.name());
+        qb.optionalCriteria("c.valid_from <= :validDate", "validDate", validDate);
+        qb.optionalCriteria("c.valid_thru >= :validDate", "validDate", validDate);
+        qb.optionalCriteria("(exists(select cc.id"
+                    + " from committee_curriculum cc"
+                    + " where cc.committee_id = c.id and cc.curriculum_id in :curriclums) "
+                + " or not exists(select cc.id"
+                    + " from committee_curriculum cc"
+                    + " where cc.committee_id = c.id))", "curriclums", curriclumIds);
+        qb.groupBy(" c.id ");
+
+        List<?> committees = qb.select("distinct c.id,c.name_et,"
+                + " array_to_string(array_agg("
+                + " p.firstname || ' ' || p.lastname), ', ') as members", em).getResultList();
+
+        return StreamUtil.toMappedList(r -> {
+            String name = resultAsString(r, 1);
+            String caption = (name != null ? name : "-") + " (" + resultAsString(r, 2) + ")";
+            AutocompleteResult dto = new AutocompleteResult(resultAsLong(r, 0), caption, caption);
+            return dto;
+        }, committees);
+    }
+    
+    public boolean canCreateDecision(List<Long> applicationIds) {
+        List<?> result = em.createNativeQuery("select sa.id"
+                + " from scholarship_application sa"
+                + " join scholarship_term st on st.id = sa.scholarship_term_id"
+                + " left join directive_student ds on ds.scholarship_application_id = sa.id"
+                + " left join directive d on d.id = ds.directive_id"
+                + " where sa.id in ?1 "
+                + " and (sa.status_code not in ?2"
+                    + " or (ds is not null and ds.canceled is not true)"
+                    + " or (d is not null and d.status_code in ?3))")
+                .setParameter(1, applicationIds)
+                .setParameter(2, EnumUtil.toNameList(ScholarshipStatus.STIPTOETUS_STAATUS_A, ScholarshipStatus.STIPTOETUS_STAATUS_L))
+                .setParameter(3, VALID_DIRECTIVE_STATUSES)
+                .getResultList();
+        return result.isEmpty();
+    }
+    
+    public ScholarshipDecisionDto decision(HoisUserDetails user, List<Long> applicationIds) {
+        ScholarshipDecisionDto dto = new ScholarshipDecisionDto();
+        List<?> result = em.createNativeQuery("select distinct st.committee_id"
+                + " from scholarship_application sa"
+                + " join scholarship_term st on st.id = sa.scholarship_term_id"
+                + " where sa.id in ?1 and st.committee_id is not null")
+                .setParameter(1, applicationIds)
+                .getResultList();
+        if (result.size() == 1) {
+            dto.setCommitteeId(resultAsLong(result.get(0), 0));
+        }
+        dto.setApplications(applicationsForCommand(null, user, applicationIds));
+        return dto;
+    }
+
+    public ScholarshipDecisionDto decision(HoisUserDetails user, Long decisionId) {
+        ScholarshipDecision decision = em.getReference(ScholarshipDecision.class, decisionId);
+        Committee committee = decision.getCommittee();
+        UserUtil.assertSameSchool(user, committee.getSchool());
+        ScholarshipDecisionDto dto = new ScholarshipDecisionDto();
+        dto.setId(EntityUtil.getId(decision));
+        dto.setProtocolNr(decision.getProtocolNr());
+        dto.setDecided(decision.getDecided());
+        dto.setAddInfo(decision.getAddInfo());
+        dto.setCommitteeId(EntityUtil.getId(decision.getMembers().get(0).getCommitteeMember().getCommittee()));
+        dto.setPresentCommitteeMembers(StreamUtil.toMappedList(m -> EntityUtil.getId(m.getCommitteeMember()), decision.getMembers()));
+        dto.setApplications(applicationsForCommand(null, user, getDecisionApplicationIds(decisionId)));
+        return dto;
+    }
+    
+    private List<Long> getDecisionApplicationIds(Long decisionId) {
+        List<?> result = em.createNativeQuery("select sa.id"
+                + " from scholarship_application sa"
+                + " where sa.scholarship_decision_id = ?1")
+                .setParameter(1, decisionId)
+                .getResultList();
+        return StreamUtil.toMappedList(r -> resultAsLong(r, 0), result);
+    }
+
+    private boolean canDeleteDecision(Long decisionId) {
+        List<?> result = em.createNativeQuery("select sa.id"
+                + " from scholarship_application sa"
+                + " join directive_student ds on ds.scholarship_application_id = sa.id"
+                + " join directive d on d.id = ds.directive_id"
+                + " where sa.scholarship_decision_id = ?1 and ds.canceled = false"
+                + " and d.status_code in ?2")
+                .setParameter(1, decisionId)
+                .setParameter(2, VALID_DIRECTIVE_STATUSES)
+                .getResultList();
+        return result.isEmpty();
+    }
+    
+    public void deleteDecision(HoisUserDetails user, Long decisionId) {
+        if (!canDeleteDecision(decisionId)) {
+            throw new ValidationFailedException("stipend.messages.error.cannotDeleteDecision");
+        }
+        ScholarshipDecision decision = em.getReference(ScholarshipDecision.class, decisionId);
+        Committee committee = decision.getCommittee();
+        UserUtil.assertSameSchool(user, committee.getSchool());
+        em.createNativeQuery("update scholarship_application set scholarship_decision_id = null"
+                + " where scholarship_decision_id = ?1")
+            .setParameter(1, decisionId)
+            .executeUpdate();
+        EntityUtil.deleteEntity(decision, em);
+    }
+    
+    public void decide(HoisUserDetails user, ScholarshipDecisionForm form) {
+        if (!canCreateDecision(form.getApplicationIds())) {
+            throw new ValidationFailedException("stipend.messages.error.cannotCreateDecision");
+        }
+        List<Long> presentCommitteeMembers = form.getPresentCommitteeMembers();
+        if (presentCommitteeMembers == null || presentCommitteeMembers.isEmpty()) {
+            throw new ValidationFailedException("main.messages.error.atLeastOneMustBeSelected");
+        }
+        ScholarshipDecision decision = new ScholarshipDecision();
+        decision.setProtocolNr(form.getProtocolNr());
+        decision.setDecided(form.getDecided());
+        decision.setAddInfo(form.getAddInfo());
+        Committee committee = null;
+        for (Long memberId : presentCommitteeMembers) {
+            CommitteeMember committeeMember = em.getReference(CommitteeMember.class, memberId);
+            ScholarshipDecisionCommitteeMember member = new ScholarshipDecisionCommitteeMember();
+            member.setScholarshipDecision(decision);
+            member.setCommitteeMember(committeeMember);
+            decision.getMembers().add(member);
+            if (committee == null) {
+                committee = committeeMember.getCommittee();
+            }
+        }
+        if (committee != null) {
+            UserUtil.assertSameSchool(user, committee.getSchool());
+            decision.setCommittee(committee);
+            EntityUtil.save(decision, em);
+        }
+        for (Long applicationId : form.getApplicationIds()) {
+            ScholarshipApplication application = em.getReference(ScholarshipApplication.class, applicationId);
+            UserUtil.assertSameSchool(user, application.getScholarshipTerm().getSchool());
+            application.setScholarshipDecision(decision);
+            EntityUtil.save(application, em);
+        }
+    }
 
     public List<ScholarshipTermStudentDto> availableStipends(Long studentId) {
         return availableStipends(studentId, Boolean.FALSE);
@@ -266,6 +429,7 @@ public class ScholarshipService {
             ScholarshipApplicationStudentDto dto = new ScholarshipApplicationStudentDto();
             dto.setId(EntityUtil.getId(sa));
             ScholarshipTerm term = sa.getScholarshipTerm();
+            dto.setTermName(term.getNameEt());
             dto.setTermId(EntityUtil.getId(term));
             dto.setType(EntityUtil.getCode(term.getType()));
             dto.setAverageMark(sa.getAverageMark());
@@ -578,7 +742,7 @@ public class ScholarshipService {
 
     public ScholarshipTermApplicationSearchDto applications(ScholarshipApplicationSearchCommand command,
             HoisUserDetails user) {
-        List<ScholarshipApplicationSearchDto> applications = applicationsForCommand(command, user);
+        List<ScholarshipApplicationSearchDto> applications = applicationsForCommand(command, user, null);
         
         ScholarshipTerm term;
         if(!applications.isEmpty()) {
@@ -591,7 +755,8 @@ public class ScholarshipService {
         return new ScholarshipTermApplicationSearchDto(term.getPlaces(), applications);
     }
 
-    private List<ScholarshipApplicationSearchDto> applicationsForCommand(ScholarshipApplicationSearchCommand command, HoisUserDetails user) {
+    private List<ScholarshipApplicationSearchDto> applicationsForCommand(ScholarshipApplicationSearchCommand command, 
+            HoisUserDetails user, List<Long> applicationIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from scholarship_application sa" 
                         + " join scholarship_term st on st.id = sa.scholarship_term_id"
@@ -599,38 +764,56 @@ public class ScholarshipService {
                         + " join person p on p.id = s.person_id"
                         + " join student_group sg on sg.id = sa.student_group_id"
                         + " join curriculum_version cv on sa.curriculum_version_id = cv.id"
-                        + " join curriculum c on c.id = cv.curriculum_id");
+                        + " join curriculum c on c.id = cv.curriculum_id"
+                        + " left join scholarship_decision sd on sd.id = sa.scholarship_decision_id");
 
         qb.requiredCriteria("st.school_id = :schoolId", "schoolId", user.getSchoolId());
         if (user.isTeacher()) {
-            qb.requiredCriteria("sa.student_group_id in (select sg.id from student_group sg"
-                    + " where sg.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
+            qb.requiredCriteria("(sa.student_group_id in (select sg.id from student_group sg"
+                    + " where sg.teacher_id = :teacherId)"
+                    + " or st.committee_id is null or st.committee_id in (select c.id"
+                    + " from committee_member cm"
+                    + " join committee c on c.id = cm.committee_id"
+                    + " join teacher t on t.person_id = cm.person_id"
+                    + " where t.id = :teacherId and c.type_code = '" + CommitteeType.KOMISJON_T.name() + "')"
+                    + ")", "teacherId", user.getTeacherId());
         }
         
-        qb.optionalContains("st.name_et", "nameEt", command.getNameEt());
-        qb.optionalCriteria("st.type_code = :typeCode", "typeCode", command.getType());
-        qb.optionalCriteria("sa.status_code = :status", "status", command.getStatus());
-        qb.optionalCriteria("st.study_period_id = :studyPeriod", "studyPeriod", command.getStudyPeriod());
-        qb.optionalCriteria("sa.scholarship_term_id in (select scholarship_term_id from scholarship_term_course where " 
-                + "course_code in (:courseCodes))", "courseCodes", command.getCourses());
-        qb.optionalCriteria("c.id in (:curriculumIds)", "curriculumIds", command.getCurriculum());
-        /*qb.optionalCriteria("sa.scholarship_term_id in (select scholarship_term_id from scholarship_term_curriculum where "
+        if (command != null) {
+            qb.optionalContains("st.name_et", "nameEt", command.getNameEt());
+            qb.optionalCriteria("st.type_code = :typeCode", "typeCode", command.getType());
+            qb.optionalCriteria("sa.status_code = :status", "status", command.getStatus());
+            qb.optionalCriteria("st.study_period_id = :studyPeriod", "studyPeriod", command.getStudyPeriod());
+            qb.optionalCriteria("sa.scholarship_term_id in (select scholarship_term_id from scholarship_term_course where " 
+                    + "course_code in (:courseCodes))", "courseCodes", command.getCourses());
+            qb.optionalCriteria("c.id in (:curriculumIds)", "curriculumIds", command.getCurriculum());
+            /*qb.optionalCriteria("sa.scholarship_term_id in (select scholarship_term_id from scholarship_term_curriculum where "
                 + "curriculum_id in (:curriculumIds))", "curriculumIds", command.getCurriculum());*/
-        qb.optionalContains(Arrays.asList("sg.code"), "studentGroup", command.getStudentGroup());
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname"), "personName", command.getStudentName());
+            qb.optionalContains(Arrays.asList("sg.code"), "studentGroup", command.getStudentGroup());
+            qb.optionalContains(Arrays.asList("p.firstname", "p.lastname"), "personName", command.getStudentName());
+        }
+        if (applicationIds != null) {
+            qb.requiredCriteria("sa.id in :applicationIds", "applicationIds", applicationIds);
+        }
 
         qb.requiredCriteria("sa.status_code != :compositionStatus", "compositionStatus",
                 ScholarshipStatus.STIPTOETUS_STAATUS_K);
 
+        String directiveStatuses = VALID_DIRECTIVE_STATUSES.stream()
+                .map(s -> "'" + s + "'").collect(Collectors.joining(", "));
         String select = "sa.id as application_id, st.type_code, st.id as term_id, st.name_et, c.code, s.id as student_id"
                 + ", p.firstname, p.lastname, p.idcode, sa.average_mark, sa.last_period_mark , sa.curriculum_completion"
                 + ", sa.is_teacher_confirmed, sa.status_code, sa.compensation_reason_code, sa.compensation_frequency_code"
                 + ", sa.credits, sa.absences, sa.reject_comment, st.is_teacher_confirm"
                 + ", (select case when s.study_start > date(now()) - interval '" + SAIS_POINTS_MONTHS + " months'"
-                + " then sais.points else null end"
-                + " from directive_student ds"
-                + " join sais_application sais on sais.id = ds.sais_application_id"
-                + " where ds.canceled = false and ds.student_id = s.id) as sais_points";
+                    + " then sais.points else null end"
+                    + " from directive_student ds"
+                    + " join sais_application sais on sais.id = ds.sais_application_id"
+                    + " where ds.canceled = false and ds.student_id = s.id) as sais_points"
+                + ", (select exists(select 1 from directive_student ds join directive d on d.id = ds.directive_id"
+                    + " where ds.scholarship_application_id = sa.id and ds.canceled = false"
+                    + " and d.status_code in (" + directiveStatuses + "))) as has_directive"
+                + ", sd.id, sd.decided";
         List<?> data = qb.select(select, em).getResultList();
         return StreamUtil.toMappedList(r -> {
         	ScholarshipApplicationSearchDto dto = new ScholarshipApplicationSearchDto();
@@ -656,6 +839,9 @@ public class ScholarshipService {
             dto.setRejectComment(resultAsString(r, 18));
             dto.setNeedsConfirm(resultAsBoolean(r, 19));
             dto.setSaisPoints(resultAsDecimal(r, 20));
+            dto.setHasDirective(resultAsBoolean(r, 21));
+            dto.setDecisionId(resultAsLong(r, 22));
+            dto.setDecisionDecided(resultAsLocalDate(r, 23));
             return dto;
         }, data);
     }

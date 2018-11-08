@@ -168,6 +168,7 @@
 
         <div layout="row">
           <md-button ng-href="#/reception/saisApplication/search" class="md-raised">{{'main.button.back' | translate}}</md-button>
+          <md-button ng-click="confirm()" ng-if="auth.isAdmin() && !saisApplication.relatedToDirective" class="md-raised">{{'main.button.delete' | translate}}</md-button>
         </div>
       </div>
     </form>

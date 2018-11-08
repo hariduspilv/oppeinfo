@@ -195,7 +195,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       $scope.canWatchStudentConnectedEntities = true;
     } else if ($scope.auth.isTeacher()) {
       QueryUtils.endpoint('/studentgroups').get({ id: $scope.student.studentGroup.id }).$promise.then(function (studentGroup) {
-        if (studentGroup.teacher.id === $scope.auth.teacher) {
+        if (studentGroup.teacher && studentGroup.teacher.id === $scope.auth.teacher) {
           $scope.canWatchStudentConnectedEntities = true;
         }
       });
@@ -672,8 +672,8 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
         });
       });
     };
-  }]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'QueryUtils',
-    function ($mdDialog, $route, $scope, dialogService, message, QueryUtils) {
+  }]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
+    function ($mdDialog, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
       $scope.auth = $route.current.locals.auth;
       $scope.studentId = $route.current.params.id;
       $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
@@ -693,14 +693,15 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
       $scope.editAbsence = function (absence) {
         var AbsenceEndpoint = QueryUtils.endpoint('/students/' + $scope.studentId + '/absences');
         var loadAbsences = $scope.loadAbsences;
-
         absence = angular.copy(absence, {});
         absence.studentName = $scope.tabledata.studentName;
         absence.studentGroup = $scope.tabledata.studentGroup;
-
+        
         $mdDialog.show({
           controller: function ($scope) {
             $scope.record = new AbsenceEndpoint(absence || {});
+            DataUtils.convertStringToDates($scope.record, ['validFrom', 'validThru']);
+
             $scope.cancel = $mdDialog.hide;
             $scope.update = function () {
               $scope.studentAbsenceForm.$setSubmitted();

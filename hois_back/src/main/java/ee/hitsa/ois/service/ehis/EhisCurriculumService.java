@@ -155,7 +155,7 @@ public class EhisCurriculumService extends EhisService {
                     org.apache.commons.lang3.StringUtils.leftPad(address.getAddressOv(), 4, '0'));
         }
         oppekavaOis.setToimumiseKohad(oisToimumiseKohad);
-        if(Boolean.TRUE.equals(curriculum.getJoint())) {
+        /*if(Boolean.TRUE.equals(curriculum.getJoint())) {
             for(CurriculumJointPartner cjp : curriculum.getJointPartners()) {
                 OisYhisOppekava oisYhisOppekava = new OisYhisOppekava();
                 if(cjp.isAbroad()) {
@@ -168,7 +168,7 @@ public class EhisCurriculumService extends EhisService {
                 }
                 oppekavaOis.getYhisOppekavaOas().add(oisYhisOppekava);
             }
-        }
+        }*/
         OisKutsestandardid occupations = new OisKutsestandardid();
         if(curriculum.getOccupations().isEmpty()) {
             occupations.setPuudubKehtivKutsestandard(Integer.valueOf(1));
@@ -299,7 +299,7 @@ public class EhisCurriculumService extends EhisService {
         }
         oppekavaStaatusOis.setOppekavaKood(curriculumCodeNumber);
         // XXX should create enum?
-        oppekavaStaatusOis.setOperatsioon("kontrollimine");
+        oppekavaStaatusOis.setOperatsioon("KONTROLLIMINE");
         // TODO remove next row, for testing against mock server only
         oppekavaStaatusOis.setKommentaar(curriculum.getDescription());
         oisOppekavadStaatus.getOisOppekava().add(oppekavaStaatusOis);
@@ -331,7 +331,7 @@ public class EhisCurriculumService extends EhisService {
                 }
                 String ehisStatus = msg.getOppekavaStaatus();
                 if(StringUtils.hasText(ehisStatus)) {
-                    Classifier es = em.createQuery("select c from Classifier c where c.mainClassCode = ?1 and c.value= ?2", Classifier.class)
+                    Classifier es = em.createQuery("select c from Classifier c where c.mainClassCode = ?1 and c.ehisValue= ?2", Classifier.class)
                             .setParameter(1, MainClassCode.OPPEKAVA_EHIS_STAATUS.name())
                             .setParameter(2, ehisStatus).setMaxResults(1).getResultList().stream().findAny().orElse(null);
 

@@ -1,0 +1,58 @@
+<div class="ois-form-layout-padding ois-form-layout form-readonly" ng-cloak>
+  <form name="decisionForm">
+    <div layout="row">
+      <md-input-container flex>
+        <label>{{'stipend.decision.protocolNr' | translate}}</label>
+        <hois-value value="decision.protocolNr"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row">
+      <md-input-container flex>
+        <label>{{'stipend.decision.decided' | translate}}</label>
+        <hois-value value="decision.decided | hoisDate"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex>
+        <label>{{'stipend.decision.addInfo' | translate}}</label>
+        <hois-value value="decision.addInfo"></hois-value>
+      </md-input-container>
+    </div>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.committee' | translate}}</legend>
+      <div flex="30" flex-sm="100" flex-xs="100">
+        <md-input-container flex>
+          <hois-select ng-model="decision.committee" values="formState.committees" disabled></hois-select>
+        </md-input-container>
+      </div>
+      <md-table-container ng-if="decision.committeeMembers">
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column>{{'stipend.decision.name' | translate}}</th>
+              <th md-column>{{'stipend.decision.role' | translate}}</th>
+              <th md-column>{{'stipend.decision.present' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in decision.committeeMembers | orderBy: 'memberName'" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{row.memberName}}</td>
+              <td md-cell ng-if="row.isChairman">{{'stipend.decision.chairman' | translate}}</td>
+              <td md-cell ng-if="!row.isChairman">{{'stipend.decision.member' | translate}}</td>
+              <td md-cell>
+                <md-checkbox aria-label="module" ng-model="row.isPresent" disabled></md-checkbox>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </fieldset>
+  </form>
+
+  <div ng-include="'scholarship/templates/scholarship.applications.'+scholarshipType+'.html'"></div>
+  
+  <div layout="row">
+    <md-button class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+    <md-button class="md-raised" ng-click="back('#/scholarships/applications/' + scholarshipType)">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

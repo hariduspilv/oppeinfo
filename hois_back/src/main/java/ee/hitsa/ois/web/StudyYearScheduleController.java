@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
 import java.util.List;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -16,7 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.service.StudyYearScheduleService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
+import ee.hitsa.ois.web.commandobject.StudyYearScheduleForm;
 import ee.hitsa.ois.web.dto.StudyYearDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 
@@ -61,5 +65,19 @@ public class StudyYearScheduleController {
     @GetMapping("/studyYears")
     public List<StudyYearDto> getStudyYearsWithStudyPeriods(HoisUserDetails user) {
         return studyYearScheduleService.getStudyYearsWithStudyPeriods(user.getSchoolId());
+    }
+
+    @GetMapping("/studyYearSchedule.xlsx")
+    public void studyYearScheduleAsExcel(HoisUserDetails user, 
+            @NotNull @Valid StudyYearScheduleForm schedulesCmd, 
+            HttpServletResponse response) throws IOException {
+        HttpUtil.xls(response, "studyyearschedule.xlsx", studyYearScheduleService.studyYearScheduleAsExcel(user, schedulesCmd));
+    }
+
+    @GetMapping("/studyYearSchedule.pdf")
+    public void studyYearScheduleAsPdf(HoisUserDetails user, 
+            @NotNull @Valid StudyYearScheduleForm schedulesCmd, 
+            HttpServletResponse response) throws IOException {
+        HttpUtil.pdf(response, "studyyearschedule.pdf", studyYearScheduleService.studyYearScheduleAsPdf(user, schedulesCmd));
     }
 }

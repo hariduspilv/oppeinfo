@@ -3,8 +3,10 @@ package ee.hitsa.ois.web.commandobject.timetable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.validation.constraints.Size;
 
@@ -16,6 +18,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.timetable.TimetableSingleEventTeacherForm;
 
 public class TimetableSingleEventForm {
     // TODO: Validation is missing
@@ -31,11 +34,12 @@ public class TimetableSingleEventForm {
     private Boolean repeat;
     private String repeatCode;
     private List<AutocompleteResult> rooms;
-    private List<AutocompleteResult> teachers;
+    private List<TimetableSingleEventTeacherForm> teachers;
     private List<AutocompleteResult> studentGroups;
     private Long weekAmount;
     private String otherTeacher;
     private String otherRoom;
+    private Boolean isSingleEvent;
 
     public static TimetableSingleEventForm of(TimetableEventTime event) {
         TimetableSingleEventForm form = new TimetableSingleEventForm();
@@ -59,10 +63,10 @@ public class TimetableSingleEventForm {
         form.setOtherRoom(event.getOtherRoom());
 
         form.setTeachers(
-                StreamUtil.toMappedList(r -> AutocompleteResult.of(r.getTeacher()), event.getTimetableEventTeachers()));
+                StreamUtil.toMappedList(r -> TimetableSingleEventTeacherForm.of(r), event.getTimetableEventTeachers()));
         form.setOtherTeacher(event.getOtherTeacher());
 
-        List<AutocompleteResult> studentGroups = StreamUtil.toMappedList(r -> AutocompleteResult.of(r.getStudentGroup()),
+        Set<AutocompleteResult> studentGroups = StreamUtil.toMappedSet(r -> AutocompleteResult.of(r.getStudentGroup()),
                 event.getTimetableEventStudentGroups());
         
         TimetableObject tobj = event.getTimetableEvent().getTimetableObject();
@@ -72,11 +76,14 @@ public class TimetableSingleEventForm {
             studentGroups.addAll(tobjStudentGroups);
         }
         
-        form.setStudentGroups(studentGroups);
+        List<AutocompleteResult> studentGroupsList = new ArrayList<>();
+        studentGroupsList.addAll(studentGroups);
+        form.setStudentGroups(studentGroupsList);
 
         LocalDateTime maxDate = event.getTimetableEvent().getTimetableEventTimes().stream()
                 .map(TimetableEventTime::getStart).max(LocalDateTime::compareTo).get();
         form.setWeekAmount(Long.valueOf(event.getStart().until(maxDate, ChronoUnit.WEEKS)));
+        form.setIsSingleEvent(Boolean.valueOf(event.getTimetableEvent().getTimetableObject() == null));
         return form;
     }
 
@@ -144,11 +151,11 @@ public class TimetableSingleEventForm {
         this.rooms = rooms;
     }
 
-    public List<AutocompleteResult> getTeachers() {
+    public List<TimetableSingleEventTeacherForm> getTeachers() {
         return teachers;
     }
 
-    public void setTeachers(List<AutocompleteResult> teachers) {
+    public void setTeachers(List<TimetableSingleEventTeacherForm> teachers) {
         this.teachers = teachers;
     }
 
@@ -190,5 +197,13 @@ public class TimetableSingleEventForm {
     public void setOtherRoom(String otherRoom) {
         this.otherRoom = otherRoom;
     }
-    
+
+    public Boolean getIsSingleEvent() {
+        return isSingleEvent;
+    }
+
+    public void setIsSingleEvent(Boolean isSingleEvent) {
+        this.isSingleEvent = isSingleEvent;
+    }
+
 }

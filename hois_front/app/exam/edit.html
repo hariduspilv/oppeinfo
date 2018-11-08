@@ -100,10 +100,13 @@
 
         <md-input-container flex="40" flex-sm="100" flex-offset="15" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'exam.places' | translate}}</label>
-          <input ng-model="record.places" name="places" type="number" min="0">
+          <input ng-model="record.places" name="places" type="number" min="0" max="9999">
           <div ng-messages="examForm.places.$error">
             <div ng-message="min">
               {{'main.messages.error.min' | translate: {min: 0} }}
+            </div>
+            <div ng-message="max">
+              {{'main.messages.error.max' | translate: {max: 9999} }}
             </div>
           </div>
         </md-input-container>
@@ -162,8 +165,8 @@
               <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
               <td md-cell>{{::row.studentGroup}}</td>
               <td md-cell>{{row.registered | hoisDate}}</td>
-              <td md-cell ng-if="!row.grade">
-                <a ng-click="deleteStudent(row)" md-no-ink class="remove">&times;</a>
+              <td md-cell>
+                <a ng-if="!row.grade" ng-click="deleteStudent(row)" md-no-ink class="remove">&times;</a>
               </td>
             </tr>
           </tbody>

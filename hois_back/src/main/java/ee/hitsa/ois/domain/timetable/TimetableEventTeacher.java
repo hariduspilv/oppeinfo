@@ -18,6 +18,8 @@ public class TimetableEventTeacher extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Teacher teacher;
+    
+    private Boolean isSubstitute;
 
     public TimetableEventTime getTimetableEventTime() {
         return timetableEventTime;
@@ -33,6 +35,14 @@ public class TimetableEventTeacher extends BaseEntityWithId {
 
     public void setTeacher(Teacher teacher) {
         this.teacher = teacher;
+    }
+
+    public Boolean getIsSubstitute() {
+        return isSubstitute;
+    }
+
+    public void setIsSubstitute(Boolean isSubstitute) {
+        this.isSubstitute = isSubstitute;
     }
 
 }

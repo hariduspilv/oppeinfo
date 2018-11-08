@@ -14,6 +14,8 @@ import javax.persistence.Table;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.basemodule.BaseModule;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 
 @Entity
@@ -56,6 +58,11 @@ public class CurriculumVersionOccupationModule extends BaseEntityWithId {
 
     @Column(nullable = false)
     private String supervisor;
+    
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    private BaseModule baseModule;
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    private Teacher teacher;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false)
@@ -226,6 +233,20 @@ public class CurriculumVersionOccupationModule extends BaseEntityWithId {
     public void setLessonPlanModules(Set<LessonPlanModule> lessonPlanModules) {
         this.lessonPlanModules = lessonPlanModules;
     }
-    
 
+    public BaseModule getBaseModule() {
+        return baseModule;
+    }
+
+    public void setBaseModule(BaseModule baseModule) {
+        this.baseModule = baseModule;
+    }
+
+    public Teacher getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(Teacher teacher) {
+        this.teacher = teacher;
+    }
 }

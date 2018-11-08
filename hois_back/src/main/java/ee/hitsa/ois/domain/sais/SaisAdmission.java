@@ -43,6 +43,7 @@ public class SaisAdmission extends BaseEntityWithId {
     private Classifier language;
     private Integer places;
     private LocalDate periodStart;
+    private Boolean is_archived;
 
     @Column(nullable = false)
     private LocalDate periodEnd;
@@ -163,4 +164,12 @@ public class SaisAdmission extends BaseEntityWithId {
     public void setApplications(Set<SaisApplication> applications) {
         this.applications = applications;
     }
+
+	public Boolean getArchived() {
+		return is_archived;
+	}
+
+	public void setArchived(Boolean is_archived) {
+		this.is_archived = is_archived;
+	}
 }

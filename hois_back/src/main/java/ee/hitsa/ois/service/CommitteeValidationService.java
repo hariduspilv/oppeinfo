@@ -1,6 +1,8 @@
 package ee.hitsa.ois.service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.validation.Validator;
 
@@ -30,10 +32,22 @@ public class CommitteeValidationService {
     }
 
     private void validateMembers(List<CommitteeMemberDto> members) {
+        Set<Long> teachers = new HashSet<>();
+        Set<Long> persons = new HashSet<>();
         for(CommitteeMemberDto member : members) {
             Class<?> group = Boolean.TRUE.equals(member.getIsExternal()) ? CommitteeMemberValidator.External.class : CommitteeMemberValidator.Internal.class;
             // FIXME should validate all members before throwing exception?
             ValidationFailedException.throwOnError(validator.validate(member, group));
+            validateDuplicateMember(member.getTeacher(), teachers);
+            if (member.getPerson() != null) {
+                validateDuplicateMember(member.getPerson().getId(), persons);
+            }
+        }
+    }
+    
+    private static void validateDuplicateMember(Long id, Set<Long> ids) {
+        if (id != null && !ids.add(id)) {
+            throw new ValidationFailedException("committee.error.duplicateMember");
         }
     }
 }

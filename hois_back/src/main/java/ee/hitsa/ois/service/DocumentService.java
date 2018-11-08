@@ -347,12 +347,12 @@ public class DocumentService {
         List<?> result = em.createNativeQuery("select ds.student_id, upper(p.firstname) firstname, upper(p.lastname) lastname, p.idcode, p.birthdate"
                 + ", ds.is_cum_laude, c.mer_code, c.name_et, ekr.value"
                 + " from directive_student ds"
-                + " join curriculum_version cv on cv.id = ds.curriculum_version_id"
+                + " join student s on s.id = ds.student_id"
+                + " join person p on p.id = s.person_id"
+                + " join curriculum_version cv on cv.id = s.curriculum_version_id"
                 + " join curriculum c on c.id = cv.curriculum_id"
                 + " join classifier_connect cc on cc.main_classifier_code = ?3 and cc.classifier_code = c.orig_study_level_code"
                 + " join classifier ekr on ekr.code = cc.connect_classifier_code"
-                + " join student s on s.id = ds.student_id"
-                + " join person p on p.id = s.person_id"
                 + " where ds.directive_id = ?1 and ds.student_id in ?2 and ds.canceled = false")
                 .setParameter(1, directiveId)
                 .setParameter(2, form.getStudentIds())
@@ -785,20 +785,25 @@ public class DocumentService {
                 + " from student_vocational_result sv"
                 + " join ("
                 + " select coalesce(svm.curriculum_version_omodule_id,sv.curriculum_version_omodule_id) as curriculum_version_omodule_id, "
-                + "   first_value(sv.id) over(partition by student_id, coalesce(svm.curriculum_version_omodule_id,sv.curriculum_version_omodule_id) order by sv.grade_date desc,sv.grade desc) as id"
+                + "   first_value(sv.id) over(partition by student_id, coalesce(svm.curriculum_version_omodule_id,sv.curriculum_version_omodule_id) order by sv.grade_date desc,sv.grade desc) as id,"
+                + " cmm.module_code as md"
                 + " from student_vocational_result sv"
                 + " left join student_vocational_result_omodule svm on sv.id=svm.student_vocational_result_id"
+                + " left join curriculum_version_omodule cm on cm.id=coalesce(svm.curriculum_version_omodule_id,sv.curriculum_version_omodule_id)" 
+                + " left join curriculum_module cmm on cm.curriculum_module_id=cmm.id" 
                 + " where sv.student_id=?1 and grade in ('A','3','4','5') and (svm.student_vocational_result_id is not null or sv.arr_modules is null)"
                 + " union"
-                + " select distinct 0, sv.id"
+                + " select distinct 0, sv.id, cmm.module_code"
                 + " from student_vocational_result sv"
                 + " left join student_vocational_result_omodule svm on sv.id=svm.student_vocational_result_id"
                 + " join curriculum_version_omodule cm on cm.id=any(sv.arr_modules)"
+                + " join curriculum_module cmm on cm.curriculum_module_id=cmm.id"
                 + " where sv.student_id=?1 and grade in ('A','3','4','5') and sv.arr_modules is not null and svm.student_vocational_result_id is null) x on x.id=sv.id"
                 + " join classifier clf on clf.code=sv.grade_code"
                 + " left join apel_school aps on sv.apel_school_id=aps.id"
                 + " left join (protocol_student ps join protocol pp on ps.protocol_id=pp.id)  on ps.id=sv.protocol_student_id"
-                + " order by sv.grade_date asc")
+                + " order by case coalesce(x.md,'KUTSEMOODUL_V') when 'KUTSEMOODUL_P' then 1  when 'KUTSEMOODUL_Y' then 2  when 'KUTSEMOODUL_V' then 3  when 'KUTSEMOODUL_L' then 4 else 3 end, "
+                + " upper(sv.module_name_et), sv.grade_date asc")
                 .setParameter(1, studentId)
                 .getResultList();
         List<DiplomaSupplementStudyResult> studyResults = supplement.getStudyResults();

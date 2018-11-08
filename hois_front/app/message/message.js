@@ -164,13 +164,13 @@ function ($scope, QueryUtils, $route, message, $location, ArrayUtils, $resource,
             $scope.groupSearchTypes.push({
                 code:'SEARCH_JOURNAL',
                 name: $translate.instant("message.searchTypeByJournals")
-            })
+            });
         }
         if ($scope.auth.school.higher) {
             $scope.groupSearchTypes.push({
                 code:'SEARCH_SUBJECTS',
                 name: $translate.instant("message.searchTypeBySubjects")
-            })
+            });
         }
     } else if ($scope.auth.isParent() || $scope.auth.isStudent()) {
         $scope.targetGroups = ['ROLL_O'];

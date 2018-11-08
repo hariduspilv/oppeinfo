@@ -47,7 +47,7 @@
           <td md-cell>{{subjectResult.subject.credits}}</td>
           <td md-cell>
             <table>
-              <tr>
+              <tr class="one-row">
                 <td ng-repeat="grade in subjectResult.grades | orderBy: 'gradeDate'">
                   <span ng-if="$index !== 0">/</span>
                   <span ng-class="{badResult: !gradeUtil.isPositive(grade.grade)}">{{grade.gradeValue}}</span>

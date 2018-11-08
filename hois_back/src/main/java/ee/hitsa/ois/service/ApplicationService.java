@@ -43,6 +43,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
+import ee.hitsa.ois.message.StudentApplicationConfirmed;
 import ee.hitsa.ois.message.StudentApplicationCreated;
 import ee.hitsa.ois.message.StudentApplicationRejectedMessage;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -329,6 +330,11 @@ public class ApplicationService {
         return EntityUtil.save(application, em);
     }
 
+    public Application confirm(Application application) {
+        setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_KINNITATUD);
+        return EntityUtil.save(application, em);
+    }
+
     public ApplicationDto get(HoisUserDetails user, Application application) {
         return ApplicationDto.of(setSeenBySchoolAdmin(user, application));
     }
@@ -442,6 +448,12 @@ public class ApplicationService {
         log.info("rejection notification message sent to student {}", EntityUtil.getId(application.getStudent()));
         StudentApplicationRejectedMessage data = new StudentApplicationRejectedMessage(application);
         automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_TL, application.getStudent(), data, user);
+    }
+
+    public void sendConfirmationNotificationMessage(Application application, HoisUserDetails user) {
+        log.info("confirmation notification message sent to student {}", EntityUtil.getId(application.getStudent()));
+        StudentApplicationConfirmed data = new StudentApplicationConfirmed(application);
+        automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_KINNIT, application.getStudent(), data, user);
     }
 
     private void setApplicationStatus(Application application, ApplicationStatus status) {

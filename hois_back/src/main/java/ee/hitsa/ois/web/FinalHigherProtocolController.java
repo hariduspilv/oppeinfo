@@ -49,7 +49,6 @@ import ee.hitsa.ois.web.dto.EntitySignDto;
 import ee.hitsa.ois.web.dto.HigherProtocolSearchDto;
 import ee.hitsa.ois.web.dto.finalprotocol.FinalHigherProtocolDto;
 import ee.hitsa.ois.web.dto.finalprotocol.FinalHigherProtocolSubjectDto;
-import ee.hitsa.ois.web.dto.finalprotocol.FinalProtocolCommitteeSelectDto;
 
 @RestController
 @RequestMapping("/finalHigherProtocols")
@@ -139,7 +138,7 @@ public class FinalHigherProtocolController {
     }
     
     @GetMapping("/committees")
-    public List<FinalProtocolCommitteeSelectDto> committees(HoisUserDetails user, 
+    public List<AutocompleteResult> committees(HoisUserDetails user, 
             @RequestParam(value = "finalDate", required = false) LocalDate finalDate) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return finalProtocolService.committeesForSelection(user, finalDate);

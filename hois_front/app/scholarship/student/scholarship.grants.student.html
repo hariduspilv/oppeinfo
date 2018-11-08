@@ -7,6 +7,7 @@
         <thead md-head>
           <tr md-row>
             <th md-column>{{'stipend.type' | translate}}</th>
+            <th md-column>{{'stipend.nameEt' | translate}}</th>
             <th md-column>{{'stipend.applicationPeriod' | translate}}</th>
             <th md-column>{{'stipend.places' | translate}}</th>
             <th md-column>{{'stipend.student.averageMark' | translate}}</th>
@@ -20,6 +21,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="stipend in possibleStipends" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{currentLanguageNameField(stipend.type)}}</td>
+            <td md-cell>{{stipend.nameEt | translate}}</td>
             <td md-cell>{{stipend.applicationStart | hoisDate}}-{{stipend.applicationEnd | hoisDate}}</td>
             <td md-cell>{{stipend.places ? stipend.places : '-'}}</td>
             <td md-cell>{{stipend.averageMark ? stipend.averageMark : '-'}}</td>
@@ -47,6 +49,7 @@
         <thead md-head>
           <tr md-row>
             <th md-column>{{'stipend.type' | translate}}</th>
+            <th md-column>{{'stipend.nameEt' | translate}}</th>
             <th md-column>{{'stipend.student.averageMark' | translate}}</th>
             <th md-column>{{'stipend.student.lastPeriodMark' | translate}}</th>
             <th md-column>{{'stipend.student.curriculumCompletion' | translate}}</th>
@@ -62,6 +65,7 @@
             <td md-cell>
               <a href="#/scholarships/applications/{{stipend.id}}">{{currentLanguageNameField(stipend.type)}}</a>
             </td>
+            <td md-cell>{{stipend.termName | translate}}</td>
             <td md-cell>{{stipend.averageMark ? stipend.averageMark : '-'}}</td>
             <td md-cell>{{stipend.lastPeriodMark ? stipend.lastPeriodMark : '-'}}</td>
             <td md-cell>{{stipend.curriculumCompletion ? stipend.curriculumCompletion : '-'}}</td>

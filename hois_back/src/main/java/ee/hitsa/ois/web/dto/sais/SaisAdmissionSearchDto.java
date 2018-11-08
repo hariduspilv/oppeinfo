@@ -18,6 +18,7 @@ public class SaisAdmissionSearchDto {
     private String studyForm;
     private Boolean failed;
     private String error;
+    private Boolean is_archived;
 
     public static SaisAdmissionSearchDto of(SaisAdmission saisAdmission) {
         SaisAdmissionSearchDto dto = EntityUtil.bindToDto(saisAdmission, new SaisAdmissionSearchDto());
@@ -40,6 +41,8 @@ public class SaisAdmissionSearchDto {
             sb.append(periodEnd.toString());
             sb.append(";studyForm: ");
             sb.append(studyForm);
+            sb.append(";is_archived: ");
+            sb.append(is_archived);
         } else {
             sb.append(";failed: ");
             sb.append(failed.toString());
@@ -128,5 +131,13 @@ public class SaisAdmissionSearchDto {
     public void setError(String error) {
         this.error = error;
     }
+
+	public Boolean getArchived() {
+		return is_archived;
+	}
+
+	public void setArchived(Boolean is_archived) {
+		this.is_archived = is_archived;
+	}
 
 }

@@ -1,0 +1,17 @@
+<div class="ois-form-layout-padding" ng-cloak>
+    <div flex>
+        <form name="archiveForm" ng-submit="save()" novalidate layout="column">
+            <div layout="row" flex>
+                <label>{{'reception.archive.archiveDateTo' | translate}}</label>
+                <md-input-container flex="100">
+                    <label>{{'academicCalendar.date' | translate}}</label>
+                    <md-datepicker ng-model="archive.endDate" required flex="100"></md-datepicker>
+                </md-input-container>
+            </div>
+            <div layout="row" flex>
+                <md-button class="md-raised" type="submit">{{'main.button.archive' | translate}}</md-button>
+                <md-button class="md-raised" ng-click="back('#/saisAdmission/search')">{{'main.button.back' | translate}}</md-button>
+            </div>
+        </form>
+    </div>
+</div>

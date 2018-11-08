@@ -21,7 +21,8 @@ angular
     'md.data.table',
     'lfNgMdFileInput',
     'ngStorage',
-    'angular-cache'
+    'angular-cache',
+    'color.picker'
   ])
   .config(function ($routeProvider) {
     $routeProvider
@@ -124,5 +125,12 @@ angular
 }).run(function($rootScope, busyHandler) {
   $rootScope.$on('backendBusy', function(event, data) {
     busyHandler.handle(data);
+  });
+}).config(function($provide) {
+  $provide.decorator('ColorPickerOptions', function($delegate) {
+      var options = angular.copy($delegate);
+      options.alpha = false;
+      options.format = 'hex';
+      return options;
   });
 });

@@ -10,9 +10,11 @@ import org.springframework.beans.BeanUtils;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
+import ee.hitsa.ois.domain.timetable.JournalEntryStudentLessonAbsence;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JournalUtil;
 
 public class JournalXlsDto extends JournalDto {
 
@@ -26,12 +28,24 @@ public class JournalXlsDto extends JournalDto {
         JournalXlsDto dto = new JournalXlsDto();
         BeanUtils.copyProperties(journalDto, dto, "journalEntries", "journalStudents");
 
+        int outcomeWithoutOrderNr = 0;
         for (JournalEntry entry : journal.getJournalEntries()) {
             dto.getJournalEntries().add(EntityUtil.bindToDto(entry, new JournalEntryDto()));
             
             if (!entry.getEntryType().getCode().equals(JournalEntryType.SISSEKANNE_L.name())) {
                 JournalEntryByDateXlsDto journalEntryByDateDto = EntityUtil.bindToDto(entry,
                         new JournalEntryByDateXlsDto());
+                journalEntryByDateDto.setStartLessonNr(entry.getStartLessonNr());
+                journalEntryByDateDto.setLessons(entry.getLessons());
+
+                if (entry.getCurriculumModuleOutcomes() != null) {
+                    if (entry.getCurriculumModuleOutcomes().getOrderNr() != null) {
+                        journalEntryByDateDto.setOutcomeOrderNr(entry.getCurriculumModuleOutcomes().getOrderNr());
+                    } else {
+                        journalEntryByDateDto.setOutcomeOrderNr(Long.valueOf(outcomeWithoutOrderNr++));
+                    }
+                    journalEntryByDateDto.setCurriculumModule(EntityUtil.getId(entry.getCurriculumModuleOutcomes().getCurriculumModule()));
+                }
 
                 for (JournalEntryStudent journalEntryStudent : entry.getJournalEntryStudents()) {
                     if (journalEntryStudent.getGrade() != null) {
@@ -39,9 +53,22 @@ public class JournalXlsDto extends JournalDto {
                                 journalEntryStudent.getGrade().getValue());
                     }
     
-                    if (journalEntryStudent.getAbsence() != null) {
-                        journalEntryByDateDto.getJournalStudentAbsence().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
-                                journalEntryStudent.getAbsence().getValue());
+                    if (Boolean.TRUE.equals(journalEntryStudent.getIsLessonAbsence())) {
+                        String absences = "";
+                        List<JournalEntryStudentLessonAbsence> lessonAbsences = new ArrayList<>();
+                        lessonAbsences.addAll(journalEntryStudent.getJournalEntryStudentLessonAbsences());
+                        lessonAbsences.sort(Comparator.comparing(JournalEntryStudentLessonAbsence::getLessonNr));
+                        
+                        for (JournalEntryStudentLessonAbsence absence : lessonAbsences) {
+                            absences += absence.getAbsence().getValue() + "(" + absence.getLessonNr().toString() + ") ";
+                        }
+                        journalEntryByDateDto.getJournalStudentAbsence()
+                                .put(EntityUtil.getId(journalEntryStudent.getJournalStudent()), absences);
+                    } else {
+                        if (journalEntryStudent.getAbsence() != null) {
+                            journalEntryByDateDto.getJournalStudentAbsence().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
+                                    journalEntryStudent.getAbsence().getValue());
+                        }
                     }
                     
                     if(journalEntryStudent.getAddInfo() != null) {
@@ -66,8 +93,9 @@ public class JournalXlsDto extends JournalDto {
 
         Collections.sort(dto.getJournalEntries(),
                 Comparator.comparing(JournalEntryDto::getEntryDate, Comparator.nullsLast(Comparator.reverseOrder())));
-        Collections.sort(dto.getJournalEntriesByDate(), Comparator.comparing(JournalEntryByDateXlsDto::getEntryDate,
-                Comparator.nullsLast(Comparator.naturalOrder())));
+        
+        setOutcomeEntriesUnqiueOrderNrs(dto.getJournalEntriesByDate());
+        orderJournalEntriesByDate(dto.getJournalEntriesByDate());
 
         for (JournalStudent journalStudent : journal.getJournalStudents()) {
             dto.getJournalStudents().add(JournalStudentDto.of(journalStudent));
@@ -115,4 +143,43 @@ public class JournalXlsDto extends JournalDto {
         this.journalEndResults = journalEndResults;
     }
     
+    private static void setOutcomeEntriesUnqiueOrderNrs(List<JournalEntryByDateXlsDto> entries) {
+        // order outcomes by curriculum module id and their order nr and then give outcomes from different modules a unique outcome order nr
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateXlsDto::getCurriculumModule, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(JournalEntryByDateXlsDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
+        List<Long> orderNrs = new ArrayList<>();
+        for (int i = 0; i < entries.size(); i++) {
+            Long entryOrderNr = entries.get(i) != null && entries.get(i).getOutcomeOrderNr() != null ? entries.get(i).getOutcomeOrderNr() : null;
+            if (entryOrderNr != null) {
+                if (!orderNrs.contains(entryOrderNr)) {
+                    orderNrs.add(entryOrderNr);
+                } else {
+                    Long newOrderNr = Long.valueOf(orderNrs.stream().max(Comparator.comparing(nr -> nr)).get().longValue() + 1);
+                    entries.get(i).setOutcomeOrderNr(newOrderNr);
+                    orderNrs.add(newOrderNr);
+                }
+            }
+        }
+    }
+
+    private static void orderJournalEntriesByDate(List<JournalEntryByDateXlsDto> entries) {
+        // order day entries by lesson nr
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateXlsDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(JournalEntryByDateXlsDto::getStartLessonNr, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(JournalEntryByDateXlsDto::getLessons, Comparator.nullsFirst(Comparator.naturalOrder())));
+        
+        // outcome entries that don't have a date are ordered last among entries without date, all other entries are ordered by date
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateXlsDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateXlsDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder())));
+        
+        Collections.sort(entries, (JournalEntryByDateXlsDto o1, JournalEntryByDateXlsDto o2) -> {
+            if (JournalUtil.isOutcomeEntryWithoutDate(o1) && !JournalUtil.isOutcomeEntryWithoutDate(o2)) {
+                return 1;
+            } else if (!JournalUtil.isOutcomeEntryWithoutDate(o1) && JournalUtil.isOutcomeEntryWithoutDate(o2)) {
+                return -1;
+            }
+            return 0;
+        });
+    }
+
 }

@@ -121,6 +121,20 @@
               studyYear: studyYear
             };
 
+            $scope.$watchGroup(['record.studyYear', 'record.studentGroup'], function () {
+              $scope.formState.previousLessonplans = [];
+              if (angular.isDefined($scope.record.studyYear) && angular.isDefined($scope.record.studentGroup)) {
+                var studyYear = $scope.formState.studyYears.find(function (it) { return it.id === $scope.record.studyYear; });
+                var studentGroup = $scope.formState.studentGroups.find(function (it) { return it.id === $scope.record.studentGroup; });
+                var curriculumLessonPlans = $scope.formState.curriculumLessonPlans[studentGroup.curriculum];
+                if (curriculumLessonPlans) {
+                  $scope.formState.previousLessonplans = curriculumLessonPlans.filter(function (it) {
+                    return new Date(it.studyYearEndDate).getTime() <= new Date(studyYear.endDate).getTime();
+                  });
+                }
+              }
+            });
+
             $scope.create = function () {
               if(!$scope.newLessonPlanForm.$valid) {
                 message.error('main.messages.form-has-errors');
@@ -203,12 +217,12 @@
         $scope.formState.studentGroups = allstudentgroups;
         $scope.formState.studentGroupMap = studentgroups;
         $scope.formState.curriculumVersions = result.curriculumVersions;
+        $scope.formState.curriculumLessonPlans = result.curriculumLessonPlans;
       });
 
-      $scope.$watch("criteria.teacherObject", function (value) {
+      $scope.$watch('criteria.teacherObject', function (value) {
         $scope.criteria.teacher = angular.isObject(value) ? value.id : value;
       });
-      
     }
   ).controller('LessonplanTeacherSearchController',
     function ($route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService) {

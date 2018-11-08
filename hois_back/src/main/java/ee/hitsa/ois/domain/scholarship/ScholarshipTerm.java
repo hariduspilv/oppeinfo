@@ -15,6 +15,7 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.school.School;
 
@@ -59,6 +60,10 @@ public class ScholarshipTerm extends BaseEntityWithId {
     private Boolean isFamilyIncomes;
     @Column(nullable = false)
     private Boolean isOpen;
+    
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true)
+    private Committee committee;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "scholarshipTerm")
     private List<ScholarshipTermCourse> scholarshipTermCourses = new ArrayList<>();
@@ -313,6 +318,14 @@ public class ScholarshipTerm extends BaseEntityWithId {
 
     public void setIsOpen(Boolean isOpen) {
         this.isOpen = isOpen;
+    }
+
+    public Committee getCommittee() {
+        return committee;
+    }
+
+    public void setCommittee(Committee committee) {
+        this.committee = committee;
     }
 
 }

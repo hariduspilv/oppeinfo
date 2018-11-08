@@ -1,5 +1,7 @@
 package ee.hitsa.ois.util;
 
+import java.time.LocalDate;
+
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.enums.Permission;
@@ -32,18 +34,31 @@ public abstract class StudentAbsenceUtil {
         return (user.isSchoolAdmin() || user.isTeacher()) &&
               UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PUUDUMINE);
     }
+    
+    public static boolean hasPermissionToChangeStatus(HoisUserDetails user, StudentAbsence absence) {
+        Student student = absence.getStudent();
+        return (UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isStudentGroupTeacher(user, student))
+                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PUUDUMINE);
+    }
 
     public static boolean hasPermissionToSearch(HoisUserDetails user) {
         return (user.isSchoolAdmin() || user.isTeacher()) &&
               UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PUUDUMINE);
     }
 
-    public static boolean canChangeStatus(HoisUserDetails user, StudentAbsence absence) {
-        Student student = absence.getStudent();
-        return !accepted(absence) && !rejected(absence) &&
-              (UserUtil.isSchoolAdmin(user, student.getSchool()) || 
-               UserUtil.isStudentGroupTeacher(user, student))
-              && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PUUDUMINE);
+    public static boolean canAccept(HoisUserDetails user, StudentAbsence absence) {
+        return !accepted(absence) && !rejected(absence) && hasPermissionToChangeStatus(user, absence);
+    }
+    
+    public static boolean canReject(HoisUserDetails user, StudentAbsence absence) {
+        return (!rejected(absence) || validTodayOrInFuture(absence.getValidFrom(), absence.getValidThru()))
+                && hasPermissionToChangeStatus(user, absence);
+    }
+    
+    public static boolean validTodayOrInFuture(LocalDate validFrom, LocalDate validThru) {
+        LocalDate today = LocalDate.now();
+        return (validThru != null && (validThru.isEqual(today) || validThru.isAfter(today)))
+                || (validFrom.isEqual(today) || validFrom.isAfter(today));
     }
 
     public static void assertCanSearch(HoisUserDetails user) {
@@ -58,8 +73,12 @@ public abstract class StudentAbsenceUtil {
         AssertionFailedException.throwIf(!canEdit(user, absence), "User cannot edit student absence");
     }
 
-    public static void assertCanChangeStatus(HoisUserDetails user, StudentAbsence absence) {
-        AssertionFailedException.throwIf(!canChangeStatus(user, absence), "User cannot accept student absence");
+    public static void assertCanAccept(HoisUserDetails user, StudentAbsence absence) {
+        AssertionFailedException.throwIf(!canAccept(user, absence), "User cannot accept student absence");
+    }
+    
+    public static void assertCanReject(HoisUserDetails user, StudentAbsence absence) {
+        AssertionFailedException.throwIf(!canReject(user, absence), "User cannot reject student absence");
     }
 
     private static boolean accepted(StudentAbsence absence) {

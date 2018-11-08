@@ -1,5 +1,8 @@
 package ee.hitsa.ois.web.commandobject.timetable;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 
@@ -13,6 +16,8 @@ public class JournalEntryStudentForm {
     private String grade;
     private Boolean removeStudentHistory = Boolean.FALSE;
     private String addInfo;
+    private Boolean isLessonAbsence;
+    private Map<Long, JournalEntryStudentLessonAbsenceForm> lessonAbsences = new HashMap<>();
 
     public Long getId() {
         return id;
@@ -50,6 +55,17 @@ public class JournalEntryStudentForm {
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
     }
-
+    public Boolean getIsLessonAbsence() {
+        return isLessonAbsence;
+    }
+    public void setIsLessonAbsence(Boolean isLessonAbsence) {
+        this.isLessonAbsence = isLessonAbsence;
+    }
+    public Map<Long, JournalEntryStudentLessonAbsenceForm> getLessonAbsences() {
+        return lessonAbsences;
+    }
+    public void setLessonAbsences(Map<Long, JournalEntryStudentLessonAbsenceForm> lessonAbsences) {
+        this.lessonAbsences = lessonAbsences;
+    }
 
 }

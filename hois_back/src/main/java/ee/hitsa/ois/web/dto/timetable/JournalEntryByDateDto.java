@@ -10,6 +10,7 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 
 public class JournalEntryByDateDto {
 
+    private Long id;
     private LocalDate entryDate;
     private Long startLessonNr;
     private Long lessons;
@@ -24,6 +25,14 @@ public class JournalEntryByDateDto {
     
     // Key is JournalStudent ID
     private Map<Long, List<JournalEntryStudentResultDto>> journalStudentResults = new HashMap<>();
+    
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public LocalDate getEntryDate() {
         return entryDate;

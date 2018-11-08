@@ -233,7 +233,6 @@
 
     var ApelApplicationEndpoint = QueryUtils.endpoint('/apelApplications');
     $scope.auth = $route.current.locals.auth;
-    $scope.canConfirmAndRemoveConfirmation = ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_K_TEEMAOIGUS_VOTA");
     $scope.application = {};
     QueryUtils.endpoint('/autocomplete/schools').query({id: $scope.auth.school.id}).$promise.then(function (schools) {
       $scope.school = schools[0];  
@@ -246,22 +245,23 @@
       } else if ($scope.auth.isAdmin() && ($scope.application.status === 'VOTA_STAATUS_K' || $scope.application.status === 'VOTA_STAATUS_E')) {
         $scope.editing = true;
       }
-      
-      $scope.canChangeTransferStatus = false;
-      if ($scope.application.status === 'VOTA_STAATUS_E' && $scope.auth.isAdmin()) {
-        $scope.canChangeTransferStatus = true;
-      }
     });
 
     function entityToForm(entity) {
       $scope.application = entity;
+
+      if (entity.status === 'VOTA_STAATUS_E' && $scope.auth.isAdmin()) {
+        $scope.committees = QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/committees').query();
+      }
+      $scope.application.committeeId = $scope.application.committee ? $scope.application.committee.id : null;
+      $scope.canChangeTransferStatus = entity.canChangeTransferStatus;
     }
 
     var entity = $route.current.locals.entity;
     if (angular.isDefined(entity)) {
       entityToForm(entity);
     } else {
-      $scope.application.status = "VOTA_STAATUS_K";
+      $scope.application.status = 'VOTA_STAATUS_K';
     }
     $scope.applicationPdfUrl = config.apiUrl + '/apelApplications/print/' + $scope.application.id + '/application.pdf';
 
@@ -706,6 +706,7 @@
 
       dialogService.showDialog(dialogTemplate, function (dialogScope) {
         dialogScope.auth = $scope.auth;
+        dialogScope.formState = {};
         dialogScope.student = $scope.application.student;
         dialogScope.currentDate = new Date();
         dialogScope.curriculumVersionId = $scope.application.curriculumVersion.id;
@@ -722,7 +723,7 @@
         }
         
         function addNewEmptyFormalSubjectOrModule() {
-          dialogScope.isMySchool = true;
+          dialogScope.formState.isMySchool = false;
           dialogScope.grades = null;
           dialogScope.record.assessment = null;
           dialogScope.record.curriculumVersionOmodule = null;
@@ -769,8 +770,8 @@
             addMissingValuesToFormalModules(dialogScope.record.formalSubjectsOrModules);
             addMissingValuesToFormalReplacedModules(dialogScope.record.formalReplacedSubjectsOrModules);
           } else {
+            dialogScope.formState.isMySchool = dialogScope.record.newTransferableSubjectOrModule.isMySchool;
             dialogScope.record.newTransferableSubjectOrModule = dialogScope.record.formalSubjectsOrModules[0];
-            dialogScope.isMySchool = dialogScope.record.newTransferableSubjectOrModule.isMySchool;
             dialogScope.record.subject = dialogScope.record.newTransferableSubjectOrModule.subject;
             dialogScope.record.nameEt = dialogScope.record.newTransferableSubjectOrModule.nameEt;
             dialogScope.record.nameEn = dialogScope.record.newTransferableSubjectOrModule.nameEn;
@@ -784,18 +785,17 @@
           addNewEmptyFormalSubjectOrModule();
         }
 
-
-        dialogScope.$watch('isMySchool', function () {
+        dialogScope.$watch('formState.isMySchool', function () {
           dialogScope.record.school = $scope.school;
 
           if (dialogScope.record.newTransferableSubjectOrModule) {
-            dialogScope.record.newTransferableSubjectOrModule.isMySchool = dialogScope.isMySchool;
+            dialogScope.record.newTransferableSubjectOrModule.isMySchool = dialogScope.formState.isMySchool;
           }
 
           if (recordId) {
             if (dialogScope.record.newTransferableSubjectOrModule) {
               var copy = angular.copy(dialogScope.record.newTransferableSubjectOrModule);
-              dialogScope.isNewSchool = copy.isNewSchool;
+              dialogScope.formState.isNewSchool = copy.isNewSchool;
               dialogScope.record.newTransferableSubjectOrModule = {
                 id: copy.id,
                 isNew: copy.isNew,
@@ -841,7 +841,7 @@
             dialogScope.record.newTransferableSubjectOrModule = {};
             dialogScope.record.newTransferableSubjectOrModule.isNew = true;
             dialogScope.record.newTransferableSubjectOrModule.apelSchool = null;
-            if (dialogScope.isMySchool) {
+            if (dialogScope.formState.isMySchool) {
               dialogScope.record.newTransferableSubjectOrModule.type = 'VOTA_AINE_LIIK_V';
             } else {
               dialogScope.record.newTransferableSubjectOrModule.type = 'VOTA_AINE_LIIK_M';
@@ -1054,7 +1054,7 @@
         }
 
         dialogScope.addNewSchool = function () {
-          dialogScope.isNewSchool = true;
+          dialogScope.formState.isNewSchool = true;
         };
 
         dialogScope.addNewTransferableModule = function () {
@@ -1065,8 +1065,8 @@
           dialogScope.dialogForm.$setSubmitted();
           if (dialogScope.dialogForm.$valid) {
             dialogScope.record.newTransferableSubjectOrModule = null;
-            transferableModule.isMySchool = dialogScope.isMySchool;
-            transferableModule.isNewSchool = dialogScope.isNewSchool;
+            transferableModule.isMySchool = dialogScope.formState.isMySchool;
+            transferableModule.isNewSchool = dialogScope.formState.isNewSchool;
             transferableModule.isNew = false;
 
             if (!transferableModule.isMySchool) {
@@ -1095,8 +1095,8 @@
         dialogScope.editTransferableModule = function (transferableModuleIndex) {
           dialogScope.record.newTransferableSubjectOrModule = angular.copy(dialogScope.record.formalSubjectsOrModules[transferableModuleIndex]);
           
-          dialogScope.isMySchool = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].isMySchool;
-          dialogScope.isNewSchool = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].isNewSchool;
+          dialogScope.formState.isMySchool = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].isMySchool;
+          dialogScope.formState.isNewSchool = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].isNewSchool;
           dialogScope.record.apelSchool = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].apelSchool;
           
           dialogScope.record.assessment = Classifier.get(dialogScope.record.newTransferableSubjectOrModule.assessment);
@@ -1212,7 +1212,7 @@
             message.error('apel.error.atLeastOneSubstitutableSubject');
           } else {
             dialogScope.record.formalSubjectsOrModules[0] = dialogScope.record.newTransferableSubjectOrModule;
-            dialogScope.record.formalSubjectsOrModules[0].isMySchool = dialogScope.isMySchool;
+            dialogScope.record.formalSubjectsOrModules[0].isMySchool = dialogScope.formState.isMySchool;
             if (!dialogScope.record.formalSubjectsOrModules[0].isMySchool) {
               dialogScope.record.formalSubjectsOrModules[0].type = 'VOTA_AINE_LIIK_M';
             }
@@ -1336,25 +1336,78 @@
     };
 
     $scope.sendBackToCreation = function () {
-      dialogService.confirmDialog({
-        prompt: 'apel.sendBackToCreationConfirm'
-      }, function () {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({}, function (response) {
-          message.info('apel.messages.sentBackToCreation');
-          entityToForm(response);
+      if ($scope.application.status === 'VOTA_STAATUS_V') {
+        dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
+          dialogScope.sendBackToCreation = true;
+          dialogScope.committee = true;
+        }, function (submittedDialogScope) {
+          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({
+            addInfo: submittedDialogScope.reason
+          }, function (response) {
+            message.info('apel.messages.sentBackToCreation');
+            entityToForm(response);
+          });
         });
-      });
+      } else {
+        dialogService.confirmDialog({
+          prompt: 'apel.sendBackToCreationConfirm'
+        }, function () {
+          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({}, function (response) {
+            message.info('apel.messages.sentBackToCreation');
+            entityToForm(response);
+          });
+        });
+      }
     };
 
     $scope.sendToConfirm = function () {
       recordsToIdentifiers(DataUtils, $scope.application.records);
+
+      if ($scope.application.status === 'VOTA_STAATUS_V') {
+        dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
+          dialogScope.sendToConfirm = true;
+          dialogScope.committee = true;
+        }, function (submittedDialogScope) {
+          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
+            student: $scope.application.student,
+            isVocational: $scope.application.isVocational,
+            records:  $scope.application.records,
+            committeeId: $scope.application.committeeId,
+            addInfo: submittedDialogScope.reason
+          }, function (response) {
+            message.info('apel.messages.sentToConfirm');
+            entityToForm(response);
+          });
+        });
+      } else {
+        dialogService.confirmDialog({
+          prompt: 'apel.sendToConfirmConfirm'
+        }, function () {
+          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
+            student: $scope.application.student,
+            isVocational: $scope.application.isVocational,
+            committeeId: $scope.application.committeeId,
+            records:  $scope.application.records
+          }, function (response) {
+            message.info('apel.messages.sentToConfirm');
+            entityToForm(response);
+          });
+        });
+      }
+    };
+
+    $scope.sendToCommittee = function () {
+      recordsToIdentifiers(DataUtils, $scope.application.records);
       dialogService.confirmDialog({
-        prompt: 'apel.sendToConfirmConfirm'
+        prompt: 'apel.sendToCommitteeConfirm'
       }, function () {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
-          student: $scope.application.student, isVocational: $scope.application.isVocational, records:  $scope.application.records
+        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToCommittee/').put({
+          student: $scope.application.student,
+          isVocational: $scope.application.isVocational,
+          records:  $scope.application.records,
+          committeeId: $scope.application.committeeId
         }, function (response) {
-          message.info('apel.messages.sentToConfirm');
+          message.info('apel.messages.sentToCommittee');
           entityToForm(response);
         });
       });
@@ -1398,9 +1451,12 @@
     };
 
     $scope.reject = function () {
-      dialogService.showDialog('apelApplication/templates/reject.dialog.html', function () {}, function (submittedDialogScope) {
+      dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
+        dialogScope.rejection = true;
+        dialogScope.committee = $scope.application.status === 'VOTA_STAATUS_V';
+      }, function (submittedDialogScope) {
         QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/reject/').put({
-          addInfo: submittedDialogScope.rejectReason
+          addInfo: submittedDialogScope.reason
         }, function (response) {
           entityToForm(response);
         });
@@ -1432,7 +1488,6 @@
   }).controller('ApelApplicationViewController', function ($scope, $route, QueryUtils, oisFileService, Classifier, ArrayUtils, DataUtils, dialogService, message, config) {
     $scope.applicationId = $route.current.params.id;
     $scope.auth = $route.current.locals.auth;
-    $scope.canConfirmAndRemoveConfirmation = ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_K_TEEMAOIGUS_VOTA");
     $scope.application = {};
     $scope.formState = {};
     QueryUtils.endpoint('/autocomplete/schools').query({id: $scope.auth.school.id}).$promise.then(function (schools) {
@@ -1445,6 +1500,7 @@
         $scope.application.person = result.person;
         $scope.application.curriculumVersion = result.curriculumVersion;
         $scope.application.isVocational = result.curriculumVersion.isVocational;
+        $scope.application.committeeId = $scope.application.committee ? $scope.application.committee.id : null;
 
         getDataForInformalLearningTables($scope, QueryUtils, Classifier);
         getDataForFormalLearningTables($scope, QueryUtils, Classifier);
@@ -1475,25 +1531,76 @@
     };
 
     $scope.sendBackToCreation = function () {
-      dialogService.confirmDialog({
-        prompt: 'apel.sendBackToCreationConfirm'
-      }, function () {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({}, function (response) {
-          message.info('apel.messages.sentBackToCreation');
-          entityToForm(response);
+      if ($scope.application.status === 'VOTA_STAATUS_V') {
+        dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
+          dialogScope.sendBackToCreation = true;
+          dialogScope.committee = true;
+        }, function (submittedDialogScope) {
+          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({
+            addInfo: submittedDialogScope.reason
+          }, function (response) {
+            message.info('apel.messages.sentBackToCreation');
+            entityToForm(response);
+          });
         });
-      });
+      } else {
+        dialogService.confirmDialog({
+          prompt: 'apel.sendBackToCreationConfirm'
+        }, function () {
+          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({}, function (response) {
+            message.info('apel.messages.sentBackToCreation');
+            entityToForm(response);
+          });
+        });
+      }
     };
 
     $scope.sendToConfirm = function () {
       recordsToIdentifiers(DataUtils, $scope.application.records);
+
+      if ($scope.application.status === 'VOTA_STAATUS_V') {
+        dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
+          dialogScope.sendToConfirm = true;
+          dialogScope.committee = true;
+        }, function (submittedDialogScope) {
+          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
+            student: $scope.application.student,
+            isVocational: $scope.application.isVocational,
+            records:  $scope.application.records,
+            committeeId: $scope.application.committeeId,
+            addInfo: submittedDialogScope.reason
+          }, function (response) {
+            message.info('apel.messages.sentToConfirm');
+            entityToForm(response);
+          });
+        });
+      } else {
+        dialogService.confirmDialog({
+          prompt: 'apel.sendToConfirmConfirm'
+        }, function () {
+          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
+            student: $scope.application.student, 
+            isVocational: $scope.application.isVocational, 
+            records:  $scope.application.records,
+            committeeId: $scope.application.committeeId
+          }, function (response) {
+            message.info('apel.messages.sentToConfirm');
+            entityToForm(response);
+          });
+        });
+      }
+    };
+
+    $scope.sendToCommittee = function () {
+      recordsToIdentifiers(DataUtils, $scope.application.records);
+
       dialogService.confirmDialog({
-        prompt: 'apel.sendToConfirmConfirm'
+        prompt: 'apel.sendToCommitteeConfirm'
       }, function () {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
+        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToCommittee/').put({
           student: $scope.application.student, isVocational: $scope.application.isVocational, records:  $scope.application.records
         }, function (response) {
-          message.info('apel.messages.sentToConfirm');
+          message.info('apel.messages.sentToCommittee');
           entityToForm(response);
         });
       });
@@ -1537,9 +1644,12 @@
     };
 
     $scope.reject = function () {
-      dialogService.showDialog('apelApplication/templates/reject.dialog.html', function () {}, function (submittedDialogScope) {
+      dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
+        dialogScope.rejection = true;
+        dialogScope.committee = $scope.application.status === 'VOTA_STAATUS_V';
+      }, function (submittedDialogScope) {
         QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/reject/').put({
-          addInfo: submittedDialogScope.rejectReason
+          addInfo: submittedDialogScope.reason
         }, function (response) {
           entityToForm(response);
         });

@@ -1,8 +1,9 @@
-<md-dialog aria-label="add entry dialog" flex="50">
+<md-dialog aria-label="add entry dialog" flex="80">
+  
   <form name="dialogForm" ng-submit="loadData()" novalidate ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2>{{journalEntry.id === undefined || journalEntry.id === null ? "journal.entry.new" : "journal.entry.edit" | translate}} - {{journal.nameEt}}</h2>
+        <h2 flex>{{journalEntry.id === undefined || journalEntry.id === null ? "journal.entry.new" : "journal.entry.edit" | translate}} - {{journal.nameEt}}</h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
@@ -13,68 +14,80 @@
     <md-dialog-content>
       <div class="md-dialog-content">
         <div flex>
-            <div layout="row" layout-sm="column" layout-xs="column">
-              <md-input-container ng-if="journalEntry.entryType !== 'SISSEKANNE_O'" flex="45">
-                <label>{{'journal.entry.type' | translate}}</label>
-                <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" required ng-change="setJournalEntryDefaultName(journalEntry.entryType)" filter-values="forbiddenEntryTypes"></hois-classifier-select>
-              </md-input-container>
-              <md-input-container ng-if="journalEntry.entryType === 'SISSEKANNE_O'" flex="45">
-                <label>{{'journal.entry.type' | translate}}</label>
-                <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" disabled></hois-classifier-select>
-              </md-input-container>
-              <md-input-container flex="45" flex-offset="10">
-                <label>{{'journal.entry.name' | translate}}</label>
-                <input type="text" ng-model="journalEntry.nameEt" md-maxlength="100">
-              </md-input-container>
-            </div>
-            <div layout="row" layout-sm="column" layout-xs="column">
-              <md-input-container layout="row" layout-align="start center" flex>
-                <md-checkbox ng-repeat="type in capacityTypes" ng-model="selectedCapacityTypes[type.code]">{{currentLanguageNameField(type)}}</md-checkbox>
-              </md-input-container>
-            </div>
-
-            <div layout="row" layout-sm="column" layout-xs="column">
-              <md-input-container flex="20">
-                <label>{{'journal.entry.selectDate' | translate}}</label>
-                <hois-select ng-model="entryDateSelect" values="lessonPlanDates"
-                ng-change="entryDateCalendar = undefined;journalEntry.entryDate = entryDateSelect; entryDateChanged(entryDateSelect)"
-                ng-required="journalEntry.entryType === 'SISSEKANNE_T' && entryDateCalendar === undefined"></hois-select>
-              </md-input-container>
-              <div layout="row" layout-align="center" style="padding-top:8px" flex="5">
-                <span>{{'main.or' | translate}}</span>
+          <div ng-if="journalEntry.id">
+            <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+              <div md-colors="{color: 'default-warn'}">
+                <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">info_outline</md-icon>
+                <span>{{'journal.entry.changingDateAndStartLessonWarning' | translate}}</span>
               </div>
-              <md-input-container flex="25">
-                <label>{{'journal.entry.selectFromCalendar' | translate}}</label>
-                <md-datepicker ng-model="entryDateCalendar" md-open-on-focus
-                ng-change="entryDateSelect = undefined;journalEntry.entryDate = entryDateCalendar; entryDateChanged(entryDateCalendar)"
-                ng-required="journalEntry.entryType === 'SISSEKANNE_T' && entryDateSelect === undefined"></md-datepicker>
-              </md-input-container>
-              <md-input-container flex="20" flex-offset="5">
-                <label>{{'journal.entry.startLessonNr' | translate}}</label>
-                <hois-select ng-model="journalEntry.startLessonNr" values="lessons" ng-required="journalEntry.entryType === 'SISSEKANNE_T'"></hois-select>
-              </md-input-container>
-              <md-input-container flex="20" flex-offset="5">
-                <label>{{'journal.entry.lessons' | translate}}</label>
-                <hois-select ng-model="journalEntry.lessons" values="lessons" ng-required="journalEntry.entryType === 'SISSEKANNE_T'"></hois-select>
-              </md-input-container>
-            </div>
-            <div layout="row" layout-sm="column" layout-xs="column">
-              <md-input-container flex>
-                <label>{{'journal.entry.content' | translate}}</label>
-                <textarea ng-model="journalEntry.content" md-maxlength="10000" max-rows="2"></textarea>
-              </md-input-container>
-            </div>
-            <div layout="row" layout-sm="column" layout-xs="column">
-              <md-input-container flex="70">
-                <label>{{'journal.entry.homework' | translate}}</label>
-                <textarea ng-model="journalEntry.homework" md-maxlength="10000" max-rows="2"></textarea>
-              </md-input-container>
+            </md-whiteframe>
+          </div>
 
-              <md-input-container flex flex-offset="5">
-                <label>{{'journal.entry.homeworkDuedate' | translate}}</label>
-                <md-datepicker ng-model="journalEntry.homeworkDuedate" md-open-on-focus ng-required="!!journalEntry.homework"></md-datepicker>
-              </md-input-container>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container ng-if="journalEntry.entryType !== 'SISSEKANNE_O'" flex="45">
+              <label>{{'journal.entry.type' | translate}}</label>
+              <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" required 
+                ng-change="setJournalEntryTypeChanged(journalEntry.entryType)" filter-values="forbiddenEntryTypes"></hois-classifier-select>
+            </md-input-container>
+            <md-input-container ng-if="journalEntry.entryType === 'SISSEKANNE_O'" flex="45">
+              <label>{{'journal.entry.type' | translate}}</label>
+              <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" disabled></hois-classifier-select>
+            </md-input-container>
+            <md-input-container flex="45" flex-offset="10">
+              <label>{{'journal.entry.name' | translate}}</label>
+              <input type="text" ng-model="journalEntry.nameEt" md-maxlength="100">
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container layout="row" layout-align="start center" flex>
+              <md-checkbox ng-repeat="type in capacityTypes" ng-model="selectedCapacityTypes[type.code]">{{currentLanguageNameField(type)}}</md-checkbox>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="20">
+              <label>{{'journal.entry.selectDate' | translate}}</label>
+              <hois-select ng-model="entryDateSelect" values="lessonPlanDates"
+              ng-change="entryDateCalendar = undefined;journalEntry.entryDate = entryDateSelect; entryDateChanged(entryDateSelect)"
+              ng-required="journalEntry.entryType === 'SISSEKANNE_T' && entryDateCalendar === undefined"></hois-select>
+            </md-input-container>
+            <div layout="row" layout-align="center" style="padding-top:8px" flex="5">
+              <span>{{'main.or' | translate}}</span>
             </div>
+            <md-input-container flex="25">
+              <label>{{'journal.entry.selectFromCalendar' | translate}}</label>
+              <md-datepicker ng-model="entryDateCalendar" md-open-on-focus
+              ng-change="entryDateSelect = undefined;journalEntry.entryDate = entryDateCalendar; entryDateChanged(entryDateCalendar)"
+              ng-required="journalEntry.entryType === 'SISSEKANNE_T' && entryDateSelect === undefined"></md-datepicker>
+            </md-input-container>
+            <md-input-container flex="20" flex-offset="5">
+              <label>{{'journal.entry.startLessonNr' | translate}}</label>
+              <hois-select ng-model="journalEntry.startLessonNr" values="lessons" ng-change="startLessonNrChanged()" 
+                ng-required="journalEntry.entryType === 'SISSEKANNE_T'"></hois-select>
+            </md-input-container>
+            <md-input-container flex="20" flex-offset="5">
+              <label>{{'journal.entry.lessons' | translate}}</label>
+              <hois-select ng-model="journalEntry.lessons" values="lessons" ng-change="lessonsChanged()" 
+                ng-required="journalEntry.entryType === 'SISSEKANNE_T'"></hois-select>
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex>
+              <label>{{'journal.entry.content' | translate}}</label>
+              <textarea ng-model="journalEntry.content" md-maxlength="10000" max-rows="2"></textarea>
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="70">
+              <label>{{'journal.entry.homework' | translate}}</label>
+              <textarea ng-model="journalEntry.homework" md-maxlength="10000" max-rows="2"></textarea>
+            </md-input-container>
+
+            <md-input-container flex flex-offset="5">
+              <label>{{'journal.entry.homeworkDuedate' | translate}}</label>
+              <md-datepicker ng-model="journalEntry.homeworkDuedate" md-open-on-focus ng-required="!!journalEntry.homework"></md-datepicker>
+            </md-input-container>
+          </div>
         </div>
 
         <div layout-padding>
@@ -85,7 +98,8 @@
                   <tr md-row flex>
                     <th md-column><span>{{'main.nr' | translate}}</span></th>
                     <th md-column><span>{{'student.label' | translate}}, {{'journal.studentGroup' | translate}}</span></th>
-                    <th md-column><span>{{'journal.entry.student.lateAbsent' | translate}}</span></th>
+                    <th md-column ng-if="journalEntry.lessons > 1"><span>{{'journal.entry.student.lessonAbsences' | translate}}</span></th>
+                    <th md-column><span>{{'journal.entry.student.absenceValues' | translate}}</span></th>
                     <th md-column><span>{{'journal.entry.student.grade' | translate}}</span></th>
                     <th md-column><span>{{'journal.entry.student.description' | translate}}</span></th>
                   </tr>
@@ -93,27 +107,60 @@
                 <tbody md-body>
                   <tr md-row ng-repeat="row in journalStudents track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>{{$index + 1}}</td>
-                    <td md-cell width="10%">
+                    <td md-cell>
                       <span>{{::row.fullname}}, {{row.studentGroup}}</span>
                     </td>
+                    <td md-cell ng-if="journalEntry.lessons > 1">
+                      <md-input-container>
+                        <md-checkbox class="journal-lesson-absence" ng-model="journalEntryStudents[row.id].isLessonAbsence" 
+                          aria-label="{{'journal.showAbsenceLessons' | translate}}" ng-change="journalEntryStudentChanged(row)" ng-disabled="!row.canEdit"></md-checkbox>
+                        <md-tooltip>{{'journal.showAbsenceLessons' | translate}}</md-tooltip>
+                      </md-input-container>
+                    </td>
                     <td md-cell>
-                      <div layout="row" layout-sm="column" layout-xs="column">
-                        <md-input-container ng-if="hasAcceptedAbsence(row)">
-                          <md-checkbox ng-model="journalEntryStudents[row.id].excused" aria-label="PUUDUMINE_V" ng-disabled="true">
-                            {{absenceOptions["PUUDUMINE_V"].value}}
-                          </md-checkbox>
-                        </md-input-container>
-                        <md-input-container ng-if="!hasAcceptedAbsence(row)" layout="row" layout-align="start center" flex>
-                          <md-checkbox ng-model="journalEntryStudents[row.id].late" aria-label="PUUDUMINE_H" ng-disabled="!row.canEdit"  
-                            ng-change="journalEntryStudentAbsenceChanged(row, journalEntryStudents[row.id].late, 'PUUDUMINE_H')">
-                            {{absenceOptions["PUUDUMINE_H"].value}}
-                          </md-checkbox>
-                          <md-checkbox ng-model="journalEntryStudents[row.id].withoutReason" aria-label="PUUDUMINE_P" ng-disabled="!row.canEdit" style="margin-left: 30px"
-                            ng-change="journalEntryStudentAbsenceChanged(row, journalEntryStudents[row.id].withoutReason, 'PUUDUMINE_P')">
-                            {{absenceOptions["PUUDUMINE_P"].value}}
-                          </md-checkbox>
-                        </md-input-container>
-                      </div>
+                      <span layout="row" ng-if="!journalEntryStudents[row.id].isLessonAbsence">
+                        <div layout="row" layout-sm="column" layout-xs="column">
+                          <md-input-container ng-if="hasWholeDayAcceptedAbsence(row)">
+                            <md-checkbox ng-if="journalEntryStudents[row.id].practice" ng-model="journalEntryStudents[row.id].practice" aria-label="PUUDUMINE_PR" disabled="true">
+                              {{absenceOptions["PUUDUMINE_PR"].value}}
+                            </md-checkbox>
+                            <md-checkbox ng-if="journalEntryStudents[row.id].excused" ng-model="journalEntryStudents[row.id].excused" aria-label="PUUDUMINE_V" disabled="true">
+                              {{absenceOptions["PUUDUMINE_V"].value}}
+                            </md-checkbox>
+                          </md-input-container>
+                          <md-input-container ng-if="!hasWholeDayAcceptedAbsence(row)" layout="row" layout-align="start center" flex>
+                            <md-checkbox ng-model="journalEntryStudents[row.id].late" aria-label="PUUDUMINE_H" ng-disabled="!row.canEdit"  
+                              ng-change="journalEntryStudentAbsenceChanged(row, journalEntryStudents[row.id].late, 'PUUDUMINE_H')">
+                              {{absenceOptions["PUUDUMINE_H"].value}}
+                            </md-checkbox>
+                            <md-checkbox ng-model="journalEntryStudents[row.id].withoutReason" aria-label="PUUDUMINE_P" ng-disabled="!row.canEdit" style="margin-left: 30px"
+                              ng-change="journalEntryStudentAbsenceChanged(row, journalEntryStudents[row.id].withoutReason, 'PUUDUMINE_P')">
+                              {{absenceOptions["PUUDUMINE_P"].value}}
+                            </md-checkbox>
+                          </md-input-container>
+                        </div>
+                      </span>
+                      <span ng-if="journalEntryStudents[row.id].isLessonAbsence" ng-repeat="lesson in [].constructor(journalEntry.lessons) track by $index">
+                        <div layout="row" layout-align="space-between start" style="width: 150px; min-width: 150px;">
+                          <md-input-container ng-if="hasAcceptedLessonAbsence(row, lessonNr)">
+                            <md-checkbox ng-if="journalEntryStudents[row.id].lessonAbsences[lessonNr].excused" ng-model="journalEntryStudents[row.id].lessonAbsences[lessonNr].excused" 
+                              aria-label="PUUDUMINE_V" disabled="true">
+                              {{absenceOptions["PUUDUMINE_V"].value}}
+                            </md-checkbox>
+                          </md-input-container>
+                          <md-input-container ng-if="!hasAcceptedLessonAbsence(row, lessonNr)" layout="row" layout-align="start center" flex>
+                            <md-checkbox ng-model="journalEntryStudents[row.id].lessonAbsences[lessonNr].late" aria-label="PUUDUMINE_H" ng-disabled="!row.canEdit"  
+                              ng-change="journalEntryStudentAbsenceChanged(row, journalEntryStudents[row.id].lessonAbsences[lessonNr].late, 'PUUDUMINE_H', lessonNr)">
+                              {{absenceOptions["PUUDUMINE_H"].value}}
+                            </md-checkbox>
+                            <md-checkbox ng-model="journalEntryStudents[row.id].lessonAbsences[lessonNr].withoutReason" aria-label="PUUDUMINE_P" ng-disabled="!row.canEdit" style="margin-left: 30px"
+                              ng-change="journalEntryStudentAbsenceChanged(row, journalEntryStudents[row.id].lessonAbsences[lessonNr].withoutReason, 'PUUDUMINE_P', lessonNr)">
+                              {{absenceOptions["PUUDUMINE_P"].value}}
+                            </md-checkbox>
+                          </md-input-container>
+                          <div style="line-height: 25px;">({{lessonNr = $index + 1}})</div>
+                        </div>
+                      </span>
                     </td>
                     <td md-cell>
                       <span ng-if="!journalEntryStudents[row.id].removeStudentHistory" 
@@ -122,22 +169,28 @@
                         <span ng-if="gradeHistory.grade.value && !$last">/</span>
                       </span>
                       &nbsp;
-                      <md-input-container>
-                        <hois-select ng-if="gradeInputAsSelect" ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" 
-                          value-property="code" filter-values="filterGrades" ng-change="journalEntryStudentChanged(row)" 
-                          aria-label="grade" ng-disabled="!row.canEdit || (journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')"></hois-select>
-                        <input ng-if="!gradeInputAsSelect" ng-model="journalEntryStudents[row.id].gradeValue" style="width: 75px;"
-                          ng-change="journalEntryStudentChanged(row)" type="text" ng-pattern="gradeInputRegex"
-                          aria-label="grade" ng-disabled="!row.canEdit || (journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')">
-                      </md-input-container>
-                      <md-button ng-if="row.canEdit" class="md-icon-button" ng-click="removeStudentHistory(row)">
-                        <md-icon md-font-set="material-icons">delete_forever</md-icon>
-                        <md-tooltip>{{'journal.removeStudentHistory' | translate}}</md-tooltip>
-                      </md-button>
+                      <span ng-if="row.canEdit && !(journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')">
+                        <md-input-container>
+                          <hois-select ng-if="gradeInputAsSelect" ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" 
+                            value-property="code" filter-values="filterGrades" ng-change="journalEntryStudentChanged(row)" aria-label="grade"></hois-select>
+                          <input ng-if="!gradeInputAsSelect" ng-model="journalEntryStudents[row.id].gradeValue" style="width: 75px;"
+                            ng-change="journalEntryStudentChanged(row)" type="text" ng-pattern="gradeInputRegex" aria-label="grade">
+                        </md-input-container>
+                        <md-button class="md-icon-button" ng-click="removeStudentHistory(row)">
+                          <md-icon md-font-set="material-icons">delete_forever</md-icon>
+                          <md-tooltip>{{'journal.removeStudentHistory' | translate}}</md-tooltip>
+                        </md-button>
+                      </span>
+                      <span ng-if="!row.canEdit || (journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')">
+                        <md-input-container>
+                          <hois-select ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" 
+                            value-property="code" aria-label="grade" disabled></hois-select>
+                        </md-input-container>
+                      </span>
                     </td>
                     <td md-cell>
                       <md-input-container>
-                        <input type="text" ng-model="journalEntryStudents[row.id].addInfo"
+                        <input type="text" ng-model="journalEntryStudents[row.id].addInfo" md-maxlength="1000"
                           ng-change="journalEntryStudentChanged(row)" aria-label="additional info" ng-disabled="!row.canEdit">
                       </md-input-container>
                     </td>

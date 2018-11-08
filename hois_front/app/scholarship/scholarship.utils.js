@@ -24,6 +24,15 @@ angular.module('hitsaOis').factory('ScholarshipUtils', ['$location', 'dialogServ
         } else {
           gotoEdit(id);
         }
+      },
+      getScholarshipTypeGroup: function (typeCode) {
+        if (['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'].indexOf(typeCode) !== -1) {
+          return 'grants';
+        } else if (['STIPTOETUS_TULEMUS', 'STIPTOETUS_ERIALA', 'STIPTOETUS_MUU'].indexOf(typeCode) !== -1) {
+          return 'scholarships';
+        } else if (['STIPTOETUS_DOKTOR'].indexOf(typeCode) !== -1) {
+          return 'drGrants';
+        }
       }
     };
   }

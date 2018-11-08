@@ -45,6 +45,9 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
         dto.setBasicDataCanBeEdited(Boolean.valueOf(CurriculumUtil.basicDataCanBeEdited(curriculum)));
         dto.setOccupation(curriculum.getOccupation());
         dto.setCanHaveOccupations(Boolean.valueOf(CurriculumUtil.canHaveOccupations(curriculum)));
+        if (module.getBaseModule() != null) {
+            dto.setBaseModule(new CurriculumModuleForm.BaseModuleInfo(module.getBaseModule().getId(), module.getBaseModule().getNameEt(), module.getBaseModule().getNameEn()));
+        }
         return dto;
     }
     
@@ -63,6 +66,9 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
         dto.setOutcomes(getOrderedOutcomes(module));
         dto.setAssessmentsEt(module.getAssessmentsEt());
         dto.setStudyPeriod(module.getCurriculum().getStudyPeriod());
+        if (module.getBaseModule() != null) {
+            dto.setBaseModule(new CurriculumModuleForm.BaseModuleInfo(module.getBaseModule().getId(), module.getBaseModule().getNameEt(), module.getBaseModule().getNameEn()));
+        }
         return dto;
     }
 
@@ -134,4 +140,5 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
     public void setCanHaveOccupations(Boolean canHaveOccupations) {
         this.canHaveOccupations = canHaveOccupations;
     }
+    
 }

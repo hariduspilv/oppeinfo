@@ -1,20 +1,26 @@
 package ee.hitsa.ois.service;
 
 import java.io.IOException;
+import java.security.Key;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
+import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.util.HttpUtil;
 
 @Service
@@ -36,19 +42,46 @@ public class OisFileService {
 
     @Autowired
     private EntityManager em;
+    
+    // 128 bit key(16 letters)
+    private static String key;
+    
+    public static String getKey() {
+    	return key;
+    }
+    
+    @Value("${file.cypher.key}")
+    public void setKey(String keyFromProps) {
+        key = keyFromProps;
+    }
 
-    public void get(String type, Long id, HttpServletResponse response) throws IOException {
+    public void get(String type, String id, HttpServletResponse response) throws IOException {
+    	byte[] deCoded = Base64.decodeBase64(id);
         String sql = QUERIES.get(type);
         if(sql == null || id == null) {
             // wrong type or missing id
             throw new AssertionFailedException("Bad parameters for file get operation");
         }
-
+        try {
+	        Key aesKey = new SecretKeySpec(key.getBytes(), "AES");
+	        Cipher cipher = Cipher.getInstance("AES");
+	        cipher.init(Cipher.DECRYPT_MODE, aesKey);
+	        id = new String(cipher.doFinal(deCoded));
+        } catch(Exception e) {
+        	response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        	return;
+        }
         // TODO additional checks based on user role
-        List<OisFile> file = em.createQuery(sql, OisFile.class)
-            .setParameter(1, id)
-            .setMaxResults(1).getResultList();
-        if(file.isEmpty()) {
+        List<OisFile> file = null;
+        try {
+        	file = em.createQuery(sql, OisFile.class)
+                    .setParameter(1, Long.parseLong(id))
+                    .setMaxResults(1).getResultList();
+        } catch (NumberFormatException e) {
+        	response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        	return;
+        }
+        if(file == null || file.isEmpty()) {
             throw new EntityNotFoundException();
         }
         OisFile oisFile = file.get(0);

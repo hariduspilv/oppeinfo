@@ -50,7 +50,7 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
                 protocol.getProtocolHdata().getSubjectStudyPeriod()));
 
         if (protocol.getOisFile() != null) {
-            dto.setOisFile(EntityUtil.bindToDto(protocol.getOisFile(), new OisFileViewDto()));
+        	dto.setOisFile(OisFileViewDto.of(protocol.getOisFile()));
         }
 
         dto.setCanBeEdited(Boolean.valueOf(HigherProtocolUtil.canChange(user, protocol)));

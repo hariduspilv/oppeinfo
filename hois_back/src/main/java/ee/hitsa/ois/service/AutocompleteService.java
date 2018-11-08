@@ -64,6 +64,7 @@ import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
+import ee.hitsa.ois.web.commandobject.CommitteeAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
@@ -75,6 +76,7 @@ import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.basemodule.BaseModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
@@ -122,6 +124,19 @@ public class AutocompleteService {
     @Autowired
     private PersonRepository personRepository;
 
+    public List<AutocompleteResult> basemodules(Long schoolId, BaseModuleAutocompleteCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from base_module b");
+        qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalContains(Arrays.asList("b.name_et", "b.name_en"), "name", lookup.getName());
+        if (lookup.getNotExpired().equals(Boolean.TRUE)) {
+            qb.requiredCriteria("b.valid_from <= :now and (b.valid_thru is null or b.valid_thru >= :now)", "now", LocalDate.now());
+        }
+        List<?> data = qb.select("b.id, b.name_et, b.name_en", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            return new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2));
+        }, data);
+    }
+    
     public List<AutocompleteResult> buildings(Long schoolId) {
         List<?> data = em.createNativeQuery("select b.id, b.code, b.name from building b where b.school_id = ?1 order by b.code, b.name")
                 .setParameter(1, Objects.requireNonNull(schoolId))
@@ -347,7 +362,7 @@ public class AutocompleteService {
         }
         
         if(Boolean.TRUE.equals(lookup.getSais())) {
-            qb.filter("exists(select sa.id from sais_admission sa where sa.curriculum_version_id = cv.id)");
+            qb.filter("exists(select sa.id from sais_admission sa where sa.curriculum_version_id = cv.id and (sa.is_archived is null or sa.is_archived = false))");
         }
         qb.optionalCriteria("c.is_higher = :higher", "higher", lookup.getHigher());
         qb.optionalContains(Arrays.asList("c.name_et", "cv.code"), "name", lookup.getName());
@@ -432,7 +447,13 @@ public class AutocompleteService {
                         + " inner join protocol p on pvd.protocol_id = p.id inner join protocol_student ps on p.id = ps.protocol_id"
                         + " where ps.grade_code in (:postiveGrades)", "postiveGrades", POSITIVE_VOCATIONAL_GRADES);
                 qb.requiredCriteria("ps.student_id = :studentId)", "studentId", lookup.getStudent());
-                qb.requiredCriteria("cvo.id not in (select svr.curriculum_version_omodule_id from student_vocational_result svr where svr.student_id = :studentId)", "studentId", lookup.getStudent());
+                qb.requiredCriteria(
+                        "cvo.id not in (select svr.curriculum_version_omodule_id from student_vocational_result svr "
+                                + "where svr.student_id = :studentId and svr.curriculum_version_omodule_id is not null)",
+                        "studentId", lookup.getStudent());
+                qb.requiredCriteria(
+                        "(select count(*) from student_vocational_result svr where svr.student_id = :studentId and cvo.id=any(svr.arr_modules)) = 0",
+                        "studentId", lookup.getStudent());
             }
         }
         
@@ -558,6 +579,20 @@ public class AutocompleteService {
             }
         }
         return dto;
+    }
+
+    public List<AutocompleteResult> allpersons(SearchCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from person p")
+                .sort("p.lastname", "p.firstname");
+
+        qb.filter("p.id > 0");
+        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", lookup.getName());
+
+        List<?> data = qb.select("p.id, p.firstname, p.lastname", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
+            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+        }, data);
     }
     
     public List<SchoolWithoutLogo> schools(SearchCommand lookup) {
@@ -826,7 +861,8 @@ public class AutocompleteService {
                         + " inner join protocol_student ps on pro.id = ps.protocol_id where ps.grade_code in (:postiveGrades)",
                         "postiveGrades", POSITIVE_HIGHER_GRADES);
                 qb.requiredCriteria("ps.student_id = :studentId)", "studentId", lookup.getStudent());
-                qb.requiredCriteria("s.id not in (select shr.subject_id from student_higher_result shr where shr.student_id = :studentId)", "studentId", lookup.getStudent());
+                qb.requiredCriteria("s.id not in (select shr.subject_id from student_higher_result shr "
+                        + "where shr.student_id = :studentId and shr.subject_id is not null)", "studentId", lookup.getStudent());
             }
         }
         
@@ -1029,16 +1065,48 @@ public class AutocompleteService {
         List<?> data = qb.select("c.code, c.name_et, c.name_en, sy.id, sy.start_date, sy.end_date, 0 as count", em).getResultList();
         return StreamUtil.toMappedList(r -> new StudyYearSearchDto((Object[])r), data);
     }
-
-    public List<AutocompleteResult> saisAdmissionCodes(Long schoolId) {
+    
+    public List<AutocompleteResult> saisAdmissionCodesArchived(Long schoolId) {
         List<?> data = em.createNativeQuery("select sa.id, sa.code from sais_admission sa "+
                 "where sa.curriculum_version_id in (select cv.id from curriculum_version cv "+
-                "join curriculum c on cv.curriculum_id = c.id where c.school_id = ?1)")
+                "join curriculum c on cv.curriculum_id = c.id where c.school_id = ?1)" +
+                "and (sa.is_archived is null OR sa.is_archived = false)")
                 .setParameter(1, schoolId)
                 .getResultList();
         return StreamUtil.toMappedList(r -> {
             String code = resultAsString(r, 1);
             return new AutocompleteResult(resultAsLong(r, 0), code, code);
+        }, data);
+    }
+    
+    public List<SaisClassifierSearchDto> saisCurriculumClassifiers(Long schoolId) {
+        List<?> data = em.createNativeQuery("select distinct cl.code, cl.name_et, cl.name_en from sais_admission sa"+
+                " join curriculum_version cv on sa.curriculum_version_id = cv.id"+
+        		" join curriculum c on cv.curriculum_id = c.id"+
+                " join classifier cl on c.orig_study_level_code = cl.code"+
+        		" where c.school_id = ?1 and (sa.is_archived is null OR sa.is_archived = false)")
+                .setParameter(1, schoolId)
+                .getResultList();
+        List<SaisClassifierSearchDto> result = StreamUtil.toMappedList(r -> {
+            SaisClassifierSearchDto c = new SaisClassifierSearchDto();
+            c.setCode(resultAsString(r, 0));
+            c.setNameEt(resultAsString(r, 1));
+            c.setNameEn(resultAsString(r, 2));
+            return c;
+        }, data);
+        result.sort(Comparator.comparing(SaisClassifierSearchDto::getNameEt));
+        return result;
+    }
+
+    public List<AutocompleteResult> saisAdmissionCodes(Long schoolId) {
+        List<?> data = em.createNativeQuery("select distinct sa.code from sais_admission sa "+
+                "where sa.curriculum_version_id in (select cv.id from curriculum_version cv "+
+                "join curriculum c on cv.curriculum_id = c.id where c.school_id = ?1) ")
+                .setParameter(1, schoolId)
+                .getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String code = resultAsString(r,0);
+            return new AutocompleteResult(null, code, code);
         }, data);
     }
 
@@ -1155,5 +1223,39 @@ public class AutocompleteService {
                 String.CASE_INSENSITIVE_ORDER));
         
         return journalsAndSubjects;
+    }
+    
+    public List<AutocompleteResult> committees(Long schoolId, CommitteeAutocompleteCommand command) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from committee c "
+                + "join committee_member cm on c.id = cm.committee_id "
+                + "join person p on cm.person_id = p.id");
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("c.type_code = :typeCode", "typeCode", command.getType());
+        qb.optionalContains("c.name_et", "name", command.getName());
+        qb.optionalCriteria("c.valid_from >= :validFrom", "validFrom", command.getValidFrom(), DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("d.valid_thru <= :validThru", "validThru", command.getValidThru(), DateUtils::lastMomentOfDay);
+        
+        if (command.getMemberPerson() != null) {
+            qb.filter("exists (select p2.id from person p2 "
+                    + "join user_ u on p2.id = u.person_id "
+                    + "join committee_member cm2 on p2.id = cm2.person_id "
+                    + "join committee c2 on cm2.committee_id = c2.id "
+                    + "where u.id = " + command.getMemberPerson() + " and c2.id = c.id)");
+        }
+        
+        qb.groupBy("c.id");
+        qb.sort("c.name_et");
+        List<?> data = qb.select(
+                "c.id, c.name_et, array_to_string(array_agg(p.firstname || ' ' || p.lastname), ', ') as members", em)
+                .getResultList();
+        
+        Set<AutocompleteResult> committees = StreamUtil.toMappedSet(r -> {
+            String name = resultAsString(r, 1);
+            String caption = (name != null ? name : "-") + " (" + resultAsString(r, 2) + ")";
+            return new AutocompleteResult(resultAsLong(r, 0), caption, caption);
+        }, data);
+        List<AutocompleteResult> committeesList = new ArrayList<>();
+        committeesList.addAll(committees);
+        return committeesList;
     }
 }

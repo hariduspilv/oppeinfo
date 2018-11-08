@@ -7,6 +7,7 @@ public class CommitteeSearchDto {
     
     private Long id;
     private String chairman;
+    private String nameEt;
     private LocalDate validFrom;
     private LocalDate validThru;
     private List<String> members;
@@ -25,6 +26,14 @@ public class CommitteeSearchDto {
 
     public void setChairman(String chairman) {
         this.chairman = chairman;
+    }
+
+    public String getNameEt() {
+        return nameEt;
+    }
+
+    public void setNameEt(String nameEt) {
+        this.nameEt = nameEt;
     }
 
     public LocalDate getValidFrom() {

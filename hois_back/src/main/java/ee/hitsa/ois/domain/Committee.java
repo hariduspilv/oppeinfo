@@ -15,7 +15,12 @@ import ee.hitsa.ois.domain.school.School;
 
 @Entity
 public class Committee extends BaseEntityWithId {
-    
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false, nullable = false)
+    private Classifier type;
+
+    private String nameEt;
     private String addInfo;
     private LocalDate validFrom;
     private LocalDate validThru;
@@ -23,10 +28,25 @@ public class Committee extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(updatable = false, nullable = false)
     private School school;
-
+    
     @OneToMany(mappedBy = "committee", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommitteeMember> members;
+    
+    @OneToMany(mappedBy = "committee", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CommitteeCurriculum> curriculums = new ArrayList<>();
 
+    public Classifier getType() {
+        return type;
+    }
+    public void setType(Classifier type) {
+        this.type = type;
+    }
+    public String getNameEt() {
+        return nameEt;
+    }
+    public void setNameEt(String nameEt) {
+        this.nameEt = nameEt;
+    }
     public String getAddInfo() {
         return addInfo;
     }
@@ -56,5 +76,11 @@ public class Committee extends BaseEntityWithId {
     }
     public void setMembers(List<CommitteeMember> members) {
         this.members = members;
+    }
+    public List<CommitteeCurriculum> getCurriculums() {
+        return curriculums;
+    }
+    public void setCurriculums(List<CommitteeCurriculum> curriculums) {
+        this.curriculums = curriculums;
     }
 }

@@ -1,8 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ReceptionSaisApplicationController', function ($scope, $route, DataUtils) {
-
+angular.module('hitsaOis').controller('ReceptionSaisApplicationController', function (message, $location, $scope, $route, DataUtils, dialogService, QueryUtils) {
+  $scope.auth = $route.current.locals.auth;
   $scope.saisApplication = {};
+  var Endpoint = QueryUtils.endpoint('/saisApplications');
 
   function entityToForm(saisApplication) {
     DataUtils.convertStringToDates(saisApplication, ["submitted", "saisChanged"]);
@@ -13,5 +14,15 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationController', func
   if (angular.isDefined(entity)) {
     entityToForm(entity);
   }
+
+  $scope.confirm = function () {
+    dialogService.confirmDialog({prompt: 'main.menu.reception.saisApplication.delete'}, function() {
+      var application = new Endpoint($scope.saisApplication);
+      application.$delete().then(function() {
+        message.info('main.messages.delete.success');
+        $location.url('/reception/saisApplication/search');
+      });
+    });
+  };
 
 });

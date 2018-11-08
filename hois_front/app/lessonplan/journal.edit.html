@@ -51,9 +51,19 @@
               <input type="text" ng-model="record.nameEt" md-maxlength="255" required>
             </md-input-container>
           </div>
-
+          
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
-            <md-input-container flex="100" flex-sm="100" flex-xs="100">
+            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                <label>{{'teacher.untis' | translate}}</label>
+                <input ng-model="record.untisCode" name="untisCode" type="text" md-maxlength="20">
+                <div ng-messages="teacherForm.untisCode.$error">
+                  <div ng-message="md-maxlength">
+                    {{'main.messages.error.maxlength' | translate}}
+                  </div>
+                </div>
+              </md-input-container>
+          
+            <md-input-container flex="50" flex-sm="100" flex-xs="100">
               <label class="textInput">{{'lessonplan.journal.groupProportion' | translate}}</label>
               <hois-classifier-select ng-model="record.groupProportion" required main-classifier-code="PAEVIK_GRUPI_JAOTUS" model-value-attr="code"></hois-classifier-select>
             </md-input-container>

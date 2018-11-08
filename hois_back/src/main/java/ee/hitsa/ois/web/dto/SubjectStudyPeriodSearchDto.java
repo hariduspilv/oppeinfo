@@ -14,6 +14,8 @@ public class SubjectStudyPeriodSearchDto {
     private Set<AutocompleteResult> midtermTasks;
     private Boolean isPracticeSubject;
     private Long moodleCourseId;
+    private Long subjectProgramId;
+    private String subjectProgramStatus;
 
     public Boolean getIsPracticeSubject() {
         return isPracticeSubject;
@@ -86,5 +88,20 @@ public class SubjectStudyPeriodSearchDto {
     public void setMoodleCourseId(Long moodleCourseId) {
         this.moodleCourseId = moodleCourseId;
     }
-    
+
+    public Long getSubjectProgramId() {
+        return subjectProgramId;
+    }
+
+    public void setSubjectProgramId(Long subjectProgramId) {
+        this.subjectProgramId = subjectProgramId;
+    }
+
+    public String getSubjectProgramStatus() {
+        return subjectProgramStatus;
+    }
+
+    public void setSubjectProgramStatus(String subjectProgramStatus) {
+        this.subjectProgramStatus = subjectProgramStatus;
+    }
 }

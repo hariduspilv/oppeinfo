@@ -36,6 +36,7 @@ public class CertificateForm extends VersionedCommand {
     private String type;
     @Required(groups = {StudentIsSet.class})
     private Long student;
+    private Boolean addOutcomes;
 
     public String getOtherName() {
         return otherName;
@@ -108,4 +109,13 @@ public class CertificateForm extends VersionedCommand {
     public void setStudent(Long student) {
         this.student = student;
     }
+
+    public Boolean getAddOutcomes() {
+        return addOutcomes;
+    }
+
+    public void setAddOutcomes(Boolean addOutcomes) {
+        this.addOutcomes = addOutcomes;
+    }
+    
 }

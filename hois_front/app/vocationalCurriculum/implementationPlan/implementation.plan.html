@@ -87,7 +87,7 @@
                     <div flex="15">{{currentLanguageNameField(type)}}</div>
                     <div layout="column" flex="75">
                         <div flex="100" ng-repeat="module in modules | filter: filterEmptyModulesByType(type.code) | orderBy: 'nameEt'" layout="row" class="align-center">
-                            <a flex="50" ng-click="openViewModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                            <a flex="50" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                             <span flex="15">{{module.credits}}&nbsp; EKAP</span>
                             <div flex="30">
                                 <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="!formState.readOnly  && implementationPlan.id && implementationPlan.canChange">
@@ -118,7 +118,7 @@
                         <div flex="15">{{currentLanguageNameField(type)}}</div>
                         <div layout="column" flex="75">
                             <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, occupation.occupation.code) | orderBy: 'nameEt'" layout="row" class="align-center">
-                                <a flex="50" ng-click="openViewModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                                <a flex="50" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                                 <span flex="15">{{module.credits}}&nbsp; EKAP</span>
                                 <div flex="30">
                                     <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="!formState.readOnly && implementationPlan.id && implementationPlan.canChange">
@@ -146,7 +146,7 @@
                             <div flex="15">{{currentLanguageNameField(type)}}</div>
                             <div layout="column" flex="75">
                                 <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, partOccupation) | orderBy: 'nameEt'" layout="row" class="align-center">
-                                    <a flex="50" ng-click="openViewModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                                    <a flex="50" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                                     <span flex="15">{{module.credits}}&nbsp; EKAP</span>
                                     <div flex="30">
                                         <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="!formState.readOnly && implementationPlan.id && implementationPlan.canChange">
@@ -175,7 +175,7 @@
                             <div flex="15">{{currentLanguageNameField(type)}}</div>
                             <div layout="column" flex="75">
                                 <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, speciality) | orderBy: 'nameEt'" layout="row" class="align-center">
-                                    <a flex="50" ng-click="openViewModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                                    <a flex="50" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                                     <span flex="15">{{module.credits}}&nbsp; EKAP</span>
                                     <div flex="30">
                                         <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="!formState.readOnly && implementationPlan.id && implementationPlan.canChange">

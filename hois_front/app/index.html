@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
   <link rel="stylesheet" href="bower_components/angular-material-data-table/dist/md-data-table.css" />
   <link rel="stylesheet" href="bower_components/lf-ng-md-file-input/dist/lf-ng-md-file-input.css" />
+  <link rel="stylesheet" href="bower_components/angularjs-color-picker/dist/angularjs-color-picker.css" />
   <!-- endbower -->
   <!-- endbuild -->
   <!-- build:css(.tmp) styles/main.css -->
@@ -27,69 +28,74 @@
 
 <body ng-app="hitsaOis" layout="row" ng-controller="MainController" ng-cloak>
   <div layout="column" tabIndex="-1" role="main" flex>
-    <md-toolbar class="md-whiteframe-glow-z1 hois_header" layout="row" layout-align="start center" class="mobileAllignStartStart">
+    <md-toolbar class="md-whiteframe-glow-z1 hois_header mobileColumnLayout" layout="row" layout-align="start center">
       <!--header class="nav-header" layout="column"-->
-        <div layout="column" layout-align="start start">
-          <md-button ng-click="toggleLeft()" class="md-icon-button" aria-label="Toggle Menu">
-            <md-icon md-colors="{color: 'primary-800'}" style="margin-top: -2px">menu</md-icon>
-          </md-button>
-        </div>
-        <div layout="column" layout-align="none">
-          <a ng-href="#/"><img style="display:inline-block;" class="logo" ng-src="{{state.logo ? state.logo : 'images/HITSA_innov_logo_03.png'}}" on-error-src="images/HITSA_innov_logo_03.png"/></a>
-        </div>
-      <div class="docs-toolbar-tools" tabIndex="-1">
-        <div class="md-toolbar-tools fill-height" layout="row" flex>
-          <h1 md-colors="{color: 'background-900'}" style="margin-top: -2px" class="md-display-2">
-            <span ng-if="Menu.currentPage.name !== Menu.currentSection.name">
-                <span hide-sm hide-md>{{Menu.currentSection.name | translate}}</span>
-            <span class="docs-menu-separator-icon" hide-sm hide-md>
-                  <span class="md-visually-hidden">-</span>
-            <md-icon md-colors="{color: 'background-900'}" style="margin-top: -2px">chevron_right</md-icon>
-            </span>
-            </span>
-            <span class="md-breadcrumb-page">{{Menu.currentPage.name | translate}}</span>
-          </h1>
+      <div layout="row" flex>
+          <div layout="column" layout-align="center center">
+            <md-button ng-click="toggleLeft()" class="md-icon-button" aria-label="Toggle Menu">
+              <md-icon md-colors="{color: 'primary-800'}" style="margin-top: -2px">menu</md-icon>
+            </md-button>
+          </div>
+            <div layout="column" layout-align="none" layout-align-xs="end center">
+              <a ng-href="#/"><img class="logo" ng-src="{{state.logo ? state.logo : 'images/HITSA_innov_logo_03.png'}}" on-error-src="images/HITSA_innov_logo_03.png"/></a>
+            </div>
+          <div layout-align="end center" ng-controller="LoginController" ng-if="windowWidth <= 300" md-is-locked-open="$mdMedia('gt-xs')" layout="row" flex>
+            <div ng-show="state.currentUser && state.currentUser.roleCode !== 'ROLL_X'">
+              <md-button class="md-icon-button" ng-href="#/messages/received?_menu">
+                <md-icon md-colors="{color: 'primary-800'}">email</md-icon>
+                <span ng-if="unreadMessages > 0" md-colors="{background: 'accent-400'}" class="unreadMessages">
+                  <span ng-if="unreadMessages > 9" style="font-size: 11px">9+</span>
+                  <span ng-if="unreadMessages <= 9" style="font-size: 12px">{{unreadMessages}}</span>
+                </span>
+              </md-button>
+            </div>
+          </div>
+        <div class="docs-toolbar-tools" tabIndex="-1" layout-align="start center">
+          <div class="md-toolbar-tools fill-height" layout="row" flex>
+            <h1 md-colors="{color: 'background-900'}" style="margin-top: -2px" class="md-display-2">
+              <span ng-if="Menu.currentPage.name !== Menu.currentSection.name">
+                  <span hide-sm hide-md>{{Menu.currentSection.name | translate}}</span>
+              <span class="docs-menu-separator-icon" hide-sm hide-md>
+                    <span class="md-visually-hidden">-</span>
+              <md-icon md-colors="{color: 'background-900'}" style="margin-top: -2px">chevron_right</md-icon>
+              </span>
+              </span>
+              <span class="md-breadcrumb-page">{{Menu.currentPage.name | translate}}</span>
+            </h1>
+          </div>
         </div>
       </div>
 
-      <div ng-controller="LoginController" md-is-locked-open="$mdMedia('gt-xs')" layouta flex>
-
-        <div flex>
-          <div layout="row" layout-align="end center" flex>
-            <div>
-              <div ng-show="state.currentUser && state.currentUser.roleCode !== 'ROLL_X'">
-                <md-button class="md-icon-button" ng-href="#/messages/received?_menu">
-                  <md-icon md-colors="{color: 'primary-800'}">email</md-icon>
-                  <span ng-if="unreadMessages > 0" md-colors="{background: 'accent-400'}" class="unreadMessages">
-                    <span ng-if="unreadMessages > 9" style="font-size: 11px">9+</span>
-                    <span ng-if="unreadMessages <= 9" style="font-size: 12px">{{unreadMessages}}</span>
-                  </span>
-                </md-button>
-              </div>
-            </div>
-            <div layout="row" layout-align="start end" class="mobileColumnLayout">
-              <div layout="column" layout-align="center center" class="user-section">
-                <span ng-show="state.currentUser">{{ state.currentUser.fullname }}</span>
-                <md-select ng-show="state.currentUser" ng-model="state.userWorkplace" ng-change="changeUser();" aria-label="change user">
-                    <md-option ng-repeat="user in state.currentUser.users" value="{{user.id}}" style="font-size: medium;">
-                      {{currentLanguageNameField(user)}}
-                    </md-option>
-                  </md-select>
-                <div ng-show="!state.currentUser" ng-click="showLogin()">
-                  <md-icon md-colors="{color: 'primary-800'}">lock</md-icon>
-                  <md-button md-colors="{color: 'primary-800'}">{{ 'main.logIn' | translate }}</md-button>
-                </div>
-              </div>
-              <div>
-                <md-button class="md-fab md-mini" ng-show="state.currentUser" ng-click="logout()" aria-label="log out" md-colors="{background: 'primary-800'}">
-                  <md-tooltip>
-                    {{ 'main.logOut' | translate }}
-                  </md-tooltip>
-                  <md-icon md-colors="{color: 'grey-50'}">exit_to_app</md-icon>
-                </md-button>
-              </div>
-            </div>
+      <div layout-align="end center" ng-controller="LoginController" md-is-locked-open="$mdMedia('gt-xs')" layout="row" flex>
+        <div ng-if="windowWidth > 300" ng-show="state.currentUser && state.currentUser.roleCode !== 'ROLL_X'">
+          <md-button class="md-icon-button" ng-href="#/messages/received?_menu">
+            <md-icon md-colors="{color: 'primary-800'}">email</md-icon>
+            <span ng-if="unreadMessages > 0" md-colors="{background: 'accent-400'}" class="unreadMessages">
+              <span ng-if="unreadMessages > 9" style="font-size: 11px">9+</span>
+              <span ng-if="unreadMessages <= 9" style="font-size: 12px">{{unreadMessages}}</span>
+            </span>
+          </md-button>
+        </div>
+        <div layout="column" layout-align="center center" class="user-section maxWidth-200">
+          <span ng-show="state.currentUser">{{ state.currentUser.fullname }}</span>
+          <md-select ng-show="state.currentUser" ng-model="state.userWorkplace" ng-change="changeUser();" aria-label="change user">
+              <md-option ng-repeat="user in state.currentUser.users" value="{{user.id}}" style="font-size: medium;">
+                {{currentLanguageNameField(user)}}
+              </md-option>
+            </md-select>
+          <div ng-show="!state.currentUser" ng-click="showLogin()">
+            <md-icon md-colors="{color: 'primary-800'}">lock</md-icon>
+            <md-button md-colors="{color: 'primary-800'}">{{ 'main.logIn' | translate }}</md-button>
           </div>
+        </div>
+        <div>
+          <md-button class="md-fab md-mini" ng-show="state.currentUser" ng-click="logout()" aria-label="log out" md-colors="{background: 'primary-800'}">
+            <md-tooltip>
+              {{ 'main.logOut' | translate }}
+            </md-tooltip>
+            <md-icon md-colors="{color: 'grey-50'}">exit_to_app</md-icon>
+          </md-button>
+        </div>
           <!--div layout="row" layout-align="end" flex>
             <md-select ng-show="state.currentUser" ng-model="state.userWorkplace" ng-change="changeUser();" aria-label="change user">
               <md-option ng-repeat="user in state.currentUser.users" value="{{user.id}}" style="font-size: medium;">
@@ -97,7 +103,6 @@
               </md-option>
             </md-select>
           </div-->
-        </div>
       </div>
     </md-toolbar>
     <div style="height:2px">&nbsp;</div>
@@ -139,7 +144,7 @@
           <div flex layout="row" layout-align="center">
             <a class="very-small-caption" ng-click="openTerms()" md-colors="{color: 'background-400'}">{{'home.terms' | translate}}</a>
           </div>
-          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="very-small-caption">Versioon 1.0.4/20181008</span></div>
+          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="very-small-caption">Versioon 1.1.0/20181108</span></div> 
           <div flex layout="row" ng-show="state.currentUser" layout-align="center">
             <a class="sidenav-link" href="https://kratt.edu.ee" target="_blank" rel="noopener">Kratt</a>
           </div>
@@ -177,6 +182,8 @@
   <script src="bower_components/angular-cache/dist/angular-cache.js"></script>
   <script src="bower_components/hwcrypto/hwcrypto.js"></script>
   <script src="bower_components/hwcrypto/hwcrypto-legacy.js"></script>
+  <script src="bower_components/tinycolor/tinycolor.js"></script>
+  <script src="bower_components/angularjs-color-picker/dist/angularjs-color-picker.js"></script>
   <!-- endbower -->
   <!-- endbuild -->
 
@@ -196,6 +203,11 @@
 
   <script src="building/building.js"></script>
   <script src="building/building.route.js"></script>
+
+  <script src="baseModule/basemodule.js"></script>
+  <script src="baseModule/basemodule.route.js"></script>
+  <script src="baseModule/theme/basemodule.theme.js"></script>
+  <script src="baseModule/theme/basemodule.theme.route.js"></script>
 
   <script src="home/home.js"></script>
   <script src="home/home.route.js"></script>
@@ -332,6 +344,7 @@
   <script src="room/room.js"></script>
   <script src="room/room.route.js"></script>
 
+  <script src="reception/reception.saisAdmission.archive.js"></script>
   <script src="reception/reception.saisAdmission.js"></script>
   <script src="reception/reception.saisAdmission.import.js"></script>
   <script src="reception/reception.saisApplication.js"></script>
@@ -389,6 +402,7 @@
 
   <script src="studentAbsence/absence.route.js"></script>
   <script src="studentAbsence/absence.search.js"></script>
+  <script src="studentAbsence/absence.group.js"></script>
 
   <script src="studentGroup/student.group.js"></script>
   <script src="studentGroup/student.group.route.js"></script>
@@ -418,6 +432,8 @@
   <script src="subjectStudyPeriod/studentGroup/subject.study.period.student.group.edit.js"></script>
   <script src="subjectStudyPeriod/studentGroup/subject.study.period.student.group.view.js"></script>
   <script src="subjectStudyPeriod/studentGroup/subject.study.period.student.group.search.js"></script>
+
+  <script src="subjectStudyPeriod/subjectProgram/subject.program.js"></script>
 
   <script src="subjectStudyPeriod/subject/subject.study.period.subject.edit.js"></script>
   <script src="subjectStudyPeriod/subject/subject.study.period.subject.view.js"></script>

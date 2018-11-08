@@ -24,6 +24,8 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$route', 
     };
 
     $scope.directiveChanged = function() {
+      $scope.formState.students = [];
+      $scope.updatePdfUrl();
       QueryUtils.endpoint(baseUrl + '/formtypes').query($scope.criteria, function(result) {
         $scope.formState.formTypes = result;
         if (result.length === 1) {
@@ -59,8 +61,8 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$route', 
       QueryUtils.endpoint(baseUrl + '/diploma/students').query($scope.criteria, function(result) {
         DataUtils.convertStringToDates(result, ['birthdate']);
         $scope.formState.students = result;
+        $scope.updatePdfUrl();
         if (result.length > 0) {
-          $scope.updatePdfUrl();
           querySigners();
           queryFreeForms();
         }

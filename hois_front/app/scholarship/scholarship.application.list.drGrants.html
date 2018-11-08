@@ -52,57 +52,14 @@
 
     <br>
 
-    <div style="overflow: scroll">
-      <table md-table class="secondary-table" ng-if="submittedType">
-        <thead md-head>
-          <tr md-row>
-            <th md-column>
-              <md-input-container>
-                <md-checkbox ng-model="selectAllApplications" aria-label="mySchool" ng-change="updateAllApplicationCheckBoxes(selectAllApplications)">
-                </md-checkbox>
-              </md-input-container>
-            </th>
-            <th md-column>{{'stipend.nr' | translate}}</th>
-            <th md-column>{{'stipend.type' | translate}}</th>
-            <th md-column>{{'stipend.grantName' | translate}}</th>
-            <th md-column>{{'stipend.curriculum' | translate}}</th>
-            <th md-column>{{'stipend.applicant' | translate}}</th>
-            <th md-column>{{'stipend.student.idCode' | translate}}</th>
-            <th md-column>{{'stipend.status' | translate}}</th>
-          </tr>
-        </thead>
-        <tbody md-body>
-          <tr md-row ng-repeat="application in applications track by $index" ng-class-odd="'odd'" ng-class-even="'even'" ng-class="{'scholarship-bottom-border': $index + 1 === allowedCount}">
-            <td md-cell>
-              <md-input-container>
-                <md-checkbox ng-model="selected[application.id]" aria-label="mySchool">
-                </md-checkbox>
-              </md-input-container>
-            </td>
-            <td md-cell>{{$index + 1}}</td>
-            <td md-cell>{{currentLanguageNameField(application.type)}}</td>
-            <td md-cell>
-              <a href="#/scholarships/applications/{{application.id}}">{{application.termNameEt}}</a>
-            </td>
-            <td md-cell>{{application.curriculumCode ? application.curriculumCode : '-'}}</td>
-            <td md-cell>
-              <a href="#/students/{{application.studentId}}/main">{{application.studentName ? application.studentName : '-'}}</a>
-            </td>
-            <td md-cell>{{application.idcode ? application.idcode : '-'}}</td>
-            <td md-cell>{{currentLanguageNameField(application.status)}}
-              <md-tooltip ng-if="['STIPTOETUS_STAATUS_L', 'STIPTOETUS_STAATUS_T'].indexOf(application.status.code) !== -1  && application.rejectComment">{{application.rejectComment}}</md-tooltip>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
+    <div ng-include="'scholarship/templates/scholarship.applications.drGrants.html'"></div>
 
     <div layout="row" ng-if="applications.length > 0">
-      <md-button class="md-raised md-primary" ng-click="accept()" ng-if="canManage">{{'main.button.accept' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="annul()" ng-if="canManage">{{'main.button.annul' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="reject()" ng-if="canManage">{{'main.button.reject' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="checkComplies()">{{'main.button.checkComplies' | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="accept()" ng-if="auth.isAdmin() && canManage">{{'main.button.accept' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="annul()" ng-if="auth.isAdmin() && canManage">{{'main.button.annul' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="reject()" ng-if="auth.isAdmin() && canManage">{{'main.button.reject' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="checkComplies()" ng-if="auth.isAdmin()">{{'main.button.checkComplies' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="committeeDecision()" ng-if="auth.isAdmin() && canManage">{{'main.button.committeeDecision' | translate}}</md-button>
     </div>
   </div>
 </div>

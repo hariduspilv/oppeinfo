@@ -26,6 +26,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleDto;
@@ -80,6 +81,11 @@ public class CurriculumVersionOccupationModuleController {
     @GetMapping("/curriculumModule/{id:\\d+}")
     public CurriculumModuleDto getCurriculumModule(@WithEntity CurriculumModule module) {
         return CurriculumModuleDto.forOccupationModule(module);
+    }
+    
+    @GetMapping("/curriculumVersion/{id:\\d+}")
+    public AutocompleteResult getCurriculumVersionMin(@WithEntity CurriculumVersion version) {
+        return AutocompleteResult.of(version);
     }
 
     @PostMapping("/theme")

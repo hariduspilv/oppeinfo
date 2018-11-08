@@ -5,8 +5,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -17,9 +19,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.student.StudentAbsence;
+import ee.hitsa.ois.domain.student.StudentAbsenceLesson;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.repository.JournalEntryStudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -29,6 +33,7 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentAbsenceUtil;
+import ee.hitsa.ois.web.commandobject.student.StudentAbsenceLessonsForm;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
@@ -44,8 +49,8 @@ public class StudentAbsenceService {
     @Autowired
     private StudyYearService studyYearService;
 
-    private static final String SELECT = "sa.id as absenceId, s.id as studentId, p.firstname, p.lastname, sa.valid_from, "
-            + "sa.valid_thru, sa.is_accepted, sa.is_rejected, sa.cause, sa.inserted_by, sa.accepted_by, sa.changed_by ";
+    private static final String SELECT = "sa.id as absenceId, s.id as studentId, p.firstname, p.lastname, sg.code, sa.valid_from, "
+            + "sa.valid_thru, sa.is_accepted, sa.is_rejected, sa.cause, sa.inserted_by, sa.accepted_by, sa.changed_by, sa.is_lesson_absence ";
     private static final String FROM =
               "from student_absence sa "
             + "join student s on s.id = sa.student_id "
@@ -55,6 +60,13 @@ public class StudentAbsenceService {
     private static final String ABSENCE_ENTRY_FROM = "from journal_entry_student jes "
             + "join journal_student js on js.id = jes.journal_student_id "
             + "join journal_entry je on je.id = jes.journal_entry_id";
+    
+    private static final String ABSENCE_LESSON_ENTRY_FROM = "from journal_entry_student jes "
+            + "join journal_entry_student_lesson_absence jesla on jesla.journal_entry_student_id = jes.id "
+            + "join journal_student js on js.id = jes.journal_student_id "
+            + "join journal_entry je on je.id = jes.journal_entry_id "
+            + "join student_absence sa on sa.student_id = js.student_id "
+            + "join student_absence_lesson sal on sal.absence = je.entry_date and sal.lesson_nr = jesla.lesson_nr + coalesce(je.start_lesson_nr - 1, 0)";
     
     private static final String FILTER_BY_STUDY_PERIOD = " exists("
             + "select sp.id "
@@ -102,38 +114,76 @@ public class StudentAbsenceService {
         dto.setId(resultAsLong(row, 0));
         String fullname = PersonUtil.fullname(resultAsString(row, 2), resultAsString(row, 3));
         dto.setStudent(new AutocompleteResult(resultAsLong(row, 1), fullname, fullname));
-        dto.setValidFrom(resultAsLocalDate(row, 4));
-        dto.setValidThru(resultAsLocalDate(row, 5));
-        dto.setIsAccepted(resultAsBoolean(row, 6));
-        dto.setIsRejected(resultAsBoolean(row, 7));
-        dto.setCause(resultAsString(row, 8));
-        dto.setApplicant(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(row, 9)));
+        dto.setStudentGroup(resultAsString(row, 4));
+        dto.setValidFrom(resultAsLocalDate(row, 5));
+        dto.setValidThru(resultAsLocalDate(row, 6));
+        dto.setIsAccepted(resultAsBoolean(row, 7));
+        dto.setIsRejected(resultAsBoolean(row, 8));
+        dto.setCause(resultAsString(row, 9));
+        dto.setApplicant(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(row, 10)));
         if(Boolean.TRUE.equals(dto.getIsAccepted()) || Boolean.TRUE.equals(dto.getIsRejected())) {
-            dto.setAcceptor(resultAsString(row, 10) != null ? resultAsString(row, 10)
-                    : PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(row, 11)));
+            dto.setAcceptor(resultAsString(row, 11) != null ? resultAsString(row, 11)
+                    : PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(row, 12)));
         }
-        dto.setCanChangeStatus(Boolean.valueOf(hasPermissionToChangeStatus && Boolean.FALSE.equals(dto.getIsAccepted())
+        dto.setCanAccept(Boolean.valueOf(hasPermissionToChangeStatus && Boolean.FALSE.equals(dto.getIsAccepted())
                 && (dto.getIsRejected() != null ? Boolean.FALSE.equals(dto.getIsRejected()) : true)));
+        dto.setCanReject(Boolean.valueOf(hasPermissionToChangeStatus
+                && (Boolean.FALSE.equals(dto.getIsAccepted())
+                        || StudentAbsenceUtil.validTodayOrInFuture(dto.getValidFrom(), dto.getValidThru()))
+                && (dto.getIsRejected() != null ? Boolean.FALSE.equals(dto.getIsRejected()) : true)));
+        dto.setIsLessonAbsence(resultAsBoolean(row, 13));
         return dto;
     }
 
     public StudentAbsence accept(HoisUserDetails user, StudentAbsence studentAbsence) {
-        updateJournalEntryStudents(studentAbsence);
+        updateJournalEntryStudentAbsences(studentAbsence, Absence.PUUDUMINE_V);
         studentAbsence.setIsAccepted(Boolean.TRUE);
+        studentAbsence.setIsLessonAbsence(Boolean.FALSE);
         studentAbsence.setAcceptedBy(PersonUtil.fullname(em.getReference(Person.class, user.getPersonId())));
+        return EntityUtil.save(studentAbsence, em);
+    }
+    
+    public StudentAbsence acceptByLessons(HoisUserDetails user, StudentAbsence studentAbsence,
+            StudentAbsenceLessonsForm form) {
+        studentAbsence.setIsAccepted(Boolean.TRUE);
+        studentAbsence.setIsLessonAbsence(Boolean.TRUE);
+        studentAbsence.setAcceptedBy(PersonUtil.fullname(em.getReference(Person.class, user.getPersonId())));
+        
+        Map<LocalDate, Map<Long, Boolean>> lessonsByDate = form.getLessonsByDate();
+        lessonsByDate.entrySet().removeIf(set -> set.getValue() == null);
+        for (LocalDate date : lessonsByDate.keySet()) {
+            for (Long lessonNr : lessonsByDate.get(date).keySet()) {
+                if (Boolean.TRUE.equals(lessonsByDate.get(date).get(lessonNr))) {
+                    StudentAbsenceLesson absenceLesson = new StudentAbsenceLesson();
+                    absenceLesson.setStudentAbsence(studentAbsence);
+                    absenceLesson.setAbsence(date);
+                    absenceLesson.setLessonNr(lessonNr);
+                    EntityUtil.save(absenceLesson, em);
+                }
+            }
+        }
+        updateJournalEntryStudentAbsenceLessons(studentAbsence);
         return EntityUtil.save(studentAbsence, em);
     }
     
     public StudentAbsence reject(HoisUserDetails user, StudentAbsence studentAbsence) {
         studentAbsence.setIsRejected(Boolean.TRUE);
+        studentAbsence.setIsAccepted(Boolean.FALSE);
         studentAbsence.setAcceptedBy(PersonUtil.fullname(em.getReference(Person.class, user.getPersonId())));
         return EntityUtil.save(studentAbsence, em);
     }
 
-    private void updateJournalEntryStudents(StudentAbsence studentAbsence) {
+    private void updateJournalEntryStudentAbsences(StudentAbsence studentAbsence, Absence absence) {
         Set<Long> absences = getAbsenceEntries(studentAbsence);
         if(!absences.isEmpty()) {
-            journalEntryStudentRepository.acceptAbsences(Absence.PUUDUMINE_V.name(), absences);
+            journalEntryStudentRepository.acceptAbsences(absence.name(), absences);
+        }
+    }
+    
+    private void updateJournalEntryStudentAbsenceLessons(StudentAbsence studentAbsence) {
+        Set<Long> absences = getAbsenceLessonsEntries(studentAbsence);
+        if(!absences.isEmpty()) {
+            journalEntryStudentRepository.acceptAbsenceLessons(Absence.PUUDUMINE_V.name(), absences);
         }
     }
 
@@ -150,6 +200,16 @@ public class StudentAbsenceService {
         List<?> result = qb.select("jes.id", em).getResultList();
         return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result);
     }
+    
+    private Set<Long> getAbsenceLessonsEntries(StudentAbsence studentAbsence) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(ABSENCE_LESSON_ENTRY_FROM);
+        qb.requiredCriteria("js.student_id = :studentId", "studentId", EntityUtil.getId(studentAbsence.getStudent()));
+        qb.requiredCriteria("jesla.absence_code = :noReason", "noReason", Absence.PUUDUMINE_P);
+        qb.requiredCriteria("sa.id = :studentAbsenceId", "studentAbsenceId", EntityUtil.getId(studentAbsence));
+        List<?> result = qb.select("jesla.id", em).getResultList();
+        return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result);
+    }
+    
 
     public boolean hasUnaccepted(HoisUserDetails user) {
         StudyYear currentYear = studyYearService.getCurrentStudyYear(user.getSchoolId());
@@ -166,5 +226,20 @@ public class StudentAbsenceService {
         }
         List<?> data = qb.select("sa.id", em).setMaxResults(1).getResultList();
         return !data.isEmpty();
+    }
+    
+    public void createContractAbsence(Contract contract) {
+        StudentAbsence studentAbsence = new StudentAbsence();
+        studentAbsence.setStudent(contract.getStudent());
+        studentAbsence.setValidFrom(contract.getStartDate());
+        studentAbsence.setValidThru(contract.getEndDate());
+        studentAbsence.setCause("Praktikal (leping)");
+        studentAbsence.setIsAccepted(Boolean.TRUE);
+        studentAbsence.setIsRejected(Boolean.FALSE);
+        studentAbsence.setContract(contract);
+        studentAbsence.setIsLessonAbsence(Boolean.FALSE);
+        EntityUtil.save(studentAbsence, em);
+        updateJournalEntryStudentAbsences(studentAbsence, Absence.PUUDUMINE_PR);
+        EntityUtil.save(contract, em);
     }
 }

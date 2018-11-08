@@ -25,12 +25,6 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       $scope.loadData();
     });
 
-
-    $scope.clearCriteria = function () {
-      $scope.criteria = {};
-      $scope.criteria.singleEvent = true;
-    };
-
     $scope.$watch('criteria.roomObject', function () {
       $scope.criteria.room = $scope.criteria.roomObject ? $scope.criteria.roomObject.id : null;
     });
@@ -39,6 +33,11 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       order:'4 desc'
     });
 
+    var _clearCriteria = $scope.clearCriteria;
+    $scope.clearEventCriteria = function () {
+      _clearCriteria();
+      $scope.criteria.singleEvent = false;
+    };
 
     $scope.afterNow = function (date, time) {
       date = new Date(date);
@@ -50,10 +49,6 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
     };
 
     $scope.allowedToEdit = function (event) {
-      if (!event.singleEvent) {
-        return false;
-      }
-
       if ($scope.auth.isAdmin()) {
         return true;
       }

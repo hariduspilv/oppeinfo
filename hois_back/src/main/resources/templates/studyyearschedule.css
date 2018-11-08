@@ -1,0 +1,39 @@
+@page {
+    size: A4 landscape;
+}
+
+html {
+    font-size: 12pt;
+}
+
+.page-break-avoid, table tr {
+    page-break-inside: avoid;
+}
+
+table.legend {
+    border-collapse: collapse;
+    margin-bottom: 20pt;
+    width: 100%;
+}
+
+table.legend td {
+    border: solid black thin;
+    padding: 3px;
+}
+
+table.legend th {
+    border: solid black thin;
+    font-weight: bold;
+    text-align: center;
+}
+
+table.schedule {
+    border-collapse: collapse;
+    margin-bottom: 20pt;
+    width: 100%;
+}
+
+table.schedule td {
+    border: solid black thin;
+    padding: 3px;
+}

@@ -5,6 +5,8 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,6 +44,7 @@ import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentJournalResultDto;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentModuleResultDto;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentResultColumnDto;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentResultDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentLessonAbsenceDto;
 
 @Transactional
 @Service
@@ -293,9 +296,9 @@ public class StudentGroupTeacherReportService {
                 List<StudentResultColumnDto> studentResultColumns = resultColumnsByStudent.get(student.getId());
                 student.setResultColumns(studentResultColumns);
                 student.setHasAddInfo(Boolean.valueOf(studentHasAddInfo(studentResultColumns)));
-                student.setAbsenceH(studentAbsencesCount(studentResultColumns, Absence.PUUDUMINE_H));
-                student.setAbsenceP(studentAbsencesCount(studentResultColumns, Absence.PUUDUMINE_P));
-                student.setAbsenceV(studentAbsencesCount(studentResultColumns, Absence.PUUDUMINE_V));
+                for (Absence absence : Absence.values()) {
+                    student.getAbsences().put(absence.name(), studentAbsencesCount(studentResultColumns, absence));
+                }
             }
         }
     }
@@ -315,10 +318,14 @@ public class StudentGroupTeacherReportService {
     
     private static Short studentAbsencesCount(List<StudentResultColumnDto> studentResultColumns, Absence type) {
         short count = 0;
+        List<Long> countedJournals = new ArrayList<>();
         List<StudentJournalResultDto> journalColumns = StreamUtil.toMappedList(c -> c.getJournalResult(),
                 StreamUtil.toFilteredList(c -> c.getJournalResult() != null, studentResultColumns));
         for (StudentJournalResultDto column : journalColumns) {
-            count += journalAbsencesCount(column.getEntries(), type);
+            if (!countedJournals.contains(column.getId())) {
+                count += journalAbsencesCount(column.getEntries(), type);
+                countedJournals.add(column.getId());
+            }
         }
         return Short.valueOf(count);
     }
@@ -389,23 +396,22 @@ public class StudentGroupTeacherReportService {
     
     private Map<Long, List<StudentJournalEntryDto>> studentJournalEntries(
             StudentGroupTeacherCommand criteria, List<Long> studentIds, List<Long> journalIds) {
-        Map<Long, List<StudentJournalEntryDto>> studentGrades = studentJournalEntryGrades(criteria, studentIds, journalIds);
-        Map<Long, List<StudentJournalEntryDto>> studentAbsences = studentJournalEntryAbsences(criteria, studentIds, journalIds);
+        Map<Long, List<StudentJournalEntryDto>> studentGrades = journalEntries(criteria, studentIds, journalIds);
+        Map<Long, List<StudentJournalEntryDto>> studentAbsences = journalEntryAbsences(criteria, studentIds, journalIds);
         
         Map<Long, List<StudentJournalEntryDto>> studentJournalEntries = new HashMap<>(studentGrades);
         for (Long studentId : studentAbsences.keySet()) {
             if (!studentJournalEntries.containsKey(studentId)) {
-                studentJournalEntries.put(studentId, studentAbsences.get(studentId));
-            } else {
-                addAbsencesToStudentGradeEntries(studentId, studentJournalEntries, studentAbsences);
+                studentJournalEntries.put(studentId, new ArrayList<>());
             }
+            addAbsencesToStudentEntries(studentId, studentJournalEntries, studentAbsences);
             Collections.sort(studentJournalEntries.get(studentId),
                     StreamUtil.comparingWithNullsLast(StudentJournalEntryDto::getOrderDate));
         }
         return studentJournalEntries;
     }
     
-    private Map<Long, List<StudentJournalEntryDto>> studentJournalEntryGrades(StudentGroupTeacherCommand criteria,
+    private Map<Long, List<StudentJournalEntryDto>> journalEntries(StudentGroupTeacherCommand criteria,
             List<Long> studentIds, List<Long> journalIds) {
         Map<Long, List<StudentJournalEntryDto>> studentGrades = new HashMap<>();
 
@@ -438,16 +444,18 @@ public class StudentGroupTeacherReportService {
         return studentGrades;
     }
     
-    private Map<Long, List<StudentJournalEntryDto>> studentJournalEntryAbsences(StudentGroupTeacherCommand criteria,
+    private Map<Long, List<StudentJournalEntryDto>> journalEntryAbsences(StudentGroupTeacherCommand criteria,
             List<Long> studentIds, List<Long> journalIds) {
         Map<Long, List<StudentJournalEntryDto>> studentAbsences = new HashMap<>();
 
         JpaNativeQueryBuilder qb = studentJournalEntriesQuery(criteria, studentIds, journalIds);
-        qb.filter("jes.absence_code is not null");
+        qb.filter("(jes.absence_code is not null or jesla.absence_code is not null)");
 
         List<?> absences = qb.select(
-                "distinct s.id as student_id, jes.id as student_entry_id, j.id as journal_id, j.name_et, je.entry_type_code, je.entry_date, jes.absence_code, "
-                        + "jes.absence_inserted, jes.add_info",
+                "distinct s.id as student_id, jes.id as student_entry_id, j.id as journal_id, j.name_et, je.entry_type_code, je.entry_date, "
+                + "coalesce(jesla.absence_code, jes.absence_code) as absence_code, "
+                + "coalesce(jesla.absence_inserted, jes.absence_inserted) as absence_inserted, "
+                + "jesla.lesson_nr + coalesce(je.start_lesson_nr - 1, 0), je.lessons, jes.add_info",
                 em).getResultList();
         
         if (!absences.isEmpty()) {
@@ -459,8 +467,10 @@ public class StudentGroupTeacherReportService {
                 journalEntry.setEntryDate(resultAsLocalDate(r, 5));
                 journalEntry.setAbsence(resultAsString(r, 6));
                 journalEntry.setAbsenceInserted(resultAsLocalDate(r, 7));
-                journalEntry.setAddInfo(resultAsString(r, 8));
                 journalEntry.setOrderDate(resultAsLocalDate(r, 7));
+                journalEntry.setLessonNr(resultAsLong(r, 8));
+                journalEntry.setLessons(resultAsLong(r, 9));
+                journalEntry.setAddInfo(resultAsString(r, 10));
                 return journalEntry;
             }, Collectors.toList())));
         }
@@ -471,6 +481,7 @@ public class StudentGroupTeacherReportService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s " +
                 "join journal_student js on js.student_id = s.id " +
                 "join journal_entry_student jes on js.id = jes.journal_student_id " +
+                "left join journal_entry_student_lesson_absence jesla on jes.id = jesla.journal_entry_student_id " +
                 "join journal_entry je on je.id = jes.journal_entry_id " +
                 "join journal j on js.journal_id = j.id " +
                 "join journal_omodule_theme jot on jot.journal_id = j.id " +
@@ -494,20 +505,47 @@ public class StudentGroupTeacherReportService {
         return qb;
     }
     
-    private static void addAbsencesToStudentGradeEntries(Long studentId, Map<Long, List<StudentJournalEntryDto>> studentJournalEntries,
+    private static void addAbsencesToStudentEntries(Long studentId, Map<Long, List<StudentJournalEntryDto>> studentJournalEntries,
             Map<Long, List<StudentJournalEntryDto>> studentAbsences) {
         Map<Long, StudentJournalEntryDto> entries = StreamUtil.toMap(e -> e.getId(), e -> e,
                 studentJournalEntries.get(studentId));
 
         for (StudentJournalEntryDto absence : studentAbsences.get(studentId)) {
             if (!entries.containsKey(absence.getId())) {
-                studentJournalEntries.get(studentId).add(absence);
+                if (absence.getLessonNr() == null) {
+                    studentJournalEntries.get(studentId).add(absence);
+                    entries.put(absence.getId(), absence);
+                } else {
+                    StudentJournalEntryDto entry = new StudentJournalEntryDto();
+                    entry.setId(absence.getId());
+                    entry.setJournal(absence.getJournal());
+                    entry.setEntryType(absence.getEntryType());
+                    entry.setEntryDate(absence.getEntryDate());
+                    entry.setOrderDate( absence.getOrderDate());
+                    entry.setAddInfo(absence.getAddInfo());
+                    addLessonAbsenceToStudentEntry(entry, absence);
+                    studentJournalEntries.get(studentId).add(entry);
+                    entries.put(absence.getId(), entry);
+                }
             } else {
                 StudentJournalEntryDto entry = entries.get(absence.getId());
-                entry.setAbsence(absence.getAbsence());
-                entry.setAbsenceInserted(absence.getAbsenceInserted());
+                if (absence.getLessonNr() == null) {
+                    entry.setAbsence(absence.getAbsence());
+                    entry.setAbsenceInserted(absence.getAbsenceInserted());
+                    entry.setLessons(absence.getLessons());
+                } else {
+                    addLessonAbsenceToStudentEntry(entry, absence);
+                }
             }
         }
+    }
+    
+    private static void addLessonAbsenceToStudentEntry(StudentJournalEntryDto entry, StudentJournalEntryDto absence) {
+        JournalEntryStudentLessonAbsenceDto lessonAbsence = new JournalEntryStudentLessonAbsenceDto();
+        lessonAbsence.setAbsence(absence.getAbsence());
+        lessonAbsence.setAbsenceInserted(LocalDateTime.of(absence.getAbsenceInserted(), LocalTime.MIN));
+        lessonAbsence.setLessonNr(absence.getLessonNr());
+        entry.getLessonAbsences().add(lessonAbsence);
     }
     
     private static void setStudentJournalEntries(StudentGroupTeacherCommand criteria,
@@ -524,9 +562,10 @@ public class StudentGroupTeacherReportService {
                             StreamUtil.toFilteredList(e -> journal.getId().equals(e.getJournal().getId()), entries));
 
                     if (Boolean.TRUE.equals(criteria.getAbsencesPerJournals())) {
-                        journal.setAbsenceH(Short.valueOf(journalAbsencesCount(journal.getEntries(), Absence.PUUDUMINE_H)));
-                        journal.setAbsenceP(Short.valueOf(journalAbsencesCount(journal.getEntries(), Absence.PUUDUMINE_P)));
-                        journal.setAbsenceV(Short.valueOf(journalAbsencesCount(journal.getEntries(), Absence.PUUDUMINE_V)));
+                        for (Absence absence : Absence.values()) {
+                            journal.getAbsences().put(absence.name(),
+                                    Short.valueOf(journalAbsencesCount(journal.getEntries(), absence)));
+                        }
                     }
                 }
             }
@@ -536,7 +575,19 @@ public class StudentGroupTeacherReportService {
     private static short journalAbsencesCount(List<StudentJournalEntryDto> journalEntries, Absence type) {
         short count = 0;
         for (StudentJournalEntryDto entry : journalEntries) {
-            if (type.name().equals(entry.getAbsence())) {
+            count = addAbsenceOfTypeToCount(type, count, entry.getAbsence(), entry.getLessons());
+            for (JournalEntryStudentLessonAbsenceDto lessonAbsence : entry.getLessonAbsences()) {
+                count = addAbsenceOfTypeToCount(type, count, lessonAbsence.getAbsence(), null);
+            }
+        }
+        return count;
+    }
+
+    private static short addAbsenceOfTypeToCount(Absence type, short count, String absence, Long lessons) {
+        if (type.name().equals(absence)) {
+            if (lessons != null) {
+                count += lessons.shortValue();
+            } else {
                 count++;
             }
         }
@@ -696,9 +747,10 @@ public class StudentGroupTeacherReportService {
             student.put("resultColumns",
                     StreamUtil.toMappedList(rc -> ReportUtil.studentResultColumnAsString(criteria.getAbsencesPerJournals(), rc, classifierCache),
                             s.getResultColumns()));
-            student.put("absenceH", s.getAbsenceH());
-            student.put("absenceP", s.getAbsenceP());
-            student.put("absenceV", s.getAbsenceV());
+            student.put("absenceH", s.getAbsences().get(Absence.PUUDUMINE_H.name()));
+            student.put("absenceP", s.getAbsences().get(Absence.PUUDUMINE_P.name()));
+            student.put("absenceV", s.getAbsences().get(Absence.PUUDUMINE_V.name()));
+            student.put("absencePR", s.getAbsences().get(Absence.PUUDUMINE_PR.name()));
             return student;
         }, dto.getStudents());
         

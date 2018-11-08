@@ -20,6 +20,7 @@ angular.module('hitsaOis').controller('JournalStudentSelectionController', funct
   $scope.searchStudent = function() {
     dialogService.showDialog('journal/journal.searchStudent.dialog.html', function(dialogScope) {
       dialogScope.selectedStudents = [];
+      dialogScope.searchedStudents = [];
 
       // code below required for not querying for students already present on the form,
       // thus avoiding double adding of the same student to the journal
@@ -37,14 +38,31 @@ angular.module('hitsaOis').controller('JournalStudentSelectionController', funct
 
       QueryUtils.createQueryForm(dialogScope, '/journals/' + entity.id + '/otherStudents', {
         studentId: students
-      });
+      }, retainSearchedStudents);
+
+      function retainSearchedStudents() {
+        for (var i = 0; i < dialogScope.tabledata.content.length; i++) {
+          var exists = false;
+          dialogScope.searchedStudents.forEach(function (retainedStudent) {
+            if (dialogScope.tabledata.content[i].studentId === retainedStudent.studentId) {
+              exists = true;
+            }
+          });
+
+          if (!exists) {
+            dialogScope.searchedStudents.push(dialogScope.tabledata.content[i]);
+          }
+        }
+      }
+
       dialogScope.loadData();
     }, function(submittedDialogScope) {
-      submittedDialogScope.tabledata.content.forEach(function(it) {
-        if (submittedDialogScope.selectedStudents.indexOf(it.studentId) !== -1) {
-          $scope.tabledata.content.push(it);
-          $scope.selectedStudents.push(it.studentId);
-        }
+      submittedDialogScope.selectedStudents.forEach(function(it) {
+        var student = submittedDialogScope.searchedStudents.filter(function (searchedStudent) {
+          return it === searchedStudent.studentId;
+        })[0];
+        $scope.tabledata.content.push(student);
+        $scope.selectedStudents.push(student.studentId);
       });
     });
   };

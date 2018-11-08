@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.timetable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Entity;
@@ -51,7 +52,7 @@ public class LessonPlanModule extends BaseEntityWithId {
     }
 
     public List<JournalOccupationModuleTheme> getJournalOccupationModuleThemes() {
-        return journalOccupationModuleThemes;
+        return journalOccupationModuleThemes != null ? journalOccupationModuleThemes : (journalOccupationModuleThemes = new ArrayList<>());
     }
 
     public void setJournalOccupationModuleThemes(List<JournalOccupationModuleTheme> journalOccupationModuleThemes) {

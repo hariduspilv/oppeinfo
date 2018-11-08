@@ -2,6 +2,7 @@ package ee.hitsa.ois.enums;
 
 public enum MainClassCode {
 
+    AINEPROGRAMM_STAATUS,
     AINESTAATUS,
     AKAD_KRAAD,
     AKADPUHKUS_POHJUS,
@@ -12,6 +13,7 @@ public enum MainClassCode {
     EHIS_EESTI_OPPEASUTUS,
     EHIS_EESTI_OPPEASUTUS_ENDINE,
     EHIS_EDUCATION_LEVEL,
+    EHIS_EMAKEEL,
     EHIS_FAIL,
     EHIS_KOOL,
     EHIS_KVALIFIKATSIOON,
@@ -37,6 +39,7 @@ public enum MainClassCode {
     KASKKIRI,
     KASKKIRI_STIPTOETL_POHJUS,
     KASKKIRI_TYHISTAMISE_VIIS,
+    KOMISJON,
     KOMPETENTS,
     KORGHINDAMINE,
     KORGMOODUL,
@@ -62,6 +65,7 @@ public enum MainClassCode {
     OPPEKOORMUS,
     OPPEPERIOOD,
     OPPERYHM_EISOBI,
+    OPPETOOSISU,
     OPPEVORM,
     OPPURESINDAJA,
     OPPURSTAATUS,

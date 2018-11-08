@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto.timetable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public class StudentJournalEntryDto {
     private final Long id;
@@ -17,6 +18,7 @@ public class StudentJournalEntryDto {
     private final String homework;
     private final LocalDate homeworkDueDate;
     private final String absence;
+    private List<StudentJournalEntryLessonAbsenceDto> lessonAbsences;
     private List<StudentJournalEntryPreviousResultDto> previousResults;
 
     public StudentJournalEntryDto(Long id, Long journalId, String entryType, LocalDate entryDate, String content, String gradeValue,
@@ -81,6 +83,14 @@ public class StudentJournalEntryDto {
     
     public String getAbsence() {
         return absence;
+    }
+
+    public List<StudentJournalEntryLessonAbsenceDto> getLessonAbsences() {
+        return lessonAbsences;
+    }
+
+    public void setLessonAbsences(List<StudentJournalEntryLessonAbsenceDto> lessonAbsences) {
+        this.lessonAbsences = lessonAbsences;
     }
 
     public List<StudentJournalEntryPreviousResultDto> getPreviousResults() {

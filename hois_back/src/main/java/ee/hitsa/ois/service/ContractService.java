@@ -34,6 +34,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.ContractStatus;
@@ -76,6 +77,8 @@ public class ContractService {
     private MessageTemplateService messageTemplateService;
     @Autowired
     private StudyYearService studyYearService;
+    @Autowired
+    private StudentAbsenceService studentAbsenceService;
     @Autowired
     private Validator validator;
 
@@ -291,6 +294,10 @@ public class ContractService {
      * @param contract
      */
     public void delete(HoisUserDetails user, Contract contract) {
+        if (contract.getStudentAbsence() != null) {
+            contract.getStudentAbsence().setContract(null);
+            studentAbsenceService.reject(user, contract.getStudentAbsence());
+        }
         EntityUtil.setUsername(user.getUsername(), em);
         // delete also practice journal(s)
         List<PracticeJournal> journals = em.createQuery("select pj from PracticeJournal pj where pj.contract.id = ?1", PracticeJournal.class)
@@ -355,7 +362,7 @@ public class ContractService {
     }
 
     /**
-     * Mark contract as ended.
+     * Mark contract as ended, if it exists reject contract's absence.
      *
      * @param contractId
      */
@@ -363,6 +370,12 @@ public class ContractService {
         Contract contract = em.getReference(Contract.class, contractId);
         if(contract.getEndDate() != null && contract.getEndDate().isBefore(LocalDate.now())) {
             setContractStatus(contract, ContractStatus.LEPING_STAATUS_L);
+            if (contract.getStudentAbsence() != null) {
+                StudentAbsence absence = contract.getStudentAbsence(); 
+                absence.setIsRejected(Boolean.TRUE);
+                absence.setIsAccepted(Boolean.FALSE);
+                EntityUtil.save(absence, em);
+            }
             EntityUtil.save(contract, em);
         }
     }

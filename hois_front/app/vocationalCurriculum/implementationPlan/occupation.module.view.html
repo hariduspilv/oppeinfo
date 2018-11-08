@@ -15,7 +15,7 @@
               <div flex="40" layout="row">{{'module.contactStudy' | translate}}</div>
             </div>
 
-            <div ng-repeat="item in occupationModule.capacities | orderBy: 'nameEt' track by item.capacityType" layout="row" class="secondary-table-row">
+            <div ng-repeat="item in occupationModule.capacities | orderBy: 'nameEt' track by item.capacityType" layout="row" class="occupation-module-capacity-row">
               <div flex="30" class="occupation-module-capacity">{{currentLanguageNameField(item)}}</div>
 
               <div flex="30">
@@ -58,7 +58,7 @@
             <textarea ng-model="occupationModule.studyMaterials" max-rows="2" readonly></textarea>
           </md-input-container>
           <div>&nbsp;</div>
-          <fieldset tabindex="2" layout="column">
+          <fieldset tabindex="2" layout="column" style="overflow:auto">
             <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.gradeFormation' | translate}}</legend>
             <div flex layout="row">
               <span flex="30" class="common-label">{{'module.assessmentType' | translate}}</span>
@@ -99,41 +99,43 @@
               <div flex="10">
               </div>
               <div flex>
-                <table md-table class="secondary-table">
-                  <thead md-head>
-                    <tr md-row>
-                      <th md-column>{{'module.themeName' | translate}}</th>
-                      <th md-column>{{'module.capacityEkapPerHour' | translate}}</th>
-                      <th md-column>{{'module.subthemes' | translate}}</th>
-                      <th md-column>{{'module.studyYear' | translate}}</th>
-                      <th md-column></th>
-                    </tr>
-                  </thead>
-                  <tbody md-body>
-                    <tr md-row ng-repeat="theme in occupationModule.themes | orderBy: currentLanguageNameField()">
-                      <td md-cell>
-                        <a class="md-primary one-row" ng-click="openAddThemeDialog(theme)">{{currentLanguageNameField(theme)}}</a>
-                      </td>
-                      <td md-cell>
-                        {{theme.credits}}/{{theme.hours}}
-                      </td>
-                      <td md-cell>
-                        <p class="scrollable">{{theme.subthemes}}</p>
-                      </td>
-                      <td md-cell>
-                        {{theme.studyYearNumber}}
-                      </td>
-                      <td md-cell></td>
-                    </tr>
-                  </tbody>
-                </table>
+                <md-table-container>
+                  <table md-table class="secondary-table">
+                    <thead md-head>
+                      <tr md-row>
+                        <th md-column>{{'module.themeName' | translate}}</th>
+                        <th md-column>{{'module.capacityEkapPerHour' | translate}}</th>
+                        <th md-column>{{'module.subthemes' | translate}}</th>
+                        <th md-column>{{'module.studyYear' | translate}}</th>
+                        <th md-column></th>
+                      </tr>
+                    </thead>
+                    <tbody md-body>
+                      <tr md-row ng-repeat="theme in occupationModule.themes | orderBy: currentLanguageNameField()">
+                        <td md-cell>
+                          <a class="md-primary one-row" ng-click="openAddThemeDialog(theme)">{{currentLanguageNameField(theme)}}</a>
+                        </td>
+                        <td md-cell>
+                          {{theme.credits}}/{{theme.hours}}
+                        </td>
+                        <td md-cell>
+                          <p class="scrollable">{{theme.subthemes}}</p>
+                        </td>
+                        <td md-cell>
+                          {{theme.studyYearNumber}}
+                        </td>
+                        <td md-cell></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </md-table-container>
               </div>
             </div>
           </fieldset>
           <div flex>&nbsp;</div>
           <fieldset tabindex="4" layout="column">
             <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.proportionPerStudyYear' | translate}}</legend>
-            <div layout="row">
+            <div layout="row" style="overflow:auto">
               <md-input-container flex ng-repeat="yc in occupationModule.yearCapacities track by $index">
                 <label>{{$index+1}}.&nbsp;{{'module.studyYearLowercase' | translate}}</label>
                 <input disabled ng-model="yc.credits" type="number">
@@ -141,7 +143,11 @@
             </div>
           </fieldset>
           <div flex>&nbsp;</div>
-          <md-input-container flex>
+          <md-input-container flex ng-if="occupationModule.teacher">
+            <label>{{'module.supervisor' | translate}}</label>
+            <input ng-value="currentLanguageNameField(occupationModule.teacher)" type="text" readonly>
+          </md-input-container>
+          <md-input-container flex ng-if="!occupationModule.teacher">
             <label>{{'module.supervisor' | translate}}</label>
             <input ng-model="occupationModule.supervisor" type="text" readonly>
           </md-input-container>

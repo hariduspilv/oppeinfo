@@ -62,6 +62,10 @@ public class ScholarshipApplication extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier compensationFrequency;
     private String rejectComment;
+    
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true)
+    private ScholarshipDecision scholarshipDecision;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "scholarshipApplication")
     private List<ScholarshipApplicationFile> scholarshipApplicationFiles = new ArrayList<>();
@@ -323,6 +327,14 @@ public class ScholarshipApplication extends BaseEntityWithId {
 
     public void setRejectComment(String rejectComment) {
         this.rejectComment = rejectComment;
+    }
+
+    public ScholarshipDecision getScholarshipDecision() {
+        return scholarshipDecision;
+    }
+
+    public void setScholarshipDecision(ScholarshipDecision scholarshipDecision) {
+        this.scholarshipDecision = scholarshipDecision;
     }
 
 }

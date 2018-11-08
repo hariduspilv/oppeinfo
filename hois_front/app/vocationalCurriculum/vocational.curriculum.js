@@ -826,7 +826,17 @@ angular.module('hitsaOis')
       }
     }
 
+    function isAddressAdded(item) {
+      return ArrayUtils.contains($scope.curriculum.addresses.map(function (address) {
+        return address.addressOv;
+      }), item.addressOv);
+    }
+
     $scope.addAddress = function () {
+      if (isAddressAdded($scope.formState.address)) {
+        message.error("curriculum.error.addressAlreadyAdded");
+        return;
+      }
       $scope.curriculum.addresses.push($scope.formState.address);
       $scope.formState.address = {};
       updateAddresses();
@@ -954,6 +964,17 @@ angular.module('hitsaOis')
         return $scope.curriculum.credits - $scope.curriculum.optionalStudyCredits === sum;
     };
 
+    $scope.hasRequiredFiles = function() {
+       var files = $scope.curriculum.files;
+       if(ArrayUtils.isEmpty(files)) {
+         return false;
+       }
+       return !ArrayUtils.isEmpty(files.filter(function(file){
+         return file.ehisFile === 'EHIS_FAIL_15773' && file.sendEhis === true && 
+          file.oisFile && file.oisFile.ftype === 'application/pdf';
+       }));
+     };
+
    $scope.hasVerifiedVersions = function() {
       var versions = $scope.curriculum.versions;
       if(ArrayUtils.isEmpty(versions)) {
@@ -997,6 +1018,9 @@ angular.module('hitsaOis')
             return false;
         } else if(!ArrayUtils.isEmpty($scope.curriculum.curriculumOccupations) && !allSpetsOccupationsValid()) {
             message.error('curriculum.error.spetsOccupationsCredits');
+            return false;
+        } else if (!$scope.hasRequiredFiles()) {
+            message.error('curriculum.error.noSummaryFile');
             return false;
         } else if (!$scope.hasVerifiedVersions()) {
             message.error('curriculum.error.noImplementationPlan');

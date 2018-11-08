@@ -39,6 +39,7 @@ public class ScholarshipTermDto {
     private Boolean isTeacherConfirm;
     private Boolean isFamilyIncomes;
     private Boolean isOpen;
+    private Long committee;
 
     public static ScholarshipTermDto of(ScholarshipTerm term) {
         ScholarshipTermDto dto = new ScholarshipTermDto();
@@ -284,6 +285,14 @@ public class ScholarshipTermDto {
 
     public void setIsOpen(Boolean isOpen) {
         this.isOpen = isOpen;
+    }
+
+    public Long getCommittee() {
+        return committee;
+    }
+
+    public void setCommittee(Long committee) {
+        this.committee = committee;
     }
 
 }

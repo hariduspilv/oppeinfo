@@ -1,8 +1,17 @@
 <md-dialog aria-label="grade add dialog" flex="30" flex-xs="100">
   <form name="studentAbsenceForm" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2 flex>{{'absence.label' | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
     <md-dialog-content>
       <div class="md-dialog-content">
-
         <div layout="row" class="form-readonly">
           <md-input-container flex>
             <label>{{'student.name' | translate}}</label>
@@ -17,7 +26,7 @@
         <div layout="row">
           <md-input-container flex>
             <label>{{'student.absence.validFrom' | translate}}</label>
-            <md-datepicker ng-model="record.validFrom" name="validFrom" required></md-datepicker>
+            <md-datepicker ng-model="record.validFrom" name="validFrom" md-max-date="record.validThru" required></md-datepicker>
           </md-input-container>
           <md-input-container flex>
             <label>{{'student.absence.validThru' | translate}}</label>

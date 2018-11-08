@@ -27,10 +27,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PROTOKOLL]
         }
       })
-      .when('/higherProtocols/:id/:action', {
-        templateUrl: function(urlAttrs) {
-          return urlAttrs.action === 'edit' ? 'higherProtocol/higher.protocol.edit.html' : 'higherProtocol/higher.protocol.view.html';
-        },
+      .when('/higherProtocols/:id/edit', {
+        templateUrl: 'higherProtocol/higher.protocol.edit.html',
         controller: 'HigherProtocolEditViewController',
         controllerAs: 'HigherProtocolEditViewController',
         resolve: {
@@ -39,12 +37,30 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           entity: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/higherProtocols').get({id: $route.current.params.id}).$promise;
           },
-          isView: function ($route){
-            return $route.current.params.action === 'view';
+          isView: function (){
+            return false;
           }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PROTOKOLL]
+        }
+      })
+      .when('/higherProtocols/:id/view', {
+        templateUrl: 'higherProtocol/higher.protocol.view.html',
+        controller: 'HigherProtocolEditViewController',
+        controllerAs: 'HigherProtocolEditViewController',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          entity: function(QueryUtils, $route) {
+            return QueryUtils.endpoint('/higherProtocols').get({id: $route.current.params.id}).$promise;
+          },
+          isView: function (){
+            return true;
+          }
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PROTOKOLL]
         }
       });
 }]);

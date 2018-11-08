@@ -78,7 +78,7 @@ public class FinalHigherProtocolDto extends VersionedCommand {
         dto.setCurriculumGrades(StreamUtil.toMappedList(g -> CurriculumGradeDto.of(g), curriculum.getGrades()));
 
         if (protocol.getOisFile() != null) {
-            dto.setOisFile(EntityUtil.bindToDto(protocol.getOisFile(), new OisFileViewDto()));
+        	dto.setOisFile(OisFileViewDto.of(protocol.getOisFile()));
         }
         dto.setConfirmedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(protocol.getConfirmer()));
         

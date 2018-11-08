@@ -19,6 +19,7 @@ public class SaisAdmissionDto {
     private String studyLevel;
     private String studyLoad;
     private String fin;
+    private Boolean is_archived;
 
     public static SaisAdmissionDto of(SaisAdmission saisAdmissionDto) {
         SaisAdmissionDto dto = EntityUtil.bindToDto(saisAdmissionDto, new SaisAdmissionDto());
@@ -112,5 +113,13 @@ public class SaisAdmissionDto {
     public void setPeriodEnd(LocalDate periodEnd) {
         this.periodEnd = periodEnd;
     }
+
+	public Boolean getArchived() {
+		return is_archived;
+	}
+
+	public void setArchived(Boolean is_archived) {
+		this.is_archived = is_archived;
+	}
 
 }

@@ -1,0 +1,12 @@
+<md-dialog aria-label="archive confirmation" flex="40" flex-sm="100" flex-xs="100">
+    <md-dialog-content>
+        <div class="md-dialog-content" layout="row">
+            <label>{{'reception.archive.archiveConfirm' | translate}}{{archive}}?</label>
+        </div>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row" layout-align="start center">
+        <md-button ng-click="submit()" class="md-raised md-primary">{{'main.yes' | translate}}</md-button>
+        <md-button ng-click="cancel()" class="md-raised">{{'main.no' | translate}}</md-button>
+    </md-dialog-actions>
+</md-dialog>

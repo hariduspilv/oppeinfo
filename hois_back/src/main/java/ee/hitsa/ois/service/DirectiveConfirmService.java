@@ -78,6 +78,7 @@ import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForField;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveConfirmForm;
 import ee.hitsa.ois.web.dto.directive.DirectiveViewStudentDto;
 
 @Transactional
@@ -288,6 +289,12 @@ public class DirectiveConfirmService {
         return confirm(PersonUtil.fullnameAndIdcode(signerName, signerIdCode), directive, confirmDate);
     }
 
+    public Directive confirmedByUser(String confirmer, Directive directive, LocalDate confirmDate, DirectiveConfirmForm form) {
+        directive.setDirectiveNr(form.getDirectiveNr());
+        directive.setPreamble(form.getPreamble());
+        return confirm(confirmer, directive, confirmDate);
+    }
+
     /**
      * Check if preconditions are ok for confirming directive
      *
@@ -434,7 +441,7 @@ public class DirectiveConfirmService {
         case KASKKIRI_EKSMAT:
             // FIXME correct field for Õppuri eksmatrikuleerimise kuupäev?
             student.setStudyEnd(confirmDate);
-            userService.disableUser(student, confirmDate);
+            userService.disableUser(student, LocalDate.now().minusDays(1));
             cancelScholarships(directiveStudent);
             break;
         case KASKKIRI_ENNIST:

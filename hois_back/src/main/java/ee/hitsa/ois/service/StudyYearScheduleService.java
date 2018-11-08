@@ -1,6 +1,12 @@
 package ee.hitsa.ois.service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,14 +25,24 @@ import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.report.studyyearschedule.ReportDepartment;
+import ee.hitsa.ois.report.studyyearschedule.ReportStudentGroup;
+import ee.hitsa.ois.report.studyyearschedule.ReportStudyPeriod;
+import ee.hitsa.ois.report.studyyearschedule.ReportTable;
+import ee.hitsa.ois.report.studyyearschedule.StudyYearScheduleReport;
 import ee.hitsa.ois.repository.StudyYearScheduleRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
+import ee.hitsa.ois.web.commandobject.StudyYearScheduleForm;
+import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
+import ee.hitsa.ois.web.dto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.StudyYearDto;
 import ee.hitsa.ois.web.dto.StudyYearScheduleDto;
+import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 
 @Service
@@ -37,6 +53,12 @@ public class StudyYearScheduleService {
     private EntityManager em;
     @Autowired
     private StudyYearScheduleRepository studyYearScheduleRepository;
+    @Autowired
+    private AutocompleteService autocompleteService;
+    @Autowired
+    private XlsService xlsService;
+    @Autowired
+    private PdfService pdfService;
 
     public Set<StudyYearScheduleDto> getSet(HoisUserDetails user, StudyYearScheduleDtoContainer schedulesCmd) {
         JpaQueryBuilder<StudyYearSchedule> qb = new JpaQueryBuilder<>(StudyYearSchedule.class, "sys");
@@ -145,4 +167,125 @@ public class StudyYearScheduleService {
             return dto;
         }, data);
     }
+
+    private List<ReportStudyPeriod> getStudyPeriodsWithWeeks(StudyYear studyYear) {
+        List<StudyPeriod> data = em.createQuery("select sp from StudyPeriod sp where sp.studyYear = ?1"
+                + " order by sp.endDate", StudyPeriod.class)
+                .setParameter(1, studyYear)
+                .getResultList();
+        return StreamUtil.toMappedList(sp -> {
+            ReportStudyPeriod studyPeriodData = new ReportStudyPeriod();
+            studyPeriodData.setPeriod(StudyPeriodDto.of(sp));
+            List<Short> weekNrs = sp.getWeekNrs();
+            if (!weekNrs.isEmpty()) {
+                weekNrs.remove(0);
+            }
+            studyPeriodData.setWeeks(weekNrs);
+            return studyPeriodData;
+        }, data);
+    }
+    
+    private static List<Integer> getWeeks(StudyYear studyYear) {
+        List<Integer> result = new ArrayList<>();
+        LocalDate start = studyYear.getStartDate();
+        LocalDate end = studyYear.getEndDate();
+        int weekNr = 1;
+        while (start.isBefore(end)) {
+            start = start.plusDays(7).minusDays(start.getDayOfWeek().ordinal());
+            result.add(Integer.valueOf(weekNr++));
+        }
+        return result;
+    }
+
+    private StudyYearScheduleReport getReport(HoisUserDetails user, StudyYearScheduleForm schedulesCmd) {
+        School school = em.getReference(School.class, user.getSchoolId());
+        StudyYear studyYear = em.getReference(StudyYear.class, schedulesCmd.getStudyYearId());
+        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        StudyYearScheduleReport report = new StudyYearScheduleReport();
+        List<StudyYearScheduleLegendDto> legendList = StreamUtil.toMappedList(StudyYearScheduleLegendDto::of, 
+                school.getStudyYearScheduleLegends());
+        Map<Long, StudyYearScheduleLegendDto> legendMap = StreamUtil.toMap(StudyYearScheduleLegendDto::getId, legendList);
+        report.setLegends(legendList);
+        ReportTable table = new ReportTable();
+        List<ReportStudyPeriod> studyPeriods = getStudyPeriodsWithWeeks(studyYear);
+        table.setStudyPeriods(studyPeriods);
+        List<Integer> weeks = getWeeks(studyYear);
+        table.setWeeks(weeks);
+        List<SchoolDepartmentResult> departmentList = StreamUtil.toFilteredList(d -> schedulesCmd.getSchoolDepartments().contains(d.getId()), 
+                autocompleteService.schoolDepartments(user.getSchoolId()));
+        List<StudentGroupSearchDto> studentGroups = getStudentGroups(user.getSchoolId(), 
+                Boolean.TRUE.equals(schedulesCmd.getShowMine()) ? user.getStudentId() : null);
+        StudyYearScheduleDtoContainer schedulesContainer = new StudyYearScheduleDtoContainer();
+        schedulesContainer.setStudyPeriods(StreamUtil.toMappedSet(sp -> sp.getPeriod().getId(), studyPeriods));
+        schedulesContainer.setStudentGroups(StreamUtil.toMappedSet(StudentGroupSearchDto::getId, studentGroups));
+        schedulesContainer.setShowMine(schedulesCmd.getShowMine());
+        Set<StudyYearScheduleDto> schedule = getSet(user, schedulesContainer);
+        table.setDepartments(StreamUtil.toMappedList(department -> {
+            ReportDepartment departmentData = new ReportDepartment();
+            departmentData.setDepartment(department);
+            departmentData.setStudentGroups(StreamUtil.toMappedList(studentGroup -> {
+                ReportStudentGroup groupData = new ReportStudentGroup();
+                groupData.setGroup(studentGroup);
+                groupData.setSchedule(StreamUtil.toMappedList(
+                        week -> schedule.stream()
+                        .filter(s -> s.getStudentGroup().equals(studentGroup.getId())
+                                && s.getWeekNr().intValue() == week.intValue())
+                        .map(s -> legendMap.get(s.getStudyYearScheduleLegend()))
+                        .findAny().orElse(null), weeks));
+                return groupData;
+            }, studentGroups.stream().filter(sg -> sg.getSchoolDepartments().contains(department.getId()))));
+            return departmentData;
+        }, departmentList));
+        report.setTables(Collections.singletonList(table));
+        return report;
+    }
+    
+    public byte[] studyYearScheduleAsExcel(HoisUserDetails user, StudyYearScheduleForm schedulesCmd) {
+        StudyYearScheduleReport report = getReport(user, schedulesCmd);
+        ReportTable table = report.getTables().get(0);
+        Map<String, Object> data = new HashMap<>();
+        data.put("legends", report.getLegends());
+        data.put("studyPeriods", table.getStudyPeriods());
+        data.put("weeks", table.getWeeks());
+        data.put("departments", table.getDepartments());
+        return xlsService.generate("studyyearschedule.xlsx", data);
+    }
+
+    public byte[] studyYearScheduleAsPdf(HoisUserDetails user, StudyYearScheduleForm schedulesCmd) {
+        StudyYearScheduleReport report = getReport(user, schedulesCmd);
+        ReportTable table = report.getTables().get(0);
+        List<ReportStudyPeriod> studyPeriods = table.getStudyPeriods();
+        int studyPeriodSplit = (studyPeriods.size() + 1) / 2;
+        ReportTable table1 = new ReportTable();
+        ReportTable table2 = new ReportTable();
+        table1.setStudyPeriods(studyPeriods.subList(0, studyPeriodSplit));
+        table2.setStudyPeriods(studyPeriods.subList(studyPeriodSplit, studyPeriods.size()));
+        List<Integer> weeks = table.getWeeks();
+        int weekSplit = 0;
+        for (int i = 0; i < studyPeriodSplit; i++) {
+            ReportStudyPeriod studyPeriod = studyPeriods.get(i);
+            weekSplit += 1 + studyPeriod.getWeeks().size();
+        }
+        table1.setWeeks(weeks.subList(0, weekSplit));
+        table2.setWeeks(weeks.subList(weekSplit, weeks.size()));
+        table1.setDepartments(splitDepartments(table, 0, weekSplit));
+        table2.setDepartments(splitDepartments(table, weekSplit, weeks.size()));
+        report.setTables(Arrays.asList(table1, table2));
+        return pdfService.generate("studyyearschedule.xhtml", report);
+    }
+
+    private static List<ReportDepartment> splitDepartments(ReportTable table, int fromIndex, int toIndex) {
+        return StreamUtil.toMappedList(sourceDepartment -> {
+            ReportDepartment splittedDepartment = new ReportDepartment();
+            splittedDepartment.setDepartment(sourceDepartment.getDepartment());
+            splittedDepartment.setStudentGroups(StreamUtil.toMappedList(studentGroup -> {
+                ReportStudentGroup splittedGroup = new ReportStudentGroup();
+                splittedGroup.setGroup(studentGroup.getGroup());
+                splittedGroup.setSchedule(studentGroup.getSchedule().subList(fromIndex, toIndex));
+                return splittedGroup;
+            }, sourceDepartment.getStudentGroups()));
+            return splittedDepartment;
+        }, table.getDepartments());
+    }
+    
 }

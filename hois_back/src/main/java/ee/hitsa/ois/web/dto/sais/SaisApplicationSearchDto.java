@@ -10,6 +10,7 @@ public class SaisApplicationSearchDto {
     private String saisAdmissionCode;
     private String status;
     private Boolean addedToDirective = Boolean.FALSE;
+    private Boolean is_archived = Boolean.FALSE;
 
 
     public String getApplicationNr() {
@@ -76,6 +77,14 @@ public class SaisApplicationSearchDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    public boolean getArchived() {
+    	return this.is_archived;
+    }
+    
+    public void setArchived(boolean archived) {
+    	this.is_archived = archived;
     }
 
 }

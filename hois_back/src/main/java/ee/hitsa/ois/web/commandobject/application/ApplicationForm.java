@@ -88,6 +88,8 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     @ClassifierRestriction(MainClassCode.VALISKOOL_PROGRAMM)
     private String abroadProgramme;
+    
+    private String otherText;
 
     private Set<OisFileForm> files;
 
@@ -308,6 +310,14 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setAbroadProgramme(String abroadProgramme) {
         this.abroadProgramme = abroadProgramme;
+    }
+
+    public String getOtherText() {
+        return otherText;
+    }
+
+    public void setOtherText(String otherText) {
+        this.otherText = otherText;
     }
 
     public Set<ApplicationPlannedSubjectDto> getPlannedSubjects() {

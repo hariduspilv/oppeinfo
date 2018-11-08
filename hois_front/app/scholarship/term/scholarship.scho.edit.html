@@ -19,7 +19,8 @@
     <md-datepicker required ng-model="stipend.applicationStart" md-max-date="stipend.applicationEnd" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
   </md-input-container>
   <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
-    <md-datepicker required ng-model="stipend.applicationEnd" md-min-date="stipend.applicationStart" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+    <md-datepicker required ng-model="stipend.applicationEnd" md-min-date="stipend.applicationStart" md-placeholder="{{'main.thru' | translate}}"
+      ng-change="applicationEndChanged()"></md-datepicker>
   </md-input-container>
 </div>
 <div layout="row">
@@ -119,6 +120,12 @@
     <md-checkbox ng-model="stipend.isAcademicLeave" aria-label="Is academic leave" flex="50">
       {{'stipend.isAcademicLeave' | translate}}
     </md-checkbox>
+  </div>
+  <div layout="row" flex>
+    <md-input-container flex="45">
+      <label class="textInput">{{'stipend.committee' | translate}}</label>
+      <hois-select ng-model="stipend.committee" values="formState.committees"></hois-select>
+    </md-input-container>
   </div>
 </div>
 <div layout="row">

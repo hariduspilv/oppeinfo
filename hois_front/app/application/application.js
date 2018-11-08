@@ -203,6 +203,10 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     loadFormDeferred.resolve();
   }
 
+  function applicationMuu(loadFormDeferred) {
+    loadFormDeferred.resolve();
+  }
+
   function loadFormData(type, studentId) {
     var loadFormDeferred = $q.defer();
     if (type === 'AVALDUS_LIIK_AKAD' || type === 'AVALDUS_LIIK_FINM' || type === 'AVALDUS_LIIK_OVORM' || type === 'AVALDUS_LIIK_OKAVA') {
@@ -234,6 +238,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       applicationValis(loadFormDeferred);
     } else if (type === 'AVALDUS_LIIK_EKSMAT') {
       applicationEksmat(loadFormDeferred);
+    } else if (type === 'AVALDUS_LIIK_MUU') {
+      applicationMuu(loadFormDeferred);
     }
 
     loadFormDeferred.promise.then(function () {
@@ -307,11 +313,26 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     }).catch(angular.noop);
   };
 
+  $scope.confirm = function () {
+    QueryUtils.endpoint('/applications/' + $scope.application.id + '/confirm/').put().$promise.then(function (response) {
+      message.info('application.messages.confirmed');
+      if ($scope.isView) {
+        entityToForm(response);
+      } else {
+        $location.url('/applications/' + $scope.application.id + '/view?_noback');
+      }
+    }).catch(angular.noop);
+  };
+
   $scope.reject = function () {
     dialogService.showDialog('application/reject.dialog.html', null, function (submittedDialogScope) {
       QueryUtils.endpoint('/applications/' + $scope.application.id + '/reject/').put({ reason: submittedDialogScope.rejectReason }).$promise.then(function (response) {
         message.info('application.messages.rejected');
-        entityToForm(response);
+        if ($scope.isView) {
+          entityToForm(response);
+        } else {
+          $location.url('/applications/' + $scope.application.id + '/view?_noback');
+        }
       }).catch(angular.noop);
     });
   };
@@ -341,9 +362,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       application.$delete().then(function () {
         message.info('main.messages.delete.success');
         if ($scope.auth.isStudent()) {
-          $location.path('/applications/student');
+          $scope.back('#/applications/student');
         } else {
-          $location.path('/applications');
+          $scope.back('#/applications');
         }
       }).catch(angular.noop);
     });

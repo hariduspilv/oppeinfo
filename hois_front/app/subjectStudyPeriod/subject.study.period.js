@@ -40,6 +40,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         }
         return name;
     };
+
+    $scope.testStatus = { code: "AINEPROGRAMM_STAATUS_L"};
   }
 ]).controller('SubjectStudyPeriodEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'dialogService', 'message', '$q', '$rootScope', 'DeclarationType',
   function ($scope, QueryUtils, ArrayUtils, $route, dialogService, message, $q, $rootScope, DeclarationType) {

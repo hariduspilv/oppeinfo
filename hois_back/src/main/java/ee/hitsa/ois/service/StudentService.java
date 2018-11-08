@@ -789,28 +789,57 @@ public class StudentService {
     }
 
     private Collection<StudentVocationalResultModuleThemeDto> vocationalResultsThemeResults(Student student) {
-        String journalResults = "select distinct on (cvot.id, teacher_id) cvot.id cvot_id, cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, jes.grade_code grade_code, jes.grade_inserted grade_inserted, "
-                + "tp.id teacher_id, tp.firstname teacher_firstname, tp.lastname teacher_lastname,"
-                + "cvo.id cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, cm.credits cm_credits,"
-                + "sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer "
+        String journalSelect = "cvo_id, cv_code, cm_name_et, mcl_name_et, cm_name_en, mcl_name_en, cvot_id, cvot_name_et, cvot_credits, grade_code, "
+                + "grade_inserted, teacher_id, teacher_firstname, teacher_lastname, sy_year_code, sy_start_date, is_apel_transfer";
+        
+        String journalCurriculumResults = " select distinct on (cvot.id, teacher_id) cvot.id cvot_id, cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, "
+                + "cvot.credits cvot_credits, jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp. ID teacher_id, tp.firstname teacher_firstname, "
+                + "tp.lastname teacher_lastname, cvo. ID cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
+                + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
-                + "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id "
+                + "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id " 
                 + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
                 + "join classifier mcl on mcl.code = cm.module_code "
                 + "join curriculum_version cv on cv.id = cvo.curriculum_version_id "
                 + "join curriculum c on c.id = cv.curriculum_id "
                 + "join journal j on j.id = js.journal_id "
-                + "join study_year sy on sy.id = j.study_year_id "
+                + "join study_year sy on sy.id = j.study_year_id " 
                 + "join journal_entry je on je.journal_id = js.journal_id "
-                + "join journal_entry_student jes on jes.journal_entry_id = je.id and jes.journal_student_id=js.id "
+                + "join journal_entry_student jes on jes.journal_entry_id = je.id and jes.journal_student_id = js.id "
                 + "left join journal_teacher jt on jt.journal_id = js.journal_id "
                 + "left join teacher t on t.id = jt.teacher_id "
                 + "left join person tp on tp.id = t.person_id "
-                + "where js.student_id = :studentId and "
-                + "je.entry_type_code = :entryTypeCode "
-                + "order by cvot.id desc, teacher_id, jes.grade_inserted desc)";
+                + "where js.student_id = :studentId and je.entry_type_code = :entryTypeCode and jes.grade_code is not null "
+                    + "and cvo.curriculum_version_id = :curriculumVersionId";
+        
+        String journalExtraCurriculumResults = " select distinct on (cvot.id, teacher_id) cvot.id cvot_id, cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, "
+                + "cvot.credits cvot_credits, jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp. ID teacher_id, tp.firstname teacher_firstname, "
+                + "tp.lastname teacher_lastname, cvo. ID cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
+                + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer "
+                + "from journal_student js "
+                + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
+                + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
+                + "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id "
+                + "join curriculum_module cm on cm.id = cvo.curriculum_module_id " 
+                + "join classifier mcl on mcl.code = cm.module_code "
+                + "join curriculum_version cv on cv.id = cvo.curriculum_version_id "
+                + "join curriculum c on c.id = cv.curriculum_id " 
+                + "join journal j on j.id = js.journal_id "
+                + "join study_year sy on sy.id = j.study_year_id "
+                + "join journal_entry je on je.journal_id = js.journal_id "
+                + "join journal_entry_student jes on jes.journal_entry_id = je.id and jes.journal_student_id = js.id "
+                + "left join journal_teacher jt on jt.journal_id = js.journal_id " 
+                + "left join teacher t on t.id = jt.teacher_id "
+                + "left join person tp on tp.id = t.person_id "
+                + "where js.student_id = :studentId and je.entry_type_code = :entryTypeCode "
+                    + "and jes.grade_code is not null and cvo.curriculum_version_id != :curriculumVersionId "
+                    + "and (select count(*) from journal_omodule_theme jot2 join curriculum_version_omodule_theme cvot2 on "
+                    + "cvot2.id = jot2.curriculum_version_omodule_theme_id join curriculum_version_omodule cvo2 on cvo2.id = cvot2.curriculum_version_omodule_id "
+                    + "where jot2.journal_id = j.id and cvo2.curriculum_version_id = 13401) = 0";
+        
+        String journalResultsOrderBy = " order by 1 desc, teacher_id, grade_inserted desc";
         
         String apelResults = "select cvo.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, "
                 + "cvot.id cvot_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, aai.grade_code grade_code, aa.confirmed grade_inserted, null as teacher_id, "
@@ -825,11 +854,13 @@ public class StudentService {
                 + "join study_year sy on sy.id = get_study_year(cast(aa.confirmed as date), cast(aa.school_id as int)) "
                 + "where aa.student_id = :studentId and aa.status_code = :applicationStatus and aai.transfer = true";
         
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from (" + journalResults + " as journal_results "
-                + "union all " + apelResults + " order by grade_inserted desc");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from (select " + journalSelect + " from ("
+                + journalCurriculumResults + " union " + journalExtraCurriculumResults + journalResultsOrderBy
+                + ") as journal_results " + "union all " + apelResults + " order by grade_inserted desc) as results");
 
         qb.parameter("entryTypeCode", JournalEntryType.SISSEKANNE_L.name());
         qb.parameter("studentId", EntityUtil.getId(student));
+        qb.parameter("curriculumVersionId", EntityUtil.getId(student.getCurriculumVersion()));
         qb.parameter("applicationStatus", ApelApplicationStatus.VOTA_STAATUS_C.name());
 
         List<?> rows = qb.select("cvo_id, cv_code, cm_name_et, mcl_name_et, cm_name_en, mcl_name_en,"

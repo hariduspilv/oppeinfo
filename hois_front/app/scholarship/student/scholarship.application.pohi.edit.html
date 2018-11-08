@@ -130,7 +130,7 @@
 
           <br/>
 
-          <div layout="row">
+          <div layout="row" layout-xs="column">
             <md-button class="md-raised md-primary" ng-if="application.canApply" ng-click="update(applicationForm)">{{'main.button.save' | translate}}</md-button>
             <md-button class="md-raised" ng-if="application.canApply" ng-click="apply(applicationForm)">{{'stipend.student.apply' | translate}}</md-button>
             <md-button class="md-raised" ng-click="back('#/scholarships/myData/grants', applicationForm)">{{'main.button.back' | translate}}</md-button>

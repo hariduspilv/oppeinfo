@@ -14,17 +14,23 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -108,12 +114,26 @@ import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
+import ee.hitsa.ois.xml.exportTimetable.ClassTeacher;
+import ee.hitsa.ois.xml.exportTimetable.Classes;
+import ee.hitsa.ois.xml.exportTimetable.Document;
+import ee.hitsa.ois.xml.exportTimetable.General;
+import ee.hitsa.ois.xml.exportTimetable.Lesson;
+import ee.hitsa.ois.xml.exportTimetable.LessonClasses;
+import ee.hitsa.ois.xml.exportTimetable.LessonRoom;
+import ee.hitsa.ois.xml.exportTimetable.LessonSubject;
+import ee.hitsa.ois.xml.exportTimetable.LessonTeacher;
+import ee.hitsa.ois.xml.exportTimetable.Lessons;
+import ee.hitsa.ois.xml.exportTimetable.Rooms;
+import ee.hitsa.ois.xml.exportTimetable.Subjects;
+import ee.hitsa.ois.xml.exportTimetable.Teachers;
+import ee.hitsa.ois.xml.exportTimetable.TimePeriod;
+import ee.hitsa.ois.xml.exportTimetable.TimePeriods;
 
 @Transactional
 @Service
 public class TimetableService {
     private static final long LESSON_LENGTH = 45;
-
     @Autowired
     private AutocompleteService autocompleteService;
     @Autowired
@@ -781,10 +801,10 @@ public class TimetableService {
         qb.optionalCriteria("t.is_higher = :isHigher", "isHigher",
                 Boolean.valueOf(TimetableType.isHigher(criteria.getType())));
 
-        String select = "t.id, t.status_code, t.start_date, t.end_date, t.is_higher";
+        String select = "t.id, t.status_code, t.start_date, t.end_date, t.is_higher, t.study_period_id";
         return JpaQueryUtil.pagingResult(qb, select, em, pageable).map(r -> {
             return new TimetableManagementSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsLocalDate(r, 2),
-                    resultAsLocalDate(r, 3), resultAsBoolean(r, 4));
+                    resultAsLocalDate(r, 3), resultAsBoolean(r, 4), resultAsLong(r, 5));
         });
     }
 
@@ -799,6 +819,7 @@ public class TimetableService {
 
         String select = "t.id, t.status_code, t.start_date, t.end_date, t.is_higher";
         List<?> data = qb.select(select, em).getResultList();
+        StudyPeriod sp = em.getReference(StudyPeriod.class, criteria.getStudyPeriod());
 
         List<TimetableManagementSearchDto> wrappedData = StreamUtil.toMappedList(r -> {
             Long id = resultAsLong(r, 0);
@@ -806,10 +827,8 @@ public class TimetableService {
             LocalDate start = resultAsLocalDate(r, 2);
             LocalDate end = resultAsLocalDate(r, 3);
             Boolean isHigher = resultAsBoolean(r, 4);
-            return new TimetableManagementSearchDto(id, status, start, end, isHigher);
+            return new TimetableManagementSearchDto(id, status, start, end, isHigher, EntityUtil.getId(sp));
         }, data);
-
-        StudyPeriod sp = em.getReference(StudyPeriod.class, criteria.getStudyPeriod());
         wrappedData = addMissingDatesToBlocked(sp, wrappedData);
 
         String pageableSort = pageable.getSort().toString();
@@ -1215,7 +1234,7 @@ public class TimetableService {
         qb.requiredCriteria("jc.study_period_id != :studyPeriodId", "studyPeriodId", currentTimetableSpId);
         qb.filter("lp.is_usable = true");
         qb.requiredCriteria("lp.student_group_id in (:studentGroupIds)", "studentGroupIds", studentGroupIds);
-        qb.groupBy("j.id, lp.student_group_id, jct.id");
+        qb.groupBy("j.id, lp.student_group_id, jct.capacity_type_code");
         
         String totalAllocatedSelect = "(select count(*) from timetable_event te "
                 + "join timetable_object too on too.id = te.timetable_object_id and too.journal_id is not null "
@@ -1582,7 +1601,7 @@ public class TimetableService {
         return periodsWithConnectedSubjects;
     }
 
-    private void sendTimetableChangesMessages(TimetableObject object) {
+    public void sendTimetableChangesMessages(TimetableObject object) {
         Timetable timetable = object.getTimetable();
         if(ClassifierUtil.equals(TimetableStatus.TUNNIPLAAN_STAATUS_P, timetable.getStatus())) {
             // send automatic messages about timetable change
@@ -1591,7 +1610,8 @@ public class TimetableService {
             String journalName = null;
             if(Boolean.TRUE.equals(timetable.getIsHigher())) {
                 // send message only to students who have declared this subject
-                students = em.createQuery("select ds.declaration.student from DeclarationSubject ds where ds.declaration.status.code=?1 and ds.subjectStudyPeriod.id = ?2", Student.class)
+                students = em.createQuery("select ds.declaration.student from DeclarationSubject ds where ds.declaration.status.code=?1 "
+                        + "and ds.subjectStudyPeriod.id = ?2 and ds.declaration.student.studentGroup is not null", Student.class)
                     .setParameter(1, DeclarationStatus.OPINGUKAVA_STAATUS_K.name())
                     .setParameter(2, EntityUtil.getId(object.getSubjectStudyPeriod()))
                     .getResultList();
@@ -1720,4 +1740,281 @@ public class TimetableService {
             return capacityType;
         }
     }
+
+	public Document getExportedWeek(LocalDate startDate, LocalDate endDate, StudyPeriod studyPeriod, HoisUserDetails user) {
+		
+		Long schoolId = user.getSchoolId();
+		
+		//Set general
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from study_year sy join school s on s.id = sy.school_id");
+        String select = "s.name_et, sy.start_date, sy.end_date";
+        
+        //Formatters for LocalDate and LocalTime
+        DateTimeFormatter documentDateFormatHois = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        DateTimeFormatter documentDateFormat = DateTimeFormatter.ofPattern("yyyyMMdd");
+        DateTimeFormatter documentTimeFormat = DateTimeFormatter.ofPattern("HHmmss");
+        DateTimeFormatter documentTimeFormatShort = DateTimeFormatter.ofPattern("HHmm");
+        DateTimeFormatter documentDateFormatYear = DateTimeFormatter.ofPattern("yyyy");
+        List<?> data = qb.select(select, em).getResultList();
+        Document document = new Document();
+        document.setGenerationDate(documentDateFormat.format(LocalDate.now()));
+        document.setGenerationTime(documentTimeFormat.format(LocalTime.now()));
+        
+        // Set general data
+        List<General> generals = StreamUtil
+                .toMappedList(r -> new General(resultAsString(r, 0),
+                		documentDateFormat.format(resultAsLocalDate(r, 1)),
+                		documentDateFormat.format(resultAsLocalDate(r, 2)),
+                		"Tunniplaan " + documentDateFormatYear.format(resultAsLocalDate(r, 1)) + "/" + documentDateFormatYear.format(resultAsLocalDate(r, 2)),
+                		resultAsString(r, 0),
+                		documentDateFormatHois.format(startDate) + "-" + documentDateFormatHois.format(endDate),
+                		documentDateFormat.format(startDate),
+                		documentDateFormat.format(endDate)), data);
+        document.setGeneral(generals.get(0));
+        
+        //Set time periods
+        JpaNativeQueryBuilder timePeriodQuery = new JpaNativeQueryBuilder("from lesson_time lt"
+                + " join lesson_time_building_group ltbg on ltbg.id = lt.lesson_time_building_group_id"
+                + " join lesson_time_building ltb on ltb.lesson_time_building_group_id = ltbg.id").sort("ltb.building_id");
+
+        timePeriodQuery.requiredCriteria("lt.school_id = :schoolId", "schoolId", schoolId);
+        timePeriodQuery.requiredCriteria("ltbg.valid_from <= :timetableStartDate", "timetableStartDate", startDate);
+        timePeriodQuery.filter("(ltbg.valid_thru >= :timetableStartDate or ltbg.valid_thru is null)");
+        
+
+        String timePeriodSelect = "distinct lt.id, lt.start_time, lt.end_time, lt.lesson_nr, lt.day_mon, lt.day_tue, lt.day_wed"
+                + " ,lt.day_thu, lt.day_fri, lt.day_sat, lt.day_sun, ltb.building_id";
+        List<?> timePeriodResult= timePeriodQuery.select(timePeriodSelect, em).getResultList();
+
+        Set<TimePeriod> timePeriods = StreamUtil
+              .toMappedSet(r -> new ee.hitsa.ois.xml.exportTimetable.TimePeriod(getLessonNumber(resultAsInteger(r, 3)),
+        			Arrays.asList(resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6), resultAsBoolean(r, 7), resultAsBoolean(r, 8), resultAsBoolean(r, 9), resultAsBoolean(r, 10)),
+              		resultAsInteger(r, 3),
+              		documentTimeFormatShort.format(resultAsLocalTime(r, 1)),
+              		documentTimeFormatShort.format(resultAsLocalTime(r, 2))), timePeriodResult);
+        Set<TimePeriod> extendedList = new HashSet<>();
+        
+        //Set periods by week day
+        for (TimePeriod period : timePeriods) {
+        	Integer weekdayNr = 1;
+        	for (Boolean isWeekDay : period.getDays()) {
+        		if (isWeekDay) {
+        			extendedList.add(new TimePeriod(
+        					"TP_" + weekdayNr + period.getId(),
+            				weekdayNr,
+            				period.getPeriod(),
+            				period.getStarttime(),
+            				period.getEndtime()
+            				));
+        		}
+        		weekdayNr++;
+        	}
+        }
+        
+        extendedList = extendedList.stream().filter(distinctByKey(TimePeriod::getId)).collect(Collectors.toSet());
+        
+        document.setTimeperiods(new TimePeriods(extendedList));
+        
+        //Set rooms
+        Query roomQuery = em.createNativeQuery("select b.code as buildingCode, r.code as roomCode, r.name from room r"
+        		+ " join building b on b.id = r.building_id"
+        		+ " where b.school_id = :schoolId");
+        roomQuery.setParameter("schoolId", schoolId);
+        List<?> dbRooms = roomQuery.getResultList();
+        Set<ee.hitsa.ois.xml.exportTimetable.Room> rooms = StreamUtil
+                .toMappedSet(r -> new ee.hitsa.ois.xml.exportTimetable.Room(("RM_" 
+                + resultAsString(r, 0)
+                + resultAsString(r, 1)).replaceAll(" ", ""),
+                "RM_" + resultAsString(r, 1)), dbRooms);
+        document.setRooms(new Rooms(rooms));
+        
+        //Set journals
+        //Get journals, teachers, student_groups, lessons
+        Integer weekNr = studyPeriod.getWeekNrForDate(startDate);
+        JpaNativeQueryBuilder journalQuery = new JpaNativeQueryBuilder("from journal_omodule_theme jot " +
+        	    "join journal j on jot.journal_id = j.id " +
+        	    "join journal_capacity jc on jc.journal_id = j.id " +
+        	    "join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id " +
+        	    "join lesson_plan lp on lp.id = lpm.lesson_plan_id " +
+        	    "join student_group sg on sg.id = lp.student_group_id " +
+        	    "join curriculum c on c.id = sg.curriculum_id " +
+        	    "left join teacher t on sg.teacher_id = t.id and t.untis_code is not null").sort("j.id, sg.code");
+        journalQuery.requiredCriteria("j.school_id = :schoolId", "schoolId", schoolId);
+        journalQuery.requiredCriteria("jc.week_nr = :weekNr", "weekNr",  weekNr.longValue());
+        journalQuery.requiredCriteria("jc.study_period_id = :studyPeriod", "studyPeriod",  studyPeriod.getId());
+        journalQuery.filter("lp.is_usable = true");
+        journalQuery.filter("j.untis_code is not null");
+        journalQuery.groupBy("j.untis_code, j.name_et, sg.code, j.id, c.name_et, t.untis_code");
+        String journalSelect = "j.untis_code as journalCode," + 
+        		" j.name_et as journalName," + 
+        		" sg.code as StudentGroupCode," + 
+        		" c.name_et as curriculumName," + 
+        		" t.untis_code as teacherCode," + 
+        		" j.id as journalId," + 
+        		" sum(jc.hours) as capacity";
+        
+        List<?> dbJournals= journalQuery.select(journalSelect, em).getResultList();
+        Set<ee.hitsa.ois.xml.exportTimetable.Subject> subjects = StreamUtil
+                .toMappedSet(r -> new ee.hitsa.ois.xml.exportTimetable.Subject("SU_" 
+                + resultAsString(r, 0),
+                resultAsString(r, 1)), dbJournals);
+        subjects = subjects.stream().filter(distinctByKey(ee.hitsa.ois.xml.exportTimetable.Subject::getId)).collect(Collectors.toSet());
+        document.setSubjects(new Subjects(subjects));
+        
+        //Set teacher
+        List<Long> journalIds = StreamUtil.toMappedList(r->resultAsLong(r, 5), dbJournals);
+        if (!journalIds.isEmpty()) {
+        	Query teacherQuery = em.createNativeQuery("select t.untis_code, p.firstname, p.lastname, p.sex_code"
+            		+ " from journal_teacher jt"
+            		+ " join journal j on j.id = jt.journal_id"
+            		+ " join teacher t on jt.teacher_id = t.id"
+            		+ " join person p on p.id = t.person_id"
+            		+ " where jt.journal_id in :journalIds"
+            		+ " and t.untis_code is not null");
+            teacherQuery.setParameter("journalIds", journalIds);
+            List<?> dbTeachers = teacherQuery.getResultList();
+            
+            Set<ee.hitsa.ois.xml.exportTimetable.Teacher> teachers = StreamUtil
+                    .toMappedSet(r -> new ee.hitsa.ois.xml.exportTimetable.Teacher("TR_" 
+                    + resultAsString(r, 0),
+                    resultAsString(r, 1),
+                    resultAsString(r, 2),
+                    resultAsString(r, 3).substring(resultAsString(r, 3).length()-1)), dbTeachers);
+            teachers = teachers.stream().filter(distinctByKey(ee.hitsa.ois.xml.exportTimetable.Teacher::getId)).collect(Collectors.toSet());
+            document.setTeachers(new Teachers(teachers));
+        }
+      
+        //Set classes
+        Set<ee.hitsa.ois.xml.exportTimetable.Class> classes = StreamUtil
+                .toMappedSet(r -> {
+                	if (resultAsString(r, 4) == null) {
+                		return new ee.hitsa.ois.xml.exportTimetable.Class("CL_" + resultAsString(r, 2),resultAsString(r, 3));
+                	} else {
+                		return new ee.hitsa.ois.xml.exportTimetable.Class("CL_" + resultAsString(r, 2),resultAsString(r, 3), new ClassTeacher("TR_" + resultAsString(r, 4)));
+                	}
+                }, dbJournals);
+        classes = classes.stream().filter(distinctByKey(ee.hitsa.ois.xml.exportTimetable.Class::getId)).collect(Collectors.toSet());
+        document.setClasses(new Classes(classes));
+        
+        //Set lessons
+        Set<ee.hitsa.ois.xml.exportTimetable.Lesson> lessons = StreamUtil
+                .toMappedSet(r -> new ee.hitsa.ois.xml.exportTimetable.Lesson("LS_" 
+                                + resultAsLong(r, 5),
+                                resultAsInteger(r, 6),
+                                new LessonSubject("SU_" + resultAsString(r, 0)),
+                                documentDateFormat.format(startDate),
+                                documentDateFormat.format(endDate),
+                                "1111F111111F111111F111111F111111F111111F111111F111111F111111F111111F111111F111111F"
+                                + "111111F111111F111111F111111F111111F111111F111111F111111F111111F111111F111111F"
+                                + "111111F111111F111111F111111F111111F111111F111111F111111F111111F111111F111111F"
+                                + "111111F111111F111111F111111F111111F111111F111111F11111"), dbJournals);
+        
+        if(!journalIds.isEmpty()) {
+        	Query lessonRooms = em.createNativeQuery("select rr.code, jr.journal_id"
+            		+ " from journal_room jr"
+            		+ " join room rr on jr.room_id = rr.id"
+            		+ " where jr.journal_id in :journalIds");
+            lessonRooms.setParameter("journalIds", journalIds);
+            List<?> dbLessonRooms = lessonRooms.getResultList();
+            
+            // Attach rooms to lessons
+            StreamUtil.toMappedList(r -> {
+                    	for (Lesson lesson : lessons) {
+                    		if (Long.parseLong(lesson.id.replace("LS_", "")) == resultAsLong(r, 1) && !"null".equals(resultAsString(r, 0))) {
+                    			if (lesson.getLesson_room() == null) {
+                    				lesson.setLesson_room(new LessonRoom("RM_" + resultAsString(r, 0)));
+                    			} else {
+                    				lesson.getLesson_room().addId("RM_" + resultAsString(r, 0));
+                    			}
+                    		}
+                    	}
+                    	return resultAsString(r, 0);
+                    },dbLessonRooms);
+            
+            Query lessonTeachers = em.createNativeQuery("select tt.untis_code, jt.journal_id"
+            		+ " from journal_teacher jt"
+            		+ " join teacher tt on tt.id = jt.teacher_id"
+            		+ " where jt.journal_id in :journalIds"
+            		+ " and tt.untis_code is not null");
+            lessonTeachers.setParameter("journalIds", journalIds);
+            List<?> dbLessonTeachers = lessonTeachers.getResultList();
+            
+            // Attach teachers to lessons
+            StreamUtil.toMappedList(r -> {
+                    	for (Lesson lesson : lessons) {
+                    		if (Long.parseLong(lesson.id.replace("LS_", "")) == resultAsLong(r, 1) && !"null".equals(resultAsString(r, 0))) {
+                    			if (lesson.getLesson_teacher() == null) {
+                    				lesson.setLesson_teacher(new LessonTeacher("TR_" + resultAsString(r, 0)));
+                    			} else {
+                    				lesson.getLesson_teacher().addId("TR_" + resultAsString(r, 0));
+                    			}
+                    		}
+                    	}
+                    	return resultAsString(r, 0);
+                    },dbLessonTeachers);
+        }
+        
+        // Put student groups from journal query result to lesson
+        
+        StreamUtil.toMappedList(r -> {
+        	for (Lesson lesson : lessons) {
+        		if (Long.parseLong(lesson.id.replace("LS_", "")) == resultAsLong(r, 5)) {
+        			if (lesson.getLesson_classes() == null) {
+        				lesson.setLesson_classes(new LessonClasses("CL_" + resultAsString(r, 2)));
+        			} else {
+        				lesson.getLesson_classes().addId("CL_" + resultAsString(r, 2));
+        			}
+        		}
+        	}
+        	return resultAsString(r, 0);
+        },dbJournals);
+        
+        // Filter duplicate journal identifiers
+         Set<Lesson> filteredLessons = lessons.stream().filter(distinctByKey(p->p.id)).collect(Collectors.toSet());
+        // Extend lessons, until this moment, teachers are kept as list of strings on one line divided by space
+        Set<Lesson> extendedLessons = extendLessonsByTeacher(filteredLessons);
+        
+        document.setLessons(new Lessons(extendedLessons));
+		return document;
+	}
+	private String getLessonNumber(Integer lessonNumber) {
+		if (lessonNumber == null) {
+			return "00";
+		}
+		int lessonNumberLength = lessonNumber.toString().length();
+		if (lessonNumberLength == 1) {
+			return "0" + lessonNumber;
+		} else {
+			return lessonNumber.toString();
+		}
+	}
+	
+	public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+	    Set<Object> seen = ConcurrentHashMap.newKeySet();
+	    return t -> seen.add(keyExtractor.apply(t));
+	}
+	
+	private Set<Lesson> extendLessonsByTeacher(Set<Lesson> lessons) {
+		Set<Lesson> extendedLessons = new HashSet<>();
+        
+        for (Lesson lesson : lessons) {
+        	if (lesson.getLesson_teacher() == null) {
+        		lesson.setId(lesson.id + "00");
+        		extendedLessons.add(lesson);
+        		continue;
+        	}
+        	String[] teachers = lesson.getLesson_teacher().getId().split(" ");
+        	if (teachers.length == 0) {
+        		lesson.setId(lesson.id + "00");
+        	} else {
+        		for (int index = 0; index < teachers.length; index++) {
+        			Lesson newLesson = new Lesson(lesson.id + getLessonNumber(index), lesson.getPeriods(), lesson.getLesson_subject(), lesson.getLesson_room(),
+        					lesson.getLesson_classes(), lesson.getEffectivebegindate(), lesson.getEffectiveenddate(), lesson.getOccurence());
+        			newLesson.setLesson_teacher(new LessonTeacher(teachers[index]));
+        			extendedLessons.add(newLesson);
+        		}
+        	}
+        }
+        return extendedLessons;
+	}
 }

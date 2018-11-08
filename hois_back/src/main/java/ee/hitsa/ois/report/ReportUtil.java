@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -74,11 +75,27 @@ public abstract class ReportUtil {
                 .map(g -> classifierValue(g, "KUTSEHINDAMINE", classifierCache)).collect(Collectors.joining(" ")) : "";
         if (Boolean.TRUE.equals(absencesPerJournals)) {
             result += " ";
-            result += journalResult.getAbsenceH().intValue() != 0 ? " H:" + journalResult.getAbsenceH() : "";
-            result += journalResult.getAbsenceP().intValue() != 0 ? " P:" + journalResult.getAbsenceP() : "";
-            result += journalResult.getAbsenceV().intValue() != 0 ? " V:" + journalResult.getAbsenceV() : "";
+            result += absencePerJournal(journalResult, Absence.PUUDUMINE_H) != 0
+                    ? " H:" + absencePerJournal(journalResult, Absence.PUUDUMINE_H)
+                    : "";
+            result += absencePerJournal(journalResult, Absence.PUUDUMINE_P) != 0
+                    ? " P:" + absencePerJournal(journalResult, Absence.PUUDUMINE_P)
+                    : "";
+            result += absencePerJournal(journalResult, Absence.PUUDUMINE_V) != 0
+                    ? " V:" + absencePerJournal(journalResult, Absence.PUUDUMINE_V)
+                    : "";
+            result += absencePerJournal(journalResult, Absence.PUUDUMINE_PR) != 0
+                    ? " PR:" + absencePerJournal(journalResult, Absence.PUUDUMINE_PR)
+                    : "";
         }
         return result;
+    }
+    
+    private static int absencePerJournal(StudentJournalResultDto journalResult, Absence absence) {
+        if (journalResult.getAbsences() != null && journalResult.getAbsences().get(absence.name()) != null) {
+            return journalResult.getAbsences().get(absence.name()).intValue();
+        }
+        return 0;
     }
     
     public static String classifierName(String code, String mainClassCode, ClassifierCache classifierCache, Language lang) {

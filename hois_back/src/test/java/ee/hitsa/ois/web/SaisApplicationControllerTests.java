@@ -87,9 +87,9 @@ public class SaisApplicationControllerTests {
                 return null;
             });
         }
-        SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
-        if (saisAdmission != null) {
-            saisAdmissionRepository.delete(saisAdmission);
+        List<SaisAdmission> saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
+        if (!saisAdmission.isEmpty()) {
+            saisAdmission.forEach(admission->saisAdmissionRepository.delete(admission));
         }
         testConfigurationService.setSessionCookie(null);
     }
@@ -129,8 +129,11 @@ public class SaisApplicationControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
 
-        SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
-        Long saisApplicationId = saisAdmission.getApplications().stream().findFirst().get().getId();
+        List<SaisAdmission> saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
+        Long saisApplicationId = null;
+        if (!saisAdmission.isEmpty()) {
+        	saisApplicationId = saisAdmission.get(0).getApplications().stream().findFirst().get().getId();
+        }
 
         //read
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(saisApplicationId.toString());
@@ -348,8 +351,11 @@ public class SaisApplicationControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
 
-        SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
-        SaisApplication saisApplication = saisAdmission.getApplications().stream().findFirst().get();
+        List<SaisAdmission> saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
+        SaisApplication saisApplication = null;
+        if (!saisAdmission.isEmpty()) {
+        	saisApplication = saisAdmission.get(0).getApplications().stream().findFirst().get();
+        }
 
         //get
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(saisApplication.getId().toString());
@@ -367,9 +373,11 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
-
+        
         saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
-        saisApplication = saisAdmission.getApplications().stream().findFirst().get();
+        if (!saisAdmission.isEmpty()) {
+        	saisApplication = saisAdmission.get(0).getApplications().stream().findFirst().get();
+        }
 
         //get
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(saisApplication.getId().toString());

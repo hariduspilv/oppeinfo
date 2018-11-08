@@ -11,6 +11,15 @@ public class SaisAdmissionSearchCommand {
     private String studyForm;
     @ClassifierRestriction(MainClassCode.FINALLIKAS)
     private String fin;
+    private Boolean is_archived;
+    
+    public void setArchived(Boolean archived) {
+    	this.is_archived = archived;
+    }
+    
+    public Boolean getArchived() {
+    	return is_archived;
+    }
 
     public String getCode() {
         return code;

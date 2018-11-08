@@ -23,7 +23,7 @@
           <br>
         </div>
 
-        <div ng-if="!practiceJournal.subject" layout="row" flex>
+        <div ng-if="!practiceJournal.isHigher" layout="row" flex>
           <md-input-container flex>
             <label>{{'practiceJournal.module' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.module)"></hois-value>
@@ -33,7 +33,7 @@
             <hois-value value="currentLanguageNameField(practiceJournal.theme)"></hois-value>
           </md-input-container>
           <md-input-container flex>
-            <label>{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
+            <label>{{'practiceJournal.creditsEKAP' | translate}}</label>
             <hois-value value="practiceJournal.credits"></hois-value>
           </md-input-container>
           <md-input-container flex>
@@ -42,13 +42,13 @@
           </md-input-container>
         </div>
 
-        <div ng-if="practiceJournal.subject" layout="row" flex>
+        <div ng-if="practiceJournal.isHigher" layout="row" flex>
           <md-input-container flex="50">
             <label>{{'practiceJournal.subject' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.subject)"></hois-value>
           </md-input-container>
           <md-input-container flex>
-            <label>{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
+            <label>{{'practiceJournal.creditsEAP' | translate}}</label>
             <hois-value value="practiceJournal.credits"></hois-value>
           </md-input-container>
           <md-input-container flex>

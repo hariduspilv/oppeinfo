@@ -47,6 +47,7 @@
             <th md-column>{{'subjectStudyPeriod.teachersFullname' | translate}}</th>
             <th md-column md-order-by="sp.{{currentLanguageNameField()}}">{{'subjectStudyPeriod.studyPeriod' | translate}}</th>
             <th md-column md-order-by="declared_students">{{'subjectStudyPeriod.declaredStudentsNumber' | translate}}</th>
+            <th md-column ng-if="auth.isTeacher()">{{'subjectProgram.label' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
@@ -54,14 +55,25 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell><a href="#/subjectStudyPeriod/{{::row.id}}/view">{{currentLanguageNameField(row.subject)}}</a></td>
             <td md-cell>
-                <table>
-                    <tr ng-repeat="teacher in row.teachers | orderBy">
-                        <td><a href="#/subjectStudyPeriod/{{::row.id}}/view">{{teacher}}</a></td>
-                    </tr>
-                </table>
+              <table>
+                <tr ng-repeat="teacher in row.teachers | orderBy">
+                  <td><a href="#/subjectStudyPeriod/{{::row.id}}/view">{{teacher}}</a></td>
+                </tr>
+              </table>
             </td>
             <td md-cell>{{currentLanguageNameField(row.studyPeriod)}}</td>
             <td md-cell><a href="#/subjectStudyPeriods/{{::row.id}}/midtermTasks/studentResults">{{::row.studentsNumber}}</a></td>
+            <td md-cell ng-if="auth.isTeacher()">
+              <p class="nomargin">
+                <hois-classifier-value ng-model="row.subjectProgramStatus" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value>
+              </p>
+              <md-button md-no-ink class="md-primary change-button" ng-if="row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_L'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+               ng-href="#/subjectStudyPeriods/{{::row.subject.id}}/{{::row.id}}/subjectProgram/new">{{'main.button.create' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-if="row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_I'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+                 ng-href="#/subjectStudyPeriods/{{::row.subject.id}}/{{::row.id}}/subjectProgram/{{::row.subjectProgramId}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-if="row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_V' || row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_K'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
+                ng-href="#/subjectStudyPeriods/{{::row.subject.id}}/{{::row.id}}/subjectProgram/{{::row.subjectProgramId}}/view">{{'main.button.view' | translate}}</md-button>
+            </td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-if="isAuthorized(['ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA', 'ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK'])" 
                 ng-href="#/subjectStudyPeriod/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>

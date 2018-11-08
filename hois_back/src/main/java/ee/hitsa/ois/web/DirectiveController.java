@@ -35,6 +35,7 @@ import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveConfirmForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
@@ -112,10 +113,11 @@ public class DirectiveController {
 
     // TODO for testing only, remove later
     @PutMapping("/confirm/{id:\\d+}")
-    public DirectiveDto confirm(HoisUserDetails user, @WithEntity Directive directive) {
-        UserUtil.assertIsSchoolAdmin(user, directive.getSchool(), Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_KASKKIRI);
+    public DirectiveDto confirm(HoisUserDetails user, @WithEntity Directive directive, @RequestBody DirectiveConfirmForm form) {
+        UserUtil.assertIsSchoolAdmin(user, directive.getSchool(), Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_KASKKIRI_EKISETA);
         // start requests after save has been successful
-        jobService.directiveConfirmed(EntityUtil.getId(directiveConfirmService.confirm(user.getUsername(), directive, LocalDate.now())));
+        jobService.directiveConfirmed(EntityUtil.getId(
+                directiveConfirmService.confirmedByUser(user.getUsername(), directive, LocalDate.now(), form)));
         return get(user, directive);
     }
 

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 import java.util.List;
+import java.util.Map;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -10,9 +11,7 @@ public class StudentJournalDto {
     private Long studyYearId;
     private String yearCode;
     private Boolean moduleOutcomesAsEntries;
-    private Long absenceH;
-    private Long absenceP;
-    private Long absencePV;
+    private Map<String, Long> absences;
     private String teachers;
     private AutocompleteResult modules;
     private List<StudentJournalEntryDto> journalEntries;
@@ -57,30 +56,14 @@ public class StudentJournalDto {
         this.moduleOutcomesAsEntries = moduleOutcomesAsEntries;
     }
     
-    public Long getAbsenceH() {
-        return absenceH;
+    public Map<String, Long> getAbsences() {
+        return absences;
     }
-    
-    public void setAbsenceH(Long absenceH) {
-        this.absenceH = absenceH;
+
+    public void setAbsences(Map<String, Long> absences) {
+        this.absences = absences;
     }
-    
-    public Long getAbsenceP() {
-        return absenceP;
-    }
-    
-    public void setAbsenceP(Long absenceP) {
-        this.absenceP = absenceP;
-    }
-    
-    public Long getAbsencePV() {
-        return absencePV;
-    }
-    
-    public void setAbsencePV(Long absencePV) {
-        this.absencePV = absencePV;
-    }
-    
+
     public String getTeachers() {
         return teachers;
     }

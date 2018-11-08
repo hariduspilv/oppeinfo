@@ -1,0 +1,118 @@
+<div aria-label="vocational curriculum implementation plan module theme add dialog" flex>
+    <form name="themeForm" ng-cloak>
+      <div class="ois-form-layout-padding nomargin" layout="column" ng-cloak>
+        <md-input-container>
+          <label>{{'theme.name' | translate}}</label>
+          <input ng-model="theme.nameEt" type="text" disabled>
+        </md-input-container>
+
+        <div layout="row">
+          <md-input-container>
+            <label>{{'theme.capacity' | translate}} ({{'basemodule.ekap' | translate}})</label>
+            <input ng-model="theme.credits" name="credits" type="number" disabled>
+          </md-input-container>
+          <md-input-container>
+            <label>{{'theme.unit' | translate}} ({{'main.hour' | translate}})</label>
+            <input ng-model="theme.hours" name="hours" type="number" disabled>
+          </md-input-container>
+        </div>
+        <div flex>
+          <fieldset tabindex="1">
+            <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'theme.capacityDistribution' | translate}}</legend>
+            <div layout="row" style="padding-bottom:1em" flex class="secondary-table-header">
+              <div flex="30">&nbsp;</div>
+              <div flex="30">{{'basemodule.capacity' | translate}}</div>
+              <div flex="40" layout="row">{{'basemodule.contactStudy' | translate}}</div>
+            </div>
+            <div ng-repeat="item in theme.capacities | orderBy: 'nameEt' track by item.capacityType" layout="row" class="secondary-table-row">
+              <div flex="30" class="occupation-module-capacity">{{currentLanguageNameField(item)}}</div>
+              <div flex="30">
+                <md-input-container flex>
+                  <input ng-model="item.hours" type="number" min="0" max="9999" pattern="^\d+$" aria-label="capacity hours" class="small-input" disabled>
+                </md-input-container>
+              </div>
+              <div flex="40" layout="row">
+                <md-checkbox ng-model="item.contact" aria-label="capacity contact"
+                class="occupation-module-capacity-contact" disabled></md-checkbox>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+        <div>&nbsp;</div>
+
+        <md-input-container flex>
+          <label>{{'basemodule.subthemes' | translate}}</label>
+          <textarea ng-model="theme.subthemes" max-rows="10" disabled></textarea>
+        </md-input-container>
+
+        <md-input-container flex>
+          <label>{{'theme.connectionToStudyOutcome' | translate}}</label>
+          <md-select ng-model="theme.outcomes" multiple disabled md-option="out as (currentLanguageNameField(out.outcomeEt)) for out in theme.outcomes" multiple ng-model-options="{trackBy: '$value.id'}">
+            <md-option ng-repeat="outcome in theme.baseModule.outcomes" ng-value="outcome" aria-label="{{currentLanguage() === 'en' ? outcome.outcomeEn : outcome.outcomeEt}}">{{currentLanguage() === 'en' ? outcome.outcomeEn : outcome.outcomeEt}}</md-option>
+          </md-select>
+        </md-input-container>
+
+        <div>&nbsp;</div>
+        <div flex>
+          <fieldset tabindex="2">
+            <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'basemodule.theme.gradeFormation' | translate}}</legend>
+            <div layout="column">
+              <div flex layout="row">
+                <span flex="30" class="common-label">{{'theme.assessmentType' | translate}}</span>
+
+                  <md-radio-group ng-model="theme.assessment" layout="row" disabled>
+                    <md-radio-button ng-repeat="option in assessments | orderBy: 'nameEt' track by option.code" ng-value="option.code"
+                    aria-label="{{ currentLanguageNameField(option) }}">
+                      {{ currentLanguageNameField(option) }}
+                    </md-radio-button>
+                    <md-radio-button ng-value="null" aria-label="{{'basemodule.theme.noAssessment' | translate}}">
+                        {{'basemodule.theme.noAssessment' | translate}}
+                    </md-radio-button>
+                  </md-radio-group>
+
+              </div>
+              <div>&nbsp;</div>
+
+              <md-input-container flex ng-show="theme.assessment">
+                <label>{{'basemodule.totalGradeDescription' | translate}}</label>
+                <textarea ng-model="theme.totalGradeDescription" max-rows="10" disabled></textarea>
+              </md-input-container>
+              <div ng-show="theme.assessment === 'KUTSEHINDAMISVIIS_E'" layout="column" flex>
+                <md-input-container flex>
+                  <label>{{'basemodule.grade3Description' | translate}}</label>
+                  <textarea ng-model="theme.grade3Description" max-rows="10" disabled
+                    ></textarea>
+                </md-input-container>
+                <md-input-container flex>
+                  <label>{{'basemodule.grade4Description' | translate}}</label>
+                  <textarea ng-model="theme.grade4Description" max-rows="10" disabled
+                    ></textarea>
+                </md-input-container>
+                <md-input-container flex>
+                  <label>{{'basemodule.grade5Description' | translate}}</label>
+                  <textarea ng-model="theme.grade5Description" max-rows="10" disabled
+                    ></textarea>
+                </md-input-container>
+              </div>
+              <div ng-show="theme.assessment === 'KUTSEHINDAMISVIIS_M'" layout="column" flex>
+                <md-input-container flex>
+                  <label>{{'basemodule.gradeADescription' | translate}}</label>
+                  <textarea ng-model="theme.passDescription" max-rows="2" disabled
+                    ></textarea>
+                </md-input-container>
+              </div>
+          </div>
+
+        </fieldset>
+      </div>
+
+      <div>&nbsp;</div>
+
+    </div>
+    <div style="padding-left: 14px">
+      <md-button class="md-raised md-primary" ng-click="edit()">{{"main.button.edit" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="back()">{{"main.button.back" | translate}}</md-button>
+    </div>
+  </form>
+</div>
+  

@@ -59,11 +59,17 @@
               <hois-value value="saisAdmission.periodEnd | hoisDate"></hois-value>
             </md-input-container>
         </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container class="label-only" flex="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="saisAdmission.archived" disabled>{{'reception.archive.archived' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
         <br/>
 
 
         <div layout="row">
           <md-button ng-href="#/reception/saisAdmission/search" class="md-raised">{{'main.button.back' | translate}}</md-button>
+          <md-button ng-click="revertArchived()" ng-if="auth.isAdmin() && saisAdmission.archived"  class="md-raised">{{'reception.archive.revertArchived' | translate}}</md-button>
         </div>
       </div>
     </form>

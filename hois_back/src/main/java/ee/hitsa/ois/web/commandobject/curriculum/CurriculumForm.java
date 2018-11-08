@@ -47,8 +47,10 @@ public class CurriculumForm extends VersionedCommand {
     private String code;
     @Size(max = 10)
     private String merCode; // XXX for EHIS this should be number (see EhisStudentService)
+    @NotNull(groups = {Confirmed.class})
     private LocalDate approval;
     @Size(max = 50)
+    @NotNull(groups = {Confirmed.class})
     private String approvalDokNr;
     @Size(max = 20000)
     @NotNull(groups = {Confirmed.class})
@@ -169,9 +171,11 @@ public class CurriculumForm extends VersionedCommand {
     private Set<String> studyLanguages;
     @NotEmpty(groups = {ConfirmedVocational.class})
     private Set<String> studyForms;
+    @NotEmpty(groups = {Confirmed.class})
     private Set<CurriculumAddressForm> addresses;
     @NotEmpty(groups = {Confirmed.class})
     private Set<Long> schoolDepartments;
+    @NotEmpty(groups = {Confirmed.class})
     private Set<CurriculumFileUpdateDto> files;
     @Valid
     private Set<CurriculumGradeDto> grades;

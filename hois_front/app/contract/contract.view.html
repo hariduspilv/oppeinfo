@@ -131,6 +131,13 @@
         </md-input-container>
       </div>
 
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label>{{'contract.markPracticeAsExcusedInDiaries' | translate}}</label>
+          <hois-value value="contract.markPracticeAsExcused ? 'main.yes' : 'main.no' | translate"></hois-value>
+        </md-input-container>
+      </div>
+
       <div layout="row">
         <md-button class="md-raised md-default" ng-click="back('#/contracts/')">{{'main.button.back' | translate}}</md-button>
         <md-button ng-if="(auth.isAdmin() && contract.status === 'LEPING_STAATUS_Y' || contract.status === 'LEPING_STAATUS_S')

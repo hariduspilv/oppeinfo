@@ -18,7 +18,7 @@ public class ApplicationFileDto extends InsertedChangedVersionDto {
 
     public static ApplicationFileDto of(ApplicationFile applicationFile) {
         ApplicationFileDto dto = EntityUtil.bindToDto(applicationFile, new ApplicationFileDto(), "oisFile");
-        dto.setOisFile(EntityUtil.bindToDto(applicationFile.getOisFile(), new OisFileViewDto()));
+        dto.setOisFile(OisFileViewDto.of(applicationFile.getOisFile()));
         return dto;
     }
 

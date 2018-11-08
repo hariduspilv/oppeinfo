@@ -122,7 +122,7 @@
                         {{currentLanguage() === 'en' ? outcome.curriculumModuleOutcomes.outcomeEn : outcome.curriculumModuleOutcomes.outcomeEt}}
                       </md-input-container>
                     </td>
-                    <td md-cell>
+                    <td md-cell style="width: 40%; min-width: 400px;">
                       <md-input-container style="width: 100%">
                         <textarea ng-model="subjectOrModule.skills" required md-maxlength="4000" max-rows="3" aria-label="{{'apel.informalLearnings.acquiredSkills' | translate}}"></textarea>
                       </md-input-container>
@@ -136,6 +136,7 @@
             </table>
           </md-table-container>
         </fieldset>
+      </div>
     </md-dialog-content>
 
     <md-dialog-actions layout="row" layout-align="start center">
@@ -143,6 +144,5 @@
       <md-button ng-if="record.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
       <md-button ng-click="cancel()" class="md-raised">{{'main.button.close' | translate}}</md-button>
     </md-dialog-actions>
-    </div>
   </form>
 </md-dialog>

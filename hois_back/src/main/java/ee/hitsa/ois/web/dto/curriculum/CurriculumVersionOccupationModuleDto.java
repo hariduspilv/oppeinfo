@@ -12,17 +12,20 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
 
     @NotNull
     @Min(1)
     private Long curriculumModule;
+    private Long baseModule;
     private Long curriculumVersion;
 
     private Long id;
@@ -54,6 +57,9 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     @NotBlank
     @Size(max = 100)
     private String supervisor;
+    private AutocompleteResult teacher;
+    
+    private Boolean copy = Boolean.FALSE;
 
     @Valid
     private Set<CurriculumVersionOccupationModuleCapacityDto> capacities;
@@ -84,12 +90,24 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     public static CurriculumVersionOccupationModuleDto of(CurriculumVersionOccupationModule module) {
         CurriculumVersionOccupationModuleDto dto = EntityUtil.bindToDto(module, new CurriculumVersionOccupationModuleDto(),
                 "curriculumModule", "capacities", "themes", "yearCapacities");
-
+        
+        if (module.getBaseModule() != null) {
+            dto.setBaseModule(module.getBaseModule().getId());
+        }
         dto.setCurriculumModule(EntityUtil.getId(module.getCurriculumModule()));
         dto.setCapacities(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleCapacityDto::of, module.getCapacities()));
         dto.setThemes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleThemeDto::of, module.getThemes()));
         dto.setYearCapacities(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleYearCapacityDto::of, module.getYearCapacities()));
  
+        return dto;
+    }
+    
+    public static CurriculumVersionOccupationModuleDto ofMin(CurriculumVersionOccupationModule module) {
+        CurriculumVersionOccupationModuleDto dto = new CurriculumVersionOccupationModuleDto();
+        dto.setId(module.getId());
+        dto.setNameEt(CurriculumUtil.moduleName(module.getCurriculumModule().getNameEt(), module.getCurriculumModule().getModule().getNameEt(), module.getCurriculumVersion().getCode()));
+        dto.setNameEn(CurriculumUtil.moduleName(module.getCurriculumModule().getNameEn(), module.getCurriculumModule().getModule().getNameEn(), module.getCurriculumVersion().getCode()));
+        dto.setThemes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleThemeDto::of, module.getThemes()));
         return dto;
     }
 
@@ -221,6 +239,22 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
         this.supervisor = supervisor;
     }
 
+    public AutocompleteResult getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(AutocompleteResult teacher) {
+        this.teacher = teacher;
+    }
+
+    public Boolean getCopy() {
+        return copy;
+    }
+
+    public void setCopy(Boolean copy) {
+        this.copy = copy;
+    }
+
     public Long getCurriculumModule() {
         return curriculumModule;
     }
@@ -260,4 +294,13 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     public void setCurriculumVersion(Long curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
     }
+
+    public Long getBaseModule() {
+        return baseModule;
+    }
+
+    public void setBaseModule(Long baseModule) {
+        this.baseModule = baseModule;
+    }
+    
 }

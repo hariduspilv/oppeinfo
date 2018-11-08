@@ -82,9 +82,9 @@
         </div>
         <div layout="row" flex>
           <md-input-container flex="45">
-            <label>{{'curriculum.areaOfStudy' | translate}}</label>
-            <hois-classifier-select ng-model="curriculum.areaOfStudy" main-classifier-code="ISCED_VALD" model-value-attr="code" criteria="{higher: true}"
-              disabled></hois-classifier-select>
+            <label>{{'curriculum.group' | translate}}</label>
+            <hois-classifier-select ng-model="curriculum.iscedClass" model-value-attr="code" main-classifier-code="ISCED_RYHM" criteria="{higher: true}" 
+              watch-model="curriculum.group" filter-values search-from-connect connect-main-classifier-code="OPPEKAVAGRUPP" disabled></hois-classifier-select>
           </md-input-container>
           <md-input-container flex="50" flex-offset="5">
             <label>{{'curriculum.languageDescription' | translate}}</label>
@@ -93,10 +93,9 @@
         </div>
         <div layout="row" flex>
           <md-input-container flex="45">
-            <label>{{'curriculum.fieldOfStudy' | translate}}</label>
-            <hois-classifier-select ng-model="curriculum.fieldOfStudy" main-classifier-code="ISCED_SUUN" watch-model="curriculum.areaOfStudy"
-              filter-values search-from-connect connect-main-classifier-code="ISCED_VALD" criteria="{higher: true}" disabled
-              model-value-attr="code"></hois-classifier-select>
+              <label>{{'curriculum.areaOfStudy' | translate}}</label>
+              <hois-classifier-select ng-model="curriculum.areaOfStudy" main-classifier-code="ISCED_VALD" watch-model="curriculum.fieldOfStudy" 
+							model-value-attr="code" select-first-value connect-main-classifier-code="ISCED_VALD" criteria="{higher: true}" disabled></hois-classifier-select>
           </md-input-container>
 
           <!-- hois-school-department-select was not used here as it set form $dirty after page load.
@@ -106,6 +105,13 @@
               {{'curriculum.structuralUnitResponsible' | translate}}
             </label>
             <hois-select ng-model="curriculum.schoolDepartments" multiple values="schoolDepartments" disabled></hois-select>
+          </md-input-container>
+        </div>
+        <div layout="row" flex>
+          <md-input-container flex="45">
+            <label>{{'curriculum.fieldOfStudy' | translate}}</label>
+            <hois-classifier-select ng-model="curriculum.fieldOfStudy" main-classifier-code="ISCED_SUUN" watch-model="curriculum.iscedClass"
+							filter-values  select-first-value connect-main-classifier-code="ISCED_SUUN" criteria="{higher: true}" disabled model-value-attr="code"></hois-classifier-select>
           </md-input-container>
         </div>
       </fieldset>
@@ -171,7 +177,7 @@
     <div>&nbsp;</div>
     <fieldset tabindex="9">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.approvalInfo' | translate}}</legend>
-      <div layout="row" flex="100">
+      <div layout="row" flex="100" layout-xs="column">
         <md-input-container flex="30" flex-sm="100" flex-xs="100">
           <label>{{'curriculum.approvalDocumentNr' | translate}}</label>
           <input ng-model="curriculum.approvalDokNr" type="text" readonly>
@@ -185,7 +191,7 @@
           <md-datepicker ng-model="curriculum.merRegDate" md-open-on-focus disabled></md-datepicker>
         </md-input-container>
       </div>
-      <div layout="row" flex="100">
+      <div layout="row" flex="100" layout-xs="column">
         <md-input-container flex="30" flex-sm="100" flex-xs="100">
           <label>{{'curriculum.accreditationDesision' | translate}}</label>
           <input ng-model="curriculum.accreditationResolution" type="text" readonly>
@@ -195,7 +201,7 @@
           <md-datepicker ng-model="curriculum.accreditationDate" md-open-on-focus disabled></md-datepicker>
         </md-input-container>
       </div>
-      <div layout="row" flex="100">
+      <div layout="row" flex="100" layout-xs="column">
         <md-input-container flex="30" flex-sm="100" flex-xs="100">
           <label>{{'curriculum.accreditationDesisionNumber' | translate}}</label>
           <input ng-model="curriculum.accreditationNr" type="text" readonly>
@@ -257,7 +263,7 @@
     <div>&nbsp;</div>
     <fieldset tabindex="11">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.statuses' | translate}}</legend>
-      <div layout="row" flex="100">
+      <div layout="row" flex="100" style="overflow:auto">
         <md-input-container flex="30" flex-sm="100" flex-xs="100">
           <label>{{'main.validFrom' | translate}}</label>
           <md-datepicker ng-model="curriculum.validFrom" md-open-on-focus disabled></md-datepicker>
@@ -302,11 +308,11 @@
           </div>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column" ng-show="curriculum.joint">
-          <md-input-container flex="30" ng-if="curriculum.joint">
+          <md-input-container flex="30" flex-xs="100" ng-if="curriculum.joint">
             <label>{{'curriculum.jointMentor' | translate}}</label>
             <hois-classifier-select ng-model="curriculum.jointMentor" main-classifier-code="EHIS_KOOL" model-value-attr="code" disabled></hois-classifier-select>
           </md-input-container>
-          <md-input-container flex="66" flex-offset="4">
+          <md-input-container flex="66" flex-xs="100" flex-offset-xs="0" flex-offset="4">
             <label>{{'curriculum.jointResponsible' | translate}}</label>
             <input ng-model="curriculum.supervisor" type="text" readonly>
           </md-input-container>
@@ -360,6 +366,7 @@
 
     <fieldset tabindex="11">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
+      <md-table-container>
       <table md-table class="secondary-table">
         <thead md-head>
           <tr md-row>
@@ -395,6 +402,7 @@
           </tr>
         </tbody>
       </table>
+    </md-table-container>
     </fieldset>
 
     <div>&nbsp;</div>
@@ -402,6 +410,7 @@
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">
         <span>{{'curriculum.versions' | translate}}</span>
       </legend>
+      <md-table-container>
       <table md-table class="secondary-table">
         <thead md-head>
           <tr md-row>
@@ -424,23 +433,24 @@
           </tr>
         </tbody>
       </table>
+    </md-table-container>
     </fieldset>
     <hois-created-modified object="curriculum" class="top-margin"></hois-created-modified>
-    <div layout="row">
+    <div layout="row" layout-xs="column">
       <div ng-show="curriculum.status === STATUS.ENTERING">
         <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
       </div>
-      <div ng-show="curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis">
+      <div ng-show="curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis" layout-xs="column">
         <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="sendToEhis(true)" ng-if="curriculum.canConfirm">{{'main.button.sendToEhisTest' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="sendToEhis(false)" ng-if="curriculum.canConfirm">{{'main.button.sendToEhis' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="sendToEhis(true)" ng-if="curriculum.canConfirm">{{'curriculum.button.sendToEhisTest' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="sendToEhis(false)" ng-if="curriculum.canConfirm">{{'curriculum.button.sendToEhis' | translate}}</md-button>
         <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
       </div>
-      <div ng-show="curriculum.status === STATUS.PROCEEDING && formState.sentToEhis">
-        <md-button class="md-raised md-default" ng-click="updateFromEhis(true)" ng-if="curriculum.canConfirm">{{'main.button.updateFromEhisTest' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="updateFromEhis(false)" ng-if="curriculum.canConfirm">{{'main.button.updateFromEhis' | translate}}</md-button>
+      <div ng-show="curriculum.status === STATUS.PROCEEDING && formState.sentToEhis" layout-xs="column">
+        <md-button class="md-raised md-default" ng-click="updateFromEhis(true)" ng-if="curriculum.canConfirm">{{'curriculum.button.updateFromEhisTest' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="updateFromEhis(false)" ng-if="curriculum.canConfirm">{{'curriculum.button.updateFromEhis' | translate}}</md-button>
       </div>
-      <div ng-show="curriculum.status === STATUS.VERIFIED">
+      <div ng-show="curriculum.status === STATUS.VERIFIED" layout-xs="column">
         <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
         <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
       </div>

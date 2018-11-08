@@ -153,7 +153,7 @@ public class StudyMaterialService {
             dto.setIsVisibleToStudents(resultAsBoolean(r, 4));
             
             OisFileViewDto oisFileDto = new OisFileViewDto();
-            oisFileDto.setId(resultAsLong(r, 5));
+            oisFileDto.setLongId(resultAsLong(r, 5));
             oisFileDto.setFname(resultAsString(r, 6));
             oisFileDto.setFtype(resultAsString(r, 7));
             dto.setOisFile(oisFileDto);

@@ -1,0 +1,122 @@
+<div class="ois-form-layout-padding">
+    <div flex>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form ng-submit="loadData()" class="nomargin" layout="column">
+            <div layout-gt-sm="row" layout="column" layout-align-gt-sm="start end">
+                <md-input-container flex-gt-sm="45" flex="100">
+                    <label class="textInput">{{'basemodule.search.name' | translate}}</label>
+                    <input ng-model="criteria.name" type="text" autofocus>
+                </md-input-container>
+                <div layout="column" flex="50" flex-offset-gt-sm="5">
+                  <label class="common-label">{{'main.validityPeriod' | translate}}</label>
+                  <div layout="row">
+                      <md-input-container>
+                          <label>{{'main.from' | translate}}</label>
+                          <md-datepicker ng-model="criteria.validFrom" md-max-date="criteria.validThru"></md-datepicker>
+                      </md-input-container>
+                      <md-input-container>
+                          <label>{{'main.thru' | translate}}</label>
+                          <md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom"></md-datepicker>
+                      </md-input-container>
+                   </div>
+                </div>
+            </div>
+            <div layout="row" layout-sm="column" layout-xs="column">
+                <md-autocomplete
+                    name="curriculum"
+                    md-selected-item="criteria.curriculum"
+                    md-search-text="queryC"
+                    md-items="curriculum in searchCurriculums(queryC)"
+                    md-item-text="currentLanguageNameField(curriculum)"
+                    md-min-length="3"
+                    md-floating-label="{{'basemodule.search.curriculum' | translate}}"
+                    md-no-cache
+                    class="small-margin"
+                    flex>
+                    <md-item-template>
+                        <span md-highlight-text="queryC" md-highlight-flags="^i">{{currentLanguageNameField(curriculum)}}</span>
+                    </md-item-template>
+                    <md-not-found>
+                        {{'main.messages.error.notFound' | translate}}
+                    </md-not-found>
+                </md-autocomplete>
+                <md-autocomplete
+                    name="curriculumVersion"
+                    md-selected-item="criteria.curriculumVersion"
+                    md-search-text="queryCV"
+                    md-items="curriculumVersion in searchCurriculumVersions(queryCV)"
+                    md-item-text="currentLanguageNameField(curriculumVersion)"
+                    md-min-length="3"
+                    md-floating-label="{{'basemodule.search.curriculumVersion' | translate}}"
+                    md-no-cache
+                    class="small-margin"
+                    flex="50" flex-sm="100" flex-xs="100" flex-offset="0" flex-offset-gt-sm="5">
+                    <md-item-template>
+                        <span md-highlight-text="queryCV" md-highlight-flags="^i">{{currentLanguageNameField(curriculumVersion)}}</span>
+                    </md-item-template>
+                    <md-not-found>
+                        {{'main.messages.error.notFound' | translate}}
+                    </md-not-found>
+                </md-autocomplete>
+            </div>
+            <div layout="row">
+                <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+                <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+                <md-button ng-href="#/basemodule/new" ng-if="formState.canCreate" class="md-raised">{{'main.button.create' | translate}}</md-button>
+            </div>
+            <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+        </form>
+      </fieldset>
+    </div>
+</div>
+<div layout-padding>
+    <div flex>
+        <md-table-container>
+            <table md-table md-progress="tabledata.$promise">
+                <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+                    <tr md-row>
+                        <th md-column style="width:35%" md-order-by="b.{{currentLanguageNameField()}}">{{'basemodule.label' | translate}}</th>
+                        <th md-column style="width:25%">{{'basemodule.search.curriculum' | translate}}</th>
+                        <th md-column style="width:25%">{{'basemodule.search.curriculumVersion' | translate}}</th>
+                        <th md-column style="width:5%">{{'basemodule.ekap' | translate}}</th>
+                        <th md-column style="width:10%"></th>
+                    </tr>
+                </thead>
+                <tbody md-body>
+                    <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                        <td md-cell><a ng-href="#/basemodule/{{::row.id}}">{{currentLanguageNameField(row)}}</a></td>
+                        <td md-cell ng-init="row.c = row.curriculums.join(', ')">
+                            {{row.c.length &GT 20 && !row.showC ? (row.c | limitTo:20) + '...' : row.c}}
+                            <span class="custom-tooltip" ng-if="!row.showC && row.c.length > 20" ng-click="row.showC = true">{{'basemodule.search.showMore' | translate}}</span>
+                            <span class="custom-tooltip" ng-if="row.showC" ng-click="row.showC = false">{{'basemodule.search.showLess' | translate}}</span>
+                        </td>
+                        <td md-cell ng-init="row.cv = row.curriculumVersions.join(', ')">
+                            {{row.cv.length &GT 20 && !row.showCV ? (row.cv | limitTo:20) + '...' : row.cv}}
+                            <span class="custom-tooltip" ng-if="!row.showCV && row.cv.length > 20" ng-click="row.showCV = true">{{'basemodule.search.showMore' | translate}}</span>
+                            <span class="custom-tooltip" ng-if="row.showCV" ng-click="row.showCV = false">{{'basemodule.search.showLess' | translate}}</span>
+                        </td>
+                        <td md-cell>{{row.credits}}</td>
+                        <td md-cell>
+                            <md-button md-no-ink ng-if="row.canEdit" class="md-primary change-button" ng-href="#/basemodule/{{::row.id}}/edit">
+                                {{'main.button.change' | translate}}
+                            </md-button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+            md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+            md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+            md-page-select></md-table-pagination>
+    </div>
+</div>
+  
+  <style>
+      @media screen and (max-width: 960px) {
+          .common-label {
+              align-self: flex-start !important;
+          }
+      }
+  </style>

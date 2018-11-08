@@ -23,7 +23,7 @@
             </tr>
           </thead>
           <tbody md-body>
-            <tr md-row ng-repeat="row in entriesWithAddInfo | orderBy: '-gradeInserted'" ng-class-odd="'odd'" ng-class-even="'even'">
+            <tr md-row ng-repeat="row in entriesWithAddInfo | orderBy: ['!entryDate', '-entryDate']" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell>{{student.fullname}}</td>
               <td md-cell>{{currentLanguageNameField(row.journal)}}</td>
               <td md-cell>{{row.entryDate | hoisDate}}</td>
@@ -34,7 +34,13 @@
                     <span>{{row.absenceInserted  ? (row.absenceInserted | hoisDate) : '-'}}</span>
                   </md-tooltip>
                 </span>
-                <span ng-if="row.absence && row.grade">/</span>
+                <span ng-repeat="lessonAbsences in row.lessonAbsences">
+                  <span>{{lessonAbsences.absence.value}}({{lessonAbsences.lessonNr}})</span>
+                  <md-tooltip>
+                    <span>{{lessonAbsences.absenceInserted  ? (lessonAbsences.absenceInserted | hoisDate) : '-'}}</span>
+                  </md-tooltip>
+                </span>
+                <span ng-if="(row.absence && row.grade) || (row.lessonAbsences.length > 0 && row.grade)">/</span>
                 <span ng-if="row.grade">
                   <span>{{row.grade.value}}</span>
                   <md-tooltip>

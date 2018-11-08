@@ -5,6 +5,7 @@ import ee.hitsa.ois.message.ApelApplicationCreated;
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
 import ee.hitsa.ois.message.PracticeJournalUniqueUrlMessage;
 import ee.hitsa.ois.message.StudentAbsenceCreated;
+import ee.hitsa.ois.message.StudentApplicationConfirmed;
 import ee.hitsa.ois.message.StudentApplicationCreated;
 import ee.hitsa.ois.message.StudentApplicationRejectedMessage;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
@@ -23,6 +24,7 @@ public enum MessageType {
     TEATE_LIIK_UUS_KK(StudentDirectiveCreated.class),
     TEATE_LIIK_OP_KASKKIRI(StudentDirectiveCreated.class),
     TEATE_LIIK_OP_AVALDUS(StudentApplicationCreated.class),
+    TEATE_LIIK_OP_AVALDUS_KINNIT(StudentApplicationConfirmed.class),
     TEATE_LIIK_TOET_KATK(StudentScholarshipEnding.class),
     TEATE_LIIK_MUUD_TUNNIPL(TimetableChanged.class),
     TEATE_LIIK_AP_LOPP(AcademicLeaveEnding.class),

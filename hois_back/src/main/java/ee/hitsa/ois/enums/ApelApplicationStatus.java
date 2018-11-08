@@ -10,5 +10,7 @@ public enum ApelApplicationStatus {
     /** Confirmed */
     VOTA_STAATUS_C,
     /** Rejected */
-    VOTA_STAATUS_L
+    VOTA_STAATUS_L,
+    /** Being confirmed (committee) */
+    VOTA_STAATUS_V
 }

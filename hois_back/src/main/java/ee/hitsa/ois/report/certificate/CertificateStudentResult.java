@@ -26,6 +26,7 @@ public class CertificateStudentResult {
     private String date;
     private List<String> teachers;
     private String assessedBy;
+    private String outcomes;
 
     public static CertificateStudentResult of(StudentHigherSubjectResultDto dto) {
         CertificateStudentResult result = new CertificateStudentResult();
@@ -38,7 +39,11 @@ public class CertificateStudentResult {
         result.setGradeName(grade.getGradeNameEt());
         result.setGradeValue(grade.getGradeValue());
         result.setDate(DateUtils.date(grade.getGradeDate()));
-        result.setAssessedBy(String.join(", ", StreamUtil.nullSafeList(grade.getTeachers())));
+        List<String> teachers = grade.getTeachers();
+        if (teachers.contains(null)) {
+        	teachers.removeAll(Collections.singleton(null));
+        }
+        result.setAssessedBy(String.join(", ", StreamUtil.nullSafeList(teachers)));
         return result;
     }
 
@@ -127,4 +132,13 @@ public class CertificateStudentResult {
     public void setTeachers(List<String> teachers) {
         this.teachers = teachers;
     }
+
+    public String getOutcomes() {
+        return outcomes;
+    }
+
+    public void setOutcomes(String outcomes) {
+        this.outcomes = outcomes;
+    }
+    
 }

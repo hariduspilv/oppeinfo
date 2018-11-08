@@ -1,0 +1,108 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="studentGroupAbsenceForm" novalidate>
+        <div layout="row">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'groupAbsence.studyYear' | translate}}</label>
+            <hois-select ng-model="criteria.studyYear" values="formState.studyYears" ng-change="studyYearChanged(true)" required></hois-select>
+          </md-input-container>
+
+          <div ng-if="auth.isAdmin()" flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
+            <hois-autocomplete flex ng-model="criteria.studentGroupObject" method="studentgroups" name="studentGroup"
+              label="groupAbsence.studentGroup" additional-query-params="{higher: false}" required></hois-autocomplete>
+          </div>
+
+          <md-input-container ng-if="auth.isTeacher()" flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'groupAbsence.studentGroup' | translate}}</label>
+            <md-select ng-model="criteria.studentGroup" required>
+              <md-option ng-value="studentGroup.id" ng-repeat="studentGroup in formState.studentGroups | orderBy: currentLanguageNameField()">
+                {{currentLanguageNameField(studentGroup)}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'groupAbsence.studyWeek' | translate}}</label>
+            <md-select ng-model="criteria.studyWeek" ng-change="studyWeekChanged()" required>
+              <md-option ng-value="week" ng-repeat="week in formState.studyWeeks | orderBy: 'nr'">
+                {{week.start | hoisDate}}-{{week.end | hoisDate}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+        
+        <div layout="row">
+          <md-button class="md-raised md-primary" ng-click="search()">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+
+  <span ng-if="content.students.length > 0">
+    <div>&nbsp;</div>
+    <div flex="100" layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
+      <span ng-repeat="a in formState.absenceOptions">
+        <span ng-if="!$first">|</span>
+        {{::a.value.toUpperCase()}} - {{currentLanguageNameField(a)}}
+      </span>
+    </div>
+  </span>
+
+  <div flex ng-if="content.students.length > 0">
+    <md-table-container>
+
+      <table class="student-group-absence-table">
+        <thead>
+          <tr>
+            <th width="15%"></th>
+            <th ng-if="journalsByDateCount(date) > 0" ng-repeat="date in content.dates" colspan="{{journalsByDateCount(date)}}">{{date | hoisDate}}</th>
+          </tr>
+          <tr>
+            <th>{{'groupAbsence.student' | translate}}</th>
+            <th ng-repeat="journal in journals">
+              <a ng-if="journal.id" ng-href="#/journal/{{journal.id}}/view" class="md-primary change-button">{{currentLanguageNameField(journal)}}</a>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="student in content.students" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td>{{student.nameEt}}</td>
+            <td ng-repeat="journal in journals">
+              <div layout="row" layout-sm="column" layout-xs="column" layout-align="center center">
+                <div ng-repeat="absence in studentAbsences[student.id][journal.id][journal.date]" style="margin-right: 10px">
+                  <div ng-if="absence.length === 1 && !absence[0].lessonNr">
+                    <md-input-container>
+                      <hois-select ng-model="absence[0].absence" values="formState.absenceOptions" aria-label="absence"
+                        model-value-attr="code" show-property="value" value-property="code" 
+                        ng-change="absenceChanged(absence[0])" required></hois-select>
+                    </md-input-container>
+                  </div>
+
+                  <div ng-if="absence.length > 1 || absence[0].lessonNr">
+                    <div layout="column" ng-repeat="lessonAbsence in absence | orderBy: 'lessonNr'">
+                      <div layout="row">
+                        <div style="line-height: 48px;">{{lessonAbsence.lessonNr}}</div>
+                        <md-input-container>
+                          <hois-select ng-model="lessonAbsence.absence" values="formState.absenceOptions" aria-label="absence"
+                            model-value-attr="code" show-property="value" value-property="code" 
+                            ng-change="lessonAbsenceChanged(lessonAbsence)" required></hois-select>
+                        </md-input-container>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </div>
+</div>

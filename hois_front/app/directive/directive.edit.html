@@ -58,7 +58,7 @@
 
         <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'directive.student.studyLevel' | translate}}</label>
-          <hois-classifier-select ng-model="formState.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code"></hois-classifier-select>
+          <hois-select ng-model="formState.studyLevel" multiple type="saisCurriculumClassifiers" value-property="code"></hois-select>
         </md-input-container>
       </div>
 
@@ -123,7 +123,7 @@
         <div layout="row">
           <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="sendToConfirm(true)">{{'directive.sendToConfirm' | translate}}</md-button>
-          <md-button class="md-raised" ng-if="record.id" ng-click="sendToConfirm(false)">{{'directive.sendToConfirmWithoutEkis' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="record.id && isAuthorized('ROLE_OIGUS_K_TEEMAOIGUS_KASKKIRI_EKISETA')" ng-click="sendToConfirm(false)">{{'directive.sendToConfirmWithoutEkis' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
           <md-button ng-click="back('#/directives', directiveForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>

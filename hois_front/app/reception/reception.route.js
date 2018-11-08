@@ -4,7 +4,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
   $routeProvider
     .when('/reception/saisAdmission/search', {
         templateUrl: 'reception/reception.saisAdmission.list.html',
-        controller: 'SimpleListController',
+        controller: 'ReceptionSaisAdmissionListController',
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
@@ -81,6 +81,17 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_SAIS]
+        }
+      }).when('/reception/saisAdmission/archive', {
+        templateUrl: 'reception/reception.saisAdmission.archive.html',
+        controller: 'ReceptionSaisAdmissionArchiveController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_VASTUVOTT]
         }
       });
 }]);

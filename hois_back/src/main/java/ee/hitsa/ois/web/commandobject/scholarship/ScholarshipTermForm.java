@@ -50,6 +50,7 @@ public class ScholarshipTermForm {
     private Boolean isTeacherConfirm;
     private Boolean isFamilyIncomes;
     private Boolean isOpen;
+    private Long committee;
 
     public String getType() {
         return type;
@@ -273,6 +274,14 @@ public class ScholarshipTermForm {
 
     public void setIsOpen(Boolean isOpen) {
         this.isOpen = isOpen;
+    }
+
+    public Long getCommittee() {
+        return committee;
+    }
+
+    public void setCommittee(Long committee) {
+        this.committee = committee;
     }
 
 }

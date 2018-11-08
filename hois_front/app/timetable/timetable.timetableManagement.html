@@ -67,6 +67,8 @@
             </md-button>
             <md-button ng-if="row.id && !row.isHigher" ng-href="{{excel(formState.xlsPlanUrl, {id: row.id})}}" target="_blank" class="md-primary change-button">{{'timetable.management.plan' | translate}}
             </md-button>
+            <md-button ng-if="row.start" ng-href="{{excel('timetables/exportTimetable',{startDate: row.start, endDate: row.end, studyPeriod: row.studyPeriod})}}" target="_blank" class="md-primary change-button">{{'timetable.management.xmlExport' | translate}}
+            </md-button>
           </td>
         </tr>
         </tbody>

@@ -1,11 +1,13 @@
 package ee.hitsa.ois.util;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
@@ -17,6 +19,7 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleCapacity
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeCapacityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto;
+import io.jsonwebtoken.lang.Collections;
 
 public abstract class OccupationModuleCapacitiesUtil {
 
@@ -48,67 +51,39 @@ public abstract class OccupationModuleCapacitiesUtil {
 
     // update module capacities
     public static void updateModuleCapacities(CurriculumVersionOccupationModule occupationModule, List<Classifier> capacityTypes) {
-        Set<CurriculumVersionOccupationModuleCapacity> capacities = new HashSet<>();
-
-        for(Classifier type : capacityTypes) {
-            Short hours = getAllThemesCapacitiesByType(type, occupationModule.getThemes());
-            CurriculumVersionOccupationModuleCapacity c = getCapacityByType(type, occupationModule);
-            c.setHours(hours);
-            c.setContact(Boolean.valueOf(getContract(type, occupationModule.getThemes())));
-            capacities.add(c);
+        Set<CurriculumVersionOccupationModuleTheme> themes = occupationModule.getThemes();
+        HashMap<Classifier, CurriculumVersionOccupationModuleCapacity> capacities = new HashMap<>();
+        
+        if (!Collections.isEmpty(capacityTypes)) {
+            capacities.putAll(capacityTypes.stream().collect(Collectors.toMap(cap -> cap, cap -> createModuleCapacity(cap, Short.valueOf((short) 0), occupationModule))));
         }
-        occupationModule.setCapacities(capacities);
-    }
+        
+        if (!themes.isEmpty()) {
 
-    private static boolean getContract(Classifier type, Set<CurriculumVersionOccupationModuleTheme> themes) {
-        String typeCode = EntityUtil.getCode(type);
-        for(CurriculumVersionOccupationModuleTheme theme : themes) {
-            boolean result = theme.getCapacities().stream()
-                    .anyMatch(c -> typeCode
-                            .equals(EntityUtil.getCode(c.getCapacityType())) && Boolean.TRUE.equals(c.getContact()));
-            if(result) {
-                return true;
+            for (CurriculumVersionOccupationModuleTheme theme : themes) {
+                for (CurriculumVersionOccupationModuleThemeCapacity cap : theme.getCapacities()) {
+                    if (capacities.containsKey(cap.getCapacityType())) {
+                        capacities.get(cap.getCapacityType()).setHours(
+                            Short.valueOf((short)(capacities.get(cap.getCapacityType()).getHours().shortValue() + cap.getHours().shortValue()))
+                        );
+                    } else {
+                        CurriculumVersionOccupationModuleCapacity newCap = createModuleCapacity(cap.getCapacityType(), cap.getHours(), occupationModule);
+                        capacities.put(cap.getCapacityType(), newCap);
+                    }
+                    if (cap.getContact().equals(Boolean.TRUE)) {
+                        capacities.get(cap.getCapacityType()).setContact(cap.getContact());
+                    }
+                }
             }
         }
-        return false;
+        occupationModule.setCapacities(new HashSet<>(capacities.values()));
     }
 
-    private static Short getAllThemesCapacitiesByType(Classifier type, Set<CurriculumVersionOccupationModuleTheme> themes) {
-        short sum = 0;
-
-        for(CurriculumVersionOccupationModuleTheme theme : themes) {
-            sum += getThemesCapacity(theme, type);
-        }
-        return Short.valueOf(sum);
-    }
-
-    private static short getThemesCapacity(CurriculumVersionOccupationModuleTheme theme, Classifier type) {
-        String typeCode = EntityUtil.getCode(type);
-        Optional<CurriculumVersionOccupationModuleThemeCapacity> capacity =  theme.getCapacities().stream()
-                .filter(c -> typeCode.equals(EntityUtil.getCode(c.getCapacityType()))).findAny();
-
-        if(!capacity.isPresent()) {
-            return 0;
-        }
-        return capacity.get().getHours().shortValue();
-    }
-
-    private static CurriculumVersionOccupationModuleCapacity getCapacityByType(Classifier type, 
-            CurriculumVersionOccupationModule occupationModule) {
-        String typeCode = EntityUtil.getCode(type);
-        Optional<CurriculumVersionOccupationModuleCapacity> capacity = occupationModule.getCapacities().stream()
-                .filter(c -> typeCode.equals(EntityUtil.getCode(c.getCapacityType()))).findAny();
-        if(!capacity.isPresent()) {
-            return createModuleCapacity(type, occupationModule);
-        }
-        return capacity.get();
-    }
-
-    private static CurriculumVersionOccupationModuleCapacity createModuleCapacity(Classifier type, CurriculumVersionOccupationModule occupationModule) {
+    private static CurriculumVersionOccupationModuleCapacity createModuleCapacity(Classifier type, Short hours, CurriculumVersionOccupationModule occupationModule) {
         CurriculumVersionOccupationModuleCapacity newCapacity = new CurriculumVersionOccupationModuleCapacity();
         newCapacity.setCapacityType(type);
         newCapacity.setContact(Boolean.FALSE);
-        newCapacity.setHours(Short.valueOf((short) 0));
+        newCapacity.setHours(hours);
         newCapacity.setModule(occupationModule);
         return newCapacity;
     }

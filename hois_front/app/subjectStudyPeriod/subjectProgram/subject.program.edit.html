@@ -1,0 +1,304 @@
+<div class="ois-form-layout-padding nomargin">
+    <form ng-cloak name="subjectProgramForm">
+        <div layout="column" ng-cloak>
+            <div flex class="form-readonly">
+                <div flex layout="column" layout-gt-xs="row">
+                    <md-input-container flex="100" flex-gt-xs="60">
+                        <label class="textInput">{{'subjectProgram.subjectName' | translate}}</label>
+                        <hois-value value="currentLanguageNameField(subject)"></hois-value>
+                    </md-input-container>
+                    <md-input-container flex="100" flex-gt-xs="20">
+                        <label class="textInput">{{'subject.code' | translate}}</label>
+                        <hois-value value="subject.code"></hois-value>
+                    </md-input-container>
+                    <md-input-container flex="100" flex-gt-xs="20">
+                        <label class="textInput">{{'subject.credits' | translate}}</label>
+                        <hois-value value="subject.credits"></hois-value>
+                    </md-input-container>
+                </div>
+                <hois-collapsable class="hois-collapse2" expanded="false">
+                    <hois-collapsable-header>
+                        <span>{{'subjectProgram.syllabus' | translate}}</span>
+                    </hois-collapsable-header>
+                    <div flex layout="column">
+                        <md-input-container flex style="margin-top: 0 !important">
+                            <label class="textInput">{{'subject.assessment' | translate}}</label>
+                            <hois-classifier-value ng-model="subject.assessment" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label class="textInput">{{'subject.assessmentDescription' | translate}}</label>
+                            <hois-value value="subject.assessmentDescription"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label class="textInput">{{'subject.language' | translate}}</label>
+                            <hois-classifier-value ng-model="subject.languages" main-classifier-code="OPPEKEEL"></hois-classifier-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.objectivesEt' | translate}}</label>
+                            <hois-value value="subject.objectivesEt"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.objectivesEn' | translate}}</label>
+                            <hois-value value="subject.objectivesEn"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.outcomesEt' | translate}}</label>
+                            <hois-value value="subject.outcomesEt"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.outcomesEn' | translate}}</label>
+                            <hois-value value="subject.outcomesEn"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.descriptionEt' | translate}}</label>
+                            <hois-value value="subject.descriptionEt"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.descriptionEn' | translate}}</label>
+                            <hois-value value="subject.descriptionEn"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.independentStudyEt' | translate}}</label>
+                            <hois-value value="subject.independentStudyEt"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.independentStudyEn' | translate}}</label>
+                            <hois-value value="subject.independentStudyEn"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.studyLiterature' | translate}}</label>
+                            <hois-value value="subject.studyLiterature"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.evaluationEt' | translate}}</label>
+                            <hois-value value="subject.evaluationEt"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.evaluationEn' | translate}}</label>
+                            <hois-value value="subject.evaluationEn"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.additionalInfo' | translate}}</label>
+                            <hois-value value="subject.additionalInfo"></hois-value>
+                        </md-input-container>
+                        <md-input-container ng-if="subject.mandatoryPrerequisiteSubjects.length > 0">
+                            <label>{{'subject.mandatoryPrerequisiteSubjects' | translate}}</label>
+                            <hois-value ng-repeat="it in subject.mandatoryPrerequisiteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+it.id"></hois-value>
+                        </md-input-container>
+                        <md-input-container ng-if="subject.recommendedPrerequisiteSubjects.length > 0">
+                            <label>{{'subject.recommendedPrerequisiteSubjects' | translate}}</label>
+                            <hois-value ng-repeat="it in subject.recommendedPrerequisiteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+it.id"></hois-value>
+                        </md-input-container>
+                        <md-input-container ng-if="subject.substituteSubjects.length > 0">
+                            <label>{{'subject.substituteSubjects' | translate}}</label>
+                            <hois-value ng-repeat="it in subject.substituteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+it.id"></hois-value>
+                        </md-input-container>
+                        <br>
+                        <md-input-container flex>
+                            <label>{{'subject.linkDepartment' | translate}}</label>
+                            <hois-value value="currentLanguageNameField(subject.schoolDepartment)"></hois-value>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subject.isPractice' | translate}}</label>
+                            <hois-value value="subject.isPractice ? 'main.yes' : 'main.no' | translate"></hois-value>
+                        </md-input-container>
+                        <md-input-container>
+                            <label>{{'subject.status' | translate}}</label>
+                            <hois-classifier-value ng-model="subject.status" main-classifier-code="AINESTAATUS"></hois-classifier-value>
+                        </md-input-container>
+                        <div layout="column" ng-if="subject.primarySubjects.length > 0">
+                            <h3>{{'subject.subjectIsPrerequisite' | translate}}</h3>
+                            <div ng-repeat="row in subject.primarySubjects | orderBy: currentLanguageNameField()">
+                                <a class="md-body-1" ng-href="#/subject/{{row.id}}">{{currentLanguageNameField(row)}}</a>
+                            </div>
+                        </div>
+                    </div>
+                </hois-collapsable>
+            </div>
+            
+            <div layout="column" ng-if="!subjectProgram.id && subjectPrograms.length > 0">
+                <md-input-container flex>
+                    <label>{{'subjectProgram.copySubjectProgram' | translate}}</label>
+                    <md-select ng-model="selectedSubjectProgram" ng-change="getSubjectProgramData(selectedSubjectProgram)">
+                        <md-option ng-value="program" ng-repeat="program in subjectPrograms">{{currentLanguageNameField(program)}}</md-option>
+                    </md-select>
+                </md-input-container>
+                <div>&nbsp;</div>
+            </div>
+            <md-input-container flex>
+                <label>{{'subjectProgram.independentStudy' | translate}}</label>
+                <textarea ng-model="subjectProgram.independentStudy" name="independentStudy" md-maxlength="20000" max-rows="10" ></textarea>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'subjectProgram.assessmentDescription' | translate}}</label>
+                <textarea ng-model="subjectProgram.assessmentDescription" name="assessmentDescription" md-maxlength="20000" max-rows="10" ></textarea>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'subjectProgram.studyLiterature' | translate}}</label>
+                <textarea ng-model="subjectProgram.studyLiterature" name="studyLiterature" md-maxlength="20000" max-rows="10" ></textarea>
+            </md-input-container>
+            <br>
+            <div flex class="study-content">
+                <fieldset tabindex="1">
+                    <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.studyContent' | translate}}</legend>
+                    <div flex layout="row">
+                        <span flex="30" class="common-label"></span>
+                        <hois-classifier-radio layout="row" ng-model="subjectProgram.studyContentType" name="studyContentType" model-value-attr="code" main-classifier-code="OPPETOOSISU"
+                        required class="md-primary"></hois-classifier-radio>
+                    </div>
+                    <div>&nbsp;</div>
+                    <div ng-show="subjectProgram.studyContentType === 'OPPETOOSISU_K'" layout="column">
+                        <md-table-container>
+                            <div layout="row" ng-repeat="sc in studyContentDt">
+                                <md-input-container >
+                                    <label>{{'subjectProgram.date' | translate}}</label>
+                                    <md-datepicker ng-model="sc.studyDt" ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_K'"></md-datepicker>
+                                </md-input-container>
+                                <md-input-container flex="100">
+                                    <label>{{'subjectProgram.description' | translate}}</label>
+                                    <textarea ng-model="sc.studyInfo" md-maxlength="4000" max-rows="10" ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_K'" ></textarea>
+                                </md-input-container>
+                                <div layout="row" layout-align="center center" style="margin-left: 10px;">
+                                <a class="remove" ng-click="removeFromArray(studyContentDt, sc)">&times;</a>
+                                </div>
+                            </div>
+                            <div layout="row">
+                                <md-button class="md-raised" ng-click="addStudyContentDt()" style="text-transform: none;">{{'main.button.addRow' | translate}}</md-button>
+                            </div>
+                        </md-table-container>
+                    </div>
+                    <div ng-show="subjectProgram.studyContentType === 'OPPETOOSISU_N'" layout="column">
+                        <md-table-container>
+                            <div layout="row" ng-repeat="sc in studyContentWk">
+                                <md-input-container flex="10">
+                                    <label>{{'subjectProgram.week' | translate}}</label>
+                                    <input type="number" ng-model="sc.weekNr" min="0" max="999" pattern="^\d+(\.\d{1})?$" ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_N'"/>
+                                </md-input-container>
+                                <md-input-container flex>
+                                    <label>{{'subjectProgram.description' | translate}}</label>
+                                    <textarea ng-model="sc.studyInfo" md-maxlength="4000" max-rows="10" ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_N'" ></textarea>
+                                </md-input-container>
+                                <div layout="row" layout-align="center center" style="margin-left: 10px;">
+                                    <a class="remove" ng-click="removeFromArray(studyContentWk, sc)">&times;</a>
+                                </div>
+                            </div>
+                            <div layout="row">
+                                <md-button class="md-raised" ng-click="addStudyContentWk()" style="text-transform: none;">{{'main.button.addRow' | translate}}</md-button>
+                            </div>
+                        </md-table-container>
+                    </div>
+                    <div ng-show="subjectProgram.studyContentType === 'OPPETOOSISU_T'" layout="column" flex>
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.description' | translate}}</label>
+                            <textarea ng-model="subjectProgram.studyDescription" name="studyDescription" md-maxlength="20000" max-rows="10" ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_T'" ></textarea>
+                        </md-input-container>
+                    </div>
+                </fieldset>
+            </div>
+            <br>
+            <div flex>
+                <fieldset tabindex="2">
+                    <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.assessmentCriteria' | translate}}</legend>
+                    <div>&nbsp;</div>
+                    <div ng-show="subject.assessment === 'HINDAMISVIIS_A'" layout="column">
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.passDescription' | translate}}</label>
+                            <textarea ng-model="subjectProgram.passDescription" name="passDescription" md-maxlength="20000" max-rows="2" ng-required="subject.assessment === 'HINDAMISVIIS_A'"></textarea>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.npassDescription' | translate}}</label>
+                            <textarea ng-model="subjectProgram.npassDescription" name="npassDescription" md-maxlength="20000" max-rows="2" ng-required="subject.assessment === 'HINDAMISVIIS_A'"></textarea>
+                        </md-input-container>
+                    </div>
+                    <div ng-show="subject.assessment === 'HINDAMISVIIS_E'" layout="column" flex>
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.grade0Description' | translate}}</label>
+                            <textarea ng-model="subjectProgram.grade0Description" name="grade0Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.grade1Description' | translate}}</label>
+                            <textarea ng-model="subjectProgram.grade1Description" name="grade1Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.grade2Description' | translate}}</label>
+                            <textarea ng-model="subjectProgram.grade2Description" name="grade2Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.grade3Description' | translate}}</label>
+                            <textarea ng-model="subjectProgram.grade3Description" name="grade3Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.grade4Description' | translate}}</label>
+                            <textarea ng-model="subjectProgram.grade4Description" name="grade4Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.grade5Description' | translate}}</label>
+                            <textarea ng-model="subjectProgram.grade5Description" name="grade5Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
+                        </md-input-container>
+                    </div>
+                    <div ng-show="subject.assessment === 'HINDAMISVIIS_H'" layout="column" flex>
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.grade3Description' | translate}}</label>
+                            <textarea ng-model="subjectProgram.grade3Description" name="grade3Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_H'"></textarea>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.grade4Description' | translate}}</label>
+                            <textarea ng-model="subjectProgram.grade4Description" name="grade4Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_H'"></textarea>
+                        </md-input-container>
+                        <md-input-container flex>
+                            <label>{{'subjectProgram.grade5Description' | translate}}</label>
+                            <textarea ng-model="subjectProgram.grade5Description" name="grade5Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_H'"></textarea>
+                        </md-input-container>
+                    </div>
+                </fieldset>
+            </div>
+            <br>
+            <div flex>
+                <fieldset tabindex="3">
+                    <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.publicLevel' | translate}}</legend>
+                    <div>&nbsp;</div>
+                    <div layout="column">
+                        <md-checkbox ng-model="subjectProgram.publicAll" aria-label="{{'subjectProgram.publicAll' | translate}}">
+                            {{'subjectProgram.publicAll' | translate}}
+                        </md-checkbox>
+                        <md-checkbox ng-model="subjectProgram.publicHois" aria-label="{{'subjectProgram.publicHois' | translate}}">
+                            {{'subjectProgram.publicHois' | translate}}
+                        </md-checkbox>
+                        <md-checkbox ng-model="subjectProgram.publicStudent" aria-label="{{'subjectProgram.publicStudent' | translate}}">
+                            {{'subjectProgram.publicStudent' | translate}}
+                        </md-checkbox>
+                    </div>
+                </fieldset>
+            </div>
+            <br>
+            <div flex class="form-readonly" layout="column">
+                <md-input-container flex>
+                    <label class="textInput">{{'subjectProgram.status' | translate}}</label>
+                    <hois-classifier-value ng-model="subjectProgram.status" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-value>
+                </md-input-container>
+            </div>
+            <br>
+        </div>
+        <md-button class="md-raised md-primary" ng-click="save()">{{"main.button.save" | translate}}</md-button>
+        <md-button class="md-raised" ng-if="subjectProgram.status === 'AINEPROGRAMM_STAATUS_I'" ng-click="completeProgram()">{{"subjectProgram.operation.complete.label" | translate}}</md-button>
+        <md-button class="md-raised" ng-if="subjectProgram.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods', subjectProgramForm)">{{"main.button.back" | translate}}</md-button>
+    </form>
+</div>
+<style>
+    .link-no-underline {
+        text-decoration: none;
+    }
+    .link-disabled {
+        color: #d7dde5;
+    }
+    .nomargin .form-readonly .md-input-has-value {
+        margin-top: 18px !important;
+    }
+    .study-content .md-input.md-datepicker-input {
+        height: 47px !important;
+    }
+    .study-content input[type="number"] {
+        height: 47px !important;
+    }
+</style>

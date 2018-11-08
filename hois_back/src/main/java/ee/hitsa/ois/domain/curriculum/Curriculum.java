@@ -37,7 +37,9 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     private String nameRu;
     private String code;
     private String merCode; // XXX for EHIS this should be number (see EhisStudentService)
+    @NotNull(groups = {Confirmed.class})
     private LocalDate approval;
+    @NotNull(groups = {Confirmed.class})
     private String approvalDokNr;
     @NotNull(groups = {Confirmed.class})
     private String outcomesEt;
@@ -145,6 +147,7 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumStudyLanguage> studyLanguages = new HashSet<>();
 
+    @NotEmpty(groups = {Confirmed.class})
     @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumAddress> addresses = new HashSet<>();
 
@@ -153,6 +156,7 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumDepartment> departments = new HashSet<>();
 
+    @NotEmpty(groups = {Confirmed.class})
     @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumFile> files = new HashSet<>();
 

@@ -164,6 +164,13 @@
         </md-input-container>
       </div>
 
+      <div ng-if="!formState.isHigher" layout="row" flex>
+        <md-input-container flex>
+          <md-checkbox ng-model="contract.isPracticeAbsence" aria-label="{{'contract.markPracticeAsExcusedInDiaries' | translate}}">
+            {{'contract.markPracticeAsExcusedInDiaries' | translate}}</md-checkbox>
+        </md-input-container>
+      </div>
+
       <div layout="row">
         <md-button ng-if="contract.status !== 'LEPING_STAATUS_Y'" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="auth.isAdmin() && contract.id && (contract.status === 'LEPING_STAATUS_Y' || contract.status === 'LEPING_STAATUS_S')" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>

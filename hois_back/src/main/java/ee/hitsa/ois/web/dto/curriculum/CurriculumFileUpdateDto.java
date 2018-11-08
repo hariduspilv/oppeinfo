@@ -19,7 +19,7 @@ public class CurriculumFileUpdateDto {
     public static CurriculumFileUpdateDto of(CurriculumFile curriculumFile) {
         CurriculumFileUpdateDto dto = new CurriculumFileUpdateDto();
         EntityUtil.bindToDto(curriculumFile, dto, "oisFile");
-        dto.setOisFile(EntityUtil.bindToDto(curriculumFile.getOisFile(), new OisFileViewDto(), "fdata"));
+        dto.setOisFile(OisFileViewDto.of(curriculumFile.getOisFile()));
         return dto;
     }
 

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.report.ReportUtil;
@@ -113,11 +114,13 @@ public class StudentGroupTeacherReport {
     }
     
     private static void setStudentAbsenceColumns(Map<String, Object> tableStudent, StudentDto student) {
-        tableStudent.put("totalAbsences",
-                Long.valueOf(student.getAbsenceP().longValue() + student.getAbsenceV().longValue()));
-        tableStudent.put("withoutReasonAbsences", student.getAbsenceP());
-        tableStudent.put("withReasonAbsences", student.getAbsenceV());
-        tableStudent.put("beingLate", student.getAbsenceH());
+        tableStudent.put("totalAbsences", Long.valueOf(student.getAbsences().get(Absence.PUUDUMINE_P.name()).longValue()
+                + student.getAbsences().get(Absence.PUUDUMINE_V.name()).longValue()
+                + student.getAbsences().get(Absence.PUUDUMINE_PR.name()).longValue()));
+        tableStudent.put("withoutReasonAbsences", student.getAbsences().get(Absence.PUUDUMINE_P.name()));
+        tableStudent.put("withReasonAbsences",Long.valueOf(student.getAbsences().get(Absence.PUUDUMINE_V.name()).longValue()
+                + student.getAbsences().get(Absence.PUUDUMINE_PR.name()).longValue()));
+        tableStudent.put("beingLate", student.getAbsences().get(Absence.PUUDUMINE_H.name()));
     }
 
     public List<StudentGroupTeacherReportTable> getTables() {

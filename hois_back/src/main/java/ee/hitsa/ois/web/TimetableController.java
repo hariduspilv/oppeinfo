@@ -1,11 +1,13 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import javax.xml.bind.JAXBException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,10 +21,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.Timetable;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.TimetableGenerationService;
 import ee.hitsa.ois.service.TimetableService;
+import ee.hitsa.ois.service.XmlService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
@@ -44,11 +49,14 @@ import ee.hitsa.ois.web.dto.timetable.TimetablePlanDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
+import ee.hitsa.ois.xml.exportTimetable.Document;
 
 @RestController
 @RequestMapping("/timetables")
 public class TimetableController {
-
+	
+	@Autowired
+    private XmlService xmlService;
     @Autowired
     private TimetableService timetableService;
     @Autowired
@@ -218,4 +226,16 @@ public class TimetableController {
         UserUtil.assertIsSchoolAdmin(user);
         HttpUtil.xls(response, "timetablePlan.xlsx", timetableGenerationService.timetablePlanExcel(id));
     }
+    
+    @GetMapping("/exportTimetable")
+    public void exportTimetable(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate, @RequestParam("endDate") LocalDate endDate, @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        Document document = timetableService.getExportedWeek(startDate, endDate, studyPeriod,user);
+        try {
+        	HttpUtil.xml(response, startDate.toString() + "-" + endDate.toString() + ".xml", xmlService.generateFromObject(document));
+        } catch (JAXBException e) {
+        	throw new HoisException(e);
+        }
+    }
+
 }

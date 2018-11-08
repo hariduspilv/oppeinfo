@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -22,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationComment;
@@ -43,6 +46,7 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
+import ee.hitsa.ois.enums.CommitteeType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.message.ApelApplicationCreated;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
@@ -84,11 +88,11 @@ public class ApelApplicationService {
     private AutomaticMessageService automaticMessageService;
 
     private static final String RPM_FROM = "from apel_application aa"
-            + " inner join student s on aa.student_id = s.id"
-            + " inner join person p on s.person_id=p.id"
-            + " inner join curriculum_version curv on s.curriculum_version_id=curv.id"
-            + " inner join curriculum cur on curv.curriculum_id=cur.id"
-            + " inner join classifier c on aa.status_code=c.code";
+            + " join student s on aa.student_id = s.id"
+            + " join person p on s.person_id=p.id"
+            + " join curriculum_version curv on s.curriculum_version_id=curv.id"
+            + " join curriculum cur on curv.curriculum_id=cur.id"
+            + " join classifier c on aa.status_code=c.code";
     private static final String RPM_SELECT = "aa.id as application_id, aa.status_code as application_status, s.id as student_id,"
             + " p.firstname as student_firstname, p.lastname as student_lastname, cur.id as curriculum_id, cur.name_et as curriculum_name_et,"
             + " cur.name_en as curriculum_name_en, aa.inserted, aa.confirmed";
@@ -103,7 +107,7 @@ public class ApelApplicationService {
      */
     public Page<ApelApplicationSearchDto> search(HoisUserDetails user,
             ApelApplicationSearchCommand criteria, Pageable pageable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(RPM_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(RPM_FROM);
         
         qb.requiredCriteria("aa.school_id = :schoolId", "schoolId", user.getSchoolId());
         
@@ -111,7 +115,15 @@ public class ApelApplicationService {
         if (user.isStudent()) {
             qb.requiredCriteria("aa.student_id = :studentId", "studentId", user.getStudentId());
         }
+        
         qb.optionalCriteria("aa.status_code in (:status)", "status", criteria.getStatus());
+        if (user.isTeacher()) {
+            qb.optionalCriteria("aa.status_code = :status", "status", ApelApplicationStatus.VOTA_STAATUS_V);
+            qb.filter("aa.id in (select aa2.id from apel_application aa2"
+                    + " join committee co on aa2.committee_id = co.id"
+                    + " join committee_member cm on co.id = cm.committee_id"
+                    + " where cm.person_id = " + user.getPersonId() + ")");
+        }
         
         qb.optionalCriteria("aa.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("aa.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
@@ -119,30 +131,63 @@ public class ApelApplicationService {
         qb.optionalCriteria("aa.confirmed >= :confirmedFrom", "confirmedFrom", criteria.getConfirmedFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("aa.confirmed <= :confirmedThru", "confirmedThru", criteria.getConfirmedThru(), DateUtils::lastMomentOfDay);
         
+        qb.optionalCriteria("aa.committee_id = :committeeId", "committeeId", criteria.getCommittee());
+        
+        List<?> data = qb.select("aa.id", em).getResultList();
+        List<Long> applicationIds = StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
+        Map<Long, List<Long>> committeeMembers = applicationCommitteeMembers(applicationIds);
+        
+        qb.sort(pageable);
         return JpaQueryUtil.pagingResult(qb, RPM_SELECT, em, pageable).map(r -> {
             ApelApplicationSearchDto dto = new ApelApplicationSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setStatus(resultAsString(r, 1));
             dto.setInserted(resultAsLocalDate(r, 8));
             dto.setConfirmed(resultAsLocalDate(r, 9));
-            
             String studentName = PersonUtil.fullname(resultAsString(r, 3), resultAsString(r, 4));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 2), studentName, studentName));
-            
             dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 7)));
-            
+            dto.setCanEdit(Boolean.valueOf(ApelApplicationUtil.canEdit(user, dto.getStatus())));
+            dto.setCanReview(Boolean.valueOf(ApelApplicationUtil.canReview(user, dto.getStatus(), committeeMembers.get(dto.getId()))));
             return dto;
         });
+    }
+    
+    private Map<Long, List<Long>> applicationCommitteeMembers(List<Long> applications) {
+        Map<Long, List<Long>> committeeMembers = new HashMap<>();
+        if (!applications.isEmpty()) {
+            List<?> data = em.createNativeQuery("select aa.id, cm.person_id from apel_application aa"
+                    + " join committee c on aa.committee_id = c.id"
+                    + " join committee_member cm on c.id = cm.committee_id"
+                    + " where aa.id in (?1)")
+                    .setParameter(1, applications).getResultList();
+            committeeMembers = data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                    Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toList())));
+        }
+        return committeeMembers;
     }
     
     /**
      * Get student APEL application
      * 
+     * @param user
      * @param application
      * @return
      */
-    public ApelApplicationDto get(ApelApplication application) {
-        return ApelApplicationDto.of(application);
+    public ApelApplicationDto get(HoisUserDetails user, ApelApplication application) {
+        ApelApplicationDto dto = ApelApplicationDto.of(application);
+        dto.setCanEdit(Boolean.valueOf(ApelApplicationUtil.canEdit(user, application)));
+        dto.setCanReview(Boolean.valueOf(ApelApplicationUtil.canReview(user, application)));
+        dto.setCanSendToConfirm(Boolean.valueOf(ApelApplicationUtil.canSendToConfirm(user, application)));
+        dto.setCanSendToCommittee(Boolean.valueOf(ApelApplicationUtil.canSendToCommittee(user, application)));
+        dto.setCanSendBackToCreation(Boolean.valueOf(ApelApplicationUtil.canSendBackToCreation(user, application)));
+        dto.setCanSendBack(Boolean.valueOf(ApelApplicationUtil.canSendBack(user, application)));
+        dto.setCanReject(Boolean.valueOf(ApelApplicationUtil.canReject(user, application)));
+        dto.setCanChangeTransferStatus(
+                Boolean.valueOf(ApelApplicationUtil.canCanChangeTransferStatus(user, application)));
+        dto.setCanConfirm(Boolean.valueOf(ApelApplicationUtil.canConfirm(user, application)));
+        dto.setCanRemoveConfirmation(Boolean.valueOf(ApelApplicationUtil.canRemoveConfirmation(user, application)));
+        return dto;
     }
     
     
@@ -174,8 +219,10 @@ public class ApelApplicationService {
      */
     public ApelApplication save(HoisUserDetails user, ApelApplication application, ApelApplicationForm applicationForm) {
         EntityUtil.setUsername(user.getUsername(), em);
-        EntityUtil.bindToEntity(applicationForm, application, "records", "files");
+        EntityUtil.bindToEntity(applicationForm, application, "records", "files", "committee", "decision");
         updateRecords(user, application, applicationForm);
+        application.setCommittee(applicationForm.getCommitteeId() != null
+                ? em.getReference(Committee.class, applicationForm.getCommitteeId()) : null);
         return EntityUtil.save(application, em);
     }
 
@@ -476,25 +523,54 @@ public class ApelApplicationService {
 
     /**
      * Set APEL application's status to 'Being confirmed'
+     * if application is reviewed add decision and duplicate it to comments
      * 
      * @param application
      * @return
      */
-    public ApelApplication sendToConfirm(ApelApplication application) {
+    public ApelApplication sendToConfirm(ApelApplication application, ApelApplicationForm applicationForm) {
         if (application.getRecords().isEmpty()) {
             throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
         }
+        
+        if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(EntityUtil.getCode(application.getStatus()))) {
+            application.setDecision(applicationForm.getAddInfo());
+            
+            ApelApplicationCommentForm commentForm = new ApelApplicationCommentForm(); 
+            commentForm.setAddInfo(applicationForm.getAddInfo());
+            createComment(application, commentForm);
+        }
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_Y);
+        return EntityUtil.save(application, em);
+    }
+    
+    /**
+     * Set APEL application's status to 'Being confirmed (committee)'
+     * 
+     * @param application
+     * @return
+     */
+    public ApelApplication sendToCommittee(ApelApplication application, ApelApplicationForm applicationForm) {
+        if (application.getRecords().isEmpty()) {
+            throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
+        }
+        setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_V);
+        application.setCommittee(em.getReference(Committee.class, applicationForm.getCommitteeId()));
         return EntityUtil.save(application, em);
     }
 
     /**
      * Set APEL application's status back to 'Drafting'
+     * if application is reviewed add decision and duplicate it to comments
      * 
      * @param application
      * @return
      */
-    public ApelApplication sendBackToCreation(ApelApplication application) {
+    public ApelApplication sendBackToCreation(ApelApplication application, ApelApplicationCommentForm commentForm) {
+        if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(EntityUtil.getCode(application.getStatus()))) {
+            application.setDecision(commentForm.getAddInfo());
+            createComment(application, commentForm);
+        }
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_K);
         return EntityUtil.save(application, em);
     }
@@ -635,14 +711,18 @@ public class ApelApplicationService {
 
     /**
      * Set APEL application's status back to 'Rejected' and add comment explaining the rejection
+     * if application is reviewed add comment as decision
      * 
      * @param application
      * @param commentForm
      * @return
      */
     public ApelApplication reject(ApelApplication application, ApelApplicationCommentForm commentForm) {
-        setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_L);
+        if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(EntityUtil.getCode(application.getStatus()))) {
+            application.setDecision(commentForm.getAddInfo());
+        }
         createComment(application, commentForm);
+        setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_L);
         return EntityUtil.save(application, em);
     }
 
@@ -674,5 +754,33 @@ public class ApelApplicationService {
             }
         }
         return null;
+    }
+    
+    public List<AutocompleteResult> committeesForSelection(HoisUserDetails user, ApelApplication application) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from committee c"
+                + " join committee_member cm on c.id = cm.committee_id"
+                + " join person p on p.id = cm.person_id");
+        
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("c.type_code = :type", "type", CommitteeType.KOMISJON_V.name());
+        
+        String validFilter = "(c.valid_from <= '" + JpaQueryUtil.parameterAsTimestamp(LocalDate.now())
+                + "' and c.valid_thru >= '" + JpaQueryUtil.parameterAsTimestamp(LocalDate.now()) + "')";
+        Long currentCommitteeId =  EntityUtil.getNullableId(application.getCommittee());
+        if (currentCommitteeId != null) {
+            validFilter += " or c.id = " + currentCommitteeId;
+        }
+        qb.filter(validFilter);
+        
+        qb.groupBy("c.id");
+        List<?> result = qb.select("distinct c.id, c.name_et,"
+                + " array_to_string(array_agg(p.firstname || ' ' || p.lastname), ', ') as members", em)
+                .getResultList();
+        
+        return StreamUtil.toMappedList(r -> {
+            String name = resultAsString(r, 1);
+            String caption = (name != null ? name : "-") + " (" + resultAsString(r, 2) + ")";
+            return new AutocompleteResult(resultAsLong(r, 0), caption, caption);
+        }, result);
     }
 }

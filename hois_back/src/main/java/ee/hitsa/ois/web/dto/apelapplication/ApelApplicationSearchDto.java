@@ -14,6 +14,8 @@ public class ApelApplicationSearchDto {
     private String status;
     private LocalDate inserted;
     private LocalDate confirmed;
+    private Boolean canEdit;
+    private Boolean canReview;
     
     public static ApelApplicationSearchDto of(Application application) {
         ApelApplicationSearchDto dto = EntityUtil.bindToDto(application, new ApelApplicationSearchDto());
@@ -67,5 +69,20 @@ public class ApelApplicationSearchDto {
     public void setConfirmed(LocalDate confirmed) {
         this.confirmed = confirmed;
     }
-    
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
+
+    public Boolean getCanReview() {
+        return canReview;
+    }
+
+    public void setCanReview(Boolean canReview) {
+        this.canReview = canReview;
+    }
 }

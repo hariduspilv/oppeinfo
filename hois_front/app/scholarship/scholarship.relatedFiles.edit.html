@@ -2,6 +2,7 @@
 
 <md-button ng-if="editable" class="md-raised" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
 <br/>
+<md-table-container>
 <table md-table class="secondary-table" ng-if="application.files.length > 0">
   <thead md-head>
     <tr md-row>
@@ -19,7 +20,7 @@
             {{file.oisFile.fname ? file.oisFile.fname : file.fname}}
           </div>
           <div flex>
-            <a ng-href="{{getUrl(file.oisFile, 'scholarshipapplication')}}" target="_blank" rel="noopener noreferrer">
+            <a ng-href="{{getUrl(file.oisFile, 'scholarshipapplication')}}" download target="_blank" rel="noopener noreferrer">
               <md-icon md-font-set="material-icons">file_download</md-icon>
             </a>
           </div>
@@ -31,3 +32,4 @@
     </tr>
   </tbody>
 </table>
+</md-table-container>

@@ -396,6 +396,9 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
         student.resultColumns.forEach(function (column) {
           if (column.journalResult && column.journalResult.entries) {
             resultsMapper.objectmapper(column.journalResult.entries);
+            column.journalResult.entries.forEach(function (entry) {
+              resultsMapper.objectmapper(entry.lessonAbsences);
+            });
           }
           if (column.practiceModuleThemeResult) {
             resultsMapper.objectmapper(column.practiceModuleThemeResult);
@@ -426,13 +429,17 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
       dialogScope.student = student;
       dialogScope.entriesWithAddInfo = [];
 
+      var addedJournals = [];
       dialogScope.student.resultColumns.forEach(function (resultColumn) {
         if (resultColumn.journalResult) {
-          resultColumn.journalResult.entries.forEach(function (entry) {
-            if (entry.addInfo) {
-              dialogScope.entriesWithAddInfo.push(entry);
-            }
-          });
+          if (addedJournals.indexOf(resultColumn.journalResult.id) === -1) {
+            resultColumn.journalResult.entries.forEach(function (entry) {
+              if (entry.addInfo) {
+                dialogScope.entriesWithAddInfo.push(entry);
+              }
+            });
+            addedJournals.push(resultColumn.journalResult.id);
+          }
         }
       });
     });

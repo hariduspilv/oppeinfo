@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web;
 
+import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.Committee;
+import ee.hitsa.ois.domain.CommitteeMember;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
 import ee.hitsa.ois.enums.Permission;
@@ -32,12 +37,15 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationListSubmitForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipDecisionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipStudentApplicationForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipTermForm;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ScholarshipTermApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationStudentDto;
+import ee.hitsa.ois.web.dto.scholarship.ScholarshipDecisionDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipStudentRejectionDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermSearchDto;
@@ -75,6 +83,46 @@ public class ScholarshipController {
     public ScholarshipTermDto get(HoisUserDetails user, @WithEntity ScholarshipTerm term) {
         UserUtil.assertIsSchoolAdmin(user, term.getSchool());
         return scholarshipService.get(term);
+    }
+
+    @GetMapping("/committees")
+    public List<AutocompleteResult> committees(HoisUserDetails user, 
+            @RequestParam(value = "validDate", required = false) LocalDate validDate,
+            @RequestParam(value = "curriculums", required = false) List<Long> curriclumIds) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        return scholarshipService.committeesForSelection(user, validDate, curriclumIds);
+    }
+
+    @GetMapping("/decision/canCreate")
+    public Map<String, Boolean> canCreateDecision(HoisUserDetails user,
+            @RequestParam("ids") List<Long> applicationIds) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        return Collections.singletonMap("canCreate", Boolean.valueOf(scholarshipService.canCreateDecision(applicationIds)));
+    }
+
+    @GetMapping("/decision")
+    public ScholarshipDecisionDto decision(HoisUserDetails user,
+            @RequestParam("ids") List<Long> applicationIds) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        return scholarshipService.decision(user, applicationIds);
+    }
+
+    @GetMapping("/decision/{id:\\d+}")
+    public ScholarshipDecisionDto decision(HoisUserDetails user, @PathVariable("id") Long decisionId) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return scholarshipService.decision(user, decisionId);
+    }
+
+    @DeleteMapping("/decision/{id:\\d+}")
+    public void deleteDecision(HoisUserDetails user, @PathVariable("id") Long decisionId) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        scholarshipService.deleteDecision(user, decisionId);
+    }
+
+    @PostMapping("/decide")
+    public void decide(HoisUserDetails user, @RequestBody ScholarshipDecisionForm form) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        scholarshipService.decide(user, form);
     }
 
     @GetMapping("/studentProfilesRejection")
@@ -224,10 +272,14 @@ public class ScholarshipController {
             UserUtil.throwAccessDeniedIf(!user.getSchoolId().equals(EntityUtil.getId(application.getScholarshipTerm().getSchool())), 
                     "User school does not match application scholarship term school");
         } else if (user.isTeacher()) {
-            UserUtil.throwAccessDeniedIf(!user.getTeacherId().equals(EntityUtil.getNullableId(application.getStudentGroup().getTeacher())), 
-                    "User teacher does not match application student group teacher");
+            Committee committee = application.getScholarshipTerm().getCommittee();
+            UserUtil.throwAccessDeniedIf(!user.getTeacherId().equals(EntityUtil.getNullableId(application.getStudentGroup().getTeacher()))
+                    && committee != null && !committee.getMembers().stream()
+                    .filter(m -> user.getPersonId().equals(EntityUtil.getId(m.getPerson())))
+                    .findAny().isPresent(), 
+                    "User teacher does not match application student group teacher or is not part of committee");
         } else {
-            throw new AccessDeniedException("User is not application student or school admin or application student group teacher");
+            throw new AccessDeniedException("User is not application student or school admin or application student group teacher or part of committee");
         }
     }
     

@@ -48,30 +48,52 @@
           additional-query-params="{valid: true, occupied: true, date: timetableEvent.date, startTime: timetableEvent.startTime, endTime: timetableEvent.endTime, 
             repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount}" flex></hois-autocomplete>
       </div>
-      <div layout="column" class="common-label" flex="55" ng-repeat="teacher in timetableEvent.teachers">
-        <div layout="row" flex layout-align="start center">
-          <div flex="5">&nbsp;</div>
-          <div flex="50">{{teacher.nameEt}}</div>
-          <div ng-if="auth.isAdmin()">
-            <a ng-click="deleteTeacher(teacher)" class="remove">&times;</a>
-          </div>
-        </div>
-      </div>
+      <md-table-container ng-if="timetableEvent.teachers.length > 0" layout="row" layout="row" flex="60" flex-sm="100" flex-xs="100">
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column ng-style="{'width': !timetableEvent.isSingleEvent ? 70 + '%' : 90 + '%' }">{{'timetable.timetableEvent.teacherName' | translate}}</th>
+              <th md-column ng-if="!timetableEvent.isSingleEvent" width="20%">{{'timetable.timetableEvent.substitute' | translate}}</th>
+              <th md-column width="10%"></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="teacher in timetableEvent.teachers | orderBy: sortTeachers" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{currentLanguageNameField(teacher.teacher)}}</td>
+              <td md-cell ng-if="!timetableEvent.isSingleEvent">
+                <md-checkbox ng-model="teacher.isSubstitute" aria-label="{{'timetable.timetableEvent.substitute' | translate}}" ng-disabled="!auth.isAdmin()"></md-checkbox>
+              </td>
+              <td md-cell>
+                <a ng-if="auth.isAdmin()" ng-click="deleteTeacher(teacher)" class="remove">&times;</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
 
       <div layout="row" flex="60" flex-sm="100" flex-xs="100">
         <hois-autocomplete label="timetable.timetableEvent.room" ng-model="timetableEvent.room" method="rooms"
           additional-query-params="{isStudy: true, occupied: true, date: timetableEvent.date, startTime: timetableEvent.startTime, endTime: timetableEvent.endTime, 
             repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount}" flex></hois-autocomplete>
       </div>
-      <div layout="column" class="common-label" flex="55" ng-repeat="room in timetableEvent.rooms | orderBy: currentLanguageNameField()">
-        <div layout="row" flex layout-align="start center">
-          <div flex="5">&nbsp;</div>
-          <div flex="50">{{room.nameEt}}</div>
-          <div>
-            <a ng-click="deleteRoom(room)" class="remove">&times;</a>
-          </div>
-        </div>
-      </div>
+      <md-table-container ng-if="timetableEvent.rooms.length > 0" layout="row" flex="60" flex-sm="100" flex-xs="100">
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column width="90%">{{'timetable.timetableEvent.code' | translate}}</th>
+              <th md-column width="10%"></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="room in timetableEvent.rooms | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{room.nameEt}}</td>
+              <td md-cell>
+                <a ng-click="deleteRoom(room)" class="remove">&times;</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
 
       <div layout="row" flex="60" flex-sm="100" flex-xs="100">
         <hois-autocomplete label="timetable.timetableEvent.studentGroup" ng-model="timetableEvent.studentGroup" method="studentgroups"
@@ -79,15 +101,24 @@
             repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount, studentGroupTeacherId: auth.isTeacher() ? auth.teacher : undefined}" 
           flex></hois-autocomplete>
       </div>
-      <div layout="column" class="common-label" flex="55" ng-repeat="studentGroup in timetableEvent.studentGroups">
-        <div layout="row" flex layout-align="start center">
-          <div flex="5">&nbsp;</div>
-          <div flex="50">{{studentGroup.nameEt}}</div>
-          <div>
-            <a ng-click="deleteStudentGroup(studentGroup)" class="remove">&times;</a>
-          </div>
-        </div>
-      </div>
+      <md-table-container ng-if="timetableEvent.studentGroups.length > 0" layout="row" flex="60" flex-sm="100" flex-xs="100">
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column width="90%">{{'timetable.timetableEvent.code' | translate}}</th>
+              <th md-column width="10%"></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="studentGroup in timetableEvent.studentGroups" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{studentGroup.nameEt}}</td>
+              <td md-cell>
+                <a ng-click="deleteStudentGroup(studentGroup)" class="remove">&times;</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
 
       <div layout="row" flex="100">
         <md-input-container flex="60" flex-sm="100" flex-xs="100">

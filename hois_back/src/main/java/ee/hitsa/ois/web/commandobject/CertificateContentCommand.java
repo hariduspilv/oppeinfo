@@ -12,6 +12,7 @@ public class CertificateContentCommand {
     @Required
     @ClassifierRestriction(MainClassCode.TOEND_LIIK)
     private String type;
+    private Boolean addOutcomes;
 
     public Long getStudent() {
         return student;
@@ -44,4 +45,13 @@ public class CertificateContentCommand {
     public void setOtherIdcode(String otherIdcode) {
         this.otherIdcode = otherIdcode;
     }
+
+    public Boolean getAddOutcomes() {
+        return addOutcomes;
+    }
+
+    public void setAddOutcomes(Boolean addOutcomes) {
+        this.addOutcomes = addOutcomes;
+    }
+    
 }

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service.curriculum;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.basemodule.BaseModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
@@ -24,15 +26,18 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleThemeCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapacity;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.VocationalGradeType;
 import ee.hitsa.ois.exception.EntityRemoveException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.BaseModuleUtil;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.OccupationModuleCapacitiesUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleCapacityDto;
@@ -113,10 +118,39 @@ public class CurriculumVersionOccupationModuleService {
     }
 
     private CurriculumVersionOccupationModule updateOccupationModule(CurriculumVersionOccupationModuleDto dto, CurriculumVersionOccupationModule occupationModule) {
-        EntityUtil.bindToEntity(dto, occupationModule,
-        classifierRepository, "curriculumModule", "capacities", "themes", "yearCapacities");
-        
-        updateModuleCapacities(occupationModule, dto.getCapacities());
+        if (dto.getCopy().equals(Boolean.FALSE) && dto.getBaseModule() != null 
+                && !(occupationModule.getBaseModule() != null && occupationModule.getBaseModule().getId().equals(dto.getBaseModule()))) {
+            BaseModule baseModule = em.getReference(BaseModule.class, dto.getBaseModule());
+            occupationModule.setBaseModule(baseModule);
+        }
+        if (occupationModule.getBaseModule() == null && dto.getCopy().equals(Boolean.FALSE)) {
+            EntityUtil.bindToEntity(dto, occupationModule,
+                    classifierRepository, "curriculumModule", "capacities", "themes", "yearCapacities", "teacher");
+            if (dto.getTeacher() != null && dto.getTeacher().getId() != null) {
+                occupationModule.setTeacher(em.getReference(Teacher.class, dto.getTeacher().getId()));
+                occupationModule.setSupervisor(occupationModule.getTeacher().getPerson().getFullname());
+            }
+            updateModuleCapacities(occupationModule, dto.getCapacities());
+        } else {
+            EntityUtil.bindToEntity(dto, occupationModule,
+                    classifierRepository, "curriculumModule", "capacities", "themes", "yearCapacities", "nameEt", "nameEn", "requirementsEt",
+                    "assessmentsEt", "learningMethodsEt", "assessmentMethodsEt", "assessment", "totalGradeDescription", "passDescription",
+                    "grade3Description", "grade4Description", "grade5Description", "independentStudyEt", "studyMaterials", "supervisor", "teacher");
+            BaseModule baseModule = em.getReference(BaseModule.class, dto.getBaseModule());
+            BaseModuleUtil.updateReferences(baseModule, Collections.emptySet(), Collections.singleton(occupationModule), em);
+            if (occupationModule.getId() == null) {
+                occupationModule.setThemes(StreamUtil.toMappedSet(t -> {
+                    CurriculumVersionOccupationModuleTheme theme = BaseModuleUtil.themeTransform(t, occupationModule);
+                    if (dto.getCopy().equals(Boolean.TRUE)) {
+                        theme.setBaseModuleTheme(null);
+                    }
+                    return theme;
+                }, baseModule.getThemes()));
+                if (!occupationModule.getThemes().isEmpty()) {
+                    OccupationModuleCapacitiesUtil.updateModuleCapacities(occupationModule, getCapacityTypes(baseModule.getSchool().getId()));
+                }
+            }
+        }
         updateYearCapacities(occupationModule, dto.getYearCapacities());
         return occupationModule;
     }

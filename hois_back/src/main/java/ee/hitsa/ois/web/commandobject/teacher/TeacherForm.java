@@ -45,7 +45,10 @@ public class TeacherForm extends VersionedCommand {
     private String rtipNr;
     @Size(max = 1000)
     private String addInfo;
+    @ClassifierRestriction(MainClassCode.EHIS_EMAKEEL)
+    private String nativeLanguage;
     private LocalDateTime ehisLastSuccessfulDate;
+    private String untisCode;
 
     public Boolean getIsStudyPeriodScheduleLoad() {
         return isStudyPeriodScheduleLoad;
@@ -143,6 +146,14 @@ public class TeacherForm extends VersionedCommand {
         this.addInfo = addInfo;
     }
     
+    public String getNativeLanguage() {
+        return nativeLanguage;
+    }
+
+    public void setNativeLanguage(String nativeLanguage) {
+        this.nativeLanguage = nativeLanguage;
+    }
+
     public LocalDateTime getEhisLastSuccessfulDate() {
         return this.ehisLastSuccessfulDate;
     }
@@ -151,7 +162,15 @@ public class TeacherForm extends VersionedCommand {
         this.ehisLastSuccessfulDate = ehisLastSuccessfulDate;
     }
 
-    public static class TeacherPersonForm {
+    public String getUntisCode() {
+		return untisCode;
+	}
+
+	public void setUntisCode(String untisCode) {
+		this.untisCode = untisCode;
+	}
+
+	public static class TeacherPersonForm {
 
         private Long id;
         @EstonianIdCode

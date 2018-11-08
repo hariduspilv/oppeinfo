@@ -56,6 +56,8 @@ public class JobExecutorService {
     private RtipService rtipService;
     @Autowired
     private StudentRepresentativeService studentRepresentativeService;
+    @Autowired
+    private TeacherService teacherService;
 
     @Value("${hois.jobs.message.representative.days}")
     private Integer representativeMessageDays;
@@ -68,6 +70,10 @@ public class JobExecutorService {
         handleJobs(job -> {
             contractService.endContract(EntityUtil.getId(job.getContract()));
         }, AUTHENTICATION_JOB, JobType.JOB_PRAKTIKALEPING_KEHTETU);
+        
+        withAuthentication(() -> {
+            teacherService.updateTeacherContractEnd();
+        }, AUTHENTICATION_MSG);
     }
 
     /**

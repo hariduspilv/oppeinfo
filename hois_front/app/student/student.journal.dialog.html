@@ -65,7 +65,13 @@
                     <span ng-if="row.absence">
                       <hois-classifier-value ng-model="row.absence" main-classifier-code="PUUDUMINE"></hois-classifier-value>
                     </span>
-                    <span ng-if="!row.absence">-</span>
+                    <span ng-if="row.lessonAbsences">
+                      <div ng-repeat="lessonAbsence in row.lessonAbsences | orderBy: 'lessonNr'" layout="row">
+                        <hois-classifier-value ng-model="lessonAbsence.absence" main-classifier-code="PUUDUMINE"></hois-classifier-value>
+                        <span>&nbsp; ({{lessonAbsence.lessonNr}})</span>
+                      </div>
+                    </span>
+                    <span ng-if="!row.absence && !row.lessonAbsences">-</span>
                   </td>
                 </tr>
               </tbody>

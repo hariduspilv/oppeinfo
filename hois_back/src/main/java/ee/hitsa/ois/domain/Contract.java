@@ -9,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 
 import org.hibernate.validator.constraints.Email;
 
@@ -16,6 +17,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 
@@ -93,6 +95,11 @@ public class Contract extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Subject subject;
+    
+    private Boolean isPracticeAbsence;
+    
+    @OneToOne(mappedBy = "contract")
+    private StudentAbsence studentAbsence;
 
     public Student getStudent() {
         return student;
@@ -302,4 +309,19 @@ public class Contract extends BaseEntityWithId {
         this.subject = subject;
     }
 
+    public Boolean getIsPracticeAbsence() {
+        return isPracticeAbsence;
+    }
+
+    public void setIsPracticeAbsence(Boolean isPracticeAbsence) {
+        this.isPracticeAbsence = isPracticeAbsence;
+    }
+
+    public StudentAbsence getStudentAbsence() {
+        return studentAbsence;
+    }
+
+    public void setStudentAbsence(StudentAbsence studentAbsence) {
+        this.studentAbsence = studentAbsence;
+    }
 }

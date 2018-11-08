@@ -6,10 +6,6 @@ angular.module('hitsaOis').controller('ApelSchoolListController', function ($sco
     order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt'
   });
   $q.all().then($scope.loadData);
-
-  $scope.clearCriteria = function () {
-    $scope.criteria = {};
-  };
   
 }).controller('ApelSchoolEditController', function ($scope, $route, dialogService, message, QueryUtils, $location, Classifier) {
     var id = $route.current.params.id;

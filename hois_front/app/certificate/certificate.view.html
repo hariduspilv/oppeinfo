@@ -54,7 +54,9 @@
       </md-input-container>
       <div ng-if="!contentEditable()">
         <label class="common-label">{{'certificate.content' | translate}}</label>
-        <div id="content" class="md-body-1"></div>
+        <md-table-container>
+            <div id="content" class="md-body-1"></div>
+        </md-table-container>
       </div>
   </div>
   <div layout="row">

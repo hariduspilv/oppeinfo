@@ -129,6 +129,19 @@ public class ApplicationController {
         return get(user, rejectedApplication);
     }
 
+    @PutMapping("/{id:\\d+}/confirm")
+    public ApplicationDto confirm(HoisUserDetails user, @WithEntity Application application) {
+        ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
+
+        if (!UserUtil.canConfirmApplication(user, application)) {
+            throw new ValidationFailedException(String.format("user %s is not allowed to confirm application %d with status %s", user.getUsername(), application.getId(), status));
+        }
+        Application confirmedApplication = applicationService.confirm(application);
+        applicationService.sendConfirmationNotificationMessage(confirmedApplication, user);
+
+        return get(user, confirmedApplication);
+    }
+
     @SuppressWarnings("fallthrough")
     private static void checkUpdateBusinessRules(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
         UserUtil.assertSameSchool(user, application.getStudent().getSchool());

@@ -1,7 +1,7 @@
 <div class="ois-form-layout-padding" layout="column" ng-cloak>
-  <div id="groupSelection" layout="column">
+  <div layout-padding id="groupSelection">
     <div layout="row" class="form-readonly">
-      <md-input-container flex="30">
+      <md-input-container flex>
         <label class="textInput">{{'timetable.timetablePlan.timetablePeriod' | translate}}</label>
         <hois-value value="(plan.startDate | hoisDate) + '-'+(plan.endDate | hoisDate)" />
       </md-input-container>
@@ -12,56 +12,45 @@
         </span>
       </div>
     </div>
-
-    <div flex>
+    <hois-collapsable expanded="false" label="('timetable.timetablePlan.showGroups' | translate)">
       <fieldset tabindex="1">
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetablePlan.showGroupsSubject' | translate}}</legend>
         <div layout="column">
           <md-checkbox ng-model="plan.selectAll" flex-offset="5">
             {{'timetable.timetablePlan.selectAll' | translate}}
           </md-checkbox>
-          <md-grid-list ng-app="app" md-cols="5" md-gutter="1em" md-row-height="6:1" flex>
+          <md-grid-list ng-app="app" md-cols="5" md-cols-md="3" md-cols-sm="2" md-cols-xs="1" md-row-height="5:1">
             <md-grid-tile ng-repeat="group in plan.studentGroups">
               <md-checkbox ng-model="group._selected" ng-change="updateGroups()">
                 {{group.code}} </md-checkbox>
             </md-grid-tile>
             <md-grid-tile ng-repeat="pair in plan.subjectTeacherPairs">
-              <span>
-                <md-checkbox ng-model="pair._selected" ng-change="updatePairs()">
-                  {{pair.code}}</md-checkbox>
-              </span>
+              <md-checkbox ng-model="pair._selected" ng-change="updatePairs()">
+                {{pair.code}}</md-checkbox>
             </md-grid-tile>
           </md-grid-list>
-
         </div>
       </fieldset>
-    </div>
+    </hois-collapsable>
 
-    <div>&nbsp;</div>
-
-    <div layout="row" flex>
-      <md-input-container flex="30">
-        <label>{{'timetable.timetablePlan.planGroupLessonsSubject' | translate}}</label>
-        <hois-select ng-model="plan.selectedGroup" values="plan.currentStudentGroups" show-property="code" value-property="dropdownValue"></hois-select>
-      </md-input-container>
-
-
-      <div flex="10" flex-offset="5">
-        <hois-autocomplete flex ng-model="plan.eventRoom" method="rooms" label="lessonplan.event.room"></hois-autocomplete>
+    <div layout="column" flex layout-gt-md="row">
+      <div flex="60" layout="column" layout-gt-sm="row">
+        <md-input-container flex="100" flex-gt-sm="60">
+          <label>{{'timetable.timetablePlan.planGroupLessonsSubject' | translate}}</label>
+          <hois-select ng-model="plan.selectedGroup" values="plan.currentStudentGroups" show-property="code" value-property="dropdownValue"></hois-select>
+        </md-input-container>
+        <hois-autocomplete flex="100" flex-gt-sm="30" flex-offset-gt-sm="10" ng-model="plan.eventRoom" method="rooms" label="lessonplan.event.room"></hois-autocomplete>
       </div>
-
-      <div flex="10" flex-offset="5">
-        <md-input-container flex>
+      <div flex="35" layout="column" layout-gt-sm="row" flex-offset-gt-md="5">
+        <md-input-container flex="100"  flex-gt-sm="25">
           <label>{{'timetable.timetablePlan.lessonAmount' | translate}}</label>
           <input ng-model="plan.lessonAmount" type="number" autofocus aria-label="lessonamount">
         </md-input-container>
+        <md-input-container flex="100" flex-gt-sm="65" flex-offset-gt-sm="10">
+          <label>{{'timetable.timetablePlan.repetition' | translate}}</label>
+          <hois-classifier-select ng-model="plan.repeatCode" model-value-attr="code" aria-label="repeatcode" main-classifier-code="TUNNIPLAAN_SYNDMUS_KORDUS">
+          </hois-classifier-select>
+        </md-input-container>
       </div>
-
-      <md-input-container flex="20" flex-offset="5">
-        <label>{{'timetable.timetablePlan.repetition' | translate}}</label>
-        <hois-classifier-select ng-model="plan.repeatCode" model-value-attr="code" aria-label="repeatcode" main-classifier-code="TUNNIPLAAN_SYNDMUS_KORDUS">
-        </hois-classifier-select>
-      </md-input-container>
     </div>
 
     <div ng-if="plan.selectedGroup && plan.repeatCode && plan.lessonAmount">

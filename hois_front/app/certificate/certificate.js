@@ -54,12 +54,25 @@ angular.module('hitsaOis')
       }
     }
 
-    if($scope.record.type) {
-      QueryUtils.endpoint(baseUrl + '/content').search({type: $scope.record.type}).$promise.then(function(response) {
+    function loadContent() {
+      QueryUtils.endpoint(baseUrl + '/content').search({
+        type: $scope.record.type,
+        addOutcomes: $scope.record.addOutcomes
+      }).$promise.then(function(response) {
         $scope.record.content = response.content;
         setReadonlyContent($scope.record.content);
       }).catch(angular.noop);
     }
+
+    if($scope.record.type) {
+      loadContent();
+    }
+
+    $scope.addOutcomesChanged = function() {
+      if($scope.record.type) {
+        loadContent();
+      }
+    };
 
     $scope.save = function() {
       $scope.certificateEditForm.$setSubmitted();
@@ -155,7 +168,8 @@ angular.module('hitsaOis')
             student: $scope.record.student,
             type: $scope.record.type,
             otherIdcode: $scope.record.otherIdcode,
-            otherName: $scope.record.otherName
+            otherName: $scope.record.otherName,
+            addOutcomes: $scope.record.addOutcomes
           }
         ).$promise.then(function(response) {
           $scope.record.content = response.content;
@@ -189,6 +203,12 @@ angular.module('hitsaOis')
         $timeout(loadContent, 1000);
       }
     });
+
+    $scope.addOutcomesChanged = function() {
+      if($scope.record.student) {
+        $timeout(loadContent, 1000);
+      }
+    };
 
     var lookup = QueryUtils.endpoint('/autocomplete/students');
     $scope.querySearch = function (text) {
@@ -352,7 +372,7 @@ angular.module('hitsaOis')
       dialogService.confirmDialog({prompt: 'certificate.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.url(baseUrl + '?_noback');
+          $scope.back('#' + baseUrl + '?_noback');
         });
       });
     };

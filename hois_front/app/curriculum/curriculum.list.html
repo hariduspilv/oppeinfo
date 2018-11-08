@@ -160,7 +160,7 @@
               {{'curriculum.isJoint' | translate}}
               </md-checkbox>
       </div>
-      <div layout="row">
+      <div layout="row" layout-xs="column">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button class="md-raised" ng-if="auth.school.vocational && canCreate" ng-href="#/vocationalCurriculum/new">{{'main.button.insertVocationalCurriculum' | translate}}</md-button>

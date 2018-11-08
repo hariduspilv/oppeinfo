@@ -35,13 +35,16 @@ import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodExam;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodExamStudent;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.TimetableEvent;
 import ee.hitsa.ois.domain.timetable.TimetableEventRoom;
+import ee.hitsa.ois.domain.timetable.TimetableEventTeacher;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.ExamType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.ProtocolType;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.TimetableEventRepeat;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -304,8 +307,9 @@ public class ExamService {
                 "join curriculum c on cv.curriculum_id = c.id " +
                 "left join student_group sg on s.student_group_id = sg.id").sort("p.lastname", "p.firstname");
         qb.requiredCriteria("ds.subject_study_period_id = :subjectStudyPeriod", "subjectStudyPeriod", EntityUtil.getId(exam.getSubjectStudyPeriod()));
-        qb.requiredCriteria("d.status_code = :status", "status", DeclarationStatus.OPINGUKAVA_STAATUS_K);
+        qb.requiredCriteria("d.status_code = :declarationStatus", "declarationStatus", DeclarationStatus.OPINGUKAVA_STAATUS_K);
         qb.requiredCriteria("s.school_id = :school", "school", user.getSchoolId());
+        qb.requiredCriteria("s.status_code in (:studentStatus)", "studentStatus", StudentStatus.STUDENT_STATUS_ACTIVE);
         if(ExamType.SOORITUS_P.name().equals(criteria.getType())) {
             // first exam
             // students who have already registered to a subject exam
@@ -460,7 +464,7 @@ public class ExamService {
         exam.setAddInfo(form.getAddInfo());
 
         // room
-        updateRoom(te, form);
+        updateRoomsAndTeachers(te, form);
         updateRegistrations(user, exam, form);
         if(te.getId() == null) {
             em.persist(te);
@@ -468,7 +472,7 @@ public class ExamService {
         return EntityUtil.save(exam, em);
     }
 
-    private void updateRoom(TimetableEvent te, ExamForm form) {
+    private void updateRoomsAndTeachers(TimetableEvent te, ExamForm form) {
         List<TimetableEventTime> eventTimes = te.getTimetableEventTimes();
         if(eventTimes == null) {
             te.setTimetableEventTimes(eventTimes = new ArrayList<>());
@@ -492,6 +496,16 @@ public class ExamService {
                     ter.setRoom(em.getReference(Room.class, r.getId()));
                     ter.setTimetableEventTime(tet);
                     return ter;
+                });
+        
+        SubjectStudyPeriod ssp = EntityUtil.getOptionalOne(SubjectStudyPeriod.class, form.getSubjectStudyPeriod(), em);
+        List<Teacher> teachers = StreamUtil.toMappedList(t -> t.getTeacher(), ssp.getTeachers());
+        EntityUtil.bindEntityCollection(tet.getTimetableEventTeachers(), t -> EntityUtil.getId(t.getTeacher()), teachers,
+                t -> EntityUtil.getId(t), t -> {
+                    TimetableEventTeacher tete = new TimetableEventTeacher();
+                    tete.setTeacher(t);
+                    tete.setTimetableEventTime(tet);
+                    return tete;
                 });
     }
 
@@ -642,10 +656,12 @@ public class ExamService {
                 "join protocol_student pstu on phdata.protocol_id = pstu.protocol_id " + 
                 "join subject_study_period_exam ssexam on phdata.subject_study_period_id = ssexam.subject_study_period_id " + 
                 "join subject_study_period_exam_student ssexams on ssexam.id = ssexams.subject_study_period_exam_id " + 
-                "where ssexam.id = sspe.id and pstu.subject_study_period_exam_student_id = ssexams.id) as subject_study_period_exam_student_id " +
+                "where ssexam.id = sspe.id and pstu.subject_study_period_exam_student_id = ssexams.id and pstu.student_id = d.student_id) " +
+                "as subject_study_period_exam_student_id " +
                 "from subject_study_period_exam_student sspes " +
                 "join subject_study_period_exam sspe on sspes.subject_study_period_exam_id = sspe.id " +
                 "join declaration_subject ds on sspes.declaration_subject_id = ds.id " + 
+                "join declaration d on ds.declaration_id = d.id " +
                 "where ds.id in (?1)")
              .setParameter(1, declarationSubjectIds)
              .getResultList();

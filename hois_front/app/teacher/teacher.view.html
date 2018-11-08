@@ -24,7 +24,7 @@
             </md-input-container>
             <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.nativeLanguage' | translate}}</label>
-              <hois-value value="teacher.person.nativeLanguage"></hois-value>
+              <hois-classifier-value ng-model="teacher.nativeLanguage" main-classifier-code="EHIS_EMAKEEL"></hois-classifier-value>
             </md-input-container>
           </div>
           <div layout="row" layout-sm="column" layout-xs="column">
@@ -86,6 +86,10 @@
             <md-input-container flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
               <label>{{'teacher.rtipNr' | translate}}</label>
               <hois-value value="teacher.rtipNr"></hois-value>
+            </md-input-container>
+            <md-input-container flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
+              <label>{{'teacher.untis' | translate}}</label>
+              <hois-value value="teacher.untisCode"></hois-value>
             </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column" flex>

@@ -47,6 +47,7 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.TeacherUserRights;
+import ee.hitsa.ois.util.UntisCodeUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherContinuingEducationForm;
@@ -288,10 +289,39 @@ public class TeacherService {
         if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
             throw new ValidationFailedException("teacher-vocational-higher");
         }
-
+        UntisCodeUtil untisCodeUtil = new UntisCodeUtil();
         updatePerson(teacherForm.getPerson(), teacher.getPerson());
 
         EntityUtil.setUsername(user.getUsername(), em);
+        if (StringUtils.isEmpty(teacherForm.getUntisCode())) {
+        	List<Teacher> teachers = em.createQuery("select t from Teacher t "
+        			+ "where t.school.id = ?1 "
+        			+ "and t.person.id != ?2", Teacher.class)
+                .setParameter(1, user.getSchoolId())
+                .setParameter(2, teacherForm.getPerson().getId())
+                .getResultList();
+    		teacherForm.setUntisCode(untisCodeUtil.generateTeacherCode(teacherForm.getPerson(), teachers));
+        } else {
+        	teacherForm.setUntisCode(teacherForm.getUntisCode().replaceAll("\\s+", ""));
+        	List<Teacher> teacherList = em.createQuery("select t from Teacher t "+
+                    "where t.school.id = ?1 " +
+                    "and t.untisCode = ?2 " +
+                    "and t.person.id != ?3", Teacher.class)
+                .setParameter(1, user.getSchoolId())
+                .setParameter(2, teacherForm.getUntisCode())
+                .setParameter(3, teacherForm.getPerson().getId())
+                .getResultList();
+        	if (!teacherList.isEmpty()) {
+        		List<Teacher> teachers = em.createQuery("select t from Teacher t "
+            			+ "where t.school.id = ?1 "
+            			+ "and t.person.id != ?2", Teacher.class)
+                    .setParameter(1, user.getSchoolId())
+                    .setParameter(2, teacherForm.getPerson().getId())
+                    .getResultList();
+        		teacherForm.setUntisCode(untisCodeUtil.generateTeacherCode(teacherForm.getPerson(), teachers));
+        	}
+        }
+        
         EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification", "teacherContinuingEducation");
         teacher.setTeacherOccupation(teacherOccupationRepository.getOneByIdAndSchool_Id(teacherForm.getTeacherOccupation().getId(), user.getSchoolId()));
         bindTeacherPositionEhisForm(teacher, teacherForm);
@@ -401,6 +431,17 @@ public class TeacherService {
             positionEhis.setMeetsQualification(Boolean.FALSE);
             positionEhis.setIsChildCare(Boolean.FALSE);
             positionEhis.setIsClassTeacher(Boolean.FALSE);
+        }
+    }
+    
+    public void updateTeacherContractEnd() {
+        List<TeacherPositionEhis> result = em.createQuery("select tpe from TeacherPositionEhis tpe"
+                + " where tpe.contractEnd is not null and tpe.contractEnd < CURRENT_DATE"
+                + " and tpe.isContractEnded = false", TeacherPositionEhis.class)
+                .getResultList();
+        for (TeacherPositionEhis teacherPositionEhis : result) {
+            teacherPositionEhis.setIsContractEnded(Boolean.TRUE);
+            EntityUtil.save(teacherPositionEhis, em);
         }
     }
 

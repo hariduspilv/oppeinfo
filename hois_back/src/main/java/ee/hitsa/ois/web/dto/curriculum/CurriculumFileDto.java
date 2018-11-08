@@ -16,7 +16,7 @@ public class CurriculumFileDto extends CurriculumFileForm {
     }
     
     public static CurriculumFileDto of(CurriculumFileUpdateDto updateDto) {
-        return EntityUtil.bindToDto(updateDto, new CurriculumFileDto());
+    	return EntityUtil.bindToDto(updateDto, new CurriculumFileDto());
     }
 
     public Long getId() {

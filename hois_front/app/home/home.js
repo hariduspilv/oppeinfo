@@ -9,16 +9,15 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     };
 
   }
-]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'QueryUtils', '$resource', 'config', 'Session', '$filter',
-  function ($rootScope, $scope, $timeout, AUTH_EVENTS, AuthService, QueryUtils, $resource, config, Session, $filter) {
-
+]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'USER_ROLES', 'ArrayUtils', 'QueryUtils', '$resource', 'config', 'Session', '$filter',
+  function ($rootScope, $scope, $timeout, AUTH_EVENTS, AuthService, USER_ROLES, ArrayUtils, QueryUtils, $resource, config, Session, $filter) {
     /**
      * Still under question if we need to add a delay for timeout.
      */
     $scope.finish = function () {
       $timeout(function () {
         $scope.balance();
-      });
+      }, 100);
       return false;
     };
 
@@ -154,6 +153,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       $scope.pageLoadingHandler.reset();
       $scope.loadGeneralMessages();
       $scope.loadUnreadMessages();
+      checkIfHasExpiredBaseModules();
       checkIfHasUnacceptedAbsences();
       checkUnconfirmedJournals();
       expiringOccupationStandards();
@@ -169,6 +169,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         $scope.sessionStudentId = null;
         $scope.tasks = [];
         $scope.studentAbsences = [];
+        $scope.absenceGroups = [];
         $scope.lastResults = [];
       }
     }
@@ -178,6 +179,12 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     }
     $scope.$on(AUTH_EVENTS.loginSuccess, afterAuthentication);
     $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
+
+    function checkIfHasExpiredBaseModules() {
+      if (['ROLL_A'].indexOf(Session.roleCode) !== -1 && ArrayUtils.includes(Session.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_BAASMOODUL)) {
+        $scope.hasExpiredBaseModules = QueryUtils.endpoint('/basemodule/expiredhascurriculums').query();
+      }
+    }
 
     function checkIfHasUnacceptedAbsences() {
       if(['ROLL_A', 'ROLL_O'].indexOf(Session.roleCode) !== -1) {
@@ -228,9 +235,13 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       $scope.pageLoadingHandler.addPromise("studentTasks",
         QueryUtils.endpoint('/journals/studentJournalTasks/').search({studentId: Session.studentId}).$promise,
         function (result) {
+          $scope.tasks = {todayTasks: [], tomorrowTasks: [], laterTasks: []};
           if (angular.isDefined(result.tasks) && result.tasks.length > 0) {
             getTodayAndTomorrowDate();
             sortTasksByDate(result.tasks.reverse());
+            if (!($scope.tasks.todayTasks.length > 0 || $scope.tasks.tomorrowTasks.length > 0 || $scope.tasks.laterTasks.length > 0)) {
+              $scope.pageLoadingHandler.setFinish("studentTasks");
+            }
           } else {
             $scope.pageLoadingHandler.setFinish("studentTasks");
           }
@@ -243,6 +254,20 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         QueryUtils.endpoint('/journals/studentJournalAbsences/').query({studentId: Session.studentId}).$promise,
         function (result) {
           $scope.studentAbsences = result;
+          $scope.absenceGroups = $scope.getGroupedValues($scope.studentAbsences, 'entryDate', 'hoisDate');
+          for (var key in $scope.absenceGroups) {
+            var PUUDUMINE_H = 0;
+            var PUUDUMINE_P = 0;
+            for (var i in $scope.absenceGroups[key]) {
+              if ($scope.absenceGroups[key][i].absenceCode === "PUUDUMINE_H") {
+                PUUDUMINE_H++;
+              } else if ($scope.absenceGroups[key][i].absenceCode === "PUUDUMINE_P") {
+                PUUDUMINE_P++;
+              }
+            }
+            $scope.absenceGroups[key].PUUDUMINE_H = PUUDUMINE_H > 0 ? PUUDUMINE_H : null;
+            $scope.absenceGroups[key].PUUDUMINE_P = PUUDUMINE_P > 0 ? PUUDUMINE_P : null;
+          }
           if (result.length === 0) {
             $scope.pageLoadingHandler.setFinish("studentAbsences");
           }

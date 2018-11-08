@@ -2,24 +2,25 @@ package ee.hitsa.ois.web.dto.scholarship;
 
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplicationFile;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.web.commandobject.OisFileViewDto;
 import ee.hitsa.ois.web.dto.OisFileDto;
 
 public class ScholarshipFileDto {
-    private OisFileDto oisFile;
+    private OisFileViewDto oisFile;
     private Long id;
     
     public static ScholarshipFileDto of(ScholarshipApplicationFile file) {
         ScholarshipFileDto dto = new ScholarshipFileDto();
-        dto.setOisFile(EntityUtil.bindToDto(file.getOisFile(), new OisFileDto(), "fdata"));
+        dto.setOisFile(OisFileViewDto.of(file.getOisFile()));
         dto.setId(EntityUtil.getId(file));
         return dto;
     }
 
-    public OisFileDto getOisFile() {
+    public OisFileViewDto getOisFile() {
         return oisFile;
     }
 
-    public void setOisFile(OisFileDto oisFile) {
+    public void setOisFile(OisFileViewDto oisFile) {
         this.oisFile = oisFile;
     }
 

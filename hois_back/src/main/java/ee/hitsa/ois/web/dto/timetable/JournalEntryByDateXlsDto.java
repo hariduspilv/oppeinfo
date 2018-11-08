@@ -8,6 +8,12 @@ public class JournalEntryByDateXlsDto {
 
     private LocalDate entryDate;
     private String nameEt;
+    
+    private String entryType;
+    private Long startLessonNr;
+    private Long lessons;
+    private Long outcomeOrderNr;
+    private Long curriculumModule;
 
     private Map<Long, String> journalStudentGrade = new HashMap<>();
     private Map<Long, String> journalStudentAbsence = new HashMap<>();
@@ -27,6 +33,46 @@ public class JournalEntryByDateXlsDto {
 
     public void setNameEt(String nameEt) {
         this.nameEt = nameEt;
+    }
+
+    public String getEntryType() {
+        return entryType;
+    }
+
+    public void setEntryType(String entryType) {
+        this.entryType = entryType;
+    }
+
+    public Long getStartLessonNr() {
+        return startLessonNr;
+    }
+
+    public void setStartLessonNr(Long startLessonNr) {
+        this.startLessonNr = startLessonNr;
+    }
+
+    public Long getLessons() {
+        return lessons;
+    }
+
+    public void setLessons(Long lessons) {
+        this.lessons = lessons;
+    }
+
+    public Long getOutcomeOrderNr() {
+        return outcomeOrderNr;
+    }
+
+    public void setOutcomeOrderNr(Long outcomeOrderNr) {
+        this.outcomeOrderNr = outcomeOrderNr;
+    }
+
+    public Long getCurriculumModule() {
+        return curriculumModule;
+    }
+
+    public void setCurriculumModule(Long curriculumModule) {
+        this.curriculumModule = curriculumModule;
     }
 
     public Map<Long, String> getJournalStudentGrade() {

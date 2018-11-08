@@ -1,0 +1,43 @@
+<md-dialog aria-label="apel results dialog" flex="50" flex-sm="50" flex-xs="100">
+  <form name="dialogForm" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{journalStudent.fullname}} {{"journal.apelResults.label" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div layout-padding>
+        <md-table-container>
+          <table md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{"journal.apelResults.moduleTheme" | translate}}</th>
+                <th md-column>{{"journal.apelResults.decisionDate" | translate}}</th>
+                <th md-column>{{"journal.apelResults.result" | translate}}</th>
+                <th md-column>{{"journal.apelResults.type" | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in journalStudent.apelResults | orderBy: 'confirmed'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{currentLanguageNameField(row.name)}}</td>
+                <td md-cell>{{row.confirmed | hoisDate}}</td>
+                <td md-cell>{{row.grade.value}}</td>
+                <td md-cell>{{row.isFormalLearning ? ('journal.apelResults.formal' | translate) : ('journal.apelResults.informal' | translate)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

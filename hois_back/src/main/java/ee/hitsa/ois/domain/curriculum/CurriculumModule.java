@@ -14,6 +14,7 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.basemodule.BaseModule;
 import ee.hitsa.ois.util.Translatable;
 
 @Entity
@@ -44,6 +45,8 @@ public class CurriculumModule extends BaseEntityWithId implements Translatable {
 	private Boolean practice;
 	
 	private Boolean isAdditional;
+	@ManyToOne(fetch = FetchType.LAZY)
+	private BaseModule baseModule;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false)
@@ -186,5 +189,13 @@ public class CurriculumModule extends BaseEntityWithId implements Translatable {
 
     public void setAssessmentsEn(String assessmentsEn) {
         this.assessmentsEn = assessmentsEn;
+    }
+
+    public BaseModule getBaseModule() {
+        return baseModule;
+    }
+
+    public void setBaseModule(BaseModule baseModule) {
+        this.baseModule = baseModule;
     }
 }

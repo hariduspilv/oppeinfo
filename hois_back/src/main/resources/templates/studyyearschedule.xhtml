@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>{{ "studyyearschedule.title" | translate }}</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+      {% include "studyyearschedule.css" %}
+    </style>
+  </head>
+  <body>
+    <table class="legend">
+      <tr>
+        <th>{{ "studyyearschedule.code" | translate }}</th>
+        <th>{{ "studyyearschedule.nameEt" | translate }}</th>
+        <th>{{ "studyyearschedule.nameEn" | translate }}</th>
+      </tr>
+      {% for item in content.legends %}
+	  <tr>
+	  	<td>{{ item.code }}</td>
+	  	<td>{{ item.nameEt }}</td>
+	  	<td>{{ item.nameEn }}</td>
+	  </tr>
+	  {% endfor %}
+    </table>
+    {% for table in content.tables %}
+    <table class="schedule">
+      <tr>
+        <td></td>
+        {% for studyPeriod in table.studyPeriods %}
+        <td class="label" colspan="{{ studyPeriod.weeks.size + 1 }}">{{ studyPeriod.period.nameEt }}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td></td>
+        {% for week in table.weeks %}
+        <td>{{ week }}</td>
+        {% endfor %}
+      </tr>
+      {% for department in table.departments %}
+      <tr>
+        <td class="label" colspan="{{ table.weeks.size + 1 }}">{{ department.department.nameEt }}</td>
+      </tr>
+          {% for studentGroup in department.studentGroups %}
+          <tr>
+            <td>{{ studentGroup.group.code }}</td>
+            {% for schedule in studentGroup.schedule %}
+            <td>{{ schedule is not empty ? schedule.code : "" }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+      {% endfor %}
+    </table>
+    {% endfor %}
+  </body>
+</html>

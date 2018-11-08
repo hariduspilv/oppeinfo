@@ -1,4 +1,10 @@
 <div class="ois-form-layout-padding form-readonly" ng-cloak>
+  <div layout="row" ng-if="showName">
+    <md-input-container flex>
+      <label>{{'committee.name' | translate}}</label>
+      <hois-value value="record.nameEt"></hois-value>
+    </md-input-container>
+  </div>
   <div layout="row" layout-sm="column" layout-xs="column">
     <md-input-container flex>
       <label>{{'committee.addInfo' | translate}}</label>
@@ -22,6 +28,12 @@
     </div>
   </div>
 
+  <div layout="row" ng-if="committeeType === 'KOMISJON_T'">
+    <md-input-container flex>
+      <label>{{'committee.curriculums' | translate}}</label>
+      <hois-value value="record.curriculums.map(currentLanguageNameField).join(', ')"></hois-value>
+    </md-input-container>
+  </div>
   
   <label class="md-subhead">{{'committee.memberIs' | translate}}</label>
   <md-table-container>
@@ -29,7 +41,7 @@
       <thead md-head>
         <tr md-row>
           <th md-column>{{'committee.isChairman' | translate}}</th>
-          <th md-column>{{'committee.external' | translate}}</th>
+          <th md-column ng-if="!showPersonSearch">{{'committee.external' | translate}}</th>
           <th md-column>{{'committee.name' | translate}}</th>
         </tr>
       </thead>
@@ -38,7 +50,7 @@
             <td md-cell>
               <i class="material-icons" ng-if="member.isChairman">done</i>
             </td>
-            <td md-cell>
+            <td md-cell ng-if="!showPersonSearch">
               <i class="material-icons" ng-if="member.isExternal">done</i>
             </td>
             <td md-cell>
@@ -49,8 +61,61 @@
     </table>
   </md-table-container>
   <br>
+  <fieldset ng-if="committeeType === 'KOMISJON_T'">
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'committee.decisions' | translate}}</legend>
+
+    <md-table-container>
+      <table md-table class="secondary-table">
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'stipend.decision.protocolNr' | translate}}</th>
+            <th md-column>{{'stipend.decision.decided' | translate}}</th>
+            <th md-column>{{'stipend.type' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="decision in record.scholarshipDecisions track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::decision.protocolNr}}</td>
+            <td md-cell>
+              <a ng-href="#/scholarships/decision/{{getScholarshipTypeForUrl(decision.scholarshipType.code)}}/{{decision.id}}">{{decision.decided | hoisDate}}</a>
+            </td>
+            <td md-cell>{{currentLanguageNameField(decision.scholarshipType)}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </fieldset>
+  <fieldset ng-if="committeeType === 'KOMISJON_V'">
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'committee.decisions' | translate}}</legend>
+
+    <md-table-container>
+      <table md-table class="secondary-table">
+        <thead md-head>
+          <tr md-row>
+            <th md-column width="20%">{{'committee.apelDecisons.student' | translate}}</th>
+            <th md-column>{{'committee.apelDecisons.decision' | translate}}</th>
+            <th md-column width="10%"></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in record.apelApplicationDecisions track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell><a ng-href="/#/apelApplication/{{row.applicationId}}/view">{{row.studentName}}</a></td>
+            <td md-cell>
+              <span>{{row.decision.length &GT 150 && !row.showAll ? (row.decision | limitTo:150) + '...' : row.decision}}</span>
+            </td>
+            <td md-cell>
+              <span class="custom-tooltip" ng-if="!row.showAll && row.decision.length > 150" ng-click="row.showAll = true">{{'committee.apelDecisons.showMore' | translate}}</span>
+              <span class="custom-tooltip" ng-if="row.showAll" ng-click="row.showAll = false">{{'committee.apelDecisons.showLess' | translate}}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </fieldset>
+  
+  <br>
   <div>
-    <md-button class="md-raised md-primary" ng-if="record.canEdit" ng-href="#/committees/{{record.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
-    <md-button class="md-raised" ng-href="#/committees">{{'main.button.back' | translate}}</md-button>
+    <md-button class="md-raised md-primary" ng-if="record.canEdit" ng-href="#/committees/{{committeeType}}/{{record.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
+    <md-button class="md-raised" ng-href="#/committees/{{committeeType}}">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

@@ -17,19 +17,19 @@
           <hois-value value="stipend.amountPaid"></hois-value>
         </md-input-container>
       </div>
-      <div layout="row" flex>
-        <md-input-container flex="45">
+      <div layout="row" layout-xs="column" flex>
+        <md-input-container flex="45" flex-xs="100">
           <label class="textInput">{{'stipend.studyForm' | translate}}</label>
           <hois-classifier-value ng-model="stipend.studyForms" main-classifier-code="OPPEVORM" multiple></hois-classifier-value>
         </md-input-container>
-        <div flex="50" flex-offset="5">
+        <div flex="50" flex-xs="100" flex-offset-xs="0" flex-offset="5">
           <md-checkbox ng-model="stipend.isTeacherConfirm" disabled aria-label="Is teacher confirm">
             {{'stipend.isTeacherConfirm' | translate}}
           </md-checkbox>
         </div>
       </div>
       <div layout="row" flex>
-        <md-input-container flex="45">
+        <md-input-container flex="45" flex-xs="100">
           <label class="textInput">{{'stipend.studyPeriodDates' | translate}}</label>
           <hois-value value="stipend.matriculationRange"></hois-value>
         </md-input-container>
@@ -51,12 +51,12 @@
           <hois-value value="application.phone"></hois-value>
         </md-input-container>
       </div>
-      <div layout="row" flex>
-        <md-input-container flex="45">
+      <div layout="row" layout-xs="column" flex>
+        <md-input-container flex="45" flex-xs="100">
           <label class="textInput">{{'stipend.student.address' | translate}}</label>
           <hois-value value="application.address"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-offset="5">
+        <md-input-container flex="50" flex-xs="100" flex-offset-xs="0" flex-offset="5">
           <label class="textInput">{{'main.email' | translate}}</label>
           <hois-value value="application.email"></hois-value>
         </md-input-container>
@@ -64,8 +64,8 @@
     </div>
     <div class="form-readonly ois-form-layout-padding">
       <div flex>
-        <div layout="row">
-          <div layout="column" flex="45">
+        <div layout="row" layout-xs="column">
+          <div layout="column" flex="45" flex-xs="100">
             <div layout="row" flex>
               <md-input-container flex>
                 <label>{{'stipend.student.bankAccount' | translate}}</label>
@@ -85,9 +85,10 @@
               </md-input-container>
             </div>
           </div>
-          <div layout="column" flex="50" flex-offset="5">
+          <div layout="column" layout-xs="row" flex-xs="100" flex-offset-xs="0" flex="50" flex-offset="5">
             <fieldset flex="100" layout="column">
               <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.compensationFrequency' | translate}}</legend>
+              <div style="overflow:auto">
               <md-input-container>
                 <md-radio-group layout="column" ng-model="application.compensationFrequency" required>
                   <md-radio-button flex layout="row" disabled ng-repeat="frequency in compensationFrequencies" value="{{frequency.code}}" aria-label="passedSubject">
@@ -95,6 +96,7 @@
                   </md-radio-button>
                 </md-radio-group>
               </md-input-container>
+              </div>
             </fieldset>
           </div>
         </div>
@@ -110,7 +112,7 @@
         <br/>
         <div layout="row">
           <md-button class="md-raised md-primary" ng-if="canManage" ng-click="accept()">{{'main.button.accept' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="back(isStudent ? '#/scholarships/myData/grants' : '#/scholarships/applications/grants')">{{'main.button.back' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="back(isStudent() ? '#/scholarships/myData/grants' : '#/scholarships/applications/grants')">{{'main.button.back' | translate}}</md-button>
         </div>
 
       </div>

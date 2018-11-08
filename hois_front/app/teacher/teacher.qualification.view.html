@@ -20,9 +20,8 @@
               <hois-classifier-value ng-model="qualification.state" main-classifier-code="RIIK"></hois-classifier-value>
             </md-input-container>
             <md-input-container flex="20" flex-offset="5" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
-              <label>{{'teacher.qualification.year' | translate}}</label>
-              <!-- todo fix hois-value-->
-              <hois-value value="qualification.year"></hois-value>
+              <label>{{'teacher.qualification.endDate' | translate}}</label>
+              <hois-value value="qualification.endDate | hoisDate"></hois-value>
             </md-input-container>
             <md-input-container flex="45" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.qualification.qualificationOther' | translate}}</label>
@@ -52,10 +51,6 @@
                 <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'teacher.qualification.studyLevel' | translate}}</label>
                   <hois-classifier-value ng-model="qualification.studyLevel" main-classifier-code="EHIS_EDUCATION_LEVEL"></hois-classifier-value>
-                </md-input-container>
-                <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'teacher.qualification.endDate' | translate}}</label>
-                  <hois-value value="qualification.endDate | hoisDate"></hois-value>
                 </md-input-container>
               </div>
               <div layout="row" layout-sm="column" layout-xs="column">

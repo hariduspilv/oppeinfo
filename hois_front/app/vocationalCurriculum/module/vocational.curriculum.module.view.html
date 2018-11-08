@@ -1,5 +1,5 @@
 <div class="ois-form-layout-padding nomargin">
-      <div layout="column" ng-cloak>
+    <div layout="column" ng-cloak>
         <fieldset tabindex="1" ng-if="module.canHaveOccupations">
             <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{module.occupation ? 'module.occupationPartOccupationSpecialize' : 'module.partOccupation' | translate}}</legend>
             <div layout="column">
@@ -100,7 +100,9 @@
         </md-input-container>
       </div>
       <span flex></span>
-      <md-button class="md-raised" ng-click="back('#/vocationalCurriculum/' + curriculumId + '/view')">{{"main.button.back" | translate}}</md-button>
+      <div>
+        <md-button class="md-raised" ng-click="back('#/vocationalCurriculum/' + curriculumId + '/view')">{{"main.button.back" | translate}}</md-button>
+      </div>
   </div>
   <style>
     .link-no-underline {

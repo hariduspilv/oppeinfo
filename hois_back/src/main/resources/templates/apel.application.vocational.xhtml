@@ -60,7 +60,7 @@
         {% endif %}
 
           <tr>
-            <td>{{ replacedSubjectOrModule.name }}</td>
+            <td><p style="word-wrap: break-word;">{{ replacedSubjectOrModule.name }}</p></td>
             <td>{{ replacedSubjectOrModule.credits }}</td>
           </tr>
 
@@ -90,12 +90,12 @@
 
           <tr>
             <td>{{ formalSubjectOrModule.school }}</td>
-            <td>{{ formalSubjectOrModule.name }}</td>
+            <td><p style="word-wrap: break-word;">{{ formalSubjectOrModule.name }}</p></td>
             <td>{{ formalSubjectOrModule.credits }}</td>
             <td>{{ formalSubjectOrModule.assessment }}</td>
             <td>{{ formalSubjectOrModule.grade }}</td>
             <td>{{ formalSubjectOrModule.gradeDate | hoisDate }}</td>
-            <td>{{ formalSubjectOrModule.teachers }}</td>
+            <td><p style="word-wrap: break-word;">{{ formalSubjectOrModule.teachers }}</p></td>
             <td>
                 {% if formalSubjectOrModule.transfer %}
                   {{ "yes" | translate }}
@@ -134,18 +134,20 @@
         {% endif %}
 
           <tr>
-            <td>{{ informalSubjectOrModule.name }}</td>
+            <td><p style="word-wrap: break-word;">{{ informalSubjectOrModule.name }}</p></td>
             <td>{{ informalSubjectOrModule.hours }}</td>
             <td>{{ informalSubjectOrModule.credits }}</td>
             <td>{{ informalSubjectOrModule.grade }}</td>
             <td>
-              <ul style="list-style-type:circle; padding-left: 15px">
-                {% for outcome in informalSubjectOrModule.outcomes %}
-                  <li>{{ outcome }}</li>
-                {% endfor %}
-              </ul>
+              <p style="word-wrap: break-word;">
+                <ul style="list-style-type:circle; padding-left: 15px">
+                  {% for outcome in informalSubjectOrModule.outcomes %}
+                    <li>{{ outcome }}</li>
+                  {% endfor %}
+                </ul>
+              </p>
             </td>
-            <td>{{ informalSubjectOrModule.skills }}</td>
+            <td><p style="word-wrap: break-word;">{{ informalSubjectOrModule.skills }}</p></td>
             <td>
               {% if informalSubjectOrModule.transfer %} X {% endif %}
             </td>
@@ -173,10 +175,10 @@
         {% endif %}
 
           <tr>
-            <td>{{ informalExperience.name }}</td>
-            <td>{{ informalExperience.placeTime }}</td>
+            <td><p style="word-wrap: break-word;">{{ informalExperience.name }}</p></td>
+            <td><p style="word-wrap: break-word;">{{ informalExperience.placeTime }}</p></td>
             <td>{{ informalExperience.hours }}</td>
-            <td>{{ informalExperience.documents }}</td>
+            <td><p style="word-wrap: break-word;">{{ informalExperience.documents }}</p></td>
             <td>{{ informalExperience.type }}</td>
           </tr>
 
@@ -202,7 +204,7 @@
         <tr>
           <td>{{ comment.insertedBy }}</td>
           <td>{{ comment.inserted | hoisDateTime }}</td>
-          <td>{{ comment.addInfo }}</td>
+          <td><p style="word-wrap: break-word;">{{ comment.addInfo }}</p></td>
         </tr>
     
       {% if loop.index == loop.length - 1 %}

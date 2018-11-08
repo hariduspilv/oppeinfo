@@ -46,10 +46,10 @@
                             <td md-cell>{{currentLanguageNameField(journal.modules)}}</td>
                             <td md-cell>{{journal.teachers}}</td>
                             <td md-cell width="20%">
-                                <span>{{journal.absencePV}} /</span>
-                                <span ng-class="{bad: journal.absenceP > 0}">{{journal.absenceP}}</span>
+                                <span>{{journal.absences['PUUDUMINE_P'] + journal.absences['PUUDUMINE_V'] + journal.absences['PUUDUMINE_PR']}} /</span>
+                                <span ng-class="{bad: journal.absences['PUUDUMINE_P'] > 0}">{{journal.absences['PUUDUMINE_P']}}</span>
                             </td>
-                            <td md-cell>{{journal.absenceH}}</td>
+                            <td md-cell>{{journal.absences['PUUDUMINE_H']}}</td>
                             <td md-cell><a ng-href="/#/studyMaterial/vocational/{{journal.id}}/view">{{'studyMaterial.label' | translate}}</a></td>
                         </tr>
                     </tbody>

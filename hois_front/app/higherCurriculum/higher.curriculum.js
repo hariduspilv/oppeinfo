@@ -80,10 +80,6 @@ angular.module('hitsaOis')
         }
     };
 
-    $scope.clearIscedClass = function() {
-        $scope.curriculum.fieldOfStudy = undefined;
-    };
-
     function getEhisSchoolsSelection() {
         $scope.jointPartnersEhisSchools = [];
         $scope.myEhisSchool = $scope.curriculum.id ? $scope.curriculum.ehisSchool : Session.school.ehisSchool;
@@ -117,7 +113,6 @@ angular.module('hitsaOis')
     function setVariablesForExistingCurriculum() {
         DataUtils.convertStringToDates($scope.curriculum, ["validFrom", "validThru", "approval", "ehisChanged", "accreditationDate", "accreditationValidDate", "merRegDate"]);
         setStudyPeriod();
-        setAreaOfStudy();
         $scope.getAreasOfStudy();
         updateAddresses();
         getJointPartners();
@@ -134,21 +129,6 @@ angular.module('hitsaOis')
       var MONTHS_IN_YEAR = 12;
       $scope.curriculum.studyPeriodYears = Math.floor($scope.curriculum.studyPeriod / MONTHS_IN_YEAR);
       $scope.curriculum.studyPeriodMonths = $scope.curriculum.studyPeriod % MONTHS_IN_YEAR;
-    }
-
-    function setAreaOfStudy() {
-
-        if($scope.curriculum.iscedClass) {
-            if($scope.curriculum.iscedClass.indexOf("ISCED_VALD") !== -1) {
-                $scope.curriculum.areaOfStudy = $scope.curriculum.iscedClass;
-            } else {
-
-                Classifier.getParentsWithMainClass('ISCED_VALD', $scope.curriculum.iscedClass).$promise.then(function (response) {
-                    $scope.curriculum.areaOfStudy = response[0].code;
-                    $scope.curriculum.fieldOfStudy = $scope.curriculum.iscedClass;
-                });
-            }
-        }
     }
 
 
@@ -214,6 +194,17 @@ angular.module('hitsaOis')
         );
     }
 
+    $scope.hasRequiredFiles = function() {
+      var files = $scope.curriculum.files;
+      if(ArrayUtils.isEmpty(files)) {
+        return false;
+      }
+      return !ArrayUtils.isEmpty(files.filter(function(file){
+        return file.ehisFile === 'EHIS_FAIL_15773' && file.sendEhis === true && 
+         file.oisFile && file.oisFile.ftype === 'application/pdf';
+      }));
+    };
+
    $scope.hasVerifiedVersions = function() {
       var versions = $scope.curriculum.versions;
       if(ArrayUtils.isEmpty(versions)) {
@@ -231,9 +222,14 @@ angular.module('hitsaOis')
           message.error(errorMessage);
           return false;
       }
-      if ($scope.strictValidation() && !$scope.hasVerifiedVersions()) {
+      if ($scope.strictValidation()) {
+        if (!$scope.hasRequiredFiles()) {
+          message.error('curriculum.error.noSummaryFile');
+          return false;
+        } else if (!$scope.hasVerifiedVersions()) {
           message.error('curriculum.error.noVersion');
           return false;
+        }
       }
       return true;
     }
@@ -247,8 +243,6 @@ angular.module('hitsaOis')
     function mapModelToDto() {
       updateJointInfo();
       clearGradesIfNecessary();
-      $scope.curriculum.iscedClass = $scope.curriculum.fieldOfStudy ?
-      $scope.curriculum.fieldOfStudy : $scope.curriculum.areaOfStudy;
       $scope.curriculum.studyPeriodMonths = $scope.curriculum.studyPeriodMonths ? $scope.curriculum.studyPeriodMonths : 0;
       $scope.curriculum.studyPeriod = $scope.curriculum.studyPeriodMonths + 12 * $scope.curriculum.studyPeriodYears;
     }
@@ -413,7 +407,17 @@ angular.module('hitsaOis')
         return jointPartner.ehisSchool || jointPartner.nameEt || jointPartner.nameEn;
     };
 
+    function isAddressAdded(item) {
+      return ArrayUtils.contains($scope.curriculum.addresses.map(function (address) {
+        return address.addressOv;
+      }), item.addressOv);
+    }
+
     $scope.addAddress = function () {
+      if (isAddressAdded($scope.formState.address)) {
+        message.error("curriculum.error.addressAlreadyAdded");
+        return;
+      }
       $scope.curriculum.addresses.push($scope.formState.address);
       $scope.formState.address = {};
       updateAddresses();

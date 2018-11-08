@@ -41,7 +41,7 @@ public class ModuleProtocolDto extends VersionedCommand {
             dto.setProtocolVdata(ProtocolVdataDto.of(protocol.getProtocolVdata()));
         }
         if (protocol.getOisFile() != null) {
-            dto.setOisFile(EntityUtil.bindToDto(protocol.getOisFile(), new OisFileViewDto()));
+        	dto.setOisFile(OisFileViewDto.of(protocol.getOisFile()));
         }
         dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(protocol.getConfirmer()));
         return dto;

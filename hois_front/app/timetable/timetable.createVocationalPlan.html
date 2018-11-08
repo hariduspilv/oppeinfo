@@ -18,7 +18,7 @@
           <md-checkbox ng-model="plan.selectAll" flex-offset="5" ng-change="selectAllChanged()">
             {{'timetable.timetablePlan.selectAll' | translate}}
           </md-checkbox>
-          <md-grid-list ng-app="app" md-cols="5" md-gutter="1em" md-row-height="6:1" flex>
+          <md-grid-list ng-app="app" md-cols="5" md-cols-md="3" md-cols-sm="2" md-cols-xs="1" md-row-height="6:1">
             <md-grid-tile ng-repeat="group in plan.studentGroups">
               <md-checkbox ng-model="group._selected" ng-change="updateGroups()">
                 {{group.code}} </md-checkbox>

@@ -15,11 +15,9 @@
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'finalProtocol.committee' | translate}}</legend>
         <div flex="30" flex-sm="100" flex-xs="100">
           <md-input-container style="width: 100%">
-            <label>{{'finalProtocol.committee' | translate}}</label>
-            <md-select ng-model="protocol.committee" aria-label="committee" ng-change="selectedCommitteeChanged()" ng-disabled="!formState.canEditProtocol">
-              <md-option ng-value="null"></md-option>
-              <md-option ng-repeat="val in committees" ng-value="val.id">{{val.members}}</md-option>
-            </md-select>
+            <label>{{'stipend.committee' | translate}}</label>
+            <hois-select ng-model="protocol.committee" values="committees" ng-change="selectedCommitteeChanged()" 
+              ng-disabled="!formState.canEditProtocol"></hois-select>
           </md-input-container>
         </div>
         <md-table-container ng-if="committeeMembers">

@@ -15,7 +15,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.persistence.EntityManager;
@@ -261,6 +263,45 @@ public abstract class EntityUtil {
         // remove possible leftovers
         return storedValues.removeIf(t -> storedIds.contains(idExtractor.apply(t))) || modified;
     }
+    
+    /**
+     * Child collection binding with create and delete operations.
+     * Used when you need to extract id from object and also have other property to set (typically holder object with multiple properties).
+     *
+     * @param storedValues
+     * @param idExtractor
+     * @param newIds
+     * @param newValueFactory
+     * @param newIdExtractor
+     * @return true if something was added/removed
+     */
+    public static <SV, ID, NV> boolean bindEntityCollection(Consumer<SV> remover, Collection<SV> storedValues, Function<SV, ID> idExtractor, Collection<NV> newValues, Function<NV, ID> newIdExtractor, Function<NV, SV> newValueFactory) {
+        Set<ID> storedIds = StreamUtil.toMappedSet(idExtractor, storedValues);
+        boolean modified = false;
+        if(newValues != null) {
+            for(NV newValue : newValues) {
+                ID id = newIdExtractor.apply(newValue);
+                if(!storedIds.remove(id)) {
+                    storedValues.add(newValueFactory.apply(newValue));
+                    modified = true;
+                }
+            }
+        }
+
+        // remove possible leftovers
+        AtomicBoolean removed = new AtomicBoolean(false);
+        storedValues.removeIf(val -> {
+            if (storedIds.contains(idExtractor.apply(val))) {
+                if (remover != null) {
+                    remover.accept(val);
+                    removed.set(true);
+                }
+                return true;
+            }
+            return false;
+        });
+        return removed.get() || modified;
+    }
 
     /**
      * child collection binding with create, update and remove operations.
@@ -273,6 +314,23 @@ public abstract class EntityUtil {
      * @param updater
      */
     public static <SV, ID, NV> void bindEntityCollection(Collection<SV> storedValues, Function<SV, ID> storedIdExtractor, Collection<NV> newValues, Function<NV, ID> newIdExtractor, Function<NV, SV> newValueFactory, BiConsumer<NV, SV> updater) {
+        bindEntityCollection(storedValues, storedIdExtractor, newValues, newIdExtractor, newValueFactory, updater, null);
+    }
+    
+
+    /**
+     * Child collection binding with create, update and remove operations.
+     *
+     * @param storedValues
+     * @param storedIdExtractor
+     * @param newValues
+     * @param newIdExtractor
+     * @param newValueFactory
+     * @param updater
+     * @param remover applies to SV object. Used on every object which is removed from the storedValues collection.
+     */
+    public static <SV, ID, NV> void bindEntityCollection(Collection<SV> storedValues, Function<SV, ID> storedIdExtractor, Collection<NV> newValues, Function<NV, ID> newIdExtractor,
+            Function<NV, SV> newValueFactory, BiConsumer<NV, SV> updater, Consumer<SV> remover) {
         Map<ID, SV> mappedStoredValues = StreamUtil.toMap(storedIdExtractor, storedValues);
 
         if(newValues != null) {
@@ -285,7 +343,7 @@ public abstract class EntityUtil {
                     if(storedValue == null) {
                         throw new AssertionFailedException("Cannot find existing entity with id: " + id);
                     }
-                    if(updater != null) {
+                    if (updater != null) {
                         updater.accept(newValue, storedValue);
                     }
                 }
@@ -293,9 +351,12 @@ public abstract class EntityUtil {
         }
 
         // remove possible leftovers
+        if (remover != null) {
+            mappedStoredValues.values().forEach(sv -> remover.accept(sv));
+        }
         storedValues.removeAll(mappedStoredValues.values());
     }
-
+    
     public static void bindClassifiers(Object command, Object entity, Map<String, ClassifierRestriction> properties, ClassifierRepository loader) {
         PropertyAccessor source = PropertyAccessorFactory.forBeanPropertyAccess(command);
         PropertyAccessor destination = PropertyAccessorFactory.forBeanPropertyAccess(entity);

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
@@ -52,6 +51,7 @@ import ee.hitsa.ois.web.dto.timetable.JournalDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentAcceptedAbsenceDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryTableDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
@@ -146,7 +146,7 @@ public class JournalController {
     @PostMapping("/{id:\\d+}/addStudentsToJournal")
     public void addStudentsToJournal(HoisUserDetails user, @WithEntity Journal journal, @RequestBody JournalStudentsCommand command) {
         JournalUtil.assertCanAddStudent(user, journal);
-        journalService.addStudentsToJournal(journal, command);
+        journalService.addStudentsToJournal(user, journal, command);
     }
 
     @PostMapping("/{id:\\d+}/removeStudentsFromJournal")
@@ -203,11 +203,11 @@ public class JournalController {
         return journalService.usedHours(journal);
     }
 
-    @GetMapping("/{id:\\d+}/studentsWithAcceptedAbsence")
-    public Set<Long> journalStudentsWithAcceptedAbsence(HoisUserDetails user, @WithEntity Journal journal,
-            @Valid JournalStudentHasAbsenceCommand command)  {
+    @GetMapping("/{id:\\d+}/studentsWithAcceptedAbsences")
+    public List<JournalEntryStudentAcceptedAbsenceDto> journalStudentsWithAcceptedAbsences(HoisUserDetails user,
+            @WithEntity Journal journal, @Valid JournalStudentHasAbsenceCommand command) {
         JournalUtil.assertCanView(user, journal);
-        return journalService.journalStudentsWithAcceptedAbsence(journal, command.getEntryDate());
+        return journalService.journalStudentsWithAcceptedAbsences(journal, command.getEntryDate());
     }
     
     @GetMapping("/studentJournalStudyYears")

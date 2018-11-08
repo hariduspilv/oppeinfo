@@ -27,6 +27,7 @@ import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.protocol.ProtocolStudentHistory;
 import ee.hitsa.ois.domain.protocol.ProtocolStudentOccupation;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
+import ee.hitsa.ois.enums.CommitteeType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.message.StudentResultMessage;
@@ -41,7 +42,6 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ProtocolStudentForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.finalprotocol.FinalProtocolCommitteeSelectDto;
 
 @Transactional
 public class AbstractProtocolService {
@@ -152,12 +152,13 @@ public class AbstractProtocolService {
     
     /* FINAL EXAM methods */
     
-    public List<FinalProtocolCommitteeSelectDto> committeesForSelection(HoisUserDetails user, LocalDate finalDate) {
+    public List<AutocompleteResult> committeesForSelection(HoisUserDetails user, LocalDate finalDate) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from committee c"
                 + " left join committee_member cm on c.id = cm.committee_id"
                 + " left join teacher t on t.id = cm.teacher_id left join person p on p.id = t.person_id ");
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("c.type_code = :type", "type", CommitteeType.KOMISJON_K.name());
         qb.optionalCriteria("c.valid_from <= :finalDate", "finalDate", finalDate);
         qb.optionalCriteria("c.valid_thru >= :finalDate", "finalDate", finalDate);
         qb.groupBy(" c.id ");
@@ -168,10 +169,7 @@ public class AbstractProtocolService {
                 + " else p.firstname || ' ' || p.lastname end), ', ') as members", em).getResultList();
 
         return StreamUtil.toMappedList(r -> {
-            FinalProtocolCommitteeSelectDto dto = new FinalProtocolCommitteeSelectDto();
-            dto.setId(resultAsLong(r, 0));
-            dto.setMembers(resultAsString(r, 1));
-            return dto;
+            return new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 1));
         }, committees);
     }
     

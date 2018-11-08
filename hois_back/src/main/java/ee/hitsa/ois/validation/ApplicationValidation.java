@@ -2,6 +2,10 @@ package ee.hitsa.ois.validation;
 
 public interface ApplicationValidation {
 
+    interface Muu extends ApplicationValidation {
+
+    }
+
     interface Finm extends ApplicationValidation {
 
     }

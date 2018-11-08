@@ -235,16 +235,16 @@
                <span ng-class="{invalid: notAllModulesHaveOccupation()}">{{'module.modulesWithoutPartOccupationOccuaptionSpecialization' | translate}}</span>
              </div>
              <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutEmptyModules | orderBy: 'nameEt'" class="lowerBorder">
-                 <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
-                     <div flex="5">&nbsp;</div>
-                     <div flex="20">{{currentLanguageNameField(type)}}</div>
-                     <div layout="column" flex="75">
-                         <div flex="100" ng-repeat="module in curriculum.modules | filter: filterEmptyModulesByType(type.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
-                             <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
-                             <span flex="10">{{module.credits}}&nbsp; EKAP</span>
-                         </div>
-                     </div>
-                 </div>
+              <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+                <div flex="5">&nbsp;</div>
+                <div flex="20">{{currentLanguageNameField(type)}}</div>
+                <div layout="column" flex="75">
+                  <div flex="100" ng-repeat="module in curriculum.modules | filter: filterEmptyModulesByType(type.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
+                    <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+                    <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+                  </div>
+                </div>
+              </div>
              </div>
 
               <!--KUTSETE/OSAKUTSETE MOODULID-->
@@ -254,47 +254,47 @@
                      <span ng-show="!curriculum.occupation" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && (!occupationHasPModule(occupation.occupation.code) || !isOccutationsCreditsValid(occupation))}">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
                  </div>
                  <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(occupation.occupation.code, curriculum.modules) | orderBy: 'nameEt'" class="lowerBorder">
-                     <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
-                         <div flex="5">&nbsp;</div>
-                         <div flex="20">{{currentLanguageNameField(type)}}</div>
-                         <div layout="column" flex="75">
-                             <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, occupation.occupation.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
-                                 <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
-                                 <span flex="10">{{module.credits}}&nbsp; EKAP</span>
-                             </div>
-                         </div>
-                     </div>
+                    <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+                      <div flex="5" flex-xs="0">&nbsp;</div>
+                      <div flex="20" flex-xs="30">{{currentLanguageNameField(type)}}</div>
+                      <div layout="column" flex="75" flex-xs="70">
+                          <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, occupation.occupation.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
+                              <a flex="30" flex-xs="80" style="word-wrap: break-word" ng-click="openAddModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+                              <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+                          </div>
+                      </div>
+                  </div>
                  </div>
                  <!--OSAKUTSETE MOODULID-->
                  <div ng-repeat = "partOccupation in occupation.partOccupations | orderBy: 'nameEt'" layout="column">
                      <div class="occupation-header2 align-center"> <span ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !occupationHasPModule(partOccupation.code)}">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}: {{currentLanguageNameField(partOccupation)}}</span></div>
                      <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(partOccupation.code, curriculum.modules) | orderBy: 'nameEt'" class="lowerBorder">
-                         <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
-                             <div flex="5">&nbsp;</div>
-                             <div flex="20">{{currentLanguageNameField(type)}}</div>
-                             <div layout="column" flex="75">
-                                 <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, partOccupation.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
-                                     <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
-                                     <span flex="10">{{module.credits}}&nbsp; EKAP</span>
-                                 </div>
-                             </div>
-                         </div>
+                        <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+                          <div flex="5" flex-xs="0">&nbsp;</div>
+                          <div flex="20" flex-xs="30">{{currentLanguageNameField(type)}}</div>
+                          <div layout="column" flex="75" flex-xs="70">
+                              <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, partOccupation.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
+                                  <a flex="30" flex-xs="80" ng-click="openAddModuleDialog(module)" style="word-wrap: break-word" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+                                  <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+                              </div>
+                          </div>
+                      </div>
                      </div>
                  </div>
                  <!--SPETSKUTSETE MOODULID-->
                  <div ng-repeat = "speciality in occupation.specialities | orderBy: 'nameEt'" layout="column">
                      <div class="occupation-header2 align-center"><span ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && (!occupationHasPModule(speciality.code) || !isSpetsOccupationValid(speciality, occupation))}">{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: {{currentLanguageNameField(speciality)}}</span></div>
                      <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality.code, curriculum.modules) | orderBy: 'nameEt'" class="lowerBorder">
-                         <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
-                             <div flex="5">&nbsp;</div>
-                             <div flex="20">{{currentLanguageNameField(type)}}</div>
-                             <div layout="column" flex="75">
-                                 <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, speciality.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
-                                     <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
-                                     <span flex="10">{{module.credits}}&nbsp; EKAP</span>
-                                 </div>
-                             </div>
-                         </div>
+                        <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+                          <div flex="5" flex-xs="0">&nbsp;</div>
+                          <div flex="20" flex-xs="30">{{currentLanguageNameField(type)}}</div>
+                          <div layout="column" flex="75" flex-xs="70">
+                              <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, speciality.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
+                                  <a flex="30" flex-xs="80" ng-click="openAddModuleDialog(module)" style="word-wrap: break-word" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+                                  <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+                              </div>
+                          </div>
+                      </div>
                      </div>
                  </div>
              </div>
@@ -412,8 +412,9 @@
      </fieldset>
 
      <div>&nbsp;</div>
-     <fieldset tabindex="11" style="overflow: auto">
+     <fieldset tabindex="11">
        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.statuses' | translate}}</legend>
+       <div style="overflow: auto">
        <div layout="row" flex="100">
          <md-input-container  flex="30" flex-sm="100" flex-xs="100">
            <label>{{'main.validFrom' | translate}}</label>
@@ -442,6 +443,7 @@
           <a ng-show="!!curriculum.stateCurriculum" ng-href="/#/stateCurriculum/{{curriculum.stateCurriculum.id}}/view" class="md-primary"
           translate="curriculum.referenceToStateCurriculum" translate-values="{{curriculum.stateCurriculum}}"></a>
         </div>
+      </div>
      </fieldset>
 
      <div>&nbsp;</div>
@@ -515,13 +517,13 @@
         </span>
         <span ng-show="curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis">
           <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
-          <md-button class="md-raised md-default" ng-click="sendToEhis(true)" ng-if="curriculum.canConfirm">{{'main.button.sendToEhisTest' | translate}}</md-button>
-          <md-button class="md-raised md-default" ng-click="sendToEhis(false)" ng-if="curriculum.canConfirm">{{'main.button.sendToEhis' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="sendToEhis(true)" ng-if="curriculum.canConfirm">{{'curriculum.button.sendToEhisTest' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="sendToEhis(false)" ng-if="curriculum.canConfirm">{{'curriculum.button.sendToEhis' | translate}}</md-button>
           <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
         </span>
         <span ng-show="curriculum.status === STATUS.PROCEEDING && formState.sentToEhis">
-          <md-button class="md-raised md-default" ng-click="updateFromEhis(true)" ng-if="curriculum.canConfirm">{{'main.button.updateFromEhisTest' | translate}}</md-button>
-          <md-button class="md-raised md-default" ng-click="updateFromEhis(false)" ng-if="curriculum.canConfirm">{{'main.button.updateFromEhis' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="updateFromEhis(true)" ng-if="curriculum.canConfirm">{{'curriculum.button.updateFromEhisTest' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="updateFromEhis(false)" ng-if="curriculum.canConfirm">{{'curriculum.button.updateFromEhis' | translate}}</md-button>
         </span>
         <span ng-show="curriculum.status === STATUS.VERIFIED">
             <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>

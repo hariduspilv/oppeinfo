@@ -19,5 +19,13 @@ public interface JournalEntryStudentRepository extends JpaRepository<JournalEntr
         + "where id in :studentEntries")
 void acceptAbsences(@Param("absence") String absence, @Param("studentEntries") Set<Long> studentEntries);
 
+@Modifying
+@Query(nativeQuery = true, value = ""
+        + "update journal_entry_student_lesson_absence "
+        + "set absence_accepted = current_timestamp, "
+        + "absence_code = :absence "
+        + "where id in :lessonAbsenceIds")
+void acceptAbsenceLessons(@Param("absence") String absence, @Param("lessonAbsenceIds") Set<Long> lessonAbsenceIds);
+
 
 }

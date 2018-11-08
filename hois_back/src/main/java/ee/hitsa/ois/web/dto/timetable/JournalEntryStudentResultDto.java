@@ -15,6 +15,8 @@ public class JournalEntryStudentResultDto {
     private String gradeInsertedBy;
     @ClassifierRestriction(MainClassCode.PUUDUMINE)
     private String absence;
+    private LocalDateTime absenceInserted;
+    private List<JournalEntryStudentLessonAbsenceDto> lessonAbsences;
     private List<JournalEntryStudentHistoryDto> journalEntryStudentHistories;
 
     public String getGrade() {
@@ -63,6 +65,22 @@ public class JournalEntryStudentResultDto {
     
     public void setAbsence(String absence) {
         this.absence = absence;
+    }
+
+    public LocalDateTime getAbsenceInserted() {
+        return absenceInserted;
+    }
+
+    public void setAbsenceInserted(LocalDateTime absenceInserted) {
+        this.absenceInserted = absenceInserted;
+    }
+
+    public List<JournalEntryStudentLessonAbsenceDto> getLessonAbsences() {
+        return lessonAbsences;
+    }
+
+    public void setLessonAbsences(List<JournalEntryStudentLessonAbsenceDto> lessonAbsences) {
+        this.lessonAbsences = lessonAbsences;
     }
 
     public List<JournalEntryStudentHistoryDto> getJournalEntryStudentHistories() {

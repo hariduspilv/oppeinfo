@@ -1,12 +1,12 @@
   <hois-collapsable expanded="false">
     <hois-collapsable-header>
       <div layout="column" layout-gt-sm="row" class="curriculum-fulfillment-result">
-        <div flex-gt-sm="40" flex-gt-md="30">
+        <div>
           <span ng-if="moduleResultById[module.id].isApelTransfer" class="apelAsterisk">*</span>
           <span>{{currentLanguageNameField(module.curriculumModule) + ' (' + currentLanguageNameField(module.curriculumModule.module) + ')'}}</span>
           <span ng-if="moduleResultById[module.id].isApelTransfer && !moduleResultById[module.id].isFormalLearning"> - {{'student.result.informal' | translate}}</span>
         </div>
-        <div flex-gt-sm="15" flex-gt-md="10" flex-offset-gt-sm="5">
+        <div flex-offset-gt-sm="5">
           <div ng-if="moduleResultById[module.id] && moduleResultById[module.id].grade && positiveGrade(moduleResultById[module.id].grade.code)"
             class="bold" md-colors="{color: 'green-600'}">{{moduleResultById[module.id].grade.value}} ({{moduleResultById[module.id].credits}} {{'student.result.ekap' | translate}})</div>
           <div ng-if="moduleResultById[module.id] && moduleResultById[module.id].grade && !positiveGrade(moduleResultById[module.id].grade.code)"

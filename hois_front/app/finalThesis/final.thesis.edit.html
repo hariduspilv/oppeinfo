@@ -37,7 +37,7 @@
             <label >{{'finalThesis.themeEt' | translate}}</label>
             <input type="text" ng-model="thesis.themeEt" md-maxlength="4000" required>
           </md-input-container>
-          <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label >{{'finalThesis.themeEn' | translate}}</label>
             <input type="text" ng-model="thesis.themeEn" md-maxlength="4000" ng-required="!thesis.isVocational">
           </md-input-container>
@@ -68,30 +68,32 @@
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" ng-class="{invalid: finalThesisForm.$submitted && thesis.supervisors.length === 0}" class="md-title-small">{{'finalThesis.supervisors' | translate}}&nbsp;*</legend>
           <md-button class="md-raised" ng-click="openAddSupervisorDialog()">{{'main.button.add' | translate}}</md-button>
-          <table md-table class="secondary-table">
-            <thead md-head>
-              <tr md-row>
-                <th md-column>{{'finalThesis.supervisor.name' | translate}}</th>
-                <th md-column>{{'finalThesis.primarySupervisor' | translate}}</th>
-                <th md-column>{{'finalThesis.externalSupervisor' | translate}}</th>
-                <th md-column></th>
-              </tr>
-            </thead>
-            <tbody md-body>
-              <tr md-row ng-repeat="supervisor in thesis.supervisors track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>{{supervisor.firstname}} {{supervisor.lastname}}</td>
-                <td md-cell>
-                  <md-checkbox ng-checked="supervisor.isPrimary" ng-disabled="true" aria-label="{{'finalThesis.primarySupervisor' | translate}}"></md-checkbox>
-                </td>
-                <td md-cell>
-                  <md-checkbox ng-checked="supervisor.isExternal" ng-disabled="true" aria-label="{{'finalThesis.externalSupervisor' | translate}}"></md-checkbox>
-                </td>
-                <td md-cell>
-                  <md-button md-no-ink class="md-primary change-button" ng-click="openAddSupervisorDialog($index)">{{'main.button.change' | translate}}</md-button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <md-table-container>
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'finalThesis.supervisor.name' | translate}}</th>
+                  <th md-column>{{'finalThesis.primarySupervisor' | translate}}</th>
+                  <th md-column>{{'finalThesis.externalSupervisor' | translate}}</th>
+                  <th md-column></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="supervisor in thesis.supervisors track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>{{supervisor.firstname}} {{supervisor.lastname}}</td>
+                  <td md-cell>
+                    <md-checkbox ng-checked="supervisor.isPrimary" ng-disabled="true" aria-label="{{'finalThesis.primarySupervisor' | translate}}"></md-checkbox>
+                  </td>
+                  <td md-cell>
+                    <md-checkbox ng-checked="supervisor.isExternal" ng-disabled="true" aria-label="{{'finalThesis.externalSupervisor' | translate}}"></md-checkbox>
+                  </td>
+                  <td md-cell>
+                    <md-button md-no-ink class="md-primary change-button" ng-click="openAddSupervisorDialog($index)">{{'main.button.change' | translate}}</md-button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
         </fieldset>
       </div>
 

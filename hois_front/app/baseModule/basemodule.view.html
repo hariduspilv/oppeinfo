@@ -1,0 +1,231 @@
+<div class="ois-form-layout-padding nomargin">
+    <form ng-cloak name="baseModuleForm">
+        <div layout="column" ng-cloak>
+            <div layout="row" flex>
+                <md-input-container flex="90" flex-sm="75" flex-xs="75">
+                    <label>{{'basemodule.nameEt' | translate}}</label>
+                    <input ng-model="baseModule.nameEt" name="nameEt" type="text" disabled>
+                </md-input-container>
+                <md-input-container flex="10" flex-sm="20" flex-xs="20" flex-offset="5">
+                    <label>{{'basemodule.ekap' | translate}}</label>
+                    <input ng-model="baseModule.credits" type="number" name="credits" disabled>
+                </md-input-container>
+            </div>
+            <md-input-container flex>
+                <label>{{'basemodule.nameEn' | translate}}</label>
+                <input ng-model="baseModule.nameEn" name="nameEn" type="text" disabled>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'basemodule.objectivesEt' | translate}}</label>
+                <textarea ng-model="baseModule.objectivesEt" name="objectivesEt" max-rows="10" disabled></textarea>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'basemodule.objectivesEn' | translate}}</label>
+                <textarea ng-model="baseModule.objectivesEn" name="objectivesEn" max-rows="10" disabled></textarea>
+            </md-input-container>
+            <div flex>
+                <fieldset tabindex="0">
+                    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'basemodule.studyOutcome' | translate}}</legend>
+                    <div layout="column">
+                        <div ng-repeat="item in baseModule.outcomes track by $index" class="occupation-row align-center" layout="row" flex>
+                        <div flex="45">
+                            <p class="scrollable">{{item.outcomeEt}}</p>
+                        </div>
+                        <div flex="40" flex-offset="5">
+                            <p class="scrollable">{{item.outcomeEn}}</p>
+                        </div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+            <div>&nbsp;</div>
+            <md-input-container flex>
+                <label>{{'stateCurriculum.enter.module.criteriaEt' | translate}}</label>
+                <textarea ng-model="baseModule.assessmentsEt" name="assessmentsEt" max-rows="10" disabled></textarea>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'stateCurriculum.enter.module.criteriaEn' | translate}}</label>
+                <textarea ng-model="baseModule.assessmentsEn" name="assessmentsEn" max-rows="10" disabled></textarea>
+            </md-input-container>
+            <div flex>
+                <fieldset tabindex="1">
+                    <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'basemodule.capacityDistribution' | translate}}</legend>
+                    <div layout="row" style="padding-bottom:1em" flex class="secondary-table-header">
+                        <div flex="30">&nbsp;</div>
+                        <div flex="30">{{'basemodule.capacity' | translate}}</div>
+                        <div flex="40" layout="row">{{'basemodule.contactStudy' | translate}}</div>
+                    </div>
+
+                    <div ng-repeat="item in baseModule.capacities | orderBy: 'nameEt' track by item.capacityType" layout="row" class="secondary-table-row">
+                        <div flex="30" class="occupation-module-capacity">{{currentLanguageNameField(item)}}</div>
+                        <div flex="30">
+                            <md-input-container flex>
+                            <input ng-model="item.hours" type="number" aria-label="capacity hours" class="small-input" disabled>
+                            </md-input-container>
+                        </div>
+                        <div flex="40" layout="row">
+                            <md-checkbox ng-model="item.contact" aria-label="capacity contact" disabled
+                            class="occupation-module-capacity-contact"></md-checkbox>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+            <div>&nbsp;</div>
+
+            <md-input-container flex>
+                <label>{{'basemodule.requirements' | translate}}</label>
+                <textarea ng-model="baseModule.cvRequirementsEt" name="cvRequirementsEt" disabled max-rows="10"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'basemodule.assessments' | translate}}</label>
+                <textarea ng-model="baseModule.cvAssessmentsEt" name="cvAssessmentsEt" disabled max-rows="10"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'basemodule.learningMethods' | translate}}</label>
+                <textarea ng-model="baseModule.cvLearningMethodsEt" name="cvLearningMethodsEt" disabled max-rows="10"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'basemodule.assessmentMethodsAndTasks' | translate}}</label>
+                <textarea ng-model="baseModule.cvAssessmentMethodsEt" name="cvAssessmentMethodsEt" disabled max-rows="10"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'basemodule.independentStudyDescription' | translate}}</label>
+                <textarea ng-model="baseModule.cvIndependentStudyEt" name="cvIndependentStudyEt" disabled max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'basemodule.studyMaterials' | translate}}</label>
+                <textarea ng-model="baseModule.cvStudyMaterials" name="cvStudyMaterials" disabled max-rows="2"></textarea>
+            </md-input-container>
+
+            <div flex>
+                <fieldset tabindex="2">
+                    <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'basemodule.gradeFormation' | translate}}</legend>
+                    <div flex layout="row">
+                        <span flex="30" class="common-label">{{'basemodule.assessmentType' | translate}}</span>
+                        <hois-classifier-radio layout="row" ng-model="baseModule.cvAssessment" name="cvAssessment" model-value-attr="code" main-classifier-code="KUTSEHINDAMISVIIS"
+                        disabled class="md-primary"></hois-classifier-radio>
+                    </div>
+                    <div>&nbsp;</div>
+                    <md-input-container flex style="width: 100%">
+                        <label>{{'basemodule.totalGradeDescription' | translate}}</label>
+                        <textarea ng-model="baseModule.cvTotalGradeDescription" name="cvTotalGradeDescription" max-rows="2" disabled></textarea>
+                    </md-input-container>
+                    <div>&nbsp;</div>
+                    <div ng-show="baseModule.cvAssessment === 'KUTSEHINDAMISVIIS_E'" layout="column">
+                        <md-input-container flex>
+                        <label>{{'basemodule.grade3Description' | translate}}</label>
+                        <textarea ng-model="baseModule.cvGrade3Description" name="cvGrade3Description" max-rows="2" disabled></textarea>
+                        </md-input-container>
+                        <md-input-container flex>
+                        <label>{{'basemodule.grade4Description' | translate}}</label>
+                        <textarea ng-model="baseModule.cvGrade4Description" name="cvGrade4Description" max-rows="2" disabled></textarea>
+                        </md-input-container>
+                        <md-input-container flex>
+                        <label>{{'basemodule.grade5Description' | translate}}</label>
+                        <textarea ng-model="baseModule.cvGrade5Description" name="cvGrade5Description" max-rows="2" disabled></textarea>
+                        </md-input-container>
+                    </div>
+                    <div ng-show="baseModule.cvAssessment === 'KUTSEHINDAMISVIIS_M'" layout="column" flex>
+                        <md-input-container flex>
+                        <label>{{'basemodule.gradeADescription' | translate}}</label>
+                        <textarea ng-model="baseModule.cvPassDescription" name="cvPassDescription" max-rows="10" disabled></textarea>
+                        </md-input-container>
+                    </div>
+                </fieldset>
+            </div>
+
+            <div flex>
+                <fieldset tabindex="3">
+                    <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'basemodule.themes' | translate}}</legend>
+                    <div layout="column">
+                        <md-table-container>
+                            <table md-table class="secondary-table">
+                                <thead md-head>
+                                    <tr md-row>
+                                        <th md-column>{{'basemodule.themeName' | translate}}</th>
+                                        <th md-column>{{'basemodule.capacityEkapPerHour' | translate}}</th>
+                                        <th md-column>{{'basemodule.subthemes' | translate}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody md-body>
+                                    <tr md-row ng-repeat="theme in baseModule.themes | orderBy: currentLanguageNameField()">
+                                        <td md-cell>
+                                            <a class="md-primary one-row" ng-click="viewTheme(theme)">{{currentLanguageNameField(theme)}}</a>
+                                        </td>
+                                        <td md-cell>{{theme.credits}}/{{theme.hours}}</td>
+                                        <td md-cell><p class="scrollable">{{theme.subthemes}}</p></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </md-table-container>
+                    </div>
+                </fieldset>
+            </div>
+            <div>&nbsp;</div>
+
+            <md-input-container flex>
+                <label>{{'basemodule.supervisor' | translate}}</label>
+                <input ng-value="currentLanguageNameField(baseModule.teacher)" type="text" disabled>
+            </md-input-container>
+
+            <div flex>
+                <fieldset tabindex="4">
+                    <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'basemodule.validity' | translate}}</legend>
+                    <div layout="row">
+                        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                            <label>{{'main.validFrom' | translate}}</label>
+                            <md-datepicker name="validFrom" ng-model="baseModule.validFrom" disabled md-max-date="baseModule.validThru" required md-open-on-focus></md-datepicker>
+                        </md-input-container>
+                        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                            <label>{{'main.validTo' | translate}}</label>
+                            <md-datepicker name="validThru" ng-model="baseModule.validThru" disabled md-min-date="baseModule.validFrom" md-open-on-focus></md-datepicker>
+                        </md-input-container>
+                    </div>
+                </fieldset>
+            </div>
+
+            <div flex ng-if="baseModule.curriculums.length > 0">
+                <fieldset tabindex="5">
+                    <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'basemodule.connectedCurriculumsAndCurriculumVersions' | translate}}</legend>
+                    <div layout="column">
+                        <md-table-container>
+                            <table md-table class="secondary-table">
+                                <thead md-head>
+                                    <tr md-row>
+                                        <th md-column style="width: 50%;">
+                                            {{'basemodule.curriculum' | translate}}
+                                        </th>
+                                        <th md-column>
+                                            {{'basemodule.curriculumVersion' | translate}}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody md-body>
+                                    <tr md-row ng-repeat="curriculum in baseModule.curriculums">
+                                        <td md-cell>
+                                            <p>{{currentLanguageNameField(curriculum)}}</p>
+                                        </td>
+                                        <td md-cell>
+                                            <p ng-repeat="cv in baseModule.curriculumVersions[curriculum.id]">{{currentLanguageNameField(cv)}}<br ng-if="!$first"></p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </md-table-container>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+        <md-button class="md-raised md-primary" ng-click="edit()">{{"main.button.edit" | translate}}</md-button>
+        <md-button class="md-raised" ng-click="back('#/basemodule')">{{"main.button.back" | translate}}</md-button>
+    </form>
+</div>
+<style>
+    .link-no-underline {
+        text-decoration: none;
+    }
+
+    .link-disabled {
+        color: #d7dde5;
+    }
+</style>

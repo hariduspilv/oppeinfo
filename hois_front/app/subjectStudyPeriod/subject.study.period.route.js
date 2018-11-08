@@ -180,5 +180,29 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
         }
+      }).when('/subjectStudyPeriods/:subjectId/:subjectStudyPeriodId/subjectProgram/new', {
+        templateUrl: 'subjectStudyPeriod/subjectProgram/subject.program.edit.html',
+        controller: 'SubjectProgramController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+        }
+      }).when('/subjectStudyPeriods/:subjectId/:subjectStudyPeriodId/subjectProgram/:subjectProgramId/view', {
+        templateUrl: 'subjectStudyPeriod/subjectProgram/subject.program.view.html',
+        controller: 'SubjectProgramController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+        }
+      }).when('/subjectStudyPeriods/:subjectId/:subjectStudyPeriodId/subjectProgram/:subjectProgramId/edit', {
+        templateUrl: 'subjectStudyPeriod/subjectProgram/subject.program.edit.html',
+        controller: 'SubjectProgramController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+        }
       });
 }]);

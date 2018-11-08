@@ -15,6 +15,7 @@ import javax.persistence.Table;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.basemodule.BaseModuleTheme;
 
 @Entity
 @Table(name="curriculum_version_omodule_theme")
@@ -51,6 +52,9 @@ public class CurriculumVersionOccupationModuleTheme extends BaseEntityWithId {
 
     @Column(name = "grade5_description")
     private String grade5Description;
+    
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    private BaseModuleTheme baseModuleTheme;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_version_omodule_theme_id", nullable = false, updatable = false)
@@ -180,5 +184,13 @@ public class CurriculumVersionOccupationModuleTheme extends BaseEntityWithId {
 
     public void setGrade5Description(String grade5Description) {
         this.grade5Description = grade5Description;
+    }
+
+    public BaseModuleTheme getBaseModuleTheme() {
+        return baseModuleTheme;
+    }
+
+    public void setBaseModuleTheme(BaseModuleTheme baseModuleTheme) {
+        this.baseModuleTheme = baseModuleTheme;
     }
 }

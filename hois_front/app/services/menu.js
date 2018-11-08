@@ -26,6 +26,14 @@ angular.module('hitsaOis')
         icon: "format_list_bulleted",
         pages: [
           {
+            name: "main.menu.basemodule.label",
+            url: "/basemodule?_menu",
+            icon: "format_list_bulleted",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
             name: 'main.menu.curriculum.schoolCurriculums',
             url: "/curriculum?_menu",
             icon: "format_list_bulleted"
@@ -67,6 +75,14 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.student.absences',
             url: '/absences?_menu',
+            icon: "announcement",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.study.groupAbsences',
+            url: "/groupAbsences?_menu",
             icon: "announcement",
             studyLevel: {
               vocational: true
@@ -206,7 +222,7 @@ angular.module('hitsaOis')
             }
           },
           {
-            name: 'main.menu.documents.apel',
+            name: 'main.menu.study.apel',
             url: "/apelApplication?_menu",
             icon:"transfer_within_a_station"
           }
@@ -350,7 +366,7 @@ angular.module('hitsaOis')
         pages: [
           {
             name: 'main.menu.graduation.committees',
-            url: "/committees?_menu",
+            url: "/committees/KOMISJON_K?_menu",
             icon:"record_voice_over"
           },
           {
@@ -546,6 +562,11 @@ angular.module('hitsaOis')
             }
           },
           {
+            name: 'main.menu.settings.scholarshipCommittees',
+            url: "/committees/KOMISJON_T?_menu",
+            icon:"record_voice_over"
+          },
+          {
             name: 'main.menu.settings.messageTemplates',
             url: "/messageTemplate?_menu",
             icon:"blur_linear"
@@ -585,6 +606,11 @@ angular.module('hitsaOis')
             name: 'main.menu.settings.apelSchools',
             url: "/apelSchools?_menu",
             icon:"location_city"
+          },
+          {
+            name: 'main.menu.settings.apelCommittees',
+            url: "/committees/KOMISJON_V?_menu",
+            icon:"record_voice_over"
           },
           {
             name: 'main.menu.settings.studentGroupYearTransfer',
@@ -677,6 +703,14 @@ angular.module('hitsaOis')
             }
           },
           {
+            name: 'main.menu.study.groupAbsences',
+            url: "/groupAbsences?_menu",
+            icon: "announcement",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
             name: 'main.menu.study.journal.journalsVocational',
             url: "/journals?_menu",
             icon: "chrome_reader_mode",
@@ -746,6 +780,24 @@ angular.module('hitsaOis')
           vocational: true
         }
       });
+      sections.push({
+        name: 'main.menu.scholarships.scholarshipApplications',
+        url: "/scholarships/applications/scholarships?_menu",
+        type: 'link',
+        icon:"euro_symbol",
+        studyLevel: {
+          higher: true
+        }
+      });
+      sections.push({
+        name: 'main.menu.scholarships.drGrantApplications',
+        url: "/scholarships/applications/drGrants?_menu",
+        type: 'link',
+        icon:"functions",
+        studyLevel: {
+          doctoral: true
+        }
+      });
 
       sections.push({
         name: 'main.menu.practiceAndGraduation.label',
@@ -759,7 +811,7 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.practiceAndGraduation.committees',
-            url: '/committees?_menu',
+            url: '/committees/KOMISJON_K?_menu',
             icon: "record_voice_over"
           },
           {
@@ -786,6 +838,12 @@ angular.module('hitsaOis')
         ]
       });
 
+      sections.push({
+        name: 'main.menu.apel.label',
+        type: 'link',
+        url: '/apelApplication?_menu',
+        icon: 'transfer_within_a_station'
+      });
 
       if (authenticatedUser.teacherGroupIds.length > 0) {
         sections.push({
@@ -1372,7 +1430,7 @@ angular.module('hitsaOis')
 
       switch(authenticatedUser.roleCode) {
         case "ROLL_A":
-          getAdminSections();
+          getAdminSections(authenticatedUser);
           break;
         case "ROLL_P":
           getMainAdminSections();

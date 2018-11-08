@@ -41,6 +41,13 @@ ja tema teadmisi hinnati järgmiselt:
 
 </table>
 
+{% if content.addOutcomes %}
+{% for result in content.student.results %}
+<b>{{ result.module }} / {{ result.theme }}</b><br>
+{{ result.outcomes }}<br>
+{% endfor %}
+{% endif %}
+
 {% if content.student.hasQuit %}
 <p>Õppur lahkus õppetöölt / katkestas õppetöö</p>
 {% endif %}

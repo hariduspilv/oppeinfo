@@ -7,7 +7,7 @@
         <table md-table>
             <tbody md-body>
                 <!-- Today -->
-                <tr md-row ng-if="tasks.todayTasks.length > 0" ng-repeat="task in tasks.todayTasks">
+                <tr md-row ng-if="tasks.todayTasks.length > 0" ng-repeat="task in tasks.todayTasks" ng-init="$last && tasks.tomorrowTasks.length === 0 && pageLoadingHandler.setFinish('studentTasks')">
                     <td md-cell width="10%">{{'home.student.today' | translate}} {{todaysDate | hoisDate}}</td>
                     <td md-cell>
                         <span style="font-weight:bold">{{task.journalName}}: </span><br>
@@ -17,7 +17,7 @@
                     </td>
                 </tr>
                 <!-- Tomorrow -->
-                <tr md-row ng-if="tasks.tomorrowTasks.length > 0" ng-repeat="task in tasks.tomorrowTasks">
+                <tr md-row ng-if="tasks.tomorrowTasks.length > 0" ng-repeat="task in tasks.tomorrowTasks" ng-init="$last && tasks.laterTasks.length === 0 && pageLoadingHandler.setFinish('studentTasks')">
                     <td md-cell width="10%">{{'home.student.tomorrow' | translate}} {{tomorrowsDate | hoisDate}}</td>
                     <td md-cell>
                         <span style="font-weight:bold">{{task.journalName}}: </span><br>
@@ -27,7 +27,7 @@
                     </td>
                 </tr>
                 <!-- Later -->
-                <tr md-row ng-if="tasks.laterTasks.length > 0" ng-repeat="task in tasks.laterTasks">
+                <tr md-row ng-if="tasks.laterTasks.length > 0" ng-repeat="task in tasks.laterTasks" ng-init="$last && pageLoadingHandler.setFinish('studentTasks')">
                     <td md-cell width="10%">{{task.date | hoisDate}}</td>
                     <td md-cell>
                         <span style="font-weight:bold">{{task.journalName}}: </span><br>
@@ -36,7 +36,6 @@
                         <span>{{task.taskContent}}</span>
                     </td>
                 </tr>
-                <span ng-show="pageLoadingHandler.setFinish('studentTasks') && false"></span>
             </tbody>
         </table>
     </md-table-container>

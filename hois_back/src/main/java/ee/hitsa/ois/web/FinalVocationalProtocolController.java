@@ -49,7 +49,6 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EntityMobileSignDto;
 import ee.hitsa.ois.web.dto.EntitySignDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
-import ee.hitsa.ois.web.dto.finalprotocol.FinalProtocolCommitteeSelectDto;
 import ee.hitsa.ois.web.dto.finalprotocol.FinalVocationalProtocolDto;
 import ee.hitsa.ois.web.dto.finalprotocol.FinalVocationalProtocolOccupationalModuleDto;
 import ee.hitsa.ois.web.dto.finalprotocol.FinalVocationalProtocolStudentDto;
@@ -131,7 +130,7 @@ public class FinalVocationalProtocolController {
     }
     
     @GetMapping("/committees")
-    public List<FinalProtocolCommitteeSelectDto> committees(HoisUserDetails user, 
+    public List<AutocompleteResult> committees(HoisUserDetails user, 
             @RequestParam(value = "finalDate", required = false) LocalDate finalDate) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return finalProtocolService.committeesForSelection(user, finalDate);

@@ -55,7 +55,7 @@
       <div>&nbsp;</div>
 
 
-      <div layout="row">
+      <div layout="row" layout-xs="column">
         <md-button ng-if="(application.status === 'AVALDUS_STAATUS_KOOST' 
         && ((auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS')) || auth.isStudent()))
         || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && (auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS')))"

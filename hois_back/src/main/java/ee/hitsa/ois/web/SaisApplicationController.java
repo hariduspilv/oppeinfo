@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -8,12 +9,14 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.service.sais.SaisApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -43,7 +46,13 @@ public class SaisApplicationController {
     @GetMapping("/{id:\\d+}")
     public SaisApplicationDto get(@WithEntity SaisApplication saisApplication, HoisUserDetails user) {
         UserUtil.assertSameSchool(user, saisApplication.getSaisAdmission().getCurriculumVersion().getCurriculum().getSchool());
-        return SaisApplicationDto.of(saisApplication);
+        return saisApplicationService.getById(saisApplication);
+    }
+    
+    @DeleteMapping("/{id:\\d+}")
+    public void delete(@WithEntity SaisApplication saisApplication, HoisUserDetails user) {
+    	UserUtil.assertIsSchoolAdmin(user);
+        saisApplicationService.delete(user, saisApplication);
     }
 
     @PostMapping("importCsv")

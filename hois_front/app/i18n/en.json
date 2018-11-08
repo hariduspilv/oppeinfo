@@ -12,6 +12,7 @@
       "add": "Add",
       "addExisting": "Add existing",
       "addRow": "Add row",
+      "archive": "Archive",
       "back": "Back",
       "cancel": "Discontinue",
       "change": "Change",
@@ -307,7 +308,8 @@
         "saisApplication": {
           "label": "Admission applications",
           "search": "Search of admission applications",
-          "importSais": "Applications from SAIS"
+          "importSais": "Applications from SAIS",
+          "delete": "Are you sure you wish to delete this application?"
         }
       },
       "reports": {
@@ -1747,6 +1749,7 @@
     "email": "E-mail address",
     "phone": "Contact phone",
     "rtipNr": "RTIP no.",
+    "untis": "Schedule code",
     "sentToEhis": "Teacher is sent to EHIS",
     "studyPeriodLoad": "Work load of study period",
     "studyYearLoad": "Work load of school year",
@@ -2299,7 +2302,7 @@
       "code": "Competition code",
       "language": "Competition language",
       "places": "Number of places",
-      "saisImportRange": "Interval of dates of competition’s inserting/changing",
+      "saisImportRange": "Interval of dates of competition’s changing",
       "saisImportAdmissions": "IMPORT from SAIS",
       "failedImport": "Failed",
       "error": "Notice",
@@ -2344,6 +2347,16 @@
       "admissionCode": "Competition code",
       "importFinished": "Importing ended",
       "form-has-errors": "One of three mandatory fields must be filled in"
+    },
+    "archive": {
+      "archiveDateTo": "Archive competitions earlier than",
+      "archiveConfirm": "Are you sure you wish to archive competitions before ",
+      "displayArchived": "Show archived competitions",
+      "archivedAdmission": "Competitions archived",
+      "archived": "Archived",
+      "revertArchived": "Take back from being archived",
+      "revertedArchived": "Taken back from being archived",
+      "error": "There exists a competition unarchived with this code already"
     }
   },
   "studyYearSchedule": {
@@ -2579,7 +2592,8 @@
       "open": "Open",
       "homeworkDuedate": "Deadline of homework",
       "student": {
-        "lateAbsent": "H/P",
+        "absenceValues": "H / P / V / PR",
+        "lessonAbsences": "123?",
         "grade": "Grade",
         "description": "Explanation"
       }
@@ -3492,6 +3506,7 @@
     "fullName": "Name of learner",
     "rejectComment": "Explanation",
     "nr": "No.",
+    "nameEt": "Scholarship term name",
     "confirmations": {
       "publish": "Are you sure you wish to reveal scholarship?",
       "saveAndPublish": "Are you sure you wish to save and reveal study allowance?",

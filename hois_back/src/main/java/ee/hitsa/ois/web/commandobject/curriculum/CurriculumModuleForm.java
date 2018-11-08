@@ -23,6 +23,7 @@ public class CurriculumModuleForm extends VersionedCommand {
     
     @NotNull
     private Long curriculum;
+    private BaseModuleInfo baseModule;
 
     @NotNull
     @Size(max=255)
@@ -171,5 +172,54 @@ public class CurriculumModuleForm extends VersionedCommand {
 
     public void setAssessmentsEn(String assessmentsEn) {
         this.assessmentsEn = assessmentsEn;
+    }
+
+    public BaseModuleInfo getBaseModule() {
+        return baseModule;
+    }
+
+    public void setBaseModule(BaseModuleInfo baseModule) {
+        this.baseModule = baseModule;
+    }
+    
+    public static class BaseModuleInfo {
+        
+        private Long id;
+        private String nameEt;
+        private String nameEn;
+        
+        public BaseModuleInfo() {
+            
+        }
+        
+        public BaseModuleInfo(Long id, String nameEt, String nameEn) {
+            this.id = id;
+            this.nameEt = nameEt;
+            this.nameEn = nameEn;
+        }
+
+        public Long getId() {
+            return id;
+        }
+        
+        public void setId(Long id) {
+            this.id = id;
+        }
+        
+        public String getNameEt() {
+            return nameEt;
+        }
+        
+        public void setNameEt(String nameEt) {
+            this.nameEt = nameEt;
+        }
+        
+        public String getNameEn() {
+            return nameEn;
+        }
+        
+        public void setNameEn(String nameEn) {
+            this.nameEn = nameEn;
+        }
     }
 }

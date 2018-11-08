@@ -46,6 +46,10 @@ md-checkbox.md-checked .md-icon {
 }
 
 @media (max-width: 359px) {
+  .fullWidth {
+    width:100%;
+  }
+
   .mobileColumnLayout {
     -webkit-box-orient: vertical!important;
     -webkit-box-direction: normal!important;
@@ -66,6 +70,10 @@ md-checkbox.md-checked .md-icon {
     -webkit-box-pack: start!important;
     -webkit-justify-content: flex-start!important;
     justify-content: flex-start!important;
+  }
+
+  .maxWidth-200{
+    max-width: 200px;
   }
 }
 
@@ -112,8 +120,9 @@ md-checkbox.md-checked .md-icon {
   border-top: 2px solid #eee;
 }
 
-
-
+.md-body-1 {
+  font-size: 13px;
+}
 
 md-table-container .md-button
 {
@@ -941,6 +950,13 @@ table.md-table thead.md-head > tr.md-row
 	padding-left:5px;
 }
 
+.higher-curriculum-subject-row {
+  font-size: 13px;
+  font-weight: normal !important;
+  min-height: 31px !important;
+  border-bottom: 1px #eee solid;
+}
+
 .sub-header1
 {
 	background-color:#EEEEEE!important;
@@ -1089,8 +1105,6 @@ table.md-table thead.md-head > tr.md-row  {
 
 .secondary-table tbody.md-body > tr.md-row, table.md-table tfoot.md-foot > tr.md-row,
 .secondary-table-row {
-    padding-top: 8px;
-    padding-bottom: 8px;
     font-size: 13px;
     font-weight: normal!important;
 }
@@ -1099,7 +1113,6 @@ table.md-table thead.md-head > tr.md-row  {
 {
 	border-bottom: 1px #eee solid;
 }
-
 
 md-checkbox .md-label, md-option .md-text, md-radio-button .md-label,
 .inaadressSearch input
@@ -1176,6 +1189,13 @@ fieldset{
 
 fieldset legend{
 	color: #1565C0;
+}
+
+/* Works for Safari, Chrome, Mozilla, etc. IE ignores them. It was needed for safari mostly. */
+fieldset legend.md-title-small {
+  width: -moz-fit-content;
+  width: -webkit-fit-content;
+  width: fit-content;
 }
 
 .md-title-small {
@@ -1262,7 +1282,7 @@ bottom: 3px;
 
 .form-readonly div:empty:after,
 .readonly  div:empty:after{
-   content:"-";
+   content:"";
    line-height: 20px;
    color:#fff;
 }
@@ -1403,19 +1423,6 @@ label.required::after {
   font-size: 12px !important;
 }
 
-/*
-* Hides arrows from number input
-*/
-.subject-study-period input[type=number]::-webkit-outer-spin-button,
-.subject-study-period input[type=number]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.subject-study-period input[type=number] {
-    -moz-appearance:textfield;
-}
-
 .bold
 {
 	font-weight: 700;
@@ -1544,6 +1551,11 @@ div[ois-drag="true"] {
   height:100%;
   display: block;
   padding-top: 8px;
+}
+
+.plannedLessons {
+  margin-top: 25px;
+  margin-bottom: 25px;
 }
 
 #timetableCreation {
@@ -1714,6 +1726,13 @@ md-grid-tile {
   width: 200px;
 }
 
+.occupation-module-capacity-row {
+  font-size: 13px;
+  font-weight: normal !important;
+  height: 35px;
+  border-bottom: 1px #eee solid;
+}
+
 .occupation-module-capacity {
   padding-top: 10px;
 }
@@ -1771,8 +1790,12 @@ tr.scholarship-bottom-border td {
   font-size: 13px;
 }
 
-.journal-entry td{
+.journal-entry {
   cursor: pointer;
+}
+
+md-checkbox.md-checked.journal-lesson-absence .md-icon {
+  background-color: rgba(13,71,161, 0.87);;
 }
 
 .middle-text {
@@ -2246,6 +2269,11 @@ label.ui-btn {
   padding: 5px;
 }
 
+.entryWithAddInfoTootlip {
+  height: auto;
+  max-width: 400px;
+  white-space: initial;
+}
 
 #tt >  div:nth-child(2)
 {
@@ -2339,13 +2367,28 @@ label.ui-btn {
   margin-top: -6px;
 }
 
-.student-group-teacher-table {
+.student-group-teacher-container .container {
+  border-top: none;
+  border-left: none;
+}
+
+.student-group-teacher-container .container table{
+  border-collapse: collapse;
+}
+
+.student-group-teacher-table, .student-group-absence-table {
   min-width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
 
-.student-group-teacher-table th,  .student-group-teacher-table td {
+.student-group-teacher-table thead, .student-group-absence-table thead {
+  background-color: #fcfcfc;
+}
+
+.student-group-teacher-table th, .student-group-teacher-table td,
+.student-group-absence-table th, .student-group-absence-table td
+{
   border: 1px solid lightgrey;
 }
 
@@ -2354,11 +2397,12 @@ label.ui-btn {
   padding-right: 5px;
 }
 
-.student-group-teacher-table tr:nth-child(3) th a{
+.student-group-teacher-table tr:nth-child(3) th a, 
+.student-group-absence-table tr:nth-child(2) th a {
   color: rgba(0,0,0,0.87) !important;
 }
 
-.student-group-teacher-table td {
+.student-group-teacher-table td, .student-group-absence-table td {
   height: 30px;
 }
 
@@ -2376,11 +2420,28 @@ label.ui-btn {
 
 .curriculum-fulfillment-result div:nth-child(1) {
   word-break: break-all;
+  width: 45%;
+  max-width: 45%;
 }
 
 .curriculum-fulfillment-result div:nth-child(2) {
   display: flex;
-  align-items: center;
+  text-align: right;
+  width: 30%;
+  max-width: 30%;
+}
+
+@media (max-width: 960px) {
+  .curriculum-fulfillment-result div:nth-child(1) {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .curriculum-fulfillment-result div:nth-child(2) {
+    text-align: left;
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 .padding-y-0 {
@@ -2396,4 +2457,30 @@ label.ui-btn {
 .padding-y-5 {
   padding-left: 5px !important;
   padding-right: 5px !important;
+}
+
+/*
+* Hides arrows from number input in firefox
+*/
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button,
+md-input-container input[type=number]::-webkit-outer-spin-button,
+md-input-container input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number], md-input-container input[type=number] {
+    -moz-appearance:textfield;
+}
+
+.md-select-menu-container md-option {
+  padding-right: 3px !important;
+}
+
+.custom-tooltip {
+  color: #1976D2;
+  padding: 1px;
+  float: right;
+  cursor: pointer;
 }

@@ -1,7 +1,7 @@
-<div layout-padding ng-cloak class="form-readonly">
+<div layout-padding ng-cloak>
   <div flex>
 
-    <div layout="row" layout-xs="column" flex>
+    <div layout="row" layout-xs="column" flex class="form-readonly">
       <div flex="70">
         <div layout="row" layout-sm="column" layout-xs="column" ng-if="record.type === 'KASKKIRI_TYHIST'">
           <md-input-container flex="100" flex-sm="100" flex-xs="100">
@@ -70,6 +70,20 @@
       </div>
     </div>
 
+    <div class="ois-form-layout" ng-show="userCanConfirm()">
+      <form name="directiveForm">
+        <div layout="column">
+          <md-input-container class="md-block">
+            <label>{{'directive.directiveNr' | translate}}</label>
+            <input type="text" ng-model="confirmRecord.directiveNr" name="directiveNr" required md-maxlength="20">
+          </md-input-container>
+          <md-input-container class="md-block">
+            <label>{{'directive.preamble' | translate}}</label>
+            <textarea ng-model="confirmRecord.preamble" md-maxlength="4000" max-rows="10" required></textarea>
+          </md-input-container>
+        </div>
+      </form>
+    </div>    
 
     <md-table-container>
       <fieldset>
@@ -111,7 +125,7 @@
     <md-button ng-if="record.id && record.userCanEdit" class="md-primary md-raised"
       ng-href="#/directives/{{record.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
     <md-button ng-click="back('#/directives')" class="md-raised">{{'main.button.back' | translate}}</md-button>
-    <md-button ng-click="confirmDirective()" ng-if="record.status === 'KASKKIRI_STAATUS_KINNITAMISEL' && record.userCanConfirm"
+    <md-button ng-click="confirmDirective()" ng-if="userCanConfirm()"
       class="md-raised">{{'directive.confirmDuringTest' | translate}}</md-button>
     <md-button ng-click="cancelDirective()" ng-if="record.userCanCancel"
       class="md-raised">{{'directive.cancel' | translate}}</md-button>

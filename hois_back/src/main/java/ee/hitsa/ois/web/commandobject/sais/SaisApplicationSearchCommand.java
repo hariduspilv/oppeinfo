@@ -15,6 +15,7 @@ public class SaisApplicationSearchCommand {
     private String idcode;
     private Boolean showRevoked;
     private Boolean addedToDirective;
+    private Boolean is_archived;
 
     public List<String> getCode() {
         return code;
@@ -52,5 +53,11 @@ public class SaisApplicationSearchCommand {
     public void setAddedToDirective(Boolean addedToDirective) {
         this.addedToDirective = addedToDirective;
     }
+	public Boolean getArchived() {
+		return is_archived;
+	}
+	public void setArchived(Boolean archived) {
+		this.is_archived = archived;
+	}
 
 }

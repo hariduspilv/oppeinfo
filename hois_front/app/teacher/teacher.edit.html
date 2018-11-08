@@ -72,12 +72,7 @@
             </md-input-container>
             <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.nativeLanguage' | translate}}</label>
-              <input ng-model="teacher.person.nativeLanguage" name="nativeLanguage" type="text" md-maxlength="100">
-              <div ng-messages="teacherForm.nativeLanguage.$error">
-                <div ng-message="md-maxlength">
-                  {{'main.messages.error.maxlength' | translate}}
-                </div>
-              </div>
+              <hois-classifier-select ng-model="teacher.nativeLanguage" main-classifier-code="EHIS_EMAKEEL" model-value-attr="code" required></hois-classifier-select>
             </md-input-container>
           </div>
 
@@ -190,6 +185,15 @@
               <label>{{'teacher.rtipNr' | translate}}</label>
               <input ng-model="teacher.rtipNr" name="rtipNr" type="text" md-maxlength="20">
               <div ng-messages="teacherForm.rtipNr.$error">
+                <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+                </div>
+              </div>
+            </md-input-container>
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'teacher.untis' | translate}}</label>
+              <input ng-model="teacher.untisCode" name="untisCode" type="text" md-maxlength="20">
+              <div ng-messages="teacherForm.untisCode.$error">
                 <div ng-message="md-maxlength">
                   {{'main.messages.error.maxlength' | translate}}
                 </div>

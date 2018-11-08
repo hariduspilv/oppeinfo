@@ -47,6 +47,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private String country;
     private String abroadPurpose;
     private String abroadProgramme;
+    private String otherText;
     private Set<ApplicationPlannedSubjectDto> plannedSubjects;
     private Set<ApplicationFileDto> files;
 
@@ -314,6 +315,14 @@ public class ApplicationDto extends InsertedChangedVersionDto {
 
     public void setAbroadProgramme(String abroadProgramme) {
         this.abroadProgramme = abroadProgramme;
+    }
+
+    public String getOtherText() {
+        return otherText;
+    }
+
+    public void setOtherText(String otherText) {
+        this.otherText = otherText;
     }
 
     public Set<ApplicationPlannedSubjectDto> getPlannedSubjects() {

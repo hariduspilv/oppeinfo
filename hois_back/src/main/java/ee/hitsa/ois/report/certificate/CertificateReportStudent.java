@@ -25,6 +25,10 @@ public class CertificateReportStudent {
     private CerfificateReportCurriculum curriculum;
     private List<CertificateStudentResult> results;
     private boolean hasQuit;
+    private String diplomaNr;
+    private String occupationText;
+    private String partoccupationText;
+    private String curriculumGradeNameEt;
 
     public static CertificateReportStudent of(Student student) {
         CertificateReportStudent reportStudent = of(student.getPerson());
@@ -58,6 +62,38 @@ public class CertificateReportStudent {
         reportStudent.setFullname(otherName);
         reportStudent.setIdCode(otherIdcode);
         return reportStudent;
+    }
+
+    public String getDiplomaNr() {
+        return diplomaNr;
+    }
+
+    public void setDiplomaNr(String diplomaNr) {
+        this.diplomaNr = diplomaNr;
+    }
+
+    public String getOccupationText() {
+        return occupationText;
+    }
+
+    public void setOccupationText(String occupationText) {
+        this.occupationText = occupationText;
+    }
+
+    public String getPartoccupationText() {
+        return partoccupationText;
+    }
+
+    public void setPartoccupationText(String partoccupationText) {
+        this.partoccupationText = partoccupationText;
+    }
+
+    public String getCurriculumGradeNameEt() {
+        return curriculumGradeNameEt;
+    }
+
+    public void setCurriculumGradeNameEt(String curriculumGradeNameEt) {
+        this.curriculumGradeNameEt = curriculumGradeNameEt;
     }
 
     public boolean isHasQuit() {

@@ -18,6 +18,8 @@ import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateXlsDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 
 public abstract class JournalUtil {
@@ -128,6 +130,22 @@ public abstract class JournalUtil {
     public static boolean canConfirmAll(HoisUserDetails user, StudyYear studyYear) {
         return studyYear != null && user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_PAEVIK) &&
                 LocalDate.now().plusWeeks(2).isAfter(studyYear.getEndDate());
+    }
+
+    public static boolean isFinalResult(JournalEntryByDateDto dto) {
+        return JournalEntryType.SISSEKANNE_L.name().equals(dto.getEntryType());
+    }
+
+    public static boolean isFinalResult(JournalEntryByDateXlsDto dto) {
+        return JournalEntryType.SISSEKANNE_L.name().equals(dto.getEntryType());
+    }
+
+    public static boolean isOutcomeEntryWithoutDate(JournalEntryByDateDto dto) {
+        return dto.getOutcomeOrderNr() != null && dto.getEntryDate() == null;
+    }
+
+    public static boolean isOutcomeEntryWithoutDate(JournalEntryByDateXlsDto dto) {
+        return dto.getOutcomeOrderNr() != null && dto.getEntryDate() == null;
     }
 
     public static void assertCanView(HoisUserDetails user) {

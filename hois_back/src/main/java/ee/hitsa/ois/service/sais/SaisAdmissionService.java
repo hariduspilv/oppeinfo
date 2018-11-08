@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -16,6 +17,7 @@ import javax.transaction.Transactional;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
+import org.opensaml.xmlsec.encryption.P;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,8 +46,10 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.web.commandobject.ArchiveForm;
 import ee.hitsa.ois.web.commandobject.sais.SaisAdmissionImportForm;
 import ee.hitsa.ois.web.commandobject.sais.SaisAdmissionSearchCommand;
+import ee.hitsa.ois.web.dto.sais.SaisAdmissionDto;
 import ee.hitsa.ois.web.dto.sais.SaisAdmissionSearchDto;
 import ee.hois.soap.LogContext;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
@@ -89,7 +93,41 @@ public class SaisAdmissionService {
             throw new BadConfigurationException("Unable to create data type factory", e);
         }
     }
-
+    
+    public void updateArchive(HoisUserDetails user, ArchiveForm archiveForm) {
+    	Long schoolId = user.getSchoolId();
+    	List<SaisAdmission> admissions = em.createQuery("select sa from SaisAdmission sa where sa.curriculumVersion.curriculum.school.id=?1"
+    	 		+ " and (sa.is_archived is null OR sa.is_archived is false)"
+    	 		+ " and sa.periodEnd <= ?2", SaisAdmission.class)
+                 .setParameter(1, schoolId)
+                 .setParameter(2, archiveForm.getEndDate())
+                 .getResultList();
+    	if (!admissions.isEmpty()) {
+    		EntityUtil.setUsername(user.getUsername(), em);
+        	admissions.forEach(p->save(p, user, Boolean.TRUE));
+    	}
+    }
+    
+    public SaisAdmissionDto updateArchive(HoisUserDetails user, SaisAdmission saisAdmission) {
+		EntityUtil.setUsername(user.getUsername(), em);
+		Long schoolId = user.getSchoolId();
+    	List<SaisAdmission> admissions = em.createQuery("select sa from SaisAdmission sa where sa.curriculumVersion.curriculum.school.id=?1"
+    	 		+ " and (sa.is_archived is null OR sa.is_archived is false)", SaisAdmission.class)
+                 .setParameter(1, schoolId)
+                 .getResultList();
+    	List<String> admissionCodes = admissions.stream().map(p->p.getCode()).collect(Collectors.toList());
+    	if (!admissionCodes.contains(saisAdmission.getCode())) {
+    		save(saisAdmission, user, Boolean.FALSE);
+    	}
+    	return SaisAdmissionDto.of(saisAdmission);
+	}
+    
+    public SaisAdmission save(SaisAdmission admission, HoisUserDetails user, Boolean archived) {
+    	admission.setArchived(archived);
+    	admission = EntityUtil.save(admission, em);
+    	return admission;
+    }
+    
     public Page<SaisAdmissionSearchDto> search(Long schoolId, SaisAdmissionSearchCommand criteria,
             Pageable pageable) {
         JpaQueryBuilder<SaisAdmission> qb = new JpaQueryBuilder<>(SaisAdmission.class, "sa").sort(pageable);
@@ -98,10 +136,12 @@ public class SaisAdmissionService {
         qb.optionalCriteria("sa.studyForm.code = :studyForm", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("sa.fin.code = :fin", "fin", criteria.getFin());
         qb.requiredCriteria("sa.curriculumVersion.curriculum.school.id = :schoolId", "schoolId", schoolId);
-
+        if (criteria.getArchived() == null || Boolean.FALSE.equals(criteria.getArchived())) {
+        	qb.filter("(sa.is_archived is null OR sa.is_archived is false)");
+        }
         return JpaQueryUtil.pagingResult(qb, em, pageable).map(SaisAdmissionSearchDto::of);
     }
-
+    
     public Page<SaisAdmissionSearchDto> saisImport(SaisAdmissionImportForm form, HoisUserDetails user) {
         List<SaisAdmissionSearchDto> importResult = new ArrayList<>();
         XRoadHeaderV4 xRoadHeader = getXroadHeader(user);
@@ -154,9 +194,15 @@ public class SaisAdmissionService {
                 continue;
             }
 
-            SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(admission.getCode());
+            List<SaisAdmission> saisAdmissions = saisAdmissionRepository.findByCode(admission.getCode());
+            Optional<SaisAdmission> saisAdmissionNotArchived = saisAdmissions.stream().filter(p->p.getArchived() == null || !p.getArchived()).findFirst();
+            SaisAdmission saisAdmission = null;
+            if (saisAdmissionNotArchived.isPresent()) {
+            	saisAdmission = saisAdmissionNotArchived.get();
+            }
             if(saisAdmission == null) {
                 saisAdmission = new SaisAdmission();
+                saisAdmission.setArchived(false);
             }
             saisAdmission.setSaisId(admission.getId());
             saisAdmission.setCurriculumVersion(curriculumVersion);
@@ -214,11 +260,11 @@ public class SaisAdmissionService {
     private AllAdmissionsExportRequest getRequest(SaisAdmissionImportForm form, HoisUserDetails user) {
         AllAdmissionsExportRequest request = new AllAdmissionsExportRequest();
         GregorianCalendar gcal = GregorianCalendar.from(form.getCreateDateFrom().atStartOfDay(ZoneId.systemDefault()));
-        request.setCreateDateFrom(datatypeFactory.newXMLGregorianCalendar(gcal));
+        //request.setCreateDateFrom(datatypeFactory.newXMLGregorianCalendar(gcal));
         request.setModifyDateFrom(datatypeFactory.newXMLGregorianCalendar(gcal));
 
-        gcal = GregorianCalendar.from(form.getCreateDateTo().atStartOfDay(ZoneId.systemDefault()));
-        request.setCreateDateTo(datatypeFactory.newXMLGregorianCalendar(gcal));
+        gcal = GregorianCalendar.from(form.getCreateDateTo().plusDays(1).atStartOfDay(ZoneId.systemDefault()));
+        //request.setCreateDateTo(datatypeFactory.newXMLGregorianCalendar(gcal));
         request.setModifyDateTo(datatypeFactory.newXMLGregorianCalendar(gcal));
         Classifier ehisSchool = em.getReference(School.class, user.getSchoolId()).getEhisSchool();
         Integer koolRegNr = null;

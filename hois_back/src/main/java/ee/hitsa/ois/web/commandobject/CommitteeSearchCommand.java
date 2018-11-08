@@ -4,17 +4,38 @@ import java.time.LocalDate;
 
 public class CommitteeSearchCommand {
 
+    private String type;
+    private String nameEt;
     private String memberName;
     private Long teacher;
+    private EntityConnectionCommand person;
     private LocalDate validFrom;
     private LocalDate validThru;
     private Boolean showInvalid = Boolean.FALSE;
 
+    public String getType() {
+        return type;
+    }
+    public void setType(String type) {
+        this.type = type;
+    }
+    public String getNameEt() {
+        return nameEt;
+    }
+    public void setNameEt(String nameEt) {
+        this.nameEt = nameEt;
+    }
     public Long getTeacher() {
         return teacher;
     }
     public void setTeacher(Long teacher) {
         this.teacher = teacher;
+    }
+    public EntityConnectionCommand getPerson() {
+        return person;
+    }
+    public void setPerson(EntityConnectionCommand person) {
+        this.person = person;
     }
     public String getMemberName() {
         return memberName;

@@ -114,6 +114,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           checkAccess: checkRightsToEdit
         },
         data: {
@@ -124,7 +125,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'VocationalCurriculumModuleController',
         controllerAs: 'controller',
         resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEKAVA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RIIKLIKOPPEKAVA]
@@ -135,6 +137,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           checkAccess: checkRightsToEdit
         },
         data: {
@@ -146,6 +149,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           checkAccess: checkRightsToEdit
         },
         data: {
@@ -157,6 +161,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           checkAccess: checkRightsToEdit
         },
         data: {
@@ -167,7 +172,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'VocationalCurriculumVersionOccupationModuleController',
         controllerAs: 'controller',
         resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); }
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEKAVA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RIIKLIKOPPEKAVA]

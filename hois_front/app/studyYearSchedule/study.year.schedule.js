@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('studyYearScheduleController', 
-function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogService, USER_ROLES, AuthService) {
+function ($scope, $route, $timeout, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, $window, dialogService, USER_ROLES, AuthService, config, $httpParamSerializer) {
     $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPETOOGRAAFIK);
 
@@ -17,33 +17,42 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog,
         $scope.criteria.showMine = true;
     }
 
+    $scope.formState = {
+        xlsUrl: 'studyYearSchedule/studyYearSchedule.xlsx',
+        pdfUrl: 'studyYearSchedule/studyYearSchedule.pdf'
+    };
+
     $scope.weeks = [];
     $scope.studyYearSchedules = [];
-
+    QueryUtils.loadingWheel($scope,true);
     QueryUtils.endpoint('/autocomplete/schooldepartments').query().$promise.then(function(response){
         $scope.schoolDepartments = response;
         if (ArrayUtils.isEmpty($scope.criteria.schoolDepartments)) {
-            $scope.criteria.schoolDepartments = $scope.schoolDepartments.map(function(el){
-                if (el.valid) {
-                    return el.id;
-                }
+            $scope.criteria.schoolDepartments = $scope.schoolDepartments.filter(function(dep){
+                return dep.valid;
+            }).map(function(dep){
+                return dep.id;
             });
+            QueryUtils.loadingWheel($scope,false);
         }
     });
 
     $scope.legends = QueryUtils.endpoint('/school/studyYearScheduleLegends').search();
-
+    QueryUtils.loadingWheel($scope,true);
     $scope.legends.$promise.then(function (response) {
         $scope.legends = response.legends;
+        QueryUtils.loadingWheel($scope,false);
     });
 
     function getStudentGroups() {
         $scope.studentGroups = QueryUtils.endpoint('/studyYearSchedule/studentGroups').query({showMine: $scope.criteria.showMine});
         if ($scope.criteria.showMine) {
+            QueryUtils.loadingWheel($scope,true);
             $scope.studentGroups.$promise.then(function(response){
                 if (angular.isArray(response) && response.length > 0) {
                     $scope.criteria.schoolDepartments = response[0].schoolDepartments;
                 }
+                QueryUtils.loadingWheel($scope,false);
             });
         }
         $scope.criteria.studentGroups = [];
@@ -53,19 +62,13 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog,
 
     function selectCurrentStudyYear() {
         $scope.criteria.studyYear = DataUtils.getCurrentStudyYearOrPeriod($scope.studyYears);
-        DataUtils.sortStudyYearsOrPeriods($scope.criteria.studyYear.studyPeriods);
+        if ($scope.criteria.studyYear) {
+            DataUtils.sortStudyYearsOrPeriods($scope.criteria.studyYear.studyPeriods);
+        }
+        $scope.yearSelectionTrigger();
     }
 
     $scope.studyYears = QueryUtils.endpoint('/studyYearSchedule/studyYears').query(selectCurrentStudyYear);
-
-    $scope.$watch('criteria.studyYear', function() {
-            if($scope.criteria.studyYear) {
-                $scope.criteria.studyPeriods = $scope.criteria.studyYear.studyPeriods.map(function(p){return p.id;});
-                getSchedules();
-                getWeeks();
-            }
-        }
-    );
 
     $scope.schoolDepartmentsChanged = function() {
         if(!ArrayUtils.isEmpty($scope.studentGroups)){
@@ -81,16 +84,26 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog,
         getSchedules();
     };
 
+    $scope.exportUrl = function(url) {
+        var params = {
+            studyYearId: $scope.criteria.studyYear ? $scope.criteria.studyYear.id : null,
+            schoolDepartments: $scope.criteria.schoolDepartments,
+            showMine: $scope.criteria.showMine
+        };
+        return config.apiUrl + '/'+ url + '?' + $httpParamSerializer(params);
+    };
+
     function getSchedules() {
         // because of many parameters this endpoint was changed from get to post method, it doesn't save anything
         $scope.record = QueryUtils.endpoint('/studyYearSchedule').save($scope.criteria);
+        QueryUtils.loadingWheel($scope,true);
         $scope.record.$promise.then(function(response){
             $scope.studyYearSchedules = response.studyYearSchedules;
+            QueryUtils.loadingWheel($scope,false);
         });
     }
 
     function getWeeks() {
-
         var weeks = [];
         var weekNr = 1;
         var start = new Date($scope.criteria.studyYear.startDate);
@@ -138,9 +151,35 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog,
 
     $scope.getLegendById = function(legendId) {
         if(angular.isArray($scope.legends)) {
-            return $scope.legends.find(function(el){return el.id === legendId; });
+            var id = $scope.legends.find(function(el){return el.id === legendId; });
+            return id;
         }
     };
+
+    $scope.$watch(
+        function () {
+            return document.getElementsByClassName("lessonplan")[0].offsetHeight;
+        },
+        function () {
+            var rowLength = document.getElementsByClassName("lessonplan")[0].offsetHeight + 17;
+            var defaultHeight =  $window.innerHeight - 340;
+            if (rowLength < defaultHeight) {
+                angular.element(document.getElementsByClassName("container")[0]).css('height', rowLength + 'px');
+            } else {
+                angular.element(document.getElementsByClassName("container")[0]).css('height', defaultHeight + 'px');
+            }
+        }
+    );
+
+    angular.element($window).bind('resize', function(){
+        var rowLength = document.getElementsByClassName("lessonplan")[0].offsetHeight + 17;
+        var defaultHeight =  $window.innerHeight - 340;
+        if (rowLength < defaultHeight) {
+            angular.element(document.getElementsByClassName("container")[0]).css('height', rowLength + 'px');
+        } else {
+            angular.element(document.getElementsByClassName("container")[0]).css('height', defaultHeight + 'px');
+        }
+    });
 
     function getNumberOfWeeks (schedule) {
         if(!schedule.studyYearScheduleLegend) {
@@ -242,11 +281,27 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog,
         });
     };
 
-    $scope.$watch('criteria.studyYear', function(){
-      if(!$scope.criteria.studyYear) {
+    $scope.refreshHeight = function() {
+        var rowLength = document.getElementsByClassName("lessonplan")[0].rows.length * 21;
+        var defaultHeight =  $window.innerHeight - 340;
+        if (rowLength < defaultHeight) {
+        angular.element(document.getElementsByClassName("container")[0]).css('height', rowLength + 'px');
+        } else {
+        angular.element(document.getElementsByClassName("container")[0]).css('height', defaultHeight + 'px');
+        }
+    };
+
+    $scope.yearSelectionTrigger = function() {
+    if(!$scope.criteria.studyYear) {
         $scope.isPastStudyYear = true;
-      } else {
-        $scope.isPastStudyYear = DataUtils.isPastStudyYearOrPeriod($scope.criteria.studyYear);
-      }
-    });
+    } else {
+        if ($scope.criteria.studyYear !== $scope.lastPickedStudyYear) {
+            $scope.isPastStudyYear = DataUtils.isPastStudyYearOrPeriod($scope.criteria.studyYear);
+            $scope.criteria.studyPeriods = $scope.criteria.studyYear.studyPeriods.map(function(p){return p.id;});
+            getSchedules();
+            getWeeks();
+            $scope.lastPickedStudyYear = $scope.criteria.studyYear;
+        }
+        }
+    };
 });

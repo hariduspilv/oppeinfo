@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService',
-  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService) {
+angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', 'dialogService',
+  function ($scope, message, QueryUtils, DataUtils, $route, $location, dialogService) {
     $scope.auth = $route.current.locals.auth;
     var baseUrl = '/timetableevents';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -20,7 +20,8 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       $scope.timetableEvent.$promise.then(afterLoad);
     } else {
       $scope.timetableEvent = new Endpoint();
-
+      $scope.timetableEvent.isSingleEvent = true;
+      
       if ($scope.auth.isTeacher()) {
         $scope.timetableEvent.teachers = [];
         $scope.timetableEvent.teachers.push({id:$scope.auth.teacher, nameEt: $scope.auth.fullname, nameEn: $scope.auth.fullname, nameRu: $scope.auth.fullname});
@@ -61,7 +62,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       }
       if ($scope.timetableEvent.teachers) {
         occupiedQuery.teachers = $scope.timetableEvent.teachers.reduce(function (filtered, teacher) {
-          filtered.push(teacher.id);
+          filtered.push(teacher.teacher.id);
           return filtered;
         }, []);
       }
@@ -88,6 +89,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       if (id) {
         $scope.timetableEvent.$update().then(afterLoad).then(message.updateSuccess);
         $scope.eventForm.$setPristine();
+        $scope.removedJournalTeacherIds = {};
       } else {
         $scope.timetableEvent.$save().then(function () {
           message.info('main.messages.create.success');
@@ -115,17 +117,24 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       }
     });
 
+    $scope.sortTeachers = function (teacher) {
+      return $scope.currentLanguageNameField(teacher.teacher);
+    };
+
     $scope.addTeacher = function () {
       if (!angular.isArray($scope.timetableEvent.teachers)) {
         $scope.timetableEvent.teachers = [];
       }
       if ($scope.timetableEvent.teachers.some(function (teacher) {
-          return teacher.id === $scope.timetableEvent.teacher.id;
+          return teacher.teacher.id === $scope.timetableEvent.teacher.id;
         })) {
         message.error('timetable.timetableEvent.error.duplicateTeacher');
         return;
       }
-      $scope.timetableEvent.teachers.push($scope.timetableEvent.teacher);
+      $scope.timetableEvent.teachers.push({
+        id: $scope.removedJournalTeacherIds ? $scope.removedJournalTeacherIds[$scope.timetableEvent.teacher.id] : null,
+        teacher: $scope.timetableEvent.teacher
+      });
       $scope.timetableEvent.teacher = undefined;
     };
 
@@ -133,6 +142,11 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       var index = $scope.timetableEvent.teachers.indexOf(teacher);
       if (index !== -1) {
         $scope.timetableEvent.teachers.splice(index, 1);
+
+        if (!$scope.removedJournalTeacherIds) {
+          $scope.removedJournalTeacherIds = {};
+        }
+        $scope.removedJournalTeacherIds[teacher.teacher.id] = teacher.id;
         $scope.eventForm.$setDirty();
       }
     };
