@@ -95,7 +95,7 @@ public class AbstractProtocolService {
         ps.setGrade(grade);
         ps.setGradeDate(LocalDate.now());
         ps.setGradeMark(gradeMark);
-        ps.setGradeValue(Boolean.TRUE.equals(isLetterGrade) ? grade.getValue2() : grade.getValue2());
+        ps.setGradeValue(Boolean.TRUE.equals(isLetterGrade) ? grade.getValue2() : grade.getValue());
     }
 
     protected void setConfirmation(HoisUserDetails user, Protocol protocol) {
