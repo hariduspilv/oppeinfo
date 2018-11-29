@@ -20,14 +20,14 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <div flex="45" flex-sm="100" flex-xs="100">
             <div layout="column" flex>
-              <div layout="row" flex>
+              <div layout="row" layout-xs="column" flex>
                 <md-input-container>
                   <label>{{'apel.insertedFrom' | translate}}</label>
-                  <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
+                  <md-datepicker ng-model="criteria.insertedFrom" md-max-date="criteria.insertedThru"></md-datepicker>
                 </md-input-container>
                 <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'apel.insertedThru' | translate}}</label>
-                  <md-datepicker ng-model="criteria.insertedThru"></md-datepicker>
+                  <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
                 </md-input-container>
               </div>
             </div>
@@ -38,7 +38,7 @@
               <div layout="row" flex>
                 <md-input-container>
                   <label>{{'apel.confirmedFrom' | translate}}</label>
-                  <md-datepicker ng-model="criteria.confirmedFrom"></md-datepicker>
+                  <md-datepicker ng-model="criteria.confirmedFrom" md-max-date="criteria.confirmedThru"></md-datepicker>
                 </md-input-container>
                 <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'apel.confirmedThru' | translate}}</label>

@@ -49,14 +49,14 @@
             <ng-form name="higherProtocolStudentForm">
               <td md-cell>{{student.student.nameEt}}</td>
               <td md-cell ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">
-                <span ng-class="{badResult: !gradeUtil.isPositiveValue(student.practiceResult)}">{{student.practiceResult}}</span>
+                <span ng-class="{badResult: !gradeUtil.isPositiveValue(student.practiceResult, auth.school.letterGrades)}">{{student.practiceResult}}</span>
               </td>
               <td md-cell ng-repeat="result in record.subjectStudyPeriodMidtermTaskDto.studentResults | filter: filterStudentResults(student)">
                 <span ng-if="!result.isText">{{result.points}}</span>
                 <span ng-if="result.isText">{{result.pointsTxt}}</span>
               </td>
               <td md-cell>
-                <span ng-class="{badResult: !gradeUtil.isPositiveValue(student.gradeValue)}">{{student.gradeValue}}</span>
+                <span ng-class="{badResult: !gradeUtil.isPositiveValue(student.gradeValue, auth.school.letterGrades)}">{{student.gradeValue}}</span>
               </td>
               <td md-cell ng-if="record.status.code === 'PROTOKOLL_STAATUS_K'">{{student.addInfo}}</td>
             </ng-form>

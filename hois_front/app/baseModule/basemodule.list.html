@@ -2,11 +2,11 @@
     <div flex>
       <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-        <form ng-submit="loadData()" class="nomargin" layout="column">
+        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" class="nomargin" layout="column">
             <div layout-gt-sm="row" layout="column" layout-align-gt-sm="start end">
                 <md-input-container flex-gt-sm="45" flex="100">
                     <label class="textInput">{{'basemodule.search.name' | translate}}</label>
-                    <input ng-model="criteria.name" type="text" autofocus>
+                    <input ng-model="criteria.name" type="text" md-maxlength="255" autofocus>
                 </md-input-container>
                 <div layout="column" flex="50" flex-offset-gt-sm="5">
                   <label class="common-label">{{'main.validityPeriod' | translate}}</label>
@@ -85,7 +85,7 @@
                 </thead>
                 <tbody md-body>
                     <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-                        <td md-cell><a ng-href="#/basemodule/{{::row.id}}">{{currentLanguageNameField(row)}}</a></td>
+                        <td md-cell><a ng-href="#/basemodule/{{::row.id}}/view">{{currentLanguageNameField(row)}}</a></td>
                         <td md-cell ng-init="row.c = row.curriculums.join(', ')">
                             {{row.c.length &GT 20 && !row.showC ? (row.c | limitTo:20) + '...' : row.c}}
                             <span class="custom-tooltip" ng-if="!row.showC && row.c.length > 20" ng-click="row.showC = true">{{'basemodule.search.showMore' | translate}}</span>

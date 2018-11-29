@@ -130,7 +130,7 @@ public class TeacherController {
 
     @PutMapping("/{id:\\d+}/continuingEducations")
     public TeacherDto saveContinuingEducations(HoisUserDetails user, @WithEntity Teacher teacher, @Valid @RequestBody TeacherContinuingEducationFormWrapper teacherContinuingEducationForms) {
-        TeacherUserRights.assertCanEdit(user, teacher);
+        TeacherUserRights.assertCanTeacherAndAdminEdit(user, teacher);
         return teacherService.saveContinuingEducations(user, teacher, teacherContinuingEducationForms.getContinuingEducations());
     }
 
@@ -148,7 +148,7 @@ public class TeacherController {
 
     @DeleteMapping("/{teacherId:\\d+}/continuingEducations/{id:\\d+}")
     public void deleteContinuingEducation(HoisUserDetails user, @WithEntity("teacherId") Teacher teacher, @WithEntity TeacherContinuingEducation continuingEducation) {
-        TeacherUserRights.assertCanEdit(user, teacher);
+        TeacherUserRights.assertCanTeacherAndAdminEdit(user, teacher);
         TeacherUtil.assertContinuingEducationBelongsToTeacher(continuingEducation, teacher);
         teacherService.delete(user, continuingEducation);
     }

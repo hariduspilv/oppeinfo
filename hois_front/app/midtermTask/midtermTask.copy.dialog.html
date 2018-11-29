@@ -15,7 +15,7 @@
         <div layout="column">
           <!-- hois-value and disabled attribute have weird behaviour in IE browser -->
           <md-input-container ng-show="formState.auth.isTeacher()">
-            <label>{{'midtermTask.teacher' | translate}}</label>
+            <label>{{formState.auth.higher ? ('midtermTask.teacherHigher' | translate) : ('midtermTask.teacherVocational' | translate)}}</label>
             <input type="text" ng-model="formState.auth.fullname" readonly>
           </md-input-container>
           <md-input-container>
@@ -23,7 +23,7 @@
               <hois-select ng-model="criteria.studyPeriod" values="studyPeriods"></hois-select>
           </md-input-container>
           <hois-autocomplete ng-model="criteria.teacherObject" method="teachers" name="teacher"
-              label="midtermTask.teacher" ng-show="formState.auth.isAdmin()"></hois-autocomplete>
+              label="{{formState.auth.higher ? 'midtermTask.teacherHigher' : 'midtermTask.teacherVocational'}}" ng-show="formState.auth.isAdmin()"></hois-autocomplete>
           <hois-autocomplete ng-model="criteria.subjectObject" method="subjects" name="subject"
               label="midtermTask.subject"></hois-autocomplete>
         </div>
@@ -38,9 +38,11 @@
           <table md-table md-row-select="true" md-progress="tabledata.$promise" ng-model="subjectStudyPeriodSelected">
           <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-              <th md-column md-order-by="subject.{{currentLanguageNameField()}}">{{'midtermTask.subject' | translate}}</th>
-              <th md-column ng-show="formState.auth.isAdmin()">{{'midtermTask.teacher' | translate}}</th>
-              <th md-column>{{'midtermTask.midtermTasks' | translate}}</th>
+            <th md-column md-order-by="subject.{{currentLanguageNameField()}}">{{'midtermTask.subject' | translate}}</th>
+            <th md-column ng-show="formState.auth.isAdmin()">
+                {{formState.auth.higher ? ('midtermTask.teacherHigher' | translate) : ('midtermTask.teacherVocational' | translate)}}
+            </th>
+            <th md-column>{{'midtermTask.midtermTasks' | translate}}</th>
           </tr>
           </thead>
           <tbody md-body>

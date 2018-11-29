@@ -44,7 +44,7 @@
         </md-input-container>
 
         <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label class="textInput">{{'journal.teachers' | translate}}</label>
+          <label class="textInput">{{auth.higher ? ('journal.teachersHigher' | translate) : ('journal.teachersVocational' | translate)}}</label>
           <hois-value value="journal.journalTeachers.join(', ')"></hois-value>
         </md-input-container>
       </div>
@@ -78,11 +78,19 @@
         </md-input-container>
       </div>
 
-      <div ng-if="journal.canEdit" layout="row" layout-sm="column" layout-xs="column">
-        <div flex="30" flex-sm="100" flex-xs="100">
+      <div ng-if="journal.canEdit" layout="row">
+        <div flex="100">
           <md-input-container>
             <label>{{'moodle.courseId' | translate}}</label>
-            <input type="number" ng-model="journal.moodleCourseId">
+            <input type="number" name="moodleCourseId" ng-model="journal.moodleCourseId" max="9007199254740991">
+            <div class="md-errors-spacer">
+              <div class="md-char-counter">{{journalForm.moodleCourseId.$viewValue ? journalForm.moodleCourseId.$viewValue.length : 0}} / 16</div>
+            </div>
+            <div ng-messages="journalForm.moodleCourseId.$error" ng-show="journalForm.moodleCourseId.$dirty">
+              <div ng-message="max">
+                  {{'main.messages.error.max' | translate }}
+              </div>
+            </div>
           </md-input-container>
           <md-button class="md-button md-raised" ng-disabled="!journal.moodleCourseId" ng-click="saveMoodleCourseId()">{{'moodle.saveCourseId' | translate}}</md-button>
         </div>
@@ -148,3 +156,9 @@
 <div ng-if="!journal.hasJournalStudents">
   <div ng-include="'journal/journal.student.selection.html'" ng-controller="JournalStudentSelectionController as journalStudentSelectionController"></div>
 </div>
+
+<style>
+  md-toolbar {
+    min-height: 64px !important;
+  }
+</style>

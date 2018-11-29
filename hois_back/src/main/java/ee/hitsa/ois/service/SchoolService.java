@@ -44,7 +44,9 @@ public class SchoolService {
     private EntityManager em;
 
     public SchoolDto getWithLogo(Long schoolId) {
-        return EntityUtil.withEntity(schoolId, id -> em.find(School.class, id), school -> SchoolDto.ofWithLogo(school));
+        SchoolDto dto = EntityUtil.withEntity(schoolId, id -> em.find(School.class, id), school -> SchoolDto.ofWithLogo(school));
+        dto.setType(schoolType(schoolId));
+        return dto;
     }
 
     public byte[] getLogo(Long schoolId) {

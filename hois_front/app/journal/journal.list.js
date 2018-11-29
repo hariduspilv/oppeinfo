@@ -8,6 +8,15 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
 
   $scope.formState = {};
 
+  $scope.load = function() {
+    if (!$scope.searchForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      return false;
+    } else {
+      $scope.loadData();
+    }
+  };
+
   QueryUtils.endpoint('/journals/canConfirmAll').search().$promise.then(function(response){
     $scope.formState.canConfirmAll = response.canConfirmAll;
   });

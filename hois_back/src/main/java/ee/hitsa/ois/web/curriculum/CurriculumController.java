@@ -35,6 +35,7 @@ import ee.hitsa.ois.report.curriculum.CurriculumCompetencesReport;
 import ee.hitsa.ois.report.curriculum.CurriculumModulesReport;
 import ee.hitsa.ois.report.curriculum.CurriculumVersionModulesReport;
 import ee.hitsa.ois.report.curriculum.CurriculumVersionReport;
+import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.XmlService;
@@ -51,6 +52,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.StateCurriculumCopyCommand;
+import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumFileForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumForm;
@@ -58,6 +60,7 @@ import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSchoolDepartmentComma
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumStudyLevelCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileUpdateDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
@@ -70,6 +73,8 @@ import ee.hitsa.ois.xml.curriculum.CurriculumXml;
 @RequestMapping("curriculum")
 public class CurriculumController {
 
+    @Autowired
+    private AutocompleteService autocompleteService;
     @Autowired
     private CurriculumService curriculumService;
     @Autowired
@@ -147,12 +152,16 @@ public class CurriculumController {
         HttpUtil.pdf(response, "curriculum_version.pdf",
                 pdfService.generate(CurriculumVersionReport.VOCATIONAL_TEMPLATE_NAME, new CurriculumVersionReport(curriculumVersion)));
     }
-    
+
     @GetMapping("/print/{id:\\d+}/curriculumVersionModules.pdf")
-    public void printCurriculumVersionModules(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion, HttpServletResponse response) throws IOException {
-        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
+    public void printCurriculumVersionModules(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion,
+            HttpServletResponse response) throws IOException {
+        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()),
+                curriculumVersion.getCurriculum());
+        CurriculumVersionModulesReport report = new CurriculumVersionModulesReport(curriculumVersion);
+        report.setIsHigherSchool(Boolean.valueOf(schoolService.schoolType(user.getSchoolId()).isHigher()));
         HttpUtil.pdf(response, "curriculum_version_modules.pdf",
-                pdfService.generate(CurriculumVersionModulesReport.VOCATIONAL_TEMPLATE_NAME, new CurriculumVersionModulesReport(curriculumVersion)));
+                pdfService.generate(CurriculumVersionModulesReport.VOCATIONAL_TEMPLATE_NAME, report));
     }
 
     @GetMapping
@@ -392,5 +401,11 @@ public class CurriculumController {
     @GetMapping("/canCreate")
     public Map<String, ?> canCreate(HoisUserDetails user) {
         return Collections.singletonMap("canCreate", Boolean.valueOf(CurriculumUtil.canCreate(user)));
+    }
+    
+    @GetMapping("/teachers")
+    public List<OccupiedAutocompleteResult> getTeachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
+        lookup.setValid(Boolean.TRUE);
+        return autocompleteService.teachers(user.getSchoolId(), lookup, true);
     }
 }

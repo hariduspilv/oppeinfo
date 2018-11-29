@@ -24,7 +24,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       
       if ($scope.auth.isTeacher()) {
         $scope.timetableEvent.teachers = [];
-        $scope.timetableEvent.teachers.push({id:$scope.auth.teacher, nameEt: $scope.auth.fullname, nameEn: $scope.auth.fullname, nameRu: $scope.auth.fullname});
+        $scope.timetableEvent.teachers.push({teacher: {id:$scope.auth.teacher, nameEt: $scope.auth.fullname, nameEn: $scope.auth.fullname, nameRu: $scope.auth.fullname}});
       }
     }
 
@@ -43,7 +43,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       var occupiedQuery = timetableTimeOccupiedQuery();
       QueryUtils.endpoint(baseUrl + '/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
         if(result.occupied) {
-          dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
+          dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts($scope, $scope.auth.higher, result), function () {
             saveEvent();
           });
         } else {
@@ -128,7 +128,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       if ($scope.timetableEvent.teachers.some(function (teacher) {
           return teacher.teacher.id === $scope.timetableEvent.teacher.id;
         })) {
-        message.error('timetable.timetableEvent.error.duplicateTeacher');
+        message.error($scope.auth.higher ? 'timetable.timetableEvent.error.duplicateTeacherHigher' : 'timetable.timetableEvent.error.duplicateTeacherVocational');
         return;
       }
       $scope.timetableEvent.teachers.push({

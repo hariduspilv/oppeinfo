@@ -23,14 +23,14 @@
 
   angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$route', '$scope', '$translate', 'dialogService', 'message', 'DataUtils', 'FormUtils', 'QueryUtils',
     function ($location, $route, $scope, $translate, dialogService, message, DataUtils, FormUtils, QueryUtils) {
-      var auth = $route.current.locals.auth;
+      $scope.auth = $route.current.locals.auth;
       var id = $route.current.params.id;
       var baseUrl = '/teachers';
       var Endpoint = QueryUtils.endpoint(baseUrl);
       var TeacherPositionEhisEndpoint = QueryUtils.endpoint('/teachers/' + id + '/ehisPositions');
       var EmailGeneratorEndpoint = QueryUtils.endpoint('/school/generateEmail', {post: {method: 'POST'}});
 
-      var school = auth.school;
+      var school = $scope.auth.school;
       var onlyHigherSchool = school && school.higher && !school.vocational;
       $scope.occupations = QueryUtils.endpoint('/school/teacheroccupations/all').query();
 
@@ -115,7 +115,8 @@
       };
 
       $scope.delete = function () {
-        FormUtils.deleteRecord($scope.teacher, baseUrl + '?_noback', {prompt: 'teacher.deleteConfirm'});
+        FormUtils.deleteRecord($scope.teacher, baseUrl + '?_noback', 
+          {prompt: $scope.auth.higher ? 'teacher.deleteConfirmHigher' : 'teacher.deleteConfirmVocational'});
       };
 
       $scope.update = function () {
@@ -123,7 +124,7 @@
           if ($scope.teacher.id) {
             $scope.teacher.$update().then(function() {
               message.updateSuccess();
-              if(auth.isTeacher()) {
+              if($scope.auth.isTeacher()) {
                 $location.url(baseUrl + '/myData?_noback');
               } else {
                 afterLoad();
@@ -141,9 +142,9 @@
 
       $scope.sendToEhis = function() {
         FormUtils.withValidForm($scope.teacherForm, function() {
-          dialogService.confirmDialog({ prompt: 'teacher.ehisconfirm' }, function () {
+          dialogService.confirmDialog({ prompt:  $scope.auth.higher ? 'teacher.ehisConfirmHigher' : 'teacher.ehisConfirmVocational' }, function () {
             QueryUtils.endpoint(baseUrl + '/' + $scope.teacher.id + '/sendToEhis').put({}, $scope.teacher).$promise.then(function() {
-              message.info('teacher.sentToEhis');
+              message.info($scope.auth.higher ? 'teacher.sentToEhisHigher' : 'teacher.sentToEhisVocational');
               $location.url(baseUrl + '/' + $scope.teacher.id + '/edit?_noback'); // Didn't work for reloading for some reason. Added loadTeacher function to update data.
               loadTeacher($scope.teacher.id);
             }).catch(function () {
@@ -154,7 +155,8 @@
       };
 
       $scope.deleteEhisPosition = function (ehisPosition) {
-        dialogService.confirmDialog({prompt: 'teacher.teacherPositionEhis.deleteConfirm'}, function () {
+        dialogService.confirmDialog(
+          {prompt: $scope.auth.higher ? 'teacher.teacherPositionEhis.deleteConfirmHigher' : 'teacher.teacherPositionEhis.deleteConfirmVocational'}, function () {
           if (ehisPosition.id) {
             ehisPosition = new TeacherPositionEhisEndpoint(ehisPosition);
             ehisPosition.$delete().then(function () {
@@ -179,6 +181,7 @@
       };
   }]).controller('TeacherContinuingEducationEditController', ['$location', '$route', '$translate', '$scope', 'dialogService', 'message', 'QueryUtils',
     function ($location, $route, $translate, $scope, dialogService, message, QueryUtils) {
+      $scope.auth = $route.current.locals.auth;
       var id = $route.current.params.id;
       var Endpoint = QueryUtils.endpoint('/teachers');
       var TeacherContinuingEducationsEndpoint = QueryUtils.endpoint('/teachers/' + id + '/continuingEducations');
@@ -225,7 +228,8 @@
       };
 
       $scope.deleteContinuingEducation = function (continuingEducation) {
-        dialogService.confirmDialog({prompt: 'teacher.continuingEducation.deleteConfirm'}, function () {
+        dialogService.confirmDialog(
+          {prompt: $scope.auth.higher ? 'teacher.continuingEducation.deleteConfirmHigher' : 'teacher.continuingEducation.deleteConfirmVocational'}, function () {
           if (continuingEducation.id) {
             continuingEducation = new TeacherContinuingEducationsEndpoint(continuingEducation);
             continuingEducation.$delete().then(function () {
@@ -241,6 +245,7 @@
       };
   }]).controller('TeacherQualificationEditController', ['$location', '$route', '$translate', '$scope', 'dialogService', 'message', 'QueryUtils',
     function ($location, $route, $translate, $scope, dialogService, message, QueryUtils) {
+      $scope.auth = $route.current.locals.auth;
       var id = $route.current.params.id;
       var Endpoint = QueryUtils.endpoint('/teachers');
       var TeacherQualificationsEndpoint = QueryUtils.endpoint('/teachers/' + id + '/qualifications');
@@ -287,7 +292,8 @@
       };
 
       $scope.deleteQualification = function (qualification) {
-        dialogService.confirmDialog({prompt: 'teacher.qualification.deleteConfirm'}, function () {
+        dialogService.confirmDialog(
+          {prompt: $scope.auth.higher ? 'teacher.qualification.deleteConfirmHigher' : 'teacher.qualification.deleteConfirmVocational'}, function () {
           if (qualification.id) {
             qualification = new TeacherQualificationsEndpoint(qualification);
             qualification.$delete().then(function () {
@@ -303,6 +309,7 @@
       };
   }]).controller('TeacherMobilityEditController', ['$location', '$route', '$translate', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
     function ($location, $route, $translate, $scope, dialogService, message, DataUtils, QueryUtils) {
+      $scope.auth = $route.current.locals.auth;
       var id = $route.current.params.id;
       var Endpoint = QueryUtils.endpoint('/teachers');
       var TeacherMobilityEndpoint = QueryUtils.endpoint('/teachers/' + id + '/mobilities');
@@ -351,7 +358,8 @@
       };
 
       $scope.deleteMobility = function (mobility) {
-        dialogService.confirmDialog({prompt: 'teacher.mobility.deleteConfirm'}, function () {
+        dialogService.confirmDialog(
+          {prompt: $scope.auth.higher ? 'teacher.mobility.deleteConfirmHigher' : 'teacher.mobility.deleteConfirmVocational'}, function () {
           if (mobility.id) {
             mobility = new TeacherMobilityEndpoint(mobility);
             mobility.$delete().then(function () {
@@ -382,7 +390,7 @@
     };
 
     $scope.loadData();
-  }]).controller('TeacherViewController', ['$scope', '$route', '$translate', 'QueryUtils', function ($scope, $route, $translate, QueryUtils) {
+  }]).controller('TeacherViewController', ['$scope', '$route', '$translate', 'QueryUtils', 'message', function ($scope, $route, $translate, QueryUtils, message) {
     $scope.isShowingRtipTab = false;
     var auth = $route.current.locals.auth;
     $scope.auth = auth;
@@ -430,13 +438,15 @@
     $scope.updateData = function () {
       QueryUtils.endpoint('/teachers/' + id + '/rtip').save().$promise.then(function () {
         $scope.loadData();
+        message.info("teacher.rtipUpdateOperation.success");
       });
     };
     
     $scope.loadData(); // HITSAOIS-219. Fixes the jumping button
     // (problem with md-dynamic-height because after changing tab it starts to change height but data is not loaded yet)
     
-  }]).controller('TeacherRtipAbsenceEditController', ['$scope', '$route', '$translate', 'QueryUtils', function ($scope, $route, $translate, QueryUtils) {
+  }]).controller('TeacherRtipAbsenceEditController', ['$scope', '$route', '$translate', 'QueryUtils', 'message', function ($scope, $route, $translate, QueryUtils, message) {
+    $scope.auth = $route.current.locals.auth;
     var id = $route.current.params.id;
     var Endpoint = QueryUtils.endpoint('/teachers');
     $scope.rtipPage = true;
@@ -465,6 +475,7 @@
     $scope.updateData = function () {
       QueryUtils.endpoint('/teachers/' + id + '/rtip').save().$promise.then(function () {
         $scope.loadData();
+        message.info("teacher.rtipUpdateOperation.success");
       });
     };
 

@@ -250,12 +250,6 @@ angular.module('hitsaOis')
         return true;
     };
 
-    $scope.checkValidThru = function() {
-        if($scope.stateCurriculum.validThru < $scope.stateCurriculum.validFrom) {
-            $scope.stateCurriculum.validThru = undefined;
-        }
-    };
-
     $scope.nameEtUniqueQuery = {
       id: id,
       paramName: 'nameEt',

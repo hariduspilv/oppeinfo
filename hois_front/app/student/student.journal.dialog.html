@@ -19,7 +19,7 @@
               <hois-value value="$parent.currentLanguageNameField(journal.modules)"></hois-value>
             </md-input-container>
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
-              <label>{{'student.journal.teachers' | translate}}</label>
+              <label>{{auth.higher ? ('student.journal.teachersHigher' | translate) : ('student.journal.teachersVocational' | translate)}}</label>
               <hois-value value="journal.teachers"></hois-value>
             </md-input-container>
           </div>

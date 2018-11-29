@@ -26,8 +26,10 @@ import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.report.apelapplication.ApelApplicationReport;
 import ee.hitsa.ois.service.ApelApplicationService;
 import ee.hitsa.ois.service.PdfService;
+import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApelApplicationUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -50,6 +52,8 @@ public class ApelApplicationController {
 
     @Autowired
     private ApelApplicationService apelApplicationService;
+    @Autowired
+    private SchoolService schoolService;
     @Autowired
     private PdfService pdfService;
 
@@ -255,11 +259,11 @@ public class ApelApplicationController {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
 
+        ApelApplicationReport report = new ApelApplicationReport(application);
+        report.setIsHigherSchool(Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(application.getSchool())).isHigher()));
         String templateName = Boolean.TRUE.equals(application.getIsVocational()) ?
                 ApelApplicationReport.VOCATIONAL_TEMPLATE_NAME : ApelApplicationReport.HIGHER_TEMPLATE_NAME;
-
-        HttpUtil.pdf(response, application.getId() + ".pdf",
-                pdfService.generate(templateName, new ApelApplicationReport(application)));
+        HttpUtil.pdf(response, application.getId() + ".pdf", pdfService.generate(templateName, report));
     }
 
     @GetMapping("/subjectModule/{subjectId:\\d+}")

@@ -14,72 +14,76 @@
       <div class="ois-form-layout-padding nomargin" layout="column" ng-cloak>
         <md-input-container>
           <label>{{'theme.name' | translate}}</label>
-          <input ng-model="occupationModuleTheme.nameEt" type="text" required ng-readonly="hasBaseModule">
+          <input ng-model="occupationModuleTheme.nameEt" type="text" required md-maxlength="255" ng-readonly="hasBaseModule">
         </md-input-container>
 
-        <div layout="row">
-          <md-input-container flex="30">
-            <label>{{'theme.capacityAndUnit' | translate}}</label>
-          </md-input-container>
-
-          <md-input-container flex="10">
-            <label>EKAP</label>
-            <input ng-model="occupationModuleTheme.credits" name="credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$"
-              ng-change="setDefaultHours()" required ng-readonly="hasBaseModule">
-            <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
-              <div ng-message="min">
-                {{'main.messages.error.positive' | translate}}
-              </div>
-              <div ng-message="max">
-                {{'curriculum.error.max999' | translate}}
-              </div>
-              <div ng-message="pattern">
-                {{'stateCurriculum.error.decimalPresision' | translate}}
-              </div>
+        <div layout="column" layout-gt-md="row">
+          <div layout="column" layout-gt-sm="row" flex-gt-md="50" flex="100">
+            <md-input-container flex-gt-sm="40" flex="100">
+              <label>{{'theme.capacityAndUnit' | translate}}</label>
+            </md-input-container>
+            <br><br>
+            <div layout="row" flex-gt-sm="60" flex="100">
+              <md-input-container flex-gt-sm="50" flex="100">
+                <label>EKAP</label>
+                <input ng-model="occupationModuleTheme.credits" name="credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$"
+                  ng-change="setDefaultHours()" required ng-readonly="hasBaseModule">
+                <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
+                  <div ng-message="min">
+                    {{'main.messages.error.positive' | translate}}
+                  </div>
+                  <div ng-message="max">
+                    {{'curriculum.error.max999' | translate}}
+                  </div>
+                  <div ng-message="pattern">
+                    {{'stateCurriculum.error.decimalPresision' | translate}}
+                  </div>
+                </div>
+              </md-input-container>
+              <md-input-container flex-gt-sm="50" flex="100">
+                <label>{{'main.hour' | translate}}</label>
+                <input ng-model="occupationModuleTheme.hours" name="hours" type="number" min="0" max="9999" pattern="^\d+$" required
+                  ng-change="setDefaultCredits()" ng-readonly="hasBaseModule">
+                <div ng-messages="dialogForm.hours.$error" ng-show="dialogForm.hours.$dirty">
+                  <div ng-message="min">
+                    {{'main.messages.error.positive' | translate}}
+                  </div>
+                  <div ng-message="max">
+                    {{'curriculum.error.max9999' | translate}}
+                  </div>
+                  <div ng-message="pattern">
+                    {{'stateCurriculum.enter.credits.integer' | translate}}
+                  </div>
+                </div>
+              </md-input-container>
             </div>
-          </md-input-container>
-
-          <md-input-container flex="10">
-            <label>{{'main.hour' | translate}}</label>
-            <input ng-model="occupationModuleTheme.hours" name="hours" type="number" min="0" max="9999" pattern="^\d+$" required
-              ng-change="setDefaultCredits()" ng-readonly="hasBaseModule">
-            <div ng-messages="dialogForm.hours.$error" ng-show="dialogForm.hours.$dirty">
-              <div ng-message="min">
-                {{'main.messages.error.positive' | translate}}
+          </div>
+          <div layout="row" flex-gt-md="50" flex="100">
+            <md-input-container flex-gt-sm="50" flex="100">
+              <label>{{'theme.proportionInModule' | translate}}</label>
+              <input ng-model="occupationModuleTheme.proportion" type="number" name="proportion" min="0" max="999" pattern="^\d+(\.\d{1})?$"
+                >
+              <div ng-messages="dialogForm.proportion.$error" ng-show="dialogForm.proportion.$dirty">
+                <div ng-message="min">
+                  {{'main.messages.error.positive' | translate}}
+                </div>
+                <div ng-message="max">
+                  {{'curriculum.error.max999' | translate}}
+                </div>
+                <div ng-message="pattern">
+                  {{'stateCurriculum.error.decimalPresision' | translate}}
+                </div>
               </div>
-              <div ng-message="max">
-                {{'curriculum.error.max9999' | translate}}
-              </div>
-              <div ng-message="pattern">
-                {{'stateCurriculum.enter.credits.integer' | translate}}
-              </div>
-            </div>
-          </md-input-container>
-
-          <md-input-container flex="30">
-            <label>{{'theme.proportionInModule' | translate}}</label>
-            <input ng-model="occupationModuleTheme.proportion" type="number" name="proportion" min="0" max="999" pattern="^\d+(\.\d{1})?$"
-             >
-            <div ng-messages="dialogForm.proportion.$error" ng-show="dialogForm.proportion.$dirty">
-              <div ng-message="min">
-                {{'main.messages.error.positive' | translate}}
-              </div>
-              <div ng-message="max">
-                {{'curriculum.error.max999' | translate}}
-              </div>
-              <div ng-message="pattern">
-                {{'stateCurriculum.error.decimalPresision' | translate}}
-              </div>
-            </div>
-          </md-input-container>
-
-          <md-input-container flex="20">
-            <label>{{'module.studyYear' | translate}}</label>
-            <md-select ng-model="occupationModuleTheme.studyYearNumber">
-              <md-option ng-value="null"></md-option>
-              <md-option ng-repeat="studyYearNumber in studyYears" ng-value="studyYearNumber" aria-label="{{studyYearNumber}}">{{studyYearNumber}}</md-option>
-            </md-select>
-          </md-input-container>
+            </md-input-container>
+  
+            <md-input-container flex-gt-sm="50" flex="100">
+              <label>{{'module.studyYear' | translate}}</label>
+              <md-select ng-model="occupationModuleTheme.studyYearNumber">
+                <md-option ng-value="null"></md-option>
+                <md-option ng-repeat="studyYearNumber in studyYears" ng-value="studyYearNumber" aria-label="{{studyYearNumber}}">{{studyYearNumber}}</md-option>
+              </md-select>
+            </md-input-container>
+          </div>
         </div>
         <div flex>
           <fieldset tabindex="1">

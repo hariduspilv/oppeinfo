@@ -127,11 +127,18 @@ public class BaseModuleService {
         Map<Long, Set<AutocompleteResult>> cvs = new HashMap<>();
         
         module.getCurriculumModules().forEach(cm -> {
-            curriculums.add(AutocompleteResult.of(cm));
-            cvs.put(cm.getId(), cm.getCurriculumVersionOccupationModules().stream()
-                    .filter(cv -> cv.getBaseModule() != null && cv.getBaseModule().getId() == cm.getBaseModule().getId())
-                    .map(AutocompleteResult::of).collect(Collectors.toSet())
-            );
+            AutocompleteResult of = AutocompleteResult.of(cm.getCurriculum());
+            curriculums.add(of);
+            if (cvs.containsKey(of.getId())) {
+                cvs.get(of.getId()).addAll(cm.getCurriculumVersionOccupationModules().stream()
+                        .filter(cv -> cv.getBaseModule() != null && cv.getBaseModule().getId() == cm.getBaseModule().getId())
+                        .map(cv -> AutocompleteResult.of(cv.getCurriculumVersion())).collect(Collectors.toSet()));
+            } else {
+                cvs.put(of.getId(), cm.getCurriculumVersionOccupationModules().stream()
+                        .filter(cv -> cv.getBaseModule() != null && cv.getBaseModule().getId() == cm.getBaseModule().getId())
+                        .map(cv -> AutocompleteResult.of(cv.getCurriculumVersion())).collect(Collectors.toSet())
+                );
+            }
         });
         dto.setCurriculums(curriculums);
         dto.setCurriculumVersions(cvs);
@@ -386,7 +393,11 @@ public class BaseModuleService {
                     BaseModuleUtil.themeTransform(theme, cv);
                 });
             }
-            OccupationModuleCapacitiesUtil.updateModuleCapacities(cv, baseModuleThemeService.getCapacityTypes(bModule.getSchool().getId()));
+            if (bModule.getThemes().isEmpty()) {
+                BaseModuleUtil.updateCapacities(bModule, cv);
+            } else {
+                OccupationModuleCapacitiesUtil.updateModuleCapacities(cv, baseModuleThemeService.getCapacityTypes(bModule.getSchool().getId()));
+            }
             EntityUtil.save(cv, em);
         });
         

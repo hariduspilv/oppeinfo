@@ -18,6 +18,7 @@ public class ModuleProtocolReport {
     public static final String TEMPLATE_NAME = "module.protocol.xhtml";
     
     private final String school;
+    private final Boolean isHigherSchool;
     private final String protocolNr;
     private final String confirmer;
     private final LocalDate confirmDate;
@@ -29,12 +30,13 @@ public class ModuleProtocolReport {
     private final String assessmentType;
     private final List<ProtocolStudentReport> protocolStudents;
 
-    public ModuleProtocolReport(Protocol protocol) {
-        this(protocol, Language.ET);
+    public ModuleProtocolReport(Protocol protocol, Boolean higherSchool) {
+        this(protocol, higherSchool, Language.ET);
     }
 
-    public ModuleProtocolReport(Protocol protocol, Language lang) {
+    public ModuleProtocolReport(Protocol protocol, Boolean higherSchool, Language lang) {
         Objects.requireNonNull(protocol);
+        isHigherSchool = higherSchool;
         school = name(protocol.getSchool(), lang);
         protocolNr = protocol.getProtocolNr();
         confirmDate = protocol.getConfirmDate();
@@ -50,7 +52,7 @@ public class ModuleProtocolReport {
 
         protocolStudents = protocol.getProtocolStudents().stream()
                 .sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getStudent().getPerson(), o2.getStudent().getPerson()))
-                .map(ps -> new ProtocolStudentReport(ps, lang))
+                .map(ps -> new ProtocolStudentReport(ps, higherSchool, Boolean.FALSE, lang))
                 .collect(Collectors.toList());
     }
 
@@ -60,6 +62,10 @@ public class ModuleProtocolReport {
     
     public String getSchool() {
         return school;
+    }
+
+    public Boolean getIsHigherSchool() {
+        return isHigherSchool;
     }
 
     public String getProtocolNr() {

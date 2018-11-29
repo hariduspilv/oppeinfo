@@ -22,7 +22,7 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
     $scope.practiceJournal = entity;
     
-    var gradesClassCode = $scope.practiceJournal.subject ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
+    var gradesClassCode = $scope.practiceJournal.isHigher ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
     $scope.grades = Classifier.queryForDropdown({ mainClassCode: gradesClassCode });
   }
 

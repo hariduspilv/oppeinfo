@@ -80,7 +80,7 @@
       <div layout="row" flex>
         <md-input-container>
           <label>{{'contract.start' | translate}}</label>
-          <md-datepicker ng-model="contract.startDate" required></md-datepicker>
+          <md-datepicker ng-model="contract.startDate" md-max-date="contract.endDate" required></md-datepicker>
         </md-input-container>
 
         <md-input-container>

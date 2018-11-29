@@ -116,14 +116,14 @@ public class BaseModuleController {
     
     @GetMapping("/replace/{bModule:\\d+}/{cModule:\\d+}")
     public BaseModuleReplaceForm getReplaceForm(HoisUserDetails user, @WithEntity("bModule") BaseModule bModule, @WithEntity("cModule") CurriculumModule cModule) {
-        BaseModuleUserRights.assertCanReplace(user);
+        BaseModuleUserRights.assertCanGetReplaceForm(user);
         return baseModuleService.getReplaceForm(bModule, cModule, null);
     }
     
     @GetMapping("/replace/{bModule:\\d+}/{cModule:\\d+}/{oModule:\\d+}")
     public BaseModuleReplaceForm getReplaceForm(HoisUserDetails user, @WithEntity("bModule") BaseModule bModule, @WithEntity("cModule") CurriculumModule cModule,
             @WithEntity("oModule") CurriculumVersionOccupationModule oModule) {
-        BaseModuleUserRights.assertCanReplace(user);
+        BaseModuleUserRights.assertCanGetReplaceForm(user);
         return baseModuleService.getReplaceForm(bModule, cModule, oModule);
     }
     

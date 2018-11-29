@@ -365,7 +365,7 @@ angular.module('hitsaOis')
         $scope.showReplaceMenu = false;
         get();
       }).catch(function () {
-        message.info("basemodule.operation.replace.fail");
+        message.error("basemodule.operation.replace.fail");
       });
     }
 

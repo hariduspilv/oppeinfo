@@ -2,31 +2,31 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form ng-submit="loadData()" novalidate class="nomargin" layout="column">
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin" layout="column">
         <div layout="row" layout-sm="column" layout-xs="column"  >
-            <!--div class="indentForToast"></div-->
-            <md-input-container flex="45" flex-sm="100" flex-xs="100">
-              <label class="textInput">{{'teacher.occupation.occupationEt' | translate}}</label>
-              <input ng-model="criteria.occupationEt" name="occupationEt" type="text" autofocus>
-            </md-input-container>
-            <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-              <label class="textInput">{{'teacher.occupation.occupationEn' | translate}}</label>
-              <input ng-model="criteria.occupationEn" name="occupationEn" type="text">
-            </md-input-container>
-    </div>
-    <div layout="row" layout-sm="column" layout-xs="column"  >
-            <md-input-container>
-              <md-checkbox ng-model="criteria.isValid" name="isValid">
-                {{'teacher.occupation.isValid' | translate}}
-              </md-checkbox>
-            </md-input-container>
-    </div>
-            <div layout="row">
-              <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-              <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-              <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPETAJAAMET')" ng-href="#/school/teacheroccupations/new">{{'main.button.create' | translate}}</md-button>
-            </div>
-          <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+          <!--div class="indentForToast"></div-->
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'teacher.occupation.occupationEt' | translate}}</label>
+            <input ng-model="criteria.occupationEt" name="occupationEt" type="text" md-maxlength="100" autofocus>
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'teacher.occupation.occupationEn' | translate}}</label>
+            <input ng-model="criteria.occupationEn" name="occupationEn" type="text" md-maxlength="100">
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+          <md-input-container>
+            <md-checkbox ng-model="criteria.isValid" name="isValid">
+              {{'teacher.occupation.isValid' | translate}}
+            </md-checkbox>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPETAJAAMET')" ng-href="#/school/teacheroccupations/new">{{'main.button.create' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
     </fieldset>
   </div>

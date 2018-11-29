@@ -10,6 +10,12 @@ angular.module('hitsaOis')
     var id = $route.current.params.versionId;
     var Endpoint = QueryUtils.endpoint('/curriculumVersion');
 
+    var moduleTypes = Object.freeze({ // Sorting module types
+      KUTSEMOODUL_P: 0,
+      KUTSEMOODUL_Y: 1,
+      KUTSEMOODUL_L: 2,
+      KUTSEMOODUL_V: 3
+    });
 
     var capacitiesData = [];
 
@@ -204,7 +210,18 @@ angular.module('hitsaOis')
       $location.path(url);
     }
 
-
+    $scope.occupationModuleHasBaseModule = function(curriculumModule) {
+      for (var i = 0; i < $scope.implementationPlan.occupationModules.length; i++) {
+        if($scope.implementationPlan.occupationModules[i].curriculumModule === curriculumModule.id) {
+          if ($scope.implementationPlan.occupationModules[i].baseModule) {
+            return true;
+          } else {
+            return false;
+          }
+        }
+      }
+      return curriculumModule.baseModule !== null;
+    }
 
     $scope.isOccupationModuleDataSaved = function(curriculumModule) {
       var isSaved = false;
@@ -365,7 +382,16 @@ angular.module('hitsaOis')
 
     Classifier.queryForDropdown({mainClassCode: 'KUTSEMOODUL'}, function(response) {
         $scope.moduleTypes = response;
+        $scope.moduleTypes.sort(function (a, b) {
+          return moduleTypes[a.code] - moduleTypes[b.code];
+        });
     });
+
+    $scope.getTotalCredits = function (modules) {
+      return modules.reduce(function (sum, module) {
+        return sum + module.credits;
+      }, 0);
+    }
 
     $scope.filterEmptyModulesByType = function(typeCode) {
         return function(module1) {

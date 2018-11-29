@@ -90,7 +90,13 @@
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.assessment" | translate }}</td>
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.grade" | translate }}</td>
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.gradeDate" | translate }}</td>
-              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.teachers" | translate }}</td>
+              <td class="label">
+                {% if content.isHigherSchool %}
+                  {{ "report.apel.application.formalSubjectsOrModules.teachersHigher" | translate }}
+                {% else %}
+                  {{ "report.apel.application.formalSubjectsOrModules.teachersVocational" | translate }}
+                {% endif %}
+              </td>
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.transfer" | translate }}</td>
             </tr>
         {% endif %}

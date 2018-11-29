@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -151,6 +152,19 @@ public class CurriculumModuleService {
             result.addAll(StreamUtil.toMappedList(c -> ClassifierSelection.of(c.getClassifier()), 
                     occupation.getOccupation().getChildConnects()));
         }
-        return StreamUtil.toFilteredList(c -> MainClassCode.KOMPETENTS.name().equals(c.getMainClassCode()), result);
+        return removeDuplicates(StreamUtil.toFilteredList(
+                c -> MainClassCode.KOMPETENTS.name().equals(c.getMainClassCode()), result));
+    }
+
+    private static List<ClassifierSelection> removeDuplicates(List<ClassifierSelection> competences) {
+        Set<String> uniqueCodes = new HashSet<>();
+        Iterator<ClassifierSelection> iterator = competences.iterator();
+        while (iterator.hasNext()) {
+            ClassifierSelection competence = iterator.next();
+            if (!uniqueCodes.add(competence.getCode())) {
+                iterator.remove();
+            }
+        }
+        return competences;
     }
 }

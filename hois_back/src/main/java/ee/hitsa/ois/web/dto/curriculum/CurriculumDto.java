@@ -81,7 +81,7 @@ public class CurriculumDto extends CurriculumForm {
         CurriculumDto dto = EntityUtil.bindToDto
                 (curriculum, new CurriculumDto(), 
                  "versions", "studyLanguages", "studyForms", "addresses", "schoolDepartments", "files", 
-                 "jointPartners", "specialities", "modules", "occupations", "grades", "stateCurriculum");
+                 "jointPartners", "specialities", "modules", "occupations", "grades", "stateCurriculum", "teacher");
                 
         dto.setStudyLanguages(StreamUtil.toMappedSet(lang -> EntityUtil.getNullableCode(lang.getStudyLang()), curriculum.getStudyLanguages()));
         dto.setStudyForms(StreamUtil.toMappedSet(f -> EntityUtil.getNullableCode(f.getStudyForm()), curriculum.getStudyForms()));
@@ -93,6 +93,9 @@ public class CurriculumDto extends CurriculumForm {
         dto.setModules(StreamUtil.toMappedSet(CurriculumModuleDto::of, curriculum.getModules()));
         dto.setGrades(StreamUtil.toMappedSet(CurriculumGradeDto::of, curriculum.getGrades()));
         dto.setFiles(StreamUtil.toMappedSet(CurriculumFileUpdateDto::of, curriculum.getFiles()));
+        if (curriculum.getTeacher() != null) {
+            dto.setTeacher(AutocompleteResult.of(curriculum.getTeacher()));
+        }
         dto.setStateCurrClass(getStateCurrClass(curriculum));        
         dto.setEhisSchool(EntityUtil.getCode(curriculum.getSchool().getEhisSchool()));
         

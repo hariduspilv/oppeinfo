@@ -17,31 +17,31 @@
             <input ng-model="occupationModuleTheme.nameEt" type="text" readonly>
           </md-input-container>
 
-          <div layout="column" layout-gt-xs="row">
-
-            <md-input-container flex="30" flex-xs="100">
-              <label>{{'theme.capacityAndUnit' | translate}}</label>
-            </md-input-container>
-            <br><br>
-
-            <div layout="row" flex="35" flex-xs="100">
-              <md-input-container flex="50" flex-xs="100">
-                <label>EKAP</label>
-                <input ng-model="occupationModuleTheme.credits" name="credits" type="number" readonly>
+          <div layout="column" layout-gt-md="row">
+            <div layout="column" layout-gt-sm="row" flex-gt-md="50" flex="100">
+              <md-input-container flex-gt-sm="40" flex="100">
+                <label>{{'theme.capacityAndUnit' | translate}}</label>
               </md-input-container>
-
-              <md-input-container flex="50" flex-xs="100">
-                <label>{{'main.hour' | translate}}</label>
-                <input ng-model="occupationModuleTheme.hours" name="hours" type="number" readonly>
-              </md-input-container>
+              <br><br>
+              <div layout="row" flex-gt-sm="60" flex="100">
+                <md-input-container flex-gt-sm="50" flex="100">
+                  <label>EKAP</label>
+                  <input ng-model="occupationModuleTheme.credits" name="credits" type="number" readonly>
+                </md-input-container>
+  
+                <md-input-container flex-gt-sm="50" flex="100">
+                  <label>{{'main.hour' | translate}}</label>
+                  <input ng-model="occupationModuleTheme.hours" name="hours" type="number" readonly>
+                </md-input-container>
+              </div>
             </div>
-            <div layout="row" flex="35" flex-xs="100">
-              <md-input-container flex="50" flex-xs="100">
+            <div layout="row" flex-gt-md="50" flex="100">
+              <md-input-container flex-gt-sm="50" flex="100">
                 <label>{{'theme.proportionInModule' | translate}}</label>
                 <input ng-model="occupationModuleTheme.proportion" type="number" name="proportion" readonly>
               </md-input-container>
 
-              <md-input-container flex="50" flex-xs="100">
+              <md-input-container flex-gt-sm="50" flex="100">
                 <label>{{'module.studyYear' | translate}}</label>
                 <input ng-model="occupationModuleTheme.studyYearNumber" readonly>
               </md-input-container>

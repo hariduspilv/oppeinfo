@@ -63,12 +63,9 @@ public class SubjectStudyPeriodSearchService {
             Pageable pageable) {
         StringBuilder from = new StringBuilder(FROM);
         StringBuilder select = new StringBuilder(SELECT);
-        if (user.isTeacher()) {
-            from.append("inner join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id ");
-            from.append("inner join teacher t on t.id = sspt.teacher_id ");
-            from.append("left join subject_program spr on spr.subject_study_period_teacher_id = sspt.id ");
-            select.append(", spr.id, spr.status_code");
-        }
+        from.append("join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id ");
+        from.append("left join subject_program spr on spr.subject_study_period_teacher_id = sspt.id ");
+        select.append(", spr.id, spr.status_code");
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable);
 
         if (StringUtils.hasText(criteria.getTeachersFullname())) {
@@ -80,28 +77,31 @@ public class SubjectStudyPeriodSearchService {
         qb.optionalCriteria("sp.id in (:studyPeriods)", "studyPeriods", criteria.getStudyPeriods());
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria(FILTER_BY_DECLARED_STUDENT_ID, "studentId", criteria.getStudent());
+        if (SubjectProgramStatus.AINEPROGRAMM_STAATUS_L.name().equals(criteria.getProgramStatus())) {
+            qb.filter("spr.status_code is null");
+        } else {
+            qb.optionalCriteria("spr.status_code = :status", "status", criteria.getProgramStatus());
+        }
         if(user.isTeacher()) {
-            qb.requiredCriteria("t.id = :teacherId", "teacherId", user.getTeacherId());
+            qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
         }
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, select.toString(), em, pageable);
-        return results.map(r -> resultToDto(r, user.isTeacher()));
+        return results.map(r -> resultToDto(r));
     }
 
-    private static SubjectStudyPeriodSearchDto resultToDto(Object r, boolean isTeacher) {
+    private static SubjectStudyPeriodSearchDto resultToDto(Object r) {
         SubjectStudyPeriodSearchDto dto = new SubjectStudyPeriodSearchDto();
         dto.setId(resultAsLong(r, 0));
         dto.setStudyPeriod(new AutocompleteResult(null, resultAsString(r, 1), resultAsString(r, 2)));
         dto.setSubject(getSubject(r));
         dto.setTeachers(getTeachers(r));
         dto.setStudentsNumber(resultAsLong(r, 8));
-        if (isTeacher) {
-            dto.setSubjectProgramId(resultAsLong(r, 9));
-            String status = resultAsString(r, 10);
-            if (status == null) {
-                dto.setSubjectProgramStatus(SubjectProgramStatus.AINEPROGRAMM_STAATUS_L.name());
-            } else {
-                dto.setSubjectProgramStatus(status);
-            }
+        dto.setSubjectProgramId(resultAsLong(r, 9));
+        String status = resultAsString(r, 10);
+        if (status == null) {
+            dto.setSubjectProgramStatus(SubjectProgramStatus.AINEPROGRAMM_STAATUS_L.name());
+        } else {
+            dto.setSubjectProgramStatus(status);
         }
         return dto;
     }

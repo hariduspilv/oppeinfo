@@ -40,7 +40,8 @@ angular.module('hitsaOis')
     $scope.isUsableChanged = function (capacityType) {
       if (!capacityType.isUsable) {
         capacityType.isTimetable = false;
-        dialogService.confirmDialog({ prompt: 'schoolCapacityType.removeUsableConfirm' }, function () {
+        dialogService.confirmDialog(
+          { prompt: $scope.auth.higher ? 'schoolCapacityType.removeUsableConfirmHigher' : 'schoolCapacityType.removeUsableConfirmVocational' }, function () {
           capacityType.loads.forEach(function (load) {
             load.loadPercentage = null;
           });

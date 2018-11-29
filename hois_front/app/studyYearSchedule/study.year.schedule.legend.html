@@ -8,11 +8,11 @@
     <table md-table class="secondary-table">
         <thead md-head>
         <tr md-row>
-            <th md-column>{{'studyYearScheduleLegend.code' | translate}}</th>
-            <th md-column>{{'studyYearScheduleLegend.nameEt' | translate}}</th>
-            <th md-column>{{'studyYearScheduleLegend.nameEn' | translate}}</th>
-            <th md-column>{{'studyYearScheduleLegend.color' | translate}}</th>
-            <th md-column></th>
+            <th md-column style="width:10%;">{{'studyYearScheduleLegend.code' | translate}}</th>
+            <th md-column style="width:30%;">{{'studyYearScheduleLegend.nameEt' | translate}}</th>
+            <th md-column style="width:30%;">{{'studyYearScheduleLegend.nameEn' | translate}}</th>
+            <th md-column style="width:20%;">{{'studyYearScheduleLegend.color' | translate}}</th>
+            <th md-column style="width:10%;"></th>
         </tr>
         </thead>
         <tbody md-body>
@@ -20,31 +20,47 @@
                 <td md-cell>
                     <span ng-class="{invalid: formSubmitted && !codeIsValid(item)}" ng-if="!item.edited">{{item.code}}</span>
                     <md-input-container ng-if="item.edited">
-                        <input ng-model="item.code" type="text" max="2" md-max-length="2">
+                        <input ng-model="item.code" class="small-input" type="text" max="2" md-max-length="2">
                     </md-input-container>
                 </td>
                 <td md-cell>
                     <span ng-class="{invalid: formSubmitted && !nameEtIsValid(item)}" ng-if="!item.edited">{{item.nameEt}}</span>
                     <md-input-container ng-if="item.edited">
-                        <input ng-model="item.nameEt" type="text">
+                        <input ng-model="item.nameEt" class="small-input" type="text">
                     </md-input-container>
                 </td>
                 <td md-cell>
                     <span ng-class="{invalid: formSubmitted && !nameEnIsValid(item)}" ng-if="!item.edited">{{item.nameEn}}</span>
                     <md-input-container ng-if="item.edited">
-                        <input ng-model="item.nameEn" type="text">
+                        <input ng-model="item.nameEn" class="small-input" type="text">
                     </md-input-container>
                 </td>
                 <td md-cell>
-                    <input ng-model="item.color" type="color" ng-disabled="!canEdit">
+                    <div class="color-container">
+                        <color-picker ng-model="item.colorPicker" options="options" ng-model-options="{ getterSetter: true }"></color-picker>
+                    </div>
                 </td>
                 <td md-cell>
                     <md-button class="remove nomargin" ng-if="canEdit" ng-click="remove(item)">&times;</md-button>
                 </td>
             </tr>
+            <tr md-row class="odd">
+                <td md-cell colspan="5" style="padding-bottom: 100px"> <!-- "Fixes" problem with table cell absolute position and table overflow hidden -->
+                    <md-button class="md-primary" ng-if="canEdit" ng-click="addRow()">{{'main.button.addNewRow' | translate}}</md-button>
+                    <br><br>
+                    <md-button class="md-raised md-primary" ng-if="canEdit" ng-click="checkErrorsAndSave()">{{'main.button.save' | translate}}</md-button>
+                </td>
+            </tr>
         </tbody>
     </table>
 </md-table-container>
-<md-button class="md-primary" ng-if="canEdit" ng-click="addRow()">{{'main.button.addNewRow' | translate}}</md-button>
-<br><br>
-<md-button class="md-raised md-primary" ng-if="canEdit" ng-click="checkErrorsAndSave()">{{'main.button.save' | translate}}</md-button>
+
+<style>
+
+    .color-container {
+        display: inline-block;
+    }
+    md-table-container .md-button {
+        text-transform: none;
+    }
+</style>

@@ -5,6 +5,9 @@ function ($scope, $route, $timeout, QueryUtils, ArrayUtils, message, DataUtils, 
     $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPETOOGRAAFIK);
 
+    $scope.colorOptions = {
+        disabled: true
+    };
     $scope.useMyFilter = $scope.auth.isStudent() || $scope.auth.isParent();
 
     $scope.criteria = {

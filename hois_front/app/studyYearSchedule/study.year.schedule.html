@@ -14,7 +14,9 @@
       <td md-cell>{{item.code}}</td>
       <td md-cell>{{item.nameEt}}</td>
       <td md-cell>{{item.nameEn}}</td>
-      <td md-cell><input ng-model="item.color" type="color" disabled></td>
+      <td md-cell>
+          <color-picker ng-model="item.color" options="colorOptions"></color-picker>
+      </td>
     </tr>
     </tbody>
   </table>

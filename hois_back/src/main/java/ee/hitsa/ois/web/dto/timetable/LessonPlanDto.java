@@ -19,6 +19,7 @@ import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
@@ -293,14 +294,22 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setId(journal.getId());
             dto.setNameEt(journal.getNameEt());
             dto.setGroupProportion(EntityUtil.getNullableCode(journal.getGroupProportion()));
-            dto.setThemes(journal.getJournalOccupationModuleThemes().stream()
-                    .filter(r -> EntityUtil.getId(r.getLessonPlanModule().getLessonPlan()).equals(EntityUtil.getId(lessonPlan)))
-                    .map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme()))
+            
+            List<JournalOccupationModuleTheme> lessonPlanThemes = StreamUtil.toFilteredList(
+                    r -> EntityUtil.getId(r.getLessonPlanModule().getLessonPlan()).equals(EntityUtil.getId(lessonPlan)),
+                    journal.getJournalOccupationModuleThemes());
+            dto.setThemes(lessonPlanThemes.stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme()))
                     .sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER))
                     .collect(Collectors.toList()));
             dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new)
                     .sorted(Comparator.comparing(r -> r.getTeacher().getNameEt(), String.CASE_INSENSITIVE_ORDER))
                     .collect(Collectors.toList()));
+            List<String> studenGroups = StreamUtil.toMappedList(
+                    t -> t.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode(),
+                    journal.getJournalOccupationModuleThemes());
+            studenGroups = studenGroups.stream().distinct().collect(Collectors.toList());
+            Collections.sort(studenGroups, (Comparator.comparing(r -> r, String.CASE_INSENSITIVE_ORDER)));
+            dto.setStudentGroups(studenGroups);
 
             // all hours mapped by capacity type and week nr
             dto.setHours(capacityMapper.mapOutput(journal));

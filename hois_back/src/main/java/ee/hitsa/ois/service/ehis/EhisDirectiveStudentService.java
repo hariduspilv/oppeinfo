@@ -273,9 +273,9 @@ public class EhisDirectiveStudentService extends EhisService {
         khlKorgharidusMuuda.setEnnistamine(khlEnnistamine);
 
         StudentHistory history = getStudentHistory(student);
-        if (!Objects.equals(EntityUtil.getNullableCode(directiveStudent.getStudyForm()), EntityUtil.getNullableCode(history.getStudyForm())) ||
-            !Objects.equals(EntityUtil.getNullableCode(directiveStudent.getFinSpecific()), EntityUtil.getNullableCode(history.getFinSpecific())) ||
-            !Objects.equals(EntityUtil.getNullableCode(directiveStudent.getStudyLoad()), EntityUtil.getNullableCode(history.getStudyLoad()))) {
+        if (!Objects.equals(EntityUtil.getNullableCode(student.getStudyForm()), EntityUtil.getNullableCode(history.getStudyForm())) ||
+            !Objects.equals(EntityUtil.getNullableCode(student.getFinSpecific()), EntityUtil.getNullableCode(history.getFinSpecific())) ||
+            !Objects.equals(EntityUtil.getNullableCode(student.getStudyLoad()), EntityUtil.getNullableCode(history.getStudyLoad()))) {
 
             KhlOppur khlOppurVormiMuutus = getKhlOppurMuutmine(student, true);
             KhlKorgharidusMuuda khlKorgharidusMuudaOppevorm = new KhlKorgharidusMuuda();

@@ -18,7 +18,13 @@
 
     <br/>
 
-    <p>{{ "report.module.protocol.teacher" | translate  }}: {{ content.teacher }}</p>
+    <p>
+      {% if content.isHigherSchool %} 
+        {{ "report.module.protocol.teacherHigher" | translate }}: {{ content.teacher }}
+      {% else %}
+        {{ "report.module.protocol.teacherVocational" | translate }}: {{ content.teacher }}
+      {% endif %}
+    </p>
     <p>{{ "report.module.protocol.assessment" | translate  }}: {{ content.assessmentType }}</p>
 
     <br/><br/>

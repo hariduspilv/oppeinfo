@@ -141,7 +141,7 @@
                             <span ng-if="!event.public">{{'timetable.timetableEvent.occupied' | translate}}</span>
                         </div>
                         <div>
-                            {{event.teachers.length > 0 ? ('student.result.teacher' | translate) : ""}}
+                            {{event.teachers.length > 0 ? (auth.higher ? ('student.result.teacherHigher' | translate) : ('student.result.teacherVocational' | translate)) : ""}}
                             <span ng-repeat="teacher in event.teachers track by $index">
                                 <a ng-if="teacher.id" ng-href="/#/timetable/teacher/{{::schoolId}}/{{teacher.id}}">{{teacher.name}}</a>
                                 <span ng-if="!teacher.id">{{teacher.name}}</span>

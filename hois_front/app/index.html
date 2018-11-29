@@ -54,8 +54,8 @@
           <div class="md-toolbar-tools fill-height" layout="row" flex>
             <h1 md-colors="{color: 'background-900'}" style="margin-top: -2px" class="md-display-2">
               <span ng-if="Menu.currentPage.name !== Menu.currentSection.name">
-                  <span hide-sm hide-md>{{Menu.currentSection.name | translate}}</span>
-              <span class="docs-menu-separator-icon" hide-sm hide-md>
+                  <span hide-sm hide-md hide-xs>{{Menu.currentSection.name | translate}}</span>
+              <span class="docs-menu-separator-icon" hide-sm hide-md hide-xs>
                     <span class="md-visually-hidden">-</span>
               <md-icon md-colors="{color: 'background-900'}" style="margin-top: -2px">chevron_right</md-icon>
               </span>
@@ -144,7 +144,7 @@
           <div flex layout="row" layout-align="center">
             <a class="very-small-caption" ng-click="openTerms()" md-colors="{color: 'background-400'}">{{'home.terms' | translate}}</a>
           </div>
-          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="very-small-caption">Versioon 1.1.0/20181108</span></div> 
+          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="very-small-caption">Versioon 1.1.1/20181129</span></div> 
           <div flex layout="row" ng-show="state.currentUser" layout-align="center">
             <a class="sidenav-link" href="https://kratt.edu.ee" target="_blank" rel="noopener">Kratt</a>
           </div>
@@ -253,6 +253,7 @@
   <script src="components/hois.select.js"></script>
   <script src="components/hois.value.js"></script>
   <script src="components/hois.time.js"></script>
+  <script src="components/hois.url.filter.js"></script>
   <script src="components/hois.date.filter.js"></script>
   <script src="components/hois.valid.dates.filter.js"></script>
   <script src="components/hois.study.period.filter.js"></script>
@@ -372,6 +373,7 @@
   <script src="services/form.utils.js"></script>
   <script src="services/higher.grade.js"></script>
   <script src="services/inaadress.service.js"></script>
+  <script src="services/lessonplan.table.service.js"></script>
   <script src="services/menu.js"></script>
   <script src="services/message.js"></script>
   <script src="services/ois.file.service.js"></script>
@@ -433,7 +435,8 @@
   <script src="subjectStudyPeriod/studentGroup/subject.study.period.student.group.view.js"></script>
   <script src="subjectStudyPeriod/studentGroup/subject.study.period.student.group.search.js"></script>
 
-  <script src="subjectStudyPeriod/subjectProgram/subject.program.js"></script>
+  <script src="subjectProgram/subject.program.js"></script>
+  <script src="subjectProgram/subject.program.route.js"></script>
 
   <script src="subjectStudyPeriod/subject/subject.study.period.subject.edit.js"></script>
   <script src="subjectStudyPeriod/subject/subject.study.period.subject.view.js"></script>

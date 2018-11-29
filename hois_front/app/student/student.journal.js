@@ -61,7 +61,8 @@
     angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'QueryUtils', '$mdDialog', 'Classifier', 'DataUtils',
         function ($scope, $route, QueryUtils, $mdDialog, Classifier, DataUtils) {
             $scope.currentNavItem = 'journals';
-            var studentId = $route.current.locals.auth.student;
+            $scope.auth = $route.current.locals.auth;
+            var studentId = $scope.auth.student;
             var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE'});
 
             QueryUtils.endpoint('/journals/studentJournalStudyYears/').query({studentId: studentId}).$promise.then(function (studyYears) {
@@ -153,7 +154,8 @@
     ]).controller('StudentJournalStudyController', ['$scope', '$route', 'QueryUtils', 
         function ($scope, $route, QueryUtils) {
             $scope.currentNavItem = 'study';
-            var studentId = $route.current.locals.auth.student;
+            $scope.auth = $route.current.locals.auth;
+            var studentId = $scope.auth.student;
 
             QueryUtils.endpoint('/journals/studentJournalStudy/').search({studentId: studentId}).$promise.then(function (result) {
                 $scope.weeks = sortEntriesByWeeks(result.studyYearStartDate, result.studyYearEndDate, result.entries);
@@ -169,7 +171,8 @@
     ]).controller('StudentJournalTasksController', ['$scope', '$route', 'QueryUtils', 
         function ($scope, $route, QueryUtils) {
             $scope.currentNavItem = 'tasks';
-            var studentId = $route.current.locals.auth.student;
+            $scope.auth = $route.current.locals.auth;
+            var studentId = $scope.auth.student;
 
             QueryUtils.endpoint('/journals/studentJournalTasks/').search({studentId: studentId}).$promise.then(function (result) {
                 $scope.weeks = sortEntriesByWeeks(result.studyYearStartDate, result.studyYearEndDate, result.tasks);

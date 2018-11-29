@@ -544,8 +544,8 @@ public class StudentService {
                     "(select string_agg(tp.firstname||' '||tp.lastname,', ') " + 
                         "from journal_teacher jt " + 
                         "join teacher t on t.id = jt.teacher_id " + 
-                        "join person tp on tp.id = T.person_id " + 
-                    "where jt.journal_id=j.id) as opetaja, " + 
+                        "join person tp on tp.id = t.person_id " + 
+                    "where jt.journal_id=j.id) as teacher, " + 
                     "je.entry_type_code, " +
                     "(select string_agg(cvot.name_et,', ')||' ('||string_agg(distinct(cm.name_et||' - '||mcl.name_et),',')||')'" +
                         "from journal_omodule_theme jot " + 
@@ -580,7 +580,7 @@ public class StudentService {
                         "join curriculum_version cv on cv.id = cvo.curriculum_version_id " +
                    "where jot.journal_id = js.journal_id and cv.id!=ss.curriculum_version_id) as foreign_theme_en, " +
                    "jes.grade_code, sy.year_code, sy.start_date, " +
-                   "false as informal, false as formal " +
+                   "false as informal, false as formal, false as practice " +
                 "from journal_student js " +
                 "join journal j on j.id = js.journal_id " +
                 "join journal_entry je on je.journal_id = js.journal_id " +
@@ -589,13 +589,29 @@ public class StudentService {
                 "join study_year sy on sy.id = j.study_year_id " +
                 "where js.student_id =:studentId and je.entry_type_code in (:entryTypeCodes)";
         
+        String practiceJournalResults = "select false as module, pj.grade_inserted, pj.id, null, tp.firstname||' '||tp.lastname as teacher, null, " + 
+                    "cvot.name_et || ' (' || cm.name_et || ' - ' || mcl.name_et || ')' as my_theme, " +
+                    "cvot.name_et || ' (' || coalesce(cm.name_en,cm.name_et) || ' - ' || coalesce(cm.name_en,cm.name_et) || ')' as my_theme_en, " +
+                    "null, null, pj.grade_code, sy.year_code, sy.start_date, false as informal, false as formal, true as practice " +
+                "from practice_journal pj " +
+                "join curriculum_version_omodule_theme cvot on cvot.id = pj.curriculum_version_omodule_theme_id " +
+                "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id " +
+                "join curriculum_module cm on cm.id = cvo.curriculum_module_id " +
+                "join classifier mcl on mcl.code = cm.module_code " +
+                "join curriculum_version cv on cv.id = cvo.curriculum_version_id " +
+                "join curriculum c on c.id = cv.curriculum_id " +
+                "join study_year sy on sy.id = pj.study_year_id " +
+                "join teacher t on t.id = pj.teacher_id " +
+                "join person tp on tp.id = t.person_id " +
+                "where pj.student_id =:studentId";
+        
         String protocolResults = 
                 "select true as module, ps.grade_date,pp.id, " + 
                     "cm.name_et||' - '||mcl.name_et ||case when cv.id!=ss.curriculum_version_id then ' ('||cv.code||')' else '' end, " +
-                    "tp.firstname ||' '||tp.lastname as opetaja, null," +
+                    "tp.firstname ||' '||tp.lastname as teacher, null," +
                     "cm.name_et||' - '||mcl.name_et ||case when cv.id!=ss.curriculum_version_id then ' ('||cv.code||')' else '' end, " +
                     "coalesce(cm.name_en,cm.name_et)||' - '||coalesce(mcl.name_en,mcl.name_et) ||case when cv.id!=ss.curriculum_version_id then ' ('||cv.code||')' else '' end ," +
-                    "null, null, ps.grade_code, sy.year_code, sy.start_date, false as informal, false as formal " + 
+                    "null, null, ps.grade_code, sy.year_code, sy.start_date, false as informal, false as formal, false as practice " + 
                 "from protocol pp " +
                 "join protocol_vdata pv on pp.id=pv.protocol_id " +
                 "join protocol_student ps on pp.id=ps.protocol_id " +
@@ -615,7 +631,7 @@ public class StudentService {
                         "else cm.name_et || ' - ' || mcl.name_et end as my_theme, " +
                     "case when aai.curriculum_version_omodule_theme_id is not null then cvot.name_et || ' (' || cm.name_en || ' - ' || mcl.name_en || ')' " +
                         "else cm.name_en || ' - ' || mcl.name_en end as my_theme_en, " +
-                    "null, null, aai.grade_code, sy.year_code, sy.start_date, true as informal, false as formal " + 
+                    "null, null, aai.grade_code, sy.year_code, sy.start_date, true as informal, false as formal, false as practice " + 
                 "from apel_application aa " + 
                 "join apel_application_record aar on aa.id=aar.apel_application_id " + 
                 "join apel_application_informal_subject_or_module aai on aar.id=aai.apel_application_record_id " + 
@@ -631,7 +647,7 @@ public class StudentService {
                 "    cm.name_en || ' - ' || mcl.name_en || case when cv.id != ss.curriculum_version_id then ' (' || cv.code || ')' else '' end, " + 
                 "    aaf.name_et || ' - ' || a_s.name_et as foreign_theme, " + 
                 "    aaf.name_en || ' - ' || a_s.name_en as foreign_theme_en, " + 
-                "    aaf.grade_code, sy.year_code, sy.start_date, false as informal, true as formal " +
+                "    aaf.grade_code, sy.year_code, sy.start_date, false as informal, true as formal, false as practice " +
                 "from apel_application aa " + 
                 "join apel_application_record aar on aa.id=aar.apel_application_id " + 
                 "join apel_application_formal_subject_or_module aaf on aar.id=aaf.apel_application_record_id " + 
@@ -645,8 +661,8 @@ public class StudentService {
             "where aa.student_id=:studentId and aa.status_code='VOTA_STAATUS_C' and aaf.transfer = true";
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                "from (" + journalResults + " union all " + protocolResults + " union all " + informalApelResults + 
-                " union all " + formalApelResults + ") xx where grade_code is not null");
+                "from (" + journalResults + " union all " + practiceJournalResults + " union all " + protocolResults + 
+                " union all " + informalApelResults + " union all " + formalApelResults + ") xx where grade_code is not null");
         qb.parameter("studentId", EntityUtil.getId(student));
         qb.parameter("entryTypeCodes", JOURNAL_RESULT_ENTRY_TYPES);
         
@@ -676,6 +692,7 @@ public class StudentService {
             dto.setStudyYearStartDate(resultAsLocalDate(r, 12));
             dto.setIsInformal(resultAsBoolean(r, 13));
             dto.setIsFormal(resultAsBoolean(r, 14));
+            dto.setIsPractice(resultAsBoolean(r, 15));
             dto.setIsApel(Boolean.valueOf(dto.getIsInformal().booleanValue() || dto.getIsFormal().booleanValue()));
             
             result.add(dto);
@@ -793,8 +810,8 @@ public class StudentService {
                 + "grade_inserted, teacher_id, teacher_firstname, teacher_lastname, sy_year_code, sy_start_date, is_apel_transfer";
         
         String journalCurriculumResults = " select distinct on (cvot.id, teacher_id) cvot.id cvot_id, cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, "
-                + "cvot.credits cvot_credits, jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp. ID teacher_id, tp.firstname teacher_firstname, "
-                + "tp.lastname teacher_lastname, cvo. ID cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
+                + "cvot.credits cvot_credits, jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
+                + "tp.lastname teacher_lastname, cvo.id cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
@@ -815,8 +832,8 @@ public class StudentService {
                     + "and cvo.curriculum_version_id = :curriculumVersionId";
         
         String journalExtraCurriculumResults = " select distinct on (cvot.id, teacher_id) cvot.id cvot_id, cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, "
-                + "cvot.credits cvot_credits, jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp. ID teacher_id, tp.firstname teacher_firstname, "
-                + "tp.lastname teacher_lastname, cvo. ID cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
+                + "cvot.credits cvot_credits, jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
+                + "tp.lastname teacher_lastname, cvo.id cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
@@ -839,6 +856,22 @@ public class StudentService {
                     + "cvot2.id = jot2.curriculum_version_omodule_theme_id join curriculum_version_omodule cvo2 on cvo2.id = cvot2.curriculum_version_omodule_id "
                     + "where jot2.journal_id = j.id and cvo2.curriculum_version_id = 13401) = 0";
         
+        String practiceJournalResults = "select cvot.id cvot_id, cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, "
+                + "cvot.credits cvot_credits, pj.grade_code grade_code, pj.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
+                + "tp.lastname teacher_lastname, cvo.id cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, " 
+                + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer "
+                + "from practice_journal pj "
+                + "join curriculum_version_omodule_theme cvot on cvot.id = pj.curriculum_version_omodule_theme_id "
+                + "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id "
+                + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+                + "join classifier mcl on mcl.code = cm.module_code "
+                + "join curriculum_version cv on cv.id = cvo.curriculum_version_id " 
+                + "join curriculum c on c.id = cv.curriculum_id "
+                + "join study_year sy on sy.id = pj.study_year_id "
+                + "join teacher t on t.id = pj.teacher_id "
+                + "join person tp on tp.id = t.person_id "
+                + "where pj.student_id = 262 and pj.grade_code is not null";
+        
         String journalResultsOrderBy = " order by 1 desc, teacher_id, grade_inserted desc";
         
         String apelResults = "select cvo.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, "
@@ -855,7 +888,7 @@ public class StudentService {
                 + "where aa.student_id = :studentId and aa.status_code = :applicationStatus and aai.transfer = true";
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from (select " + journalSelect + " from ("
-                + journalCurriculumResults + " union " + journalExtraCurriculumResults + journalResultsOrderBy
+                + journalCurriculumResults + " union " + journalExtraCurriculumResults + " union " + practiceJournalResults + journalResultsOrderBy
                 + ") as journal_results " + "union all " + apelResults + " order by grade_inserted desc) as results");
 
         qb.parameter("entryTypeCode", JournalEntryType.SISSEKANNE_L.name());
@@ -1007,16 +1040,20 @@ public class StudentService {
     
     public List<StudentVocationalConnectedEntity> vocationalConnectedEntities(Long studentId) {
         Query q = em.createNativeQuery("select jj.id, 'journal' as type, jj.name_et as name_et, jj.name_et as name_en, sy.end_date, sy.year_code, null as protocol_nr from journal jj "
-                + "inner join journal_student js on jj.id=js.journal_id " 
-                + "inner join study_year sy on jj.study_year_id = sy.id " 
+                + "join journal_student js on jj.id=js.journal_id " 
+                + "join study_year sy on jj.study_year_id = sy.id " 
                 + "where js.student_id = ?1 " 
                 + "union " 
+                + "select pj.id, 'practice', 'Praktikapäevik', 'Practice journal', pj.grade_inserted, sy.year_code, null as protocol_nr from practice_journal pj "
+                + "join study_year sy on pj.study_year_id = sy.id "
+                + "where pj.student_id = ?1 "
+                + "union "
                 + "select ps.protocol_id, 'protocol', cm.name_et, cm.name_et, sy.end_date, sy.year_code, p.protocol_nr from protocol_student ps "
-                + "inner join protocol p on ps.protocol_id = p.id "
-                + "inner join protocol_vdata pvd on ps.protocol_id = pvd.protocol_id "  
-                + "inner join curriculum_version_omodule cvo on pvd.curriculum_version_omodule_id = cvo.id " 
-                + "inner join curriculum_module cm on cvo.curriculum_module_id = cm.id " 
-                + "inner join study_year sy on pvd.study_year_id = sy.id " 
+                + "join protocol p on ps.protocol_id = p.id "
+                + "join protocol_vdata pvd on ps.protocol_id = pvd.protocol_id "  
+                + "join curriculum_version_omodule cvo on pvd.curriculum_version_omodule_id = cvo.id " 
+                + "join curriculum_module cm on cvo.curriculum_module_id = cm.id " 
+                + "join study_year sy on pvd.study_year_id = sy.id " 
                 + "where ps.student_id = ?1 " 
                 + "union " 
                 + "select aa.id, 'apel', 'VÕTA avaldus', 'APEL application', aa.confirmed, null as year_code, null from apel_application aa "

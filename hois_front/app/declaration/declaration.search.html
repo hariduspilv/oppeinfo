@@ -3,7 +3,7 @@
   <div layout="column">
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form name="declarationSearchForm" ng-submit="loadData()" novalidate>
+      <form name="declarationSearchForm" ng-submit="declarationSearchForm.$valid && loadData()" novalidate>
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'declaration.studyPeriod' | translate}}</label>
@@ -11,7 +11,7 @@
           </md-input-container>
           <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
               <label>{{'declaration.student' | translate}}</label>
-              <input ng-model="criteria.studentsName" type="text">
+              <input ng-model="criteria.studentsName" type="text" md-maxlength="255">
           </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
@@ -44,11 +44,11 @@
             <div layout="row" layout-sm="column" layout-xs="column" >
               <md-input-container flex-sm="100" flex-xs="100">
                 <label>{{'main.from' | translate}}</label>
-                <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
+                <md-datepicker ng-model="criteria.insertedFrom" md-max-date="criteria.insertedThru"></md-datepicker>
               </md-input-container>
               <md-input-container flex-sm="100" flex-xs="100">
                 <label>{{'main.thru' | translate}}</label>
-                <md-datepicker ng-model="criteria.insertedThru"></md-datepicker>
+                <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
               </md-input-container>
             </div>
           </div>
@@ -58,11 +58,11 @@
             <div layout="row" layout-sm="column" layout-xs="column" >
               <md-input-container flex-sm="100" flex-xs="100">
                 <label>{{'main.from' | translate}}</label>
-                <md-datepicker ng-model="criteria.confirmedFrom"></md-datepicker>
+                <md-datepicker ng-model="criteria.confirmedFrom" md-max-date="criteria.confirmedThru"></md-datepicker>
               </md-input-container>
               <md-input-container flex-sm="100" flex-xs="100">
                 <label>{{'main.thru' | translate}}</label>
-                <md-datepicker ng-model="criteria.confirmedThru"></md-datepicker>
+                <md-datepicker ng-model="criteria.confirmedThru" md-min-date="criteria.confirmedFrom"></md-datepicker>
               </md-input-container>
             </div>
           </div>

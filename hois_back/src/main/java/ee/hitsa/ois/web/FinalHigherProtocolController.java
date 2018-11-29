@@ -160,9 +160,10 @@ public class FinalHigherProtocolController {
         Protocol savedProtocol = finalProtocolService.save(protocol, protocolSignForm);
         FinalProtocolUtil.assertCurriculumGradesInput(protocol);
 
+        Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
         UnsignedBdocContainer unsignedBdocContainer = bdocService.createUnsignedBdocContainer("lopueksami_protokoll.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
-                pdfService.generate(FinalProtocolReport.HIGHER_TEMPLATE_NAME, new FinalProtocolReport(savedProtocol)),
+                pdfService.generate(FinalProtocolReport.HIGHER_TEMPLATE_NAME, new FinalProtocolReport(savedProtocol, isLetterGrades)),
                 protocolSignForm.getCertificate());
 
         httpSession.setAttribute(BDOC_TO_SIGN, unsignedBdocContainer);
@@ -187,8 +188,10 @@ public class FinalHigherProtocolController {
         FinalProtocolUtil.assertCanConfirm(user, protocol);
         Protocol savedProtocol = finalProtocolService.save(protocol, protocolSaveForm);
         FinalProtocolUtil.assertCurriculumGradesInput(protocol);
-        
-        byte[] pdfData = pdfService.generate(FinalProtocolReport.HIGHER_TEMPLATE_NAME, new FinalProtocolReport(savedProtocol));
+
+        Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
+        byte[] pdfData = pdfService.generate(FinalProtocolReport.HIGHER_TEMPLATE_NAME,
+                new FinalProtocolReport(savedProtocol, isLetterGrades));
         MobileIdSession session = bdocService.mobileSign("lopueksami_protokoll.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
                 pdfData,
@@ -232,7 +235,9 @@ public class FinalHigherProtocolController {
     public void print(HoisUserDetails user, @WithEntity Protocol protocol, HttpServletResponse response)
             throws IOException {
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
+
+        Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
         HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
-                pdfService.generate(FinalProtocolReport.HIGHER_TEMPLATE_NAME, new FinalProtocolReport(protocol)));
+                pdfService.generate(FinalProtocolReport.HIGHER_TEMPLATE_NAME, new FinalProtocolReport(protocol, isLetterGrades)));
     }
 }

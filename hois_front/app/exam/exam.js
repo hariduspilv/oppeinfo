@@ -75,6 +75,7 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
   }
 ]).controller('ExamEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'DataUtils', 'FormUtils', 'QueryUtils',
   function($location, $route, $scope, dialogService, message, Classifier, DataUtils, FormUtils, QueryUtils) {
+    $scope.auth = $route.current.locals.auth;
     var id = $route.current.params.id;
     var baseUrl = '/exams';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -135,7 +136,7 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
         var occupiedQuery = timetableTimeOccupiedQuery();
         QueryUtils.endpoint('/timetableevents/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
           if (result.occupied) {
-            dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
+            dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts($scope, $scope.auth.higher, result), function () {
               update();
             });
           } else {

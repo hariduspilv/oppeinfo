@@ -72,7 +72,16 @@
   </form>
 </div>
 
-
+<h3>Color picker instead of input[color]</h3>
+<color-picker ng-model="myColor" options="options"></color-picker>
+<div>
+  <form name="colorForm">
+    <div>
+      <color-picker name="color1" ng-model="myColor2" options="options2" ng-reguired="false" style="width: 200px"></color-picker>
+    </div>
+    <md-button ng-click="testColorForm()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+  </form>
+</div>
 
 <h2>Multiple (watch-model with watch-multiple)</h2>
 <div layout="row" layout-sm="column" layout-xs="column">

@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
     
-    function checkRightsToEdit(message, $location, ArrayUtils, AuthResolver, USER_ROLES) {
+    function checkRightsToEdit(message, $location, AuthResolver) {
         AuthResolver.resolve().then(function(auth){
             if(!auth.vocational) {
                 message.error('main.messages.error.nopermission');
@@ -11,7 +11,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         });
     }
 
-    function checkRightsToView(message, $location, ArrayUtils, AuthResolver, USER_ROLES) {
+    function checkRightsToView(message, $location, AuthResolver) {
         AuthResolver.resolve().then(function(auth) {
             if (!auth.vocational) {
                 message.error('main.messages.error.nopermission');
@@ -23,7 +23,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     $routeProvider
         .when('/basemodule', {
             templateUrl: 'baseModule/basemodule.list.html',
-            controller: 'baseModuleListController',
+            controller: 'BaseModuleListController',
             resolve: {
                 translationLoaded: function($translate) { return $translate.onReady(); },
                 auth: function (AuthResolver) { return AuthResolver.resolve(); },
@@ -35,7 +35,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         })
         .when('/basemodule/new', {
             templateUrl: 'baseModule/basemodule.edit.html',
-            controller: 'baseModuleEditController',
+            controller: 'BaseModuleEditController',
             resolve: {
                 translationLoaded: function($translate) { return $translate.onReady(); },
                 auth: function (AuthResolver) { return AuthResolver.resolve(); },
@@ -47,7 +47,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         })
         .when('/basemodule/:baseModuleId/edit', {
             templateUrl: 'baseModule/basemodule.edit.html',
-            controller: 'baseModuleEditController',
+            controller: 'BaseModuleEditController',
             resolve: {
                 translationLoaded: function($translate) { return $translate.onReady(); },
                 auth: function (AuthResolver) { return AuthResolver.resolve(); },
@@ -57,9 +57,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
               authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_BAASMOODUL]
             }
         })
-        .when('/basemodule/:baseModuleId', {
+        .when('/basemodule/:baseModuleId/view', {
             templateUrl: 'baseModule/basemodule.view.html',
-            controller: 'baseModuleEditController',
+            controller: 'BaseModuleEditController',
             resolve: {
                 translationLoaded: function($translate) { return $translate.onReady(); },
                 auth: function (AuthResolver) { return AuthResolver.resolve(); },

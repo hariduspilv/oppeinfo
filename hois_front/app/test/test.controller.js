@@ -20,6 +20,25 @@ angular.module('hitsaOis')
       $scope.acSingleForm.$setSubmitted();
       console.log($scope.acSingleForm.$valid);
     };
+
+    $scope.testColorForm = function () {
+      $scope.colorForm.$setSubmitted();
+      console.log($scope.colorForm);
+      console.log($scope.colorForm.$valid);
+    };
+    
+    $scope.myColor = "FFFFFF";
+    $scope.option = {
+      required: false,
+      allowEmpty: false
+    };
+
+    $scope.myColor2 = "000000";
+    $scope.options2 = {
+      required: true,
+      allowEmpty: false,
+      inputClass: 'fit-content'
+    };
   })
 
 

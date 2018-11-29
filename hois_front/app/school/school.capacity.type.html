@@ -15,7 +15,7 @@
               </th>
               <th md-column>{{'schoolCapacityType.type' | translate}}</th>
               <th md-column>{{'schoolCapacityType.isTimetable' | translate}}</th>
-              <th md-column>{{'schoolCapacityType.teacherLoadPercentage' | translate}}</th>
+              <th md-column>{{auth.higher ? ('schoolCapacityType.teacherLoadPercentageHigher' | translate) : ('schoolCapacityType.teacherLoadPercentageVocational' | translate)}}</th>
               <th md-column>&nbsp;</th>
             </tr>
           </thead>

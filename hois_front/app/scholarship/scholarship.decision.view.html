@@ -20,9 +20,11 @@
     </div>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.committee' | translate}}</legend>
-      <div flex="30" flex-sm="100" flex-xs="100">
+      <br>
+      <div layout="row">
         <md-input-container flex>
-          <hois-select ng-model="decision.committee" values="formState.committees" disabled></hois-select>
+          <label>{{'stipend.decision.name' | translate}}</label>
+          <hois-value value="decision.committeeName"></hois-value>
         </md-input-container>
       </div>
       <md-table-container ng-if="decision.committeeMembers">
@@ -52,7 +54,7 @@
   <div ng-include="'scholarship/templates/scholarship.applications.'+scholarshipType+'.html'"></div>
   
   <div layout="row">
-    <md-button class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+    <md-button class="md-raised" ng-if="auth.isAdmin()" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
     <md-button class="md-raised" ng-click="back('#/scholarships/applications/' + scholarshipType)">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

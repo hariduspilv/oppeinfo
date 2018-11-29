@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('FinalVocationalProtocolEditController', 
-function ($scope, $route, $filter, $timeout, $window, $q, QueryUtils, Classifier, ProtocolUtils, VocationalGradeUtil, oisFileService, config, message, dialogService, ArrayUtils, $location) {
+function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, VocationalGradeUtil, oisFileService, config, message, dialogService, $location) {
   var endpoint = '/finalVocationalProtocols';
   $scope.gradeUtil = VocationalGradeUtil;
   $scope.auth = $route.current.locals.auth;

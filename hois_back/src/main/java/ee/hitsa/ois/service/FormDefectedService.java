@@ -83,7 +83,12 @@ public class FormDefectedService {
     }
 
     private void setDefected(DiplomaSupplement diplomaSupplement) {
-        diplomaSupplement.setStatus(documentStatus);
+        if (diplomaSupplement.getStatus() != null) {
+            diplomaSupplement.setStatus(documentStatus);
+        }
+        if (diplomaSupplement.getStatusEn() != null) {
+            diplomaSupplement.setStatusEn(documentStatus);
+        }
         EntityUtil.save(diplomaSupplement, em);
         em.createQuery("select dsf.form from DiplomaSupplementForm dsf"
                 + " where dsf.diplomaSupplement = ?1", Form.class)

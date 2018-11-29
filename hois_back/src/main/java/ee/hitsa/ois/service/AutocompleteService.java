@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
@@ -476,28 +477,67 @@ public class AutocompleteService {
     public List<CurriculumVersionOccupationModuleThemeResult> curriculumVersionOccupationModuleThemes(
             CurriculumVersionOccupationModuleThemeAutocompleteCommand lookup) {
         String from = "from curriculum_version_omodule_theme cvot"
-                + " inner join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id"
-                + " inner join curriculum_version cv on cvo.curriculum_version_id = cv.id";
+                + " join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id"
+                + " join curriculum_version cv on cvo.curriculum_version_id = cv.id";
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("cvot.curriculum_version_omodule_id = :curriculum_version_omodule_id",
                 "curriculum_version_omodule_id", lookup.getCurriculumVersionOmoduleId());
-        
+
         if (Boolean.TRUE.equals(lookup.getClosedCurriculumVersionModules())) {
             qb.optionalCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
         } else {
             qb.optionalCriteria("cv.status_code != :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
         }
-        
-        List<?> data = qb.select("cvot.id, cvot.name_et, cvot.credits", em).getResultList();
-        return StreamUtil.toMappedList(r -> {
+
+        List<?> data = qb.select("cvot.id, cvot.name_et, cvot.credits, cvot.study_year_number", em).getResultList();
+
+        List<CurriculumVersionOccupationModuleThemeResult> results = StreamUtil.toMappedList(r -> {
             String name = resultAsString(r, 1);
-            return new CurriculumVersionOccupationModuleThemeResult(resultAsLong(r, 0), name, name, resultAsDecimal(r, 2));
+            Short studyYearNumber = resultAsShort(r, 3);
+            if (Boolean.TRUE.equals(lookup.getAddStudyYearToName()) && studyYearNumber != null) {
+                name += " (" + studyYearNumber + ". õa)";
+            }
+            return new CurriculumVersionOccupationModuleThemeResult(resultAsLong(r, 0), name, name,
+                    resultAsDecimal(r, 2), studyYearNumber);
         }, data);
+
+        if (Boolean.TRUE.equals(lookup.getExistInOtherJournals()) && lookup.getStudentGroupId() != null) {
+            Map<Long, CurriculumVersionOccupationModuleThemeResult> themes = StreamUtil.toMap(r -> r.getId(), r -> r, results);
+            setThemesInOtherJournals(themes, lookup.getStudentGroupId(), lookup.getJournalId());
+        }
+        return results;
     }
-    
-    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
+
+    public void setThemesInOtherJournals(Map<Long, CurriculumVersionOccupationModuleThemeResult> themes,
+            Long studentGroupId, Long journalId) {
+        if (!themes.isEmpty()) {
+            Set<Long> themesInOtherJournals = themesInOtherJournals(themes.keySet(), studentGroupId, journalId);
+            for (CurriculumVersionOccupationModuleThemeResult theme : themes.values()) {
+                theme.setExistsInOtherJournals(Boolean.valueOf(themesInOtherJournals.contains(theme.getId())));
+            }
+        }
+    }
+
+    private Set<Long> themesInOtherJournals(Set<Long> themeIds, Long studentGroupId, Long journalId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_version_omodule_theme cvot");
+        qb.requiredCriteria("cvot.id in (:themeIds)", "themeIds", themeIds);
+
+        String filter = "exists (select j.id from journal j"
+                + " join journal_omodule_theme jot on j.id = jot.journal_id"
+                + " join curriculum_version_omodule_theme cvot2 on jot.curriculum_version_omodule_theme_id = cvot.id"
+                + " join lesson_plan_module lpm on cvot2.curriculum_version_omodule_id = lpm.curriculum_version_omodule_id"
+                + " join lesson_plan lp on lpm.lesson_plan_id = lp.id"
+                + " where lp.student_group_id = " + studentGroupId + (journalId != null ? " and j.id != " + journalId : "") + ")";
+        qb.filter(filter);
+
+        List<?> data = qb.select("cvot.id", em).getResultList();
+        return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+    }
+
+    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(
+            CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
         List<CurriculumVersionOModulesAndThemesResult> modulesAndThemes = new ArrayList<>();
         List<CurriculumVersionOccupationModuleResult> modules = curriculumVersionOccupationModules(lookup);
         
@@ -581,20 +621,6 @@ public class AutocompleteService {
         return dto;
     }
 
-    public List<AutocompleteResult> allpersons(SearchCommand lookup) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from person p")
-                .sort("p.lastname", "p.firstname");
-
-        qb.filter("p.id > 0");
-        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", lookup.getName());
-
-        List<?> data = qb.select("p.id, p.firstname, p.lastname", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
-        return StreamUtil.toMappedList(r -> {
-            String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
-            return new AutocompleteResult(resultAsLong(r, 0), name, name);
-        }, data);
-    }
-    
     public List<SchoolWithoutLogo> schools(SearchCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from school s");
 
@@ -893,7 +919,11 @@ public class AutocompleteService {
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"),  "name", lookup.getName());
         qb.optionalCriteria("t.is_higher = :higher", "higher", lookup.getHigher());
         if(Boolean.TRUE.equals(lookup.getValid())) {
-            qb.filter("t.is_active = true");
+            String validFilter = "t.is_active = true";
+            if (lookup.getSelectedTeacherId() != null) {
+                validFilter += " or t.id = " + lookup.getSelectedTeacherId(); 
+            }
+            qb.filter(validFilter);
         }
 
         List<?> data = qb.select("t.id, p.firstname, p.lastname", em)
@@ -1258,4 +1288,27 @@ public class AutocompleteService {
         committeesList.addAll(committees);
         return committeesList;
     }
+
+    public List<AutocompleteResult> committeeMembers(Long schoolId, SearchCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from person p")
+                .sort("p.lastname", "p.firstname");
+
+        qb.requiredCriteria("p.id in (select t.person_id"
+            + " from teacher t "
+            + " where t.school_id = :schoolId and t.is_active = true"
+            + " union"
+            + " select u.person_id"
+            + " from user_ u"
+            + " where u.school_id = :schoolId and u.role_code = 'ROLL_A'"
+            + " and (valid_from is null or valid_from <= now())"
+            + " and (valid_thru is null or valid_thru >= now()))", "schoolId", schoolId);
+        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", lookup.getName());
+
+        List<?> data = qb.select("p.id, p.firstname, p.lastname", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
+            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+        }, data);
+    }
+    
 }

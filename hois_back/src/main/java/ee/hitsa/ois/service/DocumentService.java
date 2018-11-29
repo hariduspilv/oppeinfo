@@ -25,6 +25,7 @@ import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -71,9 +72,11 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.document.DiplomaBaseForm;
 import ee.hitsa.ois.web.commandobject.document.DiplomaConfirmForm;
 import ee.hitsa.ois.web.commandobject.document.DiplomaForm;
+import ee.hitsa.ois.web.commandobject.document.DiplomaSearchForm;
 import ee.hitsa.ois.web.commandobject.document.SupplementForm;
 import ee.hitsa.ois.web.commandobject.document.SupplementSearchForm;
 import ee.hitsa.ois.web.dto.FinalDocSignerDto;
+import ee.hitsa.ois.web.dto.document.DiplomaSearchDto;
 import ee.hitsa.ois.web.dto.document.DirectiveDto;
 import ee.hitsa.ois.web.dto.document.FormDto;
 import ee.hitsa.ois.web.dto.document.StudentDto;
@@ -99,12 +102,15 @@ public class DocumentService {
     private EntityManager em;
     @Autowired
     private PdfService pdfService;
+    @Autowired
+    private XlsService xlsService;
     
     public List<DirectiveDto> diplomaDirectives(HoisUserDetails user, Boolean isHigher) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive d");
         directiveCriteria(qb, user, isHigher);
-        qb.requiredCriteria("(not exists (select 1 from diploma dip where dip.directive_id = d.id)"
-                + " or exists (select 1 from diploma dip where dip.directive_id = d.id and dip.status_code = :dipstatus))",
+        qb.requiredCriteria("exists (select 1 from directive_student ds "
+                + " left join diploma dip on ds.student_id = dip.student_id"
+                + " where ds.directive_id = d.id and ds.canceled = false and coalesce(dip.status_code,'LOPUDOK_STAATUS_K') = :dipstatus)",
                 "dipstatus", DocumentStatus.LOPUDOK_STAATUS_K.name());
         return toDirectiveDtoList(qb);
     }
@@ -112,11 +118,10 @@ public class DocumentService {
     public List<DirectiveDto> supplementDirectives(HoisUserDetails user, Boolean isHigher) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive d");
         directiveCriteria(qb, user, isHigher);
-        qb.filter("exists (select 1 from diploma dip where dip.directive_id = d.id)");
-        qb.requiredCriteria("(not exists (select 1 from diploma_supplement sup join diploma dip on dip.id = sup.diploma_id"
-                    + " where dip.directive_id = d.id)"
-                + " or exists (select 1 from diploma_supplement sup join diploma dip on dip.id = sup.diploma_id"
-                    + " where dip.directive_id = d.id and sup.status_code = :supstatus))",
+        qb.requiredCriteria("exists (select 1 from directive_student ds"
+                + " join diploma dip on ds.student_id = dip.student_id"
+                + " left join diploma_supplement sup on sup.diploma_id = dip.id"
+                + " where ds.directive_id = d.id and ds.canceled = false and coalesce(sup.status_code,'LOPUDOK_STAATUS_K') = :supstatus)",
                 "supstatus", DocumentStatus.LOPUDOK_STAATUS_K.name());
         return toDirectiveDtoList(qb);
     }
@@ -241,6 +246,70 @@ public class DocumentService {
             dto.setIsValid(Boolean.TRUE);
             return dto;
         }, result);
+    }
+
+    public Page<DiplomaSearchDto> search(HoisUserDetails user, DiplomaSearchForm criteria, Pageable pageable) {
+        Query supplementQuery = em.createNativeQuery("select f.full_code, dsf.is_english"
+                + " from form f"
+                + " join diploma_supplement_form dsf on dsf.form_id = f.id"
+                + " where dsf.diploma_supplement_id = ?1 and f.status_code = ?2"
+                + " order by f.numeral")
+                .setParameter(2, FormStatus.LOPUBLANKETT_STAATUS_T.name());
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds"
+                + " join directive d on d.id = ds.directive_id"
+                + " join diploma dip on dip.directive_id = ds.directive_id and dip.student_id = ds.student_id"
+                + " join student s on s.id = ds.student_id"
+                + " join person p on p.id = s.person_id"
+                + " join curriculum_version cv on cv.id = s.curriculum_version_id"
+                + " join curriculum c on c.id = cv.curriculum_id"
+                + " left join form dip_f on dip_f.id = dip.form_id"
+                + " left join diploma_supplement sup on sup.diploma_id = dip.id").sort(pageable);
+        qb.requiredCriteria("d.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.filter("ds.canceled = false");
+        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", criteria.getStudent());
+        qb.optionalCriteria("c.id = :curriculum", "curriculum", criteria.getCurriculum());
+        qb.optionalCriteria("d.confirm_date >= :from", "from", criteria.getFrom());
+        qb.optionalCriteria("d.confirm_date <= :thru", "thru", criteria.getThru());
+        return JpaQueryUtil.pagingResult(qb, "s.id as student_id, p.firstname, p.lastname, p.idcode, c.mer_code, c.name_et"
+                + ", dip.type_code, dip.id as dip_id, dip.status_code as dip_status, dip_f.full_code"
+                + ", sup.id as sup_id, sup.status_code as sup_status, sup.status_en_code as sup_status_en",
+                em, pageable).map(r -> {
+            DiplomaSearchDto dto = new DiplomaSearchDto();
+            dto.setStudentId(resultAsLong(r, 0));
+            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setFirstname(resultAsString(r, 1));
+            dto.setLastname(resultAsString(r, 2));
+            dto.setIdcode(resultAsString(r, 3));
+            dto.setMerCode(resultAsString(r, 4));
+            dto.setCurriculum(resultAsString(r, 5));
+            dto.setType(resultAsString(r, 6));
+            dto.setDiplomaId(resultAsLong(r, 7));
+            dto.setDiplomaStatus(resultAsString(r, 8));
+            dto.setDiplomaNr(resultAsString(r, 9));
+            Long supplementId = resultAsLong(r, 10);
+            if (supplementId != null) {
+                dto.setSupplementId(supplementId);
+                dto.setSupplementStatus(resultAsString(r, 11));
+                dto.setSupplementStatusEn(resultAsString(r, 12));
+                List<?> supplementResult = supplementQuery
+                        .setParameter(1, supplementId)
+                        .getResultList();
+                dto.setSupplementNr(supplementResult.stream()
+                        .filter(sr -> !Boolean.TRUE.equals(resultAsBoolean(sr, 1)))
+                        .map(sr -> resultAsString(sr, 0)).collect(Collectors.joining(", ")));
+                dto.setSupplementNrEn(supplementResult.stream()
+                        .filter(sr -> Boolean.TRUE.equals(resultAsBoolean(sr, 1)))
+                        .map(sr -> resultAsString(sr, 0)).collect(Collectors.joining(", ")));
+            }
+            return dto;
+        });
+    }
+    
+    public byte[] searchExcel(HoisUserDetails user, DiplomaSearchForm criteria) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("criteria", criteria);
+        data.put("documents", search(user, criteria, new PageRequest(0, Integer.MAX_VALUE)));
+        return xlsService.generate("documents.xls", data);
     }
 
     public void createUpdateDiplomas(HoisUserDetails user, DiplomaForm form) {
@@ -466,9 +535,16 @@ public class DocumentService {
         requireFreeForms(user, form);
         return pdfService.generate(getDiplomaTemplateName(directive), getDiplomas(form));
     }
+
+    public byte[] viewDiplomaPdf(HoisUserDetails user, Long diplomaId) {
+        Diploma diploma = diploma(user, diplomaId);
+        return pdfService.generate(getDiplomaTemplateName(diploma.getDirective()), Collections.singletonList(diploma));
+    }
     
     public void diplomaPrintConfirm(HoisUserDetails user, DiplomaConfirmForm confirmForm) {
-        directive(user, confirmForm.getDirectiveId());
+        Directive directive = directive(user, confirmForm.getDirectiveId());
+        AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, directive.getStatus()), 
+                "Directive is not confirmed");
         List<Form> forms = requireFreeForms(user, FormType.valueOf(confirmForm.getFormType()), confirmForm.getNumerals());
         Classifier diplomaStatus = em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_T.name());
         Classifier formStatus = em.getReference(Classifier.class, FormStatus.LOPUBLANKETT_STAATUS_T.name());
@@ -586,7 +662,9 @@ public class DocumentService {
             supplement.setSigner1Position(signer1.getPosition());
             supplement.setSigner2Position(signer2.getPosition());
             supplement.setPgNrEt(Integer.valueOf(pdfService.getPageCount(SUPPLEMENT_TEMPLATE_NAME, 
-                    getViewReport(supplement, form.getShowSubjectCode(), form.getShowTeacher(), Language.ET), Language.ET)));
+                    getViewReport(supplement, form.getShowSubjectCode(), form.getShowTeacher(),
+                            isSchoolUsingLetterGrades(student), Language.ET),
+                    Language.ET)));
         }
         if (englishFields) {
             supplement.setSchoolNameEn(school.getNameEn());
@@ -617,7 +695,9 @@ public class DocumentService {
             supplement.setSigner1PositionEn(signer1.getPositionEn());
             supplement.setSigner2PositionEn(signer2.getPositionEn());
             supplement.setPgNrEn(Integer.valueOf(pdfService.getPageCount(SUPPLEMENT_EN_TEMPLATE_NAME, 
-                    getViewReport(supplement, form.getShowSubjectCode(), form.getShowTeacher(), Language.EN), Language.EN)));
+                    getViewReport(supplement, form.getShowSubjectCode(), form.getShowTeacher(),
+                            isSchoolUsingLetterGrades(student), Language.EN),
+                    Language.EN)));
         }
         
         EntityUtil.save(supplement, em);
@@ -653,12 +733,14 @@ public class DocumentService {
                 + "   first_value(sv.id) over(partition by student_id, coalesce(svm.curriculum_version_hmodule_id,sv.curriculum_version_hmodule_id) order by sv.grade_date desc,sv.grade desc) as id"
                 + " from student_higher_result sv"
                 + " left join student_higher_result_module svm on sv.id=svm.student_higher_result_id"
-                + " where sv.student_id=?1 and grade in ('A','1','2','3','4','5') and (svm.student_higher_result_id is not null)"
+                + " where sv.student_id=?1 and grade_code in ('KORGHINDAMINE_A','KORGHINDAMINE_1','KORGHINDAMINE_2','KORGHINDAMINE_3','KORGHINDAMINE_4','KORGHINDAMINE_5')"
+                + " and (svm.student_higher_result_id is not null)"
                 + " union"
                 + " select distinct 0, sv.id"
                 + " from student_higher_result sv"
                 + " left join student_higher_result_module svm on sv.id=svm.student_higher_result_id"
-                + " where sv.student_id=?1 and grade in ('A','1','2','3','4','5') and svm.student_higher_result_id is null) x on x.id=sv.id"
+                + " where sv.student_id=?1 and grade_code in ('KORGHINDAMINE_A','KORGHINDAMINE_1','KORGHINDAMINE_2','KORGHINDAMINE_3','KORGHINDAMINE_4','KORGHINDAMINE_5')"
+                + " and svm.student_higher_result_id is null) x on x.id=sv.id"
                 + " join classifier clf on clf.code=sv.grade_code"
                 + " left join (apel_school aps join classifier apc on apc.code = aps.country_code) on sv.apel_school_id=aps.id"
                 + " left join final_thesis ft on ft.student_id = sv.student_id"
@@ -841,7 +923,7 @@ public class DocumentService {
         return result.isEmpty() ? null : result.get(0);
     }
 
-    public SupplementDto supplement(HoisUserDetails user, Long directiveStudentId) {
+    public SupplementDto supplementDto(HoisUserDetails user, Long directiveStudentId) {
         DirectiveStudent directiveStudent = directiveStudent(user, directiveStudentId);
         Object r = em.createNativeQuery("select s.id, p.firstname, p.lastname, dip.status_code as diploma_status, f.full_code"
                 + ", sup.id as sup_id, sup.status_code as supplement_status, sup.status_en_code as supplement_status_en"
@@ -899,9 +981,13 @@ public class DocumentService {
                 .collect(Collectors.toList());
     }
 
-    private static String getSupplementTemplateName(DirectiveStudent directiveStudent, Language lang) {
-        return Boolean.TRUE.equals(directiveStudent.getDirective().getIsHigher()) ? 
+    private static String getSupplementTemplateName(Directive directive, Language lang) {
+        return Boolean.TRUE.equals(directive.getIsHigher()) ? 
                 (Language.EN.equals(lang) ? SUPPLEMENT_EN_TEMPLATE_NAME : SUPPLEMENT_TEMPLATE_NAME) : SUPPLEMENT_VOCATIONAL_TEMPLATE_NAME;
+    }
+
+    private static String getSupplementTemplateName(DirectiveStudent directiveStudent, Language lang) {
+        return getSupplementTemplateName(directiveStudent.getDirective(), lang);
     }
 
     private static FormType getSupplementFormType(DirectiveStudent directiveStudent, Language lang) {
@@ -909,16 +995,20 @@ public class DocumentService {
                 (Language.EN.equals(lang) ? FormType.LOPUBLANKETT_DS : FormType.LOPUBLANKETT_R) : FormType.LOPUBLANKETT_HIN;
     }
 
-    private static FormType getSupplementExtraFormType(DirectiveStudent directiveStudent) {
-        return Boolean.TRUE.equals(directiveStudent.getDirective().getIsHigher()) ? 
+    private static FormType getSupplementExtraFormType(Directive directive) {
+        return Boolean.TRUE.equals(directive.getIsHigher()) ? 
                 FormType.LOPUBLANKETT_S : FormType.LOPUBLANKETT_HINL;
+    }
+
+    private static FormType getSupplementExtraFormType(DirectiveStudent directiveStudent) {
+        return getSupplementExtraFormType(directiveStudent.getDirective());
     }
 
     public byte[] supplementPrintView(HoisUserDetails user, Long directiveStudentId, SupplementForm form) {
         DirectiveStudent directiveStudent = directiveStudent(user, directiveStudentId);
         return pdfService.generate(getSupplementTemplateName(directiveStudent, form.getLang()), 
-                getViewReport(getSupplement(directiveStudent), form.getShowSubjectCode(), form.getShowTeacher(), 
-                        form.getLang()), form.getLang());
+                getViewReport(getSupplement(directiveStudent), form.getShowSubjectCode(), form.getShowTeacher(),
+                        isSchoolUsingLetterGrades(directiveStudent.getStudent()), form.getLang()), form.getLang());
     }
 
     private static DiplomaSupplementReport getViewReport(DiplomaSupplement supplement) {
@@ -926,9 +1016,9 @@ public class DocumentService {
     }
 
     private static DiplomaSupplementReport getViewReport(DiplomaSupplement supplement, 
-            Boolean showSubjectCode, Boolean showTeacher, Language lang) {
+            Boolean showSubjectCode, Boolean showTeacher, Boolean isLetterGrades, Language lang) {
         return new DiplomaSupplementReport(supplement, Collections.singletonList("XXXXXX"), 
-                showSubjectCode, showTeacher, lang);
+                showSubjectCode, showTeacher, isLetterGrades, lang);
     }
 
     private List<Form> getFreeForms(HoisUserDetails user, FormType formType, Long start, int max) {
@@ -1014,26 +1104,64 @@ public class DocumentService {
         return pdfService.generate(getSupplementTemplateName(directiveStudent, form.getLang()), new DiplomaSupplementReport(supplement, 
                 requireExtraForms(user, directiveStudent, form).stream()
                     .map(Form::getFullCode).collect(Collectors.toList()), form.getShowSubjectCode(), form.getShowTeacher(), 
-                    form.getLang()), form.getLang());
+                    isSchoolUsingLetterGrades(directiveStudent.getStudent()), form.getLang()), form.getLang());
     }
     
-    public void supplementPrintConfirm(HoisUserDetails user, Long directiveStudentId, List<Long> formIds) {
+    private List<String> getSupplementForms(DiplomaSupplement supplement, Language lang) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from form f"
+                + " join diploma_supplement_form dsf on dsf.form_id = f.id").sort("f.numeral");
+        qb.requiredCriteria("dsf.diploma_supplement_id = :supplement", "supplement", EntityUtil.getId(supplement));
+        qb.requiredCriteria("f.status_code = :status", "status", FormStatus.LOPUBLANKETT_STAATUS_T.name());
+        qb.requiredCriteria("f.type_code = :formType", "formType", getSupplementExtraFormType(supplement.getDiploma().getDirective()).name());
+        if (Language.EN.equals(lang)) {
+            qb.filter("dsf.is_english");
+        } else {
+            qb.filter("dsf.is_english is not true");
+        }
+        List<?> result = qb.select("f.full_code", em).getResultList();
+        return StreamUtil.toMappedList(r -> resultAsString(r, 0), result);
+    }
+
+    public byte[] viewSupplementPdf(HoisUserDetails user, Long supplementId, Language language) {
+        DiplomaSupplement supplement = supplement(user, supplementId);
+        AssertionFailedException.throwIf(ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_K, supplement.getStatus()), 
+                "diploma is not printed");
+        Language lang = language == null ? Language.ET : language;
+        return pdfService.generate(getSupplementTemplateName(supplement.getDiploma().getDirective(), lang),
+                new DiplomaSupplementReport(supplement, getSupplementForms(supplement, lang), Boolean.TRUE,
+                        Boolean.TRUE, isSchoolUsingLetterGrades(supplement.getStudent()), lang), lang);
+    }
+    
+    public void supplementPrintConfirm(HoisUserDetails user, Long directiveStudentId, List<Long> formIds, Language lang) {
         DirectiveStudent directiveStudent = directiveStudent(user, directiveStudentId);
         DiplomaSupplement supplement = getSupplement(directiveStudent);
-        AssertionFailedException.throwIf(!ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_K, supplement.getStatus()), 
-                "supplement is already printed");
-        supplement.setStatus(em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_T.name()));
+        AssertionFailedException.throwIf(!ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_T, 
+                supplement.getDiploma().getStatus()), "Diploma is not printed");
+        if (Language.EN.equals(lang)) {
+            AssertionFailedException.throwIf(!ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_K, supplement.getStatusEn()), 
+                    "supplement is already printed");
+            supplement.setStatusEn(em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_T.name()));
+        } else {
+            AssertionFailedException.throwIf(!ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_K, supplement.getStatus()), 
+                    "supplement is already printed");
+            supplement.setStatus(em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_T.name()));
+        }
         EntityUtil.save(supplement, em);
         
         Classifier status = em.getReference(Classifier.class, FormStatus.LOPUBLANKETT_STAATUS_T.name());
+        LocalDate now = LocalDate.now();
         for (Form form : requireForms(user, formIds)) {
             AssertionFailedException.throwIf(!ClassifierUtil.equals(FormStatus.LOPUBLANKETT_STAATUS_K, form.getStatus()), 
                     "form is already used");
             form.setStatus(status);
+            form.setPrinted(now);
             EntityUtil.save(form, em);
             DiplomaSupplementForm diplomaSupplementForm = new DiplomaSupplementForm();
             diplomaSupplementForm.setForm(form);
             diplomaSupplementForm.setDiplomaSupplement(supplement);
+            if (Language.EN.equals(lang)) {
+                diplomaSupplementForm.setIsEnglish(Boolean.TRUE);
+            }
             em.persist(diplomaSupplementForm);
         }
     }
@@ -1053,11 +1181,32 @@ public class DocumentService {
         UserUtil.assertSameSchool(user, directiveStudent.getDirective().getSchool());
         return directiveStudent;
     }
-    
+
+    private Diploma diploma(HoisUserDetails user, Long diplomaId) {
+        Diploma diploma = em.getReference(Diploma.class, diplomaId);
+        UserUtil.assertSameSchool(user, diploma.getDirective().getSchool());
+        return diploma;
+    }
+
+    private DiplomaSupplement supplement(HoisUserDetails user, Long supplementId) {
+        DiplomaSupplement supplement = em.getReference(DiplomaSupplement.class, supplementId);
+        UserUtil.assertSameSchool(user, supplement.getDiploma().getDirective().getSchool());
+        return supplement;
+    }
+
+    private Boolean isSchoolUsingLetterGrades(Student student) {
+        List<?> data = em.createNativeQuery("select sch.is_letter_grade from student stu"
+                + " join school sch on stu.school_id = sch.id"
+                + " where stu.id = ?1")
+                .setParameter(1, EntityUtil.getId(student))
+                .getResultList();
+        return resultAsBoolean(data.get(0), 0);
+    }
+
     private static String toNullableUpperCase(String string) {
         return string == null ? null : string.toUpperCase();
     }
-    
+
     private static String toNullableLowerCase(String string) {
         return string == null ? null : string.toLowerCase();
     }

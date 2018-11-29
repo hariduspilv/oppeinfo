@@ -203,6 +203,7 @@
     "start": "Algus",
     "end": "Lõpp",
     "nr": "Nr",
+    "studyYearShort": "õa",
     "mondayShort": "E",
     "tuesdayShort": "T",
     "wednesdayShort": "K",
@@ -249,6 +250,9 @@
       "subjects": {
         "label": "Õppeained"
       },
+      "subjectProgram": {
+        "label": "Aineprogrammid"
+      },
       "certificates": {
         "label": "Tõendid",
         "search": "Tõendite otsing"
@@ -268,7 +272,8 @@
         "buildings": "Hooned ja ruumid",
         "schools": "Õppeasutused",
         "departments": "Struktuuriüksused",
-        "teacheroccupations": "Õpetaja ametikohad",
+        "teacheroccupationsHigher": "Õppejõu ametikohad",
+        "teacheroccupationsVocational": "Õpetaja ametikohad",
         "documentcoordinators": "Dok. kooskõlastajad",
         "finaldocsigners": "Lõpudok. allkirjastajad",
         "generalmessages": "Üldteated",
@@ -334,8 +339,9 @@
         "students": "Õppijad",
         "studentstatistics": "Õppijate statistika",
         "studentstatisticsbyperiod": "Õppijate stat. perioodis",
-        "teachersloadhigher": "Õpetaja koormus (kõrg)",
-        "teachersloadvocational": "Õpetaja koormus (kutse)",
+        "teachersLoadHigher": "Õppejõu koormus (kõrg)",
+        "teachersLoadVocationalHigher": "Õppejõu koormus (kutse)",
+        "teachersLoadVocational": "Õpetaja koormus (kutse)",
         "vota": "VÕTA statistika",
         "studentGroupTeacher": "Rühmajuhataja aruanne"
       },
@@ -344,6 +350,7 @@
         "committees": "Kaitsmiskomisjonid",
         "finalThesis": "Lõputöö teemad",
         "forms": "Blanketid",
+        "documents": "Lõpudok. otsing",
         "documentsPrintHigher": "Lõpudok. trükk (kõrg)",
         "documentsPrintVocational": "Lõpudok. trükk (kutse)",
         "finalProtocolsHigher": "Lõp. protokollid (kõrg)",
@@ -410,7 +417,6 @@
         "lessonTime": "Tundide ajad",
         "subjectStudyPeriods": {
           "label": "Koormuste planeerimine",
-          "search": "Aine-õpetaja paarid",
           "plans": "Õppeainete koormused",
           "studentGroups": "Õpperühmade koormused"
         },
@@ -425,8 +431,8 @@
         }
       },
       "teachers": {
-        "label": "Õpetajad",
-        "search": "Õpetajate otsing"
+        "labelHigher": "Õppejõud",
+        "labelVocational": "Õpetajad"
       },
       "timetable": {
         "label": "Tunniplaan",
@@ -597,7 +603,7 @@
         "message": "Kas oled kindel, et soovid luua uut baasmoodulit?"
       },
       "release": {
-        "label": "Seo baasmodulist lahti",
+        "label": "Seo baasmoodulist lahti",
         "success": "Baasmoodulist lahti seotud",
         "fail": "Baasmoodulist lahti sidumine ebaõnnestus",
         "message": "Kas oled kindel, et soovid moodulit lahti siduda baasmoodulist?"
@@ -642,7 +648,7 @@
     "studyPeriod": "Õppeperiood",
     "subject": "Õppeaine",
     "subjectTeacher": "Aine-õppejõu paar",
-    "teacher": "Õpetaja",
+    "teacher": "Õppejõud",
     "time": "Eksami kellaaeg",
     "type": "Soorituse liik",
     "unregister": "Tühista",
@@ -920,7 +926,8 @@
       "ekap": "EKAP",
       "grade": "Hinne",
       "date": "Kuupäev",
-      "teacher": "Õpetaja",
+      "teacherHigher": "Õppejõud",
+      "teacherVocational": "Õpetaja",
       "studyLoad": "Õppekoormus",
       "isOk": "Korras",
       "totalRequired": "Kokku vaja",
@@ -934,6 +941,7 @@
       "protocolNr": "Protokolli number",
       "informal": "Informaalne",
       "formal": "Formaalne",
+      "practice": "Praktika",
       "higher": {
         "curriculumVersion": "Õppekava versioon",
         "consideredCredits": "Kokku / õppekava täitmisel arvesse võetud EAP",
@@ -945,7 +953,7 @@
         "overallCredits": "KOKKU EAP",
         "grade": "Hinne",
         "date": "Kuupäev",
-        "teacher": "Õpetaja",
+        "teacher": "Õppejõud",
         "module": "Moodul",
         "electiveModules": "Valikmoodulid",
         "electiveModulesRequired": "Kohustuslik täitmiseks",
@@ -961,7 +969,8 @@
       "grades": "Hinded",
       "absencesIncudlingWithoutReason": "Puudumisi/sh põhjuseta",
       "lateForClass": "Hilinemisi",
-      "teachers": "Õpetaja(d)",
+      "teachersHigher": "Õppejõud",
+      "teachersVocational": "Õpetaja(d)",
       "modules": "Moodul(id)",
       "entry": {
         "date": "Sissekande kp",
@@ -1066,6 +1075,7 @@
     "regNr": "Reg. number",
     "rtipSchoolCode": "RTIP kood",
     "isMinorStudentAbsence": "Alla 18-aastane esitab puudumistõendi",
+    "isLetterGrade": "Täheline hindamine",
     "adUrl": "AD serveri url",
     "adPort": "AD serveri SSL port",
     "adDomain": "AD serveri domeen",
@@ -1196,7 +1206,8 @@
       "isCertificateDefault": "Õppija koostatud tõendi vaikimisi kooskõlastaja",
       "directive": "Käskkiri",
       "certificate": "Tõend",
-      "certificateDefault": "Õppija tõend vaikimisi"
+      "certificateDefault": "Õppija tõend vaikimisi",
+      "alreadyhascertificatedefaultcoordinator": "Õppija koostatud tõendi vaikimisi kooskõlastaja on juba eelnevalt lisatud"
     },
     "student": {
       "abroadProgramme": "Õppeprogramm",
@@ -1289,7 +1300,8 @@
     "studyPeriod": "Õppeaeg",
     "studyYear": "Õppeaasta",
     "subjects": "Õppeained",
-    "teacher": "Õpetaja",
+    "teacherHigher": "Õppejõud",
+    "teacherVocational": "Õpetaja",
     "total": "Kokku",
     "planned": "Ettenähtud",
     "isConfirmer": "olen kinnitaja",
@@ -1300,7 +1312,8 @@
     "journal": {
       "assessment": "Hindamisviis",
       "deleteconfirm": "Kas oled kindel, et soovid päeviku kustutada?",
-      "duplicateteacher": "Õpetaja on juba olemas",
+      "duplicateteacherHigher": "Õppejõud on juba olemas",
+      "duplicateteacherVocational": "Õpetaja on juba olemas",
       "duplicateroom": "Ruum on juba olemas",
       "duplicategroup": "Rühm on juba olemas",
       "duplicatetheme": "Teema on juba päevikus",
@@ -1308,13 +1321,16 @@
       "isFiller": "täitja",
       "groupProportion": "Osakaal",
       "name": "Päeviku nimi",
-      "teacher": "Õpetaja",
+      "teacherHigher": "Õppejõud",
+      "teacherVocational": "Õpetaja",
       "theme": "Õpetatav teema",
       "capacity-type": "Õppetöö liik",
       "group": "Seotud rühm",
       "group-module": "Moodul",
       "group-theme": "Teema",
       "addModuleOutcomes": "Lisa õpiväljundid",
+      "themeExistInOtherJournals": "Teema on seotud teise päevikuga",
+      "themeExistInOtherJournalsConfirm": "Teema(d) \"{{themes}}\" on seotud teise päevikuga. Kas oled kindel, et soovid päeviku salvestada?",
       "hasStudents": "Päevikuga on seotud õppijad",
       "outcomesReferenced": "Õpiväljunditega on seotud teisi kirjeid",
       "capacityTypeReferenced": "Eemaldatud õppetöö liikidega on seotud teisi kirjeid",
@@ -1322,15 +1338,18 @@
     },
     "search": {
       "vocational": "Õpperühmad (kutse)",
-      "vocational-byteacher": "Õpetajad (kutse)"
+      "vocationalByTeacherHigher": "Õppejõud (kutse)",
+      "vocationalByTeacherVocational": "Õpetajad (kutse)"
     },
     "event": {
       "studyPeriod": "Õppeperiood",
       "studentGroup": "Õpperühm",
       "studentGroups": "Õpperühmad",
       "name": "Sündmuse nimetus",
-      "teachers": "Õpetajad",
-      "otherTeacher": "Muu õpetaja",
+      "teachersHigher": "Õppejõud",
+      "teachersVocational": "Õpetajad",
+      "otherTeacherHigher": "Muu õppejõud",
+      "otherTeacherVocational": "Muu õpetaja",
       "room": "Ruum",
       "rooms": "Ruumid",
       "otherRoom": "Muu ruum",
@@ -1604,6 +1623,7 @@
     "otherLanguages": "Õpiväljundite saavutamiseks vajalikud teised keeled",
     "optionalStudyDescription": "Valikuvõimalused õppekava läbimiseks",
     "addInfo": "Täiendav informatsioon",
+    "supervisor": "Õppekava juht",
     "languageDescription": "Õppekeele lisainfo",
     "structuralUnitResponsible": "Vastutav struktuuriüksus",
     "basesOfDraft": "Õppekava koostamise alus",
@@ -1907,27 +1927,39 @@
   },
   "teacher": {
     "addInfo": "Lisainfo",
-    "label": "Õpetaja",
+    "labelHigher": "Õppejõud",
+    "labelVocational": "Õpetaja",
     "data": "Põhiandmed",
-    "deleteConfirm": "Kas oled kindel, et soovid õpetaja kustutada?",
-    "ehisconfirm": "Kas oled kindel, et soovid õpetaja andmed EHISesse saata?",
+    "deleteConfirmHigher": "Kas oled kindel, et soovid õppejõu kustutada?",
+    "deleteConfirmVocational": "Kas oled kindel, et soovid õpetaja kustutada?",
+    "ehisConfirmHigher": "Kas oled kindel, et soovid õppejõu andmed EHISesse saata?",
+    "ehisConfirmVocational": "Kas oled kindel, et soovid õpetaja andmed EHISesse saata?",
     "email": "E-posti aadress",
     "phone": "Kontakttelefon",
     "rtipNr": "RTIP nr",
     "untis": "Tunniplaani kood",
-    "sentToEhis": "Õpetaja on EHISesse saadetud",
+    "sentToEhisHigher": "Õppejõud on EHISesse saadetud",
+    "sentToEhisVocational": "Õpetaja on EHISesse saadetud",
     "ehisSendOperation": {
       "success": "Saadetud: {{day}}",
       "fail": "Saatmata!"
     },
+    "rtipUpdateOperation": {
+      "success": "Andmed on uuendatud"
+    },
     "studyPeriodLoad": "Õppeperioodi koormus",
     "studyYearLoad": "Õppeaasta koormus",
     "person": {
-      "alreadyexist": "Sisestatud õpetaja on juba süsteemis olemas",
-      "name": "Õpetaja nimi",
-      "firstname": "Õpetaja eesnimi",
-      "lastname": "Õpetaja perekonnanimi",
-      "idcode": "Õpetaja isikukood",
+      "alreadyExistHigher": "Sisestatud õppejõud on juba süsteemis olemas",
+      "alreadyExistVocational": "Sisestatud õpetaja on juba süsteemis olemas",
+      "nameHigher": "Õppejõu nimi",
+      "nameVocational": "Õpetaja nimi",
+      "firstnameHigher": "Õppejõu eesnimi",
+      "firstnameVocational": "Õpetaja eesnimi",
+      "lastnameHigher": "Õppejõu perekonnanimi",
+      "lastnameVocational": "Õpetaja perekonnanimi",
+      "idcodeHigher": "Õppejõu isikukood",
+      "idcodeVocational": "Õpetaja isikukood",
       "citizenship": "Kodakondsus",
       "nativeLanguage": "Emakeel",
       "birthdate": "Sünnikuupäev",
@@ -1940,7 +1972,6 @@
     "isHigher": "Kõrgharidusõpe",
     "isActive": "Aktiivne",
     "scheduleLoad": "Tunniplaani koormus",
-    "occupations": "Õpetaja ametid",
     "occupation": {
       "deleteconfirm": "Kas oled kindel, et soovid ametikoha kustutada?",
       "isValid": "Kehtiv",
@@ -1975,7 +2006,8 @@
       "positionSpecificationEn": "Ametikoha täpsustus (inglise keeles)",
       "positionSpecificationEt": "Täpsustus",
       "error": "Vähemalt üks EHISe ametikoht peab olema lisatud",
-      "deleteConfirm": "Kas oled kindel, et soovid õpetaja EHISe ametikohta kustutada?",
+      "deleteConfirmHigher": "Kas oled kindel, et soovid õppejõu EHISe ametikohta kustutada?",
+      "deleteConfirmVocational": "Kas oled kindel, et soovid õpetaja EHISe ametikohta kustutada?",
       "schoolDepartment": "Struktuuriüksus"
     },
     "qualification": {
@@ -1994,7 +2026,8 @@
       "specialty": "Eriala/õppekava",
       "language": "Keel",
       "addInfo": "Kommentaar",
-      "deleteConfirm": "Kas oled kindel, et soovid õpetaja kvalifikatsiooni kustutada?"
+      "deleteConfirmHigher": "Kas oled kindel, et soovid õppejõu kvalifikatsiooni kustutada?",
+      "deleteConfirmVocational": "Kas oled kindel, et soovid õpetaja kvalifikatsiooni kustutada?"
     },
     "mobility": {
       "add": "Lisa lühiajaline eemalolek",
@@ -2004,7 +2037,8 @@
       "start": "Eemaloleku algus kp",
       "state": "Sihtriik",
       "target": "Eesmärk",
-      "deleteConfirm": "Kas oled kindel, et soovid õpetaja lühiajalist eemalolekut kustutada?"
+      "deleteConfirmHigher": "Kas oled kindel, et soovid õppejõu lühiajalist eemalolekut kustutada?",
+      "deleteConfirmVocational": "Kas oled kindel, et soovid õpetaja lühiajalist eemalolekut kustutada?"
     },
     "continuingEducation": {
       "label": "Täiendkoolitus",
@@ -2021,7 +2055,8 @@
       "isAbroad": "Täiendkoolitus toimus välisriigis",
       "abroadDescription": "Välisriigi koolituse sisu",
       "delete": "Kustuta täiendkoolitus",
-      "deleteConfirm": "Kas oled kindel, et soovid õpetaja täiendkoolituse kustutada?"
+      "deleteConfirmHigher": "Kas oled kindel, et soovid õppejõu täiendkoolituse kustutada?",
+      "deleteConfirmVocational": "Kas oled kindel, et soovid õpetaja täiendkoolituse kustutada?"
     },
     "rtipAbsence": {
       "label": "Puudumised RTIP-ist",
@@ -2145,7 +2180,8 @@
       "codeOrName": "Rakenduskava kood või nimetus",
       "code": "Rakenduskava kood",
       "targetGroup": "Sihtrühm",
-      "teachers": "Õpetajad",
+      "teachersHigher": "Õppejõud",
+      "teachersVocational": "Õpetajad",
       "teachingDepartment": "Õpetav struktuuriüksus",
       "studyForm": "Õppevorm",
       "individualCurriculum": "Individuaalne õppekava",
@@ -2177,7 +2213,8 @@
     "count": "Materjalide arv",
     "type": "Tüüp",
     "name": "Nimetus",
-    "description": "Kirjeldus õpetaja jaoks",
+    "descriptionHigher": "Kirjeldus õppejõu jaoks",
+    "descriptionVocational": "Kirjeldus õpetaja jaoks",
     "fileorlink": "Fail/Link",
     "link": "Link",
     "journalCount": "Seotud päevikud",
@@ -2242,10 +2279,12 @@
   "schoolCapacityType": {
     "type": "Õppetöö liik",
     "isTimetable": "Kasutatakse tunniplaani koostamisel",
-    "teacherLoadPercentage": "Arvestatakse õpetaja koormuses koefitsiendiga (%)",
+    "teacherLoadPercentageHigher": "Arvestatakse õppejõu koormuses koefitsiendiga (%)",
+    "teacherLoadPercentageVocational": "Arvestatakse õpetaja koormuses koefitsiendiga (%)",
     "studyYear": "Õppeaasta",
     "loadPercentage": "Koormuse koefitsient %",
-    "removeUsableConfirm": "Kas soovid tühjendada kõik \"Arvestatakse õpetaja koormuses koefitsiendiga\" sisestatud vastava rea väljad?"
+    "removeUsableConfirmHigher": "Kas soovid tühjendada kõik \"Arvestatakse õppejõu koormuses koefitsiendiga\" sisestatud vastava rea väljad?",
+    "removeUsableConfirmVocational": "Kas soovid tühjendada kõik \"Arvestatakse õpetaja koormuses koefitsiendiga\" sisestatud vastava rea väljad?"
   },
   "subjectProgram": {
     "label": "Aineprogramm",
@@ -2273,6 +2312,15 @@
     "publicHois": "Avalik Tahvli kasutajatele",
     "publicStudent": "Avalik ainult minu õppijatele",
     "status": "Staatus",
+    "confirmedDate": "Kinnitamise kuupäev",
+    "confirmedBy": "Kinnitaja",
+    "rejectInfo": "Tagasilükkamise põhjus",
+    "search": {
+      "subject": "Õppeaine",
+      "studyPeriod": "Õppeperiood",
+      "teacher": "Õppejõud",
+      "status": "Staatus"
+    },
     "operation": {
       "complete": {
         "label": "Valmis",
@@ -2281,26 +2329,37 @@
       },
       "delete": {
         "message": "Kas oled kindel, et soovid aineprogrammi kustutada?"
+      },
+      "confirm": {
+        "message": "Kas oled kindel, et soovid aineprogrammi kinnitada?",
+        "success": "Aineprogramm on kinnitatud"
+      },
+      "reject": {
+        "label": "Lükka tagasi",
+        "message": "Kas oled kindel, et soovid aineprogrammi tagasi lükata?",
+        "success": "Aineprogramm tagasi lükatud"
       }
     },
     "messages": {
       "editAccept": "Aineprogramm on kinnitatud või kinnitamisel. Kas soovid jätkata?"
     },
     "error": {
-      "hasalreadysubjectprogram": "Ei saa luua uut aineprogrammi, sest aineprogram on juba olemas",
-      "nosubjectassessment": "Ei saa leida seotud õppeaine"
-    }
+      "hasalreadysubjectprogram": "Uut aineprogrammi ei saa luua, sest aineprogram on juba olemas",
+      "nosubjectassessment": "Ei leitud seotud õppeainet"
+    },
+    "youHaveUnconfirmedPrograms": "Teil on kinnitamata aineprogramme.",
+    "youHaveUncompletedPrograms": "Teil on koostamisel aineprogramme."
   },
   "subjectStudyPeriod": {
     "label": {
-      "options": "Koormuste otsingud õpperühmade-, õpetajate või õppeainete järgi",
+      "options": "Koormuste otsingud õpperühmade-, õppejõudude või õppeainete järgi",
       "studentGroups": "Õpperühmad (kõrg)",
-      "teachers": "Õpetajad (kõrg)",
+      "teachers": "Õppejõud",
       "subjects": "Õppeained"
     },
     "nameCode": "Õppeaine kood - Nimetus",
     "studyPeriod": "Õppeperiood",
-    "teachersFullname": "Õpetaja ees- ja perekonnanimi",
+    "teachersFullname": "Õppejõu ees- ja perekonnanimi",
     "declaredStudentsNumber": "Deklareerinud",
     "addInfo": "Märkus",
     "declaration": "Deklaratsioon",
@@ -2324,14 +2383,14 @@
     "subjects": "Õppeained / planeeritud maht",
     "subject": "Õppeaine",
     "addSubjects": "Lisa õppeaine(d)",
-    "addTeachers": "Lisa õpetaja(d)",
+    "addTeachers": "Lisa õppejõud",
     "overall": "Kokku",
     "changeLoad": "Muuda õppekoormus",
-    "teacher": "Õpetaja",
-    "teachers": "Õpetajad",
+    "teacher": "Õppejõud",
+    "programStatus": "Aineprogrammi staatus",
     "error": {
       "groupCannotBeRemoved": "See õpperühm peab olema lisatud!",
-      "teacherNotAdded": "Õpetaja pole lisatud!",
+      "teacherNotAdded": "Õppejõud pole lisatud!",
       "subjectLoad": "{{subject}} koormused ei klapi planeeritud koormustega. Kas soovid salvestada?",
       "noDataForSaving": "Andmed salvestamiseks puuduvad!"
     },
@@ -2340,10 +2399,10 @@
     }
   },
   "subjectStudyPeriodTeacher": {
-    "teacher": "Õpetaja",
-    "teacherAlreadyAdded": "Õpetaja on juba lisatud",
+    "teacher": "Õppejõud",
+    "teacherAlreadyAdded": "Õppejõud on juba lisatud",
     "isSignatory": "Hinnete protokolli allkirjastamine",
-    "deleteconfirm": "Kas oled kindel, et soovid aine-õpetaja paari kustutada?"
+    "deleteconfirm": "Kas oled kindel, et soovid aine-õppejõu paari kustutada?"
   },
   "subjectStudyPeriodPlan": {
     "studyPeriod": "Õppeperiood",
@@ -2644,7 +2703,8 @@
     "estonian": "Eesti keeles",
     "english": "Inglise keeles",
     "button": {
-      "showPdf": "Näita pdf"
+      "showPdf": "Näita pdf",
+      "excel": "Excelisse"
     },
     "confirm": {
       "print": "Kontrollige trükitud blankette: {{forms}}. Kas blanketid on õiged?",
@@ -2652,6 +2712,19 @@
       "correct": "Kas blanketid on õiged?",
       "yes": "Jah, kinnitan trükkimise",
       "no": "Ei, proovin uuesti"
+    },
+    "search": {
+      "curriculum": "Õppekava",
+      "from": "Lõpet. kp alates",
+      "thru": "Lõpet. kp kuni",
+      "merCode": "Õppekava HTM kood",
+      "type": "Tunnistus/Diplom",
+      "diplomaStatus": "Tunnistuse/Diplomi staatus",
+      "diplomaNr": "Tunnistuse/Diplomi nr",
+      "supplementStatus": "Hinnetelehe/Akad õiendi staatus",
+      "supplementNr": "Hinnetelehe/Akad õiendi nr",
+      "supplementStatusEn": "Akad. õiendi staatus i.k.",
+      "supplementNrEn": "Akad. õiendi nr i.k."
     },
     "error": {
       "notEnoughForms": "Süsteemis ei ole piisavalt kasutamata blankette",
@@ -2683,7 +2756,8 @@
     }
   },
   "timetable": {
-    "options": "Tunniplaanid õpperühmade-, õpetajate või ruumide järgi",
+    "optionsHigher": "Tunniplaanid õpperühmade-, õppejõudude või ruumide järgi",
+    "optionsVocational": "Tunniplaanid õpperühmade-, õpetajate või ruumide järgi",
     "weekday": "Nädalapäev",
     "weekdays": "Nädalapäevad",
     "buildings": "Hooned",
@@ -2691,11 +2765,13 @@
     "myTimetable": "Minu tunniplaan",
     "parentTimetable": "Õppija tunniplaan",
     "studentGroups": "Õpperühmad",
-    "teachers": "Õpetajad",
+    "teachersHigher": "Õppejõud",
+    "teachersVocational": "Õpetajad",
     "rooms": "Ruumid",
     "deleteConfirm": "Kas oled kindel et soovid sündmust kustutada?",
     "roomIsOccupied": "Ruum \"{{rooms}}\" on valitud aegadel hõivatud",
-    "teacherIsOccupied": "Õpetaja \"{{teachers}}\" on valitud aegadel hõivatud",
+    "teacherIsOccupiedHigher": "Õppejõud \"{{teachers}}\" on valitud aegadel hõivatud",
+    "teacherIsOccupiedVocational": "Õpetaja \"{{teachers}}\" on valitud aegadel hõivatud",
     "studentGroupIsOccupied": "Õpperühm \"{{studentGroups}}\" on valitud aegadel hõivatud",
     "continue": "Kas soovid jätkata?",
     "lessonTime": {
@@ -2716,7 +2792,8 @@
       "difference": "Erinevus XLS",
       "plan": "Plaan XLSX",
       "xmlExport": "Tunniplaani eksport",
-	    "xmlImport": "Tunniplaani import"
+      "xmlImport": "Tunniplaani import",
+      "importXml": "Impordi tunniplaan"
     },
     "view": {
       "publicize": "Avalikusta"
@@ -2733,9 +2810,9 @@
       "byTime": "Kellaaja järgi",
       "timetablePeriod": "Tunniplaani periood",
       "showGroups" : "Kuva rühmad",
-      "showGroupsSubject" : "Kuva rühmad/aine-õpetajad",
+      "showGroupsSubject" : "Kuva rühmad/aine-õppejõud",
       "planGroupLessons": "Planeeri rühma tunniplaan",
-      "planGroupLessonsSubject": "Planeeri rühma/aine-õpetaja tunniplaan",
+      "planGroupLessonsSubject": "Planeeri rühma/aine-õppejõu tunniplaan",
       "group": "rühm",
       "selectAll": "Vali kõik",
       "dayMon": "Esmaspäev",
@@ -2750,7 +2827,7 @@
       "showLessonTimes": "Näita tundide aegasid",
       "lessonTimes": "Tundide ajad",
       "timeClash": "Aeg kattub teise tunniga või on väljaspool ajavahemikku",
-      "addForOtherGroups": "Kas lisada aine-õpetaja tund ka teistesse seotud rühmadesse?",
+      "addForOtherGroups": "Kas lisada aine-õppejõu tund ka teistesse seotud rühmadesse?",
       "displayPeriodLessons": "Kuva perioodi tunnid",
       "displayLeftOverLessons": "Kuva jääktunnid"
     },
@@ -2760,9 +2837,11 @@
       "isRepeat": "Korduvsündmus",
       "weekAmount": "Nädalate arv",
       "repetition": "Kordus",
-      "teacher": "Õpetaja",
-      "otherTeacher": "Õppeasutuse väline õpetaja",
-      "teachers": "Õpetaja(d)",
+      "teacherHigher": "Õppejõud",
+      "teacherVocational": "Õpetaja",
+      "teachersVocational": "Õpetajad",
+      "otherTeacherHigher": "Õppeasutuse väline õppejõud",
+      "otherTeacherVocational": "Õppeasutuse väline õpetaja",
       "room": "Ruum",
       "otherRoom": "Õppeasutuse väline ruum",
       "rooms": "Ruumid",
@@ -2774,15 +2853,17 @@
       "code": "Tähis",
       "error": {
         "duplicateRoom": "Ruum on juba olemas",
-        "duplicateTeacher": "Õpetaja on juba olemas",
+        "duplicateTeacherHigher": "Õppejõud on juba olemas",
+        "duplicateTeacherVocational": "Õpetaja on juba olemas",
         "duplicateStudentGroup": "Õpperühm on juba olemas",
         "endIsEarlierThanStart": "Lõppkellaaeg ei tohi olla varasem algkellaajast"
       }
     },
-    "subjectTeacherPairs": "Aine-õpetaja paarid",
+    "subjectTeacherPairs": "Aine-õppejõu paarid",
     "search": {
       "label": "Otsing",
-      "teacher": "Õpetaja",
+      "teacherHigher": "Õppejõud",
+      "teacherVocational": "Õpetaja",
       "studentGroup": "Õpperühm",
       "room": "Ruum",
       "subject": "Aine/teema"
@@ -2803,7 +2884,8 @@
     "studyYear": "Õppeaasta",
     "studentGroup": "Õpperühm",
     "studentGroups": "Õpperühm(ad)",
-    "teachers": "Õpetaja(d)",
+    "teachersHigher": "Õppejõud",
+    "teachersVocational": "Õpetaja(d)",
     "modules": "Moodul(id)",
     "plannedAndEnteredLessonsCount": "Planeeritud ja sissekantud tundide arv",
     "plannedAndEnteredLessonsCount1": "Planeeritud ja sissekantud",
@@ -2944,7 +3026,8 @@
       "deleted": "Protokoll on kustutatud"
     },
     "error": {
-      "teacherMismatch": "Teistele õpetajatele ei saa protokolle koostada",
+      "teacherMismatchHigher": "Teistele õppejõudele ei saa protokolle koostada",
+      "teacherMismatchVocational": "Teistele õpetajatele ei saa protokolle koostada",
       "noPermissionToEdit": "Õigused protokolli muutmiseks puuduvad",
       "noPermissionToDelete": "Õigused protokolli kustutamiseks puuduvad",
       "noStudents": "Protokoll peab sisaldama õppijaid"
@@ -3016,7 +3099,7 @@
     "studentGroup": "Õpperühm",
     "studyPeriod": "Õppeperiood",
     "subject": "Õppeaine",
-    "teacher": "Õpetaja",
+    "teacher": "Õppejõud",
     "type": "Protokolli liik",
     "downloadSigned": "Lae allkirjastatud protokoll"
   },
@@ -3042,7 +3125,8 @@
     "messages": {
       "exportFinished": "Eksportimine lõpetatud",
       "nostudentsfound": "Tingimustele ei vastanud ükski õppija",
-      "noteachersfound": "Tingimustele ei vastanud ükski õpetaja"
+      "noTeachersFoundHigher": "Tingimustele ei vastanud ükski õppejõud",
+      "noTeachersFoundVocational": "Tingimustele ei vastanud ükski õpetaja"
     },
     "student": {
       "abroadProgramme": "Programm",
@@ -3154,7 +3238,7 @@
     "addCurriculumSubject": "Lisa õppekava aine",
     "addExtraCurriculumSubject": "Lisa õppekava väline aine",
     "subject": "Õppeaine",
-    "teacher": "Õpetaja",
+    "teacher": "Õppejõud",
     "eap_assessment": "EAP/Hindamisviis",
     "module": "Moodul",
     "module_isRequired": "Moodul/Kohustuslik",
@@ -3254,15 +3338,19 @@
       "total": "Õppijate arv kokku"
     },
     "teachersload": {
-      "actualhours": "Õpetaja tegelik tundide arv",
-      "coefficienthours": "Õpetaja planeeritud tundide arv koefitsientidega",
+      "actualHoursHigher": "Õppejõu tegelik tundide arv",
+      "actualHoursVocational": "Õpetaja tegelik tundide arv",
+      "coefficientHoursHigher": "Õppejõu planeeritud tundide arv koefitsientidega",
+      "coefficientHoursVocational": "Õpetaja planeeritud tundide arv koefitsientidega",
       "module": "Moodul",
-      "plannedhours": "Õpetaja planeeritud tundide arv",
+      "plannedHoursHigher": "Õppejõu planeeritud tundide arv",
+      "plannedHoursVocational": "Õpetaja planeeritud tundide arv",
       "studyPeriod": "Õppeperiood",
       "studyYear": "Õppeaasta",
       "subjectcode": "Õppeaine kood",
       "subject": "Õppeaine",
-      "teacher": "Õpetaja nimi"
+      "teacherHigher": "Õppejõu nimi",
+      "teacherVocational": "Õpetaja nimi"
     },
     "vota": {
       "acceptedAbroadCredits": "Rahuldatud<br>ainepunktide arv<br>(Välismaa ülikool)",
@@ -3290,6 +3378,8 @@
       "studentName": "Õppija nimi",
       "wholePracticeModule": "Praktika moodul",
       "journal": "Päevik",
+      "teacherHigher": "Õppejõud",
+      "teacherVocational": "Õpetaja",
       "date": "Kuupäev",
       "entry": "Sissekanne",
       "addInfo": "Selgitus",
@@ -3390,6 +3480,7 @@
     "sendingToCreation": "Avalduse tagasi koostamisele saatmine",
     "justification": "Põhjendus",
     "committee": "Komisjon",
+    "committeeName": "Komisjoni nimi",
     "decision": "Otsus",
     "addInfo": {
       "label": "Kommentaar",
@@ -3414,8 +3505,10 @@
       "assessment": "Hindamisviis",
       "result": "Õppetulemus",
       "resultDate": "Soorituse kp",
-      "teacher": "Õpetaja",
-      "teachers": "Õpetaja(d)",
+      "teacherHigher": "Õppejõud",
+      "teacherVocational": "Õpetaja",
+      "teachersHigher": "Õppejõud",
+      "teachersVocational": "Õpetaja(d)",
       "module": "Moodul",
       "moduleEn": "Moodul i.k.",
       "substitutableSubject": "Asendatav aine",
@@ -3558,7 +3651,8 @@
     "subject" : "Õppeaine",
     "student" : "Õppija",
     "taskDate": "Vahesoorituse kuupäev",
-    "teacher": "Õpetaja",
+    "teacherHigher": "Õppejõud",
+    "teacherVocational": "Õpetaja",
     "threshold": "Lävend",
     "thresholdPercentage": "Lävendi %"
   },
@@ -3640,7 +3734,7 @@
       "deleted": "Komisjon on kustutatud",
       "committeeMemberInScholarshipDecision": "Eemaldatud komisjoni liige on seotud otsusega"
     },
-    "name": "Nimi",
+    "name": "Komisjoni nimi",
     "prompt": {
       "deleteconfirm": "Kas oled kindel, et soovid komisjoni kustutada?"
     },
@@ -3660,7 +3754,8 @@
     "addFinalThesisProtocol": "Lisa lõputöö protokoll",
     "changeReason": "Muutmise põhjus",
     "studyYear": "Õppeaasta",
-    "teacher": "Õpetaja",
+    "teacherHigher": "Õppejõud",
+    "teacherVocational": "Õpetaja",
     "curriculumVersion": "Rakenduskava",
     "subjectCode": "Õppeaine kood",
     "module": "Moodul",
@@ -3728,7 +3823,8 @@
       "noStudents": "Protokoll peab sisaldama õppijaid",
       "curriculumGradeNotAllowed": "Kraadi ei saa anda ilma positiivse tulemuseta",
       "curriculumGradeRequired": "Kraadiõppe puhul ei saa positiivne tulemus olla ilma antava kraadita",
-      "teacherMismatch": "Teistele õpetajatele ei saa protokolle koostada",
+      "teacherMismatchHigher": "Teistele õppejõudele ei saa protokolle koostada",
+      "teacherMismatchVocational": "Teistele õpetajatele ei saa protokolle koostada",
       "noPermissionToCreate": "Õigused protokolli loomiseks puuduvad",
       "noPermissionToEdit": "Õigused protokolli muutmiseks puuduvad",
       "noPermissionToDelete": "Õigused protokolli kustutamiseks puuduvad",

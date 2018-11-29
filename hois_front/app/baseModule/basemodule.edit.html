@@ -267,10 +267,10 @@
                                 <tbody md-body>
                                     <tr md-row ng-repeat="curriculum in baseModule.curriculums">
                                         <td md-cell>
-                                            <p>{{currentLanguageNameField(curriculum)}}</p>
+                                            <p><a href="#/vocationalCurriculum/{{curriculum.id}}/view">{{currentLanguageNameField(curriculum)}}</a></p>
                                         </td>
                                         <td md-cell>
-                                            <p ng-repeat="cv in baseModule.curriculumVersions[curriculum.id]">{{currentLanguageNameField(cv)}}<br ng-if="!$first"></p>
+                                            <p ng-repeat="cv in baseModule.curriculumVersions[curriculum.id]"><a href="#/vocationalCurriculum/{{curriculum.id}}/moduleImplementationPlan/{{cv.id}}/view">{{currentLanguageNameField(cv)}}</a><br ng-if="!$first"></p>
                                         </td>
                                     </tr>
                                 </tbody>

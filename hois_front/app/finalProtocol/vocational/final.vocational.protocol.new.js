@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('FinalVocationalProtocolNewController', function ($scope, $route, $location, QueryUtils, DataUtils, Classifier, message, ArrayUtils) {
+angular.module('hitsaOis').controller('FinalVocationalProtocolNewController', function ($scope, $route, $location, QueryUtils, Classifier, message, ArrayUtils) {
   var endpoint = '/finalVocationalProtocols';
   
   $scope.auth = $route.current.locals.auth;

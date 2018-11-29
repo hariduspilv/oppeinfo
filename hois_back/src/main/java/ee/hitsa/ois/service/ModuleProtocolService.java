@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.report.ModuleProtocolReport;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -63,6 +65,9 @@ import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 @Transactional
 @Service
 public class ModuleProtocolService extends AbstractProtocolService {
+
+    @Autowired
+    private SchoolService schoolService;
 
     private static final String FINAL_EXAM_CODE = "KUTSEMOODUL_L";
 
@@ -255,6 +260,10 @@ public class ModuleProtocolService extends AbstractProtocolService {
 
     @org.springframework.transaction.annotation.Transactional(isolation = Isolation.SERIALIZABLE, propagation = Propagation.REQUIRES_NEW)
     public Protocol create(HoisUserDetails user, ModuleProtocolCreateForm form) {
+        SchoolService.SchoolType type = schoolService.schoolType(user.getSchoolId());
+        ModuleProtocolUtil.assertIsSchoolAdminOrTeacherResponsible(user, type.isHigher(),
+                form.getProtocolVdata().getTeacher());
+        
         Protocol protocol = EntityUtil.bindToEntity(form, new Protocol(), "protocolStudents", "protocolVdata");
         protocol.setIsFinal(Boolean.FALSE);
         protocol.setIsVocational(Boolean.TRUE);
@@ -294,7 +303,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
                         addHistory(ps);
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
                         Short mark = getMark(EntityUtil.getCode(grade));
-                        gradeStudent(ps, grade, mark);
+                        gradeStudent(ps, grade, mark, Boolean.FALSE);
                         ps.setAddInfo(dto.getAddInfo());
                     } else if (gradeRemoved(dto, ps)) {
                         addHistory(ps);
@@ -411,8 +420,10 @@ public class ModuleProtocolService extends AbstractProtocolService {
         qb.filter("p.is_vocational = true");
         qb.requiredCriteria("p.status_code = :status", "status", ProtocolStatus.PROTOKOLL_STAATUS_K);
         qb.requiredCriteria("ps.student_id = :studentId", "studentId", EntityUtil.getId(student));
-        qb.requiredCriteria("pvd.curriculum_version_omodule_id = :curriculumVersionOmoduleId", "curriculumVersionOmoduleId", EntityUtil.getId(module));
-        qb.requiredCriteria("ps.grade_code in :positiveGrades", "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
+        qb.requiredCriteria("pvd.curriculum_version_omodule_id = :curriculumVersionOmoduleId",
+                "curriculumVersionOmoduleId", EntityUtil.getId(module));
+        qb.requiredCriteria("ps.grade_code in :positiveGrades", "positiveGrades",
+                OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
 
         return !qb.select("true", em).getResultList().isEmpty();
     }
@@ -425,6 +436,12 @@ public class ModuleProtocolService extends AbstractProtocolService {
             calculatedResults.add(new ProtocolStudentResultDto(protocolStudentId, grade));
         }
         return calculatedResults;
+    }
+
+    public ModuleProtocolReport moduleProtocolReport(Protocol protocol) {
+        School school = protocol.getSchool();
+        Boolean isHigherSchool = Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(school)).isHigher());
+        return new ModuleProtocolReport(protocol, isHigherSchool);
     }
 
 }

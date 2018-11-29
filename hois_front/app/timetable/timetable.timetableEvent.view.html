@@ -24,7 +24,9 @@
       </div>
 
       <fieldset flex="60" flex-sm="100" flex-xs="100" ng-if="timetableEvent.teachers.length > 0">
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.teachers' | translate}}</legend>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+          {{auth.higher ? ('timetable.timetableEvent.teacherHigher' | translate) : ('timetable.timetableEvent.teachersVocational' | translate)}}
+        </legend>
         <md-table-container>
           <table md-table class="secondary-table">
             <thead md-head>

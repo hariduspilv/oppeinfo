@@ -9,7 +9,7 @@
           </md-input-container>
 
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label class="textInput">{{'finalProtocol.teacher' | translate}}</label>
+            <label class="textInput">{{auth.higher ? ('finalProtocol.teacherHigher' | translate) : ('finalProtocol.teacherVocational' | translate)}}</label>
             <hois-select ng-model="formState.teacher" type="teacher" required ng-disabled="auth.isTeacher()"></hois-select>
           </md-input-container>
         </div>

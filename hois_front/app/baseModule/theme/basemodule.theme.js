@@ -2,8 +2,8 @@
 
 angular.module('hitsaOis')
 .controller('baseModuleThemeEditController',
-['$scope', 'QueryUtils', '$route', 'message', 'Classifier', '$location', '$rootScope', 'dialogService',
-function ($scope, QueryUtils, $route, message, Classifier, $location, $rootScope, dialogService) {
+['$scope', 'QueryUtils', '$route', 'message', 'Classifier', '$location', '$rootScope', 'dialogService', '$q', '$timeout',
+function ($scope, QueryUtils, $route, message, Classifier, $location, $rootScope, dialogService, $q, $timeout) {
     $scope.auth = $route.current.locals.auth;
     $scope.baseModuleId = $route.current.params.baseModuleId;
     $scope.themeId = $route.current.params.baseModuleThemeId;
@@ -11,6 +11,7 @@ function ($scope, QueryUtils, $route, message, Classifier, $location, $rootScope
     var baseUrl = "/basemodule/theme"
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var NewThemeEndpoint = QueryUtils.endpoint(baseUrl + "/basemodule");
+    var capacitiesPromise = $q.defer();
     var HOURS_PER_EKAP = 26;
 
     $scope.capacities = QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: false });
@@ -18,6 +19,9 @@ function ($scope, QueryUtils, $route, message, Classifier, $location, $rootScope
         result = result.map(function (row) {
             row.capacityType = row.code;
         });
+        capacitiesPromise.resolve(result);
+    }).catch(function (error) {
+        capacitiesPromise.reject(error);
     })
     
     $rootScope.removeLastUrlFromHistory(function(url){
@@ -67,12 +71,17 @@ function ($scope, QueryUtils, $route, message, Classifier, $location, $rootScope
     if ($scope.themeId) {
         $scope.theme = Endpoint.get({id: $scope.themeId});
         $scope.theme.$promise.then(function (response) {
-            if (response.capacities) {
-                response.capacities = uniqueCapacityArray(response.capacities.concat($scope.capacities));
-            } else {
-                response.capacities = $scope.capacities;
-            }
-        });
+            capacitiesPromise.promise.then(function () {
+                if (response.capacities) {
+                    response.capacities = uniqueCapacityArray(response.capacities.concat($scope.capacities));
+                } else {
+                    response.capacities = $scope.capacities;
+                }
+            })
+            $timeout(function () {
+                $scope.themeForm.$setPristine();
+            });
+        })
     } else {
         $scope.theme = NewThemeEndpoint.get({id: $scope.baseModuleId});
         $scope.theme.$promise.then(function (response) {
@@ -98,7 +107,7 @@ function ($scope, QueryUtils, $route, message, Classifier, $location, $rootScope
     };
     
     $scope.getDefaultUrl = function () {
-        return '#/basemodule/' + $scope.baseModuleId;
+        return '#/basemodule/' + $scope.baseModuleId + "/view";
     }
 
     $scope.save = function () {
@@ -109,13 +118,14 @@ function ($scope, QueryUtils, $route, message, Classifier, $location, $rootScope
             $scope.theme.$update().then(function(response){
                 response.capacities = uniqueCapacityArray(response.capacities.concat($scope.capacities));
                 message.info('main.messages.update.success');
-                $scope.themeForm.$setPristine();
+                $timeout(function () {
+                    $scope.themeForm.$setPristine();
+                });
             });
         } else {
             $scope.theme.$save().then(function(response){
                 message.info('main.messages.create.success');
                 $location.url('/basemodule/' + $scope.baseModuleId + "/" + response.id + "/edit");
-                $scope.themeForm.$setPristine();
             });
         }
     }
@@ -128,7 +138,7 @@ function ($scope, QueryUtils, $route, message, Classifier, $location, $rootScope
         dialogService.confirmDialog({prompt: 'curriculum.prompt.deleteTheme'}, function() {
             $scope.theme.$delete().then(function() {
                 message.info('main.messages.delete.success');
-                $location.url("/basemodule/" + $scope.baseModuleId + "/edit");
+                $location.url("/basemodule/" + $scope.baseModuleId + "/edit?_noback");
             });
         });
     };

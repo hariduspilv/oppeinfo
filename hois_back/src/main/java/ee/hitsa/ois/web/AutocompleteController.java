@@ -161,12 +161,6 @@ public class AutocompleteController {
         return person != null ? new ResponseEntity<>(person, HttpStatus.OK) : ResponseEntity.notFound().build();
     }
 
-    @GetMapping("/allpersons")
-    public List<AutocompleteResult> allpersons(HoisUserDetails user, @Valid SearchCommand lookup) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return autocompleteService.allpersons(lookup);
-    }
-
     @GetMapping("/schools")
     public List<SchoolWithoutLogo> schools(SearchCommand lookup) {
         return autocompleteService.schools(lookup);
@@ -292,6 +286,12 @@ public class AutocompleteController {
     @GetMapping("/committees")
     public Page<AutocompleteResult> committees(HoisUserDetails user, CommitteeAutocompleteCommand lookup) {
         return asPage(autocompleteService.committees(user.getSchoolId(), lookup));
+    }
+
+    @GetMapping("/committeeMembers")
+    public List<AutocompleteResult> committeeMembers(HoisUserDetails user, @Valid SearchCommand lookup) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return autocompleteService.committeeMembers(user.getSchoolId(), lookup);
     }
 
     private static <R> Page<R> asPage(List<R> data) {

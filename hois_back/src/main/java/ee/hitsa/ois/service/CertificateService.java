@@ -66,6 +66,8 @@ public class CertificateService {
     private CertificateValidationService certificateValidationService;
     @Autowired
     private CertificateContentService certificateContentService;
+    @Autowired
+    private SchoolService schoolService;
 
     /**
      * Search certificates
@@ -138,8 +140,10 @@ public class CertificateService {
             certificate.setOtherIdcode(form.getOtherIdcode());
         }
         if(!certificateValidationService.canEditContent(user, EntityUtil.getCode(certificate.getType()))) {
-            certificate.setContent(certificateContentService.generate(
-                    certificate.getStudent(), CertificateType.valueOf(form.getType()), Boolean.TRUE.equals(form.getAddOutcomes())));
+            boolean isHigherSchool = schoolService.schoolType(user.getSchoolId()).isHigher();
+            certificate.setContent(certificateContentService.generate(certificate.getStudent(),
+                    CertificateType.valueOf(form.getType()), Boolean.TRUE.equals(form.getAddOutcomes()),
+                    isHigherSchool));
         }
         return save(user, certificate, form);
     }

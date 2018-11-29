@@ -69,13 +69,15 @@ public class TimetableEventController {
     
     @PostMapping
     public void create(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
-        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(), StreamUtil.toMappedList(t -> t.getId(), form.getTeachers()));
+        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(),
+                StreamUtil.toMappedList(t -> t.getTeacher().getId(), form.getTeachers()));
         timetableEventService.createEvent(user, form);
     }
     
     @PutMapping("/{id:\\d+}")
     public TimetableSingleEventForm update(HoisUserDetails user, @Valid @RequestBody TimetableSingleEventForm form) {
-        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(), StreamUtil.toMappedList(t -> t.getId(), form.getTeachers()));
+        timetableEventService.isAdminOrIsTeachersEvent(user, user.getSchoolId(),
+                StreamUtil.toMappedList(t -> t.getTeacher().getId(), form.getTeachers()));
         timetableEventService.updateEvent(form);
         return timetableEventService.getTimetableSingleEventForm(form.getId());
     }

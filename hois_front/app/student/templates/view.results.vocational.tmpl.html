@@ -1,7 +1,7 @@
 
 
 <div layout-padding ng-cloak class="form-readonly">
-  <div flex>
+  <div>
     <div layout="row" layout-xs="column" flex>
       <div flex="90">
         <div layout="row" layout-sm="column" layout-xs="column">
@@ -48,9 +48,10 @@
       </div>
     </div>
 
-    <div ng-controller="StudentViewResultsVocationalController as controller" flex="90" ng-cloak>
-      <md-content>
-        <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection">
+    <div ng-controller="StudentViewResultsVocationalController as controller" ng-cloak>
+      <md-content style="overflow: visible">
+        <md-table-container>
+        <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection" layout-margin>
           <md-nav-item md-nav-click="changeResultsCurrentNavItem('student.curriculumFulfillment')" name="student.curriculumFulfillment">
             {{'student.result.curriculumFulfillment' | translate}}
           </md-nav-item>
@@ -67,6 +68,7 @@
             {{'student.result.changeModules' | translate}}
           </md-nav-item>
         </md-nav-bar>
+        </md-table-container>
         <div layout-margin>
           <div ng-show="resultsCurrentNavItem === 'student.curriculumFulfillment'">
             <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.tmpl.html'"></div>

@@ -83,7 +83,6 @@ public class FinalVocationalProtocolController {
     @PostMapping
     public FinalVocationalProtocolDto create(HoisUserDetails user,
             @Valid @RequestBody FinalVocationalProtocolCreateForm finalProtocolCreateForm) {
-        FinalProtocolUtil.assertIsSchoolAdminOrTeacherResponsible(user, finalProtocolCreateForm.getProtocolVdata().getTeacher());
         return finalProtocolService.create(user, finalProtocolCreateForm);
     }
     
@@ -158,10 +157,12 @@ public class FinalVocationalProtocolController {
         FinalProtocolUtil.assertCanConfirm(user, protocol);
         Protocol savedProtocol = finalProtocolService.save(protocol, protocolSignForm);
 
-        UnsignedBdocContainer unsignedBdocContainer = bdocService.createUnsignedBdocContainer("lopueksami_protokoll.pdf",
-                MediaType.APPLICATION_PDF_VALUE,
-                pdfService.generate(FinalProtocolReport.VOCATIONAL_TEMPLATE_NAME, new FinalProtocolReport(savedProtocol)),
-                protocolSignForm.getCertificate());
+        Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
+        UnsignedBdocContainer unsignedBdocContainer = bdocService
+                .createUnsignedBdocContainer("lopueksami_protokoll.pdf", MediaType.APPLICATION_PDF_VALUE,
+                        pdfService.generate(FinalProtocolReport.VOCATIONAL_TEMPLATE_NAME,
+                                new FinalProtocolReport(savedProtocol, isLetterGrades)),
+                        protocolSignForm.getCertificate());
 
         httpSession.setAttribute(BDOC_TO_SIGN, unsignedBdocContainer);
         return EntitySignDto.of(savedProtocol, unsignedBdocContainer);
@@ -184,8 +185,10 @@ public class FinalVocationalProtocolController {
             @Valid @RequestBody FinalVocationalProtocolSignForm protocolSaveForm, HttpSession httpSession) {
         FinalProtocolUtil.assertCanConfirm(user, protocol);
         Protocol savedProtocol = finalProtocolService.save(protocol, protocolSaveForm);
-        
-        byte[] pdfData = pdfService.generate(FinalProtocolReport.VOCATIONAL_TEMPLATE_NAME, new FinalProtocolReport(savedProtocol));
+
+        Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
+        byte[] pdfData = pdfService.generate(FinalProtocolReport.VOCATIONAL_TEMPLATE_NAME,
+                new FinalProtocolReport(savedProtocol, isLetterGrades));
         MobileIdSession session = bdocService.mobileSign("lopueksami_protokoll.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
                 pdfData,
@@ -229,8 +232,10 @@ public class FinalVocationalProtocolController {
     public void print(HoisUserDetails user, @WithEntity Protocol protocol, HttpServletResponse response)
             throws IOException {
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
+        
+        Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
         HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
-                pdfService.generate(FinalProtocolReport.VOCATIONAL_TEMPLATE_NAME, new FinalProtocolReport(protocol)));
+                pdfService.generate(FinalProtocolReport.VOCATIONAL_TEMPLATE_NAME, new FinalProtocolReport(protocol, isLetterGrades)));
     }
     
 }

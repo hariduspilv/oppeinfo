@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import javax.validation.constraints.NotNull;
 
@@ -15,16 +16,17 @@ public class SubjectProgramDto extends SubjectProgramForm {
 
     private Long id;
     @NotNull
-    private SubjectStudyPeriodTeacherDto subjectStudyPerioudTeacher;
+    private SubjectStudyPeriodTeacherDto subjectStudyPeriodTeacher;
     @NotNull
     @ClassifierRestriction(MainClassCode.AINEPROGRAMM_STAATUS)
     private String status;
     private LocalDateTime confirmed;
     private String confirmedBy;
+    private Set<Long> supervisorIds;
     
     public static SubjectProgramDto of(SubjectProgram program) {
         SubjectProgramDto dto = EntityUtil.bindToDto(program, new SubjectProgramDto(), "subjectStudyPerioudTeacher", "studyContents");
-        dto.setSubjectStudyPerioudTeacher(SubjectStudyPeriodTeacherDto.of(program.getSubjectStudyPeriodTeacher()));
+        dto.setSubjectStudyPeriodTeacher(SubjectStudyPeriodTeacherDto.of(program.getSubjectStudyPeriodTeacher()));
         dto.setStudyContents(StreamUtil.toMappedSet(SubjectProgramStudyContentDto::of, program.getStudyContents()));
         return dto;
     }
@@ -46,15 +48,15 @@ public class SubjectProgramDto extends SubjectProgramForm {
     /**
      * @return the subjectStudyPerioudTeacher
      */
-    public SubjectStudyPeriodTeacherDto getSubjectStudyPerioudTeacher() {
-        return subjectStudyPerioudTeacher;
+    public SubjectStudyPeriodTeacherDto getSubjectStudyPeriodTeacher() {
+        return subjectStudyPeriodTeacher;
     }
     
     /**
      * @param subjectStudyPerioudTeacher the subjectStudyPerioudTeacher to set
      */
-    public void setSubjectStudyPerioudTeacher(SubjectStudyPeriodTeacherDto subjectStudyPerioudTeacher) {
-        this.subjectStudyPerioudTeacher = subjectStudyPerioudTeacher;
+    public void setSubjectStudyPeriodTeacher(SubjectStudyPeriodTeacherDto subjectStudyPeriodTeacher) {
+        this.subjectStudyPeriodTeacher = subjectStudyPeriodTeacher;
     }
     
     /**
@@ -98,4 +100,13 @@ public class SubjectProgramDto extends SubjectProgramForm {
     public void setConfirmedBy(String confirmedBy) {
         this.confirmedBy = confirmedBy;
     }
+
+    public Set<Long> getSupervisorIds() {
+        return supervisorIds;
+    }
+
+    public void setSupervisorIds(Set<Long> supervisorIds) {
+        this.supervisorIds = supervisorIds;
+    }
+    
 }

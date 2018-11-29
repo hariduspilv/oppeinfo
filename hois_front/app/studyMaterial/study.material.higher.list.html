@@ -16,7 +16,8 @@
 
         <div ng-if="auth.isAdmin()" layout="row" layout-sm="column" layout-xs="column">
           <div flex="45" flex-sm="100" flex-xs="100">
-            <hois-autocomplete flex ng-model="$parent.teacher" method="teachers" name="teacher" label="teacher.label"></hois-autocomplete>
+            <hois-autocomplete flex ng-model="$parent.teacher" method="teachers" name="teacher"
+              label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}"></hois-autocomplete>
           </div>
         </div>
 

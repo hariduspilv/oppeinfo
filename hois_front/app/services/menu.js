@@ -92,7 +92,8 @@ angular.module('hitsaOis')
       });
 
       sections.push({
-        name: 'main.menu.teachers.label',
+        nameHigher: 'main.menu.teachers.labelHigher',
+        nameVocational: 'main.menu.teachers.labelVocational',
         type: 'link',
         url: "/teachers?_menu",
         icon: "supervisor_account"
@@ -328,7 +329,8 @@ angular.module('hitsaOis')
             icon:"perm_contact_calendar"
           },
           {
-            name: 'main.menu.reports.teachersloadvocational',
+            nameHigher: 'main.menu.reports.teachersLoadVocationalHigher',
+            nameVocational: 'main.menu.reports.teachersLoadVocational',
             url: "/reports/teachers/load/vocational?_menu",
             icon:"grain",
             studyLevel: {
@@ -336,7 +338,7 @@ angular.module('hitsaOis')
             }
           },
           {
-            name: 'main.menu.reports.teachersloadhigher',
+            name: 'main.menu.reports.teachersLoadHigher',
             url: "/reports/teachers/load/higher?_menu",
             icon:"gradient",
             studyLevel: {
@@ -394,6 +396,11 @@ angular.module('hitsaOis')
             studyLevel: {
               vocational: true
             }
+          },
+          {
+            name: 'main.menu.graduation.documents',
+            url: "/documents?_menu",
+            icon:"print"
           },
           {
             name: 'main.menu.graduation.finalProtocolsHigher',
@@ -582,7 +589,8 @@ angular.module('hitsaOis')
             icon:"recent_actors"
           },
           {
-            name: 'main.menu.settings.teacheroccupations',
+            nameHigher: 'main.menu.settings.teacheroccupationsHigher',
+            nameVocational: 'main.menu.settings.teacheroccupationsVocational',
             url: "/school/teacheroccupations?_menu",
             icon:"business_center"
           },
@@ -725,6 +733,11 @@ angular.module('hitsaOis')
             studyLevel: {
               higher: true
             }
+          },
+          {
+            name: 'main.menu.subjectProgram.label',
+            url: "/subjectProgram?_menu",
+            icon: "description",
           },
           {
             name: 'main.menu.study.material.higher',
@@ -1069,7 +1082,7 @@ angular.module('hitsaOis')
         ]
       });
       sections.push({
-        name: 'main.menu.teachers.label',
+        name: 'main.menu.teachers.labelVocational',
         type: 'link',
         url: "/teachers?_menu",
         icon: "supervisor_account"
@@ -1385,7 +1398,7 @@ angular.module('hitsaOis')
       }
       if (pages.length > 0) {
         menu.push({
-          name: section.name,
+          name: getSectionName(section, authenticatedUser),
           type: 'toggle',
           pages: pages,
           icon: section.icon
@@ -1402,7 +1415,7 @@ angular.module('hitsaOis')
       }
 
       menu.push({
-        name: section.name,
+        name: getSectionName(section, authenticatedUser),
         type: section.type,
         url: section.url,
         icon: section.icon
@@ -1418,11 +1431,20 @@ angular.module('hitsaOis')
       }
 
       pages.push({
-        name: section.name,
+        name: getSectionName(section, authenticatedUser),
         id: section.id,
         url: section.url,
         icon: section.icon
       });
+    }
+
+    function getSectionName(section, authenticatedUser) {
+      if (authenticatedUser.higher && section.nameHigher) {
+        return section.nameHigher;
+      } else if (authenticatedUser.vocational && section.nameVocational) {
+        return section.nameVocational;
+      }
+      return section.name;
     }
 
     function getUserSections(authenticatedUser) {

@@ -193,12 +193,8 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
   function canWatchStudentConnectedEntities() {
     if ($scope.auth.isAdmin()) {
       $scope.canWatchStudentConnectedEntities = true;
-    } else if ($scope.auth.isTeacher()) {
-      QueryUtils.endpoint('/studentgroups').get({ id: $scope.student.studentGroup.id }).$promise.then(function (studentGroup) {
-        if (studentGroup.teacher && studentGroup.teacher.id === $scope.auth.teacher) {
-          $scope.canWatchStudentConnectedEntities = true;
-        }
-      });
+    } else if ($scope.auth.isTeacher() && $scope.student.studentGroup && $scope.auth.teacherGroupIds.length > 0) {
+      $scope.canWatchStudentConnectedEntities = $scope.auth.teacherGroupIds.indexOf($scope.student.studentGroup.id) !== -1;
     }
   }
 
@@ -206,8 +202,9 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     return student && angular.isNumber(student.credits) && student.credits >= student.curriculumCredits;
   };
 
-}]).controller('StudentViewResultsVocationalController', ['$filter', '$q', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope', 'VocationalGradeUtil', 'StudentUtil',
-function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGradeUtil, StudentUtil) {
+}]).controller('StudentViewResultsVocationalController', ['$filter', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope', 'VocationalGradeUtil', 'StudentUtil', 'message',
+function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGradeUtil, StudentUtil, message) {
+  $scope.auth = $route.current.locals.auth;
   $scope.gradeUtil = VocationalGradeUtil;
   var entryMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', studyYear: 'OPPEAASTA', entryType: 'SISSEKANNE' });
   var moduleMapper = Classifier.valuemapper({ module: 'KUTSEMOODUL' });
@@ -285,21 +282,19 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
   };
 
   function loadVocationalResults() {
-    if (!angular.isObject($scope.vocationalResults)) {
-      QueryUtils.loadingWheel($scope, true);
-      QueryUtils.endpoint('/students/' + $scope.student.id + '/vocationalResults').get(function (vocationalResults) {
-        vocationalResults.results = entryMapper.objectmapper(vocationalResults.results);
-        vocationalResults.curriculumModules.forEach(function (it) {
-          it.curriculumModule = moduleMapper.objectmapper(it.curriculumModule);
-        });
-        vocationalResults.extraCurriculaModules.forEach(function (it) {
-          it.curriculumModule = moduleMapper.objectmapper(it.curriculumModule);
-        });
-        $scope.vocationalResults = vocationalResults;
-        $scope.loadCurriculumFulfillment();
-        QueryUtils.loadingWheel($scope, false);
+    QueryUtils.loadingWheel($scope, true);
+    QueryUtils.endpoint('/students/' + $scope.student.id + '/vocationalResults').get(function (vocationalResults) {
+      vocationalResults.results = entryMapper.objectmapper(vocationalResults.results);
+      vocationalResults.curriculumModules.forEach(function (it) {
+        it.curriculumModule = moduleMapper.objectmapper(it.curriculumModule);
       });
-    }
+      vocationalResults.extraCurriculaModules.forEach(function (it) {
+        it.curriculumModule = moduleMapper.objectmapper(it.curriculumModule);
+      });
+      $scope.vocationalResults = vocationalResults;
+      $scope.loadCurriculumFulfillment();
+      QueryUtils.loadingWheel($scope, false);
+    });
   }
 
 
@@ -377,7 +372,9 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
   $scope.saveChangedModules = function () {
     QueryUtils.endpoint('/students/' + $scope.student.id + '/changeVocationalCurriculumModules/').post(
       {modules: $scope.changeableModules}).$promise.then(function(changeableModules) {
+      message.updateSuccess();        
       setChangeableModules(changeableModules);
+      loadVocationalResults();
     });
   };
 
@@ -411,7 +408,11 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
     } else if ($scope.resultsCurrentNavItem === 'student.inOrderOfPassing') {
       $scope.loadModuleThemeResults();
     } else if ($scope.resultsCurrentNavItem === 'student.journalsAndProtocols') {
-      $scope.loadJournalsAndProtocols();
+      if (canWatchStudentConnectedEntities()) {
+        $scope.loadJournalsAndProtocols();
+      } else {
+        $scope.changeResultsCurrentNavItem('student.curriculumFulfillment');
+      }
     } else if ($scope.resultsCurrentNavItem === 'student.changeModules') {
       if (StudentUtil.isActive($scope.student.status)) {
         $scope.loadChangeableModules();
@@ -421,8 +422,16 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
     }
   }
 
-}]).controller('StudentViewResultsHigherController', ['$q', '$route', '$scope', 'Classifier', 'HigherGradeUtil', 'QueryUtils', 'StudentUtil', '$rootScope',
-  function ($q, $route, $scope, Classifier, HigherGradeUtil, QueryUtils, StudentUtil, $rootScope) {
+  function canWatchStudentConnectedEntities() {
+    if ($scope.auth.isAdmin()) {
+      return true;
+    } else if ($scope.auth.isTeacher() && $scope.student.studentGroup && $scope.auth.teacherGroupIds.length > 0) {
+      return $scope.auth.teacherGroupIds.indexOf($scope.student.studentGroup.id) !== -1;
+    }
+  }
+
+}]).controller('StudentViewResultsHigherController', ['$route', '$scope', 'HigherGradeUtil', 'QueryUtils', 'StudentUtil', '$rootScope', 'message',
+  function ($route, $scope, HigherGradeUtil, QueryUtils, StudentUtil, $rootScope, message) {
     $scope.gradeUtil = HigherGradeUtil;
     var auth = $route.current.locals.auth;
 
@@ -439,7 +448,7 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
     });
 
     function loadHigherResults() {
-      var id = (auth.isStudent() ? auth.student : $route.current.params.id);
+      var id = (auth.isStudent() || auth.isParent()) ? auth.student : $route.current.params.id;
       QueryUtils.endpoint('/students/' + id + '/higherResults').get().$promise.then(function (response) {
         $scope.higherResults = response;
         $scope.student.higherResults = $scope.higherResults;
@@ -513,6 +522,7 @@ function ($filter, $q, $route, $scope, Classifier, QueryUtils, $rootScope, Vocat
     $scope.saveChangedModules = function () {
       QueryUtils.endpoint('/students/' + $scope.student.id + '/changeHigherCurriculumModules/').post(
         {modules: $scope.changeableModules}).$promise.then(function(changeableModules) {
+        message.updateSuccess();
         setChangeableModules(changeableModules);
         loadHigherResults();
       });

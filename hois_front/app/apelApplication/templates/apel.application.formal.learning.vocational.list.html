@@ -19,7 +19,7 @@
         <th md-column>{{'apel.formalLearnings.creditsEKAP' | translate}}</th>
         <th md-column>{{'apel.formalLearnings.result' | translate}}</th>
         <th md-column>{{'apel.formalLearnings.resultDate' | translate}}</th>
-        <th md-column>{{'apel.formalLearnings.teacher' | translate}}</th>
+        <th md-column>{{auth.higher ? ('apel.formalLearnings.teacherHigher' | translate) : ('apel.formalLearnings.teacherVocational' | translate)}}</th>
         <th md-column style="border-left: 1px rgba(0, 0, 0, 0.12) solid;"></th>
         <th md-column>{{'apel.formalLearnings.module' | translate}}</th>
         <th md-column>{{'apel.formalLearnings.creditsEKAP' | translate}}</th>

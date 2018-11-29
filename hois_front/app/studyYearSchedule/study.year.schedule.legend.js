@@ -4,6 +4,15 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController',
   function ($scope, QueryUtils, ArrayUtils, message, dialogService, USER_ROLES, AuthService) {
     $scope.removedInUseLegend = false;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPETOOGRAAFIK);
+    $scope.colorOptions = {
+      disabled: $scope.canEdit
+    };
+
+    function colorSetter(row) {
+      row.colorPicker = function (newColor) {
+        return arguments.length ? (row.color = "#" + newColor) : row.color;
+      };
+    }
 
     var DEFAULT_VALUES = [{
         code: "E",
@@ -31,6 +40,7 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController',
         color: "#8C8C8C"
       }
     ];
+    DEFAULT_VALUES.forEach(colorSetter);
 
     $scope.newLegend = {};
 
@@ -40,6 +50,7 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController',
         $scope.defaultLegends = true;
       } else {
         $scope.legends = response.legends;
+        $scope.legends.forEach(colorSetter);
         $scope.defaultLegends = false;
       }
     });
@@ -69,6 +80,7 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController',
       $scope.record.$put().then(function (response) {
         message.updateSuccess();
         $scope.legends = response.legends;
+        $scope.legends.forEach(colorSetter);
         if (angular.isArray(response.legends) && response.legends.length > 0) {
           $scope.defaultLegends = false;
         } else {
@@ -166,6 +178,7 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController',
         color: '#FFFFFF'
       };
       $scope.legends.push(newLegend);
+      colorSetter(newLegend);
       $scope.legends.forEach(function (l) {
         l.edited = false;
       });

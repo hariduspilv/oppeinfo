@@ -13,7 +13,7 @@
             md-item-text="currentLanguageNameField(item)"
             md-selected-item-change="selectedTeacherChanged(item)"
             md-min-length="1"
-            md-floating-label="{{'timetable.search.teacher' | translate}}"
+            md-floating-label="{{auth.higher ? ('timetable.search.teacherHigher' | translate) : ('timetable.search.teacherVocational' | translate)}}"
             md-require-match
             md-no-cache>
             <md-item-template>

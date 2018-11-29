@@ -36,6 +36,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -68,6 +69,8 @@ public class ReportService {
     private EntityManager em;
     @Autowired
     private XlsService xlsService;
+    @Autowired
+    private SchoolService schoolService;
 
     /**
      * Students report
@@ -295,10 +298,12 @@ public class ReportService {
     }
 
     private byte[] teacherLoadAsExcel(Long schoolId, TeacherLoadCommand criteria, boolean higher) {
+        SchoolType type = schoolService.schoolType(schoolId);
         List<TeacherLoadDto> rows = teacherLoad(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE), higher).getContent();
         Map<String, Object> data = new HashMap<>();
         data.put("criteria", criteria);
         data.put("rows", rows);
+        data.put("isHigherSchool", Boolean.valueOf(type.isHigher()));
         return xlsService.generate("teachersload" + (higher ? "higher" : "vocational") + ".xls", data);
     }
 

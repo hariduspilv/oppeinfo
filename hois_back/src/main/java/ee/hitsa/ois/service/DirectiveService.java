@@ -898,6 +898,20 @@ public class DirectiveService {
      */
     public DirectiveCoordinator save(DirectiveCoordinator coordinator, DirectiveCoordinatorForm form) {
         EntityUtil.bindToEntity(form, coordinator);
+        if (Boolean.TRUE.equals(coordinator.getIsCertificateDefault())) {
+            StringBuilder sql = new StringBuilder("select dc.id from directive_coordinator dc where dc.school_id = ?1 and dc.is_certificate_default");
+            if (coordinator.getId() != null) {
+                sql.append(" and dc.id != ?2");
+            }
+            Query query = em.createNativeQuery(sql.toString()).setParameter(1, coordinator.getSchool().getId());
+            if (coordinator.getId() != null) {
+                query.setParameter(2, coordinator.getId());
+            }
+            if (query.getResultList().size() > 0) {
+                throw new ValidationFailedException("directive.coordinator.alreadyhascertificatedefaultcoordinator");
+            }
+        
+        }
         return EntityUtil.save(coordinator, em);
     }
 

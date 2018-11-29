@@ -2,11 +2,11 @@
   <div flex>
     <fieldset tabindex="1">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form ng-submit="loadData()" novalidate>
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate>
         <div flex layout="column">
           <md-input-container>
             <label class="textInput">{{'generalmessage.title' | translate}}</label>
-            <input ng-model="criteria.title" type="text" autofocus>
+            <input ng-model="criteria.title" type="text" autofocus md-maxlength="255">
           </md-input-container>
           <md-input-container>
             <label>{{'generalmessage.targets' | translate}}</label>
@@ -16,7 +16,7 @@
           <div layout="row" flex>
             <md-input-container>
               <label>{{'generalmessage.validFrom' | translate}}</label>
-              <md-datepicker ng-model="criteria.validFrom"></md-datepicker>
+              <md-datepicker ng-model="criteria.validFrom" md-max-date="criteria.validThru"></md-datepicker>
             </md-input-container>
             <md-input-container flex-offset="5">
               <label>{{'generalmessage.validThru' | translate}}</label>

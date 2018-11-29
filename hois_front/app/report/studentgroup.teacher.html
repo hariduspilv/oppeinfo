@@ -41,7 +41,7 @@
         </div>
 
         <div layout="row" layout-md="column" layout-sm="column" layout-xs="column">
-          <md-checkbox ng-repeat="entryType in entryTypes" ng-model="criteria.entryType[entryType.code]" aria-label="{{'directive.student.foreign' | translate}}">
+          <md-checkbox ng-repeat="entryType in entryTypes | orderBy: getEntryTypeOrderNr" ng-model="criteria.entryType[entryType.code]" aria-label="{{'directive.student.foreign' | translate}}">
             <span ng-if="getEntryColor(entryType.code)" md-colors="{color: getEntryColor(entryType.code)}">{{currentLanguageNameField(entryType)}}</span>
             <span ng-if="!getEntryColor(entryType.code)">{{currentLanguageNameField(entryType)}}</span>
           </md-checkbox>

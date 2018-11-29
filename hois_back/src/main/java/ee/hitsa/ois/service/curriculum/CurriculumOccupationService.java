@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,8 +21,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleCompetence;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOccupation;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupation;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupationSpeciality;
@@ -89,7 +92,7 @@ public class CurriculumOccupationService {
 
     public CurriculumOccupation update(HoisUserDetails user, CurriculumOccupationDto dto, CurriculumOccupation occupation) {
         EntityUtil.setUsername(user.getUsername(), em);
-        if(CurriculumUtil.occupationCanBeChanged(occupation.getCurriculum().getDraft())) {
+        if(CurriculumUtil.occupationCanBeChanged(user, occupation.getCurriculum().getDraft())) {
             EntityUtil.bindToEntity(dto, occupation, classifierRepository, "specialities");
             updateSpecialities(occupation, dto.getSpecialities());
             updateCurriculumModules(occupation.getCurriculum());
@@ -121,6 +124,7 @@ public class CurriculumOccupationService {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(curriculumOccupation, em);
         updateCurriculumModules(curriculumOccupation.getCurriculum());
+        removeCompetences(curriculumOccupation);
     }
     
     /**
@@ -145,5 +149,33 @@ public class CurriculumOccupationService {
             module.getOccupations().removeAll(deletedOccupations);
         }
         curriculumModuleRepository.save(modules);
+    }
+    
+    private void removeCompetences(CurriculumOccupation curriculumOccupation) {
+        Set<String> removeCompetences = getCompetenceCodes(curriculumOccupation);
+        
+        Curriculum curriculum = curriculumOccupation.getCurriculum();
+        
+        Set<String> keepCompetences = new HashSet<>();
+        for(CurriculumOccupation occupation : curriculum.getOccupations()) {
+            keepCompetences.addAll(getCompetenceCodes(occupation));
+        }
+        removeCompetences.removeAll(keepCompetences);
+
+        Set<CurriculumModule> modules = curriculum.getModules();
+        for(CurriculumModule module : modules) {
+            Set<CurriculumModuleCompetence> deletedCompetences = module.getCompetences().stream()
+                    .filter(o -> removeCompetences.contains(EntityUtil.getCode(o.getCompetence())))
+                    .collect(Collectors.toSet());
+            module.getCompetences().removeAll(deletedCompetences);
+        }
+        curriculumModuleRepository.save(modules);
+    }
+
+    private static Set<String> getCompetenceCodes(CurriculumOccupation curriculumOccupation) {
+        return StreamUtil.toMappedSet(EntityUtil::getCode, 
+                curriculumOccupation.getOccupation().getChildConnects().stream()
+                .map(ClassifierConnect::getClassifier)
+                .filter(c -> MainClassCode.KOMPETENTS.name().equals(c.getMainClassCode())));
     }
 }

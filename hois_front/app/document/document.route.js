@@ -2,6 +2,18 @@
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
+    .when('/documents', {
+      templateUrl: 'document/diploma.search.html',
+      controller: 'DiplomaSearchController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPTUNNISTUS_TRUKKIMINE]
+      }
+    })
     .when('/documents/diplomas', {
       templateUrl: 'document/diploma.html',
       controller: 'DiplomaController',

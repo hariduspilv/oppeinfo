@@ -41,7 +41,7 @@
       <hois-classifier-value ng-model="protocol.subject.assessment" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
     </md-input-container>
     <md-input-container ng-if="!protocol.isFinalThesis" flex flex-sm="100" flex-xs="100">
-      <label>{{'finalProtocol.teacher' | translate}}</label>
+      <label>{{auth.higher ? ('finalProtocol.teacherHigher' | translate) : ('finalProtocol.teacherVocational' | translate)}}</label>
       <hois-value value="protocol.teachers.join(', ')"></hois-value>
     </md-input-container>
   </div>

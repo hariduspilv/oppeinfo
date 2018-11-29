@@ -690,4 +690,9 @@ angular.module('hitsaOis')
         );
     };
 
+    $scope.searchTeacher = function (searchText) {
+      return QueryUtils.endpoint("/curriculum/teachers").query({
+        name: searchText
+      }).$promise;
+    };
   });

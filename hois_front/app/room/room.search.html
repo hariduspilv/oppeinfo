@@ -1,6 +1,6 @@
 <div class="ois-form-layout-padding">
   <div flex>
-    <form ng-submit="loadData()" novalidate layout="column" class="nomargin">
+    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate layout="column" class="nomargin">
       <fieldset tabindex="1">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
 
@@ -8,22 +8,22 @@
           <!--div class="indentForToast"></div-->
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'building.name' | translate}}</label>
-            <input ng-model="criteria.buildingName" name="buildingName" type="text">
+            <input ng-model="criteria.buildingName" name="buildingName" type="text" md-maxlength="255">
           </md-input-container>
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'building.code' | translate}}</label>
-            <input ng-model="criteria.buildingCode" name="buildingCode" type="text" autofocus>
+            <input ng-model="criteria.buildingCode" name="buildingCode" type="text" md-maxlength="20" autofocus>
           </md-input-container>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'room.name' | translate}}</label>
-            <input ng-model="criteria.name" name="name" type="text">
+            <input ng-model="criteria.name" name="name" type="text" md-maxlength="100">
           </md-input-container>
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'room.code' | translate}}</label>
-            <input ng-model="criteria.code" name="code" type="text">
+            <input ng-model="criteria.code" name="code" type="text" md-maxlength="20">
           </md-input-container>
         </div>
       </fieldset>

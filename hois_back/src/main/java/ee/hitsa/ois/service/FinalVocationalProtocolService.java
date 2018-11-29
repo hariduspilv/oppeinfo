@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -66,6 +67,9 @@ import ee.hitsa.ois.web.dto.finalprotocol.FinalVocationalProtocolStudentDto;
 @Transactional
 @Service
 public class FinalVocationalProtocolService extends AbstractProtocolService {
+
+    @Autowired
+    private SchoolService schoolService;
 
     private static final String FINAL_EXAM_CODE = "KUTSEMOODUL_L";
     
@@ -158,6 +162,10 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
     }
 
     public FinalVocationalProtocolDto create(HoisUserDetails user, FinalVocationalProtocolCreateForm form) {
+        SchoolService.SchoolType type = schoolService.schoolType(user.getSchoolId());
+        FinalProtocolUtil.assertIsSchoolAdminOrTeacherResponsible(user, type.isHigher(),
+                form.getProtocolVdata().getTeacher());
+        
         Protocol protocol = EntityUtil.bindToEntity(form, new Protocol(), "protocolStudents", "protocolVdata");
         protocol.setIsFinal(Boolean.TRUE);
         protocol.setIsVocational(Boolean.TRUE);
@@ -234,7 +242,7 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
                         addHistory(ps);
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
                         Short mark = getMark(EntityUtil.getCode(grade));
-                        gradeStudent(ps, grade, mark);
+                        gradeStudent(ps, grade, mark, Boolean.FALSE);
                         ps.setAddInfo(dto.getAddInfo());
                     } else if (gradeRemoved(dto, ps)) {
                         addHistory(ps);

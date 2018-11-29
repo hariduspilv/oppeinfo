@@ -75,6 +75,12 @@
       </md-checkbox>
     </md-input-container>
 
+    <md-input-container ng-if="school.type.higher" class="md-block">
+      <md-checkbox ng-model="school.isLetterGrade" name="isLetterGrade">
+          {{'school.isLetterGrade' | translate}}
+      </md-checkbox>
+    </md-input-container>
+
     <md-input-container class="md-block">
       <label class="textInput">{{'school.adUrl' | translate}}</label>
       <input ng-model="school.adUrl" name="adUrl" type="text" md-maxlength="255">

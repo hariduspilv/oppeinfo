@@ -125,7 +125,7 @@ public class TimetableEventService {
 
     public TimetableEvent createEvent(HoisUserDetails user, TimetableSingleEventForm form) {
         TimetableEvent te = createEvent(form, user.getSchoolId());
-        if (isTeachersEvent(user, StreamUtil.toMappedList(TimetableSingleEventTeacherForm::getId, form.getTeachers()))) {
+        if (isTeachersEvent(user, StreamUtil.toMappedList(t -> t.getTeacher().getId(), form.getTeachers()))) {
             sendTeacherEventCreatedMessages(te);
         }
         return te;
@@ -1177,12 +1177,14 @@ public class TimetableEventService {
                         StreamUtil.toFilteredList(r -> resultAsLong(r, 1) != null && teachers.contains(resultAsLong(r, 1)), data)));
             }
             if (!CollectionUtils.isEmpty(rooms)) {
-                dto.setRooms(StreamUtil.toMappedSet(r -> resultAsString(r, 5), StreamUtil
-                        .toFilteredList(r -> resultAsLong(r, 4) != null && rooms.contains(resultAsLong(r, 4)), data)));
+                dto.setRooms(StreamUtil.toMappedSet(
+                        r -> new AutocompleteResult(resultAsLong(r, 4), resultAsString(r, 5), resultAsString(r, 5)),
+                        StreamUtil.toFilteredList(r -> resultAsLong(r, 4) != null && rooms.contains(resultAsLong(r, 4)), data)));
             }
             if (!CollectionUtils.isEmpty(studentGroups)) {
-                dto.setStudentGroups(StreamUtil.toMappedSet(r -> resultAsString(r, 7), StreamUtil
-                        .toFilteredList(r -> resultAsLong(r, 6) != null && studentGroups.contains(resultAsLong(r, 6)), data)));
+                dto.setStudentGroups(StreamUtil.toMappedSet(
+                        r -> new AutocompleteResult(resultAsLong(r, 6), resultAsString(r, 7), resultAsString(r, 7)),
+                        StreamUtil.toFilteredList(r -> resultAsLong(r, 6) != null && studentGroups.contains(resultAsLong(r, 6)), data)));
             }
         }
         return dto; 

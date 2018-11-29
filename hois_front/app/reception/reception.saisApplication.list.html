@@ -2,7 +2,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form ng-submit="loadData()" layout="column">
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" layout="column">
         <div layout="row" layout-sm="column" layout-xs="column"  >
             <md-input-container flex="100">
               <label>{{'reception.admission.code' | translate}}</label>
@@ -21,14 +21,14 @@
         <div layout="row" layout-sm="column" layout-xs="column"  >
             <md-input-container flex="100">
               <label class="textInput">{{'reception.application.candidateName' | translate}}</label>
-              <input ng-model="criteria.name" type="text">
+              <input ng-model="criteria.name" type="text" md-maxlength="255">
             </md-input-container>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column"  >
             <md-input-container flex="100">
               <label class="textInput">{{'reception.application.candidateIdCode' | translate}}</label>
-              <input ng-model="criteria.idcode" type="text">
+              <input ng-model="criteria.idcode" type="text" minlength="11" md-maxlength="11">
             </md-input-container>
         </div>
 
@@ -78,7 +78,7 @@
           <th md-column md-order-by="saisAdmissionCode">{{'reception.admission.code' | translate}}</th>
           <th md-column md-order-by="statusCode">{{'reception.application.status' | translate}}</th>
           <th md-column md-order-by="addedToDirective">{{'reception.application.addedToDirective' | translate}}</th>
-          <th md-column md-order-by="archived">{{'reception.archive.archived' | translate}}</th>
+          <th md-column md-order-by="is_archived">{{'reception.archive.archived' | translate}}</th>
         </tr>
         </thead>
         <tbody md-body>

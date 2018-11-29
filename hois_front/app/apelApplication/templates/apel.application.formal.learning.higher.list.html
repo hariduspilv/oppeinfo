@@ -9,7 +9,7 @@
         <th md-column>{{'apel.formalLearnings.assessment' | translate}}</th>
         <th md-column>{{'apel.formalLearnings.result' | translate}}</th>
         <th md-column>{{'apel.formalLearnings.resultDate' | translate}}</th>
-        <th md-column>{{'apel.formalLearnings.teacher' | translate}}</th>
+        <th md-column>{{auth.higher ? ('apel.formalLearnings.teacherHigher' | translate) : ('apel.formalLearnings.teacherVocational' | translate)}}</th>
         <th md-column>{{'apel.formalLearnings.module' | translate}} ({{'apel.formalLearnings.required' | translate}})</th>
         <th md-column>{{'apel.formalLearnings.substitutableSubjects' | translate}}</th>
         <th md-column ng-if="editing"></th>
@@ -27,7 +27,7 @@
         <td md-cell>{{currentLanguageNameField(row.data[0].subject)}} ({{row.data[0].code}})</td>
         <td md-cell>{{row.data[0].credits}}</td>
         <td md-cell>{{row.data[0].assessment.value}}</td>
-        <td md-cell>{{row.data[0].grade.value}}</td>
+        <td md-cell>{{auth.school.letterGrades ? row.data[0].grade.value2 : row.data[0].grade.value}}</td>
         <td md-cell>{{row.data[0].gradeDate | hoisDate}}</td>
         <td md-cell>{{row.data[0].teachers}}</td>
         <td md-cell>

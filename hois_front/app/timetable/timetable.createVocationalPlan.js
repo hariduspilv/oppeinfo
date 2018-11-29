@@ -2,6 +2,7 @@
 
 angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService', 'ArrayUtils',
   function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService, ArrayUtils) {
+    $scope.auth = $route.current.locals.auth;
     var bsave=false;
     $scope.Math = window.Math;
     $scope.isArray = angular.isArray;
@@ -398,6 +399,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     $scope.changeEvent = function (currentEvent) {
       var currGroupId = $scope.plan.selectedGroup;
       dialogService.showDialog('timetable/timetable.event.change.dialog.html', function (dialogScope) {
+        dialogScope.occupiedTime = [];
         dialogScope.lesson = currentEvent;
         dialogScope.teachers = currentEvent.journalObject.teachers;
         dialogScope.teachers.forEach(function (it) {
@@ -431,6 +433,48 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
           }
         });
 
+        dialogScope.$watchGroup(['lesson.eventRooms.length', 'lesson.startTime', 'lesson.endTime'], function () {
+          var occupiedQuery = {
+            startTime: dialogScope.lesson.startTime,
+            endTime: dialogScope.lesson.endTime,
+            timetableEventId: dialogScope.lesson.id,
+          };
+
+          occupiedQuery.rooms = dialogScope.lesson.eventRooms.reduce(function (filtered, room) {
+            filtered.push(room.id);
+            return filtered;
+          }, []);
+
+          occupiedQuery.teachers = dialogScope.teachers.reduce(function (filtered, teacher) {
+            if (teacher.isTeaching) {
+              filtered.push(teacher.id);
+            }
+            return filtered;
+          }, []);
+
+          QueryUtils.endpoint('/timetableevents/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
+            dialogScope.occupiedTime = result;
+          });
+        });
+
+        dialogScope.isRoomOccupied = function (roomId) {
+          if (dialogScope.occupiedTime && dialogScope.occupiedTime.rooms) {
+            return dialogScope.occupiedTime.rooms.filter(function (it) {
+              return it.id === roomId;
+            }).length > 0;
+          }
+          return false;
+        };
+
+        dialogScope.isTeacherOccupied = function (teacherId) {
+          if (dialogScope.occupiedTime && dialogScope.occupiedTime.teachers) {
+            return dialogScope.occupiedTime.teachers.filter(function (it) {
+              return it.id === teacherId;
+            }).length > 0;
+          }
+          return false;
+        };
+
         dialogScope.deleteEvent = function (toDelete) {
           bsave=true;
           QueryUtils.endpoint(baseUrl + '/deleteVocationalEvent').save({
@@ -462,30 +506,12 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
           }, [])
         };
 
-        var occupiedQuery = angular.copy(query);
-        occupiedQuery.rooms = occupiedQuery.rooms.reduce(function (filtered, room) {
-          filtered.push(room.id);
-          return filtered;
-        }, []);
-
-        QueryUtils.endpoint('/timetableevents/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
-          if(result.occupied) {
-            dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
-              saveEventRoomsAndTimes(query, currGroupId);
-            });
-          } else {
-            saveEventRoomsAndTimes(query, currGroupId);
-          }
+        bsave=true;
+        QueryUtils.endpoint(baseUrl + '/saveVocationalEventRoomsAndTimes').save(query).$promise.then(function (result) {
+          initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
         });
       });
     };
-
-    function saveEventRoomsAndTimes(query, currGroupId) {
-      bsave=true;
-      QueryUtils.endpoint(baseUrl + '/saveVocationalEventRoomsAndTimes').save(query).$promise.then(function (result) {
-        initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
-      });
-    }
 
     $scope.saveEvent = function (params) {
       bsave=true;
@@ -518,7 +544,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
 
       QueryUtils.endpoint('/timetableevents/timetableNewVocationalTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
         if (result.occupied) {
-          dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
+          dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts($scope, $scope.auth.higher, result), function () {
             saveVocationalEvent(query, currGroupId);
           }, function () {
             bsave = false;

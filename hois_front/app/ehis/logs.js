@@ -1,9 +1,10 @@
 'use strict';
 
-angular.module('hitsaOis').controller('EhisLogsController', ['$mdDialog', '$scope', 'QueryUtils', 'Session',
-  function ($mdDialog, $scope, QueryUtils, Session) {
+angular.module('hitsaOis').controller('EhisLogsController', ['$mdDialog', '$route', '$scope', 'QueryUtils', 'Session',
+  function ($mdDialog, $route, $scope, QueryUtils, Session) {
+    $scope.auth = $route.current.locals.auth;
 
-	var school = Session.school || {};
+	  var school = Session.school || {};
     $scope.messageTypes = ['laeKorgharidus', 'oisOppekava', 'oisOppekavaStaatus'];
     if(school.higher) {
       $scope.messageTypes.push('laeOppejoud');

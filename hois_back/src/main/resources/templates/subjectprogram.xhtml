@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>{{"report.subjectprogram.label" | translate}}</title>
+    <link rel="stylesheet" href="styles.css"/>
+    <style>
+    	html {
+    		font-size: 12pt;
+    	}
+    	tr, td, th {
+		    page-break-inside: avoid !important;
+		}
+    	h4 {
+    		font-size: 12pt;
+    		font-weight: bold;
+    	}
+    	th, td {
+    		vertical-align: top;
+    		font-size: 12pt;
+    	}
+    	table.invisible-border {
+    		border: none;
+    		border-collapse: collapse;
+    	}
+    	table.bordered {
+    		border-collapse: collapse;
+    	}
+    	table.bordered, table.bordered td, table.bordered th {
+    		border: 1px solid black;
+    	}
+    	table.bordered th, table.bordered td {
+    		padding: 4px;
+    	}
+    	table.invisible-border td {
+    		margin: 0 !important;
+    		padding: 0 !important;
+    	}
+    	td.bordered-cell {
+    		vertical-align: middle;
+    		border-style: solid;
+    		border-width: 0.5pt;
+    		white-space: nowrap;
+    	}
+    	td.bordered-cell > p {
+    		margin: 2px 10px !important;
+    		padding: 0 !important;
+    	}
+    	tr.empty-row {
+    		height: 20px;
+    	}
+    </style>
+  </head>
+  <body style="background-color: #fff">
+  	<table class="invisible-border" style="width:100%">
+  		<tr>
+  			<td style="width: 25%">
+  				<h4>{{'report.subjectprogram.label' | translate | upper}}</h4>
+  			</td>
+  			<td style="width: 74%"></td>
+  			<td class="bordered-cell" style="width: 1%">
+  				<p>
+	  				{{'report.subjectprogram.studyYear' | translate}}: {{ content.period.studyYear.year.nameEt }}
+	  				<br/>
+	  				{{'report.subjectprogram.semester' | translate}}: {{ lang == 'ET' ? content.period.type.nameEt : content.period.type.nameEn }}
+  				</p>
+  			</td>
+  		</tr>
+  		<tr class="empty-row"></tr>
+  		<tr>
+  			<td><b>{{'report.subjectprogram.subject.code' | translate}}:</b></td>
+  			<td colspan="2">{{ content.subject.code }}</td>
+  		</tr>
+  		<tr>
+  			<td><b>{{'report.subjectprogram.subject.name' | translate}}:</b></td>
+  			<td colspan="2">
+	  			{{ content.subject.nameEt }}
+	  			{% if content.subject.nameEn is not null %}
+	  				<br/>
+		  			{{ content.subject.nameEn }}
+		  		{% endif %}
+  			</td>
+  		</tr>
+  		<tr class="empty-row"></tr>
+  		<tr>
+  			<td><b>{{'report.subjectprogram.teacher' | translate}}:</b></td>
+  			<td colspan="2">
+  				{{ content.teacher.person.fullname }}
+  				{% if lang == "ET" %} ({{ content.teacher.teacherOccupation.occupationEt }}) {% endif %}
+  				{% if lang == "EN" %} ({{ content.teacher.teacherOccupation.occupationEn }}) {% endif %}
+  			</td>
+  		</tr>
+  		<tr>
+  			<td><b>{{'report.subjectprogram.credits' | translate}}:</b></td>
+  			<td colspan="2">{{ content.subject.credits }} EAP</td>
+  		</tr>
+  	</table>
+  	<p>
+  		<b>{{'report.subjectprogram.subject.objective' | translate}}:</b>
+  		{% if lang == "ET" %} {{ content.subject.objectivesEt }} {% endif %}
+  		{% if lang == "EN" %} {{ content.subject.objectivesEn }} {% endif %}
+  	</p>
+  	{% if (content.subject.descriptionEt is not null or content.subject.descriptionEn is not null) %}
+	  	<p>
+	  		<b>{{'report.subjectprogram.subject.description' | translate}}:</b>
+	  		{% if lang == "ET" %} {{ content.subject.descriptionEt }} {% endif %}
+	  		{% if lang == "EN" %} {{ content.subject.descriptionEn }} {% endif %}
+	  	</p>
+	{% endif %}
+  	<p>
+  		<b>{{'report.subjectprogram.subject.outcomes' | translate}}:</b>
+  		{% if lang == "ET" %} {{ content.subject.outcomesEt }} {% endif %}
+  		{% if lang == "EN" %} {{ content.subject.outcomesEn }} {% endif %}
+  	</p>
+  	{% if content.program.independentStudy is not null %}
+	  	<p>
+	  		<b>{{'report.subjectprogram.independentStudy' | translate}}:</b>
+	  		{{ content.program.independentStudy }}
+	  	</p>
+  	{% endif %}
+  	{% if content.program.assessmentDescription is not null %}
+	  	<p>
+	  		<b>{{'report.subjectprogram.assessmentDescription' | translate}}:</b>
+	  		{{ content.program.assessmentDescription }}
+	  	</p>
+  	{% endif %}
+  	<br/>
+  	<p>
+  		<b>{{'report.subjectprogram.studyDescription' | translate}}: </b>
+  	{% if content.program.studyContentType.code != "OPPETOOSISU_T" %}
+	</p>
+	  	<table class="bordered" style="width: 100%">
+	  		<tr>
+	  			<th style="width: 1%; white-space: nowrap;">{{ content.program.studyContentType.code == "OPPETOOSISU_N" ? 'report.subjectprogram.week' | translate : 'report.subjectprogram.day' | translate }}</th>
+	  			<th style="width: 99%">{{'report.subjectprogram.description' | translate}}</th>
+	  		</tr>
+	  		{% for studyContent in content.studyContents %}
+		  		<tr>
+		  			<td><b>{{content.program.studyContentType.code == "OPPETOOSISU_N" ? studyContent.weekNr + '.' : studyContent.studyDt.toString() | date(existingFormat='yyyy-MM-dd', format='dd.MM.yyyy') }}</b></td>
+		  			<td>{{ studyContent.studyInfo }}</td>
+		  		</tr>
+		  	{% endfor %}
+	  	</table>
+	 {% else %}
+	 	{{ content.program.studyDescription }}
+	</p>
+	{% endif %}
+  	<p>
+  		<b>{{'report.subjectprogram.assessmentCriteria' | translate}}:</b><br/>
+  		{% for key in content.assessmentMethodKeys %}
+  			<p><b>{{ key }}</b> — {{ content.assessmentMethods.get(key) }}</p>
+  		{% endfor %}
+  	</p>
+  	{% if content.program.studyLiterature is not null %}
+	  	<p>
+	  		<b>{{'report.subjectprogram.studyLiterature' | translate}}:</b><br/>
+	  		{{ content.program.studyLiterature }}
+	  	</p>
+  	{% endif %}
+  </body>
+</html>

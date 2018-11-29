@@ -22,6 +22,7 @@ public class DiplomaSupplementForm extends BaseEntity {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private DiplomaSupplement diplomaSupplement;
+    private Boolean isEnglish;
     
     public Form getForm() {
         return form;
@@ -35,6 +36,13 @@ public class DiplomaSupplementForm extends BaseEntity {
     }
     public void setDiplomaSupplement(DiplomaSupplement diplomaSupplement) {
         this.diplomaSupplement = diplomaSupplement;
+    }
+    
+    public Boolean getIsEnglish() {
+        return isEnglish;
+    }
+    public void setIsEnglish(Boolean isEnglish) {
+        this.isEnglish = isEnglish;
     }
     
     @Override

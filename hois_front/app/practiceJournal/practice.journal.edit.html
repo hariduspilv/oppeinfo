@@ -85,7 +85,7 @@
       <div layout="row" flex>
         <md-input-container>
           <label>{{'practiceJournal.startDate' | translate}}</label>
-          <md-datepicker ng-model="practiceJournal.startDate" required></md-datepicker>
+          <md-datepicker ng-model="practiceJournal.startDate" md-max-date="practiceJournal.endDate" required></md-datepicker>
         </md-input-container>
 
         <md-input-container>

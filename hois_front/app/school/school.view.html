@@ -64,6 +64,11 @@
       <label class="textInput">{{'school.isMinorStudentAbsence' | translate}}</label>
       <hois-value value="school.isMinorStudentAbsence ? 'main.yes' : 'main.no' | translate"></hois-value>
     </md-input-container>
+
+    <md-input-container ng-if="school.type.higher" class="md-block">
+      <label class="textInput">{{'school.isLetterGrade' | translate}}</label>
+      <hois-value value="school.isLetterGrade ? 'main.yes' : 'main.no' | translate"></hois-value>
+    </md-input-container>
     
     <md-input-container class="md-block">
       <label class="textInput">{{'school.adUrl' | translate}}</label>

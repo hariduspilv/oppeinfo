@@ -11,7 +11,7 @@
   }
 
 
-  function createTotalsRow(scope) {
+  function createWeekTotalsRow(scope) {
     var row = [];
     for (var i = 0, cnt = scope.formState.weekNrs.length; i < cnt; i++) {
       row[i] = 0;
@@ -19,12 +19,20 @@
     return row;
   }
 
-  function updateRowTotals(scope, journal, capacityType) {
+  function createStudyPeriodTotalsRow(scope) {
+    var row = [];
+    for (var i = 0, cnt = scope.formState.studyPeriods.length; i < cnt; i++) {
+      row[i] = 0;
+    }
+    return row;
+  }
+
+  function updateJournalRowTotals(scope, journal, capacityType) {
     var sum = rowSum(journal.hours[capacityType]);
     scope.formState.journalTotals[journal.id][capacityType] = sum;
   }
 
-  function updateSpRows(scope, journal, capacityType) {
+  function updateSpJournalRows(scope, journal, capacityType) {
     var hours = journal.hours[capacityType];
     scope.formState.studyPeriods.forEach(function (sp) {
       journal.spHours[capacityType][sp.arrayIndex] = rowSum(hours.slice(sp.weekIndex[0], sp.weekIndex[1]));
@@ -77,12 +85,6 @@
     totals.__ = rowSum(totals._);
   }
 
-  function getUniqueJournalThemes(themes) {
-    return themes.filter(function(obj, index, themes) {
-      return themes.map(function(mapObj) { return mapObj.id; } ).indexOf(obj.id) === index;
-    });
-  }
-
   function updateTotals(scope, totals, capacityType, index) {
     totals._[capacityType] = rowSum(totals[capacityType]);
     var sum = scope.formState.capacityTypes.reduce(function (sum, c) {
@@ -98,6 +100,7 @@
 
   angular.module('hitsaOis').controller('LessonplanSearchController',
     function ($location, $mdDialog, $route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService, message) {
+      $scope.auth = $route.current.locals.auth;
       $scope.canEdit = AuthService.isAuthorized([USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
         USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA]);
 
@@ -106,9 +109,19 @@
         higher: school.higher,
         vocational: school.vocational
       };
+      
       $scope.currentNavItem = $route.current.$$route.data.currentNavItem;
       var baseUrl = '/lessonplans';
       QueryUtils.createQueryForm($scope, baseUrl, {order: 'sg.code'});
+
+      $scope.load = function() {
+        if (!$scope.vocationalSearchForm.$valid) {
+          message.error('main.messages.form-has-errors');
+          return false;
+        } else {
+          $scope.loadData();
+        }
+      };
 
       $scope.newLessonplan = function () {
         var formState = $scope.formState;
@@ -225,7 +238,7 @@
       });
     }
   ).controller('LessonplanTeacherSearchController',
-    function ($route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService) {
+    function ($route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService, message) {
       $scope.auth = $route.current.locals.auth;
 
       $scope.canEdit = AuthService.isAuthorized([USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
@@ -239,6 +252,15 @@
       $scope.currentNavItem = $route.current.$$route.data.currentNavItem;
 
       var baseUrl = '/lessonplans/byteacher';
+
+      $scope.load = function() {
+        if (!$scope.vocationalTeacherSearchForm.$valid) {
+          message.error('main.messages.form-has-errors');
+          return false;
+        } else {
+          $scope.loadData();
+        }
+      };
 
       $scope.formState.studyYears = QueryUtils.endpoint('/autocomplete/studyYears').query();
       $scope.formState.studyYears.$promise.then(function () {
@@ -255,14 +277,26 @@
 
       QueryUtils.createQueryForm($scope, baseUrl, {});
     }
-  ).controller('LessonplanEditController', ['$location', '$mdDialog', '$route', '$scope', '$window', 'message', 'Classifier', 'QueryUtils', 'dialogService', 'stateStorageService',
-
-    function ($location, $mdDialog, $route, $scope, $window ,message, Classifier, QueryUtils, dialogService, stateStorageService) {
+  ).controller('LessonplanEditController', ['$anchorScroll', '$location', '$route', '$scope', '$window', 'message', 'Classifier', 'LessonPlanTableService', 'QueryUtils', 'dialogService', 'stateStorageService',
+    
+  function ($anchorScroll, $location, $route, $scope, $window ,message, Classifier, LessonPlanTableService, QueryUtils, dialogService, stateStorageService) {
       var id = $route.current.params.id;
       var schoolId = $route.current.locals.auth.school.id;
       var stateKey = 'lessonplan';
       var baseUrl = '/lessonplans';
       var journalMapper = Classifier.valuemapper({groupProportion: 'PAEVIK_GRUPI_JAOTUS'});
+      $scope.lessonPlanId = id;
+      $scope.saving = false;
+
+      $scope.formState = {
+        showWeeks: true
+      };
+
+      $scope.goToAnchor = function() {
+        if ($location.hash() && !$scope.saving) {
+          $anchorScroll();
+        }
+      };
 
       $scope.setHeight = function() {
         var windowHeight = $(window).innerHeight();
@@ -270,44 +304,14 @@
         $route.windowHeight = windowHeight;
       };
 
-      $scope.formState = {
-        showWeeks: true
-      };
-      $scope.keys = Object.keys;
-
       $scope.showWeeksChanged = function () {
         stateStorageService.changeState(schoolId, stateKey, {showWeeks: $scope.formState.showWeeks});
+        LessonPlanTableService.generateLessonPlan($scope);
       };
 
       $scope.showTotalsChanged = function () {
         stateStorageService.changeState(schoolId, stateKey, {showTotals: $scope.formState.showTotals});
-      };
-
-      $scope.getCapacityTypes = function (hours) {
-        if ($scope.formState.capacityTypes) {
-          return $scope.formState.capacityTypes.filter(function (ct) {
-            return hours !== undefined && hours[ct.code] !== undefined;
-          });
-        }
-      };
-
-      $scope.getTeacherLoad = function (teacherId) {
-        var teacher = $scope.formState.teachers.find(function (teacher) {
-          return teacher.id === teacherId;
-        });
-
-        if (teacher) {
-          var scheduleLoad = teacher.isStudyPeriodScheduleLoad ? teacher.scheduleLoad * $scope.formState.studyPeriods.length: teacher.scheduleLoad;
-          return {
-            scheduleLoad: scheduleLoad,
-            unplannedLessons: scheduleLoad - teacher.plannedLessons > 0 ? scheduleLoad - teacher.plannedLessons : 0
-          };
-        }
-        return null;
-      };
-
-      $scope.getUniqueJournalThemes = function(themes) {
-        return getUniqueJournalThemes(themes);
+        LessonPlanTableService.generateLessonPlan($scope);
       };
 
       $scope.updateStudyPeriods = function () {
@@ -326,6 +330,7 @@
           selectedStudyPeriods: selectedStudyPeriods
         });
         sumShownWeeks();
+        LessonPlanTableService.generateLessonPlan($scope);
       };
 
       function sumShownWeeks() {
@@ -353,7 +358,22 @@
           return sum;
         }, 0);
         moduleTotals[capacityType][index] = sum;
+
         updateTotals($scope, moduleTotals, capacityType, index);
+      }
+
+      function updateSpModuleTotals(module, capacityType, studyPeriodIndex) {
+        var spModuleTotals = $scope.formState.spModuleTotals[module.id];
+        var sum = module.journals.reduce(function (sum, journal) {
+          var hours = journal.spHours[capacityType];
+          if (hours !== undefined && hours[studyPeriodIndex] !== undefined) {
+            sum += hours[studyPeriodIndex] * (1 / journal.groupProportion.value);
+          }
+          return sum;
+        }, 0);
+        spModuleTotals[capacityType][studyPeriodIndex] = sum;
+
+        updateTotals($scope, spModuleTotals, capacityType, studyPeriodIndex);
       }
 
       function updateGrandTotals(capacityType, index) {
@@ -390,7 +410,7 @@
               spId: studyPeriod.id,
               spIndex: index,
               nr: studyPeriod.weekNrs[i],
-              endOfDay: i === studyPeriod.weekNrs.length - 1,
+              endOfPeriod: i === studyPeriod.weekNrs.length - 1,
               shown: true
             });
           }
@@ -409,9 +429,10 @@
         $scope.formState.rowTotals = {};
         $scope.formState.journalTotals = {};
         $scope.formState.moduleTotals = {};
+        $scope.formState.spModuleTotals = {};
         $scope.formState.grandTotals = {
           _: {
-            _: createTotalsRow($scope)
+            _: createWeekTotalsRow($scope)
           }
         };
         $scope.formState.studyPeriodMonths = result.studyPeriod % 12;
@@ -426,7 +447,6 @@
         } else {
           setSelectedStudyPeriods();
         }
-
         initializeTotals(result);
         QueryUtils.loadingWheel($scope, false);
         //refreshFixedColumns();
@@ -473,9 +493,14 @@
         $scope.formState.teachers = result.teachers;
         result.modules.forEach(function (module) {
           $scope.formState.moduleMap[module.id] = module;
+          $scope.formState.spModuleTotals[module.id] = {
+            _: {
+              _: createStudyPeriodTotalsRow($scope)
+            }
+          };
           $scope.formState.moduleTotals[module.id] = {
             _: {
-              _: createTotalsRow($scope)
+              _: createWeekTotalsRow($scope)
             }
           };
           module.journals.forEach(function (journal) {
@@ -484,22 +509,26 @@
             journal.spTotals = {};
             journal.lessonPlanModule = module.id;
             $scope.formState.journalTotals[journal.id] = {
-              _: createTotalsRow($scope)
+              _: createWeekTotalsRow($scope)
             };
             $scope.formState.capacityTypes.forEach(function (c) {
               var capacityType = c.code;
               journal.spHours[capacityType] = {};
               var hours = journal.hours[capacityType];
               if (hours !== undefined) {
-                updateRowTotals($scope, journal, capacityType);
-                updateSpRows($scope, journal, capacityType);
+                updateJournalRowTotals($scope, journal, capacityType);
+                updateSpJournalRows($scope, journal, capacityType);
                 var moduleTotals = $scope.formState.moduleTotals[module.id];
                 if (moduleTotals[capacityType] === undefined) {
-                  moduleTotals[capacityType] = createTotalsRow($scope);
+                  moduleTotals[capacityType] = createWeekTotalsRow($scope);
+                }
+                var spModuleTotals = $scope.formState.spModuleTotals[module.id];
+                if (spModuleTotals[capacityType] === undefined) {
+                  spModuleTotals[capacityType] = createStudyPeriodTotalsRow($scope);
                 }
                 var grandTotals = $scope.formState.grandTotals;
                 if (grandTotals[capacityType] === undefined) {
-                  grandTotals[capacityType] = createTotalsRow($scope);
+                  grandTotals[capacityType] = createWeekTotalsRow($scope);
                 }
               }
             });
@@ -525,6 +554,9 @@
               for (var i = 0, wnCnt = $scope.formState.weekNrs.length; i < wnCnt; i++) {
                 updateModuleTotals(module, capacityType, i);
               }
+              for (var i = 0, spCnt = $scope.formState.studyPeriods.length; i < spCnt; i++) {
+                updateSpModuleTotals(module, capacityType, i);
+              }
             }
           });
         });
@@ -541,6 +573,8 @@
         $scope.record = result;
         updateCopyOfRecord();
         $scope.updateStudyPeriods();
+        LessonPlanTableService.generateLessonPlan($scope);
+        $scope.goToAnchor();
       }
 
       $scope.updateTotals = function (journal, capacityType, index) {
@@ -553,13 +587,14 @@
           hours[index] = value;
         }
 
-        updateRowTotals($scope, journal, capacityType);
+        updateJournalRowTotals($scope, journal, capacityType);
         updateJournalTotals($scope, journal, index);
         updateModuleTotals($scope.formState.moduleMap[journal.lessonPlanModule], capacityType, index);
         updateGrandTotals(capacityType, index);
         //study period updates - we have to keep 2 different forms up to date at the same time
         $scope.updateSpRowByWeek(journal, capacityType, index);
         updateSpJournalTotals($scope, journal);
+        updateSpModuleTotals($scope.formState.moduleMap[journal.lessonPlanModule], capacityType, $scope.formState.weekNrs[index].spIndex);
         $scope.updateSpGrandTotals(capacityType, index);
       };
 
@@ -617,16 +652,8 @@
         journal.spHours[capacityType][sp.arrayIndex] = rowSum(hours.slice(sp.weekIndex[0], sp.weekIndex[1]));
       };
       
-      $scope.newJournal = function (module) {
-        $location.url(baseUrl + '/journals/new?lessonPlan=' + id +
-          '&occupationModule=' + module.occupationModuleId + (module.id ? ('&lessonPlanModule=' + module.id) : ''));
-      };
-
-      $scope.editJournal = function (journal) {
-        $location.url(baseUrl + '/journals/' + journal.id + '/edit?lessonPlanModule=' + journal.lessonPlanModule);
-      };
-
       $scope.update = function () {
+        $scope.saving = true;
         $scope.record.$update().then(message.updateSuccess).then(function() {
           initializeTotals($scope.record);
           updateCopyOfRecord();
@@ -637,10 +664,6 @@
       function updateCopyOfRecord() {
         copyOfRecord = angular.toJson($scope.record);
       }
-
-      $scope.getLegendByWeek = function (weekNr) {
-        return $scope.formState.legends[weekNr];
-      };
 
       $scope.delete = function () {
         dialogService.confirmDialog({prompt: 'lessonplan.prompt.deleteLessonplan'}, function() {
@@ -672,10 +695,11 @@
       function redirectBack() {
         $location.path("/lessonplans/vocational");
       }
-    }
-  ]).controller('LessonplanTeacherViewController', ['$location', '$mdDialog', '$route', '$scope', 'message', 'Classifier', 'QueryUtils',
 
-    function ($location, $mdDialog, $route, $scope, message, Classifier, QueryUtils) {
+    }
+  ]).controller('LessonplanTeacherViewController', ['$route', '$scope', 'LessonPlanTableService', 'QueryUtils',
+
+    function ($route, $scope, LessonPlanTableService, QueryUtils) {
       $scope.auth = $route.current.locals.auth;
       var id = $route.current.params.id;
       var studyYearId = $route.current.params.studyYear;
@@ -697,15 +721,11 @@
       };
 
       $scope.getCapacityByCode = function (capacityCode) {
-        if ($scope.formState.capacityTypes) {
-          return $scope.formState.capacityTypes.find(function (it) {
-            return it.code === capacityCode;
-          });
-        }
+        LessonPlanTableService.getCapacityByCode($scope.formState.capacityTypes, capacityCode);
       };
 
       $scope.getUniqueJournalThemes = function(themes) {
-        return getUniqueJournalThemes(themes);
+        return LessonPlanTableService.getUniqueJournalThemes(themes);
       };
 
       $scope.sumSubjectHours = function(hours) {
@@ -742,7 +762,7 @@
           for (var i = 0; i < studyPeriod.weekNrs.length; i++) {
             $scope.formState.weekNrs.push({
               nr: studyPeriod.weekNrs[i],
-              endOfDay: i === studyPeriod.weekNrs.length - 1
+              endOfPeriod: i === studyPeriod.weekNrs.length - 1
             });
           }
         });
@@ -752,7 +772,7 @@
         $scope.formState.journalTotals = {};
         $scope.formState.grandTotals = {
           _: {
-            _: createTotalsRow($scope)
+            _: createWeekTotalsRow($scope)
           }
         };
         
@@ -761,18 +781,18 @@
           journal.spHours = {};
           journal.spTotals = {};
           $scope.formState.journalTotals[journal.id] = {
-            _: createTotalsRow($scope)
+            _: createWeekTotalsRow($scope)
           };
           $scope.formState.capacityTypes.forEach(function (c) {
             var capacityType = c.code;
             journal.spHours[capacityType] = {};
             var hours = journal.hours[capacityType];
             if (hours !== undefined) {
-              updateRowTotals($scope, journal, capacityType);
-              updateSpRows($scope, journal, capacityType);
+              updateJournalRowTotals($scope, journal, capacityType);
+              updateSpJournalRows($scope, journal, capacityType);
               var grandTotals = $scope.formState.grandTotals;
               if (grandTotals[capacityType] === undefined) {
-                grandTotals[capacityType] = createTotalsRow($scope);
+                grandTotals[capacityType] = createWeekTotalsRow($scope);
               }
             }
           });
@@ -812,7 +832,7 @@
               studyPeriod: sp.id,
               code: capacity.code,
               value: capacity.value,
-              endOfDay: i === $scope.formState.capacityTypes.length - 1
+              endOfPeriod: i === $scope.formState.capacityTypes.length - 1
             });
           }
         });

@@ -36,7 +36,13 @@
         <td class="label" width="25%" align="center">{{ "report.curriculumVersion.modules.moduleNr" | translate }}</td>
         <td class="label" width="25%" align="center">{{ "report.curriculumVersion.modules.moduleName" | translate }}</td>
         <td class="label" width="25%" align="center">{{ "report.curriculumVersion.modules.moduleCredits" | translate }}</td>
-        <td class="label" width="25%" align="center">{{ "report.curriculumVersion.modules.teachers" | translate }}</td>
+        <td class="label" width="25%" align="center">
+          {% if content.isHigherSchool %} 
+            {{ "report.curriculumVersion.modules.teachersHigher" | translate }}
+          {% else %}
+            {{ "report.curriculumVersion.modules.teachersVocational" | translate }}
+          {% endif %}
+        </td>
       </tr>
       <tr>
         <td class="label" align="center">{{ loop.index + 1 }}.</td>

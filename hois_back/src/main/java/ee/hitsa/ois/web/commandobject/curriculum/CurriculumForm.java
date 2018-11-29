@@ -23,6 +23,7 @@ import ee.hitsa.ois.validation.CurriculumValidator.Joint;
 import ee.hitsa.ois.validation.CurriculumValidator.Vocational;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileUpdateDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumJointPartnerDto;
@@ -106,6 +107,7 @@ public class CurriculumForm extends VersionedCommand {
     private String objectivesEn;
     @Size(max = 20000)
     private String addInfo;
+    private AutocompleteResult teacher;
     private LocalDate merRegDate;
     private LocalDate accreditationDate;
     @Size(max = 1000)
@@ -495,6 +497,14 @@ public class CurriculumForm extends VersionedCommand {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public AutocompleteResult getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(AutocompleteResult teacher) {
+        this.teacher = teacher;
     }
 
     public LocalDate getMerRegDate() {

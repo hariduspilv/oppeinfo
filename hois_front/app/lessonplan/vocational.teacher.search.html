@@ -1,6 +1,7 @@
 <md-nav-bar md-selected-nav-item="currentNavItem" ng-if="formState.vocational && auth.isAdmin()">
   <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational" name="lessonplan.vocational">{{'lessonplan.search.vocational' | translate}}</md-nav-item>
-  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational/byteacher" name="lessonplan.vocational-byteacher">{{'lessonplan.search.vocational-byteacher' | translate}}</md-nav-item>
+  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational/byteacher" name="lessonplan.vocational-byteacher">
+    {{auth.higher ? ('lessonplan.search.vocationalByTeacherHigher' | translate) : ('lessonplan.search.vocationalByTeacherVocational' | translate)}}</md-nav-item>
 <!--  <md-nav-item ng-if="formState.higher" md-nav-href="#/lessonplans/higher" name="lessonplan.higher">{{'lessonplan.higher' | translate}}</md-nav-item>
   <md-nav-item ng-if="formState.higher" md-nav-href="#/lessonplans/higher/byteacher" name="lessonplan.higher-byteacher">{{'lessonplan.higher-byteacher' | translate}}</md-nav-item>  -->
 </md-nav-bar>
@@ -9,7 +10,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form ng-submit="loadData()" novalidate class="nomargin" >
+      <form ng-submit="load()" name="vocationalTeacherSearchForm" novalidate class="nomargin" >
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'lessonplan.studyYear' | translate}}</label>
@@ -17,7 +18,7 @@
           </md-input-container>
 
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="auth.isAdmin()">
-            <hois-autocomplete label="lessonplan.teacher" ng-model="criteria.teacher" method="teachers"></hois-autocomplete>
+            <hois-autocomplete label="{{auth.higher ? 'lessonplan.teacherHigher' : 'lessonplan.teacherVocational'}}" ng-model="criteria.teacher" method="teachers"></hois-autocomplete>
           </div>
         </div>
 
@@ -36,7 +37,9 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="p.lastname,p.firstname">{{'lessonplan.teacher' | translate}}</th>
+            <th md-column md-order-by="p.lastname,p.firstname">
+              {{auth.higher ? ('lessonplan.teacherHigher' | translate) : ('lessonplan.teacherVocational' | translate)}}
+            </th>
             <th md-column>{{'lessonplan.plannedHoursTotal' | translate}}</th>
           </tr>
         </thead>

@@ -92,6 +92,7 @@ import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeResult;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto.LessonPlanByTeacherSubjectDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto.LessonPlanByTeacherSubjectStudentGroupDto;
@@ -763,12 +764,22 @@ public class LessonPlanService {
                 LessonPlanJournalDto.of(journal, lessonPlan, occupationModule) :
                 LessonPlanJournalDto.of(journal, lessonPlanModule);
         dto.setGroupProportion(GroupProportion.PAEVIK_GRUPI_JAOTUS_1.name());  // by default 1/1
+        
+        Map<Long, CurriculumVersionOccupationModuleThemeResult> dtoThemes = StreamUtil.toMap(t -> t.getId(), t -> t,
+                dto.getThemes());
+        autocompleteService.setThemesInOtherJournals(dtoThemes, dto.getStudentGroupId(), dto.getId());
         return dto;
     }
 
     public LessonPlanJournalDto getJournal(Journal journal, Long lessonPlanModuleId) {
         LessonPlanModule lessonPlanModule = em.getReference(LessonPlanModule.class, lessonPlanModuleId);
-        return LessonPlanJournalDto.of(journal, lessonPlanModule);
+        LessonPlanJournalDto dto = LessonPlanJournalDto.of(journal, lessonPlanModule);
+        
+        Map<Long, CurriculumVersionOccupationModuleThemeResult> themes = StreamUtil.toMap(t -> t.getId(), t -> t,
+                dto.getThemes());
+        autocompleteService.setThemesInOtherJournals(themes, EntityUtil.getId(lessonPlanModule.getLessonPlan().getStudentGroup()),
+                EntityUtil.getId(journal));
+        return dto;
     }
 
     public LessonPlanCreatedJournalDto createJournal(HoisUserDetails user, LessonPlanJournalForm form) {

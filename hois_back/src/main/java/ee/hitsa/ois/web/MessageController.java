@@ -16,9 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Message;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.service.MessageService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.MessageForm;
@@ -68,6 +71,7 @@ public class MessageController {
 
     @GetMapping("/{id:\\d+}")
     public MessageDto get(HoisUserDetails user, @WithEntity Message message) {
+        assertCanView(user, message);
         MessageDto dto = MessageDto.of(message);
         dto.setIsRead(message.isReadBy(user.getPersonId()));
         return dto;
@@ -81,6 +85,7 @@ public class MessageController {
 
     @PutMapping("/{id:\\d+}")
     public void setRead(HoisUserDetails user, @WithEntity Message message) {
+        assertIsReceiver(user, message);
         messageService.setRead(user.getPersonId(), message);
     }
 
@@ -124,5 +129,24 @@ public class MessageController {
     public List<MessageReceiverDto> getStudentsParents(HoisUserDetails user, @WithEntity("studentId") Student student) {
         UserUtil.assertSameSchool(user, student.getSchool());
         return messageService.getStudentRepresentatives(student);
+    }
+    
+    private static void assertIsReceiver(HoisUserDetails user, Message message) {
+        UserUtil.throwAccessDeniedIf(!message.getReceivers().stream()
+                .anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId())), 
+                "User is not message receiver");
+    }
+    
+    private static void assertCanView(HoisUserDetails user, Message message) {
+        School school = message.getSendersSchool();
+        if (!user.isMainAdmin() && school != null) {
+            UserUtil.assertSameSchool(user, school);
+        }
+        Long senderId = EntityUtil.getId(message.getSender());
+        UserUtil.throwAccessDeniedIf(!(user.isSchoolAdmin() && PersonUtil.AUTOMATIC_SENDER_ID.equals(senderId))
+                && !senderId.equals(user.getPersonId()) &&
+                !message.getReceivers().stream()
+                .anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId())), 
+                "User is not message sender/receiver or school admin");
     }
 }

@@ -1,15 +1,17 @@
 <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
-    <md-nav-item md-nav-href="#/teachers/{{::teacher.id}}/edit?_noback" name="teacher.data">
+    <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/teachers/{{::teacher.id}}/edit?_noback" name="teacher.data">
         {{'teacher.data' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id && teacher.isVocational" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation?_noback" name="teacher.continuingEducation">
+    <md-nav-item ng-if="auth.isTeacher()" md-nav-href="#/teachers/{{::teacher.id}}/editmydata?_noback" name="teacher.data">
+        {{'teacher.data' | translate}}</md-nav-item>
+    <md-nav-item ng-if="(auth.isAdmin() && teacher.id && teacher.isVocational) || (auth.isTeacher() && !teacher.isHigher)" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation?_noback" name="teacher.continuingEducation">
         {{'teacher.continuingEducation.label' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/qualification?_noback" name="teacher.qualification">
+    <md-nav-item ng-if="(auth.isAdmin() && teacher.id) || (teacher.teacherQualifications.length > 0 && auth.isTeacher())" md-nav-href="#/teachers/{{::teacher.id}}/qualification?_noback" name="teacher.qualification">
         {{'teacher.qualification.qualification' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id && teacher.isHigher && isHigher" md-nav-href="#/teachers/{{::teacher.id}}/mobility?_noback" name="teacher.mobility">
+    <md-nav-item ng-if="(auth.isAdmin() && teacher.id && teacher.isHigher && isHigher) || (auth.isTeacher() && teacher.teacherMobility.length > 0)" md-nav-href="#/teachers/{{::teacher.id}}/mobility?_noback" name="teacher.mobility">
         {{'teacher.mobility.mobility' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence?_noback" name="teacher.rtipAbsence">
+    <md-nav-item ng-if="(auth.isAdmin() && teacher.id) || auth.isTeacher()" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence?_noback" name="teacher.rtipAbsence">
         {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
-</md-nav-bar>
+  </md-nav-bar>
 
 <md-content class="md-padding">
     <form name="qualificationsForm" class="nomargin" novalidate>
@@ -124,6 +126,7 @@
         <md-button ng-click="updateQualifications()" class="md-raised md-primary" ng-if="teacherQualifications.qualifications.length > 0">
             {{'main.button.save' | translate}}
         </md-button>
-        <md-button ng-click="back('#/teachers', qualificationsForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="auth.isTeacher()" ng-click="back('#/teachers/myData')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="auth.isAdmin()" ng-click="back('#/teachers', qualificationsForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </form>
 </md-content>

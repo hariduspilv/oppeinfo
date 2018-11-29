@@ -306,13 +306,14 @@
           <div layout="row" flex>
             <md-input-container>
               <label>{{'stateCurriculum.enter.validFrom' | translate}}{{getStar()}}</label>
-              <md-datepicker ng-model="stateCurriculum.validFrom" ng-required="strictValidation()" md-open-on-focus ng-change="checkValidThru()"
-               >
+              <md-datepicker ng-model="stateCurriculum.validFrom" ng-required="strictValidation()" md-open-on-focus 
+                md-max-date="stateCurriculum.validThru">
               </md-datepicker>
             </md-input-container>
             <md-input-container flex-offset="5">
               <label>{{'stateCurriculum.enter.validThru' | translate}}</label>
-              <md-datepicker ng-model="stateCurriculum.validThru" md-min-date="stateCurriculum.validFrom" md-open-on-focus>
+              <md-datepicker ng-model="stateCurriculum.validThru" md-min-date="stateCurriculum.validFrom" md-open-on-focus
+                md-min-date="stateCurriculum.validFrom">
               </md-datepicker>
             </md-input-container>
           </div>

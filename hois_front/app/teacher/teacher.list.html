@@ -2,15 +2,15 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form ng-submit="loadData()" class="nomargin" layout="column">
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" class="nomargin" layout="column">
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="45" flex-sm="100" flex-xs="100">
-              <label class="textInput">{{'teacher.person.name' | translate}}</label>
-              <input ng-model="criteria.name" type="text" autofocus>
+              <label class="textInput">{{auth.higher ? ('teacher.person.nameHigher' | translate) : ('teacher.person.nameVocational' | translate)}}</label>
+              <input ng-model="criteria.name" type="text" md-maxlength="255" autofocus>
             </md-input-container>
             <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-              <label class="textInput">{{'teacher.person.idcode' | translate}}</label>
-              <input ng-model="criteria.idcode" type="text">
+              <label class="textInput">{{auth.higher ? ('teacher.person.idcodeHigher' | translate) : ('teacher.person.idcodeVocational' | translate)}}</label>
+              <input ng-model="criteria.idcode" type="text" minlength="11" md-maxlength="11">
             </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column" ng-if="!showSchool">
@@ -54,8 +54,8 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
           <th md-column md-order-by="s.{{currentLanguageNameField()}}" ng-if="showSchool">{{'school.label' | translate}}</th>
-          <th md-column md-order-by="p.lastname,p.firstname">{{'teacher.person.name' | translate}}</th>
-          <th md-column md-order-by="p.idcode">{{'teacher.person.idcode' | translate}}</th>
+          <th md-column md-order-by="p.lastname,p.firstname">{{auth.higher ? ('teacher.person.nameHigher' | translate) : ('teacher.person.nameVocational' | translate)}}</th>
+          <th md-column md-order-by="p.idcode">{{auth.higher ? ('teacher.person.idcodeHigher' | translate) : ('teacher.person.idcodeVocational' | translate)}}</th>
           <th md-column md-order-by="t.email">{{'teacher.email' | translate}}</th>
           <th md-column md-order-by="t.phone">{{'teacher.phone' | translate}}</th>
           <th md-column md-order-by="tot.{{currentLanguage() === 'en' ? 'occupationEn' : 'occupationEt'}}"

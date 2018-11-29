@@ -8,6 +8,7 @@ public class ScholarshipDecisionDto extends ScholarshipDecisionForm {
 
     private Long id;
     private Long committeeId;
+    private String committeeName;
     private List<ScholarshipApplicationSearchDto> applications;
     
     public Long getId() {
@@ -21,6 +22,12 @@ public class ScholarshipDecisionDto extends ScholarshipDecisionForm {
     }
     public void setCommitteeId(Long committeeId) {
         this.committeeId = committeeId;
+    }
+    public String getCommitteeName() {
+        return committeeName;
+    }
+    public void setCommitteeName(String committeeName) {
+        this.committeeName = committeeName;
     }
     public List<ScholarshipApplicationSearchDto> getApplications() {
         return applications;

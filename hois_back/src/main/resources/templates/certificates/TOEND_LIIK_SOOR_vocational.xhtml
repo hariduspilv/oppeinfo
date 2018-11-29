@@ -22,7 +22,13 @@ ja tema teadmisi hinnati järgmiselt:
 			<th>{{ "report.certificate.credits.vocational" | translate }}</th>
 			<th colspan="2">{{ "report.certificate.grade" | translate }}</th>
 			<th>{{ "report.certificate.date" | translate }}</th>
-			<th>{{ "report.certificate.teacher" | translate }}</th>
+			<th>
+				{% if content.isHigherSchool %}
+					{{ "report.certificate.teacherHigher" | translate }}
+				{% else %}
+					{{ "report.certificate.teacherVocational" | translate }}
+				{% endif %}
+			</th>
 		</tr>
 	</thead>
 	<tbody>

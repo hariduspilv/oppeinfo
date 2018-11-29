@@ -69,6 +69,6 @@
     </form>
 
     <a ng-href="{{viewPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="viewPdfUrl">{{'document.button.showPdf' | translate}}</a>
-    <md-button ng-click="print()" class="md-raised md-primary" ng-if="viewPdfUrl">{{'main.button.print' | translate}}</md-button>
+    <md-button ng-click="print()" class="md-raised md-primary" ng-if="canPrintConfirm()">{{'main.button.print' | translate}}</md-button>
   </div>
 </div>

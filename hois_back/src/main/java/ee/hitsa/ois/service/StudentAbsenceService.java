@@ -66,7 +66,8 @@ public class StudentAbsenceService {
             + "join journal_student js on js.id = jes.journal_student_id "
             + "join journal_entry je on je.id = jes.journal_entry_id "
             + "join student_absence sa on sa.student_id = js.student_id "
-            + "join student_absence_lesson sal on sal.absence = je.entry_date and sal.lesson_nr = jesla.lesson_nr + coalesce(je.start_lesson_nr - 1, 0)";
+            + "join student_absence_lesson sal on sal.student_absence_id = sa.id "
+            + "and sal.absence = je.entry_date and sal.lesson_nr = jesla.lesson_nr + coalesce(je.start_lesson_nr - 1, 0)";
     
     private static final String FILTER_BY_STUDY_PERIOD = " exists("
             + "select sp.id "
@@ -220,6 +221,7 @@ public class StudentAbsenceService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_absence sa join student s on s.id = sa.student_id");
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.filter("sa.is_accepted = false");
+        qb.filter("sa.is_rejected = false");
         qb.requiredCriteria(FILTER_BY_STUDY_YEAR, "studyYear", EntityUtil.getId(currentYear));
         if(user.isTeacher()) {
             qb.requiredCriteria("s.student_group_id in (select sg.id from student_group sg where sg.teacher_id = :teacherId)", "teacherId", user.getTeacherId());

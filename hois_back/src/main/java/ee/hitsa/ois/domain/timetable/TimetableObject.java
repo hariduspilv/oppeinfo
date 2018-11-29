@@ -29,7 +29,7 @@ public class TimetableObject extends BaseEntityWithId {
     @JoinColumn(name = "timetable_object_id", nullable = true, updatable = true)
     private List<TimetableEvent> timetableEvents = new ArrayList<>();
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "timetable_object_id", nullable = true, updatable = true)
+    @JoinColumn(name = "timetable_object_id", nullable = false, updatable = false, insertable = false)
     private List<TimetableObjectStudentGroup> timetableObjectStudentGroups = new ArrayList<>();
 
     public Timetable getTimetable() {

@@ -5,7 +5,7 @@
         <div layout="column">
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="30" flex-sm="100" flex-xs="100">
-              <label>{{'teacher.person.idcode' | translate}}</label>
+              <label>{{auth.higher ? ('teacher.person.idcodeHigher' | translate) : ('teacher.person.idcodeVocational' | translate)}}</label>
               <hois-value value="teacher.person.idcode"></hois-value>
             </md-input-container>
             <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -19,7 +19,7 @@
           </div>
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="30" flex-sm="100" flex-xs="100">
-              <label>{{'teacher.person.name' | translate}}</label>
+              <label>{{auth.higher ? ('teacher.person.nameHigher' | translate) : ('teacher.person.nameVocational' | translate)}}</label>
               <hois-value value="teacher.person.firstname + ' ' + teacher.person.lastname"></hois-value>
             </md-input-container>
             <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -194,7 +194,7 @@
           </div>
         </hois-collapsable>
       </div>
-      <md-button ng-if="teacher.canEdit && auth.isTeacher()" ng-href="#/teachers/{{teacher.id}}/editmydata?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+      <md-button ng-if="teacher.canEdit && auth.isTeacher()" ng-href="#/teachers/{{teacher.id}}/editmydata" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
     </md-content>
   </md-tab>
   <md-tab label="{{'teacher.continuingEducation.continuingEducation' | translate}}" ng-if="teacher.teacherContinuingEducations.length > 0 && teacher.isVocational">

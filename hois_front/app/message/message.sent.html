@@ -7,11 +7,11 @@
 </div>
 
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-    <form ng-submit="loadData()" layout="column" novalidate>
+    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" layout="column" novalidate>
         <div layout="row">
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
                 <label class="textInput">{{'message.subject' | translate}}</label>
-                <input ng-model="criteria.subject" type="text">
+                <input ng-model="criteria.subject" type="text" md-maxlength="255">
             </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
@@ -22,11 +22,11 @@
             <div flex="33">
                 <md-input-container flex>
                     <label>{{'main.from' | translate}}</label>
-                    <md-datepicker ng-model="criteria.sentFrom"></md-datepicker>
+                    <md-datepicker ng-model="criteria.sentFrom" md-max-date="criteria.sentThru"></md-datepicker>
                 </md-input-container>
                 <md-input-container flex>
                     <label>{{'main.thru' | translate}}</label>
-                    <md-datepicker ng-model="criteria.sentThru"></md-datepicker>
+                    <md-datepicker ng-model="criteria.sentThru" md-min-date="criteria.sentFrom"></md-datepicker>
                 </md-input-container>
             </div>
         </div>

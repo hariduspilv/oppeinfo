@@ -116,7 +116,7 @@
       </div>
       <div>&nbsp;</div>
 
-      <div ng-if="application.status !== 'VOTA_STAATUS_K' || application.committee || application.decision">
+      <div ng-if="(application.status !== 'VOTA_STAATUS_K' && auth.isAdmin()) || application.committee || application.decision">
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.committee ' | translate}}</legend>
           <div ng-if="application.status === 'VOTA_STAATUS_E'" flex="45" flex-sm="100" flex-xs="100">

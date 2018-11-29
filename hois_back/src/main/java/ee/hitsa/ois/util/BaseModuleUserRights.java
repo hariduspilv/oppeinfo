@@ -93,6 +93,16 @@ public class BaseModuleUserRights {
         }
     }
     
+    public static boolean canGetReplaceForm(HoisUserDetails user) {
+        return UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA);
+    }
+    
+    public static void assertCanGetReplaceForm(HoisUserDetails user) {
+        if (!canGetReplaceForm(user)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
     public static boolean canDeleteTheme(HoisUserDetails user, School school) {
         return UserUtil.isSchoolAdmin(user, school) && UserUtil.canEditBaseModule(user);
     }

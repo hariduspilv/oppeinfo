@@ -26,6 +26,7 @@ public class TimetableEvent extends BaseEntityWithId {
     private Long lessons;
     private Boolean considerBreak;
     private String name;
+    private Boolean isImported;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier repeat;
     private Short lessonNr;
@@ -147,5 +148,13 @@ public class TimetableEvent extends BaseEntityWithId {
     public void setSchool(School school) {
         this.school = school;
     }
+
+	public Boolean getIsImported() {
+		return isImported;
+	}
+
+	public void setIsImported(Boolean isImported) {
+		this.isImported = isImported;
+	}
 
 }

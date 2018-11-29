@@ -32,7 +32,7 @@
         </md-input-container>
 
         <md-input-container flex>
-          <label>{{'module.implementationPlan.teachers' | translate}}</label>
+          <label>{{auth.higher ? ('module.implementationPlan.teachersHigher' | translate) : ('module.implementationPlan.teachersVocational' | translate)}}</label>
           <input ng-model="implementationPlan.teachers" type="text" readonly>
         </md-input-container>
 
@@ -79,14 +79,14 @@
       <!--MODULES WITHOUT OCCUPATIONS-->
       <div class="occupation-header align-center">{{'module.modulesWithoutPartOccupationOccuaptionSpecialization' | translate}}
       </div>
-      <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutEmptyModules | orderBy: 'nameEt'" class="lowerBorder">
+      <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutEmptyModules" class="lowerBorder">
         <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
           <div flex="5" flex-xs="0">&nbsp;</div>
-          <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}}</div>
+          <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(modules | filter: filterEmptyModulesByType(type.code))}} EKAP)</div>
           <div layout="column" flex="75">
             <div flex="100" ng-repeat="module in modules | filter: filterEmptyModulesByType(type.code) | orderBy: 'nameEt'" layout="row"
               class="align-center">
-              <a flex="50" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+              <a flex="50" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{occupationModuleHasBaseModule(module) ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
               <span flex="15"  style="word-wrap: break-word">{{module.credits}}&nbsp; EKAP</span>
               <div flex="30">
                 <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="isOccupationModuleDataSaved(module) ">
@@ -108,15 +108,15 @@
           <span ng-show="isOccupation">{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
           <span ng-show="!isOccupation">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
         </div>
-        <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(occupation.occupation.code, modules) | orderBy: 'nameEt'"
+        <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(occupation.occupation.code, modules)"
           class="lowerBorder">
           <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
             <div flex="5" flex-xs="0">&nbsp;</div>
-            <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}}</div>
+            <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(modules | filter: filterModulesByType(type.code, occupation.occupation.code))}} EKAP)</div>
             <div layout="column" flex="75">
               <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, occupation.occupation.code) | orderBy: 'nameEt'"
                 layout="row" class="align-center">
-                <a flex="40" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+                <a flex="40" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{occupationModuleHasBaseModule(module) ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                 <span flex="15" style="word-wrap: break-word">{{module.credits}}&nbsp; EKAP</span>
                 <div flex="30">
                   <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="isOccupationModuleDataSaved(module)">
@@ -135,15 +135,15 @@
           <div class="occupation-header2 align-center">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp;
             <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE"></hois-classifier-value>
           </div>
-          <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(partOccupation, modules) | orderBy: 'nameEt'"
+          <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(partOccupation, modules)"
             class="lowerBorder">
             <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
               <div flex="5" flex-xs="0">&nbsp;</div>
-              <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}}</div>
+              <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(modules | filter: filterModulesByType(type.code, partOccupation))}} EKAP)</div>
               <div layout="column" flex="75">
                 <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, partOccupation) | orderBy: 'nameEt'"
                   layout="row" class="align-center">
-                  <a flex="50" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+                  <a flex="50" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{occupationModuleHasBaseModule(module) ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                   <span flex="15"  style="word-wrap: break-word">{{module.credits}}&nbsp; EKAP</span>
                   <div flex="30">
                     <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="isOccupationModuleDataSaved(module) ">
@@ -163,15 +163,15 @@
           <div class="occupation-header2 align-center">{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: &nbsp;
             <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
           </div>
-          <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality, modules) | orderBy: 'nameEt'"
+          <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality, modules)"
             class="lowerBorder">
             <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
               <div flex="5" flex-xs="0">&nbsp;</div>
-              <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}}</div>
+              <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(modules | filter: filterModulesByType(type.code, speciality))}} EKAP)</div>
               <div layout="column" flex="75">
                 <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, speciality) | orderBy: 'nameEt'" layout="row"
                   class="align-center">
-                  <a flex="50" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+                  <a flex="50" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{occupationModuleHasBaseModule(module) ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                   <span flex="15">{{module.credits}}&nbsp; EKAP</span>
                   <div flex="30">
                     <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="isOccupationModuleDataSaved(module) ">
@@ -239,13 +239,13 @@
   </form>
 
   <div layout="row" layout-xs="column">
-    <div ng-show="implementationPlan.status === VERSION_STATUS.S">
+    <div ng-show="implementationPlan.status === VERSION_STATUS.S" layout-xs="column">
       <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="implementationPlan.canChange">{{'main.button.change' | translate}}</md-button>
       <md-button ng-click="confirm()" class="md-raised" ng-if="implementationPlan.canConfirm">{{'curriculum.statuschange.implementationPlan.button.verify' | translate}}</md-button>
       <md-button ng-click="setStatusClosed()" class="md-raised" ng-if="implementationPlan.canClose">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
     </div>
-    <div ng-show="implementationPlan.status === VERSION_STATUS.K">
+    <div ng-show="implementationPlan.status === VERSION_STATUS.K" layout-xs="column">
       <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="implementationPlan.canChange">{{'main.button.change' | translate}}</md-button>
       <md-button ng-click="setStatusClosed()" class="md-raised" ng-if="implementationPlan.canClose">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>

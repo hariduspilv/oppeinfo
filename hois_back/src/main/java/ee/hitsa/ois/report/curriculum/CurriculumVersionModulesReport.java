@@ -17,6 +17,7 @@ public class CurriculumVersionModulesReport {
     public static final String VOCATIONAL_TEMPLATE_NAME = "curriculum.version.modules.vocational.xhtml";
     
     private final String school;
+    private Boolean isHigherSchool;
     private final String curriculumName;
     private final String targetGroup;
     private final String studyForm;
@@ -42,6 +43,14 @@ public class CurriculumVersionModulesReport {
 
     public String getSchool() {
         return school;
+    }
+
+    public Boolean getIsHigherSchool() {
+        return isHigherSchool;
+    }
+
+    public void setIsHigherSchool(Boolean isHigherSchool) {
+        this.isHigherSchool = isHigherSchool;
     }
 
     public String getCurriculumName() {

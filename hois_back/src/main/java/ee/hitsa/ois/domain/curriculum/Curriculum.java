@@ -20,6 +20,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.validation.CurriculumValidator.Confirmed;
 import ee.hitsa.ois.validation.CurriculumValidator.ConfirmedHigher;
@@ -142,6 +143,9 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier draft;
+    
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Teacher teacher;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
@@ -674,6 +678,14 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
 
     public void setJointMentor(Classifier jointMentor) {
         this.jointMentor = jointMentor;
+    }
+    
+    public Teacher getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(Teacher teacher) {
+        this.teacher = teacher;
     }
 
     public StateCurriculum getStateCurriculum() {

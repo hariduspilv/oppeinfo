@@ -38,6 +38,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapac
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.CurriculumConsecution;
 import ee.hitsa.ois.enums.CurriculumDraft;
 import ee.hitsa.ois.enums.CurriculumEhisStatus;
@@ -138,7 +139,7 @@ public class CurriculumService {
         Integer oldStudyPeriod = curriculum.getStudyPeriod();
         EntityUtil.bindToEntity(curriculumForm, curriculum, classifierRepository, "draft", "higher",
               "versions", "studyLanguages", "studyForms", "addresses", "schoolDepartments", "files",
-              "jointPartners", "specialities", "modules", "occupations", "grades");
+              "jointPartners", "specialities", "modules", "occupations", "grades", "teacher");
 
         if(curriculum.getId() != null) {
             updateCurriculumFiles(curriculum, StreamUtil.toMappedSet(CurriculumFileDto::of, curriculumForm.getFiles()));
@@ -147,6 +148,9 @@ public class CurriculumService {
         updateLanguages(curriculum, curriculumForm.getStudyLanguages());
         updateAddresses(curriculum, curriculumForm.getAddresses());
         updateJointPartners(curriculum, curriculumForm.getJointPartners());
+        if (curriculumForm.getTeacher() != null) {
+            curriculum.setTeacher(em.getReference(Teacher.class, curriculumForm.getTeacher().getId()));
+        }
         if(CurriculumUtil.isVocational(curriculum)) {
             updateStudyForms(curriculum, curriculumForm.getStudyForms());
             if(Boolean.TRUE.equals(curriculum.getJoint())) {

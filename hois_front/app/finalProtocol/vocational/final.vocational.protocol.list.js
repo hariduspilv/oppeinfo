@@ -7,6 +7,15 @@ function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, dialogService, 
   $scope.criteria.status = 'PROTOKOLL_STAATUS_S';
   var endpoint = '/finalVocationalProtocols';
 
+  $scope.load = function() {
+    if (!$scope.searchForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      return false;
+    } else {
+      $scope.loadData();
+    }
+  }
+
   function canCreateProtocol() {
     return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) && $scope.auth.authorizedRoles.indexOf("ROLE_OIGUS_M_TEEMAOIGUS_LOPPROTOKOLL") !== -1;
   }
@@ -33,9 +42,5 @@ function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, dialogService, 
       $scope.criteria.module = $scope.criteria.moduleObject ? $scope.criteria.moduleObject.id : null;
     }
   );
-
-  $scope.clearSearch = function () {
-    $scope.criteria = {};
-  };
 
 });

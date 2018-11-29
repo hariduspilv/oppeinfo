@@ -72,9 +72,9 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
     }
 
     public HoisUserDetails getHoisUserDetails(User user) {
-        List<String> userRoles = em.createQuery("select ('ROLE_' || u.permission.code || '_' || u.object.code) from UserRights u where u.user.id = ?1", String.class)
-                .setParameter(1, user.getId())
-                .getResultList();
+        List<String> userRoles = em.createQuery(
+                "select ('ROLE_' || u.permission.code || '_' || u.object.code) from UserRights u where u.user.id = ?1",
+                String.class).setParameter(1, user.getId()).getResultList();
         return new HoisUserDetails(user, userRoles);
     }
 
@@ -88,7 +88,8 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
         if (school != null) {
             SchoolService.SchoolType type = schoolService.schoolType(school.getId());
             authenticatedSchool = new AuthenticatedSchool(school.getId(), type.isHigher(), type.isVocational(),
-                    type.isDoctoral(), EntityUtil.getCode(school.getEhisSchool()));
+                    type.isDoctoral(), school.getIsLetterGrade() != null ? school.getIsLetterGrade().booleanValue() : false,
+                    EntityUtil.getCode(school.getEhisSchool()));
             OisFile logo = school.getLogo();
             if (logo != null) {
                 authenticatedSchool.setLogo(logo.getFdata());
@@ -114,12 +115,19 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
                 authenticatedUser.setDoctoral(Boolean.valueOf(type.isDoctoral()));
             }
         }
+        Long schoolId = school != null ? school.getId() : null;
         Long teacherId = authenticatedUser.getTeacher();
         if (teacherId != null) {
             List<?> result = em.createNativeQuery("select sg.id from student_group sg where sg.teacher_id = ?1")
                 .setParameter(1, teacherId)
                 .getResultList();
             authenticatedUser.setTeacherGroupIds(StreamUtil.toMappedList(r -> resultAsLong(r, 0), result));
+            if (schoolId != null && em.createNativeQuery("select c.id from curriculum c where c.teacher_id = ?1 and c.school_id = ?2")
+                    .setParameter(1, teacherId).setParameter(2, schoolId).getResultList().size() > 0) {
+                authenticatedUser.setHasCurriculums(Boolean.TRUE);
+            } else {
+                authenticatedUser.setHasCurriculums(Boolean.FALSE);
+            }
         }
         authenticatedUser.setSchool(authenticatedSchool);
         authenticatedUser.setAuthorizedRoles(userDetails.getAuthorities());

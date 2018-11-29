@@ -8,10 +8,7 @@
  */
 angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School, QueryUtils, DataUtils) {
   return {
-    template: '<md-select md-on-open="queryPromise">' +
-    '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>' +
-    '<md-option ng-repeat="option in filteredOptions | orderBy: showProperty ? showProperty : $root.currentLanguageNameField()" ng-value="option[valueProperty]"' +
-    'aria-label="{{$root.currentLanguageNameField(option)}}">{{showProperty ? option[showProperty] : $root.currentLanguageNameField(option)}}</md-option></md-select>',
+    templateUrl: 'components/hois.select.html',
     restrict: 'E',
     replace: true,
     scope: {
@@ -27,6 +24,7 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
       preselectCurrent: '@',
       selectCurrentStudyYear: '@',
       loadAfterDefer: '=',
+      warningParam: '@'
     },
     link: function postLink(scope, element, attrs) {
       scope.isMultiple = angular.isDefined(scope.multiple);

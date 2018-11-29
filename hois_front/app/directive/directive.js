@@ -485,9 +485,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     $scope.formState = {school: Session.school || {}};
     
+    var occupations;
     var occupationMap;
     if(!$scope.formState.school.higher) {
-      var occupations = Classifier.queryForDropdown({mainClassCodes: 'KUTSE,OSAKUTSE'});
+      occupations = Classifier.queryForDropdown({mainClassCodes: 'KUTSE,OSAKUTSE'});
       occupations.$promise.then(function() {
         occupationMap = Classifier.toMap(occupations);
       });
@@ -501,12 +502,20 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       clMapper.objectmapper($scope.record.cancelingDirectives || []);
       $scope.record.students.forEach(function(it) {
         it._foreign = !it.idcode;
-        if (occupationMap && it.occupations) {
-          it.occupations = it.occupations.map(function(code) {
-            return occupationMap[code];
-          });
-        }
       });
+      if (occupations) {
+        occupations.$promise.then(function() {
+          if (occupationMap) {
+            $scope.record.students.forEach(function(it) {
+              if (it.occupations) {
+                it.occupations = it.occupations.map(function(code) {
+                  return occupationMap[code];
+                });
+              }
+            });
+          }
+        });
+      }
     });
 
     $scope.cancelDirective = function() {

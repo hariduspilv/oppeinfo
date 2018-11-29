@@ -175,10 +175,8 @@ md-table-container .md-button
 .small-input
 {
 	padding-top: inherit!important;
-    height: inherit!important;
+  height: 28px !important; /* HITSAOIS-427: line-height is needed to be normal for Safari, so height should be given */
 }
-
-
 
 #currentLogoView {
     border: 1px solid #ddd;
@@ -243,7 +241,7 @@ md-input-container a{
      padding-left: 2px;
      padding-right: 2px;
      /*border-width: 1px 1px 1px 1px ;*/
-     line-height: 26px;
+     line-height: normal;
      height: 40px;
      -ms-flex-preferred-size: 26px;
      /*border-radius: 5px;
@@ -263,7 +261,7 @@ md-input-container md-select {
      padding-left: 2px;
      padding-right: 2px;
      /*border-width: 1px 1px 1px 1px ;*/
-     line-height: 26px;
+     line-height: normal;
      /*height: 40px;*/
      -ms-flex-preferred-size: 26px;
      /*border-radius: 5px;
@@ -1354,11 +1352,19 @@ label.required::after {
   font-weight: normal;
 }
 
-.lessonplan input[type="text"]
+.lessonplan input[type="text"], .lessonplan input[type="number"]
 {
 	width: 30px;
 	text-align: center;
 	border: 1px solid #E0E0E0;
+}
+
+.lessonplan input[readonly="true"]
+{
+	width: 30px;
+	text-align: center;
+  border: none;
+  background: none;
 }
 
 .subject-study-period {
@@ -1373,7 +1379,7 @@ label.required::after {
 	border: 1px solid #ccc;
   padding: 3px;
   min-width: 30px;
-  padding:5px;
+  padding: 5px;
 }
 
 .subject-study-period thead tr th, .x_border {
@@ -2185,6 +2191,14 @@ label.ui-btn {
   padding-left: 5px !important;
 }
 
+.occupied-warning .material-icons {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+}
+
 .noLessonTime {
   background: #eee;
 }
@@ -2295,12 +2309,13 @@ label.ui-btn {
   border: 1px solid #dedede;
 }
 
-.schoolList md-grid-tile-footer
-{
-  background-color: inherit;
+.schoolList md-grid-tile-footer {
+  background-color: rgba(255, 255, 255, 0.8);
+  padding-bottom: 0.5em !important;
   color: inherit;
   font-weight: bold;
   padding: 2px;
+  height: auto;
 }
 
 .very-small-caption

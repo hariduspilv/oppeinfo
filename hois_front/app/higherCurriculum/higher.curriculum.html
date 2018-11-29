@@ -212,6 +212,25 @@
 				  <label>{{'curriculum.otherLanguages' | translate}}</label>
 				  <textarea ng-model="curriculum.otherLanguages" md-maxlength="1000" max-rows="10" ng-readonly="formState.readOnly"></textarea>
 				</md-input-container>
+				<md-autocomplete
+						name="teacher"
+						md-selected-item="curriculum.teacher"
+						md-search-text="teacherName"
+						md-items="teacher in searchTeacher(teacherName)"
+						md-item-text="currentLanguageNameField(teacher)"
+						md-min-length="1"
+						md-floating-label="{{'curriculum.supervisor' | translate}}"
+						md-no-cache
+						class="small-margin"
+						md-require-match
+						flex>
+						<md-item-template>
+								<span md-highlight-text="teacherName" md-highlight-flags="^i">{{currentLanguageNameField(teacher)}}</span>
+						</md-item-template>
+						<md-not-found>
+								{{'main.messages.error.notFound' | translate}}
+						</md-not-found>
+				</md-autocomplete>
 			</div>
 		</fieldset>
 		<div>&nbsp;</div>

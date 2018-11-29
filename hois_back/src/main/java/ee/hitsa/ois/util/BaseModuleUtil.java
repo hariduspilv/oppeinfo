@@ -2,6 +2,7 @@ package ee.hitsa.ois.util;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -119,7 +120,9 @@ public class BaseModuleUtil {
     
     public static CurriculumVersionOccupationModuleOutcome themeOutcomeTransform(BaseModuleOutcomes outcome, CurriculumVersionOccupationModuleTheme theme) {
         CurriculumVersionOccupationModuleOutcome con = new CurriculumVersionOccupationModuleOutcome();
-        Optional<CurriculumModuleOutcome> out = outcome.getOutcomes().stream().filter(o -> o.getCurriculumModule().getId().equals(theme.getModule().getCurriculumModule().getId())).findFirst();
+        Optional<CurriculumModuleOutcome> out = outcome.getOutcomes().stream().filter(o -> {// FIXME: somehow there is a possibility that we can find outcome without module. In DB right now 3 outcomes without module. Has to be examined.
+            return o.getCurriculumModule() != null && o.getCurriculumModule().getId().equals(theme.getModule().getCurriculumModule().getId());
+        }).findFirst();
         con.setOutcome(out.orElseThrow(() -> new IllegalArgumentException()));
         theme.getOutcomes().add(con);
         return con;
@@ -185,8 +188,8 @@ public class BaseModuleUtil {
         out.setCurriculumModule(module);
         outcome.getOutcomes().add(out);
         out.setBaseModuleOutcomes(outcome);
-        EntityUtil.save(outcome, em);
-        return updateOutcome(outcome, out);
+        EntityUtil.save(outcome, em);// Double save is necessary because of org.springframework.dao.InvalidDataAccessApiUsageException: org.hibernate.TransientPropertyValueException: object references an unsaved transient instance
+        return EntityUtil.save(updateOutcome(outcome, out), em);
     }
     
     public static BaseModuleOutcomes outcomeTransform(CurriculumModuleOutcome outcome, BaseModule module) {
@@ -196,7 +199,20 @@ public class BaseModuleUtil {
         return updateOutcome(outcome, out);
     }
     
-    public static void updateReferences(BaseModule module, Set<CurriculumModule> curriculumModules, Set<CurriculumVersionOccupationModule> curriculumVersions, EntityManager em) {
+    public static void updateCapacities(BaseModule bModule, CurriculumVersionOccupationModule oModule) {
+        Map<Classifier, CurriculumVersionOccupationModuleCapacity> map = oModule.getCapacities().stream().collect(Collectors.toMap(cap -> cap.getCapacityType(), cap -> cap));
+        bModule.getCapacities().forEach(cap -> {
+            if (map.get(cap.getCapacityType()) != null) {
+                CurriculumVersionOccupationModuleCapacity cCap = map.remove(cap.getCapacityType());
+                updateCapacity(cap, cCap);
+            } else {
+                oModule.getCapacities().add(capacityTransform(cap, oModule));
+            }
+        });
+    }
+    
+    public static void updateReferences(BaseModule module, Set<CurriculumModule> curriculumModules,
+            Set<CurriculumVersionOccupationModule> curriculumVersions, EntityManager em) {
         curriculumModules.forEach(cm -> {
             cm.setNameEt(module.getNameEt());
             cm.setNameEn(module.getNameEn());
@@ -274,6 +290,8 @@ public class BaseModuleUtil {
                     }
                 }
             }
+        } else {
+            return;
         }
         module.setCapacities(new HashSet<>(capacities.values()));
     }

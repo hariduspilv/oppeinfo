@@ -36,7 +36,8 @@ angular.module('hitsaOis')
         searchFromConnect: '@',
         selectFirstValue: '@',
         defaultValue: '@',
-        onlyValid: '@'
+        onlyValid: '@',
+        ignoreCodeValidation: '<' // one time binding. Ignores value during validation which happens with onlyValid. Checks by 'code' attribute.
       },
       link: function postLink(scope, element) {
         scope.isMultiple = angular.isDefined(scope.multiple);
@@ -218,7 +219,9 @@ angular.module('hitsaOis')
         if(angular.isDefined(scope.onlyValid)) {
           for(var key in scope.optionsByCode) {
             var option = scope.optionsByCode[key];
-            option.hide = !Classifier.isValid(option);
+            if (!(angular.isDefined(scope.ignoreCodeValidation) && scope.ignoreCodeValidation === option.code)) {
+              option.hide = !Classifier.isValid(option);
+            }
           }
         }
         deselectHiddenValue();

@@ -14,6 +14,7 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     private Long department;
     private Long teacher;
     private Long subject;
+    private String programStatus;
 
     public Long getStudent() {
         return student;
@@ -74,5 +75,11 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     }
     public void setStudyPeriods(List<Long> studyPeriods) {
         this.studyPeriods = studyPeriods;
+    }
+    public String getProgramStatus() {
+        return programStatus;
+    }
+    public void setProgramStatus(String programStatus) {
+        this.programStatus = programStatus;
     }
 }

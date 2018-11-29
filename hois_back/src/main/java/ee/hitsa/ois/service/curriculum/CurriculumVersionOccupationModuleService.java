@@ -130,7 +130,6 @@ public class CurriculumVersionOccupationModuleService {
                 occupationModule.setTeacher(em.getReference(Teacher.class, dto.getTeacher().getId()));
                 occupationModule.setSupervisor(occupationModule.getTeacher().getPerson().getFullname());
             }
-            updateModuleCapacities(occupationModule, dto.getCapacities());
         } else {
             EntityUtil.bindToEntity(dto, occupationModule,
                     classifierRepository, "curriculumModule", "capacities", "themes", "yearCapacities", "nameEt", "nameEn", "requirementsEt",
@@ -151,6 +150,7 @@ public class CurriculumVersionOccupationModuleService {
                 }
             }
         }
+        updateModuleCapacities(occupationModule, dto.getCapacities());
         updateYearCapacities(occupationModule, dto.getYearCapacities());
         return occupationModule;
     }
@@ -177,7 +177,6 @@ public class CurriculumVersionOccupationModuleService {
 
     private CurriculumVersionOccupationModuleCapacity updateCapacities(CurriculumVersionOccupationModuleCapacityDto dto,
             CurriculumVersionOccupationModule updatedOccupationModule) {
-
         Optional<CurriculumVersionOccupationModuleCapacity> o = dto.getId() == null ? Optional.empty() :
             updatedOccupationModule.getCapacities().stream().filter(c -> c.getId().equals(dto.getId())).findFirst();
 

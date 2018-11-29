@@ -35,11 +35,11 @@ public class FinalProtocolReport {
     private final String confirmedBy;
     private final LocalDate confirmDate;
     
-    public FinalProtocolReport(Protocol protocol) {
-        this(protocol, Language.ET);
+    public FinalProtocolReport(Protocol protocol, Boolean letterGrades) {
+        this(protocol, letterGrades, Language.ET);
     }
     
-    public FinalProtocolReport(Protocol protocol, Language lang) {
+    public FinalProtocolReport(Protocol protocol, Boolean letterGrades, Language lang) {
         Objects.requireNonNull(protocol);
         isVocational = protocol.getIsVocational();
         school = name(protocol.getSchool(), lang);
@@ -71,7 +71,7 @@ public class FinalProtocolReport {
 
         protocolStudents = protocol.getProtocolStudents().stream()
                 .sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getStudent().getPerson(), o2.getStudent().getPerson()))
-                .map(ps -> new FinalProtocolStudentReport(ps, isVocational, lang))
+                .map(ps -> new FinalProtocolStudentReport(ps, isVocational, letterGrades, lang))
                 .collect(Collectors.toList());
         confirmedBy = PersonUtil.stripIdcodeFromFullnameAndIdcode(protocol.getConfirmer());
         confirmDate = protocol.getConfirmDate();

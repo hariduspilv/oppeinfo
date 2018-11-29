@@ -21,6 +21,7 @@ public class DiplomaSupplementReport {
     private final List<String> additionalNrs;
     private final Boolean showSubjectCode;
     private final Boolean showTeacher;
+    private final Boolean isLetterGrades;
     private final String schoolName;
     private final String schoolNameEn;
     private final String firstname;
@@ -62,17 +63,18 @@ public class DiplomaSupplementReport {
     private BigDecimal totalCredits = BigDecimal.valueOf(0);
     
     public DiplomaSupplementReport(DiplomaSupplement diplomaSupplement, List<String> additionalNrs) {
-        this(diplomaSupplement, additionalNrs, Boolean.FALSE, Boolean.FALSE, Language.ET);
+        this(diplomaSupplement, additionalNrs, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Language.ET);
     }
     
     public DiplomaSupplementReport(DiplomaSupplement diplomaSupplement, List<String> additionalNrs, 
-            Boolean showSubjectCode, Boolean showTeacher, Language lang) {
+            Boolean showSubjectCode, Boolean showTeacher, Boolean isLetterGrades, Language lang) {
         this.lang = lang;
         Form diplomaForm = diplomaSupplement.getDiploma().getForm();
         this.diplomaNr = diplomaForm != null ? diplomaForm.getFullCode() : "XXXXXX";
         this.additionalNrs = additionalNrs;
         this.showSubjectCode = showSubjectCode;
         this.showTeacher = showTeacher;
+        this.isLetterGrades = isLetterGrades;
         this.schoolName = diplomaSupplement.getSchoolNameEt();
         this.schoolNameEn = diplomaSupplement.getSchoolNameEn();
         this.firstname = diplomaSupplement.getFirstname();
@@ -194,6 +196,10 @@ public class DiplomaSupplementReport {
 
     public String getSchoolName() {
         return schoolName;
+    }
+
+    public Boolean getIsLetterGrades() {
+        return isLetterGrades;
     }
 
     public String getSchoolNameEn() {

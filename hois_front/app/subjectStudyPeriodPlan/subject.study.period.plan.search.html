@@ -10,7 +10,7 @@
 
     <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-        <form ng-submit="loadData()" layout="column" novalidate >
+        <form name="searchForm" ng-submit="load()" layout="column" novalidate >
             <md-input-container>
                 <label class="textInput">{{'subjectStudyPeriodPlan.studyPeriod' | translate}}</label>
                 <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required></hois-select>

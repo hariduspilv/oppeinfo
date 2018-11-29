@@ -46,8 +46,8 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       $q.all(clMapper.promises).then($scope.loadData);
     });
   }
-]).controller('ReportStudentStatisticsController', ['$scope', 'Classifier', 'QueryUtils',
-  function ($scope, Classifier, QueryUtils) {
+]).controller('ReportStudentStatisticsController', ['$scope', 'Classifier', 'QueryUtils', 'message',
+  function ($scope, Classifier, QueryUtils, message) {
     $scope.formState = {xlsUrl: 'reports/students/statistics/studentstatistics.xls',
                         filterValues: {OPPURSTAATUS: ['OPPURSTAATUS_K', 'OPPURSTAATUS_L']}};
 
@@ -76,6 +76,15 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
     $scope.clearCriteria = function() {
       _clearCriteria();
       $scope.criteria.curriculum = [];
+    };
+
+    $scope.load = function() {
+      if (!$scope.searchForm.$valid) {
+        message.error('main.messages.form-has-errors');
+        return false;
+      } else {
+        $scope.loadData();
+      }
     };
 
     $scope.loadData();
@@ -119,8 +128,9 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('ReportTeacherLoadHigherController', ['$scope', '$timeout', 'DataUtils', 'FormUtils', 'QueryUtils',
-  function ($scope, $timeout, DataUtils, FormUtils, QueryUtils) {
+]).controller('ReportTeacherLoadHigherController', ['$scope', '$route', '$timeout', 'DataUtils', 'FormUtils', 'QueryUtils',
+  function ($scope, $route, $timeout, DataUtils, FormUtils, QueryUtils) {
+    $scope.auth = $route.current.locals.auth;
     QueryUtils.createQueryForm($scope, '/reports/teachers/load/higher', {order: 'p.lastname,p.firstname'});
 
     var loadData = $scope.loadData;
@@ -157,8 +167,9 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       }
     });
   }
-]).controller('ReportTeacherLoadVocationalController', ['$scope', '$timeout', 'DataUtils', 'FormUtils', 'QueryUtils',
-  function ($scope, $timeout, DataUtils, FormUtils, QueryUtils) {
+]).controller('ReportTeacherLoadVocationalController', ['$scope', '$route', '$timeout', 'DataUtils', 'FormUtils', 'QueryUtils',
+  function ($scope, $route, $timeout, DataUtils, FormUtils, QueryUtils) {
+    $scope.auth = $route.current.locals.auth;
     QueryUtils.createQueryForm($scope, '/reports/teachers/load/vocational', {order: 'p.lastname,p.firstname'});
 
     var loadData = $scope.loadData;
@@ -262,7 +273,16 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
   
   var baseUrl = '/reports/studentgroupteacher';
   var resultsMapper = Classifier.valuemapper({grade: 'KUTSEHINDAMINE', entryType: 'SISSEKANNE', absence: 'PUUDUMINE'});
-  var entryTypesOrder = ['SISSEKANNE_H', 'SISSEKANNE_R', 'SISSEKANNE_O', 'SISSEKANNE_L', 'SISSEKANNE_P', 'SISSEKANNE_T', 'SISSEKANNE_E', 'SISSEKANNE_I'];
+  $scope.entryTypesOrder = [
+    'SISSEKANNE_H',
+    'SISSEKANNE_R',
+    'SISSEKANNE_O',
+    'SISSEKANNE_L',
+    'SISSEKANNE_P',
+    'SISSEKANNE_T',
+    'SISSEKANNE_E',
+    'SISSEKANNE_I'
+  ];
   $scope.entryTypeColors = {
     'SISSEKANNE_H': 'green-300',
     'SISSEKANNE_R': 'indigo-300',
@@ -322,19 +342,14 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
     $scope.entryTypes = Object.keys(entryTypes).map(function(it) { 
       return entryTypes[it];
     });
-    $scope.entryTypes.sort(function(a,b) {
-      if (entryTypesOrder.indexOf(a.code) === -1) {
-        return 1;
-      } else if (entryTypesOrder.indexOf(b.code) === -1) {
-        return -1;
-      } else {
-        return entryTypesOrder.indexOf(a.code) > entryTypesOrder.indexOf(b.code);
-      }
-    });
   });
 
   $scope.getEntryColor = function (type) {
     return $scope.entryTypeColors[type];
+  };
+
+  $scope.getEntryTypeOrderNr = function (type) {
+    return $scope.entryTypesOrder.indexOf(type.code);
   };
 
   $scope.formState.allStudyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
@@ -426,6 +441,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
 
   $scope.openAddInfoDialog = function (student) {
     dialogService.showDialog('report/studentgroup.teacher.addinfo.html', function (dialogScope) {
+      dialogScope.auth = $scope.auth;
       dialogScope.student = student;
       dialogScope.entriesWithAddInfo = [];
 

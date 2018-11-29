@@ -31,12 +31,15 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
         dto.setLessonPlanModuleId(lessonPlanModuleId);
         if(journal.getJournalOccupationModuleThemes() != null) {
             //journalOccupationModuleThemes is only for the themes of the journal and not for the groups which are stored in the same table
-            dto.setJournalOccupationModuleThemes(
-                    StreamUtil.toMappedList(r -> EntityUtil.getId(r.getCurriculumVersionOccupationModuleTheme()), 
-                            journal.getJournalOccupationModuleThemes().stream().filter(module -> EntityUtil.getId(module.getLessonPlanModule()).equals(EntityUtil.getId(lessonPlanModule)))));
+            dto.setJournalOccupationModuleThemes(StreamUtil.toMappedList(r -> EntityUtil.getId(r.getCurriculumVersionOccupationModuleTheme()),
+                    journal.getJournalOccupationModuleThemes().stream().filter(module -> EntityUtil
+                                    .getId(module.getLessonPlanModule()).equals(EntityUtil.getId(lessonPlanModule)))));
             //all other themes will be used for groups
-            List<JournalOccupationModuleTheme> journalModuleThemes = StreamUtil.toFilteredList(it -> !lessonPlanModuleId.equals(EntityUtil.getId(it.getLessonPlanModule())), journal.getJournalOccupationModuleThemes());
-            Map<StudentGroup, List<JournalOccupationModuleTheme>> studentGroupMap = journalModuleThemes.stream().collect(Collectors.groupingBy(module -> module.getLessonPlanModule().getLessonPlan().getStudentGroup()));
+            List<JournalOccupationModuleTheme> journalModuleThemes = StreamUtil.toFilteredList(
+                    it -> !lessonPlanModuleId.equals(EntityUtil.getId(it.getLessonPlanModule())),
+                    journal.getJournalOccupationModuleThemes());
+            Map<StudentGroup, List<JournalOccupationModuleTheme>> studentGroupMap = journalModuleThemes.stream()
+                    .collect(Collectors.groupingBy(module -> module.getLessonPlanModule().getLessonPlan().getStudentGroup()));
             dto.setGroups(StreamUtil.toMappedList(LessonPlanJournalForm.LessonPlanGroupForm::of, studentGroupMap.entrySet()));
         }
         return dto;
@@ -48,11 +51,18 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
         dto.setStudentGroupCode(lessonPlan.getStudentGroup().getCode());
         dto.setStudentGroupId(EntityUtil.getId(lessonPlan.getStudentGroup()));
         dto.setJournalCapacityTypes(StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getCapacityType()), journal.getJournalCapacityTypes()));
-        dto.setJournalTeachers(StreamUtil.nullSafeList(journal.getJournalTeachers()).stream().map(LessonPlanJournalForm.LessonPlanJournalTeacherForm::of).sorted(Comparator.comparing(r -> ((AutocompleteResult)r.getTeacher()).getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+        dto.setJournalTeachers(StreamUtil.nullSafeList(journal.getJournalTeachers()).stream()
+                .map(LessonPlanJournalForm.LessonPlanJournalTeacherForm::of)
+                .sorted(Comparator.comparing(r -> ((AutocompleteResult)r.getTeacher()).getNameEt(), String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList()));
         dto.setLessonPlan(EntityUtil.getId(lessonPlan));
         dto.setOccupationModuleId(EntityUtil.getId(occupationModule));
-        dto.setThemes(occupationModule.getThemes().stream().map(it -> new CurriculumVersionOccupationModuleThemeResult(it)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
-        dto.setJournalRooms(StreamUtil.toMappedList(r -> new AutocompleteResult(EntityUtil.getId(r.getRoom()), r.getRoom().getCode(), r.getRoom().getCode()), journal.getJournalRooms()));
+        dto.setThemes(occupationModule.getThemes().stream()
+                .map(it -> new CurriculumVersionOccupationModuleThemeResult(it))
+                .sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList()));
+        dto.setJournalRooms(StreamUtil.toMappedList(r -> new AutocompleteResult(EntityUtil.getId(r.getRoom()),
+                r.getRoom().getCode(), r.getRoom().getCode()), journal.getJournalRooms()));
         dto.setModuleNameEt(occupationModule.getCurriculumModule().getNameEt());
         return dto;
     }

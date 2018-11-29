@@ -80,8 +80,8 @@ public class HigherProtocolController {
     public void print(HoisUserDetails user, @WithEntity Protocol protocol, HttpServletResponse response)
             throws IOException {
         HigherProtocolUtil.assertCanView(user, protocol);
-        HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
-                pdfService.generate(HigherProtocolReport.TEMPLATE_NAME, new HigherProtocolReport(protocol)));
+        HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf", pdfService
+                .generate(HigherProtocolReport.TEMPLATE_NAME, higherProtocolService.higherProtocolReport(protocol)));
     }
 
     @PostMapping
@@ -125,7 +125,8 @@ public class HigherProtocolController {
 
         UnsignedBdocContainer unsignedBdocContainer = bdocService.createUnsignedBdocContainer("protokoll.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
-                pdfService.generate(HigherProtocolReport.TEMPLATE_NAME, new HigherProtocolReport(savedProtocol)),
+                pdfService.generate(HigherProtocolReport.TEMPLATE_NAME,
+                        higherProtocolService.higherProtocolReport(savedProtocol)),
                 higherProtocolSignForm.getCertificate());
 
         httpSession.setAttribute(BDOC_TO_SIGN, unsignedBdocContainer);
@@ -153,7 +154,8 @@ public class HigherProtocolController {
         HigherProtocolUtil.validate(higherProtocolSaveForm, protocol);
 
         Protocol savedProtocol = higherProtocolService.save(protocol, higherProtocolSaveForm);
-        byte[] pdfData = pdfService.generate(HigherProtocolReport.TEMPLATE_NAME, new HigherProtocolReport(savedProtocol));
+        byte[] pdfData = pdfService.generate(HigherProtocolReport.TEMPLATE_NAME,
+                higherProtocolService.higherProtocolReport(protocol));
         
         MobileIdSession session = bdocService.mobileSign("protokoll.pdf",
                 MediaType.APPLICATION_PDF_VALUE,

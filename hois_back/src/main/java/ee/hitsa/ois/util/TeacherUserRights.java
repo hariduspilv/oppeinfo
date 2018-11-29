@@ -62,4 +62,10 @@ public abstract class TeacherUserRights {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
+
+	public static void assertCanTeacherAndAdminEdit(HoisUserDetails user, Teacher teacher) {
+		if(!canEdit(user, teacher) && !canEditAsTeacher(user, teacher)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+	}
 }

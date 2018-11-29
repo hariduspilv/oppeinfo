@@ -14,14 +14,20 @@
         <div layout="column">
           <div flex="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="row" flex="70">
-              <hois-autocomplete flex ng-model="lesson.eventRoom" method="rooms" label="lessonplan.event.room" 
+              <hois-autocomplete flex ng-model="lesson.eventRoom" method="rooms" label="lessonplan.event.room" warning-param="isOccupied"
                 additional-query-params="{buildingIds: lesson.buildingIds, isStudy: true, occupied: true, date: lesson.start, 
                     timetable: timetableId, startTime: lesson.startTime, endTime: lesson.endTime}"></hois-autocomplete>
             </div>
-            <div layout="column" class="common-label" flex="65" ng-repeat="room in lesson.eventRooms">
+            <div layout="column" class="common-label" flex="70" ng-repeat="room in lesson.eventRooms">
               <div layout="row" flex layout-align="start center">
-                <div flex="5">&nbsp;</div>
-                <div flex="50">{{room.nameEt}}</div>
+                <div flex="10">&nbsp;</div>
+                <div flex="60">{{room.nameEt}}</div>
+                <div flex="25" class="occupied-warning">
+                  <span ng-if="isRoomOccupied(room.id)">
+                    <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">warning</md-icon>
+                    <span md-colors="{color: 'default-warn'}">{{'timetable.timetableEvent.occupied' | translate}}</span>
+                  </span>
+                </div>
                 <div><a ng-click="removeFromArray(lesson.eventRooms, room)" class="remove">&times;</a></div>
               </div>
             </div>
@@ -31,13 +37,24 @@
               <label>{{'main.start' | translate}}</label>
               <hois-time ng-model="lesson.startTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
             </md-input-container>
-            <md-input-container flex="30" flex-sm="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="30" flex-sm="100" flex-offset="10" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'main.end' | translate}}</label>
               <hois-time ng-model="lesson.endTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
             </md-input-container>
           </div>
           <div flex="100">
-                <md-checkbox layout="row" ng-model="teacher.isTeaching" ng-repeat="teacher in teachers">{{teacher.nameEt}}</md-checkbox>
+            <div ng-repeat="teacher in teachers" layout="row" flex="70" class="common-label">
+              <div flex="10">
+                <md-checkbox layout="row" ng-model="teacher.isTeaching"></md-checkbox>
+              </div>
+              <div flex="60">{{teacher.nameEt}}</div>
+              <div flex="25" class="occupied-warning">
+                <span ng-if="isTeacherOccupied(teacher.id)">
+                  <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">warning</md-icon>
+                  <span md-colors="{color: 'default-warn'}">{{'timetable.timetableEvent.occupied' | translate}}</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

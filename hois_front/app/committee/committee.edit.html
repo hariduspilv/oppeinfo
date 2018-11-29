@@ -54,7 +54,7 @@
           <tr md-row>
             <th md-column>{{'committee.isChairman' | translate}}</th>
             <th md-column ng-if="!showPersonSearch">{{'committee.external' | translate}}</th>
-            <th md-column>{{'committee.name' | translate}}</th>
+            <th md-column>{{'committee.member' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
@@ -79,7 +79,7 @@
                   <hois-select ng-model="member.teacher" type="teacher" aria-label="{{'committee.name' | translate}} {{member.memberName}}" required></hois-select>
                 </md-input-container>
                 <div layout="row" flex="100" ng-if="showPersonSearch">
-                  <hois-autocomplete flex ng-model="member.person" method="allpersons" no-paging="true" label="committee.name" aria-label="{{'committee.name' | translate}} {{member.memberName}}" required></hois-autocomplete>
+                  <hois-autocomplete flex ng-model="member.person" method="committeeMembers" no-paging="true" label="committee.member" aria-label="{{'committee.member' | translate}} {{member.memberName}}" required></hois-autocomplete>
                 </div>
               </td>
               <td md-cell><a class="remove nomargin" ng-click="removeMember(member)">&times;</a></td>

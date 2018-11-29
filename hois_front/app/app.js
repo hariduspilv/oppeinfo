@@ -129,8 +129,18 @@ angular
 }).config(function($provide) {
   $provide.decorator('ColorPickerOptions', function($delegate) {
       var options = angular.copy($delegate);
-      options.alpha = false;
+      options.placeholder = 'Vali värv';
       options.format = 'hex';
+      options.case = 'upper';
+      options.hue = true;
+      options.saturation = false;
+      options.lightness = false;
+      options.alpha = false;
+      options.restrictToForma = true;
+      options.preserveInputFormat = true;
+      options.swatch = true;
+      options.swatchOnly = true;
+      options.round = false;
       return options;
   });
 });

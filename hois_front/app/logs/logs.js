@@ -2,11 +2,11 @@
 
 angular.module('hitsaOis').controller('LogsController', ['$mdDialog', '$route', '$scope', 'QueryUtils',
   function ($mdDialog, $route, $scope, QueryUtils) {
-
-    var auth = $route.current.locals.auth;
+    $scope.auth = $route.current.locals.auth;
+    
     var messageTypes = {
       ekis: ['registerDirective', 'deleteDirective', 'registerCertificate', 'registerPracticeContract', 'enforceContract', 'enforceDirective', 'rejectDirective'],
-      kutseregister: [auth.roleCode === 'ROLL_P' ? 'kutseregister.muutunudKutsestandardid' : 'kutseregister.kutsetunnistus'],
+      kutseregister: [$scope.auth.roleCode === 'ROLL_P' ? 'kutseregister.muutunudKutsestandardid' : 'kutseregister.kutsetunnistus'],
       rtip: ['sap.Z_EMPLOEES', 'sap.tootajaPohiandmed'],
       sais: ['sais2.AllAdmissionsExport', 'sais2.AllApplicationsExport']
     };

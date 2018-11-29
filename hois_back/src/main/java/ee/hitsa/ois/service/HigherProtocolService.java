@@ -37,6 +37,7 @@ import ee.hitsa.ois.enums.ExamType;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.ProtocolType;
+import ee.hitsa.ois.report.HigherProtocolReport;
 import ee.hitsa.ois.repository.ProtocolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -80,6 +81,8 @@ public class HigherProtocolService extends AbstractProtocolService {
     private ProtocolRepository protocolRepository;
     @Autowired
     private StudyYearService studyYearService;
+    @Autowired
+    private SchoolService schoolService;
 
     public Page<HigherProtocolSearchDto> search(HoisUserDetails user, HigherProtocolSearchCommand criteria,
             Pageable pageable) {
@@ -201,7 +204,8 @@ public class HigherProtocolService extends AbstractProtocolService {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
-                        gradeStudent(ps, grade, getHigherGradeMark(grade));
+                        Short mark = HigherAssessment.getGradeMark(dto.getGrade());
+                        gradeStudent(ps, grade, mark, Boolean.FALSE);
                     } else if (gradeRemoved(dto, ps)) {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
@@ -316,16 +320,20 @@ public class HigherProtocolService extends AbstractProtocolService {
 
         if(Boolean.TRUE.equals(dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getIsPracticeSubject())) {
             Set<Long> students = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
-            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_journal pj join classifier c on c.code = pj.grade_code");
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
+                    "from practice_journal pj join classifier c on c.code = pj.grade_code");
 
             qb.requiredCriteria("pj.student_id in (:studentId)", "studentId", students);
-            qb.requiredCriteria("pj.subject_id = :subjectId", "subjectId", dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getSubject().getId());
+            qb.requiredCriteria("pj.subject_id = :subjectId", "subjectId",
+                    dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getSubject().getId());
 
-            List<?> data = qb.select("pj.student_id, c.value", em).getResultList();
+            List<?> data = qb.select("pj.student_id, c.value, c.value2", em).getResultList();
 
             assertDoesNotHaveDuplicates(data);
 
-            Map<Long, String> practiceResults = StreamUtil.toMap(r -> resultAsLong(r, 0),  r -> resultAsString(r, 1), data);
+            Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
+            Map<Long, String> practiceResults = StreamUtil.toMap(r -> resultAsLong(r, 0),
+                    Boolean.TRUE.equals(isLetterGrades) ? r -> resultAsString(r, 2) : r -> resultAsString(r, 1), data);
 
             for(HigherProtocolStudentDto protocolStudent : dto.getProtocolStudents()) {
                 Long studentId = protocolStudent.getStudent().getId();
@@ -343,5 +351,11 @@ public class HigherProtocolService extends AbstractProtocolService {
         if(data.size() != existingIds.size()) {
             throw new ValidationFailedException("higherProtocol.error.duplicatesInPracticeResults");
         }
+    }
+
+    public HigherProtocolReport higherProtocolReport(Protocol protocol) {
+        School school = protocol.getSchool();
+        Boolean isHigherSchool = Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(school)).isHigher());
+        return new HigherProtocolReport(protocol, isHigherSchool, school.getIsLetterGrade());
     }
 }

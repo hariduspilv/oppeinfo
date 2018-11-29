@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('TimetableManagementController', 
-  function ($scope, $location, $timeout, message, QueryUtils, DataUtils, Classifier, dialogService, USER_ROLES, AuthService) {
+  function ($rootScope, $window, $scope, $location, $timeout, message, QueryUtils, DataUtils, Classifier, dialogService, USER_ROLES, AuthService, oisFileService) {
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIPLAAN);
     var baseUrl = '/timetables';
 
@@ -18,6 +18,32 @@ angular.module('hitsaOis').controller('TimetableManagementController',
       } else {
         loadData();
       }
+    };
+
+    $scope.openAddFileDialog = function (studyPeriod, startDate) {
+      dialogService.showDialog('timetable/dialog/file.import.dialog.html', function(scope){
+      }, function (submitScope) {
+        var data = submitScope.data;
+        oisFileService.getFromLfFile(data.file[0], function(file) {
+            data.oisFile = file;
+            var ImportTimetableEndpoint = QueryUtils.endpoint('/timetables/importXml/' + studyPeriod);
+            var newFile = new ImportTimetableEndpoint(data.oisFile);
+            newFile.$save(startDate).then(function(response) {
+                if (response.status != null) {
+                  message.error(response.status);
+                }
+                message.info('main.messages.create.success');
+            }).catch(angular.noop);
+        });
+      });
+    };
+
+    $scope.exportTimetable = function(url, params) {
+      QueryUtils.endpoint("/timetables/exportTimetableCheck").search(params).$promise.then(function (response) {
+        if (!response._error) {
+          $window.location.href = $rootScope.excel(url, params);
+        }
+      });
     };
 
     function filterStudyPeriods() {

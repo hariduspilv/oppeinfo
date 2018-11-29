@@ -68,6 +68,7 @@ public class School extends BaseEntityWithId implements Translatable {
     private String adIdcodeField;
     private String nameGenitiveEt;
     private Boolean isMinorStudentAbsence = Boolean.FALSE;
+    private Boolean isLetterGrade = Boolean.FALSE;
     private String finalSchoolType;
     @Column(name = "final_62")
     private String final62;
@@ -266,6 +267,14 @@ public class School extends BaseEntityWithId implements Translatable {
 
     public void setIsMinorStudentAbsence(Boolean isMinorStudentAbsence) {
         this.isMinorStudentAbsence = isMinorStudentAbsence;
+    }
+
+    public Boolean getIsLetterGrade() {
+        return isLetterGrade;
+    }
+
+    public void setIsLetterGrade(Boolean isLetterGrade) {
+        this.isLetterGrade = isLetterGrade;
     }
 
     public String getFinalSchoolType() {

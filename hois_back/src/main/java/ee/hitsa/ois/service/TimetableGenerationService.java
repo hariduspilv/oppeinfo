@@ -90,6 +90,8 @@ public class TimetableGenerationService {
     @Autowired
     private TimetableService timetableService;
     @Autowired
+    private SchoolService schoolService;
+    @Autowired
     private EntityManager em;
     @Autowired
     private XlsService xlsService;
@@ -211,6 +213,8 @@ public class TimetableGenerationService {
                     prevTimetable);
             data.put("journals", difference);
         }
+        data.put("isHigherSchool",
+                Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(currTimetable.getSchool())).isHigher()));
         return xlsService.generate("timetabledifference.xls", data);
     }
 

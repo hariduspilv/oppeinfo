@@ -39,7 +39,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
                 checkAccess: checkRightsToEdit
             }
         })
-        .when('/basemodule/:baseModuleId/:baseModuleThemeId', {
+        .when('/basemodule/:baseModuleId/:baseModuleThemeId/view', {
             templateUrl: 'baseModule/theme/basemodule.theme.view.html',
             controller: 'baseModuleThemeEditController',
             resolve: {

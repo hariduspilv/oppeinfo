@@ -18,6 +18,7 @@ public class StudentVocationalResultByTimeDto {
     private Boolean isApel;
     private Boolean isInformal;
     private Boolean isFormal;
+    private Boolean isPractice;
     
     public AutocompleteResult getName() {
         return name;
@@ -114,5 +115,13 @@ public class StudentVocationalResultByTimeDto {
     public void setIsFormal(Boolean isFormal) {
         this.isFormal = isFormal;
     }
-    
+
+    public Boolean getIsPractice() {
+        return isPractice;
+    }
+
+    public void setIsPractice(Boolean isPractice) {
+        this.isPractice = isPractice;
+    }
+
 }

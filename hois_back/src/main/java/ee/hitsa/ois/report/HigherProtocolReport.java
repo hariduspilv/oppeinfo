@@ -18,6 +18,7 @@ public class HigherProtocolReport {
 
     public static final String TEMPLATE_NAME = "higher.protocol.xhtml";
 
+    private final Boolean isHigherSchool;
     private final String protocolNr;
     private final LocalDate inserted;
     private final String status;
@@ -29,12 +30,13 @@ public class HigherProtocolReport {
     private final List<String> teachers;
     private final List<ProtocolStudentReport> protocolStudents;
 
-    public HigherProtocolReport(Protocol protocol) {
-        this(protocol, Language.ET);
+    public HigherProtocolReport(Protocol protocol, Boolean higherSchool, Boolean letterGrades) {
+        this(protocol, higherSchool, letterGrades, Language.ET);
     }
 
-    public HigherProtocolReport(Protocol protocol, Language lang) {
+    public HigherProtocolReport(Protocol protocol, Boolean higherSchool, Boolean letterGrades, Language lang) {
         Objects.requireNonNull(protocol);
+        isHigherSchool = higherSchool;
         protocolNr = protocol.getProtocolNr();
         inserted = protocol.getInserted().toLocalDate();
         status = name(protocol.getStatus(), lang);
@@ -48,8 +50,12 @@ public class HigherProtocolReport {
         teachers = PersonUtil.sorted(ssp.getTeachers().stream().map(t -> t.getTeacher().getPerson()));
         this.protocolStudents = protocol.getProtocolStudents().stream()
                 .sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getStudent().getPerson(), o2.getStudent().getPerson()))
-                .map(ps -> new ProtocolStudentReport(ps, lang))
+                .map(ps -> new ProtocolStudentReport(ps, higherSchool, letterGrades, lang))
                 .collect(Collectors.toList());
+    }
+
+    public Boolean getIsHigherSchool() {
+        return isHigherSchool;
     }
 
     public List<ProtocolStudentReport> getProtocolStudents() {

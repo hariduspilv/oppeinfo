@@ -191,20 +191,29 @@ public class CommitteeService {
     }
 
     private void allScholarshipDecisionCommitteeMembersExist(Committee committee, List<CommitteeMemberDto> memberDtos) {
+        if (!CommitteeType.KOMISJON_T.name().equals(EntityUtil.getCode(committee.getType()))) {
+            return;
+        }
         Long committeeId = EntityUtil.getNullableId(committee);
         
         if (committeeId != null) {
-            List<?> data = em.createNativeQuery("select cm.id from committee c"
-                    + " join committee_member cm on c.id = cm.committee_id"
+            List<?> data = em.createNativeQuery("select cm.id, cm.person_id from committee_member cm"
                     + " join scholarship_decision_committee_member sdcm on cm.id = sdcm.committee_member_id"
-                    + " where c.id = ?1")
+                    + " where cm.committee_id = ?1")
                     .setParameter(1, committeeId)
                     .getResultList();
             Set<Long> scholarshipCommitteeMembers = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+            Set<Long> scholarshipCommitteePersons = StreamUtil.toMappedSet(r -> resultAsLong(r, 1), data);
             Set<Long> formMembers = StreamUtil.toMappedSet(r -> r.getId(), memberDtos);
+            Set<Long> formPersons = StreamUtil.toMappedSet(r -> r.getPerson().getId(), memberDtos);
             
             for (Long committeeMember : scholarshipCommitteeMembers) {
                 if (!formMembers.contains(committeeMember)) {
+                    throw new ValidationFailedException("committee.message.committeeMemberInScholarshipDecision");
+                }
+            }
+            for (Long committeePerson : scholarshipCommitteePersons) {
+                if (!formPersons.contains(committeePerson)) {
                     throw new ValidationFailedException("committee.message.committeeMemberInScholarshipDecision");
                 }
             }

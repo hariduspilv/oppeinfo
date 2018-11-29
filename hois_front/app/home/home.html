@@ -1,5 +1,22 @@
 <div layout-padding>
   <div ng-if="state.currentUser" ng-controller="AuthenticatedHomeController as ctrl" layout="column">
+    <div ng-if="hasUnconfirmedPrograms.has">
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'warn'}">
+          <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+          <span>{{'subjectProgram.youHaveUnconfirmedPrograms' | translate}} <a ng-href="/#/subjectProgram?_menu">{{'main.button.view' | translate}}</a></span>
+        </div>
+      </md-whiteframe>
+      
+    </div>
+    <div ng-if="hasUncompletedPrograms.has">
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'warn'}">
+          <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+          <span>{{'subjectProgram.youHaveUncompletedPrograms' | translate}} <a ng-href="/#/subjectStudyPeriods?_menu">{{'main.button.view' | translate}}</a></span>
+        </div>
+      </md-whiteframe>
+    </div>
     <div ng-if="hasExpiredBaseModules.length">
       <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
         <div md-colors="{color: 'warn'}">

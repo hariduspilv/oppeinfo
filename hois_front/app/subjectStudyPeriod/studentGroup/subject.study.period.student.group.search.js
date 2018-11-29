@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchController', 
-function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthService) {
+function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthService, message) {
     $scope.schoolId = $route.current.locals.auth.school.id;
 
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN);
@@ -21,12 +21,14 @@ function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthSer
 
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(setCurrentStudyPeriod);
 
-    $scope.$watch('criteria.studyPeriod', function() {
-            if(!ArrayUtils.isEmpty($scope.studyPeriods) && !$scope.criteria.studyPeriod) {
-                setCurrentStudyPeriod();
-            }
+    $scope.load = function() {
+        if (!$scope.searchForm.$valid) {
+          message.error('main.messages.form-has-errors');
+          return false;
+        } else {
+          $scope.loadData();
         }
-    );
+      };
 
     $scope.$watch('criteria.department', function() {
         if ($scope.criteria.department && $scope.criteria.curriculum) {

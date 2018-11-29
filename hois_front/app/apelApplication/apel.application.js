@@ -724,13 +724,14 @@
         
         function addNewEmptyFormalSubjectOrModule() {
           dialogScope.formState.isMySchool = false;
+          dialogScope.formState.isNewSchool = false;
           dialogScope.grades = null;
           dialogScope.record.assessment = null;
           dialogScope.record.curriculumVersionOmodule = null;
           dialogScope.record.newTransferableSubjectOrModule = {
             isNew: true,
             newApelSchool: null,
-            type: 'VOTA_AINE_LIIK_V',
+            type: 'VOTA_AINE_LIIK_M',
             assessment: null
           };
           getTransferableModulesOrSubjects(dialogScope.record.newTransferableSubjectOrModule.type);
@@ -770,12 +771,12 @@
             addMissingValuesToFormalModules(dialogScope.record.formalSubjectsOrModules);
             addMissingValuesToFormalReplacedModules(dialogScope.record.formalReplacedSubjectsOrModules);
           } else {
-            dialogScope.formState.isMySchool = dialogScope.record.newTransferableSubjectOrModule.isMySchool;
             dialogScope.record.newTransferableSubjectOrModule = dialogScope.record.formalSubjectsOrModules[0];
             dialogScope.record.subject = dialogScope.record.newTransferableSubjectOrModule.subject;
             dialogScope.record.nameEt = dialogScope.record.newTransferableSubjectOrModule.nameEt;
             dialogScope.record.nameEn = dialogScope.record.newTransferableSubjectOrModule.nameEn;
             dialogScope.record.apelSchool = dialogScope.record.newTransferableSubjectOrModule.apelSchool;
+            dialogScope.formState.isMySchool = dialogScope.record.newTransferableSubjectOrModule.isMySchool;
           }
         } else {
           dialogScope.record = {
@@ -846,15 +847,12 @@
             } else {
               dialogScope.record.newTransferableSubjectOrModule.type = 'VOTA_AINE_LIIK_M';
             }
+            getTransferableModulesOrSubjects(dialogScope.record.newTransferableSubjectOrModule.type);
           }
         });
 
         dialogScope.typeChanged = function (typeCode) {
-          if (dialogScope.isVocational) {
-            getTransferableModules(typeCode);
-          } else {
-            getTransferableSubjects(typeCode);
-          }
+          getTransferableModulesOrSubjects(typeCode);
         };
 
         function getTransferableModules(typeCode) {
@@ -932,7 +930,7 @@
 
         dialogScope.gradeValue = function (code) {
           var grade = clMapper.objectmapper({ grade: code }).grade;
-          return grade ? grade.value : undefined;
+          return grade ? ($scope.auth.school.letterGrades ? grade.value2 : grade.value) : undefined;
         };
 
         dialogScope.newSchoolCountryChanged = function (countryCode) {
@@ -1055,6 +1053,9 @@
 
         dialogScope.addNewSchool = function () {
           dialogScope.formState.isNewSchool = true;
+          if (dialogScope.record.newTransferableSubjectOrModule && dialogScope.record.newTransferableSubjectOrModule.apelSchool) {
+            dialogScope.record.newTransferableSubjectOrModule.apelSchool = null;
+          }
         };
 
         dialogScope.addNewTransferableModule = function () {
@@ -1458,6 +1459,7 @@
         QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/reject/').put({
           addInfo: submittedDialogScope.reason
         }, function (response) {
+          message.info('apel.messages.rejected');
           entityToForm(response);
         });
       });

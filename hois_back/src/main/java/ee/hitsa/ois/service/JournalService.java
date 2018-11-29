@@ -63,6 +63,7 @@ import ee.hitsa.ois.message.StudentRemarkCreated;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.JournalRepository;
 import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
@@ -132,6 +133,8 @@ public class JournalService {
     private XlsService xlsService;
     @Autowired
     private StudyYearService studyYearService;
+    @Autowired
+    private SchoolService schoolService;
     @Autowired
     private AutomaticMessageService automaticMessageService;
     
@@ -900,6 +903,10 @@ public class JournalService {
     public byte[] journalAsExcel(Journal journal) {
         JournalXlsDto dto = JournalXlsDto.of(journal);
         dto.setLessonHours(usedHours(journal));
+        
+        SchoolType type = schoolService.schoolType(EntityUtil.getId(journal.getSchool()));
+        dto.setIsHigherSchool(Boolean.valueOf(type.isHigher()));
+        
         return xlsService.generate("journal.xls", Collections.singletonMap("journal", dto));
     }
 

@@ -70,6 +70,10 @@ public abstract class CurriculumUtil {
     public static boolean occupationCanBeChanged(Classifier draft) {
         return !ClassifierUtil.equals(CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_RIIKLIK, draft);
     }
+    
+    public static boolean occupationCanBeChanged(HoisUserDetails user, Classifier draft) {
+        return occupationCanBeChanged(draft) || user.isSchoolAdmin();
+    }
 
     public static boolean isFreeModule(CurriculumModule m) {
         return ClassifierUtil.equals(CurriculumModuleType.KUTSEMOODUL_V, m.getModule());

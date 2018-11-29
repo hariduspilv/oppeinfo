@@ -226,6 +226,7 @@ angular.module('hitsaOis')
       this.userId = user.user;
       this.studentId = user.student;
       this.teacherId = user.teacher;
+      this.hasCurriculums = user.hasCurriculums;
       this.authorizedRoles = user.authorizedRoles;
       this.school = angular.extend(this.school || {}, user.school);
       this.roleCode = user.roleCode;
@@ -238,6 +239,7 @@ angular.module('hitsaOis')
       this.userId = null;
       this.studentId = null;
       this.teacherId = null;
+      this.hasCurriculums = null;
       this.authorizedRoles = [];
       this.school = {};
       this.roleCode = null;

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-.controller('baseModuleListController', ['$scope', 'QueryUtils', '$route', 
+.controller('BaseModuleListController', ['$scope', 'QueryUtils', '$route', 
 function ($scope, QueryUtils, $route) {
     QueryUtils.createQueryForm($scope, '/basemodule');
 
@@ -21,16 +21,18 @@ function ($scope, QueryUtils, $route) {
     $scope.searchCurriculumVersions = function (name) {
         return autocompleteCurriculumVersion.query({name: name}).$promise;
     };
-
+    
+    $scope.criteria.order = 'b.' + $scope.currentLanguageNameField();
     $scope.loadData();
 }])
-.controller('baseModuleEditController',
-['$scope', 'QueryUtils', '$route', 'message', 'ArrayUtils', 'dialogService', '$location', '$rootScope',
-function ($scope, QueryUtils, $route, message, ArrayUtils, dialogService, $location, $rootScope) {
+.controller('BaseModuleEditController',
+['$scope', 'QueryUtils', '$route', 'message', 'ArrayUtils', 'dialogService', '$location', '$rootScope', '$q',
+function ($scope, QueryUtils, $route, message, ArrayUtils, dialogService, $location, $rootScope, $q) {
 
     var baseUrl = "/basemodule";
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var autocompleteTeacher = QueryUtils.endpoint(baseUrl + "/teachers");
+    var capacityPromise = $q.defer();
 
     $scope.auth = $route.current.locals.auth;
     $scope.baseModuleId = $route.current.params.baseModuleId;
@@ -39,6 +41,9 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, dialogService, $locat
         result = result.map(function (row) {
             row.capacityType = row.code;
         });
+        capacityPromise.resolve(result);
+    }).catch(function (error) {
+        capacityPromise.reject(error);
     });
 
     $rootScope.removeLastUrlFromHistory(function(url){
@@ -117,11 +122,13 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, dialogService, $locat
         if ($scope.baseModule.validThru) {
             $scope.baseModule.validThru = new Date($scope.baseModule.validThru);
         }
-        if ($scope.baseModule.capacities) {
-            $scope.baseModule.capacities = uniqueCapacityArray($scope.baseModule.capacities.concat($scope.capacities));
-        } else {
-            $scope.baseModule.capacities = $scope.capacities;
-        }
+        capacityPromise.promise.then(function () {
+            if ($scope.baseModule.capacities) {
+                $scope.baseModule.capacities = uniqueCapacityArray($scope.baseModule.capacities.concat($scope.capacities));
+            } else {
+                $scope.baseModule.capacities = $scope.capacities;
+            }
+        });
     }
     
     function uniqueCapacityArray(arr) {
@@ -200,7 +207,7 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, dialogService, $locat
 
     $scope.viewTheme = function (theme) {
         if (angular.isDefined(theme) && $scope.baseModuleId) {
-            $location.url("/basemodule/" + $scope.baseModuleId + "/" + theme.id);
+            $location.url("/basemodule/" + $scope.baseModuleId + "/" + theme.id + "/view");
         }
     };
     

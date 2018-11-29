@@ -24,7 +24,7 @@
             <th md-column>{{'student.result.ekap' | translate}}</th>
             <th md-column>{{'student.result.grade' | translate}}</th>
             <th md-column>{{'student.result.date' | translate}}</th>
-            <th md-column>{{'student.result.teacher' | translate}}</th>
+            <th md-column>{{auth.higher ? ('student.result.teacherHigher' | translate) : ('student.result.teacherVocational' | translate)}}</th>
             <th md-column>{{'student.result.isOk' | translate}}</th>
           </tr>
         </thead>

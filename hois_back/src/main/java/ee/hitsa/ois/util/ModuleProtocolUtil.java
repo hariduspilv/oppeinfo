@@ -56,10 +56,11 @@ public abstract class ModuleProtocolUtil {
         return false;
     }
 
-    public static void assertIsSchoolAdminOrTeacherResponsible(HoisUserDetails user, Long teacherId) {
+    public static void assertIsSchoolAdminOrTeacherResponsible(HoisUserDetails user, boolean isHigher, Long teacherId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         if(user.isTeacher() && !user.getTeacherId().equals(teacherId)) {
-            throw new ValidationFailedException("moduleProtocol.error.teacherMismatch");
+            throw new ValidationFailedException(isHigher ? "moduleProtocol.error.teacherMismatchHigher"
+                    : "moduleProtocol.error.teacherMismatchVocational");
         }
     }
 

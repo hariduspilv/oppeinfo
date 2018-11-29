@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$scope', '$sessionStorage', 'QueryUtils',  '$route', 'message', 'MidtermTaskUtil', 'ArrayUtils', 'dialogService', 
-function ($scope, $sessionStorage, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dialogService) {
+angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$scope', 'QueryUtils',  '$route', 'message', 'MidtermTaskUtil', 'ArrayUtils', 'dialogService', 
+function ($scope, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dialogService) {
+  $scope.auth = $route.current.locals.auth;
 
   $scope.subjectStudyPeriodId = $route.current.params.id;
   var Endpoint = QueryUtils.endpoint('/midtermTasks/studentResults');

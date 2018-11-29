@@ -112,14 +112,14 @@
         <div layout="row" ng-if="record.supplementStatusEn === 'LOPUDOK_STAATUS_T'">
           <md-input-container flex="40" flex-sm="100" flex-xs="100" class="readonly">
             <label>{{'document.supplementStatus' | translate}}</label>
-            <hois-classifier-value ng-model="record.supplementStatus" main-classifier-code="LOPUDOK_STAATUS" model-value-attr="code"></hois-classifier-value>
+            <hois-classifier-value ng-model="record.supplementStatusEn" main-classifier-code="LOPUDOK_STAATUS" model-value-attr="code"></hois-classifier-value>
           </md-input-container>
         </div>
       
         <div layout="row" ng-if="record.supplementStatusEn === 'LOPUDOK_STAATUS_T'">
           <md-input-container flex="40" flex-sm="100" flex-xs="100" class="readonly">
             <label>{{'document.usedForms' | translate}}</label>
-            <hois-value value="record.forms.join(', ')"></hois-value>
+            <hois-value value="record.formsEn.join(', ')"></hois-value>
           </md-input-container>
         </div>
         

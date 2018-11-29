@@ -28,6 +28,8 @@ public class SubjectProgramForm extends VersionedCommand {
     private String grade3Description;
     private String grade4Description;
     private String grade5Description;
+    
+    private String rejectInfo;
 
     @NotNull
     @ClassifierRestriction(MainClassCode.OPPETOOSISU)
@@ -184,6 +186,12 @@ public class SubjectProgramForm extends VersionedCommand {
     }
     public void setGrade5Description(String grade5Description) {
         this.grade5Description = grade5Description;
+    }
+    public String getRejectInfo() {
+        return rejectInfo;
+    }
+    public void setRejectInfo(String rejectInfo) {
+        this.rejectInfo = rejectInfo;
     }
     /**
      * @param studyContents the studyContents to set

@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Committee;
-import ee.hitsa.ois.domain.CommitteeMember;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
 import ee.hitsa.ois.enums.Permission;
@@ -109,7 +108,7 @@ public class ScholarshipController {
 
     @GetMapping("/decision/{id:\\d+}")
     public ScholarshipDecisionDto decision(HoisUserDetails user, @PathVariable("id") Long decisionId) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
         return scholarshipService.decision(user, decisionId);
     }
 

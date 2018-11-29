@@ -101,7 +101,6 @@ public class ModuleProtocolController {
     @PostMapping
     public ModuleProtocolDto create(HoisUserDetails user,
             @Valid @RequestBody ModuleProtocolCreateForm moduleProtocolCreateForm) {
-        ModuleProtocolUtil.assertIsSchoolAdminOrTeacherResponsible(user, moduleProtocolCreateForm.getProtocolVdata().getTeacher());
         return ModuleProtocolDto.onlyId(moduleProtocolService.create(user, moduleProtocolCreateForm));
     }
     @PutMapping("/{id:\\d+}")
@@ -172,8 +171,8 @@ public class ModuleProtocolController {
         Protocol savedProtocol = moduleProtocolService.save(protocol, moduleProtocolSignForm);
 
         UnsignedBdocContainer unsignedBdocContainer = bdocService.createUnsignedBdocContainer("mooduli_protokoll.pdf",
-                MediaType.APPLICATION_PDF_VALUE,
-                pdfService.generate(ModuleProtocolReport.TEMPLATE_NAME, new ModuleProtocolReport(savedProtocol)),
+                MediaType.APPLICATION_PDF_VALUE, pdfService.generate(ModuleProtocolReport.TEMPLATE_NAME,
+                        moduleProtocolService.moduleProtocolReport(protocol)),
                 moduleProtocolSignForm.getCertificate());
 
         httpSession.setAttribute(BDOC_TO_SIGN, unsignedBdocContainer);
@@ -199,7 +198,8 @@ public class ModuleProtocolController {
         ModuleProtocolUtil.assertCanConfirm(user, protocol);
 
         Protocol savedProtocol = moduleProtocolService.save(protocol, moduleProtocolSaveForm);
-        byte[] pdfData = pdfService.generate(ModuleProtocolReport.TEMPLATE_NAME, new ModuleProtocolReport(savedProtocol));
+        byte[] pdfData = pdfService.generate(ModuleProtocolReport.TEMPLATE_NAME,
+                moduleProtocolService.moduleProtocolReport(savedProtocol));
         
         MobileIdSession session = bdocService.mobileSign("mooduli_protokoll.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
@@ -244,8 +244,8 @@ public class ModuleProtocolController {
     public void print(HoisUserDetails user, @WithEntity Protocol protocol, HttpServletResponse response)
             throws IOException {
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
-        HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
-                pdfService.generate(ModuleProtocolReport.TEMPLATE_NAME, new ModuleProtocolReport(protocol)));
+        HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf", pdfService
+                .generate(ModuleProtocolReport.TEMPLATE_NAME, moduleProtocolService.moduleProtocolReport(protocol)));
     }
     
     @GetMapping("/{id:\\d+}/calculate")

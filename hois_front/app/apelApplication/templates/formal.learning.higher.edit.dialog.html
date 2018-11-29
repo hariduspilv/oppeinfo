@@ -171,8 +171,8 @@
                 </md-input-container>
                 <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'apel.formalLearnings.result' | translate}}</label>
-                  <hois-select ng-model="record.newTransferableSubjectOrModule.grade" values="grades" show-property="value" value-property="code"
-                    aria-label="grade" required></hois-select>
+                  <hois-select ng-model="record.newTransferableSubjectOrModule.grade" values="grades" value-property="code"
+                    show-property="{{auth.school.letterGrades ? 'value2' : 'value'}}" aria-label="grade" required></hois-select>
                 </md-input-container>
                 <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'apel.formalLearnings.result' | translate}}</label>
@@ -190,11 +190,11 @@
                   <input value="{{record.newTransferableSubjectOrModule.gradeDate | hoisDate}}" disabled></input>
                 </md-input-container>
                 <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.teachers' | translate}}</label>
+                  <label>{{auth.higher ? ('apel.formalLearnings.teachersHigher' | translate) : ('apel.formalLearnings.teachersVocational' | translate)}}</label>
                   <input type="text" value="{{record.newTransferableSubjectOrModule.teachers}}" disabled>
                 </md-input-container>
                 <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.teachers' | translate}}</label>
+                  <label>{{auth.higher ? ('apel.formalLearnings.teachersHigher' | translate) : ('apel.formalLearnings.teachersVocational' | translate)}}</label>
                   <input type="text" ng-model="record.newTransferableSubjectOrModule.teachers" md-maxlength="255">
                 </md-input-container>
               </div>

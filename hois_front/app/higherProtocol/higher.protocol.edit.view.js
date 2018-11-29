@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$scope', '$sessionStorage', '$filter', '$q', 'QueryUtils', 'DataUtils', '$route', '$rootScope', 'message', 'orderByFilter', '$location', 'config', 'MidtermTaskUtil', 'dialogService', 'ArrayUtils', 'Classifier', 'ProtocolUtils', 'oisFileService', 'HigherGradeUtil',
-function ($scope, $sessionStorage, $filter, $q, QueryUtils, DataUtils, $route, $rootScope, message, orderBy, $location, config, MidtermTaskUtil, dialogService, ArrayUtils, Classifier, ProtocolUtils, oisFileService, HigherGradeUtil) {
+angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$scope', '$filter', '$q', 'QueryUtils', '$route', 'message', 'config', 'MidtermTaskUtil', 'Classifier', 'ProtocolUtils', 'oisFileService', 'HigherGradeUtil',
+function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskUtil, Classifier, ProtocolUtils, oisFileService, HigherGradeUtil) {
   $scope.auth = $route.current.locals.auth;
   $scope.gradeUtil = HigherGradeUtil;
   var baseUrl = "/higherProtocols";

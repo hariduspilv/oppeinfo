@@ -97,7 +97,7 @@ angular.module('hitsaOis')
      * Gets a form for replacement this occupation module by base module
      */
     function getModuleReplaceForm() {
-      if ($scope.curriculumModule.baseModule) {
+      if ($scope.curriculumModule.baseModule && $scope.auth.isAdmin() && ArrayUtils.includes($scope.auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEKAVA)) {
         QueryUtils.endpoint(
           "/basemodule/replace/" + $scope.curriculumModule.baseModule.id +
           "/" + $scope.curriculumModule.id +
@@ -400,7 +400,7 @@ angular.module('hitsaOis')
       dialogService.confirmDialog({prompt: 'curriculum.prompt.deleteModule'}, function() {
         new Endpoint($scope.occupationModule).$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path('/vocationalCurriculum/' + curriculum + '/moduleImplementationPlan/' + curriculumVersion + '/edit');
+          $location.url('/vocationalCurriculum/' + curriculum + '/moduleImplementationPlan/' + curriculumVersion + '/edit?_noback');
         }).catch(angular.noop);
       });
     };

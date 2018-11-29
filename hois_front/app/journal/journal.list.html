@@ -2,7 +2,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+      <form name="searchForm" ng-submit="load()" novalidate class="nomargin">
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'journal.studyYear' | translate}}</label>
@@ -17,7 +17,7 @@
 
         <div layout="row" layout-sm="column" layout-xs="column" ng-if="auth.isAdmin()">
           <div flex="45" flex-sm="100" flex-xs="100">
-            <hois-autocomplete label="teacher.label" ng-model="criteria.teacherObject" method="teachers"></hois-autocomplete>
+            <hois-autocomplete label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}" ng-model="criteria.teacherObject" method="teachers"></hois-autocomplete>
           </div>
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <hois-autocomplete label="module.label" ng-model="criteria.moduleObject" method="vocationaloccupationmodules"></hois-autocomplete>
@@ -33,7 +33,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100">
             <label class="textInput">{{'journal.label' | translate}}</label>
-            <input ng-model="criteria.journalName" type="text">
+            <input ng-model="criteria.journalName" type="text" md-maxlength="255">
           </md-input-container>
 
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -60,7 +60,7 @@
           <tr md-row>
             <th md-column md-order-by="2">{{'journal.studentGroups' | translate}}</th>
             <th md-column md-order-by="3">{{'journal.label' | translate}}</th>
-            <th md-column md-order-by="4">{{'journal.teachers' | translate}}</th>
+            <th md-column md-order-by="4">{{auth.higher ? ('journal.teachersHigher' | translate) : ('journal.teachersVocational' | translate)}}</th>
             <th md-column md-order-by="{{currentLanguage() === 'et' ? 5 : 6}}">{{'journal.modules' | translate}}</th>
             <th md-column>{{'journal.plannedAndEnteredLessonsCount1' | translate}}<br>{{'journal.plannedAndEnteredLessonsCount2' | translate}}</th>
             <th md-column md-order-by="7">{{'main.status' | translate}}</th>

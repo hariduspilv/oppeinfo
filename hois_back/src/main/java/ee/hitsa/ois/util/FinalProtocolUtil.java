@@ -118,10 +118,11 @@ public class FinalProtocolUtil {
         }
     }
 
-    public static void assertIsSchoolAdminOrTeacherResponsible(HoisUserDetails user, Long teacherId) {
+    public static void assertIsSchoolAdminOrTeacherResponsible(HoisUserDetails user, boolean isHigher, Long teacherId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         if(user.isTeacher() && !user.getTeacherId().equals(teacherId)) {
-            throw new ValidationFailedException("finalProtocol.error.teacherMismatch");
+            throw new ValidationFailedException(isHigher ? "finalProtocol.error.teacherMismatchHigher"
+                    : "finalProtocol.error.teacherMismatchVocational");
         }
     }
 

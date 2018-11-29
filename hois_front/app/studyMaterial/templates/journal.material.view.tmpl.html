@@ -24,7 +24,7 @@
             </div>
           </td>
           <td md-cell ng-if="material.typeCode.code === 'OPPEMATERJAL_L'">
-            <a ng-href="{{material.url}}" target="_blank" rel="noopener noreferrer">{{material.url}}</a>
+            <a ng-href="{{material.url | hoisUrl}}" target="_blank" rel="noopener noreferrer">{{material.url}}</a>
           </td>
         </tr>
       </tbody>

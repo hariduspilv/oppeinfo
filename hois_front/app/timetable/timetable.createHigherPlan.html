@@ -33,19 +33,19 @@
     </hois-collapsable>
 
     <div layout="column" flex layout-gt-md="row">
-      <div flex="60" layout="column" layout-gt-sm="row">
+      <div flex="50" layout="column" layout-gt-sm="row">
         <md-input-container flex="100" flex-gt-sm="60">
           <label>{{'timetable.timetablePlan.planGroupLessonsSubject' | translate}}</label>
           <hois-select ng-model="plan.selectedGroup" values="plan.currentStudentGroups" show-property="code" value-property="dropdownValue"></hois-select>
         </md-input-container>
-        <hois-autocomplete flex="100" flex-gt-sm="30" flex-offset-gt-sm="10" ng-model="plan.eventRoom" method="rooms" label="lessonplan.event.room"></hois-autocomplete>
+        <hois-autocomplete flex="100" flex-gt-sm="35" flex-offset-gt-sm="5" ng-model="plan.eventRoom" method="rooms" label="lessonplan.event.room"></hois-autocomplete>
       </div>
-      <div flex="35" layout="column" layout-gt-sm="row" flex-offset-gt-md="5">
-        <md-input-container flex="100"  flex-gt-sm="25">
+      <div flex="45" layout="column" layout-gt-sm="row" flex-offset-gt-md="5">
+        <md-input-container flex="100"  flex-gt-sm="35">
           <label>{{'timetable.timetablePlan.lessonAmount' | translate}}</label>
           <input ng-model="plan.lessonAmount" type="number" autofocus aria-label="lessonamount">
         </md-input-container>
-        <md-input-container flex="100" flex-gt-sm="65" flex-offset-gt-sm="10">
+        <md-input-container flex="100" flex-gt-sm="60" flex-offset-gt-sm="5">
           <label>{{'timetable.timetablePlan.repetition' | translate}}</label>
           <hois-classifier-select ng-model="plan.repeatCode" model-value-attr="code" aria-label="repeatcode" main-classifier-code="TUNNIPLAAN_SYNDMUS_KORDUS">
           </hois-classifier-select>

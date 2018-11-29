@@ -46,14 +46,12 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
           pPromise.then(fThen);
           if (fCatch !== null || fCatch !== undefined) {
             pPromise.catch(function (error) {
-              console.log(error);
               this.setFinish(sName);
               throw error;
             });
             pPromise.catch(fCatch);
           } else {
-            pPromise.catch(function (error) {
-              console.log(error);
+            pPromise.catch(function () {
               this.setFinish(sName);
             });
           }
@@ -153,6 +151,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       $scope.pageLoadingHandler.reset();
       $scope.loadGeneralMessages();
       $scope.loadUnreadMessages();
+      checkIfHasSubjectProgramNotification();
       checkIfHasExpiredBaseModules();
       checkIfHasUnacceptedAbsences();
       checkUnconfirmedJournals();
@@ -180,9 +179,21 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     $scope.$on(AUTH_EVENTS.loginSuccess, afterAuthentication);
     $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
 
+    function checkIfHasSubjectProgramNotification() {
+      if (['ROLL_O'].indexOf(Session.roleCode) !== -1) {
+        $scope.hasUnconfirmedPrograms = QueryUtils.endpoint("/subject/subjectProgram/hasunconfirmed").get();
+        $scope.hasUncompletedPrograms = QueryUtils.endpoint("/subject/subjectProgram/hasuncompleted").get();
+      } else {
+        $scope.hasUnconfirmedPrograms = undefined;
+        $scope.hasUncompletedPrograms = undefined;
+      }
+    }
+
     function checkIfHasExpiredBaseModules() {
       if (['ROLL_A'].indexOf(Session.roleCode) !== -1 && ArrayUtils.includes(Session.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_BAASMOODUL)) {
         $scope.hasExpiredBaseModules = QueryUtils.endpoint('/basemodule/expiredhascurriculums').query();
+      } else {
+        $scope.hasExpiredBaseModules = undefined;
       }
     }
 

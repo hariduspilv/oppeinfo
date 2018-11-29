@@ -9,6 +9,7 @@ import ee.hitsa.ois.domain.student.Student;
 public class CertificateReport {
     
     private String school;
+    private Boolean isHigherSchool;
     private CertificateReportStudent student;
     private String studyYear;
     private List<CertificateReportSession> sessions;
@@ -64,6 +65,14 @@ public class CertificateReport {
 
     public void setSchool(String school) {
         this.school = school;
+    }
+
+    public Boolean getIsHigherSchool() {
+        return isHigherSchool;
+    }
+
+    public void setIsHigherSchool(Boolean isHigherSchool) {
+        this.isHigherSchool = isHigherSchool;
     }
 
     public CertificateReportStudent getStudent() {

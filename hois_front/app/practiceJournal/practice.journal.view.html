@@ -213,7 +213,7 @@
     <div class="form-readonly" layout="row">
       <md-input-container flex>
         <label class="textInput">{{'practiceJournal.grade' | translate}}</label>
-        <hois-value value="getGrade(practiceJournal.grade).value"></hois-value>
+        <hois-value value="practiceJournal.isHigher && auth.school.letterGrades ? getGrade(practiceJournal.grade).value2 : getGrade(practiceJournal.grade).value"></hois-value>
       </md-input-container>
     </div>
 

@@ -2,7 +2,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form ng-submit="loadData()" class="ois-form-layout nomargin" layout="column">
+      <form name="seachForm" ng-submit="seachForm.$valid && loadData()" class="ois-form-layout nomargin" layout="column">
         <div layout="column" flex>
           <md-input-container  ng-if="auth.isMainAdmin()" flex>
             <label>{{'school.label' | translate}}</label>
@@ -10,11 +10,11 @@
           </md-input-container>
           <md-input-container flex>
             <label>{{'person.name' | translate}}</label>
-            <input ng-model="criteria.name" type="text">
+            <input ng-model="criteria.name" type="text" md-maxlength="255">
           </md-input-container>
           <md-input-container flex>
             <label>{{'person.idcode' | translate}}</label>
-            <input ng-model="criteria.idcode" type="text">
+            <input ng-model="criteria.idcode" type="text" minlength="11" md-maxlength="11">
           </md-input-container>
           <md-input-container flex>
             <label>{{'user.role' | translate}}</label>

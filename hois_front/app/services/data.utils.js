@@ -80,17 +80,17 @@ angular.module('hitsaOis').factory('DataUtils',
              (period1.startDate >= period2.startDate) && (period1.startDate <= period2.endDate);
     }
 
-    function occupiedEventTimePrompts(occupiedTime) {
+    function occupiedEventTimePrompts(scope, isHigherSchool, occupiedTime) {
       var rooms = occupiedTime.rooms.map(function(room) {
-        return room;
+        return scope.currentLanguageNameField(room);
       }).join(', ');
 
       var teachers = occupiedTime.teachers.map(function(teacher) {
-        return teacher.nameEt;
+        return scope.currentLanguageNameField(teacher);
       }).join(', ');
 
       var studentGroups = occupiedTime.studentGroups.map(function(studentGroup) {
-        return studentGroup;
+        return scope.currentLanguageNameField(studentGroup);
       }).join(', ');
 
       var prompts = [];
@@ -98,7 +98,7 @@ angular.module('hitsaOis').factory('DataUtils',
         prompts.push('timetable.roomIsOccupied');
       }
       if (teachers.length > 0) {
-        prompts.push('timetable.teacherIsOccupied');
+        prompts.push(isHigherSchool ? 'timetable.teacherIsOccupiedHigher' : 'timetable.teacherIsOccupiedVocational');
       }
       if (studentGroups.length > 0) {
         prompts.push('timetable.studentGroupIsOccupied');

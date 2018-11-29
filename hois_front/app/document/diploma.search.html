@@ -1,0 +1,78 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="loadData()" novalidate class="nomargin">
+        <div layout="row">
+          <md-input-container flex="100">
+            <label>{{'document.student' | translate}}</label>
+            <input type="text" ng-model="criteria.student">
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <hois-autocomplete flex ng-model="criteria.curriculum" method="curriculumsauto" no-paging="true" label="document.search.curriculum"></hois-autocomplete>
+        </div>
+        <div layout="row">
+          <div layout="column" flex="45">
+            <div layout="row" layout-sm="column" layout-xs="column" >
+              <md-input-container flex flex-sm="100" flex-xs="100">
+                <label>{{'document.search.from' | translate}}</label>
+                <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"></md-datepicker>
+              </md-input-container>
+              <md-input-container flex flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+                <label>{{'document.search.thru' | translate}}</label>
+                <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+              </md-input-container>
+            </div>
+          </div>
+        </div>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'document.button.excel' | translate}}</a>
+        </div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="p.lastname">{{'document.student' | translate}}</th>
+            <th md-column md-order-by="p.idcode">{{'document.idcode' | translate}}</th>
+            <th md-column md-order-by="c.mer_code">{{'document.search.merCode' | translate}}</th>
+            <th md-column md-order-by="c.name_et">{{'document.search.curriculum' | translate}}</th>
+            <th md-column>{{'document.search.type' | translate}}</th>
+            <th md-column>{{'document.search.diplomaStatus' | translate}}</th>
+            <th md-column>{{'document.search.diplomaNr' | translate}}</th>
+            <th md-column>{{'document.search.supplementStatus' | translate}}</th>
+            <th md-column>{{'document.search.supplementNr' | translate}}</th>
+            <th md-column ng-if="auth.higher">{{'document.search.supplementStatusEn' | translate}}</th>
+            <th md-column ng-if="auth.higher">{{'document.search.supplementNrEn' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell><a ng-href="#/students/{{::row.studentId}}/main">{{row.fullname}}</a></td>
+            <td md-cell>{{::row.idcode}}</td>
+            <td md-cell>{{::row.merCode}}</td>
+            <td md-cell>{{::row.curriculum}}</td>
+            <td md-cell>{{currentLanguageNameField(row.type)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.diplomaStatus)}}</td>
+            <td md-cell><a ng-href="{{formState.pdfBaseUrl}}/{{::row.diplomaId}}/diploma.pdf">{{::row.diplomaNr}}</a></td>
+            <td md-cell>{{currentLanguageNameField(row.supplementStatus)}}</td>
+            <td md-cell><a ng-href="{{formState.pdfBaseUrl}}/{{::row.supplementId}}/supplement.pdf">{{::row.supplementNr}}</a></td>
+            <td md-cell ng-if="auth.higher">{{currentLanguageNameField(row.supplementStatusEn)}}</td>
+            <td md-cell ng-if="auth.higher"><a ng-href="{{formState.pdfBaseUrl}}/{{::row.supplementId}}/supplement.pdf?lang=EN">{{::row.supplementNrEn}}</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+      md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>

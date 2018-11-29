@@ -47,12 +47,12 @@
 
           <md-input-container class="md-block">
             <label>{{'student.representative.phone' | translate}}</label>
-            <input ng-model="record.person.phone" name="phone" type="text" required md-maxlength="100" md-autofocus="!!record.id">
+            <input ng-model="record.person.phone" name="phone" type="text" required md-maxlength="100" md-autofocus="!record.id">
           </md-input-container>
 
           <md-input-container class="md-block">
             <label>{{'student.representative.email' | translate}}</label>
-            <input ng-model="record.person.email" name="email" type="text" required md-maxlength="255">
+            <input ng-model="record.person.email" name="email" type="text" required md-maxlength="100">
           </md-input-container>
 
           <md-checkbox ng-model="record.isStudentVisible" name="isStudentVisible" ng-disabled="isParent" ng-if="record.id">

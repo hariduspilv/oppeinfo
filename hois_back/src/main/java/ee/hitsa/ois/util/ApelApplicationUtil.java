@@ -36,14 +36,12 @@ public abstract class ApelApplicationUtil {
     public static boolean canEdit(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
-        if (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)) {
-            if (user.isStudent()) {
-                return ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status) && UserUtil.isSame(user, student);
-            } else if (user.isSchoolAdmin()) {
-                return (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)
-                        || ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status))
-                        && UserUtil.isSchoolAdmin(user, application.getSchool());
-            }
+        if (user.isStudent()) {
+            return ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status) && UserUtil.isSame(user, student);
+        } else if (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)) {
+            return (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)
+                    || ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status))
+                    && UserUtil.isSchoolAdmin(user, application.getSchool());
         }
         return false;
     }

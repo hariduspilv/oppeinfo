@@ -306,10 +306,8 @@ function ($scope, $location, $q, message, QueryUtils, $route, Classifier) {
 ]).controller('ScholarshipDecisionViewController', ['$scope', '$location', '$q', 'message', 'QueryUtils', '$route', 'Classifier', 'dialogService',
 function ($scope, $location, $q, message, QueryUtils, $route, Classifier, dialogService) {
   var baseUrl = '/scholarships/decision';
+  $scope.auth = $route.current.locals.auth;
   $scope.scholarshipType = $route.current.params.type;
-  $scope.formState = {
-    committees: QueryUtils.endpoint("/scholarships/committees").query()
-  };
   var id = $route.current.params.id;
 
   var Endpoint = QueryUtils.endpoint(baseUrl);

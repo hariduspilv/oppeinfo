@@ -22,15 +22,26 @@
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
             <md-input-container flex> 
               <label class="textInput">{{'lessonplan.journal.theme' | translate}}</label>
-              <hois-select name="theme" ng-model="formState.theme" values="formState.themes"></hois-select>
-            </md-input-container>
+              <md-select name="theme" ng-model="formState.theme">
+                <md-option md-option-empty></md-option>
+                <md-option ng-repeat="theme in formState.themes" ng-value="theme.id" ng-style="theme.existsInOtherJournals ? {color: 'red'} : {}">
+                  <span>{{currentLanguageNameField(theme)}}</span>
+                  <span ng-if="theme.studyYearNumber">({{theme.studyYearNumber}}. {{'main.studyYearShort' | translate}})</span>
+                </md-option>
+              </md-select>
+            </md-input-container>          
           </div>
 
           <div layout="column" class="common-label" flex="95" 
             ng-repeat="theme in record.journalOccupationModuleThemes | orderBy: orderByThemeName">
             <div layout="row" flex layout-align="start center">
               <div flex="5">&nbsp;</div>
-              <div flex="50">{{currentLanguageNameField(formState.themeMap[theme])}}</div>
+              <div flex="50">
+                <span ng-style="{'color': formState.themeMap[theme].existsInOtherJournals ? 'red' : 'inherit'}">
+                  <span>{{currentLanguageNameField(formState.themeMap[theme])}}</span>
+                  <span ng-if="formState.themeMap[theme].studyYearNumber"> ({{formState.themeMap[theme].studyYearNumber}} {{'main.studyYearShort' | translate}})</span>
+                </span>
+              </div>
               <div>
                 <a ng-click="deleteTheme(theme)" class="remove">&times;</a>
               </div>
@@ -70,7 +81,8 @@
           </div>
 
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
-            <hois-autocomplete label="lessonplan.journal.teacher" ng-model="formState.teacher" method="teachers" additional-query-params="{valid: true}" flex></hois-autocomplete>
+            <hois-autocomplete ng-model="formState.teacher" method="teachers" additional-query-params="{valid: true}" 
+              label="{{auth.higher ? 'lessonplan.journal.teacherHigher' : 'lessonplan.journal.teacherVocational'}}" flex></hois-autocomplete>
           </div>
 
           <div layout="row">
@@ -127,8 +139,8 @@
           </div>
 
           <div layout="row" flex>
-            <md-table-container class="secondary-table">
-              <table md-table flex="80">
+            <md-table-container class="secondary-table" flex>
+              <table md-table flex>
                 <thead md-head flex>
                   <tr md-row>
                     <th md-column></th>
@@ -150,9 +162,12 @@
                     <td md-cell>
                       <md-input-container class="md-block" flex>
                         <label>{{'lessonplan.journal.group-theme' | translate}}</label>
-                        <hois-select ng-model="moduleTheme.curriculumVersionOccupationModuleThemes" required values="moduleTheme.group.themes" flex
-                          multiple></hois-select>
+                        <hois-select ng-model="moduleTheme.curriculumVersionOccupationModuleThemes" values="moduleTheme.group.themes"
+                          warning-param="existsInOtherJournals" multiple required flex></hois-select>
                       </md-input-container>
+                    </td>
+                    <td md-cell>
+                      {{moduleTheme.group.themes[moduleTheme.curriculumVersionOccupationModuleThemes]}}
                     </td>
                     <td md-cell>
                       <a ng-click="deleteGroup(moduleTheme)" class="remove">&times;</a>
@@ -185,7 +200,7 @@
       <div layout="row">
         <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
         <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-        <md-button ng-click="back('#/lessonplans/vocational/' + record.lessonPlan + '/edit', journalForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-click="backToLessonplan()" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
   </div>

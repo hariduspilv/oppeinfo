@@ -18,6 +18,9 @@
               <th md-column>{{"report.studentGroupTeacher.studentName" | translate}}</th>
               <th md-column>{{"report.studentGroupTeacher.journal" | translate}}</th>
               <th md-column>{{"report.studentGroupTeacher.date" | translate}}</th>
+              <th md-column>
+                {{auth.higher ? ("report.studentGroupTeacher.teacherHigher" | translate) : ("report.studentGroupTeacher.teacherVocational" | translate)}}
+              </th>
               <th md-column>{{"report.studentGroupTeacher.entry" | translate}}</th>
               <th md-column>{{"report.studentGroupTeacher.addInfo" | translate}}</th>
             </tr>
@@ -27,6 +30,7 @@
               <td md-cell>{{student.fullname}}</td>
               <td md-cell>{{currentLanguageNameField(row.journal)}}</td>
               <td md-cell>{{row.entryDate | hoisDate}}</td>
+              <td md-cell>{{row.changedBy}}</td>
               <td md-cell>
                 <span ng-if="row.absence">
                   <span>{{row.absence.value}}</span>

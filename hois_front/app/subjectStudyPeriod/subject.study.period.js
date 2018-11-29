@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$scope', 'QueryUtils', 'DataUtils', '$route', 'ArrayUtils',
-  function ($scope, QueryUtils, DataUtils, $route, ArrayUtils) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$scope', 'QueryUtils', 'DataUtils', '$route', 'ArrayUtils', 'Classifier', 'message',
+  function ($scope, QueryUtils, DataUtils, $route, ArrayUtils, Classifier, message) {
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods', {order: 's.' + $scope.currentLanguageNameField()});
 
     $scope.auth = $route.current.locals.auth;
@@ -12,16 +12,24 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         }
     }
 
+    Classifier.queryForDropdown({mainClassCode: 'AINEPROGRAMM_STAATUS'}, function(response) {
+        $scope.statusOptions = Classifier.toMap(response);
+    });
+
+    $scope.load = function() {
+        if (!$scope.searchForm.$valid) {
+          message.error('main.messages.form-has-errors');
+          return false;
+        } else {
+          $scope.loadData();
+        }
+      };
+
     QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
         $scope.studyPeriods = response;
         setCurrentStudyPeriod();
         $scope.loadData();
     });
-
-    $scope.$watch('criteria.studyPeriods', function() {
-          setCurrentStudyPeriod();
-        }
-    );
 
     $scope.$watch('criteria.studentObject', function() {
       if($scope.criteria) {
@@ -77,6 +85,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
       $scope.studentGroup = QueryUtils.endpoint('/studentgroups').get({id: studentGroupId});
     }
 
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+    $scope.subjects = QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query();
+
     if(id) {
         Endpoint.get({id: id}).$promise.then(function(response){
             $scope.record = response;
@@ -87,6 +98,16 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
                 $scope.record.groupProportion = 'PAEVIK_GRUPI_JAOTUS_1';
             }
             $scope.disableSubject = true;
+            $scope.subject = QueryUtils.endpoint('/subjectStudyPeriods/subject').get({id: response.subject}, function (subject) {
+                $scope.subjects.$promise.then(function (subjects) {
+                    for (var i = 0; i < subjects.length; i++) {
+                        if (subjects[i].id === subject.id) {
+                            return;
+                        }
+                    }
+                    subjects.push(subject);
+                });
+            });
         });
     } else {
         var initialObject = {
@@ -104,10 +125,6 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
             });
         }
     }
-
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
-
-    $scope.subjects = QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query();
 
     $scope.addTeacher = function(teacher) {
         if(teacher && !isTeacherAdded(teacher)) {

@@ -1,6 +1,32 @@
 'use strict';
 
-angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$route', '$q', '$httpParamSerializer', '$window', 'Classifier', 
+angular.module('hitsaOis').controller('DiplomaSearchController', ['$scope', '$route', '$q', 'Classifier', 'QueryUtils', 'config',
+  function ($scope, $route, $q, Classifier, QueryUtils, config) {
+
+    var baseUrl = "/documents";
+    $scope.auth = $route.current.locals.auth;
+
+    $scope.formState = {
+      xlsUrl: 'documents/documents.xls',
+      pdfBaseUrl: config.apiUrl + baseUrl + "/view"
+    };
+
+    var clMapper = Classifier.valuemapper({type: 'LOPUBLANKETT', diplomaStatus: 'LOPUDOK_STAATUS', 
+      supplementStatus: 'LOPUDOK_STAATUS', supplementStatusEn: 'LOPUDOK_STAATUS'});
+
+    QueryUtils.createQueryForm($scope, baseUrl, {order: 'p.lastname', isHigher: $scope.auth.higher}, function (result) {
+      $q.all(clMapper.promises).then(function() {
+        clMapper.objectmapper(result);
+      });
+    });
+    var _clearCriteria = $scope.clearCriteria;
+    $scope.clearCriteria = function() {
+      _clearCriteria();
+      $scope.criteria.isHigher = $scope.auth.higher;
+    };
+    $scope.loadData();
+
+}]).controller('DiplomaController', ['$scope', '$route', '$q', '$httpParamSerializer', '$window', 'Classifier', 
     'config', 'QueryUtils', 'DataUtils', 'DocumentUtils', 'dialogService', 'message',
   function ($scope, $route, $q, $httpParamSerializer, $window, Classifier, config, QueryUtils, DataUtils, DocumentUtils, dialogService, message) {
     var baseUrl = '/documents';
@@ -108,6 +134,18 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$route', 
       return config.apiUrl + baseUrl + '/diploma/print.pdf?' + $httpParamSerializer($scope.criteria);
     }
 
+    function getSelectedDirective() {
+      var directives = $scope.formState.directives.filter(function (directive) {
+        return directive.id === $scope.criteria.directiveId;
+      });
+      if (directives.length > 0) {
+        return directives[0];
+      }
+    }
+    $scope.canPrintConfirm = function() {
+      var selectedDirective = getSelectedDirective();
+      return $scope.viewPdfUrl && selectedDirective.status.code === 'KASKKIRI_STAATUS_KINNITATUD';
+    };
     $scope.print = function() {
       $scope.criteria.studentIds = getSelectedStudentIds();
       QueryUtils.endpoint(baseUrl + '/diploma/calculate').query($scope.criteria, function(result) {
@@ -255,7 +293,7 @@ angular.module('hitsaOis').controller('DiplomaController', ['$scope', '$route', 
           accept: 'document.confirm.yes',
           cancel: 'document.confirm.no'
         }, function() {
-          QueryUtils.endpoint(baseUrl + '/supplement/' + id + '/confirm').save(result.map(function(form) {
+          QueryUtils.endpoint(baseUrl + '/supplement/' + id + '/confirm' + (lang ? '?lang=' + lang : '')).save(result.map(function(form) {
             return form.id;
           }), function() {
             message.updateSuccess();

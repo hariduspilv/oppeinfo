@@ -46,8 +46,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
       }, function (submittedDialogScope) {
         var data = submittedDialogScope.data;
         oisFileService.getFromLfFile(data.file[0], function (file) {
-          data.oisFile = file;
-          $scope.application.files.push(data);
+          $scope.application.files.push(file);
         });
         //message.info('stipend.messages.filesWillBeAddedOnSubmit');
       });

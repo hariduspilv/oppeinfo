@@ -7,6 +7,10 @@ public class CurriculumVersionOccupationModuleThemeAutocompleteCommand {
     @Required
     private Long curriculumVersionOmoduleId;
     private Boolean closedCurriculumVersionModules;
+    private Boolean addStudyYearToName;
+    private Boolean existInOtherJournals;
+    private Long journalId;
+    private Long studentGroupId;
 
     public Long getCurriculumVersionOmoduleId() {
         return curriculumVersionOmoduleId;
@@ -23,5 +27,36 @@ public class CurriculumVersionOccupationModuleThemeAutocompleteCommand {
     public void setClosedCurriculumVersionModules(Boolean closedCurriculumVersionModules) {
         this.closedCurriculumVersionModules = closedCurriculumVersionModules;
     }
-    
+
+    public Boolean getAddStudyYearToName() {
+        return addStudyYearToName;
+    }
+
+    public void setAddStudyYearToName(Boolean addStudyYearToName) {
+        this.addStudyYearToName = addStudyYearToName;
+    }
+
+    public Boolean getExistInOtherJournals() {
+        return existInOtherJournals;
+    }
+
+    public void setExistInOtherJournals(Boolean existInOtherJournals) {
+        this.existInOtherJournals = existInOtherJournals;
+    }
+
+    public Long getJournalId() {
+        return journalId;
+    }
+
+    public void setJournalId(Long journalId) {
+        this.journalId = journalId;
+    }
+
+    public Long getStudentGroupId() {
+        return studentGroupId;
+    }
+
+    public void setStudentGroupId(Long studentGroupId) {
+        this.studentGroupId = studentGroupId;
+    }
 }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.DocumentService;
@@ -23,9 +24,11 @@ import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.document.DiplomaConfirmForm;
 import ee.hitsa.ois.web.commandobject.document.DiplomaForm;
+import ee.hitsa.ois.web.commandobject.document.DiplomaSearchForm;
 import ee.hitsa.ois.web.commandobject.document.SupplementForm;
 import ee.hitsa.ois.web.commandobject.document.SupplementSearchForm;
 import ee.hitsa.ois.web.dto.FinalDocSignerDto;
+import ee.hitsa.ois.web.dto.document.DiplomaSearchDto;
 import ee.hitsa.ois.web.dto.document.DirectiveDto;
 import ee.hitsa.ois.web.dto.document.FormDto;
 import ee.hitsa.ois.web.dto.document.StudentDto;
@@ -38,7 +41,19 @@ public class DocumentController {
 
     @Autowired
     private DocumentService documentService;
-    
+
+    @GetMapping
+    public Page<DiplomaSearchDto> search(HoisUserDetails user, DiplomaSearchForm criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_LOPTUNNISTUS_TRUKKIMINE);
+        return documentService.search(user, criteria, pageable);
+    }
+
+    @GetMapping("/documents.xls")
+    public void searchExcel(HoisUserDetails user, DiplomaSearchForm criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_LOPTUNNISTUS_TRUKKIMINE);
+        HttpUtil.xls(response, "documents.xls", documentService.searchExcel(user, criteria));
+    }
+
     @GetMapping("/diploma/directives")
     public List<DirectiveDto> diplomaDirectives(HoisUserDetails user, Boolean isHigher) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_LOPTUNNISTUS_TRUKKIMINE);
@@ -73,7 +88,7 @@ public class DocumentController {
     @GetMapping("/supplement/{id:\\d+}")
     public SupplementDto supplement(HoisUserDetails user, @PathVariable("id") Long directiveStudentId) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_HINNETELEHT_TRUKKIMINE);
-        return documentService.supplement(user, directiveStudentId);
+        return documentService.supplementDto(user, directiveStudentId);
     }
     
     @GetMapping("/signers")
@@ -141,8 +156,23 @@ public class DocumentController {
     
     @PostMapping("/supplement/{id:\\d+}/confirm")
     public void supplementPrintConfirm(HoisUserDetails user, @PathVariable("id") Long directiveStudentId, 
-            @RequestBody List<Long> formIds) {
+            Language lang, @RequestBody List<Long> formIds) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_HINNETELEHT_TRUKKIMINE);
-        documentService.supplementPrintConfirm(user, directiveStudentId, formIds);
+        documentService.supplementPrintConfirm(user, directiveStudentId, formIds, lang);
     }
+    
+    @GetMapping("/view/{id:\\d+}/diploma.pdf")
+    public void viewDiplomaPdf(HoisUserDetails user, @PathVariable("id") Long diplomaId, 
+            HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_LOPTUNNISTUS_TRUKKIMINE);
+        HttpUtil.pdf(response, "diploma.pdf", documentService.viewDiplomaPdf(user, diplomaId));
+    }
+
+    @GetMapping("/view/{id:\\d+}/supplement.pdf")
+    public void viewSupplementPdf(HoisUserDetails user, @PathVariable("id") Long supplementId, 
+            Language lang, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_HINNETELEHT_TRUKKIMINE);
+        HttpUtil.pdf(response, "diploma_supplement.pdf", documentService.viewSupplementPdf(user, supplementId, lang));
+    }
+
 }

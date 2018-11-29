@@ -99,7 +99,9 @@
                 <td>{{ result.name }}</td>
                 <td class="study-results-credits">{{ result.credits }}</td>
                 <td class="study-results-date">{{ result.gradeDate | hoisDate }}</td>
-                <td class="study-results-grade">{{ "A" == result.grade ? result.gradeName : result.grade }}</td>
+                <td class="study-results-grade">
+                    {{ ("P" == result.grade and content.isLetterGrades) or ("A" == result.grade and content.isLetterGrades == false) ? result.gradeName : result.grade }}
+                </td>
                 <td>{{ result.teacher }}</td>
             </tr>
         {% endfor %}
@@ -113,7 +115,9 @@
                 <td></td>
                 <td class="study-results-credits">{{ result.credits }}</td>
                 <td class="study-results-date">{{ result.gradeDate | hoisDate }}</td>
-                <td class="study-results-grade">{{ "A" == result.grade ? result.gradeName : result.grade }}</td>
+                <td class="study-results-grade">
+                    {{ ("P" == result.grade and content.isLetterGrades) or ("A" == result.grade and content.isLetterGrades == false) ? result.gradeName : result.grade }}
+                </td>
                 <td>{{ result.teacher }}</td>
             </tr>
         {% endfor %}
@@ -126,7 +130,9 @@
                 <td>{{ result.name }}</td>
                 <td class="study-results-credits">{{ result.credits }}</td>
                 <td class="study-results-date">{{ result.gradeDate | hoisDate }}</td>
-                <td class="study-results-grade">{{ "A" == result.grade ? result.gradeName : result.grade }}</td>
+                <td class="study-results-grade">
+                    {{ ("P" == result.grade and content.isLetterGrades) or ("A" == result.grade and content.isLetterGrades == false) ? result.gradeName : result.grade }}
+                </td>
                 <td>{{ result.teacher }}</td>
             </tr>
         {% endfor %}
@@ -159,27 +165,27 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>5</td>
+                    <td>{{ content.isLetterGrades ? 'A' : 5 }}</td>
                     <td>{{ "diploma.curriculumAndResults.evaluationDescription.grade.5" | translate }}</td>
                 </tr>
                 <tr>
-                    <td>4</td>
+                    <td>{{ content.isLetterGrades ? 'B' : 4 }}</td>
                     <td>{{ "diploma.curriculumAndResults.evaluationDescription.grade.4" | translate }}</td>
                 </tr>
                 <tr>
-                    <td>3</td>
+                    <td>{{ content.isLetterGrades ? 'C' : 3 }}</td>
                     <td>{{ "diploma.curriculumAndResults.evaluationDescription.grade.3" | translate }}</td>
                 </tr>
                 <tr>
-                    <td>2</td>
+                    <td>{{ content.isLetterGrades ? 'D' : 2 }}</td>
                     <td>{{ "diploma.curriculumAndResults.evaluationDescription.grade.2" | translate }}</td>
                 </tr>
                 <tr>
-                    <td>1</td>
+                    <td>{{ content.isLetterGrades ? 'E' : 1 }}</td>
                     <td>{{ "diploma.curriculumAndResults.evaluationDescription.grade.1" | translate }}</td>
                 </tr>
                 <tr>
-                    <td>0</td>
+                    <td>{{ content.isLetterGrades ? 'F' : 0 }}</td>
                     <td>{{ "diploma.curriculumAndResults.evaluationDescription.grade.0" | translate }}</td>
                 </tr>
             </tbody>

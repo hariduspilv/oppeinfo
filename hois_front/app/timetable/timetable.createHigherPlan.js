@@ -2,6 +2,7 @@
 
 angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService', '$filter',
   function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService, $filter) {
+    $scope.auth = $route.current.locals.auth;
     var MS_PER_MINUTE = 60000;
     var MS_PER_FITEENMINUTES = MS_PER_MINUTE * 15;
     var CONCURRENT_TOP_MARGIN = 17;
@@ -230,6 +231,48 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
           }
         });
 
+        dialogScope.$watchGroup(['lesson.eventRooms.length', 'lesson.startTime', 'lesson.endTime'], function () {
+          var occupiedQuery = {
+            startTime: dialogScope.lesson.startTime,
+            endTime: dialogScope.lesson.endTime,
+            timetableEventId: dialogScope.lesson.id,
+          };
+
+          occupiedQuery.rooms = dialogScope.lesson.eventRooms.reduce(function (filtered, room) {
+            filtered.push(room.id);
+            return filtered;
+          }, []);
+
+          occupiedQuery.teachers = dialogScope.teachers.reduce(function (filtered, teacher) {
+            if (teacher.isTeaching) {
+              filtered.push(teacher.id);
+            }
+            return filtered;
+          }, []);
+
+          QueryUtils.endpoint('/timetableevents/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
+            dialogScope.occupiedTime = result;
+          });
+        });
+
+        dialogScope.isRoomOccupied = function (roomId) {
+          if (dialogScope.occupiedTime && dialogScope.occupiedTime.rooms) {
+            return dialogScope.occupiedTime.rooms.filter(function (it) {
+              return it.id === roomId;
+            }).length > 0;
+          }
+          return false;
+        };
+
+        dialogScope.isTeacherOccupied = function (teacherId) {
+          if (dialogScope.occupiedTime && dialogScope.occupiedTime.teachers) {
+            return dialogScope.occupiedTime.teachers.filter(function (it) {
+              return it.id === teacherId;
+            }).length > 0;
+          }
+          return false;
+        };
+
         dialogScope.deleteEvent = function (toDelete) {
           QueryUtils.endpoint(baseUrl + '/deleteHigherEvent').save({
             timetableEventId: toDelete
@@ -273,23 +316,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
             return filtered;
           }, [])
         };
-
-        var occupiedQuery = angular.copy(query);
-        occupiedQuery.timetable = $scope.timetableId;
-        occupiedQuery.rooms = occupiedQuery.rooms.reduce(function (filtered, room) {
-          filtered.push(room.id);
-          return filtered;
-        }, []);
-
-        QueryUtils.endpoint('/timetableevents/timetableTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
-          if(result.occupied) {
-            dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
-              saveEventRoomsAndTimes(query, currentEvent);
-            });
-          } else {
-            saveEventRoomsAndTimes(query, currentEvent);
-          }
-        });
+        saveEventRoomsAndTimes(query, currentEvent);
       });
     };
 
@@ -388,7 +415,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
 
       QueryUtils.endpoint('/timetableevents/timetableNewHigherTimeOccupied').get(occupiedQuery).$promise.then(function (result) {
         if(result.occupied) {
-          dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts(result), function () {
+          dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts($scope, $scope.auth.higher, result), function () {
             saveEvent(params, allGroups, isSubjectTeacherPair, startTime);
           }, function () {
             // needs TimetablePlanDto to get rid of wrong dragable lesson

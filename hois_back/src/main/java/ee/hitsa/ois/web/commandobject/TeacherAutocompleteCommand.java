@@ -15,6 +15,7 @@ public class TeacherAutocompleteCommand extends SearchCommand {
     private String repeatCode;
     private Long weekAmount;
     private Long timetable;
+    private Long selectedTeacherId;
 
     public Long getTimetable() {
         return timetable;
@@ -87,5 +88,13 @@ public class TeacherAutocompleteCommand extends SearchCommand {
     public void setWeekAmount(Long weekAmount) {
         this.weekAmount = weekAmount;
     }
-    
+
+    public Long getSelectedTeacherId() {
+        return selectedTeacherId;
+    }
+
+    public void setSelectedTeacherId(Long selectedTeacherId) {
+        this.selectedTeacherId = selectedTeacherId;
+    }
+
 }

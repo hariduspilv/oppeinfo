@@ -72,6 +72,9 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
         CurriculumVersionOccupationModuleDto dto = new CurriculumVersionOccupationModuleDto();
         dto.setId(module.getId());
         dto.setCurriculumModule(EntityUtil.getId(module.getCurriculumModule()));
+        if (module.getBaseModule() != null) {
+            dto.setBaseModule(module.getBaseModule().getId());
+        }
         return dto;
     }
     

@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -47,7 +46,6 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class AbstractProtocolService {
     
     protected static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private static final Pattern GRADE_PATTERN = Pattern.compile("[0-5]");
 
     @Autowired
     private AutomaticMessageService automaticMessageService;
@@ -88,20 +86,19 @@ public class AbstractProtocolService {
 
     protected static void removeGrade(ProtocolStudent ps) {
         ps.setGrade(null);
-        ps.setGradeDate(LocalDate.now());
+        ps.setGradeDate(null);
         ps.setGradeMark(null);
         ps.setGradeValue(null);
     }
 
-    protected static void gradeStudent(ProtocolStudent ps, Classifier grade, Short gradeMark) {
-        String gradeValue = grade.getValue();
-        ps.setGradeMark(gradeMark);
-        ps.setGradeValue(gradeValue);
+    protected static void gradeStudent(ProtocolStudent ps, Classifier grade, Short gradeMark, Boolean isLetterGrade) {
         ps.setGrade(grade);
         ps.setGradeDate(LocalDate.now());
+        ps.setGradeMark(gradeMark);
+        ps.setGradeValue(Boolean.TRUE.equals(isLetterGrade) ? grade.getValue2() : grade.getValue2());
     }
 
-    protected void setConfirmation(HoisUserDetails user,Protocol protocol) {
+    protected void setConfirmation(HoisUserDetails user, Protocol protocol) {
         protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_K.name()));
         protocol.setConfirmDate(LocalDate.now());
         protocol.setConfirmer(user.getUsername());
@@ -113,15 +110,6 @@ public class AbstractProtocolService {
             StudentResultMessage msg = new StudentResultMessage(protocolStudent);
             automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OA_TULEMUS, protocolStudent.getStudent(), msg);
         }
-    }
-    
-    protected static Short getHigherGradeMark(Classifier grade) {
-        Short gradeMark = null;
-        String gradeValue = grade.getValue();
-        if(GRADE_PATTERN.matcher(gradeValue).matches()) {
-            gradeMark = Short.valueOf(gradeValue);
-        }
-        return gradeMark;
     }
     
     public void removeStudent(HoisUserDetails user, ProtocolStudent student) {

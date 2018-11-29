@@ -21,7 +21,7 @@
                             <th md-column>{{'student.journal.journalName' | translate}}</th>
                             <th md-column>{{'student.journal.grades' | translate}}</th>
                             <th md-column>{{'student.journal.modules' | translate}}</th>
-                            <th md-column>{{'student.journal.teachers' | translate}}</th>
+                            <th md-column>{{auth.higher ? ('student.journal.teachersHigher' | translate) : ('student.journal.teachersVocational' | translate)}}</th>
                             <th md-column>{{'student.journal.absencesIncudlingWithoutReason' | translate}}</th>
                             <th md-column>{{'student.journal.lateForClass' | translate}}</th>
                             <th md-column></th>

@@ -75,6 +75,8 @@ public abstract class OccupationModuleCapacitiesUtil {
                     }
                 }
             }
+        } else {
+            return;
         }
         occupationModule.setCapacities(new HashSet<>(capacities.values()));
     }

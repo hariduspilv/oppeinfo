@@ -38,6 +38,7 @@ import ee.hitsa.ois.web.commandobject.timetable.TimetableEditForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventHigherForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventVocationalForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand;
+import ee.hitsa.ois.web.dto.OisFileDto;
 import ee.hitsa.ois.web.dto.timetable.GroupTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetablePlanDto;
 import ee.hitsa.ois.web.dto.timetable.RoomTimetableDto;
@@ -236,6 +237,20 @@ public class TimetableController {
         } catch (JAXBException e) {
         	throw new HoisException(e);
         }
+    }
+    
+    @GetMapping("/exportTimetableCheck")
+    public void exportTimetableCheck(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate, @RequestParam("endDate") LocalDate endDate, @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod, HttpServletResponse response) throws IOException {
+    	UserUtil.assertIsSchoolAdmin(user);
+    	timetableService.checkUntiscodes(startDate, endDate, studyPeriod, user);
+    }
+    
+    @PostMapping("/importXml/{studyPeriod:\\d+}")
+    public TimetableDto importXml(HoisUserDetails user,@Valid @RequestBody OisFileDto oisFile, @RequestParam("startDate") LocalDate startDate, @RequestParam("endDate") LocalDate endDate, @WithEntity("studyPeriod") StudyPeriod studyPeriod, @RequestParam("isHigher") Boolean isHigher, HttpServletResponse response) throws IOException {
+    	UserUtil.assertIsSchoolAdmin(user);
+    	TimetableDto timetableDto = new TimetableDto();
+    	timetableDto.setStatus(timetableService.importXml(user, oisFile, startDate, endDate, studyPeriod, isHigher));
+    	return timetableDto;
     }
 
 }

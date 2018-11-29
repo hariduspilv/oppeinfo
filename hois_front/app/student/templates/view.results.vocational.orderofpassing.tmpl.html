@@ -7,7 +7,7 @@
         <th md-column></th>
         <th md-column>{{'student.result.grade' | translate}}</th>
         <th md-column>{{'student.result.date' | translate}}</th>
-        <th md-column>{{'student.result.teacher' | translate}}</th>
+        <th md-column>{{auth.higher ? ('student.result.teacherHigher' | translate) : ('student.result.teacherVocational' | translate)}}</th>
       </tr>
     </thead>
     <tbody md-body>
@@ -20,7 +20,10 @@
           </span>
           <span ng-if="row.isInformal"> - {{'student.result.informal' | translate}}</span>
         </td>
-        <td md-cell><span ng-if="row.entryType">{{currentLanguageNameField(row.entryType)}}</span></td>
+        <td md-cell>
+          <span ng-if="row.entryType">{{currentLanguageNameField(row.entryType)}}</span>
+          <span ng-if="row.isPractice">{{'student.result.practice' | translate}}</span>
+        </td>
         <td md-cell>
           <span ng-class="row.isModule ? 'md-body-2 bold' : ''">
             <span ng-class="{badResult: !gradeUtil.isPositive(row.grade.code)}">{{row.grade.value}}</span>

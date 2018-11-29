@@ -422,7 +422,8 @@ public class StudentGroupTeacherReportService {
             List<?> grades = qb.select(
                     "distinct s.id as student_id, jes.id as student_entry_id, j.id as journal_id, j.name_et, "
                             + "je.entry_type_code, je.entry_date, jes.grade_code, jes.grade_inserted, "
-                            + "coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by, jes.add_info",
+                            + "coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by, "
+                            + "jes.add_info, jes.changed_by",
                     em).getResultList();
             
             if (!grades.isEmpty()) {
@@ -436,6 +437,7 @@ public class StudentGroupTeacherReportService {
                     journalEntry.setGradeInserted(resultAsLocalDate(r, 7));
                     journalEntry.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 8)));
                     journalEntry.setAddInfo(resultAsString(r, 9));
+                    journalEntry.setChangedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 10)));
                     journalEntry.setOrderDate(resultAsLocalDate(r, 7));
                     return journalEntry;
                 }, Collectors.toList())));
@@ -455,7 +457,7 @@ public class StudentGroupTeacherReportService {
                 "distinct s.id as student_id, jes.id as student_entry_id, j.id as journal_id, j.name_et, je.entry_type_code, je.entry_date, "
                 + "coalesce(jesla.absence_code, jes.absence_code) as absence_code, "
                 + "coalesce(jesla.absence_inserted, jes.absence_inserted) as absence_inserted, "
-                + "jesla.lesson_nr + coalesce(je.start_lesson_nr - 1, 0), je.lessons, jes.add_info",
+                + "jesla.lesson_nr + coalesce(je.start_lesson_nr - 1, 0), je.lessons, jes.add_info, jes.changed_by",
                 em).getResultList();
         
         if (!absences.isEmpty()) {
@@ -471,6 +473,7 @@ public class StudentGroupTeacherReportService {
                 journalEntry.setLessonNr(resultAsLong(r, 8));
                 journalEntry.setLessons(resultAsLong(r, 9));
                 journalEntry.setAddInfo(resultAsString(r, 10));
+                journalEntry.setChangedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 11)));
                 return journalEntry;
             }, Collectors.toList())));
         }
@@ -523,6 +526,7 @@ public class StudentGroupTeacherReportService {
                     entry.setEntryDate(absence.getEntryDate());
                     entry.setOrderDate( absence.getOrderDate());
                     entry.setAddInfo(absence.getAddInfo());
+                    entry.setChangedBy(absence.getChangedBy());
                     addLessonAbsenceToStudentEntry(entry, absence);
                     studentJournalEntries.get(studentId).add(entry);
                     entries.put(absence.getId(), entry);

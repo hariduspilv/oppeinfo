@@ -12,7 +12,7 @@
     md-items="item in search(searchText)"
     placeholder="{{label | translate}}"
     ng-hide="ngModel.length > maxChips" flex>
-    <span md-highlight-text="searchText">{{$root.currentLanguageNameField(item)}}</span>
+    <span md-highlight-text="searchText" ng-style="{'color': warningParam && item['{{warningParam}}'] ? 'red' : 'inherit'}">{{$root.currentLanguageNameField(item)}}</span>
   </md-autocomplete>
   <md-chip-template>
         <span>

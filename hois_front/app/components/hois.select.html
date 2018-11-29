@@ -1,0 +1,9 @@
+<md-select md-on-open="queryPromise">
+  <md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>
+  <md-option ng-repeat="option in filteredOptions | orderBy: showProperty ? showProperty : $root.currentLanguageNameField()"
+    ng-value="option[valueProperty]" aria-label="{{$root.currentLanguageNameField(option)}}">
+    <span ng-style="{'color': warningParam && option['{{warningParam}}'] ? 'red': 'inherit'}">
+      {{showProperty  ? option[showProperty] : $root.currentLanguageNameField(option)}}
+    </span>
+  </md-option>
+</md-select>

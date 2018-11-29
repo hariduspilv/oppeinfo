@@ -18,6 +18,7 @@ import ee.hitsa.ois.util.JournalUtil;
 
 public class JournalXlsDto extends JournalDto {
 
+    private Boolean isHigherSchool;
     private List<JournalEntryDto> journalEntries = new ArrayList<>();
     private List<JournalStudentDto> journalStudents = new ArrayList<>();
     private List<JournalEntryByDateXlsDto> journalEntriesByDate = new ArrayList<>();
@@ -109,6 +110,14 @@ public class JournalXlsDto extends JournalDto {
             dto.setEndDate(journalDto.getStudyYearEndDate());
         }
         return dto;
+    }
+
+    public Boolean getIsHigherSchool() {
+        return isHigherSchool;
+    }
+
+    public void setIsHigherSchool(Boolean isHigherSchool) {
+        this.isHigherSchool = isHigherSchool;
     }
 
     public List<JournalEntryDto> getJournalEntries() {

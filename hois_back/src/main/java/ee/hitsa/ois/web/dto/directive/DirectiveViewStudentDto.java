@@ -11,6 +11,7 @@ import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.directive.DirectiveStudentOccupation;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentBase;
+import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -427,7 +428,7 @@ public class DirectiveViewStudentDto {
     }
 
     public static DirectiveViewStudentDto of(DirectiveStudent directiveStudent) {
-        DirectiveViewStudentDto dto = EntityUtil.bindToDto(directiveStudent, new DirectiveViewStudentDto());
+        DirectiveViewStudentDto dto = EntityUtil.bindToDto(directiveStudent, new DirectiveViewStudentDto(), "occupations");
         StudentBase student = directiveStudent.getStudent();
         Person person;
         if(student != null) {
@@ -450,7 +451,10 @@ public class DirectiveViewStudentDto {
 
         if(ClassifierUtil.oneOf(directiveStudent.getDirective().getStatus(), DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, DirectiveStatus.KASKKIRI_STAATUS_TYHISTATUD)) {
             // for confirmed and canceled directives, get pre-directive status from history
-            student = directiveStudent.getStudentHistory();
+            StudentHistory studentHistory = directiveStudent.getStudentHistory();
+            if (studentHistory != null) {
+                student = studentHistory;
+            }
         }
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directiveStudent.getDirective().getType()));
         Application application = directiveStudent.getApplication();

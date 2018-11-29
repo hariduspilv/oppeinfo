@@ -161,7 +161,7 @@ angular.module('hitsaOis')
       dialogService.confirmDialog({ prompt: 'curriculum.minorSpecialtyDeleteConfirm' }, function () {
         new Endpoint($scope.data).$delete().then(function () {
           message.info('main.messages.delete.success');
-          $location.path('/higherCurriculum/' + curriculumId + '/version/' + versionId + '/edit');
+          $location.url('/higherCurriculum/' + curriculumId + '/version/' + versionId + '/edit?_noback');
         });
       });
     };

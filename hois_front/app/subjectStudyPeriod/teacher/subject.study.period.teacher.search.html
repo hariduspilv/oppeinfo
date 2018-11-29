@@ -7,7 +7,7 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <fieldset>
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-    <form ng-submit="loadData()" layout="column" novalidate >
+    <form name="searchForm" ng-submit="load()" layout="column" novalidate >
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="50" flex-sm="100" flex-xs="100">
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>

@@ -69,15 +69,18 @@ public class CertificateContentService {
     private ClassifierService classifierService;
     @Autowired
     private PersonRepository personRepository;
+    @Autowired
+    private SchoolService schoolService;
 
     public String generate(Long schoolId, CertificateContentCommand command) {
         CertificateType type = CertificateType.valueOf(command.getType());
+        boolean isHigherSchool = schoolService.schoolType(schoolId).isHigher();
         if(command.getStudent() != null) {
             Student student = em.getReference(Student.class, command.getStudent());
             if(!schoolId.equals(EntityUtil.getId(student.getSchool()))) {
                 throw new ValidationFailedException("certificate.error.content");
             }
-            return generate(student, type, Boolean.TRUE.equals(command.getAddOutcomes()));
+            return generate(student, type, Boolean.TRUE.equals(command.getAddOutcomes()), isHigherSchool);
         }
 
         if(command.getOtherIdcode() == null) {
@@ -92,12 +95,14 @@ public class CertificateContentService {
         } else {
             report = CertificateReport.of(school, command.getOtherName(), command.getOtherIdcode());
         }
+        report.setIsHigherSchool(Boolean.valueOf(isHigherSchool));
         return templateService.evaluateTemplate(getTemplateName(false, type),
                 Collections.singletonMap("content", report));
     }
 
-    public String generate(Student student, CertificateType type, boolean addOutcomes) {
+    public String generate(Student student, CertificateType type, boolean addOutcomes, boolean isHigherSchool) {
         CertificateReport report = CertificateReport.of(student);
+        report.setIsHigherSchool(Boolean.valueOf(isHigherSchool));
         StudyYear studyYear = studyYearService.getCurrentStudyYear(EntityUtil.getId(student.getSchool()));
         if(studyYear == null) {
             throw new ValidationFailedException("studyYear.missingCurrent");

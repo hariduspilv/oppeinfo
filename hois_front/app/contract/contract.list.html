@@ -9,7 +9,7 @@
               <div layout="row" flex>
                 <md-input-container>
                   <label>{{'contract.startFrom' | translate}}</label>
-                  <md-datepicker ng-model="criteria.startFrom"></md-datepicker>
+                  <md-datepicker ng-model="criteria.startFrom" md-max-date="criteria.startThru"></md-datepicker>
                 </md-input-container>
                 <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'contract.startThru' | translate}}</label>
@@ -24,7 +24,7 @@
                 <div layout="row" flex>
                   <md-input-container>
                     <label>{{'contract.endFrom' | translate}}</label>
-                    <md-datepicker ng-model="criteria.endFrom"></md-datepicker>
+                    <md-datepicker ng-model="criteria.endFrom" md-max-date="criteria.endThru"></md-datepicker>
                   </md-input-container>
                   <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'contract.endThru' | translate}}</label>
@@ -41,7 +41,7 @@
             <div layout="column" flex>
               <md-input-container>
                 <label class="textInput">{{'student.label' | translate}}</label>
-                <input ng-model="criteria.studentName" type="text">
+                <input ng-model="criteria.studentName" type="text" md-maxlength="255">
               </md-input-container>
             </div>
           </div>
@@ -74,7 +74,7 @@
             <div layout="column" flex>
               <md-input-container>
                 <label class="textInput">{{'enterprise.label' | translate}}</label>
-                <input ng-model="criteria.enterpriseName" type="text">
+                <input ng-model="criteria.enterpriseName" type="text" md-maxlength="255">
               </md-input-container>
             </div>
           </div>
@@ -83,7 +83,7 @@
             <div layout="column" flex>
                 <md-input-container>
                   <label class="textInput">{{'enterprise.supervisor' | translate}}</label>
-                  <input ng-model="criteria.enterpriseContactPersonName" type="text">
+                  <input ng-model="criteria.enterpriseContactPersonName" type="text" md-maxlength="255">
                 </md-input-container>
               </div>
           </div>

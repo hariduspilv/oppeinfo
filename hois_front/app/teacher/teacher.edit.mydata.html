@@ -1,12 +1,24 @@
-<md-tabs md-dynamic-height md-border-bottom>
-  <md-tab label="{{'teacher.data' | translate}}">
+<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+  <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/teachers/{{::teacher.id}}/edit?_noback" name="teacher.data">
+      {{'teacher.data' | translate}}</md-nav-item>
+  <md-nav-item ng-if="auth.isTeacher()" md-nav-href="#/teachers/{{::teacher.id}}/editmydata?_noback" name="teacher.data">
+      {{'teacher.data' | translate}}</md-nav-item>
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id && teacher.isVocational) || (auth.isTeacher() && !teacher.isHigher)" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation?_noback" name="teacher.continuingEducation">
+      {{'teacher.continuingEducation.label' | translate}}</md-nav-item>
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id) || (teacher.teacherQualifications.length > 0 && auth.isTeacher())" md-nav-href="#/teachers/{{::teacher.id}}/qualification?_noback" name="teacher.qualification">
+      {{'teacher.qualification.qualification' | translate}}</md-nav-item>
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id && teacher.isHigher && isHigher) || (auth.isTeacher() && teacher.teacherMobility.length > 0)" md-nav-href="#/teachers/{{::teacher.id}}/mobility?_noback" name="teacher.mobility">
+      {{'teacher.mobility.mobility' | translate}}</md-nav-item>
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id) || auth.isTeacher()" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence?_noback" name="teacher.rtipAbsence">
+      {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
+</md-nav-bar>
     <md-content class="md-padding">
       <form name="teacherForm" role="form" class="form-readonly" novalidate>
         <div style="padding-top: 1em">
           <div layout="column">
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container flex="30" flex-sm="100" flex-xs="100">
-                <label>{{'teacher.person.idcode' | translate}}</label>
+                <label>{{auth.higher ? ('teacher.person.idcodeHigher' | translate) : ('teacher.person.idcodeVocational' | translate)}}</label>
                 <hois-value value="teacher.person.idcode"></hois-value>
               </md-input-container>
               <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -21,7 +33,7 @@
 
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container flex="30" flex-sm="100" flex-xs="100">
-                <label>{{'teacher.person.name' | translate}}</label>
+                <label>{{auth.higher ? ('teacher.person.nameHigher' | translate) : ('teacher.person.nameVocational' | translate)}}</label>
                 <hois-value value="teacher.person.firstname + ' ' + teacher.person.lastname"></hois-value>
               </md-input-container>
               <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -216,28 +228,6 @@
         <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
       </form>
     </md-content>
-  </md-tab>
-  <md-tab label="{{'teacher.continuingEducation.continuingEducation' | translate}}" ng-if="teacher.teacherContinuingEducations.length > 0 && teacher.isVocational">
-      <md-content class="md-padding">
-        <div ng-include="'teacher/teacher.continuing.education.view.html'"></div>
-      </md-content>
-    </md-tab>
-  <md-tab label="{{'teacher.qualification.qualification' | translate}}" ng-if="teacher.teacherQualifications.length > 0">
-    <md-content class="md-padding">
-      <div ng-include="'teacher/teacher.qualification.view.html'"></div>
-    </md-content>
-  </md-tab>
-  <md-tab label="{{'teacher.mobility.mobility' | translate}}" ng-if="teacher.teacherMobility.length > 0">
-    <md-content class="md-padding">
-      <div ng-include="'teacher/teacher.mobility.view.html'"></div>
-    </md-content>
-  </md-tab>
-  <md-tab md-on-select="changeIsShowingRtipTab()" md-on-deselect="changeIsShowingRtipTab()" label="{{'teacher.rtipAbsence.label' | translate}}">
-    <md-content class="md-padding">
-      <div ng-include="'teacher/teacher.rtip.absence.view.html'"></div>
-    </md-content>
-  </md-tab>
-</md-tabs>
 <div layout="row" layout-margin>
   <md-button ng-click="back('#/teachers/myData', teacherForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>

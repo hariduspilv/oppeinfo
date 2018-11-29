@@ -18,8 +18,10 @@ angular.module('hitsaOis').constant('HigherGrade', {
   var DISTINCTIVE_GRADES = [HigherGrade.KORGHINDAMINE_0, HigherGrade.KORGHINDAMINE_1, HigherGrade.KORGHINDAMINE_2, 
     HigherGrade.KORGHINDAMINE_3, HigherGrade.KORGHINDAMINE_4, HigherGrade.KORGHINDAMINE_5];
 
-  var POSITIVE_GRADE_VALUES = ['1', '2', '3', '4', '5', 'A'];
-  var DISTINCTIVE_GRADE_VALUES = ['0', '1', '2', '3', '4', '5'];
+  var POSITIVE_GRADE_RANGE_VALUES = ['1', '2', '3', '4', '5', 'A'];
+  var POSITIVE_GRADE_LETTER_VALUES = ['E', 'D', 'C', 'B', 'A', 'P'];
+  var DISTINCTIVE_GRADE_RANGE_VALUES = ['0', '1', '2', '3', '4', '5'];
+  var DISTINCTIVE_GRADE_LETTER_VALUES = ['F', 'E', 'D', 'C', 'B', 'A'];
 
   return {
     isPositive: function(gradeCode) {
@@ -28,11 +30,17 @@ angular.module('hitsaOis').constant('HigherGrade', {
     isDistinctive: function(gradeCode) {
       return ArrayUtils.includes(DISTINCTIVE_GRADES, gradeCode);
     },
-    isPositiveValue: function(gradeValue) {
-      return ArrayUtils.includes(POSITIVE_GRADE_VALUES, gradeValue);
+    isPositiveValue: function(gradeValue, letterGrades) {
+      if (letterGrades) {
+        return ArrayUtils.includes(POSITIVE_GRADE_LETTER_VALUES, gradeValue);
+      }
+      return ArrayUtils.includes(POSITIVE_GRADE_RANGE_VALUES, gradeValue);
     },
-    isDistinctiveValue: function(gradeValue) {
-      return ArrayUtils.includes(DISTINCTIVE_GRADE_VALUES, gradeValue);
+    isDistinctiveValue: function(gradeValue, letterGrades) {
+      if (letterGrades) {
+        return ArrayUtils.includes(DISTINCTIVE_GRADE_LETTER_VALUES, gradeValue);
+      }
+      return ArrayUtils.includes(DISTINCTIVE_GRADE_RANGE_VALUES, gradeValue);
     }
   };
 });

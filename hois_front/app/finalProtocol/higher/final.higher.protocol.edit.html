@@ -70,8 +70,8 @@
                   <td md-cell>{{row.idcode}}</td>
                   <td md-cell>{{row.studentGroup}}</td>
                   <td md-cell>
-                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code"
-                      aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol"></hois-select>
+                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="{{auth.school.letterGrades ? 'value2' : 'value'}}" 
+                      value-property="code" aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol"></hois-select>
                   </td>
                   <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                     <md-input-container ng-if="row.gradeHasChanged">

@@ -294,6 +294,14 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
 
     function goBack(defaultUrl) {
       var backUrlFromHistory = history.pop();
+      while (angular.isDefined(backUrlFromHistory)) {
+        if (backUrlFromHistory === $window.location.hash || 
+          ($window.location.hash.endsWith("?_noback") && $window.location.hash.slice(0, -8) === backUrlFromHistory)) {
+          backUrlFromHistory = history.pop();
+        } else {
+          break;
+        }
+      }
       var backUrl = backUrlFromHistory || defaultUrl;
       isBack = true;
       $window.location.href = backUrl;

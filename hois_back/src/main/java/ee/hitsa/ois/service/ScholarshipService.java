@@ -297,9 +297,17 @@ public class ScholarshipService {
         dto.setProtocolNr(decision.getProtocolNr());
         dto.setDecided(decision.getDecided());
         dto.setAddInfo(decision.getAddInfo());
-        dto.setCommitteeId(EntityUtil.getId(decision.getMembers().get(0).getCommitteeMember().getCommittee()));
+        dto.setCommitteeId(EntityUtil.getId(committee));
+        dto.setCommitteeName(committee.getNameEt());
         dto.setPresentCommitteeMembers(StreamUtil.toMappedList(m -> EntityUtil.getId(m.getCommitteeMember()), decision.getMembers()));
         dto.setApplications(applicationsForCommand(null, user, getDecisionApplicationIds(decisionId)));
+        if (user.isTeacher()) {
+            ScholarshipTerm scholarshipTerm = em.getReference(ScholarshipTerm.class, dto.getApplications().get(0).getTerm());
+            Committee termCommittee = scholarshipTerm.getCommittee();
+            UserUtil.throwAccessDeniedIf(termCommittee != null && !termCommittee.getMembers().stream()
+                    .anyMatch(cm -> user.getPersonId().equals(EntityUtil.getId(cm.getPerson()))), 
+                    "Teacher is not member of scholarship term committee");
+        }
         return dto;
     }
     
@@ -771,7 +779,7 @@ public class ScholarshipService {
         if (user.isTeacher()) {
             qb.requiredCriteria("(sa.student_group_id in (select sg.id from student_group sg"
                     + " where sg.teacher_id = :teacherId)"
-                    + " or st.committee_id is null or st.committee_id in (select c.id"
+                    + " or st.committee_id in (select c.id"
                     + " from committee_member cm"
                     + " join committee c on c.id = cm.committee_id"
                     + " join teacher t on t.person_id = cm.person_id"

@@ -41,7 +41,7 @@
       <hois-classifier-value ng-model="protocol.protocolVdata.assessment" main-classifier-code="KUTSEHINDAMISVIIS"></hois-classifier-value>
     </md-input-container>
     <md-input-container flex flex-sm="100" flex-xs="100">
-      <label>{{'finalProtocol.teacher' | translate}}</label>
+      <label>{{auth.higher ? ('finalProtocol.teacherHigher' | translate) : ('finalProtocol.teacherVocational' | translate)}}</label>
       <hois-value value="currentLanguageNameField(protocol.protocolVdata.teacher)"></hois-value>
     </md-input-container>
   </div>

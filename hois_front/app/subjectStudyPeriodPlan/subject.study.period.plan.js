@@ -45,12 +45,14 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
         }
     );
 
-    $scope.$watch('criteria.studyPeriod', function() {
-            if($scope.studyPeriods && !$scope.criteria.studyPeriod) {
-                setCurrentStudyPeriod();
-            }
+    $scope.load = function() {
+        if (!$scope.searchForm.$valid) {
+          message.error('main.messages.form-has-errors');
+          return false;
+        } else {
+          $scope.loadData();
         }
-    );
+      };
 
     $scope.getCapacitiesHours = function(capacityCode, plan) {
         if(!plan.capacities) {
@@ -197,9 +199,11 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
             });
         } else {
             $scope.record.$save().then(function(response){
+                message.info('main.messages.create.success');
                 $location.url(baseUrl + "/" + response.id + "/edit?_noback");
             });
         }
+        $scope.subjectStudyPeriodPlanEditForm.$setPristine();
     }
 
     $scope.save = function(){

@@ -1,13 +1,15 @@
 <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
-    <md-nav-item md-nav-href="#/teachers/{{::teacher.id}}/edit?_noback" name="teacher.data">
+  <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/teachers/{{::teacher.id}}/edit?_noback" name="teacher.data">
       {{'teacher.data' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id && teacher.isVocational" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation?_noback" name="teacher.continuingEducation"
-      >{{'teacher.continuingEducation.label' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/qualification?_noback" name="teacher.qualification">
+  <md-nav-item ng-if="auth.isTeacher()" md-nav-href="#/teachers/{{::teacher.id}}/editmydata?_noback" name="teacher.data">
+      {{'teacher.data' | translate}}</md-nav-item>
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id && teacher.isVocational) || (auth.isTeacher() && !teacher.isHigher)" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation?_noback" name="teacher.continuingEducation">
+      {{'teacher.continuingEducation.label' | translate}}</md-nav-item>
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id) || (teacher.teacherQualifications.length > 0 && auth.isTeacher())" md-nav-href="#/teachers/{{::teacher.id}}/qualification?_noback" name="teacher.qualification">
       {{'teacher.qualification.qualification' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id && teacher.isHigher && isHigher" md-nav-href="#/teachers/{{::teacher.id}}/mobility?_noback" name="teacher.mobility">
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id && teacher.isHigher && isHigher) || (auth.isTeacher() && teacher.teacherMobility.length > 0)" md-nav-href="#/teachers/{{::teacher.id}}/mobility?_noback" name="teacher.mobility">
       {{'teacher.mobility.mobility' | translate}}</md-nav-item>
-    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence?_noback" name="teacher.rtipAbsence">
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id) || auth.isTeacher()" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence?_noback" name="teacher.rtipAbsence">
       {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
 </md-nav-bar>
 
@@ -24,18 +26,18 @@
             hois-value is not used as id did not match whole page design
           -->
             <md-input-container flex="25" flex-sm="100" flex-xs="100" ng-if="!teacher.id">
-              <label>{{'teacher.person.idcode' | translate}}</label>
+              <label>{{auth.higher ? ('teacher.person.idcodeHigher' | translate) : ('teacher.person.idcodeVocational' | translate)}}</label>
               <hois-idcode-lookup ng-model="teacher.person.idcode" name="idcode" role="forteacher" after-lookup="lookupPerson(response)"
                 after-failed-lookup="lookupFailure()" no-lookup="cleanReadOnly()" ng-required="teacher.person.citizenship === 'RIIK_EST'"></hois-idcode-lookup>
               <div ng-messages="teacherForm.idcode.$error" ng-show="teacherForm.idcode.$dirty">
                 <div ng-message="teacherIdCode">
-                  {{'teacher.person.alreadyexist' | translate}}
+                  {{auth.higher ? ('teacher.person.alreadyExistHigher' | translate) : ('teacher.person.alreadyExistVocational' | translate)}}
                 </div>
               </div>
             </md-input-container>
 
             <md-input-container flex-sm="100" flex-xs="100" flex="25" ng-if="teacher.id">
-              <label>{{'teacher.person.idcode' | translate}}</label>
+              <label>{{auth.higher ? ('teacher.person.idcodeHigher' | translate) : ('teacher.person.idcodeVocational' | translate)}}</label>
               <input type="text" ng-model="teacher.person.idcode" readonly>
             </md-input-container>
 
@@ -53,7 +55,7 @@
 
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="25" flex-sm="100" flex-xs="100">
-              <label>{{'teacher.person.firstname' | translate}}</label>
+              <label>{{auth.higher ? ('teacher.person.firstnameHigher' | translate) : ('teacher.person.firstnameVocational' | translate)}}</label>
               <input ng-model="teacher.person.firstname" name="firstname" type="text" ng-blur="generateEmail()" required md-maxlength="100">
               <div ng-messages="teacherForm.firstname.$error">
                 <div ng-message="md-maxlength">
@@ -62,7 +64,7 @@
               </div>
             </md-input-container>
             <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-              <label>{{'teacher.person.lastname' | translate}}</label>
+              <label>{{auth.higher ? ('teacher.person.lastnameHigher' | translate) : ('teacher.person.lastnameVocational' | translate)}}</label>
               <input ng-model="teacher.person.lastname" name="lastname" type="text" ng-blur="generateEmail()" required md-maxlength="100">
               <div ng-messages="teacherForm.lastname.$error">
                 <div ng-message="md-maxlength">
@@ -383,7 +385,8 @@
       </div>
 
       <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-      <md-button ng-click="back('#/teachers', teacherForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      <md-button ng-if="auth.isAdmin()" ng-click="back('#/teachers', teacherForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      <md-button ng-if="auth.isTeacher()" ng-click="back('#/teachers/myData')" class="md-raised">{{'main.button.back' | translate}}</md-button>
       <md-button ng-if="teacher.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
       <md-button ng-if="teacher.id && teacher.teacherPositionEhis && teacher.teacherPositionEhis.length" ng-click="sendToEhis()" class="md-raised">{{'main.button.sendToEhis' | translate}}</md-button>
       <span ng-if="teacher.ehisLastSuccessfulDate && teacher.teacherPositionEhis.length > 0" style="font-size: 13px">{{'teacher.ehisSendOperation.success' | translate: {day: (teacher.ehisLastSuccessfulDate | hoisDateTime)} }}</span>

@@ -9,7 +9,6 @@ function ($route, $location, $scope, $filter, $q, ArrayUtils, Classifier, DataUt
   $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' }, filterGrades);
   var forbiddenGrades = ['KORGHINDAMINE_MI'];
   var clMapper = Classifier.valuemapper({ grade: 'KORGHINDAMINE', status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
-  var studentClMapper = Classifier.valuemapper({ journalResults: 'KORGHINDAMINE', status: 'OPPURSTAATUS' });
   $scope.formState = {};
 
   function filterGrades() {
@@ -112,12 +111,8 @@ function ($route, $location, $scope, $filter, $q, ArrayUtils, Classifier, DataUt
 
   $scope.gradeValue = function (code) {
     var grade = clMapper.objectmapper({ grade: code }).grade;
-    return grade ? grade.value : undefined;
+    return grade ? ($scope.auth.school.letterGrades ? grade.value2 : grade.value) : undefined;
   };
-
-  function correcltyInsertedCurriculumGrades() {
-    data.protocolStudents.forEach()
-  }
 
   function validationPassed(confirmValidation) {
     if (!$scope.finalProtocolForm.$valid) {

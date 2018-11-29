@@ -20,6 +20,7 @@ public class StudentJournalEntryDto {
     private LocalDate absenceInserted;
     private List<JournalEntryStudentLessonAbsenceDto> lessonAbsences = new ArrayList<>();
     private String addInfo;
+    private String changedBy;
     // either gradeInserted or absenceInserted date, used for ordering entries outside of query
     private LocalDate orderDate;
     private Long lessonNr;
@@ -44,6 +45,7 @@ public class StudentJournalEntryDto {
         }
         
         this.addInfo = entry.getAddInfo();
+        this.changedBy = entry.getChangedBy();
         this.orderDate = entry.getOrderDate();
         this.lessonNr = entry.getLessonNr();
         this.lessons = entry.getLessons();
@@ -135,6 +137,14 @@ public class StudentJournalEntryDto {
     
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public String getChangedBy() {
+        return changedBy;
+    }
+
+    public void setChangedBy(String changedBy) {
+        this.changedBy = changedBy;
     }
 
     public LocalDate getOrderDate() {

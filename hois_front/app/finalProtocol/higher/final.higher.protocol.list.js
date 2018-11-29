@@ -18,8 +18,4 @@ angular.module('hitsaOis').controller('FinalHigherProtocolListController',
     
     $q.all(clMapper.promises).then($scope.loadData);
 
-    $scope.clearSearch = function () {
-      $scope.criteria = {};
-    };
-
 });

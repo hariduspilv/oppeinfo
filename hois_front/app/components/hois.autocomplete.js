@@ -28,6 +28,7 @@ angular.module('hitsaOis')
         mdSelectedItemChange: '&?',
         readonly: '=',
         additionalQueryParams: '=',
+        warningParam: '@',
         noPaging: '@',
         url: '@'    // this allows to search from different controllers, not only AutocompleteController
       },

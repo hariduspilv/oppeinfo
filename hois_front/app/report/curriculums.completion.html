@@ -2,11 +2,11 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form ng-submit="loadData()" novalidate>
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate>
         <div layout="row">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'report.curriculumscompletion.name' | translate}}</label>
-            <input ng-model="criteria.name" name="name" type="text" autofocus>
+            <input ng-model="criteria.name" name="name" type="text" md-maxlength="255" autofocus>
           </md-input-container>
 
           <div flex="50" flex-offset="5">
