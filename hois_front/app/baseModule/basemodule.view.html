@@ -96,7 +96,6 @@
                 <label>{{'basemodule.studyMaterials' | translate}}</label>
                 <textarea ng-model="baseModule.cvStudyMaterials" name="cvStudyMaterials" disabled max-rows="2"></textarea>
             </md-input-container>
-
             <div flex>
                 <fieldset tabindex="2">
                     <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'basemodule.gradeFormation' | translate}}</legend>
@@ -133,7 +132,7 @@
                     </div>
                 </fieldset>
             </div>
-
+            <div>&nbsp;</div>
             <div flex>
                 <fieldset tabindex="3">
                     <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'basemodule.themes' | translate}}</legend>
@@ -183,7 +182,7 @@
                     </div>
                 </fieldset>
             </div>
-
+            <div>&nbsp;</div>
             <div flex ng-if="baseModule.curriculums.length > 0">
                 <fieldset tabindex="5">
                     <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'basemodule.connectedCurriculumsAndCurriculumVersions' | translate}}</legend>
@@ -216,6 +215,7 @@
                 </fieldset>
             </div>
         </div>
+        <div>&nbsp;</div>
         <md-button class="md-raised md-primary" ng-click="edit()">{{"main.button.edit" | translate}}</md-button>
         <md-button class="md-raised" ng-click="back('#/basemodule')">{{"main.button.back" | translate}}</md-button>
     </form>

@@ -9,6 +9,7 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
     private Long term;
     private String termNameEt;
     private String curriculumCode;
+    private String studentGroup;
     private Long studentId;
     private String studentName;
     private String firstName;
@@ -63,6 +64,14 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
 
     public void setCurriculumCode(String curriculumCode) {
         this.curriculumCode = curriculumCode;
+    }
+
+    public String getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(String studentGroup) {
+        this.studentGroup = studentGroup;
     }
 
     public Long getStudentId() {

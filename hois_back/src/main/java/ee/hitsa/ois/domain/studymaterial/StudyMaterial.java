@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.studymaterial;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -105,6 +106,13 @@ public class StudyMaterial extends BaseEntityWithId {
     }
     public void setIsVocational(Boolean isVocational) {
         this.isVocational = isVocational;
+    }
+    public List<StudyMaterialConnect> getStudyMaterialConnect() {
+        return studyMaterialConnect == null ? (studyMaterialConnect = new LinkedList<>()) : studyMaterialConnect;
+    }
+    public void setStudyMaterialConnect(List<StudyMaterialConnect> studyMaterialConnect) {
+        getStudyMaterialConnect().clear();
+        getStudyMaterialConnect().addAll(studyMaterialConnect);
     }
     
 }

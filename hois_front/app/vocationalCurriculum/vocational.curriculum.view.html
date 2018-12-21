@@ -521,17 +521,20 @@
         </span>
         <span ng-show="curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis" layout-xs="column">
           <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="curriculum.canSetUnderRevision">{{'curriculum.button.changeStatusUnderRevision' | translate}}</md-button>
           <md-button class="md-raised md-default" ng-click="sendToEhis(true)" ng-if="curriculum.canConfirm">{{'curriculum.button.sendToEhisTest' | translate}}</md-button>
           <md-button class="md-raised md-default" ng-click="sendToEhis(false)" ng-if="curriculum.canConfirm">{{'curriculum.button.sendToEhis' | translate}}</md-button>
           <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
         </span>
         <span ng-show="curriculum.status === STATUS.PROCEEDING && formState.sentToEhis" layout-xs="column">
+          <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="curriculum.canSetUnderRevision">{{'curriculum.button.changeStatusUnderRevision' | translate}}</md-button>
           <md-button class="md-raised md-default" ng-click="updateFromEhis(true)" ng-if="curriculum.canConfirm">{{'curriculum.button.updateFromEhisTest' | translate}}</md-button>
           <md-button class="md-raised md-default" ng-click="updateFromEhis(false)" ng-if="curriculum.canConfirm">{{'curriculum.button.updateFromEhis' | translate}}</md-button>
         </span>
         <span ng-show="curriculum.status === STATUS.VERIFIED" layout-xs="column">
-            <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
+          <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="curriculum.canSetUnderRevision">{{'curriculum.button.changeStatusUnderRevision' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
         </span>
         <a href="{{curriculumPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="showPrintButton()">{{'main.button.printGeneral' | translate}}</a>
         <a href="{{curriculumModulesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="showPrintButton()">{{'main.button.printModules' | translate}}</a>

@@ -123,6 +123,15 @@
         }
       };
 
+      $scope.directiveControllers = [];
+      var clearCriteria = $scope.clearCriteria;
+      $scope.clearCriteria = function () {
+        clearCriteria();
+        $scope.directiveControllers.forEach(function (c) {
+          c.clear();
+        });
+      };
+      
       $scope.newLessonplan = function () {
         var formState = $scope.formState;
         var studyYear = $scope.criteria.studyYear;
@@ -147,6 +156,17 @@
                 }
               }
             });
+
+            $scope.search = function (text) {
+              var regExp = new RegExp('^.*' + text.replace("%", ".*").toUpperCase() + '.*$');
+              return $scope.formState.studentGroups.filter(function (group) {
+                return regExp.test($scope.$parent.currentLanguageNameField(group).toUpperCase());
+              }).filter(function (group) {
+                return angular.isDefined($scope.formState.studentGroupMap[$scope.record.studyYear].find(function (it) {
+                  return it.id === group.id;
+                }));
+              });
+            };
 
             $scope.create = function () {
               if(!$scope.newLessonPlanForm.$valid) {
@@ -180,24 +200,7 @@
       }
 
       function isValidStudentGroup(studyYearStart, studyYearEnd, validFrom, validThru) {
-        var valid = false;
-        if (!validFrom && validThru && moment(validThru).isSameOrAfter(studyYearStart)) {
-          valid = true;
-        } else if (!validThru && validFrom && moment(validFrom).isSameOrBefore(studyYearEnd)) {
-          valid = true;
-        } else if (validFrom && moment(validFrom).isBetween(studyYearStart, studyYearEnd, null, [])) {
-          valid = true;
-        } else if (validThru && moment(validThru).isBetween(studyYearStart, studyYearEnd, null, [])) {
-          valid = true;
-        } else if (validFrom && validThru && moment(studyYearStart).isBetween(validFrom, validThru, null, [])) {
-          valid = true;
-        } else if (validFrom && validThru && moment(studyYearEnd).isBetween(validFrom, validThru, null, [])) {
-          valid = true;
-        }  else if (!validFrom && !validThru) {
-          valid = true;
-        }
-
-        return valid;
+        return (!validFrom || moment(validFrom).isSameOrBefore(studyYearEnd)) && (!validThru || moment(validThru).isSameOrAfter(studyYearStart));
       }
 
       function filterStudentGroups(existing, valid) {
@@ -277,32 +280,44 @@
 
       QueryUtils.createQueryForm($scope, baseUrl, {});
     }
-  ).controller('LessonplanEditController', ['$anchorScroll', '$location', '$route', '$scope', '$window', 'message', 'Classifier', 'LessonPlanTableService', 'QueryUtils', 'dialogService', 'stateStorageService',
+  ).controller('LessonplanEditController', ['$location', '$route', '$scope', '$timeout', '$window', 'message', 'Classifier', 'LessonPlanTableService', 'QueryUtils', 'dialogService', 'stateStorageService',
     
-  function ($anchorScroll, $location, $route, $scope, $window ,message, Classifier, LessonPlanTableService, QueryUtils, dialogService, stateStorageService) {
+  function ($location, $route, $scope, $timeout, $window ,message, Classifier, LessonPlanTableService, QueryUtils, dialogService, stateStorageService) {
       var id = $route.current.params.id;
       var schoolId = $route.current.locals.auth.school.id;
       var stateKey = 'lessonplan';
       var baseUrl = '/lessonplans';
       var journalMapper = Classifier.valuemapper({groupProportion: 'PAEVIK_GRUPI_JAOTUS'});
       $scope.lessonPlanId = id;
-      $scope.saving = false;
 
       $scope.formState = {
-        showWeeks: true
+        showWeeks: true,
+        scrollPosition: 0
       };
+      var saveScrollPosition = true;
 
-      $scope.goToAnchor = function() {
-        if ($location.hash() && !$scope.saving) {
-          $anchorScroll();
+      var containter = angular.element(document.getElementById('lessonplan-container'));
+      containter.bind('scroll', function() {
+        if (saveScrollPosition) {
+          $scope.formState.scrollPosition = containter[0].scrollTop;
         }
-      };
+      });
 
-      $scope.setHeight = function() {
-        var windowHeight = $(window).innerHeight();
-        windowHeight= windowHeight-150;
-        $route.windowHeight = windowHeight;
-      };
+      $scope.$on('$locationChangeStart', function (event, nextUrl) {
+        if (nextUrl.indexOf('journal') !== -1) {
+          var lessonplanScrollPosition = {};
+          lessonplanScrollPosition[id] = $scope.formState.scrollPosition;
+          stateStorageService.changeState(schoolId, stateKey, {scrollPosition: lessonplanScrollPosition});
+        }
+      });
+
+      function setLessonplanContainerScroll(scrollValue) {
+        saveScrollPosition = false;
+        containter[0].scrollTop = scrollValue;
+        $timeout(function () {
+          saveScrollPosition = true;
+        }, 1000);
+      }
 
       $scope.showWeeksChanged = function () {
         stateStorageService.changeState(schoolId, stateKey, {showWeeks: $scope.formState.showWeeks});
@@ -443,20 +458,16 @@
         if (!angular.equals({}, state)) {
           $scope.formState.showWeeks = state.showWeeks;
           $scope.formState.showTotals = state.showTotals;
+          $scope.formState.scrollPosition = state.scrollPosition && state.scrollPosition[id] ? state.scrollPosition[id] : 0;
           setSelectedStudyPeriods(state.selectedStudyPeriods);
         } else {
           setSelectedStudyPeriods();
         }
         initializeTotals(result);
         QueryUtils.loadingWheel($scope, false);
-        //refreshFixedColumns();
-        //console.log(window.screen.height);
         $scope.windowWidth = $window.innerWidth;
 
-
-        //console.log(angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].clientHeight);
         angular.element(document.getElementsByClassName("container")).css('height', $window.innerHeight-340 + 'px');
-        $scope.$broadcast('refreshFixedColumns');
       });
 
       /*
@@ -554,8 +565,8 @@
               for (var i = 0, wnCnt = $scope.formState.weekNrs.length; i < wnCnt; i++) {
                 updateModuleTotals(module, capacityType, i);
               }
-              for (var i = 0, spCnt = $scope.formState.studyPeriods.length; i < spCnt; i++) {
-                updateSpModuleTotals(module, capacityType, i);
+              for (var j = 0, spCnt = $scope.formState.studyPeriods.length; j < spCnt; j++) {
+                updateSpModuleTotals(module, capacityType, j);
               }
             }
           });
@@ -574,7 +585,7 @@
         updateCopyOfRecord();
         $scope.updateStudyPeriods();
         LessonPlanTableService.generateLessonPlan($scope);
-        $scope.goToAnchor();
+        setLessonplanContainerScroll($scope.formState.scrollPosition);
       }
 
       $scope.updateTotals = function (journal, capacityType, index) {
@@ -604,6 +615,10 @@
             return it.code === capacityCode;
           });
         }
+      };
+
+      $scope.getLegendByWeek = function (weekNr) {
+        return LessonPlanTableService.getLegendByWeek($scope, weekNr);
       };
 
       $scope.updateLessonCountByStudyPeriod = function (journal, capacityType, spIndex) {
@@ -653,7 +668,6 @@
       };
       
       $scope.update = function () {
-        $scope.saving = true;
         $scope.record.$update().then(message.updateSuccess).then(function() {
           initializeTotals($scope.record);
           updateCopyOfRecord();
@@ -721,7 +735,7 @@
       };
 
       $scope.getCapacityByCode = function (capacityCode) {
-        LessonPlanTableService.getCapacityByCode($scope.formState.capacityTypes, capacityCode);
+        return LessonPlanTableService.getCapacityByCode($scope.formState.capacityTypes, capacityCode);
       };
 
       $scope.getUniqueJournalThemes = function(themes) {

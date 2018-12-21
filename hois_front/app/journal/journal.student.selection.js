@@ -5,7 +5,11 @@ angular.module('hitsaOis').controller('JournalStudentSelectionController', funct
 
   $scope.selectedStudents = [];
   $scope.addSelectedStudents = function() {
-    QueryUtils.endpoint('/journals/' + entity.id + '/addStudentsToJournal').save({students: $scope.selectedStudents}, $route.reload);
+    if ($scope.selectedStudents.length > 0) {
+      QueryUtils.endpoint('/journals/' + entity.id + '/addStudentsToJournal').save({students: $scope.selectedStudents}, $route.reload);
+    } else {
+      message.error('journal.messages.noStudentsSelected');
+    }
   };
 
   QueryUtils.endpoint('/journals/' + entity.id + '/suitedStudents').query({}, function(result) {
@@ -36,10 +40,6 @@ angular.module('hitsaOis').controller('JournalStudentSelectionController', funct
         dialogScope.criteria.studentGroupId = dialogScope.criteria.studentGroupObject ? dialogScope.criteria.studentGroupObject.id : null;
       });
 
-      QueryUtils.createQueryForm(dialogScope, '/journals/' + entity.id + '/otherStudents', {
-        studentId: students
-      }, retainSearchedStudents);
-
       function retainSearchedStudents() {
         for (var i = 0; i < dialogScope.tabledata.content.length; i++) {
           var exists = false;
@@ -54,6 +54,10 @@ angular.module('hitsaOis').controller('JournalStudentSelectionController', funct
           }
         }
       }
+
+      QueryUtils.createQueryForm(dialogScope, '/journals/' + entity.id + '/otherStudents', {
+        studentId: students
+      }, retainSearchedStudents);
 
       dialogScope.loadData();
     }, function(submittedDialogScope) {

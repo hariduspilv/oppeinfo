@@ -112,8 +112,8 @@ public class StudyMaterialController {
 
     @GetMapping("/{id:\\d+}")
     public StudyMaterialDto get(HoisUserDetails user, @WithEntity StudyMaterial material) {
-        assertAccess(user, material);
-        return studyMaterialService.get(material);
+        assertCanView(user, material);
+        return studyMaterialService.get(user, material);
     }
 
     @PostMapping
@@ -137,7 +137,7 @@ public class StudyMaterialController {
     public StudyMaterialDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) StudyMaterial material,
             @Valid @RequestBody StudyMaterialForm materialForm) {
-        assertAccess(user, material);
+        assertCanEdit(user, material);
         return get(user, studyMaterialService.save(user, material, materialForm));
     }
 
@@ -158,15 +158,35 @@ public class StudyMaterialController {
     public void disconnect(HoisUserDetails user,
             @WithVersionedEntity(versionRequestParam = "version") StudyMaterialConnect materialConnect,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertAccess(user, materialConnect.getStudyMaterial());
+        assertAccess(user, materialConnect);
         studyMaterialService.delete(user, materialConnect);
     }
 
-    private static void assertAccess(HoisUserDetails user, StudyMaterial material) {
-        if (!((UserUtil.isSchoolAdmin(user, material.getSchool()) 
-                || (user.isTeacher() && user.getTeacherId().equals(EntityUtil.getId(material.getTeacher())))))
+    private static void assertCanView(HoisUserDetails user, StudyMaterial material) {
+        if (!(UserUtil.isSchoolAdmin(user, material.getSchool()) 
+                || (user.isTeacher() && user.getTeacherId().equals(EntityUtil.getId(material.getTeacher())))
+                || (user.isTeacher() && material.getStudyMaterialConnect().stream().flatMap(con -> con.getJournal().getJournalTeachers().stream()).filter(t -> user.getTeacherId().equals(EntityUtil.getId(t.getTeacher()))).findFirst().isPresent()))
+                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL)) {
+            throw new AssertionFailedException("User is not school admin or teacher who created the material or journal does not have a connection to this material or has no rights");
+        }
+    }
+
+
+    private static void assertCanEdit(HoisUserDetails user, StudyMaterial material) {
+        if (!(UserUtil.isSchoolAdmin(user, material.getSchool()) 
+                || (user.isTeacher() && user.getTeacherId().equals(EntityUtil.getId(material.getTeacher()))))
                 && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL)) {
             throw new AssertionFailedException("User is not school admin or teacher who created the material or has no rights");
+        }
+    }
+    
+
+    private static void assertAccess(HoisUserDetails user, StudyMaterialConnect materialConnect) {
+        if (!(UserUtil.isSchoolAdmin(user, materialConnect.getStudyMaterial().getSchool()) 
+                || (user.isTeacher() && user.getTeacherId().equals(EntityUtil.getId(materialConnect.getStudyMaterial().getTeacher())))
+                || (user.isTeacher() && materialConnect.getJournal().getJournalTeachers().stream().filter(t -> user.getTeacherId().equals(EntityUtil.getId(t.getTeacher()))).findFirst().isPresent()))
+                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL)) {
+            throw new AssertionFailedException("User is not school admin or teacher who created the material or journal does not have a connection to this material or has no rights");
         }
     }
 

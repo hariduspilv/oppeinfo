@@ -1,0 +1,43 @@
+<div layout="row" layout-md="column" layout-sm="column" layout-xs="column" flex>
+  <md-checkbox ng-model="journalEntryTypes['SISSEKANNE_T']._selected" ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_T">
+    <span class="capacity-type-legend" md-colors="{background: getEntryColor('SISSEKANNE_T')}">
+      {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_T'])}}
+    </span>
+  </md-checkbox>
+  <md-checkbox ng-model="journalEntryTypes['SISSEKANNE_E']._selected" ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_E">
+    <span class="capacity-type-legend" md-colors="{background: getEntryColor('SISSEKANNE_E')}">
+      {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_E'])}}
+    </span>
+  </md-checkbox>
+  <md-checkbox ng-model="journalEntryTypes['SISSEKANNE_I']._selected" ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_I">
+    <span class="capacity-type-legend" md-colors="{background: getEntryColor('SISSEKANNE_I')}">
+      {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_I'])}}
+    </span>
+  </md-checkbox>
+  <md-checkbox ng-model="journalEntryTypes['SISSEKANNE_H']._selected" ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_H">
+    <span class="capacity-type-legend" md-colors="{background: getEntryColor('SISSEKANNE_H')}">
+      {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_H'])}}
+    </span>
+  </md-checkbox>
+  <md-checkbox ng-model="journalEntryTypes['SISSEKANNE_P']._selected" ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_P">
+    <span class="capacity-type-legend" md-colors="{background: getEntryColor('SISSEKANNE_P')}">
+      {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_R'])}}
+    </span>
+  </md-checkbox>
+  <md-checkbox ng-model="journalEntryTypes['SISSEKANNE_R']._selected" ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_R">
+    <span class="capacity-type-legend" md-colors="{background: getEntryColor('SISSEKANNE_R')}">
+      {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_R'])}}
+    </span>
+  </md-checkbox>
+  <md-checkbox ng-if="journal.moduleOutcomesAsEntries" ng-model="journalEntryTypes['SISSEKANNE_O']._selected"
+    ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_O">
+    <span class="capacity-type-legend" md-colors="{background: getEntryColor('SISSEKANNE_O')}">
+      {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_O'])}}
+    </span>
+  </md-checkbox>
+  <md-checkbox ng-model="journalEntryTypes['SISSEKANNE_L']._selected" ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_L">
+    <span class="capacity-type-legend" md-colors="{background: getEntryColor('SISSEKANNE_L')}">
+      {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}
+    </span>
+  </md-checkbox>
+</div>

@@ -40,6 +40,21 @@ public class ScholarshipTermDto {
     private Boolean isFamilyIncomes;
     private Boolean isOpen;
     private Long committee;
+    private String addInfo;
+    private Boolean isOutcomes;
+    private Boolean isPeriodGrade;
+    private Boolean isJournalFinalGrade;
+    private Boolean isModuleGrade;
+    private Boolean isApelGrade;
+    private Boolean isJournalGrade;
+    private Boolean isLastPeriodOutcomes;
+    private Boolean isLastPeriodPeriodGrade;
+    private Boolean isLastPeriodJournalFinalGrade;
+    private Boolean isLastPeriodModuleGrade;
+    private Boolean isLastPeriodApelGrade;
+    private Boolean isLastPeriodJournalGrade;
+    private LocalDate lastPeriodGradeFrom;
+    private LocalDate lastPeriodGradeThru;
 
     public static ScholarshipTermDto of(ScholarshipTerm term) {
         ScholarshipTermDto dto = new ScholarshipTermDto();
@@ -293,6 +308,126 @@ public class ScholarshipTermDto {
 
     public void setCommittee(Long committee) {
         this.committee = committee;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
+    }
+
+    public Boolean getIsOutcomes() {
+        return isOutcomes;
+    }
+
+    public void setIsOutcomes(Boolean isOutcomes) {
+        this.isOutcomes = isOutcomes;
+    }
+
+    public Boolean getIsPeriodGrade() {
+        return isPeriodGrade;
+    }
+
+    public void setIsPeriodGrade(Boolean isPeriodGrade) {
+        this.isPeriodGrade = isPeriodGrade;
+    }
+
+    public Boolean getIsJournalFinalGrade() {
+        return isJournalFinalGrade;
+    }
+
+    public void setIsJournalFinalGrade(Boolean isJournalFinalGrade) {
+        this.isJournalFinalGrade = isJournalFinalGrade;
+    }
+
+    public Boolean getIsModuleGrade() {
+        return isModuleGrade;
+    }
+
+    public void setIsModuleGrade(Boolean isModuleGrade) {
+        this.isModuleGrade = isModuleGrade;
+    }
+
+    public Boolean getIsApelGrade() {
+        return isApelGrade;
+    }
+
+    public void setIsApelGrade(Boolean isApelGrade) {
+        this.isApelGrade = isApelGrade;
+    }
+
+    public Boolean getIsJournalGrade() {
+        return isJournalGrade;
+    }
+
+    public void setIsJournalGrade(Boolean isJournalGrade) {
+        this.isJournalGrade = isJournalGrade;
+    }
+
+    public Boolean getIsLastPeriodOutcomes() {
+        return isLastPeriodOutcomes;
+    }
+
+    public void setIsLastPeriodOutcomes(Boolean isLastPeriodOutcomes) {
+        this.isLastPeriodOutcomes = isLastPeriodOutcomes;
+    }
+
+    public Boolean getIsLastPeriodPeriodGrade() {
+        return isLastPeriodPeriodGrade;
+    }
+
+    public void setIsLastPeriodPeriodGrade(Boolean isLastPeriodPeriodGrade) {
+        this.isLastPeriodPeriodGrade = isLastPeriodPeriodGrade;
+    }
+
+    public Boolean getIsLastPeriodJournalFinalGrade() {
+        return isLastPeriodJournalFinalGrade;
+    }
+
+    public void setIsLastPeriodJournalFinalGrade(Boolean isLastPeriodJournalFinalGrade) {
+        this.isLastPeriodJournalFinalGrade = isLastPeriodJournalFinalGrade;
+    }
+
+    public Boolean getIsLastPeriodModuleGrade() {
+        return isLastPeriodModuleGrade;
+    }
+
+    public void setIsLastPeriodModuleGrade(Boolean isLastPeriodModuleGrade) {
+        this.isLastPeriodModuleGrade = isLastPeriodModuleGrade;
+    }
+
+    public Boolean getIsLastPeriodApelGrade() {
+        return isLastPeriodApelGrade;
+    }
+
+    public void setIsLastPeriodApelGrade(Boolean isLastPeriodApelGrade) {
+        this.isLastPeriodApelGrade = isLastPeriodApelGrade;
+    }
+
+    public Boolean getIsLastPeriodJournalGrade() {
+        return isLastPeriodJournalGrade;
+    }
+
+    public void setIsLastPeriodJournalGrade(Boolean isLastPeriodJournalGrade) {
+        this.isLastPeriodJournalGrade = isLastPeriodJournalGrade;
+    }
+
+    public LocalDate getLastPeriodGradeFrom() {
+        return lastPeriodGradeFrom;
+    }
+
+    public void setLastPeriodGradeFrom(LocalDate lastPeriodGradeFrom) {
+        this.lastPeriodGradeFrom = lastPeriodGradeFrom;
+    }
+
+    public LocalDate getLastPeriodGradeThru() {
+        return lastPeriodGradeThru;
+    }
+
+    public void setLastPeriodGradeThru(LocalDate lastPeriodGradeThru) {
+        this.lastPeriodGradeThru = lastPeriodGradeThru;
     }
 
 }

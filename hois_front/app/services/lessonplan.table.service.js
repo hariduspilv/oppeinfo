@@ -124,8 +124,8 @@ angular.module('hitsaOis')
 
             var capcityTotalId = CAPACITY_TOTAL + SEPARATOR + moduleIndex + SEPARATOR + journalIndex + SEPARATOR + capacityType.code;
             var capcityTotalValue = totalColumnValue(scope.formState.journalTotals[journal.id][capacityType.code]);
-            var style = journalCapacityTotalStyle(scope, moduleIndex, journalIndex, capacityType.code);
-            var ctJournalTotal = totalColumn(capcityTotalId, capcityTotalValue, style);
+            var fontColor = journalCapacityTotalFontColor(scope, moduleIndex, journalIndex, capacityType.code);
+            var ctJournalTotal = totalColumn(capcityTotalId, capcityTotalValue, fontColor);
             var journalRequiredLessons = journal.requiredLessons[capacityType.code] ? journal.requiredLessons[capacityType.code] : 0;
             ctJournalTotal.title = $translate.instant('lessonplan.planned') + " " + journalRequiredLessons;
             ctRow.appendChild(ctJournalTotal);
@@ -191,15 +191,20 @@ angular.module('hitsaOis')
 
       addTotalRows(scope, table);
       table = $compile(table)(scope);
+      scope.$broadcast('refreshFixedColumns');
     };
 
     /* HELPER FUNCTIONS */
     lessonPlanTableService.getUniqueJournalThemes = function (themes) {
-      getUniqueJournalThemes(themes);
+      return getUniqueJournalThemes(themes);
     };
 
     lessonPlanTableService.getCapacityByCode = function (capacityTypes, capacityCode) {
-      getCapacityByCode(capacityCode);
+      return getCapacityByCode(capacityTypes, capacityCode);
+    };
+
+    lessonPlanTableService.getLegendByWeek = function (scope, weekNr) {
+      return getLegendByWeek(scope, weekNr);
     };
 
     function getUniqueJournalThemes(themes) {
@@ -336,6 +341,9 @@ angular.module('hitsaOis')
       var moduleSpan = document.createElement("span");
       moduleSpan.className = 'hois-collapse-header';
       moduleSpan.innerHTML = scope.currentLanguageNameField(module) + '&nbsp;' + '&nbsp;';
+      if (scope.record.curriculumVersion.id !== module.curriculumVersionId) {
+        moduleSpan.style = 'color: red';
+      }
       moduleNameTd.appendChild(moduleSpan);
 
       var addModuleLink = document.createElement("a");
@@ -639,10 +647,10 @@ angular.module('hitsaOis')
       return column;
     }
 
-    function journalCapacityTotalStyle(scope, moduleIndex, journalIndex, capacityCode) {
+    function journalCapacityTotalFontColor(scope, moduleIndex, journalIndex, capacityCode) {
       var journal = scope.record.modules[moduleIndex].journals[journalIndex];
       var requiredLessons = journal.requiredLessons[capacityCode] ? journal.requiredLessons[capacityCode] : 0;
-      return scope.formState.journalTotals[journal.id][capacityCode] !== requiredLessons ? 'color: red' : 'color: inherit';
+      return scope.formState.journalTotals[journal.id][capacityCode] !== requiredLessons ? 'red' : 'inherit';
     }
 
     function setWeekHourInputListener(scope, input) {
@@ -731,7 +739,7 @@ angular.module('hitsaOis')
     function changeTotalsIrrespectiveOfChosenPeriod(scope, module, journal, moduleIndex, journalIndex, capacityCode) {
       var journalCapacityTotal =
         document.getElementById(CAPACITY_TOTAL + SEPARATOR + moduleIndex + SEPARATOR + journalIndex + SEPARATOR + capacityCode);
-      journalCapacityTotal.style = journalCapacityTotalStyle(scope, moduleIndex, journalIndex, capacityCode);
+      journalCapacityTotal.style.color = journalCapacityTotalFontColor(scope, moduleIndex, journalIndex, capacityCode);
       journalCapacityTotal.innerHTML = totalColumnValue(scope.formState.journalTotals[journal.id][capacityCode]);
 
       var journalTotal = document.getElementById(JOURNAL_TOTAL + SEPARATOR + journal.id);
@@ -791,14 +799,14 @@ angular.module('hitsaOis')
       return row;
     }
 
-    function totalColumn(id, value, style) {
+    function totalColumn(id, value, fontColor) {
       var column = document.createElement('td');
       column.id = id;
       column.innerHTML = value;
       column.classList.add(CENTER);
       column.classList.add(DIVIDER);
       column.classList.add(FIX);
-      column.style = style;
+      column.style.color = fontColor;
       return column;
     }
 

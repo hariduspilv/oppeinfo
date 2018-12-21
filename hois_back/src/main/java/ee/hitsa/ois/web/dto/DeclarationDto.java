@@ -29,7 +29,7 @@ public class DeclarationDto {
     public static DeclarationDto of(Declaration declaration) {
         DeclarationDto dto = new DeclarationDto();
         EntityUtil.bindToDto(declaration, dto, "studyPeriod", "student", "subjects");
-        dto.setStudyPeriod(AutocompleteResult.of(declaration.getStudyPeriod()));
+        dto.setStudyPeriod(AutocompleteResult.ofWithYear(declaration.getStudyPeriod()));
         dto.setSubjects(StreamUtil.toMappedSet(DeclarationSubjectDto::of, declaration.getSubjects()));
         StudentSearchDto student = new StudentSearchDto();
         student.setId(EntityUtil.getId(declaration.getStudent()));

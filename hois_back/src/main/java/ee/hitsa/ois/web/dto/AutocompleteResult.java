@@ -40,6 +40,7 @@ import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 
 public class AutocompleteResult extends EntityConnectionCommand implements Translatable {
@@ -101,11 +102,10 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     }
 
     public static AutocompleteResult of(Curriculum curriculum) {
-        return new AutocompleteResult(curriculum.getId(),
-                CurriculumUtil.curriculumName(curriculum.getCode(), curriculum.getNameEt()),
-                CurriculumUtil.curriculumName(curriculum.getCode(), curriculum.getNameEn()));
+        return new CurriculumResult(curriculum.getId(), curriculum.getNameEt(), curriculum.getNameEn(),
+                curriculum.getCode());
     }
-    
+
     public static AutocompleteResult of(CurriculumGrade grade) {
         return new AutocompleteResult(grade.getId(), grade.getNameEt(), grade.getNameEn());
     }
@@ -205,6 +205,11 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
 
     public static AutocompleteResult of(StudyPeriod studyPeriod) {
         return new AutocompleteResult(studyPeriod.getId(), studyPeriod);
+    }
+    
+    public static AutocompleteResult ofWithYear(StudyPeriod studyPeriod) {
+        return new AutocompleteResult(studyPeriod.getId(), studyPeriod.getStudyYear().getYear().getNameEt() + " " + studyPeriod.getNameEt(),
+                studyPeriod.getStudyYear().getYear().getNameEn() + " " + studyPeriod.getNameEn());
     }
 
     public static AutocompleteResult of(StudyYear studyYear) {

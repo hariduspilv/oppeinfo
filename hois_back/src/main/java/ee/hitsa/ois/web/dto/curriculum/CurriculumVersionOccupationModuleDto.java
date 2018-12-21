@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -10,6 +11,7 @@ import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.NotBlank;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -61,6 +63,8 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     
     private Boolean copy = Boolean.FALSE;
 
+    private BigDecimal credits;
+
     @Valid
     private Set<CurriculumVersionOccupationModuleCapacityDto> capacities;
     @Valid
@@ -79,14 +83,16 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     }
     
     public static CurriculumVersionOccupationModuleDto forApelApplicationForm(CurriculumVersionOccupationModule module) {
-        CurriculumVersionOccupationModuleDto dto = EntityUtil.bindToDto(module, new CurriculumVersionOccupationModuleDto(),
-                "curriculumModule", "capacities", "themes", "yearCapacities");
-
-        dto.setCurriculumModule(EntityUtil.getId(module.getCurriculumModule()));
-        dto.setNameEt(module.getCurriculumModule().getNameEt());
-        dto.setNameEn(module.getCurriculumModule().getNameEn());
-        dto.setThemes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleThemeDto::of, module.getThemes()));
- 
+        CurriculumVersionOccupationModuleDto dto = new CurriculumVersionOccupationModuleDto();
+        dto.setId(module.getId());
+        dto.setAssessment(EntityUtil.getCode(module.getAssessment()));
+        CurriculumModule curriculumModule = module.getCurriculumModule();
+        dto.setCurriculumModule(EntityUtil.getId(curriculumModule));
+        dto.setNameEt(curriculumModule.getNameEt());
+        dto.setNameEn(curriculumModule.getNameEn());
+        dto.setCredits(curriculumModule.getCredits());
+        dto.setThemes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleThemeDto::forApelApplicationForm,
+                module.getThemes()));
         return dto;
     }
 
@@ -98,6 +104,10 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
             dto.setBaseModule(module.getBaseModule().getId());
         }
         dto.setCurriculumModule(EntityUtil.getId(module.getCurriculumModule()));
+        CurriculumModule curriculumModule = module.getCurriculumModule();
+        dto.setNameEt(curriculumModule.getNameEt());
+        dto.setNameEn(curriculumModule.getNameEn());
+        dto.setCredits(curriculumModule.getCredits());
         dto.setCapacities(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleCapacityDto::of, module.getCapacities()));
         dto.setThemes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleThemeDto::of, module.getThemes()));
         dto.setYearCapacities(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleYearCapacityDto::of, module.getYearCapacities()));
@@ -264,6 +274,14 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
 
     public void setCurriculumModule(Long curriculumModule) {
         this.curriculumModule = curriculumModule;
+    }
+
+    public BigDecimal getCredits() {
+        return credits;
+    }
+
+    public void setCredits(BigDecimal credits) {
+        this.credits = credits;
     }
 
     public Set<CurriculumVersionOccupationModuleCapacityDto> getCapacities() {

@@ -226,7 +226,10 @@ public class ModuleProtocolService extends AbstractProtocolService {
     private static final String HAS_NO_POSITIVE_RESULT_IN_THIS_MODULE = "s.id not in (select ps.student_id from protocol_student ps "
             + "inner join protocol p on p.id = ps.protocol_id "
             + "inner join protocol_vdata pvd on pvd.protocol_id = p.id "
-            + "where p.is_vocational = true and (grade_code is null or grade_code in (:positiveGrades)) and pvd.curriculum_version_omodule_id = cvo.id)";
+            + "where p.is_vocational = true and (grade_code is null or grade_code in (:positiveGrades)) and pvd.curriculum_version_omodule_id = cvo.id "
+            + "union all "
+            + "select svr.student_id from student_vocational_result svr "
+            + "where svr.grade_code in (:positiveGrades) and (svr.curriculum_version_omodule_id = cvo.id or cvo.id = any(svr.arr_modules)))";
 
     private Map<Long, ModuleProtocolStudentSelectDto> studentsForSelection(HoisUserDetails user, Long occupationalModuleId) {
         JpaNativeQueryBuilder studentsQb = new JpaNativeQueryBuilder(
@@ -243,6 +246,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
 
         studentsQb.requiredCriteria(HAS_NO_POSITIVE_RESULT_IN_THIS_MODULE,
                 "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
+        
 
         studentsQb.sort("p.firstname, p.lastname");
         List<?> students = studentsQb.select("distinct s.id, p.firstname, p.lastname, p.idcode, s.status_code", em)
@@ -344,13 +348,19 @@ public class ModuleProtocolService extends AbstractProtocolService {
         qb.requiredCriteria("s.status_code in (:activeStatuses)", "activeStatuses", StudentStatus.STUDENT_STATUS_ACTIVE);
         qb.optionalCriteria("c.is_higher = :is_higher", "is_higher", Boolean.FALSE);
         qb.optionalContains("p.firstname || ' ' || p.lastname", "name", command.getStudentName());
-        
+
         qb.filter("s.id not in (select ps.student_id from protocol_student ps "
             + "join protocol p on p.id = ps.protocol_id "
             + "join protocol_vdata pvd on pvd.protocol_id = p.id "
             + "where p.is_vocational = true and (grade_code is null or "
-            + "grade_code in (" + OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE.stream().map(g -> "'" + g + "'").collect(Collectors.joining(", "))
-            + ")) and pvd.curriculum_version_omodule_id = " + EntityUtil.getId(protocol.getProtocolVdata().getCurriculumVersionOccupationModule()) + ")");
+            + "grade_code in (:positiveGrades)) "
+            + "and pvd.curriculum_version_omodule_id = :moduleId "
+            + "union all "
+            + "select svr.student_id from student_vocational_result svr "
+            + "where svr.grade_code in (:positiveGrades) "
+            + "and (svr.curriculum_version_omodule_id = :moduleId or :moduleId = any(svr.arr_modules)))");
+        qb.parameter("moduleId", EntityUtil.getId(protocol.getProtocolVdata().getCurriculumVersionOccupationModule()));
+        qb.parameter("positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
 
         qb.requiredCriteria(NOT_ADDED_TO_PROTOCOL, "protocolId", EntityUtil.getId(protocol));
 
@@ -429,13 +439,19 @@ public class ModuleProtocolService extends AbstractProtocolService {
     }
 
     public List<ProtocolStudentResultDto> calculateGrades(ProtocolCalculateCommand command) {
+        List<ProtocolStudent> activeStudents = getActiveSelectedStudents(command.getProtocolStudents());
         List<ProtocolStudentResultDto> calculatedResults = new ArrayList<>();
-        for(Long protocolStudentId : command.getProtocolStudents()) {
-            ProtocolStudent ps = em.getReference(ProtocolStudent.class, protocolStudentId);
+        for (ProtocolStudent ps : activeStudents) {
             OccupationalGrade grade = ModuleProtocolGradeUtil.calculateGrade(ps);
-            calculatedResults.add(new ProtocolStudentResultDto(protocolStudentId, grade));
+            calculatedResults.add(new ProtocolStudentResultDto(EntityUtil.getId(ps), grade));
         }
         return calculatedResults;
+    }
+
+    private List<ProtocolStudent> getActiveSelectedStudents(Set<Long> protocolStudents) {
+        return em.createQuery("select ps from ProtocolStudent ps where ps.id in (?1) and ps.student.status.code in (?2)",
+                        ProtocolStudent.class)
+                .setParameter(1, protocolStudents).setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE).getResultList();
     }
 
     public ModuleProtocolReport moduleProtocolReport(Protocol protocol) {

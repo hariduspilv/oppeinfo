@@ -28,7 +28,6 @@ import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.report.ModuleProtocolReport;
-import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.BdocService;
 import ee.hitsa.ois.service.ModuleProtocolService;
 import ee.hitsa.ois.service.PdfService;
@@ -46,7 +45,6 @@ import ee.hitsa.ois.web.commandobject.ModuleProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSignForm;
 import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
-import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.commandobject.timetable.OtherStudentsSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -56,7 +54,6 @@ import ee.hitsa.ois.web.dto.ModuleProtocolDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolOccupationalModuleDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolSearchDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolStudentSelectDto;
-import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 
 
@@ -69,8 +66,6 @@ public class ModuleProtocolController {
 
     @Autowired
     private ModuleProtocolService moduleProtocolService;
-    @Autowired
-    private AutocompleteService autocompleteService;
     @Autowired
     private BdocService bdocService;
     @Autowired
@@ -123,12 +118,6 @@ public class ModuleProtocolController {
     public List<AutocompleteResult> occupationModules(HoisUserDetails user, @PathVariable Long curriculumVersionId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return moduleProtocolService.occupationModules(user, curriculumVersionId);
-    }
-
-    @GetMapping("teachers")
-    public List<OccupiedAutocompleteResult> teachers(HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return autocompleteService.teachers(user.getSchoolId(), new TeacherAutocompleteCommand(), false);
     }
 
     @GetMapping("occupationModule/{studyYearId:\\d+}/{curriculumVersionOccupationModuleId:\\d+}")

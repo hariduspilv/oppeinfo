@@ -29,22 +29,15 @@
                       </md-option>
                       </md-select>
                   </md-input-container>
-                  <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-                      <label>{{'subjectStudyPeriod.studentGroup' | translate}}</label>
-                      <md-select ng-model="criteria.studentGroup">
-                      <md-option ng-value="null">
-                      </md-option>
-                        <md-option ng-value="option.id" ng-repeat="option in studentGroups | filter: filterStudentGroups | orderBy: currentLanguageNameField()">
-                          {{currentLanguageNameField(option)}}
-                      </md-option>
-                      </md-select>
-                  </md-input-container>
+                  <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"
+                    ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
+                    label="{{'subjectStudyPeriod.studentGroup'}}" additional-query-params="{higher: true, valid: true, curriculumId: criteria.curriculum}"></hois-autocomplete>
               </div>
           <div layout="row">
               <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
               <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
               <md-button class="md-raised" ng-if="canEdit" href="#/subjectStudyPeriods/studentGroups/new">{{'main.button.create' | translate}}</md-button>
-              <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
+              <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
           </div>
       </form>
     </fieldset>

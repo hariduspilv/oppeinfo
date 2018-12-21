@@ -19,7 +19,7 @@ public class StudentVocationalResultModuleThemeDto {
     private LocalDate studyYearStartDate;
     private Boolean isApelTransfer;
     private Boolean isFormalLearning;
-    private Boolean isOtherSchool;
+    private List<Long> replacedModules;
     
     public AutocompleteResult getModule() {
         return module;
@@ -101,12 +101,11 @@ public class StudentVocationalResultModuleThemeDto {
         this.isFormalLearning = isFormalLearning;
     }
 
-    public Boolean getIsOtherSchool() {
-        return isOtherSchool;
+    public List<Long> getReplacedModules() {
+        return replacedModules;
     }
 
-    public void setIsOtherSchool(Boolean isOtherSchool) {
-        this.isOtherSchool = isOtherSchool;
+    public void setReplacedModules(List<Long> replacedModules) {
+        this.replacedModules = replacedModules;
     }
-    
 }

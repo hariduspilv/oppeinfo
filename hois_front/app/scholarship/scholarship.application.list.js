@@ -17,7 +17,6 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     };
     $scope.selected = {};
 
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
     var clMapper = Classifier.valuemapper({
       status: 'STIPTOETUS_STAATUS',
       type: 'STIPTOETUS',
@@ -26,13 +25,8 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     });
 
     var promises = clMapper.promises;
-    promises.push($scope.studyPeriods.$promise);
 
     $q.all(promises).then(function () {
-      if ($scope.studyPeriods.length > 0 && !$scope.criteria.studyPeriod) {
-        var currentStudyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods);
-        $scope.criteria.studyPeriod = currentStudyPeriod ? currentStudyPeriod.id : undefined;
-      }
       if (!('_menu' in $route.current.params)) {
         $scope.fromStorage = function (key) {
           return JSON.parse($sessionStorage[key] || '{}');
@@ -109,14 +103,16 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
 
     function chosenApplications() {
       return $scope.applications.filter(function (it) {
-        return $scope.selected[it.id];
+        return $scope.selected[it.id] && !it.hasDirective;
       }).map(function (it) {
         return it.id;
       });
     }
 
-    function allApplications() {
-      return $scope.applications.map(function (it) {
+    function allApplicationsWithoutDirective() {
+      return $scope.applications.filter(function (it) { 
+        return !it.hasDirective;
+      }).map(function (it) {
         return it.id;
       });
     }
@@ -124,7 +120,9 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     $scope.accept = function () {
       var applications = chosenApplications();
       if (applications.length > 0) {
-        QueryUtils.endpoint(baseUrl + '/acceptApplications').put(applications, $scope.reloadTable);
+        QueryUtils.endpoint(baseUrl + '/acceptApplications').put(applications, $scope.reloadTable).$promise.then(function () {
+          message.info('stipend.messages.applicationAccepted');  
+        });
       } else {
         message.error('stipend.messages.error.noStudentsSelected');
       }
@@ -157,27 +155,42 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
     $scope.teacherConfirm = function (action) {
       var applications = chosenApplications();
       if (applications.length > 0) {
-        QueryUtils.endpoint(baseUrl + '/teacherConfirmApplications/' + action).put(applications, $scope.reloadTable);
+        QueryUtils.endpoint(baseUrl + '/teacherConfirmApplications/' + action)
+          .put(applications, $scope.reloadTable).$promise.then(function () {
+            if (action === 'yes') {
+              message.info('stipend.messages.applicationConfirmed');
+            } else if (action === 'no') {
+              message.info('stipend.messages.applicationUnconfirmed');
+            }
+          });
       } else {
         message.error('stipend.messages.error.noStudentsSelected');
       }
     };
 
     $scope.refreshResults = function () {
-      var applications = allApplications();
+      var applications = allApplicationsWithoutDirective();
       if (applications.length > 0) {
-        QueryUtils.endpoint(baseUrl + '/refreshResults').put(applications, $scope.reloadTable);
+        QueryUtils.endpoint(baseUrl + '/refreshResults').put(applications, $scope.reloadTable).$promise.then(function () {
+          message.info('stipend.messages.resultsRefreshed');  
+        });
+      } else {
+        message.error('stipend.messages.error.noApplicationsWithoutDirectives');
       }
     };
 
     $scope.checkComplies = function () {
-      var applications = allApplications();
+      var applications = allApplicationsWithoutDirective();
       if (applications.length > 0) {
         QueryUtils.endpoint(baseUrl + '/checkComplies').save(applications, function (result) {
           $scope.applications.forEach(function (application) {
             application.nonCompliant = !result[application.id];
           });
+        }).$promise.then(function () {
+          message.info('stipend.messages.compliesChecked');  
         });
+      } else {
+        message.error('stipend.messages.error.noApplicationsWithoutDirectives');
       }
     };
 
@@ -229,7 +242,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
       QueryUtils.endpoint(baseUrl + '/rejectApplications').put({
         applications: $scope.rejections
       }, function () {
-        message.info('main.messages.update.success');
+        message.info('stipend.messages.applicationRejected');
         $location.path('/scholarships/applications/' + $scope.scholarshipType);
       });
     };
@@ -238,7 +251,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
       QueryUtils.endpoint(baseUrl + '/annulApplications').put({
         applications: $scope.rejections
       }, function () {
-        message.info('main.messages.update.success');
+        message.info('stipend.messages.applicationAnnulled');
         $location.path('/scholarships/applications/' + $scope.scholarshipType);
       });
     };

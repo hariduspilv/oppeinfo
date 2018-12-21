@@ -9,7 +9,7 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Required;
-import ee.hitsa.ois.web.commandobject.OisFileForm;
+import ee.hitsa.ois.web.dto.OisFileDto;
 
 public class ScholarshipStudentApplicationForm {
 
@@ -35,7 +35,7 @@ public class ScholarshipStudentApplicationForm {
     private String compensationFrequency;
     private BigDecimal routeKm;
 
-    private List<OisFileForm> files;
+    private List<OisFileDto> files;
     private List<ScholarshipApplicationFamilyForm> family;
 
     public Long getId() {
@@ -78,11 +78,11 @@ public class ScholarshipStudentApplicationForm {
         this.addInfo = addInfo;
     }
 
-    public List<OisFileForm> getFiles() {
+    public List<OisFileDto> getFiles() {
         return files;
     }
 
-    public void setFiles(List<OisFileForm> files) {
+    public void setFiles(List<OisFileDto> files) {
         this.files = files;
     }
 

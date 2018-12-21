@@ -21,6 +21,15 @@ angular.module('hitsaOis').controller('StudentAbsenceController',
       }
     };
 
+    $scope.directiveControllers = [];
+    var clearCriteria = $scope.clearCriteria;
+    $scope.clearCriteria = function () {
+      clearCriteria();
+      $scope.directiveControllers.forEach(function (c) {
+        c.clear();
+      });
+    };
+    
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
     $scope.studyYears = QueryUtils.endpoint('/autocomplete/studyYears').query();
     $scope.studyYears.$promise.then(function() {

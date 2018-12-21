@@ -10,8 +10,8 @@
           </md-input-container>
 
           <div ng-if="auth.isAdmin()" flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
-            <hois-autocomplete flex ng-model="criteria.studentGroupObject" method="studentgroups" name="studentGroup"
-              label="groupAbsence.studentGroup" additional-query-params="{higher: false}" required></hois-autocomplete>
+            <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
+              label="{{'groupAbsence.studentGroup'}}" additional-query-params="{higher: false}" required></hois-autocomplete>
           </div>
 
           <md-input-container ng-if="auth.isTeacher()" flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
@@ -55,8 +55,7 @@
   </span>
 
   <div flex ng-if="content.students.length > 0">
-    <md-table-container>
-
+    <div class="container" fixed-column-table fixed-columns="1" style="height: 750px">
       <table class="student-group-absence-table">
         <thead>
           <tr>
@@ -65,7 +64,7 @@
           </tr>
           <tr>
             <th>{{'groupAbsence.student' | translate}}</th>
-            <th ng-repeat="journal in journals">
+            <th ng-repeat="journal in journals" class="fix">
               <a ng-if="journal.id" ng-href="#/journal/{{journal.id}}/view" class="md-primary change-button">{{currentLanguageNameField(journal)}}</a>
             </th>
           </tr>
@@ -96,13 +95,12 @@
                       </div>
                     </div>
                   </div>
-
                 </div>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
-    </md-table-container>
+    </div>
   </div>
 </div>

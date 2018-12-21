@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -47,7 +48,9 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.CommitteeType;
+import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.message.ApelApplicationCreated;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -264,12 +267,13 @@ public class ApelApplicationService {
     }
     
     private void updateRecords(HoisUserDetails user, ApelApplication application, ApelApplicationForm applicationForm) {
-        EntityUtil.bindEntityCollection(application.getRecords(), ApelApplicationRecord::getId, applicationForm.getRecords(), ApelApplicationRecordForm::getId, recordForm -> {
+        EntityUtil.bindEntityCollection(application.getRecords(), ApelApplicationRecord::getId,
+                applicationForm.getRecords(), ApelApplicationRecordForm::getId, recordForm -> {
             ApelApplicationRecord updatedRecord = EntityUtil.bindToEntity(recordForm, new ApelApplicationRecord(), 
                     "apelApplication", "informalExperiences", "informalSubjectsOrModules", "formalSubjectsOrModules", "formalReplacedSubjectsOrModules");
             updateInformalExperiences(recordForm, updatedRecord);
             updateInformalSubjectsOrModules(recordForm, updatedRecord);
-            updateFormalSubjectsOrModules(user, recordForm, updatedRecord);
+            updateFormalSubjectsOrModules(user, recordForm, updatedRecord, applicationForm.getIsVocational());
             updateFormalReplacedSubjectsOrModules(recordForm, updatedRecord);
             return updatedRecord;
         }, (recordForm, updatedRecord) -> {
@@ -277,7 +281,7 @@ public class ApelApplicationService {
                     "formalSubjectsOrModules", "formalReplacedSubjectsOrModules");
             updateInformalExperiences(recordForm, updatedRecord);
             updateInformalSubjectsOrModules(recordForm, updatedRecord);
-            updateFormalSubjectsOrModules(user, recordForm, updatedRecord);
+            updateFormalSubjectsOrModules(user, recordForm, updatedRecord, applicationForm.getIsVocational());
             updateFormalReplacedSubjectsOrModules(recordForm, updatedRecord);
         });
     }
@@ -290,10 +294,11 @@ public class ApelApplicationService {
      * @param recordForm
      * @return
      */
-    public ApelApplicationRecord createRecord(HoisUserDetails user, ApelApplication application, ApelApplicationRecordForm recordForm) {
+    public ApelApplicationRecord createRecord(HoisUserDetails user, ApelApplication application,
+            ApelApplicationRecordForm recordForm) {
         ApelApplicationRecord record = new ApelApplicationRecord();
         record.setApelApplication(application);
-        return updateRecord(user, recordForm, record);
+        return updateRecord(user, recordForm, record, application.getIsVocational());
     }
 
     /**
@@ -304,12 +309,13 @@ public class ApelApplicationService {
      * @param record
      * @return
      */
-    public ApelApplicationRecord updateRecord(HoisUserDetails user, ApelApplicationRecordForm recordForm, ApelApplicationRecord record) {
+    public ApelApplicationRecord updateRecord(HoisUserDetails user, ApelApplicationRecordForm recordForm,
+            ApelApplicationRecord record, Boolean isVocational) {
         ApelApplicationRecord updatedRecord = EntityUtil.bindToEntity(recordForm, record, "apelApplication", 
                 "informalExperiences", "informalSubjectsOrModules", "formalSubjectsOrModules", "formalReplacedSubjectsOrModules");
         updateInformalExperiences(recordForm, updatedRecord);
         updateInformalSubjectsOrModules(recordForm, updatedRecord);
-        updateFormalSubjectsOrModules(user, recordForm, updatedRecord);
+        updateFormalSubjectsOrModules(user, recordForm, updatedRecord, isVocational);
         updateFormalReplacedSubjectsOrModules(recordForm, updatedRecord);
         return EntityUtil.save(updatedRecord, em);
     }
@@ -327,7 +333,8 @@ public class ApelApplicationService {
     }
 
     private void updateInformalExperiences(ApelApplicationRecordForm recordForm, ApelApplicationRecord record) {
-        EntityUtil.bindEntityCollection(record.getInformalExperiences(), ApelApplicationInformalExperience::getId, recordForm.getInformalExperiences(), ApelApplicationInformalExperienceForm::getId, form -> {
+        EntityUtil.bindEntityCollection(record.getInformalExperiences(), ApelApplicationInformalExperience::getId,
+                recordForm.getInformalExperiences(), ApelApplicationInformalExperienceForm::getId, form -> {
             ApelApplicationInformalExperience informalExperience = EntityUtil.bindToEntity(form,
                     new ApelApplicationInformalExperience(), "apelApplicationRecord", "type");
             informalExperience.setApelApplicationRecord(record);
@@ -340,7 +347,9 @@ public class ApelApplicationService {
     }
 
     private void updateInformalSubjectsOrModules(ApelApplicationRecordForm recordForm, ApelApplicationRecord record) {
-        EntityUtil.bindEntityCollection(record.getInformalSubjectsOrModules(), ApelApplicationInformalSubjectOrModule::getId, recordForm.getInformalSubjectsOrModules(), ApelApplicationInformalSubjectOrModuleForm::getId, form -> {
+        EntityUtil.bindEntityCollection(record.getInformalSubjectsOrModules(),
+                ApelApplicationInformalSubjectOrModule::getId, recordForm.getInformalSubjectsOrModules(),
+                ApelApplicationInformalSubjectOrModuleForm::getId, form -> {
             ApelApplicationInformalSubjectOrModule subjectOrModule = EntityUtil.bindToEntity(form, 
                     new ApelApplicationInformalSubjectOrModule(), "apelApplicationRecord", "subject", "curriculumVersionHmodule",
                     "curriculumVersionOmodule", "curriculumVersionOmoduleTheme", "outcomes");
@@ -351,6 +360,7 @@ public class ApelApplicationService {
         }, (form, subjectOrModule) -> {
             EntityUtil.bindToEntity(form, subjectOrModule, "subject", "curriculumVersionHmodule",
                     "curriculumVersionOmodule", "curriculumVersionOmoduleTheme", "outcomes");
+            subjectOrModule = updateInformalSubjectOrModule(form, subjectOrModule);
             updateInformalSubjectsOrModulesOutcomes(form, subjectOrModule);
             validateInformalSubjectOrModule(record, subjectOrModule);
         });
@@ -370,8 +380,11 @@ public class ApelApplicationService {
         return subjectOrModule;
     }
 
-    private void updateInformalSubjectsOrModulesOutcomes(ApelApplicationInformalSubjectOrModuleForm subjectOrModuleForm, ApelApplicationInformalSubjectOrModule subjectOrModule) {
-        EntityUtil.bindEntityCollection(subjectOrModule.getOutcomes(), ApelApplicationInformalSubjectOrModuleOutcomes::getId, subjectOrModuleForm.getOutcomes(), ApelApplicationInformalSubjectOrModuleOutcomesForm::getId, form -> {
+    private void updateInformalSubjectsOrModulesOutcomes(ApelApplicationInformalSubjectOrModuleForm subjectOrModuleForm,
+            ApelApplicationInformalSubjectOrModule subjectOrModule) {
+        EntityUtil.bindEntityCollection(subjectOrModule.getOutcomes(),
+                ApelApplicationInformalSubjectOrModuleOutcomes::getId, subjectOrModuleForm.getOutcomes(),
+                ApelApplicationInformalSubjectOrModuleOutcomesForm::getId, form -> {
             ApelApplicationInformalSubjectOrModuleOutcomes subjectOrModuleOutcomes = EntityUtil.bindToEntity(form, 
                     new ApelApplicationInformalSubjectOrModuleOutcomes(), "apelApplicationInformalSubjectOrModule", "curriculumModuleOutcomes");
             subjectOrModuleOutcomes.setApelApplicationInformalSubjectOrModule(subjectOrModule);
@@ -390,24 +403,28 @@ public class ApelApplicationService {
         }
     }
     
-    private void updateFormalSubjectsOrModules(HoisUserDetails user, ApelApplicationRecordForm recordForm, ApelApplicationRecord record) {
-        EntityUtil.bindEntityCollection(record.getFormalSubjectsOrModules(), ApelApplicationFormalSubjectOrModule::getId, recordForm.getFormalSubjectsOrModules(), ApelApplicationFormalSubjectOrModuleForm::getId, form -> {
+    private void updateFormalSubjectsOrModules(HoisUserDetails user, ApelApplicationRecordForm recordForm,
+            ApelApplicationRecord record, Boolean isVocational) {
+        EntityUtil.bindEntityCollection(record.getFormalSubjectsOrModules(),
+                ApelApplicationFormalSubjectOrModule::getId, recordForm.getFormalSubjectsOrModules(),
+                ApelApplicationFormalSubjectOrModuleForm::getId, form -> {
             ApelApplicationFormalSubjectOrModule subjectOrModule = EntityUtil.bindToEntity(form, 
                     new ApelApplicationFormalSubjectOrModule(), "apelApplicationRecord", "apelSchool", "subject", "curriculumVersionHmodule", 
-                    "curriculumVersionOmodule", "type", "grade", "assessment");
+                    "curriculumVersionOmodule", "type", "grade", "assessment", "isOptional");
             subjectOrModule.setApelApplicationRecord(record);
-            updateFormalSubjectOrModule(user, subjectOrModule, form);
+            updateFormalSubjectOrModule(user, subjectOrModule, form, isVocational);
             validateFormalSubjectOrModule(record, subjectOrModule);
             return subjectOrModule;
         }, (form, subjectOrModule) -> {
             EntityUtil.bindToEntity(form, subjectOrModule, "apelApplicationRecord", "apelSchool", "subject", "curriculumVersionHmodule", 
-                    "curriculumVersionOmodule", "type", "grade", "assessment");
-            updateFormalSubjectOrModule(user, subjectOrModule, form);
+                    "curriculumVersionOmodule", "type", "grade", "assessment", "isOptional");
+            updateFormalSubjectOrModule(user, subjectOrModule, form, isVocational);
             validateFormalSubjectOrModule(record, subjectOrModule);
         });
     }
     
-    private void updateFormalSubjectOrModule(HoisUserDetails user, ApelApplicationFormalSubjectOrModule subjectOrModule, ApelApplicationFormalSubjectOrModuleForm form) {
+    private void updateFormalSubjectOrModule(HoisUserDetails user, ApelApplicationFormalSubjectOrModule subjectOrModule,
+            ApelApplicationFormalSubjectOrModuleForm form, Boolean isVocational) {
         form.setApelSchool(form.getNewApelSchool() != null ? apelSchoolService.create(user, form.getNewApelSchool()).getId() : form.getApelSchool());
         subjectOrModule.setApelSchool(form.getApelSchool() != null ? em.getReference(ApelSchool.class, form.getApelSchool()): null);
         subjectOrModule.setSubject(form.getSubject() != null ? em.getReference(Subject.class, form.getSubject()) : null);
@@ -418,6 +435,10 @@ public class ApelApplicationService {
         subjectOrModule.setType(em.getReference(Classifier.class, form.getType()));
         subjectOrModule.setGrade(em.getReference(Classifier.class, form.getGrade()));
         subjectOrModule.setAssessment(em.getReference(Classifier.class, form.getAssessment()));
+        subjectOrModule.setIsMySchool(form.getIsMySchool() != null ? form.getIsMySchool() : null);
+        if (Boolean.FALSE.equals(isVocational)) {
+            subjectOrModule.setIsOptional(form.getIsOptional() != null ? form.getIsOptional() : Boolean.TRUE);
+        }
     }
     
     private static void validateFormalSubjectOrModule(ApelApplicationRecord record, ApelApplicationFormalSubjectOrModule subjectOrModule) {
@@ -431,27 +452,36 @@ public class ApelApplicationService {
     }
     
     private void updateFormalReplacedSubjectsOrModules(ApelApplicationRecordForm recordForm, ApelApplicationRecord record) {
-        EntityUtil.bindEntityCollection(record.getFormalReplacedSubjectsOrModules(), ApelApplicationFormalReplacedSubjectOrModule::getId, recordForm.getFormalReplacedSubjectsOrModules(), ApelApplicationFormalReplacedSubjectOrModuleForm::getId, form -> {
-            ApelApplicationFormalReplacedSubjectOrModule replacedSubjectOrModule = EntityUtil.bindToEntity(form,
-                    new ApelApplicationFormalReplacedSubjectOrModule(), "apelApplicationRecord", "subject", "curriculumVersionOmodule");
+        EntityUtil.bindEntityCollection(record.getFormalReplacedSubjectsOrModules(),
+                ApelApplicationFormalReplacedSubjectOrModule::getId, recordForm.getFormalReplacedSubjectsOrModules(),
+                ApelApplicationFormalReplacedSubjectOrModuleForm::getId, form -> {
+                    ApelApplicationFormalReplacedSubjectOrModule replacedSubjectOrModule = EntityUtil.bindToEntity(form,
+                            new ApelApplicationFormalReplacedSubjectOrModule(), "apelApplicationRecord", "subject",
+                            "curriculumVersionOmodule", "curriculumVersionOmoduleTheme");
             replacedSubjectOrModule.setApelApplicationRecord(record);
             replacedSubjectOrModule.setSubject(form.getSubject() != null 
                     ? em.getReference(Subject.class, form.getSubject()) : null);
             replacedSubjectOrModule.setCurriculumVersionOmodule(form.getCurriculumVersionOmodule() != null 
                     ? em.getReference(CurriculumVersionOccupationModule.class, form.getCurriculumVersionOmodule()) : null);
+            replacedSubjectOrModule.setCurriculumVersionOmoduleTheme(form.getCurriculumVersionOmoduleTheme() != null 
+                    ? em.getReference(CurriculumVersionOccupationModuleTheme.class, form.getCurriculumVersionOmoduleTheme()) : null);
             validateFormalReplacedSubjectOrModule(record, replacedSubjectOrModule);
             return replacedSubjectOrModule;
         }, (form, replacedSubjectOrModule) -> {
-            EntityUtil.bindToEntity(form, replacedSubjectOrModule, "apelApplicationRecord", "subject", "curriculumVersionOmodule");
+            EntityUtil.bindToEntity(form, replacedSubjectOrModule, "apelApplicationRecord", "subject",
+                    "curriculumVersionOmodule", "curriculumVersionOmoduleTheme");
             replacedSubjectOrModule.setSubject(form.getSubject() != null 
                     ? em.getReference(Subject.class, form.getSubject()) : null);
             replacedSubjectOrModule.setCurriculumVersionOmodule(form.getCurriculumVersionOmodule() != null 
                     ? em.getReference(CurriculumVersionOccupationModule.class, form.getCurriculumVersionOmodule()) : null);
+            replacedSubjectOrModule.setCurriculumVersionOmoduleTheme(form.getCurriculumVersionOmoduleTheme() != null 
+                    ? em.getReference(CurriculumVersionOccupationModuleTheme.class, form.getCurriculumVersionOmoduleTheme()) : null);
             validateFormalReplacedSubjectOrModule(record, replacedSubjectOrModule);
         });
     }
     
-    private static void validateFormalReplacedSubjectOrModule(ApelApplicationRecord record, ApelApplicationFormalReplacedSubjectOrModule subjectOrModule) {
+    private static void validateFormalReplacedSubjectOrModule(ApelApplicationRecord record,
+            ApelApplicationFormalReplacedSubjectOrModule subjectOrModule) {
         ApelApplication application = record.getApelApplication();
         
         if (application.getIsVocational().booleanValue()) {
@@ -582,31 +612,38 @@ public class ApelApplicationService {
      * @return
      */
     public ApelApplication confirm(HoisUserDetails user, ApelApplication application) {
-        checkThatModulesOrSubjectsAreTransferredOnlyOnce(application);
+        if (Boolean.TRUE.equals(application.getIsVocational())) {
+            checkThatModulesAreTransferredOnlyOnce(application);
+        } else {
+            checkThatSubjectsAreReplacedOnlyOnce(application);
+        }
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_C);
         application.setConfirmedBy(user.getUsername());
         application.setConfirmed(LocalDateTime.now());
         return EntityUtil.save(application, em);
     }
 
-    private void checkThatSubjectsAreNotAlreadyTransferred(Long studentId, List<Long> transferredIds) {
+    private void checkThatSubjectsDoNotAlreadyHavePositiveGrade(Long studentId, List<Long> replacedIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_higher_result shr");
         qb.requiredCriteria("shr.student_id = :studentId", "studentId", studentId);
+        qb.requiredCriteria("shr.grade_code in (:positiveGrades)", "positiveGrades", Stream.of(HigherAssessment.values())
+                .filter(HigherAssessment::getIsPositive).map(HigherAssessment::name).collect(Collectors.toList()));
         List<?> data = qb.select("shr.subject_id", em).getResultList();
-        Set<Long> previouslyTransferredIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+        Set<Long> subjectsWithPositiveResultsIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
 
-        if (listsHaveCommonIds(transferredIds, previouslyTransferredIds)) {
+        if (listsHaveCommonIds(replacedIds, subjectsWithPositiveResultsIds)) {
             throw new ValidationFailedException("apel.error.subjectHasBeenPreviouslyTransferred");
         }
     }
 
-    private void checkThatModulesAreNotAlreadyTransferred(Long studentId, List<Long> transferredIds) {
+    private void checkThatModulesDoNotAlreadyHavePositiveGrade(Long studentId, List<Long> replacedIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_vocational_result svr");
         qb.requiredCriteria("svr.student_id = :studentId", "studentId", studentId);
+        qb.requiredCriteria("svr.grade_code in (:positiveGrades)", "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
         List<?> data = qb.select("svr.curriculum_version_omodule_id", em).getResultList();
         Set<Long> previouslyTransferredIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
 
-        if (listsHaveCommonIds(transferredIds, previouslyTransferredIds)) {
+        if (listsHaveCommonIds(replacedIds, previouslyTransferredIds)) {
             throw new ValidationFailedException("apel.error.moduleHasBeenPreviouslyTransferred");
         }
     }
@@ -615,85 +652,147 @@ public class ApelApplicationService {
         return !Collections.disjoint(transferredIds, previouslyTransferredIds);
     }
 
-    private void checkThatModulesOrSubjectsAreTransferredOnlyOnce(ApelApplication application) {
-        Set<Long> transferredSubjectIds = new HashSet<>();
-        Set<Map<Long, Long>> transferredModuleAndThemeIdsMaps = new HashSet<>();
-        for(ApelApplicationRecord record : application.getRecords()) {
-            record.getInformalSubjectsOrModules().forEach(informalSubjectOrModule -> {
-                if (Boolean.TRUE.equals(application.getIsVocational())) {
-                    addTransferredModuleAndThemeIdsMap(informalSubjectOrModule, transferredModuleAndThemeIdsMaps);
-                } else {
-                    addTransferredSubjectId(informalSubjectOrModule, transferredSubjectIds);
-                }
+    private void checkThatModulesAreTransferredOnlyOnce(ApelApplication application) {
+        Set<Map<Long, Long>> replacedModuleAndThemeIdsMaps = new HashSet<>();
+        Set<Long> transferedFormalModules = new HashSet<>();
+        
+        for (ApelApplicationRecord record : application.getRecords()) {
+            record.getInformalSubjectsOrModules().forEach(informalModule -> {
+                addReplacedModuleAndThemeIdsMap(informalModule, replacedModuleAndThemeIdsMaps);
             });
-            record.getFormalSubjectsOrModules().forEach(formalSubjectOrModule -> {
-                if (Boolean.TRUE.equals(application.getIsVocational())) {
-                    addTransferredModuleAndThemeIdsMap(formalSubjectOrModule, transferredModuleAndThemeIdsMaps);
-                } else {
-                    addTransferredSubjectId(formalSubjectOrModule, transferredSubjectIds);
-                }
+
+            boolean transferedFormalLearning = recordIncludesTransferedFromalLearning(record);
+            if (transferedFormalLearning) {
+                record.getFormalReplacedSubjectsOrModules().forEach(formalReplacedModule -> {
+                    addReplacedModuleAndThemeIdsMap(formalReplacedModule, replacedModuleAndThemeIdsMaps);
+                });
+            }
+            
+            record.getFormalSubjectsOrModules().forEach(formalModule -> {
+                addTransferedModule(formalModule, transferedFormalModules);
             });
         }
-        if (!transferredSubjectIds.isEmpty()) {
-            checkThatSubjectsAreNotAlreadyTransferred(EntityUtil.getId(application.getStudent()), new ArrayList<>(transferredSubjectIds));
-        } else if (!transferredModuleAndThemeIdsMaps.isEmpty()) {
-            List<Long> transferredModuleIds = StreamUtil.toMappedList(m -> m.keySet().toArray(new Long[0])[0], transferredModuleAndThemeIdsMaps);
-            checkThatModulesAreNotAlreadyTransferred(EntityUtil.getId(application.getStudent()), transferredModuleIds);
+        if (!replacedModuleAndThemeIdsMaps.isEmpty()) {
+            List<Long> replacedModuleIds = StreamUtil.toMappedList(m -> m.keySet().toArray(new Long[0])[0],
+                    replacedModuleAndThemeIdsMaps);
+            checkThatModulesDoNotAlreadyHavePositiveGrade(EntityUtil.getId(application.getStudent()),
+                    replacedModuleIds);
         }
     }
 
-    private static void addTransferredModuleAndThemeIdsMap(ApelApplicationInformalSubjectOrModule informalModule,
-            Set<Map<Long, Long>> transferredModuleAndThemeIdsMaps) {
+    private void checkThatSubjectsAreReplacedOnlyOnce(ApelApplication application) {
+        Set<Long> replacedSubjectIds = new HashSet<>();
+        Set<Long> transferedFormalSubjects = new HashSet<>();
+        
+        for (ApelApplicationRecord record : application.getRecords()) {
+            record.getInformalSubjectsOrModules().forEach(informalSubject -> {
+                addReplacedSubjectId(informalSubject, replacedSubjectIds);
+            });
+
+            boolean transferedFormalLearning = recordIncludesTransferedFromalLearning(record);
+            if (transferedFormalLearning) {
+                record.getFormalReplacedSubjectsOrModules().forEach(formalReplacedSubject -> {
+                    addReplacedSubjectId(formalReplacedSubject, replacedSubjectIds);
+                });
+            }
+            
+            record.getFormalSubjectsOrModules().forEach(formalSubject -> {
+                addTransferedSubject(formalSubject, transferedFormalSubjects);
+            });
+        }
+        if (!replacedSubjectIds.isEmpty()) {
+            checkThatSubjectsDoNotAlreadyHavePositiveGrade(EntityUtil.getId(application.getStudent()),
+                    new ArrayList<>(replacedSubjectIds));
+        }
+    }
+
+    private static boolean recordIncludesTransferedFromalLearning(ApelApplicationRecord record) {
+        boolean includes = false;
+        for (int i = 0; i < record.getFormalSubjectsOrModules().size(); i++) {
+            if (Boolean.TRUE.equals(record.getFormalSubjectsOrModules().get(i).getTransfer())) {
+                includes = true;
+                break;
+            }
+        }
+        
+        return includes;
+    }
+
+    private static void addReplacedModuleAndThemeIdsMap(ApelApplicationInformalSubjectOrModule informalModule,
+            Set<Map<Long, Long>> replacedModuleAndThemeIdsMaps) {
         if (Boolean.TRUE.equals(informalModule.getTransfer())) {
-            if (Boolean.TRUE.equals(informalModule.getTransfer()) && informalModule.getCurriculumVersionOmodule() != null
+            if (Boolean.TRUE.equals(informalModule.getTransfer())
+                    && informalModule.getCurriculumVersionOmodule() != null
                     && informalModule.getCurriculumVersionOmoduleTheme() == null) {
-                addTransferredModuleMap(transferredModuleAndThemeIdsMaps, EntityUtil.getId(informalModule.getCurriculumVersionOmodule()), null);
-            } else if (Boolean.TRUE.equals(informalModule.getTransfer()) && informalModule.getCurriculumVersionOmodule() != null
+                addReplacedModuleMap(replacedModuleAndThemeIdsMaps,
+                        EntityUtil.getId(informalModule.getCurriculumVersionOmodule()), null);
+            } else if (Boolean.TRUE.equals(informalModule.getTransfer())
+                    && informalModule.getCurriculumVersionOmodule() != null
                     && informalModule.getCurriculumVersionOmoduleTheme() != null) {
-                addTransferredModuleMap(transferredModuleAndThemeIdsMaps, EntityUtil.getId(informalModule.getCurriculumVersionOmodule()),
+                addReplacedModuleMap(replacedModuleAndThemeIdsMaps,
+                        EntityUtil.getId(informalModule.getCurriculumVersionOmodule()),
                         EntityUtil.getId(informalModule.getCurriculumVersionOmoduleTheme()));
             }
         }
     }
-    
-    private static void addTransferredModuleMap(Set<Map<Long, Long>> transferredModuleIds, Long moduleId, Long themeId) {
+
+    private static void addReplacedModuleMap(Set<Map<Long, Long>> replacedModuleIds, Long moduleId,
+            Long themeId) {
         Map<Long, Long> fullModule = new HashMap<>();
-        Map<Long, Long> transfer = new HashMap<>();
+        Map<Long, Long> replacement = new HashMap<>();
         fullModule.put(moduleId, null);
-        transfer.put(moduleId, themeId);
-        
-        if (themeId == null && (isModuleOrThemeFromModuleAlreadyTransferred(moduleId, transferredModuleIds) || !transferredModuleIds.add(transfer))) {
+        replacement.put(moduleId, themeId);
+
+        if (themeId == null && (isModuleOrThemeFromModuleAlreadyReplaced(moduleId, replacedModuleIds)
+                || !replacedModuleIds.add(replacement))) {
+            throw new ValidationFailedException("apel.error.moduleReplacedMoreThanOnce");
+        } else if (themeId != null
+                && (replacedModuleIds.contains(fullModule) || !replacedModuleIds.add(replacement))) {
+            throw new ValidationFailedException("apel.error.moduleReplacedMoreThanOnce");
+        }
+    }
+
+    private static void addTransferedModule(ApelApplicationFormalSubjectOrModule transferedModule,
+            Set<Long> transferedModuleIds) {
+        if (Boolean.TRUE.equals(transferedModule.getTransfer())
+                && transferedModule.getCurriculumVersionOmodule() != null
+                && !transferedModuleIds.add(EntityUtil.getId(transferedModule.getCurriculumVersionOmodule()))) {
             throw new ValidationFailedException("apel.error.moduleTransferredMoreThanOnce");
-        } else if (themeId != null && (transferredModuleIds.contains(fullModule) || !transferredModuleIds.add(transfer))) {
-            throw new ValidationFailedException("apel.error.moduleTransferredMoreThanOnce");
         }
     }
 
-    private static void addTransferredModuleAndThemeIdsMap(ApelApplicationFormalSubjectOrModule formalModule, Set<Map<Long, Long>> transferredModuleAndThemeIdsMaps) {
-        if (formalModule.getCurriculumVersionOmodule() != null) {
-            Map<Long, Long> transfer = new HashMap<>();
-            Long moduleId = EntityUtil.getId(formalModule.getCurriculumVersionOmodule());
-            transfer.put(moduleId, null);
-            
-            if (Boolean.TRUE.equals(formalModule.getTransfer()) && (isModuleOrThemeFromModuleAlreadyTransferred(moduleId, transferredModuleAndThemeIdsMaps)
-                    || !transferredModuleAndThemeIdsMaps.add(transfer))) {
-                throw new ValidationFailedException("apel.error.moduleTransferredMoreThanOnce");
-            }
+    private static void addReplacedModuleAndThemeIdsMap(
+            ApelApplicationFormalReplacedSubjectOrModule formalReplacedModule,
+            Set<Map<Long, Long>> replacedModuleAndThemeIdsMaps) {
+        Long moduleId = EntityUtil.getId(formalReplacedModule.getCurriculumVersionOmodule());
+        Long themeId = EntityUtil.getNullableId(formalReplacedModule.getCurriculumVersionOmoduleTheme());
+        addReplacedModuleMap(replacedModuleAndThemeIdsMaps, moduleId, themeId);
+    }
+
+    private static boolean isModuleOrThemeFromModuleAlreadyReplaced(Long moduleId,
+            Set<Map<Long, Long>> replacedModuleAndThemeIdsMaps) {
+        return replacedModuleAndThemeIdsMaps.stream().anyMatch(e -> e.containsKey(moduleId));
+    }
+
+    private static void addReplacedSubjectId(ApelApplicationInformalSubjectOrModule informalSubject,
+            Set<Long> replacedSubjectIds) {
+        if (Boolean.TRUE.equals(informalSubject.getTransfer()) && informalSubject.getSubject() != null
+                && !replacedSubjectIds.add(EntityUtil.getId(informalSubject.getSubject()))) {
+            throw new ValidationFailedException("apel.error.subjectReplacedMoreThanOnce");
         }
     }
 
-    private static boolean isModuleOrThemeFromModuleAlreadyTransferred(Long moduleId, Set<Map<Long, Long>> transferredModuleAndThemeIdsMaps) {
-        return transferredModuleAndThemeIdsMaps.stream().anyMatch(e -> e.containsKey(moduleId));
-    }
-
-    private static void addTransferredSubjectId(ApelApplicationInformalSubjectOrModule informalSubject, Set<Long> transferredSubjectIds) {
-        if (Boolean.TRUE.equals(informalSubject.getTransfer()) && informalSubject.getSubject() != null && !transferredSubjectIds.add(EntityUtil.getId(informalSubject.getSubject()))) {
-            throw new ValidationFailedException("apel.error.subjectTransferredMoreThanOnce");
+    private static void addReplacedSubjectId(ApelApplicationFormalReplacedSubjectOrModule formalReplacedSubject,
+            Set<Long> replacedSubjectIds) {
+        if (!replacedSubjectIds.add(EntityUtil.getId(formalReplacedSubject.getSubject()))) {
+            throw new ValidationFailedException("apel.error.subjectReplacedMoreThanOnce");
         }
     }
-
-    private static void addTransferredSubjectId(ApelApplicationFormalSubjectOrModule formalSubject, Set<Long> transferredSubjectIds) {
-        if (Boolean.TRUE.equals(formalSubject.getTransfer()) && formalSubject.getSubject() != null && !transferredSubjectIds.add(EntityUtil.getId(formalSubject.getSubject()))) {
+    
+    private static void addTransferedSubject(ApelApplicationFormalSubjectOrModule formalSubject,
+            Set<Long> transferedSubjectIds) {
+        if (Boolean.TRUE.equals(formalSubject.getTransfer()) && formalSubject.getSubject() != null
+                && !transferedSubjectIds.add(EntityUtil.getId(formalSubject.getSubject()))) {
             throw new ValidationFailedException("apel.error.subjectTransferredMoreThanOnce");
         }
     }

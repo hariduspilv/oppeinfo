@@ -55,6 +55,8 @@ public class LessonPlanXlsDto {
         private String nameEn;
         private String teacher;
         private List<LessonPlanXlsJournalDto> journals;
+        private Map<String, List<Double>> hours;
+        private List<Double> totalHours;
         
         @Override
         public String getNameEt() {
@@ -85,10 +87,27 @@ public class LessonPlanXlsDto {
         public List<LessonPlanXlsJournalDto> getJournals() {
             return journals;
         }
-        
+
         public void setJournals(List<LessonPlanXlsJournalDto> journals) {
             this.journals = journals;
         }
+
+        public Map<String, List<Double>> getHours() {
+            return hours;
+        }
+
+        public void setHours(Map<String, List<Double>> hours) {
+            this.hours = hours;
+        }
+
+        public List<Double> getTotalHours() {
+            return totalHours;
+        }
+
+        public void setTotalHours(List<Double> totalHours) {
+            this.totalHours = totalHours;
+        }
+
     }
     
     public static class LessonPlanXlsJournalDto {

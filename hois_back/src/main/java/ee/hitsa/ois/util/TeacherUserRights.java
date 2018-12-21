@@ -22,7 +22,7 @@ public abstract class TeacherUserRights {
     }
 
     public static boolean canView(HoisUserDetails user, Teacher teacher) {
-        return hasPermissionToView(user) && (user.isExternalExpert() || UserUtil.isSameSchool(user, teacher.getSchool()));
+        return hasPermissionToView(user) && (user.isExternalExpert() || UserUtil.isSchoolAdmin(user, teacher.getSchool()) || UserUtil.isSamePerson(user, teacher.getPerson()));
     }
 
     public static boolean canEdit(HoisUserDetails user, Teacher teacher) {

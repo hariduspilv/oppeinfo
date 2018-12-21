@@ -24,6 +24,7 @@ import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.service.ApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -64,7 +65,7 @@ public class ApplicationController {
 
     @PutMapping("/{id:\\d+}")
     public ApplicationDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Application application, @Valid @RequestBody ApplicationForm applicationForm) {
-        if (!UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) && !UserUtil.isSame(user, application.getStudent())) {
+        if (!UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) && !UserUtil.isStudent(user, application.getStudent()) || !StudentUtil.canBeEdited(application.getStudent())) {
             throw new ValidationFailedException(String.format("user %s is not allowed to update application %d", user.getUsername(), application.getId()));
         }
         checkUpdateBusinessRules(user, application, applicationForm);
@@ -75,7 +76,7 @@ public class ApplicationController {
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Application application, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         Student student = application.getStudent();
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
-        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) || !ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)) {
+        if((!(UserUtil.isStudent(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) || !ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)) && !StudentUtil.canBeEdited(student)) {
             throw new ValidationFailedException(String.format("user %s is not allowed to delete application %d with status %s", user.getUsername(), application.getId(), status.name()));
         }
         applicationService.delete(user, application);
@@ -83,7 +84,7 @@ public class ApplicationController {
 
     @GetMapping("/student/{id:\\d+}/validAcademicLeave")
     public ValidAcademicLeaveDto academicLeave(HoisUserDetails user, @WithEntity Student student) {
-        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
+        if(!(UserUtil.isStudent(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
             throw new ValidationFailedException(String.format("user %s is not allowed to view validAcademicLeave", user.getUsername()));
         }
         DirectiveStudent academicLeave = applicationService.findLastValidAcademicLeaveWithoutRevocation(EntityUtil.getId(student));
@@ -92,7 +93,7 @@ public class ApplicationController {
 
     @GetMapping("student/{id:\\d+}/applicable")
     public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(HoisUserDetails user, @WithEntity Student student) {
-        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
+        if(!(UserUtil.isStudent(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
             throw new ValidationFailedException(String.format("user %s is not allowed to view applicable", user.getUsername()));
         }
 
@@ -108,7 +109,7 @@ public class ApplicationController {
 
         Application submitedApplication = applicationService.submit(user, application);
         Student student = application.getStudent();
-        if (UserUtil.isSame(user, student) && !UserUtil.isAdultStudent(user, student)) {
+        if (UserUtil.isStudent(user, student) && !UserUtil.isAdultStudent(user, student)) {
             applicationService.sendConfirmNeededNotificationMessage(submitedApplication);
         }
 

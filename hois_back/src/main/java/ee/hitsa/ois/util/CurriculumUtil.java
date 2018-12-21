@@ -8,6 +8,7 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupation;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.enums.CurriculumDraft;
 import ee.hitsa.ois.enums.CurriculumEhisStatus;
 import ee.hitsa.ois.enums.CurriculumModuleType;
@@ -77,6 +78,25 @@ public abstract class CurriculumUtil {
 
     public static boolean isFreeModule(CurriculumModule m) {
         return ClassifierUtil.equals(CurriculumModuleType.KUTSEMOODUL_V, m.getModule());
+    }
+
+    public static int vocationalModuleOrderNr(CurriculumModule module) {
+        int orderNr;
+        String moduleCode = EntityUtil.getCode(module.getModule());
+        if (moduleCode.equals(CurriculumModuleType.KUTSEMOODUL_P.name())) {
+            orderNr = 1;
+        } else if (moduleCode.equals(CurriculumModuleType.KUTSEMOODUL_Y.name())) {
+            orderNr = 2;
+        } else if (moduleCode.equals(CurriculumModuleType.KUTSEMOODUL_V.name())) {
+            orderNr = 3;
+        } else {
+            orderNr = 4;
+        }
+        return orderNr;
+    }    
+
+    public static int vocationalModuleOrderNr(CurriculumVersionOccupationModule occupationModule) {
+        return vocationalModuleOrderNr(occupationModule.getCurriculumModule());
     }
 
     public static boolean canHaveOccupations(Curriculum curriculum) {
@@ -172,6 +192,16 @@ public abstract class CurriculumUtil {
                 !CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_M.name().equals(ehisStatus);
     }
 
+    public static boolean canSetUnderRevision(HoisUserDetails user, Curriculum curriculum) {
+        return UserUtil.isSchoolAdmin(user, curriculum.getSchool()) && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+                && (ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, curriculum.getStatus()) || ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_M, curriculum.getStatus()));
+    }
+
+    public static boolean canSetUnderRevision(HoisUserDetails user, CurriculumVersion version) {
+        return UserUtil.isSchoolAdmin(user, version.getCurriculum().getSchool()) && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+                && ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K, version.getStatus());
+    }
+
 //  User rights validation
 
     public static void assertCanView(HoisUserDetails user, String userEhisShool, CurriculumVersion version) {
@@ -224,6 +254,18 @@ public abstract class CurriculumUtil {
 
     public static void assertOccupationCanBeChanged(Classifier draft) {
         if(!occupationCanBeChanged(draft)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanSetUnderRevision(HoisUserDetails user, Curriculum curriculum) {
+        if (!canSetUnderRevision(user, curriculum)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanSetUnderRevision(HoisUserDetails user, CurriculumVersion version) {
+        if (!canSetUnderRevision(user, version)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }

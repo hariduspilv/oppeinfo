@@ -16,6 +16,7 @@ public class StudyMaterialDto extends InsertedChangedVersionDto {
     private Boolean isVisibleToStudents;
     private String url;
     private Boolean isVocational;
+    private Boolean canEdit;
     
     public static StudyMaterialDto of(StudyMaterial material) {
         if (material == null) {
@@ -85,6 +86,14 @@ public class StudyMaterialDto extends InsertedChangedVersionDto {
     }
     public void setIsVocational(Boolean isVocational) {
         this.isVocational = isVocational;
+    }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
     }
 
 }

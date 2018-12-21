@@ -18,14 +18,13 @@ import org.digidoc4j.Container;
 import org.digidoc4j.ContainerBuilder;
 import org.digidoc4j.DataToSign;
 import org.digidoc4j.DigestAlgorithm;
+import org.digidoc4j.OCSPSourceBuilder;
 import org.digidoc4j.Signature;
 import org.digidoc4j.SignatureBuilder;
 import org.digidoc4j.SignatureProfile;
 import org.digidoc4j.TSLCertificateSource;
-import org.digidoc4j.impl.bdoc.SKCommonCertificateVerifier;
-import org.digidoc4j.impl.bdoc.ocsp.OcspSourceBuilder;
-import org.digidoc4j.impl.bdoc.ocsp.SKOnlineOCSPSource;
-import org.digidoc4j.impl.bdoc.tsl.LazyCertificatePool;
+import org.digidoc4j.impl.asic.SKCommonCertificateVerifier;
+import org.digidoc4j.impl.asic.tsl.LazyCertificatePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +51,7 @@ import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.OCSPCertificateVerifier;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.RevocationToken;
+import eu.europa.esig.dss.x509.ocsp.OCSPSource;
 
 @Service
 public class BdocService {
@@ -72,6 +72,7 @@ public class BdocService {
     @PostConstruct
     public void postConstruct() {
         if (Boolean.TRUE.equals(isTestMode)) {
+            System.setProperty("digidoc4j.mode", "TEST");
             configuration = new Configuration(Configuration.Mode.TEST);
             configuration.setTslLocation("https://open-eid.github.io/test-TL/tl-mp-test-EE.xml");
         } else {
@@ -99,7 +100,7 @@ public class BdocService {
                 .withSigningCertificate(CertificateUtil.getCertificateFromHex(certificateInHex));
         if (Boolean.TRUE.equals(isTestMode)) {
             //using no profile mode to pass OCSP, for signing with PROD ID-card in TEST mode. https://github.com/open-eid/digidoc4j/wiki/Questions-&-Answers#if-ocsp-request-has-failed
-            signatureBuilder.withSignatureProfile(SignatureProfile.B_EPES);
+            //signatureBuilder.withSignatureProfile(SignatureProfile.B_EPES);
         }
         return signatureBuilder.buildDataToSign();
     }
@@ -143,7 +144,7 @@ public class BdocService {
     }
 
     private RevocationToken doOcspCheck(X509Certificate certificate) {
-        SKOnlineOCSPSource ocspSource = OcspSourceBuilder.anOcspSource().withConfiguration(configuration).build();
+        OCSPSource ocspSource = OCSPSourceBuilder.anOcspSource().withConfiguration(configuration).build();
         CertificateVerifier certificateVerifier = getCertificateVerifier(ocspSource);
         LazyCertificatePool lazyCertificatePool = new LazyCertificatePool(certificateVerifier.getTrustedCertSource());
 
@@ -157,7 +158,7 @@ public class BdocService {
         return ocspCertificateVerifier.check(certificateToken);
     }
 
-    private CertificateVerifier getCertificateVerifier(SKOnlineOCSPSource ocspSource) {
+    private CertificateVerifier getCertificateVerifier(OCSPSource ocspSource) {
         //org.digidoc4j.impl.bdoc.xades.XadesValidationDssFacade
         CertificateVerifier certificateVerifier = new SKCommonCertificateVerifier();
         certificateVerifier.setOcspSource(ocspSource);

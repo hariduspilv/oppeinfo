@@ -68,21 +68,23 @@ public class CertificateValidationService {
 
     public void assertCanChange(HoisUserDetails user, Certificate certificate) {
         if(!canBeChanged(user, certificate)) {
-            throw new ValidationFailedException("no.rights");
+            throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
 
     public void assertCanDelete(HoisUserDetails user, Certificate certificate) {
         UserUtil.assertIsSchoolAdminOrStudent(user, certificate.getSchool());
-        if((user.isStudent() && !UserUtil.isSame(user, certificate.getStudent())) || !entering(certificate)) {
-            throw new ValidationFailedException("no.rights");
+        Student student = certificate.getStudent();
+        if(!StudentUtil.canBeEdited(student) || ((user.isStudent() && !UserUtil.isStudent(user, certificate.getStudent())) || !entering(certificate))) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
 
     public void assertCanSendToEkis(HoisUserDetails user, Certificate certificate) {
         UserUtil.assertIsSchoolAdminOrStudent(user, certificate.getSchool());
-        if((user.isStudent() && !UserUtil.isSame(user, certificate.getStudent())) || !entering(certificate)) {
-            throw new ValidationFailedException("no.rights");
+        Student student = certificate.getStudent();
+        if (!StudentUtil.canBeEdited(student) || ((user.isStudent() && !UserUtil.isStudent(user, certificate.getStudent())) || !entering(certificate))) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
 
@@ -91,7 +93,8 @@ public class CertificateValidationService {
     }
 
     public boolean canBeChanged(HoisUserDetails user, Certificate certificate) {
-        return UserUtil.isSchoolAdmin(user, certificate.getSchool()) && entering(certificate);
+        Student student = certificate.getStudent();
+        return StudentUtil.canBeEdited(student) && UserUtil.isSchoolAdmin(user, certificate.getSchool()) && entering(certificate);
     }
 
     public boolean canBeChanged(HoisUserDetails user, String status) {

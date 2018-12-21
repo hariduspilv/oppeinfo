@@ -16,10 +16,7 @@
         <hois-select values="formState.studyYears" ng-model="record.studyYear" md-autofocus required></hois-select>
       </md-input-container>
 
-      <md-input-container class="md-block">
-        <label class="textInput">{{'lessonplan.studentGroup' | translate}}</label>
-        <hois-select values="formState.studentGroupMap[record.studyYear]" ng-model="record.studentGroup" required></hois-select>
-      </md-input-container>
+      <hois-autocomplete class="md-block" ha-attribute="id" ng-model="record.studentGroup" label="lessonplan.studentGroup" ha-search="search"></hois-autocomplete>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'lessonplan.copyLessonplan' | translate}}</label>

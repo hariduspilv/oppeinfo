@@ -137,6 +137,18 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       }
     };
 
+    $scope.$watch('record.validThru', function (newValue) {
+      if (newValue && typeof newValue === 'string') {
+        $scope.record.validThru = new Date(newValue);
+      }
+    });
+
+    $scope.$watch('record.validFrom', function (newValue) {
+      if (newValue && typeof newValue === 'string') {
+        $scope.record.validFrom = new Date(newValue);
+      }
+    });
+
     $scope.validThruChanged = function() {
       var thru = $scope.record.validThru;
       if(thru) {

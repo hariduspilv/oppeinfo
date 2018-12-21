@@ -38,7 +38,7 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout) {
         applyClasses('thead tr', 'cross', 'th');
         applyClasses('tbody tr', 'fixed-cell', 'td');
 
-        container.addEventListener('scroll', function () {
+        function updateHeaders() {
           var x = container.scrollLeft;
           var y = container.scrollTop;
 
@@ -51,7 +51,6 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout) {
             leftHeader.style.transform = translate(x, 0);
           });
 
-
           //Update the top header positions when the container is scrolled
           topHeaders.forEach(function (topHeader) {
             topHeader.style.transform = translate(0, y);
@@ -61,12 +60,17 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout) {
           crossHeaders.forEach(function (crossHeader) {
             crossHeader.style.transform = translate(x, y);
           });
+        }
 
-        });
+        updateHeaders();
 
         function translate(x, y) {
           return 'translate(' + x + 'px, ' + y + 'px)';
         }
+
+        container.addEventListener('scroll', function () {
+          updateHeaders();
+        });
       }
 
       $timeout(function () {

@@ -11,8 +11,10 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
     var baseUrl = '/timetableevents';
 
     QueryUtils.endpoint(baseUrl + '/searchFormData').search().$promise.then(function (result) {
-      $scope.formState.studentGroups = result.studentGroups;
       $scope.formState.studyPeriods = result.studyPeriods;
+      $scope.formState.studyPeriods.forEach(function (studyPeriod) {
+        studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+      });
       $scope.formState.teachers = result.teachers;
 
       if (!angular.isDefined($scope.criteria.singleEvent)) {

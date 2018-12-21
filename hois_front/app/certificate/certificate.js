@@ -140,6 +140,12 @@ angular.module('hitsaOis')
 
     if(id) {
       $scope.record = Endpoint.get({id: id}, afterLoad);
+      $scope.record.$promise.then(function (response) {
+        if (response.canBeChanged === false) {
+          message.error('main.messages.error.nopermission');
+          $scope.back("#/");
+        }
+      })
     } else {
       $scope.record = new Endpoint();
       afterLoad();

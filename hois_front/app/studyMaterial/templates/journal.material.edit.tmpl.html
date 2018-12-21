@@ -3,7 +3,7 @@
   <div layout="row" style="overflow: auto" layout-xs="column">
     <md-button class="md-button md-raised" ng-href="/#/studyMaterial/vocational/{{journal.id}}/new">{{'main.button.create' | translate}}</md-button>
     <div class="middle-text">{{'studyMaterial.orChooseExisting' | translate}}</div>
-    <hois-autocomplete flex ng-model="$parent.$parent.existingMaterial" method="studyMaterials" name="existingMaterial" label="studyMaterial.name"
+    <hois-autocomplete flex ng-model="$parent.$parent.existingMaterial" method="studyMaterials" ha-controller="hAutocomplete" name="existingMaterial" label="studyMaterial.name"
       additional-query-params="{teacher: auth.teacher, journal: journal.id}" no-paging="true"></hois-autocomplete>
     <md-button class="md-button md-raised" ng-click="addExisting()" ng-disabled="!existingMaterial">{{'main.button.add' | translate}}</md-button>
   </div>

@@ -1,15 +1,15 @@
 <md-autocomplete flex
-                 md-input-minlength="2"
+                 md-min-length="mdMinLength"
                  md-no-cache="true"
-                 md-selected-item="ngModel"
+                 md-selected-item="ngHolder"
                  md-selected-item-change="selectedItemChange()"
-                 md-search-text="searchText"
-                 md-items="item in search(searchText)"
+                 md-search-text="ngSearchText"
+                 md-items="item in haSearch(ngSearchText)"
                  md-item-text="getChipText(item)"
                  md-require-match
                  ng-required="required"
                  ng-disabled="disabled">
   <md-item-template>
-    <span md-highlight-text="searchText" ng-style="{'color': warningParam && item['{{warningParam}}'] ? 'red' : 'inherit'}">{{$root.currentLanguageNameField(item)}}</span>
+    <span md-highlight-text="ngSearchText" ng-style="{'color': warningParam && item['{{warningParam}}'] ? 'red' : 'inherit'}">{{display ? item[display] : $root.currentLanguageNameField(item)}}</span>
   </md-item-template>
 </md-autocomplete>

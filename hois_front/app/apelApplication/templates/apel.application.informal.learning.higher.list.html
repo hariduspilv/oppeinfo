@@ -2,18 +2,15 @@
   <table md-table md-progress="tabledata.$promise" class="secondary-table">
     <thead md-head md-on-reorder="loadData">
       <tr md-row style="background: #E0E0E0 !important">
-        <th md-column ng-if="editing" colspan="1">
-            <a ng-click="editInformalLearning(record.id)">{{'main.button.change' | translate}}</a>
+        <th md-column>
+          <a ng-if="!formState.viewForm && application.canEdit" ng-click="editInformalLearning(record.id)">{{'main.button.change' | translate}}</a>
         </th>
-        <th md-column ng-if="editing && application.status === 'VOTA_STAATUS_K'" colspan="4" style="text-align: center">{{'apel.informalLearnings.schoolResults' | translate}}</th>
-        <th md-column ng-if="!editing && application.status === 'VOTA_STAATUS_K'" colspan="5" style="text-align: center">{{'apel.informalLearnings.schoolResults' | translate}}</th>
-        <th md-column ng-if="!(application.status === 'VOTA_STAATUS_K') && editing" colspan="5" style="text-align: center">{{'apel.informalLearnings.schoolResults' | translate}}</th>
-        <th md-column ng-if="!(application.status === 'VOTA_STAATUS_K') && !editing" colspan="6" style="text-align: center">{{'apel.informalLearnings.schoolResults' | translate}}</th>
+        <th md-column colspan="{{informalLearningColspan}}" style="text-align: center">{{'apel.informalLearnings.schoolResults' | translate}}</th>
         <th md-column style="border-left: 1px rgba(0, 0, 0, 0.12) solid;"></th>
         <th md-column colspan="5" style="text-align: center">{{'apel.informalLearnings.otherInformalLearnings' | translate}}</th>
       </tr>
       <tr md-row>
-        <th md-column ng-if="!(application.status === 'VOTA_STAATUS_K')" colspan="1">{{'apel.informalLearnings.transfer' | translate}}</th>
+        <th md-column ng-if="application.status !== 'VOTA_STAATUS_K'" colspan="1">{{'apel.informalLearnings.transfer' | translate}}</th>
         <th md-column>{{'apel.informalLearnings.subject' | translate}} ({{'apel.informalLearnings.code' | translate}})</th>
         <th md-column>{{'apel.informalLearnings.creditsEAP' | translate}}</th>
         <th md-column>{{'apel.informalLearnings.result' | translate}}</th>

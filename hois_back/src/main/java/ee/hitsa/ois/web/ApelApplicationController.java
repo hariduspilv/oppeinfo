@@ -195,7 +195,7 @@ public class ApelApplicationController {
         if (!ApelApplicationUtil.canEdit(user, application)) {
             throw new ValidationFailedException("apel.error.nopermission");
         }
-        apelApplicationService.updateRecord(user, recordForm, record);
+        apelApplicationService.updateRecord(user, recordForm, record, application.getIsVocational());
         return get(user, application);
     }
 

@@ -23,7 +23,7 @@ import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
-import ee.hitsa.ois.enums.CurriculumModuleType;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
 import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
@@ -190,8 +190,8 @@ public class LessonPlanDto extends LessonPlanForm {
         private String nameEt;
         private String nameEn;
         private Integer totalHours;
-        private Long occupationModuleId;
         private Long typeOrder;
+        private Long curriculumVersionId;
 
         public static LessonPlanModuleDto of(LessonPlanModule lessonPlanModule, LessonPlanCapacityMapper capacityMapper) {
             LessonPlanModuleDto dto = new LessonPlanModuleDto();
@@ -204,7 +204,8 @@ public class LessonPlanDto extends LessonPlanForm {
                     .collect(Collectors.toList()));
             dto.setTotalHours(Integer.valueOf(lessonPlanModule.getCurriculumVersionOccupationModule().getCapacities()
                     .stream().mapToInt(CurriculumVersionOccupationModuleCapacity::getHours).sum()));
-            setTypeOrderValue(dto, lessonPlanModule.getCurriculumVersionOccupationModule());
+            dto.setTypeOrder(Long.valueOf(CurriculumUtil.vocationalModuleOrderNr(lessonPlanModule.getCurriculumVersionOccupationModule())));
+            dto.setCurriculumVersionId(EntityUtil.getId(lessonPlanModule.getCurriculumVersionOccupationModule().getCurriculumVersion()));
             return dto;
         }
 
@@ -213,7 +214,8 @@ public class LessonPlanDto extends LessonPlanForm {
             setOccupationModuleValues(dto, occupationModule);
             dto.setJournals(Collections.emptyList());
             dto.setTotalHours(Integer.valueOf(0));
-            setTypeOrderValue(dto, occupationModule);
+            dto.setTypeOrder(Long.valueOf(CurriculumUtil.vocationalModuleOrderNr(occupationModule)));
+            dto.setCurriculumVersionId(EntityUtil.getId(occupationModule.getCurriculumVersion()));
             return dto;
         }
 
@@ -222,21 +224,6 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setNameEt(cm.getNameEt());
             dto.setNameEn(cm.getNameEn());
             dto.setOccupationModuleId(EntityUtil.getId(occupationModule));
-        }
-        
-        private static void setTypeOrderValue(LessonPlanModuleDto dto, CurriculumVersionOccupationModule occupationModule) {
-            int orderNr;
-            String moduleCode = EntityUtil.getCode(occupationModule.getCurriculumModule().getModule());
-            if (moduleCode.equals(CurriculumModuleType.KUTSEMOODUL_P.name())) {
-                orderNr = 1;
-            } else if (moduleCode.equals(CurriculumModuleType.KUTSEMOODUL_Y.name())) {
-                orderNr = 2;
-            } else if (moduleCode.equals(CurriculumModuleType.KUTSEMOODUL_V.name())) {
-                orderNr = 3;
-            } else {
-                orderNr = 4;
-            }
-            dto.setTypeOrder(Long.valueOf(orderNr));
         }
 
         public String getNameEt() {
@@ -263,14 +250,6 @@ public class LessonPlanDto extends LessonPlanForm {
             this.totalHours = totalHours;
         }
 
-        public Long getOccupationModuleId() {
-            return occupationModuleId;
-        }
-
-        public void setOccupationModuleId(Long occupationModuleId) {
-            this.occupationModuleId = occupationModuleId;
-        }
-
         public Long getTypeOrder() {
             return typeOrder;
         }
@@ -278,7 +257,15 @@ public class LessonPlanDto extends LessonPlanForm {
         public void setTypeOrder(Long typeOrder) {
             this.typeOrder = typeOrder;
         }
-        
+
+        public Long getCurriculumVersionId() {
+            return curriculumVersionId;
+        }
+
+        public void setCurriculumVersionId(Long curriculumVersionId) {
+            this.curriculumVersionId = curriculumVersionId;
+        }
+
     }
 
     public static class LessonPlanModuleJournalDto extends LessonPlanModuleJournalForm {

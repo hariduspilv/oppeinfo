@@ -11,6 +11,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,6 +40,7 @@ import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.commandobject.finalprotocol.FinalVocationalProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.finalprotocol.FinalVocationalProtocolSaveForm;
@@ -103,9 +105,9 @@ public class FinalVocationalProtocolController {
     }
     
     @GetMapping("/curriculumVersions")
-    public List<CurriculumVersionResult> curriculumVersions(HoisUserDetails user) {
+    public Page<CurriculumVersionResult> curriculumVersions(HoisUserDetails user, SearchCommand lookup) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return finalProtocolService.curriculumVersionsForSelection(user);
+        return new PageImpl<>(finalProtocolService.curriculumVersionsForSelection(user, lookup));
     }
     
     @GetMapping("/occupationModules/{curriculumVersionId:\\d+}")

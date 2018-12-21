@@ -17,7 +17,7 @@
   <div flex>
     <md-input-container>
       <label>{{labelStart | translate}}</label>
-      <md-datepicker ng-model="application.startDate" md-min-date="now" md-open-on-focus ng-required="!application.isPeriod"></md-datepicker>
+      <md-datepicker ng-model="application.startDate" md-min-date="now" md-max-date="application.endDate" md-open-on-focus ng-required="!application.isPeriod"></md-datepicker>
     </md-input-container>
 
     <md-input-container style="margin-left: 0px" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">

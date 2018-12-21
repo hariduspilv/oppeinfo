@@ -6,7 +6,6 @@ angular.module('hitsaOis').controller('FinalVocationalProtocolNewController', fu
   $scope.auth = $route.current.locals.auth;
   $scope.formState = {
     selectedStudents: [],
-    curriculumVersions: QueryUtils.endpoint(endpoint + '/curriculumVersions/').query(),
     isFinalThesis: $route.current.params.moduleType === 'thesis' ? true : false
   };
 
@@ -18,10 +17,17 @@ angular.module('hitsaOis').controller('FinalVocationalProtocolNewController', fu
     status: 'OPPURSTAATUS'
   });
 
-  $scope.curriculumVersionChange = function () {
+  $scope.$watch('formState.teacherObject', function () {
+    $scope.formState.teacher = $scope.formState.teacherObject ? $scope.formState.teacherObject.id : null;
+  });
+
+  $scope.$watch('formState.curriculumVersionObject', function () {
+    $scope.formState.curriculumVersion = $scope.formState.curriculumVersionObject ? $scope.formState.curriculumVersionObject.id : null;
     $scope.formState.curriculumVersionOccupationModule = undefined;
-    $scope.formState.curriculumVersionOccupationModules = QueryUtils.endpoint(endpoint + '/occupationModules/' + $scope.formState.curriculumVersion).query();
-  };
+    if ($scope.formState.curriculumVersion) {
+      $scope.formState.curriculumVersionOccupationModules = QueryUtils.endpoint(endpoint + '/occupationModules/' + $scope.formState.curriculumVersion).query();
+    }
+  });
 
   $scope.curriculumVersionOccupationModuleChange = function () {
     var query = QueryUtils.endpoint(endpoint + '/occupationModule/' + $route.current.params.moduleType + '/' 
@@ -40,7 +46,7 @@ angular.module('hitsaOis').controller('FinalVocationalProtocolNewController', fu
       });
       
       if (result.teacher) {
-        $scope.formState.teacher = result.teacher.id;
+        $scope.formState.teacherObject = result.teacher;
       }
     });
   };

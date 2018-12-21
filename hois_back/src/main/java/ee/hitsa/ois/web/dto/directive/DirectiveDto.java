@@ -18,6 +18,7 @@ public class DirectiveDto extends DirectiveForm {
     private String status;
     private LocalDateTime inserted;
     private String insertedBy;
+    private Boolean canEditDirective;
 
     public Long getId() {
         return id;
@@ -49,6 +50,14 @@ public class DirectiveDto extends DirectiveForm {
 
     public void setInsertedBy(String insertedBy) {
         this.insertedBy = insertedBy;
+    }
+
+    public Boolean getCanEditDirective() {
+        return canEditDirective;
+    }
+
+    public void setCanEditDirective(Boolean canEditDirective) {
+        this.canEditDirective = canEditDirective;
     }
 
     public static DirectiveDto of(Directive directive) {

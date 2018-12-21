@@ -9,11 +9,9 @@
             <label class="textInput">{{'moduleProtocol.studyYear' | translate}}</label>
             <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
           </md-input-container>
-
-          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label class="textInput">{{'moduleProtocol.studentGroup' | translate}}</label>
-            <hois-select ng-model="criteria.studentGroup" type="studentgroup" criteria="{valid: true}"></hois-select>
-          </md-input-container>
+          
+          <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
+          ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" label="{{'studentGroup.label'}}"></hois-autocomplete>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">

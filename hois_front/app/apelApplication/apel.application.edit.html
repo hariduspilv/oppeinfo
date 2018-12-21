@@ -4,7 +4,7 @@
       <div ng-hide="application.student" layout="row" layout-sm="column" layout-xs="column">
         <div flex="45" flex-sm="100" flex-xs="100">
           <hois-autocomplete flex ng-model="application.student" method="students" name="student" label="apel.student"
-          additional-query-params="{active: true}"></hois-autocomplete>
+          additional-query-params="{active: true}" ng-change="studentChanged()"></hois-autocomplete>
         </div>
       </div>
       <div ng-hide="!application.student">
@@ -20,7 +20,7 @@
           </span>
           <div ng-if="!application.isVocational" ng-include="'apelApplication/templates/apel.application.formal.learning.higher.list.html'"
             style="margin-bottom: 20px"></div>
-          <md-button ng-if="application.status === 'VOTA_STAATUS_K'" class="md-raised md-default" ng-click="editFormalLearning()">{{'main.button.create' | translate}}</md-button>
+          <md-button ng-if="application.canEdit" class="md-raised md-default" ng-click="editFormalLearning()">{{'main.button.create' | translate}}</md-button>
         </fieldset>
       </div>
       <div>&nbsp;</div>
@@ -34,7 +34,7 @@
               <div ng-if="!application.isVocational" ng-include="'apelApplication/templates/apel.application.informal.learning.higher.list.html'" 
                 style="margin-bottom: 20px"></div>
             </span>
-          <md-button ng-if="application.status === 'VOTA_STAATUS_K'" class="md-raised md-default" ng-click="editInformalLearning()">{{'main.button.create' | translate}}</md-button>
+          <md-button ng-if="application.canEdit" class="md-raised md-default" ng-click="editInformalLearning()">{{'main.button.create' | translate}}</md-button>
         </fieldset>
       </div>
       <div>&nbsp;</div>
@@ -42,7 +42,7 @@
       <div ng-hide="!application.student" layout="column" flex>
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.addInfo.addInfos' | translate}}</legend>
-          <md-button ng-if="editing" class="md-raised" ng-click="openEditCommentDialog()">{{'main.button.create' | translate}}</md-button>
+          <md-button ng-if="application.canEdit" class="md-raised" ng-click="openEditCommentDialog()">{{'main.button.create' | translate}}</md-button>
           <md-table-container>
             <table md-table md-progress="tabledata.$promise" class="secondary-table">
               <thead md-head>
@@ -70,7 +70,7 @@
       <div ng-hide="!application.student" layout="column" flex>
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
-          <md-button class="md-raised" ng-if="editing" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="application.canEdit" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
           <md-table-container>
             <table md-table class="secondary-table">
               <thead md-head>
@@ -106,7 +106,7 @@
                     {{file.insertedBy}}
                   </td>
                   <td md-cell>
-                    <a class="remove nomargin" ng-if="editing" ng-click="deleteFile(file)">&times;</a>
+                    <a class="remove nomargin" ng-if="application.canEdit" ng-click="deleteFile(file)">&times;</a>
                   </td>
                 </tr>
               </tbody>
@@ -122,10 +122,11 @@
           <div ng-if="application.status === 'VOTA_STAATUS_E'" flex="45" flex-sm="100" flex-xs="100">
             <md-input-container style="width: 100%">
               <label>{{'apel.committee' | translate}}</label>
-              <hois-select ng-model="application.committeeId" values="committees" required></hois-select>
+              <hois-select ng-model="application.committeeId" values="committees" ng-disabled="!application.canEdit" required></hois-select>
             </md-input-container>
           </div>
-          <div ng-if="application.status !== 'VOTA_STAATUS_E'" layout="column" class="form-readonly">
+          <div ng-if="application.status !== 'VOTA_STAATUS_E' || (application.status === 'VOTA_STAATUS_E' && !application.canEdit)" 
+            layout="column" class="form-readonly">
             <div>&nbsp;</div>
             <md-input-container>
               <label>{{'apel.committee' | translate}}</label>

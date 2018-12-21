@@ -92,6 +92,6 @@ public class SubjectStudyPeriodController {
     @GetMapping("/studyPeriod/{id:\\d+}")
     public AutocompleteResult getStudyPeriod(HoisUserDetails user, @WithEntity StudyPeriod studyPeriod) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, studyPeriod.getStudyYear().getSchool());
-        return AutocompleteResult.of(studyPeriod); 
+        return AutocompleteResult.ofWithYear(studyPeriod); 
     }
 }

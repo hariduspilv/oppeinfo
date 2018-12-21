@@ -19,18 +19,26 @@ angular.module('hitsaOis').controller('StudyMaterialHigherListController', ['$sc
         loadData();
       }
     };
+    
+    $scope.directiveControllers = [];
+    var clearCriteria = $scope.clearCriteria;
+    $scope.clearCriteria = function () {
+      clearCriteria();
+      $scope.directiveControllers.forEach(function (c) {
+        c.clear();
+      });
+    };
 
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query();
     $scope.studyPeriods.$promise.then(function () {
+      $scope.studyPeriods.forEach(function (studyPeriod) {
+        studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+      });
       if ($scope.studyPeriods.length > 0 && !$scope.criteria.studyPeriod) {
         var currentStudyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods);
         $scope.criteria.studyPeriod = currentStudyPeriod ? currentStudyPeriod.id : undefined;
       }
       $timeout($scope.loadData);
-    });
-
-    $scope.$watch('teacher', function (newTeacher) {
-      $scope.criteria.teacher = newTeacher ? newTeacher.id : null;
     });
   }]).controller('StudyMaterialVocationalListController', ['$scope', '$route', '$timeout', 'QueryUtils', 'message',
     'USER_ROLES', 'AuthService', 'DataUtils',
@@ -51,7 +59,16 @@ angular.module('hitsaOis').controller('StudyMaterialHigherListController', ['$sc
           loadData();
         }
       };
-  
+
+      $scope.directiveControllers = [];
+      var clearCriteria = $scope.clearCriteria;
+      $scope.clearCriteria = function () {
+        clearCriteria();
+        $scope.directiveControllers.forEach(function (c) {
+          c.clear();
+        });
+      };
+
       $scope.studyYears = QueryUtils.endpoint('/autocomplete/studyYears').query();
       $scope.studyYears.$promise.then(function () {
         if ($scope.studyYears.length > 0 && !$scope.criteria.studyYear) {
@@ -59,10 +76,6 @@ angular.module('hitsaOis').controller('StudyMaterialHigherListController', ['$sc
           $scope.criteria.studyYear = currentStudyYear ? currentStudyYear.id : undefined;
         }
         $timeout($scope.loadData);
-      });
-
-      $scope.$watch('teacher', function (newTeacher) {
-        $scope.criteria.teacher = newTeacher ? newTeacher.id : null;
       });
 
       $scope.$watch('criteria.studyYear', function() {
@@ -74,5 +87,4 @@ angular.module('hitsaOis').controller('StudyMaterialHigherListController', ['$sc
       $scope.$watch('criteria.journalObject', function() {
         $scope.criteria.journal = $scope.criteria.journalObject ? $scope.criteria.journalObject.id : null;
       });
-
     }]);

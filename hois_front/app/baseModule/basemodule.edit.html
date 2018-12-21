@@ -178,10 +178,10 @@
                     </div>
                 </fieldset>
             </div>
-
+            <div>&nbsp;</div>
             <div flex>
                 <fieldset tabindex="3">
-                    <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.themes' | translate}}</legend>
+                    <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'basemodule.themes' | translate}}</legend>
                     <div layout="column">
                         <div flex="10">
                             <md-button class="md-raised" ng-click="editTheme()" ng-if="baseModuleId">{{'main.button.add' | translate}}</md-button>
@@ -247,7 +247,7 @@
                     </div>
                 </fieldset>
             </div>
-
+            <div>&nbsp;</div>
             <div flex ng-if="baseModule.curriculums.length > 0">
                 <fieldset tabindex="5">
                     <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'basemodule.connectedCurriculumsAndCurriculumVersions' | translate}}</legend>
@@ -280,6 +280,7 @@
                 </fieldset>
             </div>
         </div>
+        <div>&nbsp;</div>
         <md-button class="md-raised md-primary" ng-click="save()">{{"main.button.save" | translate}}</md-button>
         <md-button class="md-raised" ng-if="baseModule.id && baseModule.curriculums.length == 0" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         <md-button class="md-raised" ng-click="back('#/basemodule', baseModuleForm)">{{"main.button.back" | translate}}</md-button>

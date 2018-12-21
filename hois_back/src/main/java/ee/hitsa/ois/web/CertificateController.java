@@ -62,7 +62,7 @@ public class CertificateController {
     public CertificateDto get(HoisUserDetails user, @WithEntity Certificate certificate) {
         if(certificate.getStudent() != null) {
             if(!UserUtil.canViewStudent(user, certificate.getStudent())) {
-                throw new ValidationFailedException("no.permission");
+                throw new ValidationFailedException("main.messages.error.nopermission");
             }
         } else {
             UserUtil.assertIsSchoolAdmin(user, certificate.getSchool());

@@ -1,21 +1,14 @@
 package ee.hitsa.ois.web.commandobject.curriculum;
 
-public class CurriculumVersionAutocompleteCommand {
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 
-    private String name;
+public class CurriculumVersionAutocompleteCommand extends SearchCommand {
+
     private Boolean higher;
     private Boolean sais;
     private Boolean valid;
     private Boolean closed;
     private Boolean languages;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public Boolean getHigher() {
         return higher;

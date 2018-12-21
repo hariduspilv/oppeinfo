@@ -59,7 +59,7 @@
                 <span ng-if="result.isText">{{result.pointsTxt}}</span>
               </td>
               <td md-cell>
-                <hois-select ng-model="student.grade" values="grades" value-property="code" show-property="{{auth.school.letterGrades ? 'value2' : 'value'}}"
+                <hois-select class="protocolGradeSelect" ng-model="student.grade" values="grades" value-property="code" show-property="{{auth.school.letterGrades ? 'value2' : 'value'}}"
                   ng-disabled="!formState.canEditProtocol" aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-change="gradeChanged(student)"></hois-select>
               </td>
               <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">

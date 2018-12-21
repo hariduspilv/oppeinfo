@@ -50,7 +50,7 @@
     <hois-autocomplete flex ng-model="formState.curriculum" method="curriculums" label="stipend.curriculums" ng-required="missingCurriculums"
       additional-query-params="{higher: true}"></hois-autocomplete>
   </div>
-  <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in stipend.curriculums">
+  <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in stipend.curriculums | orderBy: ['curriculum.' + currentLanguageNameField(), 'code']">
     <div layout="row" flex layout-align="start center">
       <div flex="5">&nbsp;</div>
       <div flex="50">{{curriculum.nameEt}}</div>

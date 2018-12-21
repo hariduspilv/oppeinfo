@@ -505,7 +505,7 @@ public class StudentService {
         dto.setUserCanAddRepresentative(Boolean.valueOf(UserUtil.canAddStudentRepresentative(user, student)));
         dto.setUserIsSchoolAdmin(Boolean.valueOf(UserUtil.isSchoolAdmin(user, student.getSchool())));
         dto.setUserIsStudentGroupTeacher(Boolean.valueOf(UserUtil.isStudentGroupTeacher(user, student)));
-        if(!(Boolean.TRUE.equals(dto.getUserIsSchoolAdmin()) || UserUtil.isSame(user, student) || UserUtil.isStudentRepresentative(user, student))) {
+        if(!(Boolean.TRUE.equals(dto.getUserIsSchoolAdmin()) || UserUtil.isStudent(user, student) || UserUtil.isStudentRepresentative(user, student))) {
             dto.setSpecialNeed(null);
             dto.setIsRepresentativeMandatory(null);
         }
@@ -718,11 +718,12 @@ public class StudentService {
         List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
         result.addAll(vocationalResultsThemeResults(student));
         result.addAll(vocationalResultsModuleResults(student));
-        result.addAll(otherSchoolExtraCurriculaModuleResults(student));
-        result.sort(StreamUtil.comparingWithNullsLast(StudentVocationalResultModuleThemeDto::getDate).reversed());
+        result.addAll(formalLearningReplacedModuleResults(student));
+
         return result;
     }
     
+    // protocol results and apel informal learning results
     private List<StudentVocationalResultModuleThemeDto> vocationalResultsModuleResults(Student student) {
         List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
         
@@ -737,12 +738,13 @@ public class StudentService {
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
         qb.requiredCriteria("svr.student_id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.filter("svr.arr_modules is null");
         qb.sort("svr.grade_date");
         
         List<?> rows = qb.select(
                 "distinct coalesce(svro.curriculum_version_omodule_id, svr.curriculum_version_omodule_id),"
                 + "cv.code, cm.name_et as module_name_et, mcl.name_et classifer_name_et,cm.name_en as module_name_en, mcl.name_en as classifer_name_en, "
-                + "cm.credits, svr.apel_application_record_id, aar.is_formal_learning, svr.grade_code, svr.grade_date, "
+                + "cm.credits, svr.apel_application_record_id, svr.grade_code, svr.grade_date, "
                 + "svr.teachers, sy.year_code, sy.start_date",
                 em).getResultList();
 
@@ -755,18 +757,18 @@ public class StudentService {
             
             Long apelApplicationRecordId = resultAsLong(r, 7);
             dto.setIsApelTransfer(apelApplicationRecordId != null ? Boolean.TRUE : Boolean.FALSE);
-            dto.setIsFormalLearning(resultAsBoolean(r, 8));
-            dto.setGrade(resultAsString(r, 9));
-            dto.setDate(resultAsLocalDate(r, 10));
-            dto.getTeachers().add(new AutocompleteResult(null, resultAsString(r, 11), resultAsString(r, 11)));
-            dto.setStudyYear(resultAsString(r, 12));
-            dto.setStudyYearStartDate(resultAsLocalDate(r, 13));
+            dto.setIsFormalLearning(Boolean.FALSE);
+            dto.setGrade(resultAsString(r, 8));
+            dto.setDate(resultAsLocalDate(r, 9));
+            dto.getTeachers().add(new AutocompleteResult(null, resultAsString(r, 10), resultAsString(r, 10)));
+            dto.setStudyYear(resultAsString(r, 11));
+            dto.setStudyYearStartDate(resultAsLocalDate(r, 12));
             result.add(dto);
         }
         return result;
     }
     
-    private List<StudentVocationalResultModuleThemeDto> otherSchoolExtraCurriculaModuleResults(Student student) {
+    private List<StudentVocationalResultModuleThemeDto> formalLearningReplacedModuleResults(Student student) {
         List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_vocational_result svr "
@@ -776,43 +778,54 @@ public class StudentService {
                 + "left join apel_school a_s on svr.apel_school_id = a_s.id "
                 + "left join study_year sy on sy.id = svr.study_year_id");
         qb.requiredCriteria("svr.student_id = :studentId", "studentId", EntityUtil.getId(student));
-        qb.filter("svr.curriculum_version_omodule_id is null");
         qb.sort("svr.grade_date");
         qb.groupBy("svr.arr_modules, svr.module_name_et, svr.module_name_en, svr.credits, a_s.id, "
                 + "svr.grade_code, svr.grade_date, svr.teachers, sy.year_code, sy.start_date");
         
         List<?> rows = qb.select("svr.module_name_et, svr.module_name_en, string_agg(cm.name_et || ' - ' || mcl.name_et, ', ') as replaced_modules_et, " + 
                 "string_agg(cm.name_en || ' - ' || mcl.name_en, ', ') as replaced_modules_en, svr.credits, a_s.id as school_id, " + 
-                "a_s.name_et, a_s.name_en, svr.grade_code, svr.grade_date, svr.teachers, sy.year_code, sy.start_date", em).getResultList();
+                "a_s.name_et, a_s.name_en, svr.grade_code, svr.grade_date, svr.teachers, sy.year_code, sy.start_date, " +
+                "array_to_string(array_agg(cast(cvo.id as text)), ',')", em).getResultList();
 
         for (Object r : rows) {
             StudentVocationalResultModuleThemeDto dto = new StudentVocationalResultModuleThemeDto();
             dto.setModule(new AutocompleteResult(null, 
-                    otherSchoolExtraCurriculumModuleName(resultAsString(r, 0), resultAsString(r, 2), resultAsString(r, 6)),
-                    otherSchoolExtraCurriculumModuleName(resultAsString(r, 1), resultAsString(r, 3), resultAsString(r, 7))));
+                    formalLearningResultModuleName(resultAsString(r, 0), resultAsString(r, 2), resultAsString(r, 6)),
+                    formalLearningResultModuleName(resultAsString(r, 1), resultAsString(r, 3), resultAsString(r, 7))));
             dto.setCredits(resultAsDecimal(r, 4));
             dto.setGrade(resultAsString(r, 8));
-            dto.setIsOtherSchool(Boolean.TRUE);
+            dto.setIsApelTransfer(Boolean.TRUE);
+            dto.setIsFormalLearning(Boolean.TRUE);
+            
+            String replacedModulesAsString = resultAsString(r, 13);
+            if(replacedModulesAsString != null) {
+                List<String> replacedModules = Arrays.asList(replacedModulesAsString.split(","));
+                dto.setReplacedModules(new ArrayList<>());
+                for (String moduleId : replacedModules) {
+                    dto.getReplacedModules().add(Long.valueOf(moduleId));
+                }
+            }
             result.add(dto);
        }
        return result;
     }
     
-    private static String otherSchoolExtraCurriculumModuleName(String moduleName, String replacedModules, String school) {
-        if (moduleName != null && replacedModules != null && school != null) {
-            return moduleName + " -> (" + replacedModules + ") - " + school; 
+    private static String formalLearningResultModuleName(String moduleName, String replacedModules, String school) {
+        if (moduleName != null && replacedModules != null) {
+            String name = moduleName + " -> (" + replacedModules + ")";
+            return school != null ? name + " - " + school : name;
         }
         return null;
     }
 
     private Collection<StudentVocationalResultModuleThemeDto> vocationalResultsThemeResults(Student student) {
         String journalSelect = "cvo_id, cv_code, cm_name_et, mcl_name_et, cm_name_en, mcl_name_en, cvot_id, cvot_name_et, cvot_credits, grade_code, "
-                + "grade_inserted, teacher_id, teacher_firstname, teacher_lastname, sy_year_code, sy_start_date, is_apel_transfer";
+                + "grade_inserted, teacher_id, teacher_firstname, teacher_lastname, sy_year_code, sy_start_date, is_apel_transfer, is_formal";
         
         String journalCurriculumResults = " select distinct on (cvot.id, teacher_id) cvot.id cvot_id, cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, "
                 + "cvot.credits cvot_credits, jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvo.id cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
-                + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer "
+                + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer, false is_formal "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
@@ -834,7 +847,7 @@ public class StudentService {
         String journalExtraCurriculumResults = " select distinct on (cvot.id, teacher_id) cvot.id cvot_id, cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, "
                 + "cvot.credits cvot_credits, jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvo.id cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
-                + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer "
+                + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer, false is_formal "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
@@ -854,12 +867,12 @@ public class StudentService {
                     + "and jes.grade_code is not null and cvo.curriculum_version_id != :curriculumVersionId "
                     + "and (select count(*) from journal_omodule_theme jot2 join curriculum_version_omodule_theme cvot2 on "
                     + "cvot2.id = jot2.curriculum_version_omodule_theme_id join curriculum_version_omodule cvo2 on cvo2.id = cvot2.curriculum_version_omodule_id "
-                    + "where jot2.journal_id = j.id and cvo2.curriculum_version_id = 13401) = 0";
+                    + "where jot2.journal_id = j.id and cvo2.curriculum_version_id = :curriculumVersionId) = 0";
         
         String practiceJournalResults = "select cvot.id cvot_id, cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, "
                 + "cvot.credits cvot_credits, pj.grade_code grade_code, pj.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvo.id cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, " 
-                + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer "
+                + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, false is_apel_transfer, false is_formal "
                 + "from practice_journal pj "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = pj.curriculum_version_omodule_theme_id "
                 + "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id "
@@ -870,13 +883,13 @@ public class StudentService {
                 + "join study_year sy on sy.id = pj.study_year_id "
                 + "join teacher t on t.id = pj.teacher_id "
                 + "join person tp on tp.id = t.person_id "
-                + "where pj.student_id = 262 and pj.grade_code is not null";
+                + "where pj.student_id = :studentId and pj.grade_code is not null";
         
         String journalResultsOrderBy = " order by 1 desc, teacher_id, grade_inserted desc";
         
-        String apelResults = "select cvo.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, "
+        String apelInformalResults = "select cvo.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, "
                 + "cvot.id cvot_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, aai.grade_code grade_code, aa.confirmed grade_inserted, null as teacher_id, "
-                + "null teacher_firstname, null teacher_lastname, sy.year_code sy_year_code, sy.start_date sy_start_date, true is_apel_transfer "
+                + "null teacher_firstname, null teacher_lastname, sy.year_code sy_year_code, sy.start_date sy_start_date, true is_apel_transfer, false is_formal "
                 + "from apel_application aa join apel_application_record aar on aa.id = aar.apel_application_id "
                 + "join apel_application_informal_subject_or_module aai on aar.id = aai.apel_application_record_id "
                 + "join curriculum_version_omodule_theme cvot on aai.curriculum_version_omodule_theme_id = cvot.id "
@@ -887,9 +900,25 @@ public class StudentService {
                 + "join study_year sy on sy.id = get_study_year(cast(aa.confirmed as date), cast(aa.school_id as int)) "
                 + "where aa.student_id = :studentId and aa.status_code = :applicationStatus and aai.transfer = true";
         
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from (select " + journalSelect + " from ("
-                + journalCurriculumResults + " union " + journalExtraCurriculumResults + " union " + practiceJournalResults + journalResultsOrderBy
-                + ") as journal_results " + "union all " + apelResults + " order by grade_inserted desc) as results");
+        String apelFormalResults = "select cvo.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, "
+                + "cvot.id cvot_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, 'KUTSEHINDAMINE_A' grade_code, aa.confirmed grade_inserted, null as teacher_id, "
+                + "null teacher_firstname, null teacher_lastname, sy.year_code sy_year_code, sy.start_date sy_start_date, true is_apel_transfer, true is_formal "
+                + "from apel_application aa join apel_application_record aar on aa.id = aar.apel_application_id "
+                + "join apel_application_formal_subject_or_module aaf on aar.id = aaf.apel_application_record_id "
+                + "join apel_application_formal_replaced_subject_or_module aarf on aar.id = aarf.apel_application_record_id "
+                + "join curriculum_version_omodule_theme cvot on aarf.curriculum_version_omodule_theme_id = cvot.id "
+                + "join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "
+                + "join curriculum_version cv on cvo.curriculum_version_id = cv.id "
+                + "join curriculum_module cm on cvo.curriculum_module_id = cm.id "
+                + "join classifier mcl on mcl.code = cm.module_code "
+                + "join study_year sy on sy.id = get_study_year(cast(aa.confirmed as date), cast(aa.school_id as int)) "
+                + "where aa.student_id = :studentId and aa.status_code = :applicationStatus and aaf.transfer = true";
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
+                "from (select " + journalSelect + " from (" + journalCurriculumResults + " union "
+                        + journalExtraCurriculumResults + " union " + practiceJournalResults + journalResultsOrderBy
+                        + ") as journal_results union all " + apelInformalResults + " union all " + apelFormalResults
+                        + " order by is_apel_transfer desc, grade_inserted desc) as results");
 
         qb.parameter("entryTypeCode", JournalEntryType.SISSEKANNE_L.name());
         qb.parameter("studentId", EntityUtil.getId(student));
@@ -898,7 +927,7 @@ public class StudentService {
 
         List<?> rows = qb.select("cvo_id, cv_code, cm_name_et, mcl_name_et, cm_name_en, mcl_name_en,"
                 + "cvot_id, cvot_name_et, cvot_credits, grade_code, grade_inserted, teacher_id, teacher_firstname, teacher_lastname, "
-                + "sy_year_code, sy_start_date, is_apel_transfer",
+                + "sy_year_code, sy_start_date, is_apel_transfer, is_formal",
                 em).getResultList();
 
         Map<Long, StudentVocationalResultModuleThemeDto> result = new HashMap<>();
@@ -923,6 +952,7 @@ public class StudentService {
                 dto.setStudyYear(resultAsString(r, 14));
                 dto.setStudyYearStartDate(resultAsLocalDate(r, 15));
                 dto.setIsApelTransfer(resultAsBoolean(r, 16));
+                dto.setIsFormalLearning(resultAsBoolean(r, 17));
                 result.put(themeId, dto);
             }
         }

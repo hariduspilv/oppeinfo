@@ -224,6 +224,12 @@ public class CurriculumController {
 
         return get(user, curriculumService.saveAndProceedCurriculum(user, curriculum, curriculumForm));
     }
+    
+    @PutMapping("/underrevision/{id:\\d+}")
+    public CurriculumDto setUnderRevision(HoisUserDetails user, @WithEntity Curriculum curriculum) {
+        CurriculumUtil.assertCanSetUnderRevision(user, curriculum);
+        return get(user, curriculumService.setUnderRevision(user, curriculum));
+    }
 
     @PutMapping("/sendToEhis/{id:\\d+}")
     public CurriculumDto sendToEhis(HoisUserDetails user, @WithEntity Curriculum curriculum) {

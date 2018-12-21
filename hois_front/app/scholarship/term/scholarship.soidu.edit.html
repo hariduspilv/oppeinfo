@@ -43,9 +43,10 @@
 <div>
   <div layout="row" flex="100">
     <hois-autocomplete flex ng-model="formState.curriculum" method="curriculums" label="stipend.curriculums" ng-required="missingCurriculums"
-      additional-query-params="{higher: false}"></hois-autocomplete>
+      additional-query-params="{higher: false, closed: false}"></hois-autocomplete>
+    <md-button ng-click="addAllCurriculums()" class="md-raised">{{'stipend.addAllCurriculums' | translate}}</md-button>
   </div>
-  <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in stipend.curriculums">
+  <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in stipend.curriculums | orderBy: ['curriculum.' + currentLanguageNameField(), 'code']">
     <div layout="row" flex layout-align="start center">
       <div flex="5">&nbsp;</div>
       <div flex="50">{{curriculum.nameEt}}</div>
@@ -66,6 +67,12 @@
         multiple></hois-classifier-select>
     </md-input-container>
   </div>
+  <div layout="row" flex>
+    <md-input-container flex="100">
+      <label class="textInput">{{'stipend.addInfoForStudent' | translate}}</label>
+      <textarea ng-model="stipend.addInfo" md-maxlength="4000" max-rows="10"></textarea>
+    </md-input-container>
+  </div>  
   <div layout="row">
     <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
       <label>{{'stipend.studyPeriodDates' | translate}}</label>

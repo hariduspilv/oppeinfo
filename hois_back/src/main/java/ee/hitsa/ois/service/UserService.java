@@ -156,16 +156,24 @@ public class UserService {
      */
     public List<UserProjection> findAllActiveUsers(Long personId) {
         // TODO c.name_et depends on parameter
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(ACTIVE_FROM).sort("c.name_et", "s.code");
+        StringBuilder from = new StringBuilder(ACTIVE_FROM).append(" ");
+        from.append("left join student st on st.id = u.student_id "); // Student or Representative
+        from.append("left join person p on p.id = st.person_id "); // Student person
+        from.append("left join student_group sg on sg.id = st.student_group_id "); // Student group
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort("c.name_et", "s.code");
 
         qb.requiredCriteria("u.person_id = :personId", "personId", personId);
         qb.requiredCriteria("(u.role_code = :guestRole or exists(select 1 from user_rights r where u.id = r.user_id))", "guestRole", Role.ROLL_X);
         qb.validNowCriteria("u.valid_from", "u.valid_thru");
 
-        List<?> resultList = qb.select("u.id, s.code, u.role_code", em).getResultList();
-        List<UserProjection> users = StreamUtil.toMappedList(r -> new UserProjection(
-                resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)
-        ), resultList);
+        List<?> resultList = qb.select("u.id, s.code, u.role_code, c.name_et, c.extraval1, c.name_en, c.extraval2, p.firstname, sg.code as sgCode", em).getResultList();
+        List<UserProjection> users = StreamUtil.toMappedList(r -> {
+            String ext1 = resultAsString(r, 4);
+            String ext2 = resultAsString(r, 6);
+            return new UserProjection(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2),
+                    ext1 != null ? ext1 : resultAsString(r, 3), ext2 != null ? ext2 : resultAsString(r, 5),
+                    resultAsString(r, 7), resultAsString(r, 8));
+        }, resultList);
 
         // return ROLE_X only if it's single role person does have
         if(users.size() <= 1) {

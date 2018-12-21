@@ -11,7 +11,7 @@
                     <th md-column>{{'student.label' | translate}}</th>
                     <th md-column>{{'student.idcode' | translate}}</th>
                     <th md-column ng-if="protocol.protocolVdata.isPractice">{{'moduleProtocol.practiceResult' | translate}}</th>
-                    <th md-column ng-repeat="journal in journals | orderBy: 'nameEt'">
+                    <th md-column ng-if="formState.showJournals" ng-repeat="journal in journals | orderBy: 'nameEt'">
                       <div>
                         <a md-colors="{color: 'grey-50'}" ng-href="/#/journal/{{::journal.id}}/view">{{'P' + ($index + 1)}}</a>
                         <md-tooltip>
@@ -19,7 +19,7 @@
                         </md-tooltip>
                       </div>
                     </th>
-                    <th md-column ng-if="formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
+                    <th md-column ng-if="formState.showOutcomes && formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
                       <div>
                         {{'moduleProtocol.outcome' | translate}}{{outcome.orderNr + 1}}
                         <md-tooltip>{{outcome.nameEt}}</md-tooltip>
@@ -42,14 +42,14 @@
                       </span>
                     </span>
                   </td>
-                  <td md-cell ng-repeat="journal in journals | orderBy: 'nameEt'">
+                  <td md-cell ng-if="formState.showJournals" ng-repeat="journal in journals | orderBy: 'nameEt'">
                     <span ng-if="protocolStudentJournalResults[row.id] && protocolStudentJournalResults[row.id][journal.id]"
                       ng-repeat="grade in protocolStudentJournalResults[row.id][journal.id]">
                       <span ng-class="{badResult: !gradeUtil.isPositive(grade.code)}">{{grade.value}}</span>
                       <span ng-if="!$last">/</span>
                     </span>
                   </td>
-                  <td md-cell ng-if="formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
+                  <td md-cell ng-if="formState.showOutcomes && formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
                     <span ng-if="protocolStudentOutcomeResults[row.id] && protocolStudentOutcomeResults[row.id][outcome.id]">
                       <span ng-class="{badResult: !gradeUtil.isPositive(protocolStudentOutcomeResults[row.id][outcome.id].code)}">{{protocolStudentOutcomeResults[row.id][outcome.id].value}}</span>
                     </span>

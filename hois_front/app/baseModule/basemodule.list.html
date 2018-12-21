@@ -3,8 +3,8 @@
       <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
         <form name="searchForm" ng-submit="searchForm.$valid && loadData()" class="nomargin" layout="column">
-            <div layout-gt-sm="row" layout="column" layout-align-gt-sm="start end">
-                <md-input-container flex-gt-sm="45" flex="100">
+            <div layout-gt-sm="row" layout="column">
+                <md-input-container flex-gt-sm="45" flex="100" class="flex-end">
                     <label class="textInput">{{'basemodule.search.name' | translate}}</label>
                     <input ng-model="criteria.name" type="text" md-maxlength="255" autofocus>
                 </md-input-container>
@@ -22,7 +22,7 @@
                    </div>
                 </div>
             </div>
-            <div layout="row" layout-sm="column" layout-xs="column">
+            <div layout-gt-sm="row" layout="column">
                 <md-autocomplete
                     name="curriculum"
                     md-selected-item="criteria.curriculum"
@@ -33,7 +33,7 @@
                     md-floating-label="{{'basemodule.search.curriculum' | translate}}"
                     md-no-cache
                     class="small-margin"
-                    flex>
+                    flex="100" flex-gt-sm="45">
                     <md-item-template>
                         <span md-highlight-text="queryC" md-highlight-flags="^i">{{currentLanguageNameField(curriculum)}}</span>
                     </md-item-template>
@@ -87,12 +87,12 @@
                     <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
                         <td md-cell><a ng-href="#/basemodule/{{::row.id}}/view">{{currentLanguageNameField(row)}}</a></td>
                         <td md-cell ng-init="row.c = row.curriculums.join(', ')">
-                            {{row.c.length &GT 20 && !row.showC ? (row.c | limitTo:20) + '...' : row.c}}
+                            {{row.c.length &gt; 20 && !row.showC ? (row.c | limitTo:20) + '...' : row.c}}
                             <span class="custom-tooltip" ng-if="!row.showC && row.c.length > 20" ng-click="row.showC = true">{{'basemodule.search.showMore' | translate}}</span>
                             <span class="custom-tooltip" ng-if="row.showC" ng-click="row.showC = false">{{'basemodule.search.showLess' | translate}}</span>
                         </td>
                         <td md-cell ng-init="row.cv = row.curriculumVersions.join(', ')">
-                            {{row.cv.length &GT 20 && !row.showCV ? (row.cv | limitTo:20) + '...' : row.cv}}
+                            {{row.cv.length &gt; 20 && !row.showCV ? (row.cv | limitTo:20) + '...' : row.cv}}
                             <span class="custom-tooltip" ng-if="!row.showCV && row.cv.length > 20" ng-click="row.showCV = true">{{'basemodule.search.showMore' | translate}}</span>
                             <span class="custom-tooltip" ng-if="row.showCV" ng-click="row.showCV = false">{{'basemodule.search.showLess' | translate}}</span>
                         </td>
@@ -113,10 +113,10 @@
     </div>
 </div>
   
-  <style>
-      @media screen and (max-width: 960px) {
-          .common-label {
-              align-self: flex-start !important;
-          }
-      }
-  </style>
+<style>
+    @media screen and (min-width: 960px) {
+        .flex-end {
+            align-self: flex-end;
+        }
+    }
+</style>

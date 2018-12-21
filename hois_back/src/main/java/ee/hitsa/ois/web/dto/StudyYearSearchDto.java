@@ -5,6 +5,8 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.time.LocalDate;
 
+import ee.hitsa.ois.domain.StudyYear;
+
 public class StudyYearSearchDto {
     private String code;
     private String nameEt;
@@ -24,6 +26,17 @@ public class StudyYearSearchDto {
         this.startDate = resultAsLocalDate(row, 4);
         this.endDate = resultAsLocalDate(row, 5);
         this.count = resultAsLong(row, 6);
+    }
+    
+    public static StudyYearSearchDto of(StudyYear studyYear) {
+        StudyYearSearchDto dto = new StudyYearSearchDto();
+        dto.setId(studyYear.getId());
+        dto.setCode(studyYear.getYear().getCode());
+        dto.setNameEt(studyYear.getYear().getNameEt());
+        dto.setNameEn(studyYear.getYear().getNameEn());
+        dto.setStartDate(studyYear.getStartDate());
+        dto.setEndDate(studyYear.getEndDate());
+        return dto;
     }
 
     public String getCode() {

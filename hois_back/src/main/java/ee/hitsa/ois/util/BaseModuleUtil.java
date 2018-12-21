@@ -188,7 +188,10 @@ public class BaseModuleUtil {
         out.setCurriculumModule(module);
         outcome.getOutcomes().add(out);
         out.setBaseModuleOutcomes(outcome);
-        EntityUtil.save(outcome, em);// Double save is necessary because of org.springframework.dao.InvalidDataAccessApiUsageException: org.hibernate.TransientPropertyValueException: object references an unsaved transient instance
+        EntityUtil.save(outcome, em);
+        if (module.getId() == null) {
+            return updateOutcome(outcome, out);
+        }
         return EntityUtil.save(updateOutcome(outcome, out), em);
     }
     

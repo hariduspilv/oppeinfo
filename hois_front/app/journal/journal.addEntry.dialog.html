@@ -108,6 +108,15 @@
                   <tr md-row ng-repeat="row in journalStudents track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>{{$index + 1}}</td>
                     <td md-cell>
+                      <i>
+                        <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'student.statuses.academicLeaveShort' | translate}}</span>
+                        <span ng-if="row.status === 'OPPURSTAATUS_L'">{{'student.statuses.finishedShort' | translate}}</span>
+                        <span ng-if="row.status === 'OPPURSTAATUS_K'">{{'student.statuses.exmatriculatedShort' | translate}}</span>
+                        <span ng-if="row.isIndividualCurriculum">
+                          <span ng-if="row.status !== 'OPPURSTAATUS_O' && row.status !== 'OPPURSTAATUS_V'">, </span>
+                          <span>{{'student.statuses.individualCurriculumShort' | translate}}</span>
+                        </span>
+                      </i>
                       <span>{{::row.fullname}}, {{row.studentGroup}}</span>
                     </td>
                     <td md-cell ng-if="journalEntry.lessons > 1">
@@ -169,10 +178,10 @@
                         <span ng-if="gradeHistory.grade.value && !$last">/</span>
                       </span>
                       &nbsp;
-                      <span ng-if="row.canEdit && !(journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')">
+                      <span ng-if="row.canEdit && !(row.apelTransferredFinalResult && journalEntry.entryType === 'SISSEKANNE_L') && !(journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')">
                         <md-input-container>
                           <hois-select ng-if="gradeInputAsSelect" ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" 
-                            value-property="code" filter-values="filterGrades" ng-change="journalEntryStudentChanged(row)" aria-label="grade"></hois-select>
+                            value-property="code" ng-change="journalEntryStudentChanged(row)" aria-label="grade"></hois-select>
                           <input ng-if="!gradeInputAsSelect" ng-model="journalEntryStudents[row.id].gradeValue" style="width: 75px;"
                             ng-change="journalEntryStudentChanged(row)" type="text" ng-pattern="gradeInputRegex" aria-label="grade">
                         </md-input-container>
@@ -181,7 +190,7 @@
                           <md-tooltip>{{'journal.removeStudentHistory' | translate}}</md-tooltip>
                         </md-button>
                       </span>
-                      <span ng-if="!row.canEdit || (journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')">
+                      <span ng-if="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType === 'SISSEKANNE_L') || (journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')">
                         <md-input-container>
                           <hois-select ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" 
                             value-property="code" aria-label="grade" disabled></hois-select>

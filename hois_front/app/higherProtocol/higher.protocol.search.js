@@ -11,7 +11,11 @@ angular.module('hitsaOis').controller('HigherProtocolSearchController', ['$scope
     QueryUtils.createQueryForm($scope, baseUrl, {order: 'id'}, clMapper.objectmapper);
     DataUtils.convertStringToDates($scope.criteria, ['inserted', 'confirmDate']);
 
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
+      response.forEach(function (studyPeriod) {
+        studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+      });
+    });
     var promises = clMapper.promises;
     promises.push($scope.studyPeriods.$promise);
 

@@ -180,7 +180,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
 
     function checkIfHasSubjectProgramNotification() {
-      if (['ROLL_O'].indexOf(Session.roleCode) !== -1) {
+      if (['ROLL_O'].indexOf(Session.roleCode) !== -1 && Session.higher) {
         $scope.hasUnconfirmedPrograms = QueryUtils.endpoint("/subject/subjectProgram/hasunconfirmed").get();
         $scope.hasUncompletedPrograms = QueryUtils.endpoint("/subject/subjectProgram/hasuncompleted").get();
       } else {

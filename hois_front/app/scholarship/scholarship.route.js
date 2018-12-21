@@ -326,8 +326,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           };
         }
       },
-      data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
+      authorizedRoles: function(Session) {
+        return Session.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS) !== -1 || 
+          isStudentGroupTeacher(Session);
       }
     })
     .when('/scholarships/applications/:type/reject', {

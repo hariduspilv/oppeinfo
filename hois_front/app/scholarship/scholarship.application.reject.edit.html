@@ -9,6 +9,7 @@
       <tr md-row>
         <th md-column>{{'stipend.fullName' | translate}}</th>
         <th md-column>{{'stipend.student.idCode' | translate}}</th>
+        <th md-column>{{'stipend.student.studentGroup' | translate}}</th>
         <th md-column>{{'stipend.rejectComment' | translate}}</th>
         <th md-column>&nbsp;</th>
       </tr>
@@ -17,6 +18,7 @@
       <tr md-row ng-repeat="rejection in rejections" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{rejection.fullName}}</td>
         <td md-cell>{{rejection.idCode}}</td>
+        <td md-cell>{{rejection.studentGroup}}</td>
         <td md-cell>
           <div flex><input flex type="text" ng-model="rejection.rejectComment" style="width: 100%" autofocus maxlength="100"></div>
         </td>

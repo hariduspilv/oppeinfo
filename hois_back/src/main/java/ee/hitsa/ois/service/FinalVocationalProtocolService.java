@@ -6,6 +6,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,7 @@ import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
@@ -52,6 +54,7 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ProtocolVdataForm;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.finalprotocol.FinalProtocolCommitteeMemberForm;
 import ee.hitsa.ois.web.commandobject.finalprotocol.FinalVocationalProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.finalprotocol.FinalVocationalProtocolSaveForm;
@@ -299,7 +302,7 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
         return Short.valueOf((short) OccupationalGrade.valueOf(grade).getMark());
     }
 
-    public List<CurriculumVersionResult> curriculumVersionsForSelection(HoisUserDetails user) {
+    public List<CurriculumVersionResult> curriculumVersionsForSelection(HoisUserDetails user, SearchCommand lookup) {
         String from = "from curriculum_version cv" + " inner join curriculum c on cv.curriculum_id = c.id"
                 + " inner join curriculum_version_omodule cvo on cvo.curriculum_version_id = cv.id"
                 + " inner join curriculum_module cm on cvo.curriculum_module_id = cm.id"
@@ -311,7 +314,9 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
         qb.requiredCriteria("c.status_code != :curriculumStatus", "curriculumStatus", CurriculumStatus.OPPEKAVA_STAATUS_C.name());
         qb.requiredCriteria("cv.status_code != :cvStatusCode", "cvStatusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
         qb.requiredCriteria("cm.module_code = :moduleCode", "moduleCode", FINAL_EXAM_CODE);
-
+        qb.optionalContains(Arrays.asList("cv.code", "cv.code || ' ' || c.name_et", "cv.code || ' ' || c.name_en"), "name", lookup.getName());
+        
+        qb.sort(Language.EN.equals(lookup.getLang()) ? "cv.code, c.name_et" : "cv.code, c.name_en");
         List<?> data = qb.select(
                 "distinct cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, cv.school_department_id, sf.study_form_code, c.is_higher",
                 em).getResultList();

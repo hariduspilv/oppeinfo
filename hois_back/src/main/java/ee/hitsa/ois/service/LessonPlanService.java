@@ -463,12 +463,25 @@ public class LessonPlanService {
             LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(lessonPlan.getStudyYear());
 
             for (LessonPlanModuleForm formModule : formModules) {
+                LessonPlanModule lpm = null;
                 if (formModule.getId() == null) {
-                    continue;
-                }
-                LessonPlanModule lpm = modules.remove(formModule.getId());
-                if (lpm == null) {
-                    throw new AssertionFailedException("Unknown lessonplan module");
+                    // if teacher responsible for teacher is added to a lesson
+                    // plan module that has never had any journals, the module
+                    // needs to be created
+                    if (formModule.getTeacher() != null) {
+                        lpm = new LessonPlanModule();
+                        lpm.setLessonPlan(lessonPlan);
+                        lpm.setCurriculumVersionOccupationModule(em.getReference(CurriculumVersionOccupationModule.class,
+                                formModule.getOccupationModuleId()));
+                        lessonPlan.getLessonPlanModules().add(lpm);
+                    } else {
+                        continue;
+                    }
+                } else {
+                    lpm = modules.remove(formModule.getId());
+                    if (lpm == null) {
+                        throw new AssertionFailedException("Unknown lessonplan module");
+                    }
                 }
                 EntityUtil.bindToEntity(formModule, lpm);
                 lpm.setTeacher(EntityUtil.getOptionalOne(Teacher.class, formModule.getTeacher(), em));
@@ -1264,6 +1277,7 @@ public class LessonPlanService {
         
             List<LessonPlanXlsJournalDto> journals =  lessonplanExcelJournals(m, dto.getWeekNrs());
             module.setJournals(journals);
+            setLessonplanExcelModuleTotals(module, journals, dto.getWeekNrs(), true);
             modules.add(module);
         }
         return modules;
@@ -1285,6 +1299,37 @@ public class LessonPlanService {
             journals.add(journal);
         }
         return journals;
+    }
+    
+    private void setLessonplanExcelModuleTotals(LessonPlanXlsModuleDto module, List<LessonPlanXlsJournalDto> journals,
+            List<Short> weekNrs, boolean useGroupProportion) {
+        Map<String, List<Double>> hours = new HashMap<>();
+        journals.forEach(journal -> {
+            double groupProportion = useGroupProportion ? 1 / Double
+                    .valueOf(em.getReference(Classifier.class, journal.getGroupProportion()).getValue()).doubleValue()
+                    : 1;
+            for (String capacity : journal.getHours().keySet()) {
+                if (!hours.containsKey(capacity)) {
+                    List<Double> weekHours = new ArrayList<>();
+                    for (Short hour : journal.getHours().get(capacity)) {
+                        weekHours.add(hour != null ? Double.valueOf(hour.shortValue() * groupProportion) : Double.valueOf(0));
+                    }
+                    hours.put(capacity, weekHours);
+                } else {
+                    List<Double> capacityHours = hours.get(capacity);
+                    List<Short> journalCapacityHours = journal.getHours().get(capacity);
+                    for (int i = 0; i < capacityHours.size(); i++) {
+                        double weekHours = capacityHours.get(i) != null ? capacityHours.get(i).doubleValue() : 0;
+                        double journalWeekHours = journalCapacityHours.get(i) != null ? journalCapacityHours.get(i).doubleValue() * groupProportion : 0;
+                        capacityHours.set(i, Double.valueOf(weekHours + journalWeekHours));
+                    }
+                }
+            }
+        });
+        module.setHours(sortTotalHourCapacities(hours));
+        
+        List<Double> totalHours = grandProportionTotals(module.getHours(), weekNrs);
+        module.setTotalHours(totalHours);
     }
     
     private LessonPlanXlsTotalsDto lessonplanExcelTotals(List<LessonPlanXlsModuleDto> modules, List<Short> weekNrs, boolean useGroupProportion) {

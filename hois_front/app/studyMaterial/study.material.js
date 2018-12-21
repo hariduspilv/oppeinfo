@@ -12,6 +12,7 @@
       $scope.canEdit = canEdit($scope.auth);
       $scope.subjectStudyPeriod = $route.current.locals.subjectStudyPeriod;
       $scope.teachers = $scope.subjectStudyPeriod.teachers.map($scope.currentLanguageNameField).join(', ');
+      $scope.studentGroups = $scope.subjectStudyPeriod.studentGroups.join(', ');
       $scope.getFileUrl = oisFileService.getUrl;
 
       var ConnectEndpoint = QueryUtils.endpoint('/studyMaterial/connect');
@@ -43,6 +44,7 @@
         });
       };
 
+      $scope.hAutocomplete = [];
       $scope.addExisting = function () {
         if (!$scope.existingMaterial) {
           message.error('main.messages.form-has-errors');
@@ -52,7 +54,7 @@
         connection.studyMaterial = $scope.existingMaterial.id;
         connection.subjectStudyPeriod = $scope.subjectStudyPeriod.id;
         connection.$save().then(function () {
-          $scope.existingMaterial = undefined;
+          $scope.hAutocomplete.forEach(function (r) { r.clear(); });
           loadMaterials();
         });
       };
@@ -63,6 +65,7 @@
         $scope.auth = $route.current.locals.auth;
         $scope.journal = $route.current.locals.journal;
         $scope.teachers = $scope.journal.teachers.map($scope.currentLanguageNameField).join(', ');
+        $scope.studentGroups = $scope.journal.studentGroups.join(', ');
         $scope.getFileUrl = oisFileService.getUrl;
 
         var ConnectEndpoint = QueryUtils.endpoint('/studyMaterial/connect');
@@ -94,6 +97,7 @@
           });
         };
 
+        $scope.hAutocomplete = [];
         $scope.addExisting = function () {
           if (!$scope.existingMaterial) {
             message.error('main.messages.form-has-errors');
@@ -103,7 +107,7 @@
           connection.studyMaterial = $scope.existingMaterial.id;
           connection.journal = $scope.journal.id;
           connection.$save().then(function () {
-            $scope.existingMaterial = undefined;
+            $scope.hAutocomplete.forEach(function (r) { r.clear(); });
             loadMaterials();
           });
         };
@@ -113,6 +117,7 @@
       dialogService, message, Classifier, $q) {
       $scope.subjectStudyPeriod = $route.current.locals.subjectStudyPeriod;
       $scope.teachers = $scope.subjectStudyPeriod.teachers.map($scope.currentLanguageNameField).join(', ');
+      $scope.studentGroups = $scope.subjectStudyPeriod.studentGroups.join(', ');
       $scope.getFileUrl = oisFileService.getUrl;
 
       var clMapper = Classifier.valuemapper({
@@ -135,6 +140,7 @@
       dialogService, message, Classifier, $q) {
       $scope.journal = $route.current.locals.journal;
       $scope.teachers = $scope.journal.teachers.map($scope.currentLanguageNameField).join(', ');
+      $scope.studentGroups = $scope.journal.studentGroups.join(', ');
       $scope.getFileUrl = oisFileService.getUrl;
 
       var clMapper = Classifier.valuemapper({

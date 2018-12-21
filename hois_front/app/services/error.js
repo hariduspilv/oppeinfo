@@ -36,7 +36,7 @@ angular.module('hitsaOis').factory('resourceErrorHandler', function ($q, message
         if(!popupshown) {
           message.error('main.messages.form-has-errors');
         }
-      } else {
+      } else if ([401, 403, 419, 440].indexOf(response.status) === -1) {
         message.error('main.messages.system.failure');
       }
       return $q.reject(response);

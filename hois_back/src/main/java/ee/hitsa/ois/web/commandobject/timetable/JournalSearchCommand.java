@@ -12,6 +12,7 @@ public class JournalSearchCommand {
     private Long teacher;
     private List<Long> module;
     private String journalName;
+    private Boolean onlyMyJournals;
 
     @ClassifierRestriction(MainClassCode.PAEVIK_STAATUS)
     private String status;
@@ -64,5 +65,12 @@ public class JournalSearchCommand {
         this.status = status;
     }
 
+    public Boolean getOnlyMyJournals() {
+        return onlyMyJournals;
+    }
+
+    public void setOnlyMyJournals(Boolean onlyMyJournals) {
+        this.onlyMyJournals = onlyMyJournals;
+    }
 
 }

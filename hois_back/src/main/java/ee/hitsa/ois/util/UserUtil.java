@@ -36,7 +36,7 @@ public abstract class UserUtil {
     public static boolean canSubmitApplication(HoisUserDetails user, Application application) {
         if(ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_KOOST, application.getStatus())) {
             Student student = application.getStudent();
-            return isSame(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentRepresentative(user, student);
+            return isStudent(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentRepresentative(user, student);
         }
         return false;
     }
@@ -44,6 +44,9 @@ public abstract class UserUtil {
     public static boolean canRejectApplication(HoisUserDetails user, Application application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
+        if (!StudentUtil.canBeEdited(student)) {
+            return false;
+        }
         if (ApplicationStatus.AVALDUS_STAATUS_KOOST.name().equals(status)) {
             return Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm()) && (isStudentRepresentative(user, student) || isSchoolAdmin(user, student.getSchool()));
         }
@@ -61,7 +64,8 @@ public abstract class UserUtil {
                 && (ApplicationStatus.AVALDUS_STAATUS_ESIT.name().equals(status) 
                         || ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name().equals(status)) 
                 && isSchoolAdmin(user, student.getSchool()) 
-                && hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_AVALDUS);
+                && hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_AVALDUS)
+                && StudentUtil.canBeEdited(student);
     }
 
     public static boolean canCancelDirective(HoisUserDetails user, Directive directive) {
@@ -76,13 +80,14 @@ public abstract class UserUtil {
     }
 
     public static boolean canViewStudent(HoisUserDetails user, Student student) {
-        return isSchoolAdmin(user, student.getSchool()) || isSame(user, student) || isStudentRepresentative(user, student) || isTeacher(user, student.getSchool());
+        return isSchoolAdmin(user, student.getSchool()) || isStudent(user, student) || isStudentRepresentative(user, student) || isTeacher(user, student.getSchool());
     }
 
     public static boolean canEditStudent(HoisUserDetails user, Student student) {
-        return (isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+        return ((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
                 || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || isAdultStudent(user, student) || isStudentRepresentative(user, student);
+                || isAdultStudent(user, student) || isStudentRepresentative(user, student))
+                && StudentUtil.canBeEdited(student);
     }
 
     /**
@@ -93,9 +98,10 @@ public abstract class UserUtil {
      * @return
      */
     public static boolean canAddStudentRepresentative(HoisUserDetails user, Student student) {
-        return (isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+        return ((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
                 || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || isAdultStudent(user, student);
+                || isAdultStudent(user, student))
+                && StudentUtil.canBeEdited(student);
     }
 
     /**
@@ -107,9 +113,10 @@ public abstract class UserUtil {
      */
     public static boolean canEditStudentRepresentative(HoisUserDetails user, StudentRepresentative representative) {
         Student student = representative.getStudent();
-        if ((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+        if (((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
                 || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || isAdultStudent(user, student)) {
+                || isAdultStudent(user, student))
+                && StudentUtil.canBeEdited(student)) {
             return true;
         }
         // representative can edit it's own record even if student's data is not visible to him/her
@@ -125,9 +132,10 @@ public abstract class UserUtil {
      */
     public static boolean canDeleteStudentRepresentative(HoisUserDetails user, StudentRepresentative representative) {
         Student student = representative.getStudent();
-        if ((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
+        if (((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
                 || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || isAdultStudent(user, student)) {
+                || isAdultStudent(user, student))
+                && StudentUtil.canBeEdited(student)) {
             return true;
         }
         return false;
@@ -184,8 +192,16 @@ public abstract class UserUtil {
         return user.isStudent() && user.getStudentId().equals(EntityUtil.getId(student));
     }
 
+    /**
+     * @since 10.12.2018 Before it compared Person ID which would make a possibility to get information with any role (just to be logged in with account).
+     * Replaced by comparing Student ID.
+     * 
+     * @param user
+     * @param student
+     * @return
+     */
     public static boolean isStudentRepresentative(HoisUserDetails user, Student student) {
-        return user.isRepresentative() && student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
+        return user.isRepresentative() && user.getStudentId().equals(student.getId());//student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
     }
 
     public static boolean isStudentGroupTeacher(HoisUserDetails user, Student student) {
@@ -293,6 +309,10 @@ public abstract class UserUtil {
     public static void assertIsStudent(HoisUserDetails user) {
         AssertionFailedException.throwIf(!user.isStudent(), "User is not school student");
     }
+    
+    public static void assertIsStudent(HoisUserDetails user, Student student) {
+        AssertionFailedException.throwIf(!isStudent(user, student), "main.messages.error.nopermission");
+    }
 
     public static void assertIsSchoolAdminOrStudent(HoisUserDetails user, School school) {
         AssertionFailedException.throwIf(!isSchoolAdminOrStudent(user, school), "User is not school admin or student in given school");
@@ -308,7 +328,7 @@ public abstract class UserUtil {
     }
     
     public static void assertIsSchoolAdminOrStudentGroupTeacher(HoisUserDetails user, StudentGroup studentGroup) {
-        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !isStudentGroupTeacher(user, studentGroup),
+        AssertionFailedException.throwIf(!isSchoolAdmin(user, studentGroup.getSchool()) && !isStudentGroupTeacher(user, studentGroup),
                 "User is not school admin or student group teacher");
     }
 
@@ -326,6 +346,10 @@ public abstract class UserUtil {
         for(Permission p : Permission.values()) {
             ROLE_NAME_CACHE.put(p, new ConcurrentHashMap<>());
         }
+    }
+    
+    public static void throwAccessDeniedIf(boolean expression) {
+        throwAccessDeniedIf(expression, "main.messages.error.nopermission");
     }
     
     public static void throwAccessDeniedIf(boolean expression, String message) {

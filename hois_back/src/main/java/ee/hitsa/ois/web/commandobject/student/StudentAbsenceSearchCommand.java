@@ -17,6 +17,7 @@ public class StudentAbsenceSearchCommand {
     private Boolean isRejected;
     @Size(max=255)
     private String studentGroupCode;
+    private Long studentGroupId;
 
     public Long getStudyPeriod() {
         return studyPeriod;
@@ -64,6 +65,14 @@ public class StudentAbsenceSearchCommand {
 
     public void setStudentGroupCode(String studentGroupCode) {
         this.studentGroupCode = studentGroupCode;
+    }
+
+    public Long getStudentGroupId() {
+        return studentGroupId;
+    }
+
+    public void setStudentGroupId(Long studentGroupId) {
+        this.studentGroupId = studentGroupId;
     }
 
     public Long getStudyYear() {

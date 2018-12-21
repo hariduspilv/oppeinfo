@@ -245,7 +245,7 @@ public class DeclarationService {
             return false;
         }
         if(user.isStudent()) {
-            return UserUtil.isSame(user, student) && StudentUtil.isStudying(student);
+            return UserUtil.isStudent(user, student) && StudentUtil.isStudying(student);
         }
         return UserUtil.isSchoolAdmin(user, student.getSchool());
     }
@@ -461,7 +461,7 @@ public class DeclarationService {
 
     public AutocompleteResult getCurrentStudyPeriod(Long schoolId) {
         Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
-        return studyPeriodId != null ? AutocompleteResult.of(em.getReference(StudyPeriod.class, studyPeriodId)) : null;
+        return studyPeriodId != null ? AutocompleteResult.ofWithYear(em.getReference(StudyPeriod.class, studyPeriodId)) : null;
     }
 
     private StudyPeriodEventDto getCurrentStudyPeriodDeclarationPeriod(Long schoolId) {

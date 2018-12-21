@@ -127,7 +127,7 @@ public class ScholarshipController {
     @GetMapping("/studentProfilesRejection")
     public List<ScholarshipStudentRejectionDto> studentProfilesRejection(HoisUserDetails user,
             @RequestParam("id") List<Long> applicationIds) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
         return scholarshipService.getStudentProfilesForRejection(applicationIds);
     }
 
@@ -156,16 +156,10 @@ public class ScholarshipController {
         return scholarshipService.teacherConfirmApplications(user, applicationIds, Boolean.FALSE);
     }
 
-    @PutMapping("/teacherConfirmApplications/annul")
-    public HttpStatus teacherConfirmApplicationsAnnul(HoisUserDetails user, @RequestBody List<Long> applicationIds) {
-        UserUtil.assertIsTeacher(user);
-        return scholarshipService.teacherConfirmApplications(user, applicationIds, null);
-    }
-
     @PutMapping("/annulApplications")
     public HttpStatus annulApplications(HoisUserDetails user,
             @Valid @RequestBody ScholarshipApplicationListSubmitForm form) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        assertCanAnnulApplication(user);
         return scholarshipService.annulApplications(form, user);
     }
 
@@ -286,6 +280,14 @@ public class ScholarshipController {
         AssertionFailedException.throwIf(
                 user.getStudentId().longValue() != EntityUtil.getId(application.getStudent()).longValue(),
                 "Invalid student");
+    }
+    
+    private static void assertCanAnnulApplication(HoisUserDetails user) {
+        if (user.isTeacher()) {
+            UserUtil.assertIsTeacher(user);
+        } else {
+            UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        }
     }
 
 }

@@ -31,7 +31,7 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
         dto.setFullname(PersonUtil.fullname(student.getPerson()));
         dto.setIdcode(student.getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
-        dto.setStudentGroup(student.getStudentGroup().getCode());
+        dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
         dto.setCurriculumGrade(protocolStudent.getCurriculumGrade() != null ? CurriculumGradeDto.of(protocolStudent.getCurriculumGrade()) : null);
         
         if (protocolStudent.getProtocolStudentOccupations() != null) {

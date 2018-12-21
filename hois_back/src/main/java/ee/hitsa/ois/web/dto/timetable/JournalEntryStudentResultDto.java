@@ -8,6 +8,8 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 
 public class JournalEntryStudentResultDto {
 
+    private Long journalEntryStudentId;
+    private Long journalStudentId;
     private String grade;
     private String addInfo;
     private LocalDateTime inserted;
@@ -18,6 +20,22 @@ public class JournalEntryStudentResultDto {
     private LocalDateTime absenceInserted;
     private List<JournalEntryStudentLessonAbsenceDto> lessonAbsences;
     private List<JournalEntryStudentHistoryDto> journalEntryStudentHistories;
+
+    public Long getJournalEntryStudentId() {
+        return journalEntryStudentId;
+    }
+
+    public void setJournalEntryStudentId(Long journalEntryStudentId) {
+        this.journalEntryStudentId = journalEntryStudentId;
+    }
+
+    public Long getJournalStudentId() {
+        return journalStudentId;
+    }
+
+    public void setJournalStudentId(Long journalStudentId) {
+        this.journalStudentId = journalStudentId;
+    }
 
     public String getGrade() {
         return grade;

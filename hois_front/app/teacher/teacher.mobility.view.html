@@ -1,6 +1,19 @@
 <!--<div ng-include="'teacher/teacher.menu.view.html'"></div>-->
 <div  class="ois-form-layout form-readonly">
   <div flex>
+    <div>&nbsp;</div>
+    <div layout="row" layout-xs="column" flex class="form-readonly">
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label>{{auth.higher ? ('teacher.person.nameHigher' | translate) : ('teacher.person.nameVocational' | translate)}}</label>
+          <hois-value value="teacher.person.firstname + ' ' + teacher.person.lastname"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{auth.higher ? ('teacher.person.idcodeHigher' | translate) : ('teacher.person.idcodeVocational' | translate)}}</label>
+          <hois-value value="teacher.person.idcode"></hois-value>
+        </md-input-container>
+      </div>
+    </div>
     <div ng-repeat="mobility in teacher.teacherMobility">
       <hois-collapsable label="('teacher.mobility.mobility' | translate)">
         <div layout="column">

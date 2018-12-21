@@ -45,17 +45,15 @@
             <hois-classifier-select ng-model="criteria.studyLevel" model-value-attr="code" main-classifier-code="OPPEASTE"></hois-classifier-select>
           </md-input-container>
           <div flex="45" flex-offset="5">
-            <hois-autocomplete ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.student.curriculum"
+            <hois-autocomplete ng-model="criteria.curriculumVersion" ha-controller="directiveControllers" method="curriculumversions" label="report.student.curriculum"
               md-selected-item-change="curriculumVersionChanged"></hois-autocomplete>
           </div>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="45">
-            <label class="textInput">{{'report.student.studentGroup' | translate}}</label>
-            <hois-select ng-model="criteria.studentGroup" values="formState.studentGroups" 
-              filter-values="formState.filterStudentGroups"></hois-select>
-          </md-input-container>
+          <hois-autocomplete flex="45" ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" ng-search-text="studentGroupName"
+            method="studentgroups" name="studentGroup" label="{{'report.student.studentGroup'}}"
+            additional-query-params="{curriculumVersionId: criteria.curriculumVersion.id}"></hois-autocomplete>
           <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100" ng-if="auth.higher">
             <label>{{'report.student.studyLoad' | translate}}</label>
             <hois-classifier-select ng-model="criteria.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS"></hois-classifier-select>

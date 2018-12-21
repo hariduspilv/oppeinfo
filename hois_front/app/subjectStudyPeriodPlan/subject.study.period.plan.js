@@ -32,8 +32,11 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
         $scope.checkIfStudyPeriodIsPast();
     }
 
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
+    QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query().$promise.then(function(response){
         $scope.studyPeriods = response;
+        $scope.studyPeriods.forEach(function (studyPeriod) {
+          studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+        });
         DataUtils.sortStudyYearsOrPeriods($scope.studyPeriods);
         setCurrentStudyPeriod();
     });
@@ -106,6 +109,7 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
         QueryUtils.endpoint(baseUrl + "/studyPeriod/" + studyPeriodId).get().$promise.then(
             function(response) {
                 $scope.studyPeriod = response;
+                response[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(response.studyYear) + " " + $scope.currentLanguageNameField(response);
                 $scope.readOnly = DataUtils.isPastStudyYearOrPeriod($scope.studyPeriod);
             }
         );

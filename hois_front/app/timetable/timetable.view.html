@@ -11,18 +11,19 @@
 
       <div id="tt" ng-repeat="curriculum in timetable.curriculums | orderBy: currentLanguageNameField()" layout="column" flex>
         <div class="hois-collapse-header even">{{currentLanguageNameField(curriculum)}}{{curriculum.curriculumCode}}, {{currentLanguageNameField(curriculum.curriculumStudyLevelCode)}}</div>
-        <div flex >
-                <md-grid-list ng-app="app" md-cols-xs="1" md-cols-sm="2" md-cols-md="4" md-cols-lg="8" md-cols-gt-lg="8" md-gutter="1em"
-                md-row-height="40px" flex>
-                <md-grid-tile ng-repeat="group in curriculum.groups | orderBy: code" style="text-align: left;">
-                  <!--md-button class="md-button" md-colors="{background: 'background-200'}" ng-click="showTeacherWeek(row.teacherId)">
-                    {{row.lastname}}, {{row.firstname}}
-                  </md-button-->
-                  <a ng-if="!timetable.higher" href="#/timetable/{{timetable.id}}/createVocationalPlan/{{group.id}}">{{group.code}}</a>
-                  <a ng-if="timetable.higher" href="#/timetable/{{timetable.id}}/createHigherPlan/group/{{group.id}}">{{group.code}}</a>
-                </md-grid-tile>
-              </md-grid-list>
-            </div>
+        <div flex>
+          <md-grid-list ng-app="app" md-cols-xs="1" md-cols-sm="2" md-cols-md="4" md-cols-lg="8" md-cols-gt-lg="8" md-gutter="1em" md-row-height="40px" flex>
+            <md-grid-tile ng-repeat="group in curriculum.groups | orderBy: code">
+              <!--md-button class="md-button" md-colors="{background: 'background-200'}" ng-click="showTeacherWeek(row.teacherId)">
+                {{row.lastname}}, {{row.firstname}}
+              </md-button-->
+              <span style="position: absolute; left: 0px;">
+                <a ng-if="!timetable.higher" href="#/timetable/{{timetable.id}}/createVocationalPlan/{{group.id}}">{{group.code}}</a>
+                <a ng-if="timetable.higher" href="#/timetable/{{timetable.id}}/createHigherPlan/group/{{group.id}}">{{group.code}}</a>
+              </span>
+            </md-grid-tile>
+          </md-grid-list>
+        </div>
       </div>
 
       <div ng-if="timetable.pairs">

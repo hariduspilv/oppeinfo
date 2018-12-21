@@ -50,7 +50,9 @@ public class ApelApplicationFormalSubjectOrModuleReport {
             }
         }
         
-        isCompulsory = Boolean.valueOf(!formalSubjectOrModule.getIsOptional().booleanValue());
+        isCompulsory = formalSubjectOrModule.getIsOptional() != null
+                ? Boolean.valueOf(!formalSubjectOrModule.getIsOptional().booleanValue())
+                : null;
         credits = formalSubjectOrModule.getCredits();
         assessment = TranslateUtil.name(formalSubjectOrModule.getAssessment(), lang);
         grade = formalSubjectOrModule.getGrade().getValue();

@@ -8,18 +8,17 @@
             <hois-select ng-model="formState.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
           </md-input-container>
 
-          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label class="textInput">{{auth.higher ? ('finalProtocol.teacherHigher' | translate) : ('finalProtocol.teacherVocational' | translate)}}</label>
-            <hois-select ng-model="formState.teacher" type="teacher" required ng-disabled="auth.isTeacher()"></hois-select>
-          </md-input-container>
+          <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <hois-autocomplete flex ng-model="formState.teacherObject" method="teachers" label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}" 
+              additional-query-params="{valid: true}" ng-disabled="auth.isTeacher()" required></hois-autocomplete>
+          </div>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex flex-sm="100">
-            <label class="textInput">{{'finalProtocol.implementationPlan' | translate}}</label>
-            <hois-select ng-model="formState.curriculumVersion" values="formState.curriculumVersions" ng-change="curriculumVersionChange()"
-              required></hois-select>
-          </md-input-container>
+          <div flex>
+            <hois-autocomplete flex ng-model="formState.curriculumVersionObject" url="/finalVocationalProtocols/curriculumVersions"
+              label="finalProtocol.implementationPlan" ng-disabled="auth.isTeacher()" required></hois-autocomplete>
+          </div>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">

@@ -13,11 +13,13 @@
           <div layout="row" flex="20" flex-xs="100" flex-offset-xs="0" flex-offset="5">
             <md-input-container flex ng-if="criteria.type !== 'STIPTOETUS_POHI'">
               <label class="textInput">{{'stipend.curriculums' | translate}}</label>
-              <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" multiple></hois-select>
+              <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" 
+                criteria="{higher: false, closed: false, teacher: auth.teacher}" sorted-query="true" multiple></hois-select>
             </md-input-container>
             <md-input-container flex ng-if="criteria.type === 'STIPTOETUS_POHI'">
               <label class="textInput">{{'stipend.curriculum' | translate}}</label>
-              <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" required></hois-select>
+              <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" 
+                criteria="{higher: false, closed: false, teacher: auth.teacher}" sorted-query="true" required></hois-select>
             </md-input-container>
           </div>
           <md-input-container flex="20" flex-xs="100" flex-offset-xs="0" flex-offset="5">
@@ -39,7 +41,7 @@
           </md-input-container>
           <md-input-container flex="20" flex-xs="100" flex-offset-xs="0" flex-offset="5">
             <label class="textInput">{{'stipend.studyPeriod' | translate}}</label>
-            <hois-select ng-model="criteria.studyPeriod" values="studyPeriods"></hois-select>
+            <hois-select ng-model="criteria.studyPeriod" type="studyperiodyear" preselect-current></hois-select>
           </md-input-container>
           <md-input-container flex="20" flex-xs="100" flex-offset-xs="0" flex-offset="5">
             <label class="textInput">{{'stipend.status' | translate}}</label>
@@ -67,8 +69,8 @@
       <md-button class="md-raised" ng-click="committeeDecision()" ng-if="auth.isAdmin() && canManage">{{'main.button.committeeDecision' | translate}}</md-button>
       
       <md-button class="md-raised md-primary" ng-click="teacherConfirm('yes')" ng-if="isStudentGroupTeacher">{{'main.button.confirm' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="teacherConfirm('annul')" ng-if="isStudentGroupTeacher">{{'main.button.annul' | translate}}</md-button>
       <md-button class="md-raised" ng-click="teacherConfirm('no')" ng-if="isStudentGroupTeacher">{{'main.button.noConfirm' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="annul()" ng-if="isStudentGroupTeacher">{{'main.button.annul' | translate}}</md-button>
     </div>
   </div>
 </div>

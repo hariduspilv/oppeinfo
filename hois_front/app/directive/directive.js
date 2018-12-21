@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'resourceErrorHandler', 'Classifier', 'Curriculum', 'DataUtils', 'FormUtils', 'QueryUtils', 'Session',
-  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, resourceErrorHandler, Classifier, Curriculum, DataUtils, FormUtils, QueryUtils, Session) {
+angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'resourceErrorHandler', 'Classifier', 'Curriculum', 'DataUtils', 'FormUtils', 'QueryUtils', 'Session', '$rootScope',
+  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, resourceErrorHandler, Classifier, Curriculum, DataUtils, FormUtils, QueryUtils, Session, $rootScope) {
     var id = $route.current.params.id;
     var canceledDirective = $route.current.params.canceledDirective;
     var baseUrl = '/directives';
@@ -56,6 +56,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     }
 
     function afterLoad(result) {
+      if (angular.isDefined(result) && result.canEditDirective === false) {
+        message.error("main.messages.error.nopermission");
+        $rootScope.back("#/directives/" + result.id + "/view");
+      }
       $scope.formState.cancelSelect = (result && result.type === 'KASKKIRI_TYHIST');
       if($scope.formState.cancelSelect) {
         var templateId = result.canceledDirectiveType ? result.canceledDirectiveType.substr(9).toLowerCase() : 'unknown';
@@ -148,7 +152,9 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     if(id) {
       $scope.formState.curriculumVersions.$promise.then(function() {
         $scope.record = Endpoint.get({id: id});
-        $scope.record.$promise.then(afterLoad).then(loadFormData);
+        $scope.record.$promise.then(afterLoad).then(loadFormData).catch(function () {
+          $scope.back("#/");
+        });
       });
     } else {
       $scope.record = new Endpoint({students: []});
@@ -302,6 +308,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
           $scope.formState = {selectedStudents: [], type: data.type};
 
           QueryUtils.createQueryForm($scope, baseUrl);
+
+          $scope.$watch('criteria.studentGroupObject', function () {
+            $scope.criteria.studentGroup = $scope.criteria.studentGroupObject ? $scope.criteria.studentGroupObject.id : null;
+          });
 
           $scope.cancel = $mdDialog.hide;
           $scope.select = function() {

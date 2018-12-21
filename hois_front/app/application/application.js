@@ -27,6 +27,16 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
 
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
+    entity.$promise.then(function (response) {
+      if (!$scope.isView) {
+        if (!((response.status === 'AVALDUS_STAATUS_KOOST' || (response.status === 'AVALDUS_STAATUS_YLEVAAT' && $scope.auth.isAdmin())) && response.canEditStudent)) {
+          message.error('main.messages.error.nopermission');
+          $scope.back("#/");
+        }
+      }
+    });
+  }
+  if (angular.isDefined(entity)) {
     entityToForm(entity);
   }
 
@@ -195,7 +205,11 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     }
 
     $scope.studentSubjects = QueryUtils.endpoint('/students/' + $scope.application.student.id + '/subjects').query();
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
+      response.forEach(function (studyPeriod) {
+        studyPeriod.display = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+      });
+    });
     $q.all([$scope.studentSubjects.$promise, $scope.studyPeriods.$promise]).then(loadFormDeferred.resolve);
   }
 
@@ -276,6 +290,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
           } else {
             message.error(result[$scope.application.type].reason);
           }
+        }, function () {
+          $scope.back("#/");
         });
       } else {
         loadFormData($scope.application.type, student.id);

@@ -9,10 +9,8 @@
       </div>
 
       <div layout="row">
-        <md-input-container flex>
-          <label>{{'occupationcertificate.studentGroup' | translate}}</label>
-          <hois-select ng-model="criteria.studentGroup" values="formState.studentGroups" multiple></hois-select>
-        </md-input-container>
+        <hois-autocomplete flex ng-model="criteria.studentGroups" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup" multiple
+          label="{{'occupationcertificate.studentGroup'}}" additional-query-params="{valid: true, curriculumVersionIds: criteria.curriculumVersion}"></hois-autocomplete>
       </div>
 
       <div layout="row">

@@ -291,6 +291,15 @@ angular.module('hitsaOis')
       });
     };
 
+    $scope.changeStatusUnderRevision = function () {
+      var messages = {
+        prompt: "curriculum.statuschange.implementationPlan.prompt.setStatusUnderRevision",
+        updateSuccess: 'curriculum.statuschange.implementationPlan.success.opened'
+      };
+      var setStatusEndpoint = QueryUtils.endpoint('/curriculumVersion/underrevision');
+      changeStatus(setStatusEndpoint, messages)
+    };
+
     $scope.saveAndConfirm = function() {
       var messages = {
           prompt: $scope.formState.readOnly ? 'curriculum.statuschangeReadOnly.implementationPlan.prompt.verify' : 'curriculum.statuschange.implementationPlan.prompt.verify',

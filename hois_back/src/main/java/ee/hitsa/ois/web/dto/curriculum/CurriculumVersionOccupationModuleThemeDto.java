@@ -74,6 +74,17 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         return dto;
     }
 
+    public static CurriculumVersionOccupationModuleThemeDto forApelApplicationForm(CurriculumVersionOccupationModuleTheme theme) {
+        CurriculumVersionOccupationModuleThemeDto dto = new CurriculumVersionOccupationModuleThemeDto();
+        dto.setId(theme.getId());
+        dto.setNameEt(theme.getNameEt());
+        dto.setCredits(theme.getCredits());
+        dto.setHours(theme.getHours());
+        dto.setOutcomes(StreamUtil.toMappedSet(o -> EntityUtil.getId(o.getOutcome()), theme.getOutcomes()));
+        dto.setModule(EntityUtil.getId(theme.getModule()));
+        return dto;
+    }
+
     public Long getId() {
         return id;
     }

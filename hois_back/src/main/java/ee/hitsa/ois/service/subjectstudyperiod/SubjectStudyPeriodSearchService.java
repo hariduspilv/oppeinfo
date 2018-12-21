@@ -63,9 +63,11 @@ public class SubjectStudyPeriodSearchService {
             Pageable pageable) {
         StringBuilder from = new StringBuilder(FROM);
         StringBuilder select = new StringBuilder(SELECT);
-        from.append("join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id ");
-        from.append("left join subject_program spr on spr.subject_study_period_teacher_id = sspt.id ");
-        select.append(", spr.id, spr.status_code");
+        if (user.isTeacher()) {
+            from.append("join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id ");
+            from.append("left join subject_program spr on spr.subject_study_period_teacher_id = sspt.id ");
+            select.append(", spr.id, spr.status_code");
+        }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable);
 
         if (StringUtils.hasText(criteria.getTeachersFullname())) {
@@ -86,22 +88,24 @@ public class SubjectStudyPeriodSearchService {
             qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
         }
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, select.toString(), em, pageable);
-        return results.map(r -> resultToDto(r));
+        return results.map(r -> resultToDto(r, user.isTeacher()));
     }
 
-    private static SubjectStudyPeriodSearchDto resultToDto(Object r) {
+    private static SubjectStudyPeriodSearchDto resultToDto(Object r, boolean isTeacher) {
         SubjectStudyPeriodSearchDto dto = new SubjectStudyPeriodSearchDto();
         dto.setId(resultAsLong(r, 0));
         dto.setStudyPeriod(new AutocompleteResult(null, resultAsString(r, 1), resultAsString(r, 2)));
         dto.setSubject(getSubject(r));
         dto.setTeachers(getTeachers(r));
         dto.setStudentsNumber(resultAsLong(r, 8));
-        dto.setSubjectProgramId(resultAsLong(r, 9));
-        String status = resultAsString(r, 10);
-        if (status == null) {
-            dto.setSubjectProgramStatus(SubjectProgramStatus.AINEPROGRAMM_STAATUS_L.name());
-        } else {
-            dto.setSubjectProgramStatus(status);
+        if (isTeacher) {
+            dto.setSubjectProgramId(resultAsLong(r, 9));
+            String status = resultAsString(r, 10);
+            if (status == null) {
+                dto.setSubjectProgramStatus(SubjectProgramStatus.AINEPROGRAMM_STAATUS_L.name());
+            } else {
+                dto.setSubjectProgramStatus(status);
+            }
         }
         return dto;
     }

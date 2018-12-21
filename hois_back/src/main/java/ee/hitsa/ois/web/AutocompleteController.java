@@ -53,6 +53,7 @@ import ee.hitsa.ois.web.dto.StudyPeriodWithYearIdDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.SubjectResult;
 import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOModulesAndThemesResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeResult;
@@ -111,18 +112,13 @@ public class AutocompleteController {
     }
 
     @GetMapping("/curriculums")
-    public Page<AutocompleteResult> curriculums(HoisUserDetails user, CurriculumAutocompleteCommand term) {
-        return asPage(autocompleteService.curriculums(user.getSchoolId(), term));
+    public Page<CurriculumResult> curriculums(HoisUserDetails user, CurriculumAutocompleteCommand term) {
+        return asPage(autocompleteService.curriculums(user.getSchoolId(), term, true));
     }
     
     @GetMapping("/curriculumsauto")
-    public List<AutocompleteResult> curriculumsAsList(HoisUserDetails user, CurriculumAutocompleteCommand term) {
-        return autocompleteService.curriculums(user.getSchoolId(), term);
-    }
-    
-    @GetMapping("/curriculumsDropdown")
-    public List<AutocompleteResult> curriculumsDropdown(HoisUserDetails user) {
-        return autocompleteService.curriculumsDropdown(user.getSchoolId());
+    public List<CurriculumResult> curriculumsAsList(HoisUserDetails user, CurriculumAutocompleteCommand term) {
+        return autocompleteService.curriculums(user.getSchoolId(), term, false);
     }
 
     @GetMapping("/curriculumversions")
@@ -131,13 +127,13 @@ public class AutocompleteController {
     }
     
     @GetMapping("/curriculumversionhmodules")
-    public List<AutocompleteResult> curriculumVersionHigherModules(@Valid CurriculumVersionHigherModuleAutocompleteCommand lookup) {
-        return autocompleteService.curriculumVersionHigherModules(lookup);
+    public List<AutocompleteResult> curriculumVersionHigherModules(HoisUserDetails user, @Valid CurriculumVersionHigherModuleAutocompleteCommand lookup) {
+        return autocompleteService.curriculumVersionHigherModules(user, lookup);
     }
 
     @GetMapping("/curriculumversionomodules")
-    public List<CurriculumVersionOccupationModuleResult> curriculumVersionOccupationModules(@Valid CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
-        return autocompleteService.curriculumVersionOccupationModules(lookup);
+    public List<CurriculumVersionOccupationModuleResult> curriculumVersionOccupationModules(HoisUserDetails user, @Valid CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
+        return autocompleteService.curriculumVersionOccupationModules(user, lookup);
     }
 
     @GetMapping("/curriculumversionomodulethemes")
@@ -146,8 +142,8 @@ public class AutocompleteController {
     }
     
     @GetMapping("/curriculumversionomodulesandthemes")
-    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(@Valid CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
-        return autocompleteService.curriculumVersionOccupationModulesAndThemes(lookup);
+    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(HoisUserDetails user, @Valid CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
+        return autocompleteService.curriculumVersionOccupationModulesAndThemes(user, lookup);
     }
 
     @GetMapping("/directivecoordinators")

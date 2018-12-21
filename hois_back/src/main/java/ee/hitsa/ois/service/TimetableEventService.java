@@ -113,7 +113,7 @@ public class TimetableEventService {
 
     public Map<String, ?> searchFormData(Long schoolId) {
         Map<String, Object> data = new HashMap<>();
-        data.put("studyPeriods", autocompleteService.studyPeriods(schoolId));
+        data.put("studyPeriods", autocompleteService.studyPeriodsWithYear(schoolId));
         StudentGroupAutocompleteCommand studentGroupLookup = new StudentGroupAutocompleteCommand();
         data.put("studentGroups", autocompleteService.studentGroups(schoolId, studentGroupLookup));
         TeacherAutocompleteCommand teacherLookup = new TeacherAutocompleteCommand();

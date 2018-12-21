@@ -14,6 +14,7 @@
         <th md-column>{{'stipend.curriculum' | translate}}</th>
         <th md-column>{{'stipend.applicant' | translate}}</th>
         <th md-column>{{'stipend.student.idCode' | translate}}</th>
+        <th md-column>{{'stipend.studentGroup' | translate}}</th>
         <!-- only for pohi and eri-->
         <th md-column ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{'stipend.averageMarkShort' | translate}}</th>
         <th md-column ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{'stipend.student.lastPeriodMark' | translate}}</th>
@@ -45,11 +46,12 @@
         </td>
         <td md-cell>{{application.curriculumCode ? application.curriculumCode : '-'}}</td>
         <td md-cell>
-          <a href="#/students/{{application.studentId}}/main" ng-style="application.nonCompliant ? {color: 'red'} : {}">
+          <a href="#/students/{{application.studentId}}/main" ng-style="application.nonCompliant && !application.hasDirective ? {color: 'red'} : {}">
             {{application.studentName ? application.studentName : '-'}}
           </a>
         </td>
         <td md-cell>{{application.idcode ? application.idcode : '-'}}</td>
+        <td md-cell>{{application.studentGroup ? application.studentGroup : '-'}}</td>
         <!-- only for pohi and eri-->
         <td md-cell ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{application.averageMark ? application.averageMark : '-'}}</td>
         <td md-cell ng-if="submittedType !== 'STIPTOETUS_SOIDU'">{{application.lastPeriodMark ? application.lastPeriodMark : '-'}}</td>

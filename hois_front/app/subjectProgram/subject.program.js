@@ -189,7 +189,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     dialogService.confirmDialog({prompt: 'subjectProgram.operation.complete.message'}, function() {
       QueryUtils.endpoint(baseUrl + "/complete").get({id: $scope.subjectProgram.id}).$promise.then(function () {
         message.info('subjectProgram.operation.complete.success');
-        $location.url("/subjectProgram/" + subjectId + "/" + subjectStudyPeriodId + "/" + formType + "/" + $scope.subjectProgram.id + "/view");
+        $location.url("/subjectProgram/" + subjectId + "/" + subjectStudyPeriodId + "/" + formType + "/" + $scope.subjectProgram.id + "/view?_noback");
       });
     });
   };
@@ -198,15 +198,6 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     dialogService.confirmDialog({prompt: 'subjectProgram.operation.confirm.message'}, function() {
       QueryUtils.endpoint(baseUrl + "/confirm").get({id: $scope.subjectProgram.id}).$promise.then(function () {
         message.info('subjectProgram.operation.confirm.success');
-        get();
-      });
-    });
-  };
-
-  $scope.reject = function () {
-    dialogService.confirmDialog({prompt: 'subjectProgram.operation.reject.message'}, function() {
-      QueryUtils.endpoint(baseUrl + "/reject/" + $scope.subjectProgram.id).save("test").$promise.then(function () {
-        message.info('subjectProgram.operation.reject.success');
         get();
       });
     });
@@ -237,7 +228,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
           }
         };
       }, function () {
-        // saved in dialogScope.saveTheme()
+        
       });
   };
 
@@ -258,16 +249,18 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
       return "#/subjectProgram";
     }
     return "#/subjectStudyPeriods";
-  }
+  };
 
   get();
-}]).controller('SubjectProgramSearch', ['$scope', 'QueryUtils', '$route', 'DataUtils', 'Classifier',
-function ($scope, QueryUtils, $route, DataUtils, Classifier) {
+}]).controller('SubjectProgramSearch', ['$scope', 'QueryUtils', '$route', 'DataUtils', 'Classifier', 'message',
+function ($scope, QueryUtils, $route, DataUtils, Classifier, message) {
   var baseUrl = '/subject/subjectProgram';
   QueryUtils.createQueryForm($scope, baseUrl);
 
   $scope.auth = $route.current.locals.auth;
-  $scope.criteria.status = 'AINEPROGRAMM_STAATUS_V';
+  if (angular.isUndefined($scope.criteria.status)) {
+    $scope.criteria.status = 'AINEPROGRAMM_STAATUS_V';
+  }
   
   var autocompleteTeacher = QueryUtils.endpoint("/autocomplete/teachersList");
   var autocompleteStudyPeriod = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear');

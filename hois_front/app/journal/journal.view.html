@@ -103,8 +103,8 @@
   <div layout-padding>
     <div flex>
       <div layout="row">
-        <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
         <a ng-attr-href="{{excel(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+        <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
       </div>
     </div>
   </div>
@@ -114,7 +114,12 @@
       <div layout="row" flex>
         <div flex="50" layout="column" layout-align="start">
           <div class="common-label" flex>{{'journal.absencesLegend' | translate}}</div>
-          <div class="common-label" flex>{{'journal.entryTabelLegend' | translate}}</div>
+          <div class="common-label" flex>
+            <span>{{'student.statuses.academicLeaveShort' | translate}} - {{'student.statuses.academicLeave' | translate}}, </span>
+            <span>{{'student.statuses.individualCurriculumShort' | translate}} - {{'student.statuses.individualCurriculum' | translate}}, </span>
+            <span>{{'student.statuses.exmatriculatedShort' | translate}} - {{'student.statuses.exmatriculated' | translate}}, </span>
+            <span>{{'student.statuses.finishedShort' | translate}} - {{'student.statuses.finished' | translate}}</span>
+          </div>
         </div>
         <div flex="50" layout="row" layout-align="end">
           <md-input-container>
@@ -125,15 +130,15 @@
         </div>
       </div>
       <br>
-      <div class="container" fixed-column-table fixed-columns="2">
+      <div ng-include="'journal/journal.entryType.buttons.tmpl.html'"></div>
+      <div class="container" fixed-column-table fixed-columns="2" ng-style="{'overflow-y': journal.journalStudents.length < 11 ? 'hidden':'scroll'}">
         <table class="journalTable">
           <thead>
             <tr flex>
               <th>{{'main.nr' | translate}}</th>
               <th style="padding-right:11em;"><span>{{'student.label' | translate}}, {{'journal.studentGroup' | translate}}</span></th>
-              <th class="bordered" style="padding-left:1em;"
-                md-colors="{background: getEntryColor(journalEntry.entryType.code)}" 
-                ng-repeat="journalEntry in journal.journalEntriesByDate">
+              <th ng-if="journalEntryTypes[journalEntry.entryType.code]._selected" class="bordered"
+                md-colors="{background: getEntryColor(journalEntry.entryType.code)}" ng-repeat="journalEntry in journal.journalEntriesByDate">
                 <span ng-if="journalEntry.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span>
                 <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}}</span>
                 <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_O'">{{'journal.outcome' | translate}}{{journalEntry.outcomeOrderNr + 1}}</span>
@@ -157,12 +162,12 @@
               <td width="10%" height="30px">
                 <span>
                   <i>
-                    <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'journal.academicLeaveAbbrev' | translate}}</span>
-                    <span ng-if="row.status === 'OPPURSTAATUS_L'">{{'journal.finishedAbbrev' | translate}}</span>
-                    <span ng-if="row.status === 'OPPURSTAATUS_K'">{{'journal.exmatriculatedAbbrev' | translate}}</span>
+                    <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'student.statuses.academicLeaveShort' | translate}}</span>
+                    <span ng-if="row.status === 'OPPURSTAATUS_L'">{{'student.statuses.finishedShort' | translate}}</span>
+                    <span ng-if="row.status === 'OPPURSTAATUS_K'">{{'student.statuses.exmatriculatedShort' | translate}}</span>
                     <span ng-if="row.isIndividualCurriculum">
                       <span ng-if="row.status !== 'OPPURSTAATUS_O' && row.status !== 'OPPURSTAATUS_V'">, </span>
-                      <span>{{'journal.individualCurriculumAbbrev' | translate}}</span>
+                      <span>{{'student.statuses.individualCurriculumShort' | translate}}</span>
                     </span>
                   </i>
                   <a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}
@@ -170,8 +175,8 @@
                   <span ng-if="row.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
                 </span>
               </td>
-              <td class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate">
-                <div layout="row" style="padding-left:1em;">
+              <td ng-if="journalEntryTypes[journalEntry.entryType.code]._selected" class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate">
+                <div layout="row">
                   <div ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
                     <span>
                       {{result.absence.value}}
@@ -230,10 +235,11 @@
   </div>
 
   <div layout-padding>
+    <div ng-include="'journal/journal.entryType.buttons.tmpl.html'"></div>
     <div flex>
       <div layout="row">
-        <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
         <a ng-attr-href="{{excel(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+        <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
       </div>
     </div>
   </div>
@@ -243,16 +249,6 @@
       <div layout="row">
         <div flex="10">
           <h2>{{'journal.entries' | translate}}</h2>
-        </div>
-        <div layout="row" layout-align="start end" layout-sm="column" layout-xs="column" flex="70">
-          <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_T')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_T'])}}</span>
-          <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_E')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_E'])}}</span>
-          <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_I')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_I'])}}</span>
-          <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_H')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_H'])}}</span>
-          <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_P')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_P'])}}</span>
-          <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_R')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_R'])}}</span>
-          <span ng-if="journal.moduleOutcomesAsEntries" class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_O')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_O'])}}</span>
-          <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_L')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}</span>
         </div>
       </div>
       <md-table-container>

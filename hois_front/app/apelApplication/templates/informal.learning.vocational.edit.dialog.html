@@ -96,8 +96,8 @@
                   <ng-form name="subjectOrModuleForm">
                     <td md-cell>
                       <md-input-container>
-                        <hois-value ng-if="subjectOrModule.isModule" value="currentLanguageNameField(subjectOrModule.module)"></hois-value>
-                        <hois-value ng-if="!subjectOrModule.isModule" value="currentLanguageNameField(subjectOrModule.module) + '/' + currentLanguageNameField(subjectOrModule.curriculumVersionOmoduleTheme)">
+                        <hois-value ng-if="subjectOrModule.isModule" value="currentLanguageNameField(subjectOrModule.curriculumVersionOmodule)"></hois-value>
+                        <hois-value ng-if="!subjectOrModule.isModule" value="currentLanguageNameField(subjectOrModule.curriculumVersionOmodule) + '/' + currentLanguageNameField(subjectOrModule.curriculumVersionOmoduleTheme)">
                         </hois-value>
                       </md-input-container>
                     </td>

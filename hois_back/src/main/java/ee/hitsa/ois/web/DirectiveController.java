@@ -3,6 +3,7 @@ package ee.hitsa.ois.web;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
@@ -67,13 +69,18 @@ public class DirectiveController {
     @GetMapping("/{id:\\d+}/view")
     public DirectiveViewDto getForView(HoisUserDetails user, @WithEntity Directive directive) {
         UserUtil.assertSameSchool(user, directive.getSchool());
+        if (user.isStudent() || user.isRepresentative()) {
+            Long studentId = user.getStudentId();
+            Optional<DirectiveStudent> optStudent = directive.getStudents().stream().filter(dirStudent -> studentId.equals(EntityUtil.getNullableId(dirStudent.getStudent()))).findFirst();
+            UserUtil.throwAccessDeniedIf(!optStudent.isPresent(), "main.messages.error.nopermission");
+        }
         return directiveService.getForView(user, directive);
     }
 
     @GetMapping("/{id:\\d+}")
     public DirectiveDto get(HoisUserDetails user, @WithEntity Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KASKKIRI);
-        return directiveService.get(directive);
+        return directiveService.get(user, directive);
     }
 
     @PostMapping

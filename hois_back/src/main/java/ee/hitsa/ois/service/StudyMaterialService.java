@@ -6,7 +6,11 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -23,12 +27,15 @@ import ee.hitsa.ois.domain.studymaterial.StudyMaterialConnect;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.commandobject.OisFileViewDto;
 import ee.hitsa.ois.web.commandobject.studymaterial.JournalSearchCommand;
@@ -40,7 +47,6 @@ import ee.hitsa.ois.web.dto.studymaterial.JournalSearchDto;
 import ee.hitsa.ois.web.dto.studymaterial.StudyMaterialConnectDto;
 import ee.hitsa.ois.web.dto.studymaterial.StudyMaterialDto;
 import ee.hitsa.ois.web.dto.studymaterial.StudyMaterialSearchDto;
-import ee.hitsa.ois.web.dto.studymaterial.SubjectStudyPeriodDto;
 import ee.hitsa.ois.web.dto.studymaterial.SubjectStudyPeriodSearchDto;
 
 @Transactional
@@ -52,12 +58,14 @@ public class StudyMaterialService {
 
     private static final String SUBJECT_STUDY_PERIOD_FROM = "from subject_study_period ssp"
             + " inner join subject s on s.id = ssp.subject_id"
-            + " inner join study_period sp on sp.id = ssp.study_period_id";
+            + " inner join study_period sp on sp.id = ssp.study_period_id"
+            + " left join subject_study_period_student_group sspsg on sspsg.subject_study_period_id = ssp.id"
+            + " left join student_group sg on sg.id = sspsg.student_group_id";
     private static final String SUBJECT_STUDY_PERIOD_SELECT = "ssp.id as subject_study_period_id"
             + ", s.id as subject_id, s.name_et as subject_name_et, s.name_en as subject_name_en"
             + ", s.code as subject_code, s.credits as subject_credits"
             + ", sp.id as study_period_id, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en"
-    + ", (select count(*) from study_material_connect where subject_study_period_id = ssp.id) as material_count";
+    + ", (select count(*) from study_material_connect where subject_study_period_id = ssp.id) as material_count, string_agg(sg.code, ', ' order by sg.code) as groups";
 
     private static final String JOURNAL_FROM = "from journal j"
             + " inner join study_year sy on sy.id = j.study_year_id"
@@ -81,7 +89,7 @@ public class StudyMaterialService {
 
     public Page<SubjectStudyPeriodSearchDto> searchSubjectStudyPeriods(HoisUserDetails user, 
             SubjectStudyPeriodSearchCommand command, Pageable pageable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECT_STUDY_PERIOD_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECT_STUDY_PERIOD_FROM).sort(pageable).groupBy("ssp.id, s.id, sp.id");
         
         qb.requiredCriteria("s.school_id = :school_id", "school_id", user.getSchoolId());
         
@@ -89,6 +97,7 @@ public class StudyMaterialService {
         qb.optionalCriteria("ssp.study_period_id = :study_period_id", "study_period_id", command.getStudyPeriod());
         qb.optionalCriteria("ssp.id in (select subject_study_period_id from subject_study_period_teacher where teacher_id = :teacher_id)", 
                 "teacher_id", command.getTeacher());
+        qb.optionalCriteria("sg.id = :sgId", "sgId", command.getStudentGroup());
         
         return JpaQueryUtil.pagingResult(qb, SUBJECT_STUDY_PERIOD_SELECT, em, pageable).map(r -> {
             SubjectStudyPeriodSearchDto dto = new SubjectStudyPeriodSearchDto();
@@ -100,30 +109,50 @@ public class StudyMaterialService {
                     SubjectUtil.subjectName(code, resultAsString(r, 3), credits)));
             dto.setStudyPeriod(new AutocompleteResult(resultAsLong(r, 6), resultAsString(r, 7), resultAsString(r, 8)));
             dto.setMaterialCount(resultAsLong(r, 9));
+            String groups = resultAsString(r, 10);
+            if (groups == null) {
+                dto.setStudentGroups(Collections.emptySet());
+            } else {
+                dto.setStudentGroups(Arrays.stream(groups.split(", ")).collect(Collectors.toCollection(LinkedHashSet::new)));
+            }
             return dto;
         });
     }
 
-    public SubjectStudyPeriodDto getSubjectStudyPeriod(SubjectStudyPeriod subjectStudyPeriod) {
-        return SubjectStudyPeriodDto.of(subjectStudyPeriod);
+    public SubjectStudyPeriodSearchDto getSubjectStudyPeriod(SubjectStudyPeriod subjectStudyPeriod) {
+        return SubjectStudyPeriodSearchDto.of(subjectStudyPeriod);
     }
     
     public Page<JournalSearchDto> searchJournals(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(JOURNAL_FROM).sort(pageable);
+        StringBuilder from = new StringBuilder(JOURNAL_FROM).append(" ");
+        from.append("left join journal_omodule_theme jot on j.id=jot.journal_id ");
+        from.append("left join lesson_plan_module lpm on jot.lesson_plan_module_id=lpm.id ");
+        from.append("left join lesson_plan lp on lpm.lesson_plan_id=lp.id ");
+        from.append("left join student_group sg on lp.student_group_id=sg.id ");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable).groupBy("j.id, c.name_et, c.name_en");
         
         qb.requiredCriteria("j.school_id = :school_id", "school_id", user.getSchoolId());
         
         qb.optionalCriteria("j.id = :journal_id", "journal_id", command.getJournal());
         qb.optionalCriteria("j.study_year_id = :study_year_id", "study_year_id", command.getStudyYear());
+        qb.optionalCriteria("sg.id = :sgId", "sgId", command.getStudentGroup());
         qb.optionalCriteria("j.id in (select journal_id from journal_teacher where teacher_id = :teacher_id)", 
                 "teacher_id", command.getTeacher());
         
-        return JpaQueryUtil.pagingResult(qb, JOURNAL_SELECT, em, pageable).map(r -> {
+        StringBuilder select = new StringBuilder(JOURNAL_SELECT);
+        select.append(", string_agg(sg.code, ', ' order by sg.code) as groups");
+        return JpaQueryUtil.pagingResult(qb, select.toString(), em, pageable).map(r -> {
             JournalSearchDto dto = new JournalSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setNameEt(resultAsString(r, 1));
             dto.setStudyYear(new AutocompleteResult(resultAsLong(r, 2), resultAsString(r, 3), resultAsString(r, 4)));
             dto.setMaterialCount(resultAsLong(r, 5));
+            String groups = resultAsString(r, 6);
+            if (groups == null) {
+                dto.setStudentGroups(Collections.emptySet());
+            } else {
+                dto.setStudentGroups(Arrays.stream(groups.split(", ")).collect(Collectors.toCollection(LinkedHashSet::new)));
+            }
             return dto;
         });
     }
@@ -170,8 +199,12 @@ public class StudyMaterialService {
         }, data);
     }
     
-    public StudyMaterialDto get(StudyMaterial material) {
-        return StudyMaterialDto.of(material);
+    public StudyMaterialDto get(HoisUserDetails user, StudyMaterial material) {
+        StudyMaterialDto dto = StudyMaterialDto.of(material);
+        dto.setCanEdit(Boolean.valueOf((UserUtil.isSchoolAdmin(user, material.getSchool())
+                || (user.isTeacher() && user.getTeacherId().equals(EntityUtil.getId(material.getTeacher()))))
+                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL)));
+        return dto;
     }
 
     public StudyMaterial createSubjectStudyPeriodMaterial(HoisUserDetails user, StudyMaterialForm materialForm) {
@@ -196,7 +229,7 @@ public class StudyMaterialService {
     public StudyMaterial save(HoisUserDetails user, StudyMaterial material, StudyMaterialForm materialForm) {
         EntityUtil.setUsername(user.getUsername(), em);
         material.setTeacher(em.getReference(Teacher.class, materialForm.getTeacher()));
-        EntityUtil.bindToEntity(materialForm, material);
+        EntityUtil.bindToEntity(materialForm, material, "canEdit");
         return EntityUtil.save(material, em);
     }
 

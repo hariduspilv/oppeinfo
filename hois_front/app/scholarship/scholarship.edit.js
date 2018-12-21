@@ -106,6 +106,28 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       }
     });
 
+    $scope.addAllCurriculums = function () {
+      QueryUtils.endpoint('/autocomplete/curriculumsauto').query({higher: false, closed: false}, function (curriculums) {
+        if (!angular.isArray($scope.stipend.curriculums)) {
+          $scope.stipend.curriculums = [];
+        }
+        var stipendCurriculumIds = $scope.stipend.curriculums.map(function (it) {
+          return it.id;
+        });
+        
+        for (var i = 0; i < curriculums.length; i++) {
+          var curriculum = curriculums[i];
+          if (stipendCurriculumIds.indexOf(curriculum.id) === -1) {
+            $scope.stipend.curriculums.push(curriculum);
+          }
+        }
+        if($scope.stipend.curriculums.length > 0) {
+          $scope.missingCurriculums = false;
+        }
+        reloadCommittees();
+      });
+    };
+
     $scope.deleteCurriculum = function (curriculum) {
       var index = $scope.stipend.curriculums.indexOf(curriculum);
       if (index !== -1) {

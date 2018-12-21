@@ -20,7 +20,8 @@
             <hois-select ng-model="criteria.curriculumVersion" name="curriculumVersion" type="curriculumversion"></hois-select>
           </md-input-container>
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <hois-autocomplete flex ng-model="criteria.studentGroupObject" method="studentgroups" name="studentGroup" label="finalThesis.studentGroup"></hois-autocomplete>
+            <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers"
+              method="studentgroups" name="studentGroup" label="finalThesis.studentGroup"></hois-autocomplete>
           </div>
         </div>
 

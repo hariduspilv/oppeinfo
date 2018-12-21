@@ -8,11 +8,10 @@ import ee.hitsa.ois.validation.Required;
 public class DirectiveStudentSearchCommand {
 
     @Size(max = 255)
-    private String firstname;
-    @Size(max = 255)
-    private String lastname;
+    private String name;
     @EstonianIdCode
     private String idcode;
+    private Long studentGroup;
     private Boolean application;
     @Required
     private String type;
@@ -20,24 +19,24 @@ public class DirectiveStudentSearchCommand {
     private Long directive;
     private Boolean isHigher;
 
-    public String getFirstname() {
-        return firstname;
+    public String getName() {
+        return name;
     }
 
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
-    }
-
-    public String getLastname() {
-        return lastname;
-    }
-
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getIdcode() {
         return idcode;
+    }
+
+    public Long getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(Long studentGroup) {
+        this.studentGroup = studentGroup;
     }
 
     public void setIdcode(String idcode) {

@@ -32,8 +32,8 @@
               <tr md-row>
                 <th md-column>{{'directive.student.fullname' | translate}}</th>
                 <th md-column>{{'directive.student.idcode' | translate}}</th>
-                <th md-column ng-show="record.type === 'KASKKIRI_LOPET'">{{'directive.student.curriculum' | translate}}</th>
-                <th md-column ng-show="record.type === 'KASKKIRI_LOPET'">{{'directive.student.studentGroup' | translate}}</th>
+                <th md-column>{{'directive.student.curriculum' | translate}}</th>
+                <th md-column>{{'directive.student.studentGroup' | translate}}</th>
               </tr>
             </thead>
             <tbody md-body>
@@ -42,8 +42,8 @@
                   <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</md-button>
                 </td>
                 <td md-cell>{{::row.idcode}}</td>
-                <td md-cell ng-show="record.type === 'KASKKIRI_LOPET'">{{currentLanguageNameField(row.curriculumVersion)}}</td>
-                <td md-cell ng-show="record.type === 'KASKKIRI_LOPET'">{{::row.studentGroup}}</td>
+                <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+                <td md-cell>{{::row.studentGroup}}</td>
               </tr>
             </tbody>
           </table>

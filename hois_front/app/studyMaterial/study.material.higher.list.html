@@ -6,7 +6,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-            <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" ng-required="auth.isAdmin()"></hois-select>
+            <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required></hois-select>
           </md-input-container>
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'subjectStudyPeriod.subject' | translate}}</label>
@@ -14,9 +14,13 @@
           </md-input-container>
         </div>
 
-        <div ng-if="auth.isAdmin()" layout="row" layout-sm="column" layout-xs="column">
+        <div layout="row" layout-sm="column" layout-xs="column">
           <div flex="45" flex-sm="100" flex-xs="100">
-            <hois-autocomplete flex ng-model="$parent.teacher" method="teachers" name="teacher"
+            <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" ng-search-text="studentGroupSearch" method="studentgroups" name="studentGroup" 
+              label="{{'subjectStudyPeriod.studentGroup'}}" additional-query-params="{higher: true}"></hois-autocomplete>
+          </div>
+          <div ng-if="auth.isAdmin()" flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <hois-autocomplete flex ng-model="criteria.teacher" ha-attribute="id" ha-controller="directiveControllers" ng-search-text="teacherSearch" method="teachers" name="teacher" 
               label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}"></hois-autocomplete>
           </div>
         </div>
@@ -38,6 +42,7 @@
           <tr md-row>
             <th md-column>{{'subjectStudyPeriod.subject' | translate}}</th>
             <th md-column>{{'subjectStudyPeriod.studyPeriod' | translate}}</th>
+            <th md-column md-order-by="groups">{{'subjectStudyPeriod.studentGroup' | translate}}</th>
             <th md-column>{{'studyMaterial.count' | translate}}</th>
             <th md-column></th>
           </tr>
@@ -46,6 +51,7 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyPeriod)}}</td>
+            <td md-cell>{{row.studentGroups.join(', ')}}</td>
             <td md-cell>{{row.materialCount}}</td>
             <td md-cell>
               <div ng-if="canEdit">

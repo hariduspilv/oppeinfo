@@ -47,8 +47,6 @@ public class ModuleProtocolStudentDto {
                 journalStudent.getJournalEntryStudents().stream()
                         .filter(jes -> JournalEntryType.SISSEKANNE_L.name()
                                 .equals(EntityUtil.getCode(jes.getJournalEntry().getEntryType())))
-                        .filter(jes -> EntityUtil.getId(jes.getJournalEntry().getJournal().getStudyYear())
-                                .equals(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getStudyYear())))
                         .filter(jes -> EntityUtil.getNullableCode(jes.getGrade()) != null)
                         .filter(jes -> JournalUtil.filterJournalEntryStudentsByOccupationalModule(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule(), jes))
                         .forEach(jes -> dto.getJournalResults()
@@ -64,8 +62,6 @@ public class ModuleProtocolStudentDto {
                 journalStudent.getJournalEntryStudents().stream()
                 .filter(jes -> JournalEntryType.SISSEKANNE_O.name()
                         .equals(EntityUtil.getCode(jes.getJournalEntry().getEntryType())))
-                .filter(jes -> EntityUtil.getId(jes.getJournalEntry().getJournal().getStudyYear())
-                        .equals(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getStudyYear())))
                 .filter(jes -> EntityUtil.getNullableCode(jes.getGrade()) != null)
                 .filter(jes -> JournalUtil.filterJournalEntryStudentsByOccupationalModule(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule(), jes))
                 .forEach(jes -> dto.getOutcomeResults()
@@ -79,10 +75,8 @@ public class ModuleProtocolStudentDto {
         
         if (protocolStudent.getStudent().getPracticeJournals() != null) {
             protocolStudent.getStudent().getPracticeJournals().stream()
-                .filter(pj -> EntityUtil.getId(pj.getStudyYear())
-                        .equals(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getStudyYear())))
                 .filter(pj -> EntityUtil.getNullableCode(pj.getGrade()) != null)
-                .filter(pj -> EntityUtil.getId(pj.getModule())
+                .filter(pj -> pj.getModule() != null && EntityUtil.getId(pj.getModule())
                         .equals(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule())))
                 .forEach(pj -> dto.getPracticeJournalResults()
                         .add(new ModuleProtocolPracticeJournalResultDto(pj.getId(), EntityUtil.getCode(pj.getGrade()),

@@ -8,11 +8,10 @@
             <label class="textInput">{{'journal.studyYear' | translate}}</label>
             <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
           </md-input-container>
-
-          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label class="textInput">{{'journal.studentGroup' | translate}}</label>
-            <hois-select ng-model="criteria.studentGroup" type="studentgroup"></hois-select>
-          </md-input-container>
+          
+          <hois-autocomplete flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" 
+           ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups"
+           label="{{'journal.studentGroup'}}" additional-query-params="{higher: false}"></hois-autocomplete>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column" ng-if="auth.isAdmin()">
@@ -39,6 +38,12 @@
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'journal.status' | translate}}</label>
             <hois-classifier-select ng-model="criteria.status" main-classifier-code="PAEVIK_STAATUS" model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
+        </div>
+
+        <div ng-if="auth.isTeacher()" layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="criteria.onlyMyJournals">{{'journal.showOnlyMyJournals' | translate}}</md-checkbox>
           </md-input-container>
         </div>
 

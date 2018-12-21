@@ -226,6 +226,7 @@
     </div>
     <div ng-show="version.status === VERSION_STATUS.K">
       <md-button class="md-raised md-primary" ng-if="version.canChange" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="version.canChange && version.canSetUnderRevision">{{'curriculum.statuschange.version.button.changeStatusUnderRevision' | translate}}</md-button>
       <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="version.canClose">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-if="version.canChange" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
     </div>

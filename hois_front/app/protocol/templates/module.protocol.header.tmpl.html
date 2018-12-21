@@ -1,48 +1,56 @@
-      <div class="form-readonly">
-        <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.protocolNumber' | translate}}</label>
-            <hois-value value="protocol.protocolNr"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'main.status' | translate}}</label>
-            <hois-value value="currentLanguageNameField(protocol.status)"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.studyYear' | translate}}</label>
-            <hois-value value="currentLanguageNameField(protocol.protocolVdata.studyYear)"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.insertedDate' | translate}} / {{'moduleProtocol.confirmDate' | translate}}</label>
-            <hois-value value="(protocol.inserted ? (protocol.inserted | hoisDate) : '-')  + ' / ' + (protocol.confirmDate ? (protocol.confirmDate | hoisDate) : '-')"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.confirmer' | translate}}</label>
-            <hois-value value="protocol.confirmer ? protocol.confirmer : '-' "></hois-value>
-          </md-input-container>
-        </div>
+<div class="form-readonly">
+  <div layout="row" layout-sm="column" layout-xs="column">
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{'moduleProtocol.protocolNumber' | translate}}</label>
+      <hois-value value="protocol.protocolNr"></hois-value>
+    </md-input-container>
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{'main.status' | translate}}</label>
+      <hois-value value="currentLanguageNameField(protocol.status)"></hois-value>
+    </md-input-container>
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{'moduleProtocol.studyYear' | translate}}</label>
+      <hois-value value="currentLanguageNameField(protocol.protocolVdata.studyYear)"></hois-value>
+    </md-input-container>
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{'moduleProtocol.insertedDate' | translate}} / {{'moduleProtocol.confirmDate' | translate}}</label>
+      <hois-value value="(protocol.inserted ? (protocol.inserted | hoisDate) : '-')  + ' / ' + (protocol.confirmDate ? (protocol.confirmDate | hoisDate) : '-')"></hois-value>
+    </md-input-container>
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{'moduleProtocol.confirmer' | translate}}</label>
+      <hois-value value="protocol.confirmer ? protocol.confirmer : '-' "></hois-value>
+    </md-input-container>
+  </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.curriculumVersion' | translate}}</label>
-            <hois-value value="currentLanguageNameField(protocol.protocolVdata.curriculumVersion)"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.module' | translate}}</label>
-            <hois-value value="currentLanguageNameField(protocol.protocolVdata.curriculumVersionOccupationModule)"
-            href-value="'#/occupationModule/' + protocol.protocolVdata.curriculum + '/' + protocol.protocolVdata.curriculumVersion.id + '/' + protocol.protocolVdata.curriculumModule + '/' + protocol.protocolVdata.curriculumVersionOccupationModule.id + '/view'"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.moduleCredits' | translate}}</label>
-            <hois-value value="protocol.protocolVdata.moduleCredits + ' ' + ('moduleProtocol.creditsUnit' | translate)"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.moduleGrading' | translate}}</label>
-            <hois-classifier-value ng-model="protocol.protocolVdata.assessment" main-classifier-code="KUTSEHINDAMISVIIS"></hois-classifier-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{auth.higher ? ('teacher.labelHigher' | translate) : ('teacher.labelVocational' | translate)}}</label>
-            <hois-value value="currentLanguageNameField(protocol.protocolVdata.teacher)"></hois-value>
-          </md-input-container>
-        </div>
-      </div>
+  <div layout="row" layout-sm="column" layout-xs="column">
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{'moduleProtocol.curriculumVersion' | translate}}</label>
+      <hois-value value="currentLanguageNameField(protocol.protocolVdata.curriculumVersion)"></hois-value>
+    </md-input-container>
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{'moduleProtocol.module' | translate}}</label>
+      <hois-value value="currentLanguageNameField(protocol.protocolVdata.curriculumVersionOccupationModule)" href-value="'#/occupationModule/' + protocol.protocolVdata.curriculum + '/' + protocol.protocolVdata.curriculumVersion.id + '/' + protocol.protocolVdata.curriculumModule + '/' + protocol.protocolVdata.curriculumVersionOccupationModule.id + '/view'"></hois-value>
+    </md-input-container>
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{'moduleProtocol.moduleCredits' | translate}}</label>
+      <hois-value value="protocol.protocolVdata.moduleCredits + ' ' + ('moduleProtocol.creditsUnit' | translate)"></hois-value>
+    </md-input-container>
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{'moduleProtocol.moduleGrading' | translate}}</label>
+      <hois-classifier-value ng-model="protocol.protocolVdata.assessment" main-classifier-code="KUTSEHINDAMISVIIS"></hois-classifier-value>
+    </md-input-container>
+    <md-input-container flex flex-sm="100" flex-xs="100">
+      <label>{{auth.higher ? ('teacher.labelHigher' | translate) : ('teacher.labelVocational' | translate)}}</label>
+      <hois-value value="currentLanguageNameField(protocol.protocolVdata.teacher)"></hois-value>
+    </md-input-container>
+  </div>
+</div>
+
+<div layout="row" layout-sm="column" layout-xs="column">
+  <md-input-container ng-if="journals.length > 0" flex="10" flex-md="20" flex-sm="100" flex-xs="100">
+    <md-checkbox ng-model="formState.showJournals">{{'moduleProtocol.showJournals' | translate}}</md-checkbox>
+  </md-input-container>
+  <md-input-container ng-if="formState.outcomesAsEntries" flex="10" flex-md="20" flex-sm="100" flex-xs="100">
+    <md-checkbox ng-model="formState.showOutcomes">{{'moduleProtocol.showOutcomes' | translate}}</md-checkbox>
+  </md-input-container>
+</div>

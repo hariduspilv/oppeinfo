@@ -70,8 +70,9 @@ public class TimetableController {
     }
 
     @GetMapping("/{id:\\d+}/view")
-    public TimetableDto get(@WithEntity Timetable timetable) {
+    public TimetableDto get(HoisUserDetails user, @WithEntity Timetable timetable) {
         //UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertSameSchool(user, timetable.getSchool()); //HITSAOIS-462
         /* IKE TODO */
         return timetableService.getForView(timetable);
     }
@@ -112,7 +113,7 @@ public class TimetableController {
     @PostMapping
     public TimetableDto create(HoisUserDetails user, @Valid @RequestBody TimetableEditForm form) {
         UserUtil.assertIsSchoolAdmin(user);
-        return get(timetableService.createTimetable(user, form));
+        return get(user, timetableService.createTimetable(user, form));
     }
 
     @PostMapping("/saveVocationalEvent")
@@ -155,7 +156,7 @@ public class TimetableController {
     @GetMapping("/copyTimetable")
     public TimetableDto cloneTimetable(HoisUserDetails user, @Valid TimetableCopyForm form) {
         UserUtil.assertIsSchoolAdmin(user);
-        return get(timetableService.cloneTimetable(user, form));
+        return get(user, timetableService.cloneTimetable(user, form));
     }
 
     @PostMapping("/saveVocationalEventRoomsAndTimes")
@@ -176,19 +177,19 @@ public class TimetableController {
     public TimetableDto save(HoisUserDetails user, @Valid @RequestBody TimetableEditForm form,
             @WithEntity Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return get(timetableService.save(user, form, timetable));
+        return get(user, timetableService.save(user, form, timetable));
     }
     
     @PutMapping("/{id:\\d+}/confirm")
     public TimetableDto confirm(HoisUserDetails user, @WithEntity Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return get(timetableService.confirm(timetable));
+        return get(user, timetableService.confirm(timetable));
     }
     
     @PutMapping("/{id:\\d+}/publicize")
     public TimetableDto publicize(HoisUserDetails user, @WithEntity Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return get(timetableService.publicize(timetable));
+        return get(user, timetableService.publicize(timetable));
     }
     
     @GetMapping("/timetableStudyYearWeeks/{school:\\d+}")

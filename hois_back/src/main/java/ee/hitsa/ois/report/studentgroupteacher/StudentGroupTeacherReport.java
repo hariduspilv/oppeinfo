@@ -86,6 +86,8 @@ public class StudentGroupTeacherReport {
                 List<String> tableResults = results.subList(i * TABLE_SIZE, Math.min((i + 1) * TABLE_SIZE, results.size()));
                 
                 tableStudent.put("fullname", student.getFullname());
+                tableStudent.put("status", student.getStatus());
+                tableStudent.put("isIndividualCurriculum", student.getIsIndividualCurriculum());
                 tableStudent.put("resultColumns", tableResults);
                 
                 if (i == tableCount - 1 && tableResults.size() + ABSENCE_COLUMNS <= TABLE_SIZE) {

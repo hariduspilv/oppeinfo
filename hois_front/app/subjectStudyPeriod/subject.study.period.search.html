@@ -36,15 +36,6 @@
           </md-select>
         </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column" ng-if="auth.isAdmin()">
-        <md-input-container flex-gt-sm="45" flex="100">
-          <label>{{'subjectStudyPeriod.programStatus' | translate}}</label>
-          <md-select ng-model="criteria.programStatus">
-            <md-option ng-value=""></md-option>
-            <md-option ng-value="status.code" ng-repeat="status in statusOptions">{{currentLanguageNameField(status)}}</md-option>
-          </md-select>
-        </md-input-container>
-      </div>
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
@@ -63,7 +54,7 @@
             <th md-column>{{'subjectStudyPeriod.teachersFullname' | translate}}</th>
             <th md-column md-order-by="sp.{{currentLanguageNameField()}}">{{'subjectStudyPeriod.studyPeriod' | translate}}</th>
             <th md-column md-order-by="declared_students">{{'subjectStudyPeriod.declaredStudentsNumber' | translate}}</th>
-            <th md-column>{{'subjectProgram.label' | translate}}</th>
+            <th md-column ng-if="auth.isTeacher()">{{'subjectProgram.label' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
@@ -79,11 +70,11 @@
             </td>
             <td md-cell>{{currentLanguageNameField(row.studyPeriod)}}</td>
             <td md-cell><a href="#/subjectStudyPeriods/{{::row.id}}/midtermTasks/studentResults">{{::row.studentsNumber}}</a></td>
-            <td md-cell>
+            <td md-cell ng-if="auth.isTeacher()">
               <p class="nomargin">
                 <hois-classifier-value ng-model="row.subjectProgramStatus" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value>
               </p>
-              <div ng-if="auth.isTeacher()">
+              <div>
                 <md-button md-no-ink class="md-primary change-button" ng-if="row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_L'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
                   ng-href="#/subjectProgram/{{::row.subject.id}}/{{::row.id}}/periods/new">{{'main.button.create' | translate}}</md-button>
                 <md-button md-no-ink class="md-primary change-button" ng-if="row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_I'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"

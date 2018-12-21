@@ -12,12 +12,12 @@
     </div>
   </div>
   <div flex>
-    <form name="studyMaterialForm" ng-submit="save()" novalidate>
-      <div layout="row">
+    <form name="studyMaterialForm" ng-submit="save()" novalidate layout="column">
+      <div flex>
         <hois-autocomplete ng-if="auth.isAdmin()" flex ng-model="$parent.teacher" method="teachers" name="teacher" label="teacher.labelHigher"
-          required></hois-autocomplete>
+          required ng-disabled="material.id && !material.canEdit"></hois-autocomplete>
       </div>
-      <md-input-container layout="row">
+      <md-input-container flex>
         <label class="textInput">{{'studyMaterial.type' | translate}}</label>
         <hois-classifier-select ng-model="material.typeCode" main-classifier-code="OPPEMATERJAL" model-value-attr="code" ng-disabled="material.id"
           ng-change="typeCodeChanged(material.typeCode)" required></hois-classifier-select>
@@ -33,31 +33,33 @@
           <div class="invalid" ng-message="samefile">{{'main.messages.error.fileAlreadyExists' | translate}}</div>
         </div>
       </span>
-      <md-input-container layout="row" ng-if="material.typeCode === 'OPPEMATERJAL_L'">
+      <md-input-container ng-if="material.typeCode === 'OPPEMATERJAL_L'" flex>
         <label>{{'studyMaterial.link' | translate}}</label>
-        <input ng-model="material.url" type="text" required>
+        <input ng-model="material.url" type="text" required ng-disabled="material.id && !material.canEdit">
       </md-input-container>
-      <md-input-container layout="row">
+      <md-input-container flex>
         <label>{{'studyMaterial.name' | translate}}</label>
-        <input ng-model="material.nameEt" type="text" required>
+        <input ng-model="material.nameEt" type="text" required ng-disabled="material.id && !material.canEdit" md-maxlength="255">
       </md-input-container>
-      <md-input-container layout="row">
+      <md-input-container flex>
         <label>{{auth.higher ? ('studyMaterial.descriptionHigher' | translate) : ('studyMaterial.descriptionVocational' | translate)}}</label>
-        <input ng-model="material.descriptionEt" type="text">
+        <input ng-model="material.descriptionEt" type="text" ng-disabled="material.id && !material.canEdit" md-maxlength="4000">
       </md-input-container>
-      <md-input-container>
-        <md-checkbox ng-model="material.isVisibleToStudents" ng-disabled="material.isPublic === true" aria-label="isVisibleToStudents">
-          {{'studyMaterial.isVisibleToStudents' | translate}}
-        </md-checkbox>
-      </md-input-container>
-      <md-input-container>
-        <md-checkbox ng-model="material.isPublic" aria-label="isPublic">
-          {{'studyMaterial.isPublic' | translate}}
-        </md-checkbox>
-      </md-input-container>
-
       <div layout="row">
-        <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+        <md-input-container>
+          <md-checkbox ng-model="material.isVisibleToStudents" ng-disabled="material.isPublic === true || (material.id && !material.canEdit)" aria-label="isVisibleToStudents">
+            {{'studyMaterial.isVisibleToStudents' | translate}}
+          </md-checkbox>
+        </md-input-container>
+        <md-input-container>
+          <md-checkbox ng-model="material.isPublic" aria-label="isPublic" ng-disabled="material.id && !material.canEdit">
+            {{'studyMaterial.isPublic' | translate}}
+          </md-checkbox>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-button class="md-raised md-primary" type="submit" ng-if="!material.id || material.canEdit">{{'main.button.save' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="back(backPath)">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>

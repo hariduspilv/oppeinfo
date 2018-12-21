@@ -64,9 +64,11 @@
           <md-nav-item ng-if="canWatchStudentConnectedEntities" md-nav-click="changeResultsCurrentNavItem('student.journalsAndProtocols')" name="student.journalsAndProtocols">
             {{'student.result.journalsAndProtocols' | translate}}
           </md-nav-item>
+          <!-- IK 20.12.18 REMOVED
           <md-nav-item ng-if="canChangeStudentModules" md-nav-click="changeResultsCurrentNavItem('student.changeModules')" name="student.changeModules">
             {{'student.result.changeModules' | translate}}
           </md-nav-item>
+          -->
         </md-nav-bar>
         </md-table-container>
         <div layout-margin>
@@ -82,9 +84,11 @@
           <div ng-if="canWatchStudentConnectedEntities" ng-show="resultsCurrentNavItem === 'student.journalsAndProtocols'">
             <div ng-include="'student/templates/journals.and.protocols.tmpl.html'"></div>
           </div>
+          <!-- IK 20.12.18 REMOVED
           <div ng-if="canChangeStudentModules" ng-show="resultsCurrentNavItem === 'student.changeModules'">
             <div ng-include="'student/templates/change.modules.tmpl.html'"></div>
           </div>
+          -->
         </div>
       </md-content>
     </div>

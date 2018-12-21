@@ -1,5 +1,20 @@
 'use strict';
 
+/**
+ * Example of clearing autocomplete fields:
+ * (JS)
+ * $scope.directiveControllers = [];
+ * var clearCriteria = $scope.clearCriteria;
+ * $scope.clearCriteria = function () {
+ *   clearCriteria();
+ *   $scope.directiveControllers.forEach(function (c) {
+ *     c.clear();
+ *   });
+ * }
+ * 
+ * (HTML)
+ * <hois-autocomplete ng-model="criteria.object" ha-attribute="id" ha-controller="directiveControllers" ...></hois-autocomplete>
+ */
 angular.module('hitsaOis')
   .directive('hoisAutocomplete', function ($rootScope, $translate, $q, QueryUtils) {
 
@@ -18,8 +33,13 @@ angular.module('hitsaOis')
       scope: {
         maxChips: '@',
         ngModel: '=',
+        ngSearchText: '=?',
         label: '@',
         method: '@',
+        haAttribute: '@',
+        haSearch: "=?",
+        display: '@',
+        mdMinLength: '@',
         multiple: '@',
         ngRequired: '=',
         required: '@', // todo add chip visuals
@@ -30,12 +50,17 @@ angular.module('hitsaOis')
         additionalQueryParams: '=',
         warningParam: '@',
         noPaging: '@',
-        url: '@'    // this allows to search from different controllers, not only AutocompleteController
+        url: '@',    // this allows to search from different controllers, not only AutocompleteController
+        haController: "=?" // Array. Holds functions of this directive to be used outside as an object in array.
       },
       link: {
         post: function(scope, element, attrs) {
-          var url =  scope.url ? scope.url : '/autocomplete/' + scope.method;
-          var lookup = QueryUtils.endpoint(url);
+          if (angular.isUndefined(scope.haSearch)) {
+            var url =  scope.url ? scope.url : '/autocomplete/' + scope.method;
+            var lookup = QueryUtils.endpoint(url);
+          }
+          var controller = {};
+          scope.ngHolder = scope.ngModel;
 
           scope.isRequired = angular.isDefined(scope.required);
           element.attr('required', scope.isRequired);
@@ -43,8 +68,106 @@ angular.module('hitsaOis')
           scope.isDisabled = angular.isDefined(scope.disabled);
           element.attr('disabled', scope.isDisabled);
 
-          if (angular.isDefined(attrs.multiple) && !angular.isArray(scope.ngModel)) {
-            scope.ngModel = [];
+          if (angular.isUndefined(scope.mdMinLength)) {
+            scope.mdMinLength = 1;
+          }
+
+          if (angular.isDefined(attrs.multiple) && !angular.isArray(scope.ngHolder)) {
+            scope.ngHolder = [];
+          }
+
+          function equals(model, holder) {
+            if (angular.isDefined(scope.multiple)) {
+              if (angular.isDefined(scope.haAttribute)) {
+                if (angular.isArray(model) && angular.isArray(holder)) {
+                  if (model.length !== holder.length) {
+                    return false;
+                  } else {
+                    return holder.filter(function (obj, idx) {
+                      return obj[scope.haAttribute] !== model[idx];
+                    }).length === 0;
+                  }
+                } else {
+                  return model === holder;
+                }
+              } else {
+                return angular.equals(model, holder);
+              }
+            } else {
+              if (angular.isDefined(scope.haAttribute)) {
+                if (angular.isDefined(model) && angular.isDefined(holder) && model !== null && holder !== null) {
+                  return holder[scope.haAttribute] === model;
+                } else {
+                  return model === holder;
+                }
+              } else {
+                return angular.equals(model, holder);
+              }
+            }
+          }
+          
+          if (angular.isDefined(scope.multiple)) {
+            scope.$watchCollection('ngHolder', function (newValue, oldValue) {
+              if (newValue !== oldValue && !equals(scope.ngModel, newValue)) {
+                if (angular.isDefined(scope.haAttribute)) {
+                  scope.ngModel = [];
+                  if (angular.isArray(newValue)) {
+                    newValue.forEach(function (val) {
+                      scope.ngModel.push(val[scope.haAttribute]);
+                    });
+                  }
+                } else {
+                  scope.ngModel = newValue || [];
+                }
+              }
+            });
+            scope.$watchCollection('ngModel', function (newValue) {
+              if (!equals(newValue, scope.ngHolder)) {
+                if (newValue && newValue.length > 0) {
+                  scope.ngHolder = newValue;
+                } else {
+                  scope.ngHolder = newValue || [];
+                }
+              }
+            });
+          } else {
+            scope.$watch('ngHolder', function (newValue, oldValue) {
+              if (newValue !== oldValue && !equals(scope.ngModel, newValue)) {
+                if (angular.isDefined(scope.haAttribute)) {
+                  scope.ngModel = newValue ? newValue[scope.haAttribute] : null;
+                } else {
+                  scope.ngModel = newValue;
+                }
+              }
+            });
+            scope.$watch('ngModel', function (newValue, oldValue) {
+              if (newValue !== oldValue && !equals(newValue, scope.ngHolder)) {
+                if (angular.isDefined(scope.haAttribute)) {
+                  if (newValue.hasOwnProperty(scope.haAttribute)) {
+                    scope.ngHolder = newValue;
+                  }
+                } else {
+                  scope.ngHolder = newValue;
+                }
+              }
+            });
+          }
+
+          controller.clear = function () {
+            if (angular.isUndefined(scope.multiple)) {
+              scope.ngHolder = null;
+            } else {
+              scope.ngHolder = [];
+            }
+            scope.ngSearchText = null;
+          };
+
+          if (angular.isDefined(scope.haController)) {
+            if (angular.isArray(scope.haController)) {
+              scope.haController.push(controller);
+            } else {
+              scope.haController = [controller];
+            }
           }
 
           scope.transformChip = function(chip) {
@@ -55,6 +178,9 @@ angular.module('hitsaOis')
           };
 
           scope.getChipText = function (chip) {
+            if (scope.display) {
+              return chip[scope.display];
+            }
             return $rootScope.currentLanguageNameField(chip);
           };
 
@@ -68,44 +194,46 @@ angular.module('hitsaOis')
             }
           };
 
-          scope.search = function (text) {
-            var deferred = $q.defer();
-            var query = {
-              lang: $translate.use().toUpperCase(),
-              name: text
+          if (angular.isUndefined(scope.haSearch)) {
+            scope.haSearch = function (text) {
+              var deferred = $q.defer();
+              var query = {
+                lang: $translate.use().toUpperCase(),
+                name: text
+              };
+              if(scope.additionalQueryParams) {
+                  angular.extend(query, scope.additionalQueryParams);
+              }
+
+              if(url === '/autocomplete/curriculumversions') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else if(url === '/autocomplete/studentgroups') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else if(url === '/autocomplete/curriculumversionomodulesandthemes') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else if(url === '/autocomplete/journals') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else if(scope.noPaging === 'true') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else {
+                lookup.search(query, function (data) {
+                  deferred.resolve(data.content);
+                });
+              }
+
+              return deferred.promise;
             };
-            if(scope.additionalQueryParams) {
-                angular.extend(query, scope.additionalQueryParams);
-            }
-
-            if(url === '/autocomplete/curriculumversions') {
-              lookup.query(query, function (data) {
-                deferred.resolve(data);
-              });
-            } else if(url === '/autocomplete/studentgroups') {
-              lookup.query(query, function (data) {
-                deferred.resolve(data);
-              });
-            } else if(url === '/autocomplete/curriculumversionomodulesandthemes') {
-              lookup.query(query, function (data) {
-                deferred.resolve(data);
-              });
-            } else if(url === '/autocomplete/journals') {
-              lookup.query(query, function (data) {
-                deferred.resolve(data);
-              });
-            } else if(scope.noPaging === 'true') {
-              lookup.query(query, function (data) {
-                deferred.resolve(data);
-              });
-            } else {
-              lookup.search(query, function (data) {
-                deferred.resolve(data.content);
-              });
-            }
-
-            return deferred.promise;
-          };
+          }
         }
       }
     };

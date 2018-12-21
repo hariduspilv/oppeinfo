@@ -1,25 +1,23 @@
-<div layout-padding>
-  <div flex>
-    <div layout="row">
-      <md-button class="md-raised md-primary" ng-click="addNewEntry()">{{'journal.addNewEntry' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="searchStudent()">{{'journal.addStudents' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="confirm()" ng-if="journal.canBeConfirmed">{{'journal.confirmJournal' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="unconfirm()" ng-if="journal.canBeUnconfirmed">{{'journal.button.unconfirm' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
-      <a ng-href="{{excel(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
-      <md-input-container>
-        <span class="common-label">{{'journal.gradeInput' | translate}}</span>
-        <md-radio-group layout-gt-sm="row" ng-model="formState.gradeInputAsSelect">
-          <md-radio-button ng-value="true">{{'journal.asSelectField' | translate}}</md-radio-button>
-          <md-radio-button ng-value="false">{{'journal.asInputField' | translate}}</md-radio-button>
-        </md-radio-group>
-      </md-input-container>
-    </div>
-    <div layout="row" ng-if="$parent.$parent.moodleCourseId">
-      <md-button class="md-raised" ng-click="enrollStudents()">{{'moodle.enrollStudents' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="importGradeItems()">{{'moodle.importGradeItems' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="importAllGrades()">{{'moodle.importAllGrades' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="importMissingGrades()">{{'moodle.importMissingGrades' | translate}}</md-button>
-    </div>
+<div flex>
+  <div layout="row">
+    <md-button class="md-raised md-primary" ng-click="addNewEntry()">{{'journal.addNewEntry' | translate}}</md-button>
+    <md-button class="md-raised" ng-click="searchStudent()">{{'journal.addStudents' | translate}}</md-button>
+    <md-button class="md-raised" ng-click="confirm()" ng-if="journal.canBeConfirmed">{{'journal.confirmJournal' | translate}}</md-button>
+    <md-button class="md-raised" ng-click="unconfirm()" ng-if="journal.canBeUnconfirmed">{{'journal.button.unconfirm' | translate}}</md-button>
+    <a ng-href="{{excel(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+    <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
+    <md-input-container>
+      <span class="common-label">{{'journal.gradeInput' | translate}}</span>
+      <md-radio-group layout-gt-sm="row" ng-model="formState.gradeInputAsSelect">
+        <md-radio-button ng-value="true">{{'journal.asSelectField' | translate}}</md-radio-button>
+        <md-radio-button ng-value="false">{{'journal.asInputField' | translate}}</md-radio-button>
+      </md-radio-group>
+    </md-input-container>
+  </div>
+  <div layout="row" ng-if="$parent.$parent.moodleCourseId">
+    <md-button class="md-raised" ng-click="enrollStudents()">{{'moodle.enrollStudents' | translate}}</md-button>
+    <md-button class="md-raised" ng-click="importGradeItems()">{{'moodle.importGradeItems' | translate}}</md-button>
+    <md-button class="md-raised" ng-click="importAllGrades()">{{'moodle.importAllGrades' | translate}}</md-button>
+    <md-button class="md-raised" ng-click="importMissingGrades()">{{'moodle.importMissingGrades' | translate}}</md-button>
   </div>
 </div>

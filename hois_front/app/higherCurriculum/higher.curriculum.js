@@ -603,6 +603,18 @@ angular.module('hitsaOis')
       });
     };
 
+    $scope.changeStatusUnderRevision = function () {
+      var messages = {
+          updateSuccess: 'curriculum.success.opened'
+      };
+      dialogService.confirmDialog({prompt: "curriculum.prompt.setStatusUnderRevision"}, function () {
+        setTimeout(function () {
+          var setStatusEndpoint = QueryUtils.endpoint(baseUrl + '/underrevision');
+          changeStatus(setStatusEndpoint, messages)
+        });
+      });
+    };
+
     $scope.setStatusClosed = function() {
 
       var messages = {

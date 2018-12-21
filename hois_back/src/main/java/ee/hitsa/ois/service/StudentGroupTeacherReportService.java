@@ -271,15 +271,19 @@ public class StudentGroupTeacherReportService {
     private List<StudentDto> studentGroupStudents(StudentGroupTeacherCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s " +
                 " join person p on s.person_id = p.id" +
-                " join student_group sg on s.student_group_id = sg.id");
+                " join student_group sg on s.student_group_id = sg.id" +
+                " left join curriculum_version cv on s.curriculum_version_id = cv.id");
         qb.requiredCriteria("sg.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
         
         qb.sort("p.lastname, p.firstname");
-        List<?> data = qb.select("s.id, p.firstname, p.lastname", em).getResultList();
+        List<?> data = qb.select("s.id, p.firstname, p.lastname, s.status_code, cv.is_individual", em).getResultList();
+
         List<StudentDto> students = StreamUtil.toMappedList(r -> {
             StudentDto student = new StudentDto();
             student.setId(resultAsLong(r, 0));
             student.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            student.setStatus(resultAsString(r, 3));
+            student.setIsIndividualCurriculum(resultAsBoolean(r, 4));
             return student;
         }, data);
         
@@ -748,6 +752,8 @@ public class StudentGroupTeacherReportService {
         List< Map<String, Object>> students = StreamUtil.toMappedList(s -> {
             Map<String, Object> student = new HashMap<>();
             student.put("fullname", s.getFullname());
+            student.put("status", s.getStatus());
+            student.put("isIndividualCurriculum", s.getIsIndividualCurriculum());
             student.put("resultColumns",
                     StreamUtil.toMappedList(rc -> ReportUtil.studentResultColumnAsString(criteria.getAbsencesPerJournals(), rc, classifierCache),
                             s.getResultColumns()));

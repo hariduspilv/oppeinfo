@@ -88,7 +88,7 @@
             </div>
             <div ng-messages="journalForm.moodleCourseId.$error" ng-show="journalForm.moodleCourseId.$dirty">
               <div ng-message="max">
-                  {{'main.messages.error.max' | translate }}
+                  {{'main.messages.error.max' | translate: {max: 16} }}
               </div>
             </div>
           </md-input-container>

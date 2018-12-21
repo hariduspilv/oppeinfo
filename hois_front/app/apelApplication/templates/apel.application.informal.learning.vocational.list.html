@@ -1,19 +1,16 @@
 <md-table-container flex="100">
   <table md-table md-progress="tabledata.$promise" class="secondary-table">
     <thead md-head md-on-reorder="loadData">
-      <tr md-row style="background: #E0E0E0 !important">
-        <th md-column ng-if="editing" colspan="1">
+      <tr md-row style="background: #e0e0e0 !important">
+        <th md-column ng-if="!formState.viewForm && application.canEdit">
           <a ng-click="editInformalLearning(record.id)">{{'main.button.change' | translate}}</a>
         </th>
-        <th md-column ng-if="editing && application.status === 'VOTA_STAATUS_K'" colspan="5" style="text-align: center">{{'apel.informalLearnings.transferableModules' | translate}}</th>
-        <th md-column ng-if="!editing && application.status === 'VOTA_STAATUS_K'" colspan="6" style="text-align: center">{{'apel.informalLearnings.transferableModules' | translate}}</th>
-        <th md-column ng-if="!(application.status === 'VOTA_STAATUS_K') && editing" colspan="6" style="text-align: center">{{'apel.informalLearnings.transferableModules' | translate}}</th>
-        <th md-column ng-if="!(application.status === 'VOTA_STAATUS_K') && !editing" colspan="7" style="text-align: center">{{'apel.informalLearnings.transferableModules' | translate}}</th>
+        <th md-column colspan="{{informalLearningColspan}}" style="text-align: center">{{'apel.informalLearnings.substitutableModulesThemes' | translate}}</th>
         <th md-column style="border-left: 1px rgba(0, 0, 0, 0.12) solid;"></th>
         <th md-column colspan="5" style="text-align: center">{{'apel.informalLearnings.otherInformalLearnings' | translate}}</th>
       </tr>
       <tr md-row>
-        <th md-column ng-if="!(application.status === 'VOTA_STAATUS_K')">{{'apel.informalLearnings.transfer' | translate}}</th>
+        <th md-column ng-if="application.status !== 'VOTA_STAATUS_K'">{{'apel.informalLearnings.transfer' | translate}}</th>
         <th md-column>{{'apel.informalLearnings.module' | translate}}/{{'apel.informalLearnings.theme' | translate}}</th>
         <th md-column>{{'apel.informalLearnings.isModule' | translate}}</th>
         <th md-column>{{'apel.informalLearnings.hours' | translate}}/{{'apel.informalLearnings.ekap' | translate}}</th>
@@ -30,7 +27,7 @@
     </thead>
     <tbody md-body>
       <tr md-row ng-repeat="row in record.data | orderBy:'moduleId'" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell ng-if="!(application.status === 'VOTA_STAATUS_K')">
+        <td md-cell ng-if="application.status !== 'VOTA_STAATUS_K'">
           <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && canChangeTransferStatus" 
             ng-model="row.transfer" ng-click="changeInformalTransferStatus(row)" aria-label="{{'apel.informalLearnings.transfer' | translate}}"></md-checkbox>
           <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && !canChangeTransferStatus" 

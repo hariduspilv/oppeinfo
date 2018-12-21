@@ -4,6 +4,7 @@ public class SubjectStudyPeriodSearchCommand {
 
     private Long teacher;
     private Long studyPeriod;
+    private Long studentGroup;
     private Long subject;
     
     public Long getTeacher() {
@@ -20,6 +21,12 @@ public class SubjectStudyPeriodSearchCommand {
         this.studyPeriod = studyPeriod;
     }
     
+    public Long getStudentGroup() {
+        return studentGroup;
+    }
+    public void setStudentGroup(Long studentGroup) {
+        this.studentGroup = studentGroup;
+    }
     public Long getSubject() {
         return subject;
     }

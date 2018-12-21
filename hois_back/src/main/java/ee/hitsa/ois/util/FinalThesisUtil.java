@@ -39,33 +39,31 @@ public abstract class FinalThesisUtil {
         if (!hasFinalThesisViewPermission(user)) {
             return false;
         }
-        
-        if (user.isSchoolAdmin() || isSupervisor(user, finalThesis)) {
+        if (UserUtil.isSchoolAdmin(user, finalThesis.getStudent().getSchool()) || isSupervisor(user, finalThesis)) {
             return true;
         } else if (user.isStudent()) {
-            return UserUtil.isSame(user, finalThesis.getStudent());
+            return UserUtil.isStudent(user, finalThesis.getStudent());
         }
         
         return false;
     }
     
     public static boolean canCreate(HoisUserDetails user) {
-        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LOPTEEMA)) {
+        if (user.isSchoolAdmin()) {
+            return hasFinalThesisEditPermission(user);
+        } else if (user.isStudent()) {
+            return true;
+        } else {
             return false;
         }
-        return user.isSchoolAdmin() || user.isStudent();
     }
     
     public static boolean canEdit(HoisUserDetails user, FinalThesis finalThesis) {
-        if (!hasFinalThesisEditPermission(user)) {
-            return false;
-        }
-        
         if (user.isSchoolAdmin() || isSupervisor(user, finalThesis)) {
             if (confirmed(finalThesis)) {
                 return hasFinalThesisConfirmPermission(user);
             }
-            return true;
+            return hasFinalThesisEditPermission(user);
         } else if (user.isStudent()) {
             return !confirmed(finalThesis);
         }
@@ -76,7 +74,6 @@ public abstract class FinalThesisUtil {
         if (confirmed(finalThesis) || !hasFinalThesisConfirmPermission(user)) {
             return false;
         }
-        
         return user.isSchoolAdmin() || isSupervisor(user, finalThesis);
     }
     

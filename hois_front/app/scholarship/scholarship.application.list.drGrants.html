@@ -13,7 +13,8 @@
           <div layout="row" flex="20" flex-offset="5">
             <md-input-container flex>
               <label class="textInput">{{'stipend.curriculums' | translate}}</label>
-              <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" multiple></hois-select>
+              <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" 
+                criteria="{higher: true, closed: false}" sorted-query="true" multiple></hois-select>
             </md-input-container>
           </div>
           <md-input-container flex="20" flex-offset="5">
@@ -35,7 +36,7 @@
           </md-input-container>
           <md-input-container flex="20" flex-offset="5">
             <label class="textInput">{{'stipend.studyPeriod' | translate}}</label>
-            <hois-select ng-model="criteria.studyPeriod" values="studyPeriods"></hois-select>
+            <hois-select ng-model="criteria.studyPeriod" type="studyperiodyear" preselect-current></hois-select>
           </md-input-container>
           <md-input-container flex="20" flex-offset="5">
             <label class="textInput">{{'stipend.status' | translate}}</label>

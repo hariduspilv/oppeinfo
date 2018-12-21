@@ -6,19 +6,22 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
     $scope.auth = $route.current.locals.auth;
     var clMapper = Classifier.valuemapper({type: 'SOORITUS'});
     QueryUtils.createQueryForm($scope, '/exams', {order: 'te.start'}, clMapper.objectmapper);
-    $scope.formState = {studyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriods').query(),
+    $scope.formState = {studyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(),
                         canAdd: $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_EKSAM) !== -1};
     var promises = clMapper.promises;
     promises.push($scope.formState.studyPeriods.$promise);
 
     $q.all(promises).then(function() {
+      $scope.formState.studyPeriods.forEach(function (studyPeriod) {
+        studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+      });
       if($scope.formState.studyPeriods.length > 0 && !$scope.criteria.studyPeriod) {
         var currentStudyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyPeriods);
         $scope.criteria.studyPeriod = currentStudyPeriod ? currentStudyPeriod.id : undefined;
       }
-      if($scope.criteria.studyPeriod) {
+      if ($scope.criteria.studyPeriod) {
         $timeout($scope.loadData);
-      } else if($scope.formState.studyPeriods.length === 0) {
+      } else if ($scope.formState.studyPeriods.length === 0) {
         message.error('studyYear.studyPeriod.missing');
       }
     });
@@ -217,7 +220,11 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
     };
 
     if(!id) {
-      var studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+      var studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
+        response.forEach(function (studyPeriod) {
+          studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+        });
+      });
       var subjectStudyPeriodEndpoint = QueryUtils.endpoint(baseUrl + '/subjectstudyperiods');
       $scope.formState.studyPeriods = studyPeriods;
       $scope.formState.subjectStudyPeriods = [];

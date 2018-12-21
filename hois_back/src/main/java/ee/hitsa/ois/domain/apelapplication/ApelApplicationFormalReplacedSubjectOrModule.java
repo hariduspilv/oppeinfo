@@ -7,6 +7,7 @@ import javax.persistence.ManyToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.subject.Subject;
 
 @Entity
@@ -23,6 +24,10 @@ public class ApelApplicationFormalReplacedSubjectOrModule extends BaseEntityWith
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(nullable = true)
     private CurriculumVersionOccupationModule curriculumVersionOmodule;
+    
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true)
+    private CurriculumVersionOccupationModuleTheme curriculumVersionOmoduleTheme;
 
     public ApelApplicationRecord getApelApplicationRecord() {
         return apelApplicationRecord;
@@ -46,6 +51,14 @@ public class ApelApplicationFormalReplacedSubjectOrModule extends BaseEntityWith
 
     public void setCurriculumVersionOmodule(CurriculumVersionOccupationModule curriculumVersionOmodule) {
         this.curriculumVersionOmodule = curriculumVersionOmodule;
+    }
+
+    public CurriculumVersionOccupationModuleTheme getCurriculumVersionOmoduleTheme() {
+        return curriculumVersionOmoduleTheme;
+    }
+
+    public void setCurriculumVersionOmoduleTheme(CurriculumVersionOccupationModuleTheme curriculumVersionOmoduleTheme) {
+        this.curriculumVersionOmoduleTheme = curriculumVersionOmoduleTheme;
     }
 
 }

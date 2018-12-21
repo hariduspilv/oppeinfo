@@ -232,8 +232,7 @@
               <table md-table class="secondary-table">
                 <tbody md-body>
                   <tr md-row ng-repeat="replacedSubjectOrModule in record.formalReplacedSubjectsOrModules" ng-class-odd="'odd'" ng-class-even="'even'">
-                    <td md-cell ng-if="!replacedSubjectOrModule.subject.code">{{currentLanguageNameField(replacedSubjectOrModule.subject)}}</td>
-                    <td md-cell ng-if="replacedSubjectOrModule.subject.code">{{currentLanguageNameField(replacedSubjectOrModule.subject)}} ({{replacedSubjectOrModule.subject.code}})</td>
+                    <td md-cell>{{currentLanguageNameField(replacedSubjectOrModule.subject)}}</td>
                     <td md-cell>
                       <a class="remove nomargin" ng-click="removeSubtitutableSubject(replacedSubjectOrModule)">&times;</a>
                     </td>

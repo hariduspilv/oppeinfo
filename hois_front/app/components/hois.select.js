@@ -6,7 +6,7 @@
  * @description
  * # hoisCurriculumVersionSelect
  */
-angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School, QueryUtils, DataUtils) {
+angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curriculum, School, QueryUtils, DataUtils) {
   return {
     templateUrl: 'components/hois.select.html',
     restrict: 'E',
@@ -24,7 +24,8 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
       preselectCurrent: '@',
       selectCurrentStudyYear: '@',
       loadAfterDefer: '=',
-      warningParam: '@'
+      warningParam: '@',
+      sortedQuery: '=',
     },
     link: function postLink(scope, element, attrs) {
       scope.isMultiple = angular.isDefined(scope.multiple);
@@ -36,6 +37,8 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
       scope.options = [];
       scope.filteredOptions = [];
       scope.hideOptions = [];
+
+      scope.orderBy = !scope.sortedQuery ? (scope.showProperty ? scope.showProperty : $rootScope.currentLanguageNameField()) : '';
 
       function doFilter() {
         scope.filteredOptions = (scope.options || []).filter(function(it) {return scope.hideOptions.indexOf(it[scope.valueProperty]) === -1; });
@@ -76,7 +79,7 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
           if (attrs.type === 'building') {
             scope.options = QueryUtils.endpoint('/autocomplete/buildings').query();
           } else if (attrs.type === 'curriculum') {
-            scope.options = QueryUtils.endpoint('/autocomplete/curriculumsDropdown').query();
+            scope.options = QueryUtils.endpoint('/autocomplete/curriculumsauto').query(scope.criteria);
           } else if (attrs.type === 'curriculumversion') {
             scope.options = Curriculum.queryVersions(scope.criteria);
           } else if (attrs.type === 'directivecoordinator') {

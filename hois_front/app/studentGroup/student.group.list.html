@@ -1,12 +1,12 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
 	<div flex>
-		<form ng-submit="loadData()" novalidate>
+		<form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate>
 			<fieldset tabindex="1">
 				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
 				<div flex layout="column">
 					<md-input-container flex>
 						<label class="textInput">{{'studentGroup.code' | translate}}</label>
-						<input ng-model="criteria.code" name="code" type="text" autofocus>
+						<input ng-model="criteria.code" name="code" type="text" md-maxlength="255" autofocus>
 					</md-input-container>
 
 					<div layout="row" flex>

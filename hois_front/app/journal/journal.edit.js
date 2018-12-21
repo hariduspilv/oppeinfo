@@ -1,17 +1,25 @@
 'use strict';
 
-angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, $filter, $window, QueryUtils, ArrayUtils, DataUtils, Classifier, StudentUtil, message, dialogService, VocationalGradeUtil, $q, oisFileService) {
+angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, $filter, $window, QueryUtils, ArrayUtils, DataUtils, Classifier, StudentUtil, message, dialogService, VocationalGradeUtil, $q, oisFileService, stateStorageService) {
   $scope.auth = $route.current.locals.auth;
   $scope.gradeUtil = VocationalGradeUtil;
   var classifierMapper = Classifier.valuemapper({ entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE', absence: 'PUUDUMINE' });
+  var stateKey = 'journal';
+  var schoolId = $route.current.locals.auth.school.id;
+  $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
+  $scope.gradeInputRegex = '^X$|^A$|^MA$|^1$|^2$|^3$|^4$|^5$';
 
   // same constant that is in absence.search.js
   var LESSONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+  var STUDENT_ROW_HEIGHT = 33;
+  var STUDENT_ROW_WITH_INPUT_HEIGHT = 49;
 
   $scope.formState = {
     gradeInputAsSelect: true
   };
   $scope.showAllStudentsModel = false;
+
+  var state = stateStorageService.loadState(schoolId, stateKey);
 
   function loadUsedHours() {
     QueryUtils.endpoint('/journals/' + entity.id + '/usedHours').get().$promise.then(function (result) {
@@ -28,14 +36,8 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       journalEntriesByDate.forEach(function (it) {
         for (var p in it.journalStudentResults) {
           if (it.journalStudentResults.hasOwnProperty(p)) {
-            classifierMapper.objectmapper(it.journalStudentResults[p]);
-            it.journalStudentResults[p][0].lessonAbsences.forEach(function (absence) {
-              classifierMapper.objectmapper(absence);
-            });
+            mapStudentResultClassifiers(it.journalStudentResults[p]);
           }
-          it.journalStudentResults[p][0].journalEntryStudentHistories.forEach(function (history) {
-            classifierMapper.objectmapper(history);
-          });
         }
       });
       $scope.journal.journalEntriesByDate = journalEntriesByDate;
@@ -48,6 +50,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
               classifierMapper.objectmapper(student.apelResults[p]);
             }
           }
+          setStudentApelTransferredModuleResult(student);
         });
         $scope.$broadcast('refreshFixedColumns');
         $scope.windowHeight = $window.innerHeight;
@@ -55,20 +58,32 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     });
   }
 
-  $scope.finished = function () {
-    /*
-    var hh, tb;
-    hh = angular.element(document.getElementsByClassName("journalTable"))[0].clientHeight;
-    tb = angular.element(document.getElementsByClassName("journalTable")).find("tbody")[0].clientHeight;
-    hh = 39 + tb;
-
-    if($scope.journal.journalStudents && $scope.journal.journalStudents.length > 10) {
-      angular.element(document.getElementsByClassName("container")).css('height', $scope.journal.journalStudents.length * 32 + 39 + 18 + 'px');
-    } else {
-      angular.element(document.getElementsByClassName("container")).css('height', hh + 18 + 'px');
+  function setStudentApelTransferredModuleResult(student) {
+    if (student.apelResults) {
+      var moduleResults = student.apelResults.filter(function(apelResult){
+        return apelResult.isModule;
+      });
+      if (moduleResults.length > 0) {
+        // if there are more than one module that has results, set grade as 'KUTSEHINDAMINE_A'
+        student.apelTransferredFinalResult = moduleResults.length === 1 ? moduleResults[0].grade.code : 'KUTSEHINDAMINE_A';
+      }
     }
-    */
-    angular.element(document.getElementsByClassName("container")).css('height', Math.min(10, $scope.journal.journalStudents.length) * 33 + 39 + 18 + 'px');
+  }
+
+  function mapStudentResultClassifiers(result) {
+    classifierMapper.objectmapper(result);
+    result[0].lessonAbsences.forEach(function (absence) {
+      classifierMapper.objectmapper(absence);
+    });
+    result[0].journalEntryStudentHistories.forEach(function (history) {
+      classifierMapper.objectmapper(history);
+    });
+  }
+
+  $scope.finished = function (quickUpdateInProgress) {
+    var rowHeight = quickUpdateInProgress ? STUDENT_ROW_WITH_INPUT_HEIGHT : STUDENT_ROW_HEIGHT;
+    angular.element(document.getElementsByClassName("container"))
+      .css('height', Math.min(10, $scope.journal.journalStudents.length) * rowHeight + 40 + 18 + 'px');
   };
 
   angular.element($window).bind('resize', function(){
@@ -176,14 +191,41 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     'SISSEKANNE_P': 'teal-100',
     'SISSEKANNE_R': 'indigo-100'
   };
+
   $scope.journalEntryTypes = {};
   Classifier.queryForDropdown({ mainClassCode: 'SISSEKANNE' }, function (result) {
     $scope.journalEntryTypes = Classifier.toMap(result);
+    if (!angular.equals({}, state)) {
+      setSelectedEntryTypes(state.selectedEntryTypes);
+    } else {
+      setSelectedEntryTypes();
+    }
   });
+
+  function setSelectedEntryTypes(selectedEntryTypes) {
+    var journalEntryTypeValues = Object.values($scope.journalEntryTypes);
+    if (!selectedEntryTypes) {
+      selectedEntryTypes = journalEntryTypeValues.map(function (type) { return type.code; });
+    }
+    
+    journalEntryTypeValues.forEach(function (type) {
+      type._selected = selectedEntryTypes.indexOf(type.code) !== -1;
+    });
+  }
+
+  $scope.updateSelectedEntryTypes = function () {
+    var selectedEntryTypes = Object.values($scope.journalEntryTypes).filter(function (type) {
+      return type._selected;
+    }).map(function (type) { return type.code; });
+
+    stateStorageService.changeState(schoolId, stateKey, {
+      selectedEntryTypes: selectedEntryTypes
+    });
+  };
+
   $scope.getEntryColor = function (type) {
     return $scope.journalEntryTypeColors[type];
   };
-
 
   var JournalEntryEndpoint = QueryUtils.endpoint('/journals/' + entity.id + '/journalEntry');
 
@@ -193,7 +235,6 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     dialogScope.journalEntryStudents = [];
     dialogScope.journalStudents.forEach(function (student) {
       dialogScope.journalEntryStudents[student.id] = { isLessonAbsence: false, lessonAbsences: {} };
-      setStudentApelTransferredModuleResult(student);
     });
 
     dialogScope.absenceOptions = {};
@@ -208,19 +249,6 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     Classifier.queryForDropdown({ mainClassCode: 'PUUDUMINE' }, function (result) {
       dialogScope.absenceOptions = Classifier.toMap(result);
     });
-  }
-
-  function setStudentApelTransferredModuleResult(student) {
-    if (student.apelResults) {
-      var moduleResults = student.apelResults.filter(function(apelResult){
-        return apelResult.isModule;
-      });
-      if (moduleResults.length > 0) {
-        // if there are more than one module that has results, set grade as 'KUTSEHINDAMINE_A'
-        student.apelTransferredFinalResult = moduleResults.length === 1 ? moduleResults[0].grade.code : 'KUTSEHINDAMINE_A';
-        student.canEdit = false;
-      }
-    }
   }
 
   function capacityTypesToArray(selectedCapacityTypes, newEntity) {
@@ -255,21 +283,8 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     dialogService.showDialog('journal/journal.addEntry.dialog.html', function (dialogScope) {
       dialogScope.journal = $scope.journal;
       dialogScope.gradeInputAsSelect = $scope.formState.gradeInputAsSelect;
-
-      dialogScope.$watch('journalEntry.entryType', function() {
-        if (dialogScope.journalEntry.entryType === 'SISSEKANNE_L') {
-          if ($scope.journal.isDistinctiveAssessment) {
-            dialogScope.filterGrades = ['KUTSEHINDAMINE_X', 'KUTSEHINDAMINE_A', 'KUTSEHINDAMINE_MA'];
-            dialogScope.gradeInputRegex = '^1$|^2$|^3$|^4$|^5$';
-          } else {
-            dialogScope.filterGrades = ['KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_2', 'KUTSEHINDAMINE_3', 'KUTSEHINDAMINE_4', 'KUTSEHINDAMINE_5'];
-            dialogScope.gradeInputRegex = '^X$|^A$|^MA$';
-          }
-        } else {
-          dialogScope.filterGrades = [];
-          dialogScope.gradeInputRegex = '^X$|^A$|^MA$|^1$|^2$|^3$|^4$|^5$';
-        }
-      });
+      dialogScope.grades = $scope.grades;
+      dialogScope.gradeInputRegex = $scope.gradeInputRegex;
 
       dialogScope.entryDateChanged = function () {
         getStudentsWithAcceptedAbsences(true);
@@ -543,15 +558,12 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
       function setApelTransferredResultAsFinalResult() {
         dialogScope.journalStudents.forEach(function(student) {
-          console.log("siin");
           if (student.apelTransferredFinalResult) {
             dialogScope.journalEntryStudents[student.id].grade = student.apelTransferredFinalResult;
             dialogScope.journalEntryStudentChanged(student);
           }
         });
       }
-
-      dialogScope.grades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
 
       dialogScope.removeStudentHistory = function (row) {
         dialogScope.journalEntryStudents[row.id].journalStudent = row.id;
@@ -610,6 +622,118 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     JournalEntryEndpoint.get({ id: journalEntryId }, function (response) {
       showEntryDialog(response);
     });
+  };
+
+  $scope.quickUpdate = function (journalEntry) {
+    $scope.finished(true);
+    journalEntry.quickUpdate = true;
+    journalEntry.quickUpdateStudents = [];
+
+    for (var p in journalEntry.journalStudentResults) {
+      if (journalEntry.journalStudentResults.hasOwnProperty(p)) {
+        var result = journalEntry.journalStudentResults[p][0];
+
+        if (!angular.isObject(journalEntry.quickUpdateStudents[p])) {
+          journalEntry.quickUpdateStudents[p] = {};
+        }
+        journalEntry.quickUpdateStudents[p] = {
+          id: result.journalEntryStudentId,
+          journalStudent: result.journalStudentId,
+          grade: result.grade ? result.grade.code : null,
+          gradeValue: result.grade ? VocationalGradeUtil.removePrefix(result.grade.code) : null,
+          addInfo: result.addInfo
+        };
+      }
+    }
+  };
+
+  $scope.saveQuickUpdate = function (journalEntry) {
+    var journalEntryStudents = Object.values(journalEntry.quickUpdateStudents);
+    var formValid = gradeInputsValid(journalEntryStudents);
+
+    if (!formValid) {
+      message.error('main.messages.form-has-errors');
+      return;
+    }
+
+    QueryUtils.endpoint('/journals/' + $scope.journal.id + '/journalEntry/quickUpdate').save({
+      journalEntryId: journalEntry.id,
+      journalEntryStudents: journalEntryStudents,
+      allStudents: $scope.showAllStudentsModel
+    }).$promise.then(function (result) {
+      var updatedEntryStudents = [];
+      for (var p in result) {
+        if (result.hasOwnProperty(p) && !isNaN(p)) {
+          updatedEntryStudents[p] = result[p];
+        }
+      }
+
+      for (var i = 0; i < $scope.journal.journalEntriesByDate.length; i++) {
+        var entriesByDate = $scope.journal.journalEntriesByDate[i];
+        if (journalEntry.id === entriesByDate.id) {
+          entriesByDate.journalStudentResults = updatedEntryStudents;
+          for (var key in entriesByDate.journalStudentResults) {
+            if (entriesByDate.journalStudentResults.hasOwnProperty(key)) {
+              mapStudentResultClassifiers(entriesByDate.journalStudentResults[key]);
+            }
+          }
+          entriesByDate.quickUpdate = false;
+          updateEntryStudentsTableHeight();
+          break;
+        }
+      }
+    });
+  };
+
+  function gradeInputsValid(journalEntryStudents) {
+    var valid = true;
+    if (!$scope.formState.gradeInputAsSelect) {
+      journalEntryStudents.forEach(function (student) {
+        if (student.gradeValue && !student.grade) {
+          valid = false;
+        }
+      });
+    }
+    return valid;
+  }
+
+  $scope.cancelQuickUpdate = function (journalEntry) {
+    journalEntry.quickUpdate = false;
+    updateEntryStudentsTableHeight();
+  };
+
+  function updateEntryStudentsTableHeight() {
+    var entryQuickUpdateOpen = false;
+    $scope.journal.journalEntriesByDate.forEach(function (entry) {
+      if (entry.quickUpdate) {
+        entryQuickUpdateOpen = true;
+      }
+    });
+    if (!entryQuickUpdateOpen) {
+      $scope.finished(false);
+    }
+  }
+
+  $scope.quickUpdateGradeChanged = function (journalEntry, journalStudentId) {
+    var studentQuickUpdate = journalEntry.quickUpdateStudents[journalStudentId];
+    if (!angular.isDefined(studentQuickUpdate.journalStudent)) {
+      studentQuickUpdate.journalStudent = journalStudentId;
+    }
+
+    if (!$scope.formState.gradeInputAsSelect) {
+      if (studentQuickUpdate.gradeValue && new RegExp($scope.gradeInputRegex).test(studentQuickUpdate.gradeValue)) {
+        studentQuickUpdate.grade = VocationalGradeUtil.addPrefix(studentQuickUpdate.gradeValue);
+      } else {
+        studentQuickUpdate.grade = null;
+      }
+    }
+  };
+
+  $scope.quickUpdateAddInfoChanged = function (journalEntry, journalStudentId) {
+    var studentQuickUpdate = journalEntry.quickUpdateStudents[journalStudentId];
+    if (!angular.isDefined(studentQuickUpdate.journalStudent)) {
+      studentQuickUpdate.journalStudent = journalStudentId;
+    }
   };
 
   $scope.moduleDescriptionDialog = function (moduleDescription) {

@@ -107,6 +107,12 @@ public class CurriculumVersionController {
         CurriculumUtil.assertCanClose(user, schoolService.getEhisSchool(user.getSchoolId()), curriculumVersion.getCurriculum());
         return get(user, curriculumVersionService.close(curriculumVersion));
     }
+    
+    @PutMapping("/underrevision/{id:\\d+}")
+    public CurriculumVersionDto setUnderRevision(HoisUserDetails user, @WithEntity CurriculumVersion curriculumVersion) {
+        CurriculumUtil.assertCanSetUnderRevision(user, curriculumVersion);
+        return get(user, curriculumVersionService.setUnderRevision(user, curriculumVersion));
+    }
 
     @PutMapping("/confirm/{id:\\d+}")
     public CurriculumVersionDto confirm(HoisUserDetails user,

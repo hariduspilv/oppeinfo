@@ -28,7 +28,7 @@
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'lessonplan.showPeriods' | translate}}</legend>
       <div layout="column">
         <md-grid-list ng-app="app" md-cols="6" md-cols-md="4" md-cols-sm="3" md-cols-xs="1" md-gutter="1em"
-        md-row-height="35px" flex>
+        md-row-height="35px">
           <md-grid-tile ng-repeat="sp in ::formState.studyPeriods track by $index">
             <md-checkbox aria-label="{{currentLanguageNameField(sp)}}" ng-model="sp._selected"
               ng-change="updateStudyPeriods()" style="position: absolute; left: 5px;">{{currentLanguageNameField(sp)}}</md-checkbox>
@@ -39,29 +39,29 @@
 
     <div>&nbsp;</div>
 
-    <div class="container" fixed-column-table fixed-columns="3">
-    <table class="lessonplan">
-      <thead>
-        <tr>
-          <th colspan="3" class="dividerBorder">{{'lessonplan.total' | translate}}</th>
-          <th ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></th>
-          <th ng-if="sp._selected" colspan="{{sp.weekNrs.length}}" class="dividerBorder" ng-repeat="sp in ::formState.studyPeriods track by $index">
-            {{currentLanguageNameField(sp)}} ({{sp.startDate | hoisDayMonth}}-{{sp.endDate | hoisDayMonth}})</th>
-        </tr>
-        <tr ng-if="formState.showWeeks">
-          <th colspan="3" class="cross dividerBorder">&nbsp;</th>
-          <th ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></th>
-          <th ng-if="w.show" ng-repeat="w in ::formState.weekNrs track by $index" class="center" ng-class="{dividerBorder: w.endOfPeriod}"
-            ng-style="{ background: true ? getLegendByWeek(w.nr) : 'white' }" title="{{formState.weekBeginningDates[$index] | hoisDate}}">{{w.nr}}</th>
-        </tr>
-      </thead>
-      <tbody id="lessonplan-table-body"></tbody>
-    </table>
+    <div id="lessonplan-container" class="container" fixed-column-table fixed-columns="3">
+      <table class="lessonplan">
+        <thead>
+          <tr>
+            <th colspan="3" class="dividerBorder">{{'lessonplan.total' | translate}}</th>
+            <th ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></th>
+            <th ng-if="sp._selected" colspan="{{sp.weekNrs.length}}" class="dividerBorder" ng-repeat="sp in ::formState.studyPeriods track by $index">
+              {{currentLanguageNameField(sp)}} ({{sp.startDate | hoisDayMonth}}-{{sp.endDate | hoisDayMonth}})</th>
+          </tr>
+          <tr ng-if="formState.showWeeks">
+            <th colspan="3" class="cross dividerBorder">&nbsp;</th>
+            <th ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></th>
+            <th ng-if="w.show" ng-repeat="w in ::formState.weekNrs track by $index" class="center" ng-class="{dividerBorder: w.endOfPeriod}"
+              ng-style="{ background: true ? getLegendByWeek(w.nr) : 'white' }" title="{{formState.weekBeginningDates[$index] | hoisDate}}">{{w.nr}}</th>
+          </tr>
+        </thead>
+        <tbody id="lessonplan-table-body"></tbody>
+      </table>
     </div>
 </div>
 <div>
   <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <md-button class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-  <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
+  <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
   <md-button ng-click="back()" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>

@@ -19,14 +19,9 @@
             </md-select>
           </md-input-container>
 
-          <md-input-container flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'report.studentGroupTeacher.studentGroup' | translate}}</label>
-            <md-select ng-model="formState.studentGroup" ng-change="studentGroupChanged()" ng-model-options="{trackBy: '$value.id'}" required>
-              <md-option ng-value="studentGroup" ng-repeat="studentGroup in formState.studentGroups | orderBy: currentLanguageNameField()">
-                {{currentLanguageNameField(studentGroup)}}
-              </md-option>
-            </md-select>
-          </md-input-container>
+          <hois-autocomplete flex="30" flex-offset="5" flex-sm="100" flex-xs="100" ng-model="formState.studentGroup"
+            ha-controller="directiveControllers" md-selected-item-change="studentGroupChanged()" method="studentgroups" name="studentGroup"
+            label="{{'report.studentGroupTeacher.studentGroup'}}" additional-query-params="{valid: true, higher: false, studentGroupTeacherId: teacherId}" required></hois-autocomplete>
         </div>
 
         <div layout="row">
@@ -73,8 +68,17 @@
   </div>
 </div>
 <div layout-padding ng-if="record">
+  <div flex="50" layout="column" layout-align="start">
+    <div class="common-label" flex>{{'journal.absencesLegend' | translate}}</div>
+    <div class="common-label" flex>
+      <span>{{'student.statuses.academicLeaveShort' | translate}} - {{'student.statuses.academicLeave' | translate}}, </span>
+      <span>{{'student.statuses.individualCurriculumShort' | translate}} - {{'student.statuses.individualCurriculum' | translate}}, </span>
+      <span>{{'student.statuses.exmatriculatedShort' | translate}} - {{'student.statuses.exmatriculated' | translate}}, </span>
+      <span>{{'student.statuses.finishedShort' | translate}} - {{'student.statuses.finished' | translate}}</span>
+    </div>
+  </div>
   <div flex class="student-group-teacher-container">
-    <div class="container" fixed-column-table fixed-columns="1" ng-style="{height: (record.students.length > 15) ? 15*32 + 210 + 'px' : record.students.length * 32 + 210 + 'px'}">
+    <div class="container" fixed-column-table fixed-columns="1" ng-style="{height: (record.students.length > 15) ? 15*32 + 165 + 'px' : record.students.length * 32 + 165 + 'px'}">
       <table ng-if="record.moduleTypes.length > 0" class="student-group-teacher-table">
         <thead>
           <tr>
@@ -107,6 +111,15 @@
           <tr ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
             <td>
               <div>
+                <i>
+                  <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'student.statuses.academicLeaveShort' | translate}}</span>
+                  <span ng-if="row.status === 'OPPURSTAATUS_L'">{{'student.statuses.finishedShort' | translate}}</span>
+                  <span ng-if="row.status === 'OPPURSTAATUS_K'">{{'student.statuses.exmatriculatedShort' | translate}}</span>
+                  <span ng-if="row.isIndividualCurriculum">
+                    <span ng-if="row.status !== 'OPPURSTAATUS_O' && row.status !== 'OPPURSTAATUS_V'">, </span>
+                    <span>{{'student.statuses.individualCurriculumShort' | translate}}</span>
+                  </span>
+                </i>
                 <span>{{row.fullname}}</span>
                 <a ng-click="openAddInfoDialog(row)">
                   <md-icon ng-if="row.hasAddInfo" class="md-icon-button">message</md-icon>
@@ -161,3 +174,12 @@
     </div>
   </div>
 </div>
+
+<style>
+  /* Mozilla Firefox Bug 688556: `border-collapse: collapse` shows a table without borders (if there is position relative or transform on cells) */
+  @-moz-document url-prefix() {
+    table {
+        border-collapse: separate !important;
+    }
+  }
+</style>

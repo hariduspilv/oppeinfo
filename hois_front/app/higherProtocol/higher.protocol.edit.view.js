@@ -7,7 +7,7 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
   var baseUrl = "/higherProtocols";
   var Endpoint = QueryUtils.endpoint(baseUrl);
   var midtermTaskUtil = new MidtermTaskUtil();
-  var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS' });
+  var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS', grade: 'KORGHINDAMINE' });
 
   function getEmptyStudentResult(student, midtermTask) {
     return {
@@ -65,6 +65,12 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
       }
     }
     $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.record);
+  };
+
+  $scope.gradeValue = function (code) {
+    console.log(code);
+    var grade = clMapper.objectmapper({ grade: code }).grade;
+    return grade ? ($scope.auth.school.letterGrades ? grade.value2 : grade.value) : undefined;
   };
 
   $scope.addInfoChanged = function () {

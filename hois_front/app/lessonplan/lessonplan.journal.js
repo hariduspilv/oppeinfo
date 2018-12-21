@@ -364,17 +364,5 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       }
       $scope.journalForm.$setDirty();
     };
-
-    $scope.backToLessonplan = function() {
-      var anchor = '#' + (id ? 'journal' + id : 'module' + occupationModule);
-      var backUrl = '/lessonplans/vocational/' + $scope.record.lessonPlan + '/edit' + anchor;
-      if ($scope.journalForm.$dirty === true) {
-        dialogService.confirmDialog({prompt: 'main.messages.confirmFormDataNotSaved'}, function() {
-          $location.url(backUrl);
-        });
-      } else {
-        $location.url(backUrl);
-      }
-    };
   }
 ]);

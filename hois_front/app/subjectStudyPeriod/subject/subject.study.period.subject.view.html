@@ -70,7 +70,7 @@
         <div layout="row">
             <md-button ng-if="!readOnly" class="md-raised md-primary" ng-href="#/subjectStudyPeriods/subjects/{{subject.id}}/{{studyPeriod.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
             <a ng-if="auth.isAdmin() || auth.isTeacher()" ng-href="{{excel(formState.xlsUrl, container)}}" 
-                target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
+                target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
             <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/subjects')">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>

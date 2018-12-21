@@ -100,6 +100,12 @@ public class CurriculumVersionService {
         return EntityUtil.save(curriculumVersion, em);
     }
 
+    public CurriculumVersion setUnderRevision(HoisUserDetails user, CurriculumVersion curriculumVersion) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        setCurriculumVersionStatus(curriculumVersion, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_S);
+        return EntityUtil.save(curriculumVersion, em);
+    }
+
     public CurriculumVersion confirm(CurriculumVersion curriculumVersion) {
         setCurriculumVersionStatus(curriculumVersion, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K);
         return EntityUtil.save(curriculumVersion, em);
@@ -134,6 +140,7 @@ public class CurriculumVersionService {
         String myEhisShool = schoolService.getEhisSchool(user.getSchoolId());
         dto.setCanChange(Boolean.valueOf(CurriculumUtil.canChange(user, myEhisShool, curriculum)));
         dto.setCanConfirm(Boolean.valueOf(CurriculumUtil.canConfirm(user, myEhisShool, curriculum)));
+        dto.setCanSetUnderRevision(Boolean.valueOf(CurriculumUtil.canSetUnderRevision(user, curriculumVersion)));
         dto.setCanClose(Boolean.valueOf(CurriculumUtil.canClose(user, myEhisShool, curriculum)));
         dto.setCanDelete(Boolean.valueOf(CurriculumUtil.canDelete(user, myEhisShool, curriculum)));
 

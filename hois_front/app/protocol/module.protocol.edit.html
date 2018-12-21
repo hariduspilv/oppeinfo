@@ -1,17 +1,24 @@
 <div class="ois-form-layout-padding" ng-cloak>
   <div flex>
+    <div ng-include="'protocol/templates/module.protocol.header.tmpl.html'"></div>
     <form ng-submit="save()" novalidate layout="column" name="moduleProtocolForm">
-      <div ng-include="'protocol/templates/module.protocol.header.tmpl.html'"></div>
       <div>
         <div flex>
           <md-table-container>
-            <table md-table md-progress="protocol.$promise" md-row-select="formState.canAddDeleteStudents" multiple="true" ng-model="calculateGrades.protocolStudents">
+            <table md-table md-progress="protocol.$promise">
               <thead md-head>
                 <tr md-row>
+                  <th md-column ng-if="formState.canEditProtocol" width="10">
+                    <md-input-container>
+                      <md-checkbox ng-model="formState.selectAllStudents" aria-label="selectAllStudents" 
+                        ng-change="updateAllStudentsCheckBoxes(formState.selectAllStudents)">
+                      </md-checkbox>
+                    </md-input-container>
+                  </th>
                   <th md-column>{{'student.label' | translate}}</th>
                   <th md-column>{{'student.idcode' | translate}}</th>
                   <th md-column ng-if="protocol.protocolVdata.isPractice">{{'moduleProtocol.practiceResult' | translate}}</th>
-                  <th md-column ng-repeat="journal in journals | orderBy: 'nameEt'">
+                  <th md-column ng-if="formState.showJournals" ng-repeat="journal in journals | orderBy: 'nameEt'">
                     <div>
                       <a md-colors="{color: 'grey-50'}" ng-href="/#/journal/{{::journal.id}}/view">{{'P' + ($index + 1)}}</a>
                       <md-tooltip>
@@ -19,7 +26,7 @@
                       </md-tooltip>
                     </div>
                   </th>
-                  <th md-column ng-if="formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
+                  <th md-column ng-if="formState.showOutcomes && formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
                     <div>
                         {{'moduleProtocol.outcome' | translate}}{{outcome.orderNr + 1}}
                       <md-tooltip>{{outcome.nameEt}}</md-tooltip>
@@ -33,6 +40,12 @@
               <tbody md-body>
                 <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'"
                   md-select="row.id" md-select-id="row.id">
+                  <td md-cell ng-if="formState.canEditProtocol">
+                    <md-input-container>
+                      <md-checkbox ng-model="calculateGrades.protocolStudents[row.id]" ng-hide="!row.canBeDeleted" aria-label="selectStudent">
+                      </md-checkbox>
+                    </md-input-container>
+                  </td>
                   <td md-cell>{{row.fullname}}</td>
                   <td md-cell>{{row.idcode}}</td>
                   <td md-cell ng-if="protocol.protocolVdata.isPractice">
@@ -44,21 +57,21 @@
                       </span>
                     </span>
                   </td>
-                  <td md-cell ng-repeat="journal in journals | orderBy: 'nameEt'">
+                  <td md-cell ng-if="formState.showJournals" ng-repeat="journal in journals | orderBy: 'nameEt'">
                     <span ng-if="protocolStudentJournalResults[row.id] && protocolStudentJournalResults[row.id][journal.id]"
                       ng-repeat="grade in protocolStudentJournalResults[row.id][journal.id]">
                       <span ng-class="{badResult: !gradeUtil.isPositive(grade.code)}">{{grade.value}}</span>
                       <span ng-if="!$last">/</span>
                     </span>
                   </td>
-                  <td md-cell ng-if="formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
+                  <td md-cell ng-if="formState.showOutcomes && formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
                     <span ng-if="protocolStudentOutcomeResults[row.id] && protocolStudentOutcomeResults[row.id][outcome.id]">
                       <span ng-class="{badResult: !gradeUtil.isPositive(protocolStudentOutcomeResults[row.id][outcome.id].code)}">{{protocolStudentOutcomeResults[row.id][outcome.id].value}}</span>
                     </span>
                   </td>
                   <td md-cell>
-                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code"
-                      aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol"></hois-select>
+                    <hois-select class="protocolGradeSelect" ng-model="row.grade" values="grades" show-property="value" value-property="code"
+                      aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol || !row.canBeDeleted"></hois-select>
                   </td>
                   <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                     <md-input-container ng-if="row.gradeHasChanged">
@@ -79,7 +92,7 @@
       </div>
       <br>
       <div layout="row">
-        <md-button ng-if="formState.canEditProtocol" class="md-raised" ng-click="calculate()" ng-disabled="calculateGrades.protocolStudents.length === 0">{{'higherProtocol.calculate' | translate}}</md-button>
+        <md-button ng-if="formState.canEditProtocol" class="md-raised" ng-click="calculate()" ng-disabled="!formState.selectedStudentsExist">{{'higherProtocol.calculate' | translate}}</md-button>
       </div>
       <br>
       <div>
@@ -98,7 +111,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'moduleProtocol.studyOutcomes' | translate}}</legend>
-      <div ng-repeat="outcome in protocol.protocolVdata.outcomes | orderBy: 'orderNr'" flex>
+      <div ng-repeat="outcome in protocol.protocolVdata.outcomes | orderBy: 'orderNr'" flex class="md-body-1">
         <div>{{currentLanguageNameField(outcome)}}</div>
       </div>
     </fieldset>

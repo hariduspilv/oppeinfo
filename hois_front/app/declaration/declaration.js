@@ -223,18 +223,22 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
     QueryUtils.createQueryForm($scope, '/declarations', {order: 'dId'}, clMapper.objectmapper);
     DataUtils.convertStringToDates($scope.criteria, ['inserted', 'confirmDate']);
 
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query();
+    $scope.studyPeriods.$promise.then(function (response) {
+      response.forEach(function (studyPeriod) {
+        studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+      });
+    });
     $scope.curriculumVersions = QueryUtils.endpoint('/autocomplete/curriculumversions').query({higher: true, valid: true});
-    $scope.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').query();
     var promises = clMapper.promises;
     promises.push($scope.studyPeriods.$promise);
     promises.push($scope.curriculumVersions.$promise);
-    promises.push($scope.studentGroups.$promise);
 
     $scope.formState = {canCreate: auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA') !== -1 };
 
     var loadData = $scope.loadData;
     $scope.loadData = function() {
+      console.log($scope.criteria);
       $scope.declarationSearchForm.$setSubmitted();
       if(!$scope.declarationSearchForm.$valid) {
         message.error('main.messages.form-has-errors');

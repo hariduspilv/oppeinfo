@@ -13,7 +13,7 @@
 angular.module('hitsaOis')
   .directive('hoisCollapsable', function () {
     return {
-      template:'<div class="hois-collapse-parent"><div layout="row" class="hois-collapse" ng-style="{background: headerBackgroundColor}"><div flex layout="row" layout-align="start center"><div class="hois-collapse-header" flex ng-transclude="header">{{label}}&nbsp;<a class="md-primary" style="font-size: 13px; font-weight: normal;" ng-click="action()" ng-if="ngif()">{{link}}</a></div></div><div flex="15" flex-sm="20" flex-xs="30"><md-button ng-click="expandCollapse()" class="hois-collapse-button"><md-icon md-font-set="material-icons md-dark">{{expanded ? "keyboard_arrow_up" : "keyboard_arrow_down"}}</md-icon></md-button></div></div><div ng-show="expanded" ng-transclude></div></div>',
+      template:'<div class="hois-collapse-parent"><div layout="row" class="hois-collapse" ng-style="{background: headerBackgroundColor}"><div flex layout="row" layout-align="start center"><div class="hois-collapse-header" flex ng-transclude="header">{{label}}&nbsp;<a class="md-primary" style="font-size: 13px; font-weight: normal;" ng-click="action()" ng-if="ngif()">{{link}}</a></div></div><div flex="15" flex-sm="20" flex-xs="30"><md-button ng-hide="hideCollapseButton" ng-click="expandCollapse()" class="hois-collapse-button"><md-icon md-font-set="material-icons md-dark">{{expanded ? "keyboard_arrow_up" : "keyboard_arrow_down"}}</md-icon></md-button></div></div><div ng-show="expanded" ng-transclude></div></div>',
       replace: true,
       transclude: {
         header: '?hoisCollapsableHeader'
@@ -24,7 +24,8 @@ angular.module('hitsaOis')
         action: '&',
         ngif: '&',
         expanded: '<',
-        headerBackgroundColor: '<'
+        headerBackgroundColor: '<',
+        hideCollapseButton: '@' //used in student curriculum fulfillment
       },
       link: function postLink(scope) {
         scope.expanded = angular.isDefined(scope.expanded) ? scope.expanded : true;

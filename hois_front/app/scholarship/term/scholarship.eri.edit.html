@@ -47,9 +47,10 @@
 <div>
   <div layout="row" flex="100">
     <hois-autocomplete flex ng-model="formState.curriculum" method="curriculums" label="stipend.curriculums" ng-required="missingCurriculums"
-      additional-query-params="{higher: false}"></hois-autocomplete>
+      additional-query-params="{higher: false, closed: false}"></hois-autocomplete>
+    <md-button ng-click="addAllCurriculums()" class="md-raised">{{'stipend.addAllCurriculums' | translate}}</md-button>
   </div>
-  <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in stipend.curriculums">
+  <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in stipend.curriculums | orderBy: ['curriculum.' + currentLanguageNameField(), 'code']">
     <div layout="row" flex layout-align="start center">
       <div flex="5">&nbsp;</div>
       <div flex="50">{{curriculum.nameEt}}</div>
@@ -71,6 +72,12 @@
     </md-input-container>
   </div>
   <div layout="row" flex>
+    <md-input-container flex="100">
+      <label class="textInput">{{'stipend.addInfoForStudent' | translate}}</label>
+      <textarea ng-model="stipend.addInfo" md-maxlength="4000" max-rows="10"></textarea>
+    </md-input-container>
+  </div>
+  <div layout="row" flex>
     <md-input-container flex="45">
       <label class="textInput">{{'stipend.averageMark' | translate}}</label>
       <input ng-model="stipend.averageMark" type="number" autofocus aria-label="averageMark" min="0" max="5">
@@ -81,6 +88,31 @@
         value-property="code"></hois-select>
     </md-input-container>
   </div>
+  <h3>{{'stipend.considerFollowing' | translate}}</h3>
+  <div layout="row" flex>
+    <md-checkbox ng-model="stipend.isOutcomes" flex="50">
+      {{'stipend.isOutcomes' | translate}}
+    </md-checkbox>
+    <md-checkbox ng-model="stipend.isModuleGrade" flex="50">
+      {{'stipend.isModuleGrade' | translate}}
+    </md-checkbox>
+  </div>
+  <div layout="row" flex>
+    <md-checkbox ng-model="stipend.isPeriodGrade" flex="50">
+      {{'stipend.isPeriodGrade' | translate}}
+    </md-checkbox>
+    <md-checkbox ng-model="stipend.isApelGrade" flex="50">
+      {{'stipend.isApelGrade' | translate}}
+    </md-checkbox>
+  </div>
+  <div layout="row" flex>
+    <md-checkbox ng-model="stipend.isJournalFinalGrade" flex="50">
+      {{'stipend.isJournalFinalGrade' | translate}}
+    </md-checkbox>
+    <md-checkbox ng-model="stipend.isJournalGrade" flex="50">
+      {{'stipend.isJournalGrade' | translate}}
+    </md-checkbox>
+  </div>
   <div layout="row" flex>
     <md-input-container flex="45">
       <label class="textInput">{{'stipend.lastPeriodMark' | translate}}</label>
@@ -90,6 +122,43 @@
       <label class="textInput">{{'stipend.priority' | translate}}</label>
       <hois-select ng-model="stipend.lastPeriodMarkPriority" values="formState.priorities | filter: lastPeriodMarkPriorityFilter"
         show-property="value" value-property="code"></hois-select>
+    </md-input-container>
+  </div>
+  <h3>{{'stipend.considerFollowing' | translate}}</h3>
+  <div layout="row" flex>
+    <md-checkbox ng-model="stipend.isLastPeriodOutcomes" flex="50">
+      {{'stipend.isOutcomes' | translate}}
+    </md-checkbox>
+    <md-checkbox ng-model="stipend.isLastPeriodModuleGrade" flex="50">
+      {{'stipend.isModuleGrade' | translate}}
+    </md-checkbox>
+  </div>
+  <div layout="row" flex>
+    <md-checkbox ng-model="stipend.isLastPeriodPeriodGrade" flex="50">
+      {{'stipend.isPeriodGrade' | translate}}
+    </md-checkbox>
+    <md-checkbox ng-model="stipend.isLastPeriodApelGrade" flex="50">
+      {{'stipend.isApelGrade' | translate}}
+    </md-checkbox>
+  </div>
+  <div layout="row" flex>
+    <md-checkbox ng-model="stipend.isLastPeriodJournalFinalGrade" flex="50">
+      {{'stipend.isJournalFinalGrade' | translate}}
+    </md-checkbox>
+    <md-checkbox ng-model="stipend.isLastPeriodJournalGrade" flex="50">
+      {{'stipend.isJournalGrade' | translate}}
+    </md-checkbox>
+  </div>
+  <div layout="row">
+    <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+      <label>{{'stipend.lastPeriodGrade' | translate}}</label>
+      <input type="hidden">
+    </md-input-container>
+    <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+      <md-datepicker ng-model="stipend.lastPeriodGradeFrom" md-max-date="stipend.lastPeriodGradeThru" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+    </md-input-container>
+    <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+      <md-datepicker ng-model="stipend.lastPeriodGradeThru" md-min-date="stipend.lastPeriodGradeFrom" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
     </md-input-container>
   </div>
   <div layout="row" flex>

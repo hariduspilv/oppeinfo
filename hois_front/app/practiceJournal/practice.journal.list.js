@@ -11,6 +11,15 @@ angular.module('hitsaOis').controller('PracticeJournalListController', function 
       $q.all(clMapper.promises).then($scope.loadData);
     }
   });
+  
+  $scope.directiveControllers = [];
+  var clearCriteria = $scope.clearCriteria;
+  $scope.clearCriteria = function () {
+    clearCriteria();
+    $scope.directiveControllers.forEach(function (c) {
+      c.clear();
+    });
+  };
 
   $scope.load = function() {
     if (!$scope.criteria.studyYear) {

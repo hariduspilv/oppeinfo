@@ -134,7 +134,7 @@
         <label>{{'subjectProgram.studyLiterature' | translate}}</label>
         <hois-value value="subjectProgram.studyLiterature"></hois-value>
       </md-input-container>
-      <br>
+      <div>&nbsp;</div>
       <div flex class="study-content">
         <fieldset tabindex="1">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.studyContent' | translate}}</legend>
@@ -148,7 +148,7 @@
               <div layout="row" ng-repeat="sc in studyContentDt">
                 <md-input-container>
                   <label>{{'subjectProgram.date' | translate}}</label>
-                  <hois-value value="sc.studyDt | hoisDate"></md-datepicker>
+                  <hois-value value="sc.studyDt | hoisDate"></hois-value>
                 </md-input-container>
                 <md-input-container flex="100">
                   <label>{{'subjectProgram.description' | translate}}</label>
@@ -177,7 +177,7 @@
           </div>
         </fieldset>
       </div>
-      <br>
+      <div>&nbsp;</div>
       <div flex>
         <fieldset tabindex="2">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.assessmentCriteria' | translate}}</legend>
@@ -234,7 +234,7 @@
           </div>
         </fieldset>
       </div>
-      <br>
+      <div>&nbsp;</div>
       <div flex>
         <fieldset tabindex="3">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.publicLevel' | translate}}</legend>
@@ -252,11 +252,11 @@
           </div>
         </fieldset>
       </div>
-      <br>
+      <div>&nbsp;</div>
       <div flex class="form-readonly" layout="column">
         <md-input-container flex>
           <label class="textInput">{{'subjectProgram.status' | translate}}</label>
-          <hois-classifier-value ng-model="subjectProgram.status" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-value>
+          <hois-classifier-value ng-model="subjectProgram.status" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value>
         </md-input-container>
         <md-input-container flex ng-if="subjectProgram.status === 'AINEPROGRAMM_STAATUS_K'">
           <label>{{'subjectProgram.confirmedDate' | translate}}</label>
@@ -272,7 +272,7 @@
     <md-button class="md-raised md-primary" ng-if="subjectProgram.id && subjectProgram.subjectStudyPeriodTeacher.teacherId === userTeacherId" ng-click="edit()">{{"main.button.change" | translate}}</md-button>
     <md-button class="md-raised" ng-if="subjectProgram.id && isSupervisor && subjectProgram.status === 'AINEPROGRAMM_STAATUS_V'" ng-click="confirm()">{{"main.button.confirm" | translate}}</md-button>
     <md-button class="md-raised" ng-if="subjectProgram.id && isSupervisor && subjectProgram.status !== 'AINEPROGRAMM_STAATUS_I'" ng-click="openRejectDialog()">{{"subjectProgram.operation.reject.label" | translate}}</md-button>
-    <md-button class="md-raised" ng-if="subjectProgram.id" ng-href="{{pdfUrl()}}" target='_blank'>{{"main.button.print" | translate}}</md-button>
+    <md-button class="md-raised" ng-if="subjectProgram.id" ng-href="{{pdfUrl()}}" target="_blank">{{"main.button.print" | translate}}</md-button>
     <md-button class="md-raised" ng-click="back(getDefaultBack())">{{"main.button.back" | translate}}</md-button>
   </form>
 </div>

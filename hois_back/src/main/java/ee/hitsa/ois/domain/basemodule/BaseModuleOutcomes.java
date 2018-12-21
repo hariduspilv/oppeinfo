@@ -1,6 +1,8 @@
 package ee.hitsa.ois.domain.basemodule;
 
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -24,7 +26,7 @@ public class BaseModuleOutcomes extends BaseEntityWithId {
     @OneToMany(mappedBy = "baseModuleOutcomes", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BaseModuleThemeOutcomes> baseModuleThemeOutcomes = new HashSet<>();
     @OneToMany(mappedBy = "baseModuleOutcomes")
-    private Set<CurriculumModuleOutcome> outcomes = new HashSet<>();
+    private List<CurriculumModuleOutcome> outcomes = new LinkedList<>();
     
     public BaseModule getBaseModule() {
         return baseModule;
@@ -57,8 +59,8 @@ public class BaseModuleOutcomes extends BaseEntityWithId {
         getBaseModuleThemeOutcomes().clear();
         getBaseModuleThemeOutcomes().addAll(baseModuleThemeOutcomes);
     }
-    public Set<CurriculumModuleOutcome> getOutcomes() {
-        return outcomes != null ? outcomes : (outcomes = new HashSet<>());
+    public List<CurriculumModuleOutcome> getOutcomes() {
+        return outcomes != null ? outcomes : (outcomes = new LinkedList<>());
     }
     public void setOutcomes(Set<CurriculumModuleOutcome> outcomes) {
         getOutcomes().clear();

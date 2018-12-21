@@ -128,9 +128,11 @@ public class ApplicationService {
             dto.setStatus(resultAsString(r, 2));
             dto.setInserted(resultAsLocalDateTime(r, 3));
             dto.setSubmitted(resultAsLocalDateTime(r, 4));
+            Long studentId = resultAsLong(r, 5);
             String name = PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 5), name, name));
             dto.setRejectReason(resultAsString(r, 8));
+            dto.setCanEditStudent(Boolean.valueOf(StudentUtil.canBeEdited(em.getReference(Student.class, studentId))));
             return dto;
         });
     }
@@ -145,7 +147,7 @@ public class ApplicationService {
      */
     public Application create(HoisUserDetails user, ApplicationForm applicationForm) {
         Student student = em.getReference(Student.class, applicationForm.getStudent().getId());
-        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
+        if(!(UserUtil.isStudent(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
             throw new ValidationFailedException(String.format("user %s is not allowed to create application", user.getUsername()));
         }
 
@@ -317,7 +319,7 @@ public class ApplicationService {
             application.setNeedsRepresentativeConfirm(Boolean.TRUE);
         }
         application = EntityUtil.save(application, em);
-        if (!UserUtil.isSame(user, student)) {
+        if (!UserUtil.isStudent(user, student)) {
             StudentApplicationCreated data = new StudentApplicationCreated(application);
             automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS, student, data);
         }

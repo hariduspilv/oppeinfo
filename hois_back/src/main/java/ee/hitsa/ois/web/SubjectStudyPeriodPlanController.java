@@ -24,7 +24,6 @@ import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.SubjectStudyPeriodPlanService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
@@ -32,7 +31,7 @@ import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanUniqueCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.StudyPeriodDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanSearchDtoContainer;
 
@@ -87,8 +86,8 @@ public class SubjectStudyPeriodPlanController {
     }
 
     @GetMapping("/studyPeriod/{id:\\d+}")
-    public StudyPeriodDto studyPeriod(@WithEntity StudyPeriod studyPeriod) {
-        return EntityUtil.bindToDto(studyPeriod, new StudyPeriodDto());
+    public StudyPeriodWithYearDto studyPeriod(@WithEntity StudyPeriod studyPeriod) {
+        return StudyPeriodWithYearDto.of(studyPeriod);
     }
 
     @GetMapping("/subject/{id:\\d+}")

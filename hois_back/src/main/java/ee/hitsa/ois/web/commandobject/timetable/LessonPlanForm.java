@@ -43,6 +43,7 @@ public class LessonPlanForm extends VersionedCommand {
     public static class LessonPlanModuleForm {
 
         private Long id;
+        private Long occupationModuleId;
         private EntityConnectionCommand teacher;
         @Valid
         private List<? extends LessonPlanModuleJournalForm> journals;
@@ -53,6 +54,14 @@ public class LessonPlanForm extends VersionedCommand {
 
         public void setId(Long id) {
             this.id = id;
+        }
+
+        public Long getOccupationModuleId() {
+            return occupationModuleId;
+        }
+
+        public void setOccupationModuleId(Long occupationModuleId) {
+            this.occupationModuleId = occupationModuleId;
         }
 
         public EntityConnectionCommand getTeacher() {

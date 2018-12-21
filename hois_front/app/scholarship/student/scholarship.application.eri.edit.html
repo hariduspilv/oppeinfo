@@ -32,6 +32,12 @@
         </md-input-container>
       </div>
       <div layout="row" flex>
+        <md-input-container flex="100">
+          <label class="textInput">{{'stipend.addInfo' | translate}}</label>
+          <hois-value value="stipend.addInfo"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="row" flex>
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
           <hois-value value="stipend.curriculumCompletion"></hois-value>
@@ -41,22 +47,16 @@
           <hois-value value="stipend.lastPeriodMark"></hois-value>
         </md-input-container>
       </div>
-      <div layout="row" flex>
-        <md-input-container flex="45">
-          <label class="textInput">{{'stipend.maxAbsences' | translate}}</label>
-          <hois-value value="stipend.maxAbsences"></hois-value>
+      <div layout="row" layout-xs="column" flex>
+        <md-input-container flex="45" flex-xs="100">
+          <label class="textInput">{{'stipend.studyPeriodDates' | translate}}</label>
+          <hois-value value="stipend.matriculationRange"></hois-value>
         </md-input-container>
-        <div flex="50" flex-offset="5">
+        <div flex="50" flex-offset="5" flex-xs="100" flex-offset-xs="0">
           <md-checkbox ng-model="stipend.isTeacherConfirm" disabled aria-label="Is teacher confirm">
             {{'stipend.isTeacherConfirm' | translate}}
           </md-checkbox>
         </div>
-      </div>
-      <div layout="row" flex>
-        <md-input-container flex="45">
-          <label class="textInput">{{'stipend.studyPeriodDates' | translate}}</label>
-          <hois-value value="stipend.matriculationRange"></hois-value>
-        </md-input-container>
       </div>
     </div>
   </fieldset>
@@ -81,10 +81,6 @@
         <md-input-container flex="45">
           <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
           <hois-value value="application.curriculumCompletion"></hois-value>
-        </md-input-container>
-        <md-input-container flex="50" flex-offset="5">
-          <label>{{'stipend.maxAbsences' | translate}}</label>
-          <hois-value value="application.absences"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" flex>

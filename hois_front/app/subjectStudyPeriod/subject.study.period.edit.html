@@ -83,7 +83,15 @@
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="record.id">
                     <label>{{'moodle.courseId' | translate}}</label>
-                    <input type="number" ng-model="record.moodleCourseId">
+                    <input type="number" name="moodleCourseId" ng-model="record.moodleCourseId" max="9007199254740991">
+                    <div class="md-errors-spacer">
+                        <div class="md-char-counter">{{subjectStudyPeriodEditForm.moodleCourseId.$viewValue ? subjectStudyPeriodEditForm.moodleCourseId.$viewValue.length : 0}} / 16</div>
+                      </div>
+                      <div ng-messages="subjectStudyPeriodEditForm.moodleCourseId.$error" ng-show="subjectStudyPeriodEditForm.moodleCourseId.$dirty">
+                        <div ng-message="max">
+                            {{'main.messages.error.max' | translate: {max: 16} }}
+                        </div>
+                      </div>
                 </md-input-container>
             </div>
         </div>

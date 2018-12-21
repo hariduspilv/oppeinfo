@@ -33,7 +33,7 @@
             <td md-cell>
               <span ng-if="moduleResultById[module.id].themeResultById[row.id].isApelTransfer" class="apelAsterisk">* </span>
               <span>{{row.nameEt}}</span>
-              <span ng-if="moduleResultById[module.id].themeResultById[row.id].isApelTransfer"> - {{'student.result.informal' | translate}}</span>
+              <span ng-if="moduleResultById[module.id].themeResultById[row.id].isApelTransfer && !moduleResultById[module.id].themeResultById[row.id].isFormalLearning"> - {{'student.result.informal' | translate}}</span>
             </td>
             <td md-cell>{{row.credits}}</td>
             <td md-cell>

@@ -15,10 +15,7 @@
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="45">
-            <label>{{'report.curriculumscompletion.studentgroup' | translate}}</label>
-            <hois-select ng-model="criteria.studentGroup" type="studentgroup"></hois-select>
-          </md-input-container>
+          <hois-autocomplete flex="45" ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" label="{{'report.curriculumscompletion.studentgroup'}}"></hois-autocomplete>
           <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
             <label>{{'report.curriculumscompletion.studyForm' | translate}}</label>
             <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>

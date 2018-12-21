@@ -127,6 +127,15 @@ angular.module('hitsaOis')
       }
     }
 
+    $scope.changeStatusUnderRevision = function () {
+      var messages = {
+        prompt: "curriculum.statuschange.version.prompt.setStatusUnderRevision",
+        updateSuccess: 'curriculum.statuschange.version.success.opened'
+      };
+      var setStatusEndpoint = QueryUtils.endpoint('/curriculumVersion/underrevision');
+      changeStatus(setStatusEndpoint, messages)
+    };
+
     $scope.saveAndConfirm = function() {
       var messages = {
         prompt: $scope.formState.readOnly ? 'curriculum.statuschangeReadOnly.version.prompt.verify' : 'curriculum.statuschange.version.prompt.verify',

@@ -178,11 +178,15 @@ public class DirectiveService {
      * @param directive
      * @return
      */
-    public DirectiveDto get(Directive directive) {
+    public DirectiveDto get(HoisUserDetails user, Directive directive) {
+        DirectiveDto dto;
         if(ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())) {
-            return DirectiveCancelDto.of(directive, changedStudentsForCancel(directive.getCanceledDirective()));
+            dto = DirectiveCancelDto.of(directive, changedStudentsForCancel(directive.getCanceledDirective()));
+        } else {
+            dto = DirectiveDto.of(directive);
         }
-        return DirectiveDto.of(directive);
+        dto.setCanEditDirective(Boolean.valueOf(UserUtil.canEditDirective(user, directive)));
+        return dto;
     }
 
     /**
@@ -720,11 +724,11 @@ public class DirectiveService {
                 "left outer join student_group sg on s.student_group_id = sg.id").sort("sg.code", "person.lastname", "person.firstname");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
-        qb.optionalContains("person.firstname", "firstname", criteria.getFirstname());
-        qb.optionalContains("person.lastname", "lastname", criteria.getLastname());
+        qb.optionalContains("person.firstname || ' ' || person.lastname", "name", criteria.getName());
         qb.optionalCriteria("person.idcode = :idcode", "idcode", criteria.getIdcode());
         qb.optionalCriteria("s.id not in (select ds.student_id from directive_student ds where ds.directive_id = :directiveId)", "directiveId", criteria.getDirective());
         qb.optionalCriteria("c.is_higher = :isHigher", "isHigher", criteria.getIsHigher());
+        qb.optionalCriteria("s.student_group_id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
 
         boolean scholarship = isScholarship(criteria.getType());
         if(scholarship) {
@@ -799,7 +803,7 @@ public class DirectiveService {
             dto.setId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
             dto.setIdcode(resultAsString(r, 3));
-            if(DirectiveType.KASKKIRI_LOPET.equals(directiveType)) {
+            if(!DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || !DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
                 String curriculumVersionCode = resultAsString(r, 5);
                 dto.setCurriculumVersion(new AutocompleteResult(resultAsLong(r, 4),
                         CurriculumUtil.versionName(curriculumVersionCode, resultAsString(r, 6)),

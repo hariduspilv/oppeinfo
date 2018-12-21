@@ -26,7 +26,7 @@
 
 
       <div ng-show="applicationEditView" layout="row">
-        <md-button ng-if="application.status === 'AVALDUS_STAATUS_KOOST' || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())"
+        <md-button ng-if="(application.status === 'AVALDUS_STAATUS_KOOST' || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())) && (!application.id || application.canEditStudent)"
           class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
         <div ng-include="'application/templates/action.buttons.html'"></div>
         <md-button ng-click="back(auth.isStudent() ? '#/applications/student' : '#/applications/', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>

@@ -4,6 +4,7 @@ public class JournalSearchCommand {
 
     private Long teacher;
     private Long studyYear;
+    private Long studentGroup;
     private Long journal;
     
     public Long getTeacher() {
@@ -20,6 +21,12 @@ public class JournalSearchCommand {
         this.studyYear = studyYear;
     }
     
+    public Long getStudentGroup() {
+        return studentGroup;
+    }
+    public void setStudentGroup(Long studentGroup) {
+        this.studentGroup = studentGroup;
+    }
     public Long getJournal() {
         return journal;
     }

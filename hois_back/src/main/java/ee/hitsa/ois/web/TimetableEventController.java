@@ -57,6 +57,7 @@ public class TimetableEventController {
     @GetMapping("/{id:\\d+}")
     public TimetableSingleEventForm get(HoisUserDetails user, @WithEntity TimetableEventTime eventTime) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertSameSchool(user, eventTime.getTimetableEvent().getSchool());
         return timetableEventService.get(eventTime);
     }
 

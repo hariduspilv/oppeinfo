@@ -9,6 +9,15 @@ angular.module('hitsaOis').controller('FinalThesisListController', function ($sc
   var clMapper = Classifier.valuemapper({ status: 'LOPUTOO_STAATUS' });
   QueryUtils.createQueryForm($scope, endpoint, {order: '2'}, clMapper.objectmapper);
 
+  $scope.directiveControllers = [];
+  var clearCriteria = $scope.clearCriteria;
+  $scope.clearCriteria = function () {
+    clearCriteria();
+    $scope.directiveControllers.forEach(function (c) {
+      c.clear();
+    });
+  };
+
   if ($scope.auth.isTeacher() || $scope.auth.isAdmin()) {
     $q.all(clMapper.promises).then($scope.loadData);
   } else if ($scope.auth.isStudent()) {
@@ -24,8 +33,4 @@ angular.module('hitsaOis').controller('FinalThesisListController', function ($sc
       }
     });
   }
-
-  $scope.$watch('criteria.studentGroupObject', function () {
-    $scope.criteria.studentGroup = $scope.criteria.studentGroupObject ? $scope.criteria.studentGroupObject.id : null;
-  });
 });

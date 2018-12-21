@@ -10,10 +10,7 @@
             <th md-column>{{'stipend.nameEt' | translate}}</th>
             <th md-column>{{'stipend.applicationPeriod' | translate}}</th>
             <th md-column>{{'stipend.places' | translate}}</th>
-            <th md-column>{{'stipend.student.averageMark' | translate}}</th>
-            <th md-column>{{'stipend.student.lastPeriodMark' | translate}}</th>
-            <th md-column>{{'stipend.student.curriculumCompletion' | translate}}</th>
-            <th md-column>{{'stipend.student.maxAbsences' | translate}}</th>
+            <th md-column>{{'stipend.addInfo' | translate}}</th>
             <th md-column>{{'stipend.student.needsConfirm' | translate}}</th>
             <th md-column>&nbsp;</th>
           </tr>
@@ -24,10 +21,13 @@
             <td md-cell>{{stipend.nameEt | translate}}</td>
             <td md-cell>{{stipend.applicationStart | hoisDate}}-{{stipend.applicationEnd | hoisDate}}</td>
             <td md-cell>{{stipend.places ? stipend.places : '-'}}</td>
-            <td md-cell>{{stipend.averageMark ? stipend.averageMark : '-'}}</td>
-            <td md-cell>{{stipend.lastPeriodMark ? stipend.lastPeriodMark : '-'}}</td>
-            <td md-cell>{{stipend.curriculumCompletion ? stipend.curriculumCompletion : '-'}}</td>
-            <td md-cell>{{stipend.maxAbsences ? stipend.maxAbsences : '-'}}</td>
+            <td md-cell>
+              <span>{{stipend.addInfo ? (stipend.addInfo.length &GT 100 && !stipend.showAddInfo ? (stipend.addInfo | limitTo:100) + '...' : stipend.addInfo) : '-'}} </span>
+              <span class="custom-tooltip" ng-if="!stipend.showAddInfo && stipend.addInfo.length > 100" 
+                ng-click="stipend.showAddInfo = true">{{'stipend.student.showMore' | translate}}</span>
+              <span class="custom-tooltip" ng-if="stipend.showAddInfo" ng-click="stipend.showAddInfo = false">
+                {{'stipend.student.showLess' | translate}}</span>
+            </td>
             <td md-cell>{{stipend.isTeacherConfirm ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
             <td md-cell>
               <span ng-if="stipend.canApply">
@@ -50,10 +50,6 @@
           <tr md-row>
             <th md-column>{{'stipend.type' | translate}}</th>
             <th md-column>{{'stipend.nameEt' | translate}}</th>
-            <th md-column>{{'stipend.student.averageMark' | translate}}</th>
-            <th md-column>{{'stipend.student.lastPeriodMark' | translate}}</th>
-            <th md-column>{{'stipend.student.curriculumCompletion' | translate}}</th>
-            <th md-column>{{'stipend.student.maxAbsences' | translate}}</th>
             <th md-column>{{'stipend.student.isTeacherConfirm' | translate}}</th>
             <th md-column>{{'stipend.student.status' | translate}}</th>
             <th md-column>{{'stipend.student.decisionDate' | translate}}</th>
@@ -66,10 +62,6 @@
               <a href="#/scholarships/applications/{{stipend.id}}">{{currentLanguageNameField(stipend.type)}}</a>
             </td>
             <td md-cell>{{stipend.termName | translate}}</td>
-            <td md-cell>{{stipend.averageMark ? stipend.averageMark : '-'}}</td>
-            <td md-cell>{{stipend.lastPeriodMark ? stipend.lastPeriodMark : '-'}}</td>
-            <td md-cell>{{stipend.curriculumCompletion ? stipend.curriculumCompletion : '-'}}</td>
-            <td md-cell>{{stipend.absences ? stipend.absences : '-'}}</td>
             <td md-cell>{{stipend.isTeacherConfirm === null && stipend.needsConfirm ? ('stipend.needsConfirm' | translate) : stipend.isTeacherConfirm ? ("main.confirm" | translate) : stipend.needsConfirm ? ("main.noConfirm" | translate) : "-"}}</td>
             <td md-cell>{{currentLanguageNameField(stipend.status)}}
               <md-tooltip ng-if="['STIPTOETUS_STAATUS_L', 'STIPTOETUS_STAATUS_T'].indexOf(stipend.status.code) !== -1  && stipend.rejectComment">{{stipend.rejectComment}}</md-tooltip>

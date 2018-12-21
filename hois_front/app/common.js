@@ -13,5 +13,14 @@ angular.module('hitsaOis').controller('SimpleListController', ['$q', '$route', '
     } else {
       $scope.loadData();
     }
+
+    $scope.directiveControllers = [];
+    var clearCriteria = $scope.clearCriteria;
+    $scope.clearCriteria = function () {
+      clearCriteria();
+      $scope.directiveControllers.forEach(function (c) {
+        c.clear();
+      });
+    };
   }
 ]);

@@ -16,6 +16,7 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
     private List<String> studyLoads;
     private BigDecimal amountPaid;
     private String matriculationRange;
+    private String addInfo;
 
     public static ScholarshipTermApplicationDto of(ScholarshipTerm term) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -30,6 +31,7 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
         dto.setStudyLoads(StreamUtil.toMappedList(t -> EntityUtil.getCode(t.getStudyLoad()),
                 term.getScholarshipTermStudyLoads()));
         dto.setStudyPeriod(StudyPeriodDto.of(term.getStudyPeriod()));
+        dto.setAddInfo(term.getAddInfo());
         return dto;
     }
 
@@ -79,6 +81,14 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
 
     public void setMatriculationRange(String matriculationRange) {
         this.matriculationRange = matriculationRange;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
 
 }

@@ -11,7 +11,7 @@
 
   <body>
     <div id="footer">
-        <span id="pagenumber"/>/<span id="pagecount"/>
+      <span id="pagenumber"/>/<span id="pagecount"/>
     </div>
     {% for table in content.tables %}
       <table class="studentGroupTeachertable">
@@ -33,7 +33,25 @@
         <tbody>
           {% for student in table.students %}
           <tr>
-            <td>{{ student.fullname }}</td>
+            <td>
+              <i>
+                {% if student.status == "OPPURSTAATUS_A" %}
+                  <span>{{ "student.statuses.academicLeaveShort" | translate }}</span>
+                {% elseif student.status == "OPPURSTAATUS_L" %}
+                  <span>{{ "student.statuses.finishedShort" | translate }}</span>
+                {% elseif student.status == "OPPURSTAATUS_K" %}
+                  <span>{{ "student.statuses.exmatriculatedShort" | translate }}</span>
+                {% endif %}
+
+                {% if student.isIndividualCurriculum %}
+                  {% if student.status != "OPPURSTAATUS_O" and student.status != "OPPURSTAATUS_V"  %}
+                    <span>, </span>
+                  {% endif %}  
+                  <span>{{ "student.statuses.individualCurriculumShort" | translate }}</span>
+                {% endif %}
+              </i>
+              <span>{{ student.fullname }}</span>
+            </td>
             {% for column in student.resultColumns %}
               <td class="center" style="white-space: nowrap">{{ column }}</td>
             {% endfor %}
@@ -52,18 +70,24 @@
 
     <table class="reportsubtable">
       <tr>
+        <td class="label">{{ "student.statuses.legend" | translate }}</td>
+      </tr>
+      <tr>{{'student.statuses.academicLeaveShort' | translate}} - {{'student.statuses.academicLeave' | translate}}</tr>
+      <tr>{{'student.statuses.individualCurriculumShort' | translate}} - {{'student.statuses.individualCurriculum' | translate}}</tr>
+      <tr>{{'student.statuses.exmatriculatedShort' | translate}} - {{'student.statuses.exmatriculated' | translate}}</tr>
+      <tr>{{'student.statuses.finishedShort' | translate}} - {{'student.statuses.finished' | translate}}</tr>
+    </table>
+
+    <table class="reportsubtable">
+      <tr>
         <td class="label">{{ "studentgroupteacher.journal" | translate }}</td>
       </tr>
-      <!--tr>
-        <td class="label">{{ "studentgroupteacher.moduleType" | translate }}</td>
-        <td class="label">{{ "studentgroupteacher.module" | translate }}</td>
-        <td class="label">{{ "studentgroupteacher.journal" | translate }}</td>
-      </tr-->
       {% for journal in content.journals %}
         <tr>
           <td>{{ journal.name }} - {{ journal.module }} ({{ journal.moduleType }})</td>
         </tr>
       {% endfor %}
     </table>
+    
   </body>
 </html>

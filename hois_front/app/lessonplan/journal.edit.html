@@ -200,7 +200,7 @@
       <div layout="row">
         <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
         <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-        <md-button ng-click="backToLessonplan()" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-click="back('#/lessonplans/vocational/' + record.lessonPlan + '/edit', journalForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
   </div>

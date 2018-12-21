@@ -4,6 +4,7 @@ angular.module('hitsaOis').controller('ModuleProtocolListController', function (
   $scope.auth = $route.current.locals.auth;
   $scope.search = {};
   $scope.criteria = {};
+  $scope.directiveControllers = [];
 
   function canCreateProtocol() {
     return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) && $scope.auth.authorizedRoles.indexOf("ROLE_OIGUS_K_TEEMAOIGUS_MOODULPROTOKOLL") !== -1;
@@ -40,6 +41,9 @@ angular.module('hitsaOis').controller('ModuleProtocolListController', function (
   $scope.clearSearch = function () {
     $scope.clearCriteria();
     $scope.search = {};
+    $scope.directiveControllers.forEach(function (c) {
+      c.clear();
+    });
   };
 
   $scope.curriculumVersionModule = function(row) {

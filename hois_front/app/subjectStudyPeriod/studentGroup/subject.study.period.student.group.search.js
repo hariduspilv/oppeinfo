@@ -19,7 +19,12 @@ function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthSer
         $scope.loadData();
     }
 
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(setCurrentStudyPeriod);
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(setCurrentStudyPeriod);
+    $scope.studyPeriods.$promise.then(function (response) {
+        response.forEach(function (studyPeriod) {
+            studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+        });
+    });
 
     $scope.load = function() {
         if (!$scope.searchForm.$valid) {
@@ -30,6 +35,15 @@ function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthSer
         }
       };
 
+    $scope.directiveControllers = [];
+    var clearCriteria = $scope.clearCriteria;
+    $scope.clearCriteria = function () {
+        clearCriteria();
+        $scope.directiveControllers.forEach(function (c) {
+            c.clear();
+        });
+    }
+    
     $scope.$watch('criteria.department', function() {
         if ($scope.criteria.department && $scope.criteria.curriculum) {
             var curriculum = $scope.curricula.find(function (it) { return it.id === $scope.criteria.curriculum; });

@@ -247,6 +247,7 @@
     </div>
     <div ng-show="implementationPlan.status === VERSION_STATUS.K" layout-xs="column">
       <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="implementationPlan.canChange">{{'main.button.change' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="implementationPlan.canChange && implementationPlan.canSetUnderRevision">{{'curriculum.statuschange.implementationPlan.button.changeStatusUnderRevision' | translate}}</md-button>
       <md-button ng-click="setStatusClosed()" class="md-raised" ng-if="implementationPlan.canClose">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
     </div>

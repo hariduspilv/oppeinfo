@@ -90,6 +90,7 @@ public class StudentAbsenceService {
         
         qb.optionalCriteria("s.curriculum_version_id in :curriculumVersions", "curriculumVersions", criteria.getCurriculumVersions());
         qb.optionalContains("sg.code", "studentGroupCode", criteria.getStudentGroupCode());
+        qb.optionalCriteria("sg.id = :groupId", "groupId", criteria.getStudentGroupId());
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getStudentName());
         qb.optionalCriteria("sa.is_accepted = :isAccepted", "isAccepted", criteria.getIsAccepted());
         

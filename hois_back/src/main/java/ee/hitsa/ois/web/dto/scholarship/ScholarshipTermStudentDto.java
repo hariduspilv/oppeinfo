@@ -12,6 +12,7 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
     private BigDecimal lastPeriodMark;
     private BigDecimal curriculumCompletion;
     private Long maxAbsences;
+    private String addInfo;
     private Boolean isTeacherConfirm;
     private String status;
     private LocalDate decisionDate;
@@ -70,6 +71,14 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
 
     public void setMaxAbsences(Long maxAbsences) {
         this.maxAbsences = maxAbsences;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
 
     public Boolean getIsTeacherConfirm() {

@@ -233,7 +233,7 @@ public class BaseModuleService {
         EntityUtil.bindEntityCollection(module.getOutcomes(), BaseModuleOutcomes::getId,
             outcomes, BaseModuleOutcomesDto::getId, dto -> createOutcome(module, dto), this::updateOutcome,
             baseOut -> {
-                Set<CurriculumModuleOutcome> currOuts = baseOut.getOutcomes();
+                List<CurriculumModuleOutcome> currOuts = baseOut.getOutcomes();
                 currOuts.forEach(outcome -> {
                     JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_module_outcomes cmo").limit(1);
                     qb.requiredCriteria("cmo.id = :outcomeId and ("

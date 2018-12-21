@@ -1,15 +1,34 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolController', function ($scope, $route, Classifier, $q, ArrayUtils, ProtocolUtils, VocationalGradeUtil, QueryUtils, message, $location, dialogService, $mdDialog, $window, oisFileService, config, $timeout, $filter) {
+angular.module('hitsaOis').controller('ModuleProtocolController', function ($filter, $scope, $route, $location, $q, Classifier, ProtocolUtils, VocationalGradeUtil, QueryUtils, config, dialogService, message, oisFileService, stateStorageService) {
   var endpoint = '/moduleProtocols';
   $scope.gradeUtil = VocationalGradeUtil;
   $scope.auth = $route.current.locals.auth;
+  var stateKey = 'moduleProtocol';
+  var schoolId = $scope.auth.school.id;
   var clMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', status: 'PROTOKOLL_STAATUS' });
   var editForbiddenGrades = ['KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_X'];
   var viewForbiddenGrades = ['KUTSEHINDAMINE_X'];
   var allGrades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
   
   $scope.formState = {};
+  $scope.formState.selectedStudentsExist = false;
+  var state = stateStorageService.loadState(schoolId, stateKey);
+  if (!angular.equals({}, state)) {
+    $scope.formState.showJournals = state.showJournals;
+    $scope.formState.showOutcomes = state.showOutcomes;
+  } else {
+    $scope.formState.showJournals = true;
+    $scope.formState.showOutcomes = true;
+  }
+
+  $scope.$watch('formState.showJournals', function() {
+    stateStorageService.changeState(schoolId, stateKey, {showJournals: $scope.formState.showJournals});
+  });
+
+  $scope.$watch('formState.showOutcomes', function() {
+    stateStorageService.changeState(schoolId, stateKey, {showOutcomes: $scope.formState.showOutcomes});
+  });
 
   $scope.calculateGrades = {
     protocolStudents: []
@@ -220,7 +239,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
   };
 
   function setCalculatedGrade(calculatedGrade) {
-    var student = $scope.protocol.protocolStudents.find(function(s){
+    var student = $scope.protocol.protocolStudents.find(function(s) {
       return s.id === calculatedGrade.protocolStudent;
     });
     student.grade = calculatedGrade.grade;
@@ -231,9 +250,37 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     $scope.gradeChanged();
   }
 
+  function getSelectedStudents() {
+    if ($scope.protocol && $scope.protocol.protocolStudents) {
+      return $scope.protocol.protocolStudents.filter(function (student) {
+        return $scope.calculateGrades.protocolStudents[student.id];
+      }).map(function (student) {
+        return student.id;
+      });
+    }
+    return 0;
+  }
+
+  $scope.$watchCollection('calculateGrades.protocolStudents', function () {
+    var selectedStudents = getSelectedStudents();
+    $scope.formState.selectedStudentsExist = selectedStudents.length > 0;
+  });
+
+  $scope.updateAllStudentsCheckBoxes = function (value) {
+    $scope.protocol.protocolStudents.forEach(function (student) {
+      if (student.canBeDeleted) {
+        $scope.calculateGrades.protocolStudents[student.id] = value;
+      } else {
+        $scope.calculateGrades.protocolStudents[student.id] = value;
+      }
+    });
+  };
+
   $scope.calculate = function() {
-    QueryUtils.endpoint(endpoint + '/' + $scope.protocol.id + "/calculate").query($scope.calculateGrades).$promise.then(function(response){
+    var selectedStudents = getSelectedStudents();
+    QueryUtils.endpoint(endpoint + '/' + $scope.protocol.id + "/calculate").query({protocolStudents: selectedStudents}).$promise.then(function(response) {
       $scope.calculateGrades.protocolStudents = [];
+      $scope.formState.selectAllStudents = false;
       setCalculatedGrades(response);
       message.info('moduleProtocol.messages.calculated');
     });

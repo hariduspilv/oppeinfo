@@ -50,6 +50,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private String otherText;
     private Set<ApplicationPlannedSubjectDto> plannedSubjects;
     private Set<ApplicationFileDto> files;
+    private Boolean canEditStudent;
 
     public static ApplicationDto of(Application application) {
         ApplicationDto dto = EntityUtil.bindToDto(application, new ApplicationDto(), "files", "plannedSubjects", "validAcademicLeave");
@@ -61,6 +62,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
             dto.setValidAcademicLeave(ValidAcademicLeaveDto.of(directiveStudent));
         }
         dto.setIsAdult(Boolean.valueOf(StudentUtil.isAdultAndDoNotNeedRepresentative(application.getStudent())));
+        dto.setCanEditStudent(Boolean.valueOf(StudentUtil.canBeEdited(application.getStudent())));
         return dto;
     }
 
@@ -339,5 +341,13 @@ public class ApplicationDto extends InsertedChangedVersionDto {
 
     public void setFiles(Set<ApplicationFileDto> files) {
         this.files = files;
+    }
+
+    public Boolean getCanEditStudent() {
+        return canEditStudent;
+    }
+
+    public void setCanEditStudent(Boolean canEditStudent) {
+        this.canEditStudent = canEditStudent;
     }
 }

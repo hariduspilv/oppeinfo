@@ -148,9 +148,7 @@ public class CurriculumService {
         updateLanguages(curriculum, curriculumForm.getStudyLanguages());
         updateAddresses(curriculum, curriculumForm.getAddresses());
         updateJointPartners(curriculum, curriculumForm.getJointPartners());
-        if (curriculumForm.getTeacher() != null) {
-            curriculum.setTeacher(em.getReference(Teacher.class, curriculumForm.getTeacher().getId()));
-        }
+        curriculum.setTeacher(curriculumForm.getTeacher() == null ? null : em.getReference(Teacher.class, curriculumForm.getTeacher().getId()));
         if(CurriculumUtil.isVocational(curriculum)) {
             updateStudyForms(curriculum, curriculumForm.getStudyForms());
             if(Boolean.TRUE.equals(curriculum.getJoint())) {
@@ -431,6 +429,12 @@ public class CurriculumService {
         setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_M);
         return save(user, curriculum, curriculumForm);
     }
+    
+    public Curriculum setUnderRevision(HoisUserDetails user, Curriculum curriculum) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_S);
+        return EntityUtil.save(curriculum, em);
+    }
 
     private void setCurriculumStatus(Curriculum curriculum, CurriculumStatus status) {
         curriculum.setStatus(em.getReference(Classifier.class, status.name()));
@@ -441,6 +445,7 @@ public class CurriculumService {
         String myEhisShool = schoolService.getEhisSchool(user.getSchoolId());
         dto.setCanChange(Boolean.valueOf(CurriculumUtil.canChange(user, myEhisShool, curriculum)));
         dto.setCanConfirm(Boolean.valueOf(CurriculumUtil.canConfirm(user, myEhisShool, curriculum)));
+        dto.setCanSetUnderRevision(Boolean.valueOf(CurriculumUtil.canSetUnderRevision(user, curriculum)));
         dto.setCanClose(Boolean.valueOf(CurriculumUtil.canClose(user, myEhisShool, curriculum)));
         dto.setCanDelete(Boolean.valueOf(CurriculumUtil.canDelete(user, myEhisShool, curriculum)));
 

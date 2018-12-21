@@ -1318,6 +1318,11 @@ th.bordered[md-column] {
   color: red;
 }
 
+.protocolGradeSelect {
+  margin: 0px;
+  width: 5em;
+}
+
 th.required::after {
   content: ' *';
 }
@@ -2255,17 +2260,19 @@ label.ui-btn {
 	/*width: 100%;*/
 }
 
-.journalTable  td, .journalTable  th
+.journalTable td, .journalTable th
 {
   border-bottom: 1px solid #ccc;
   border-right: 1px solid #ccc;
   height: 30px;
-  /*padding: 3px;*/
+  white-space: nowrap;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
-.journalTable  td:nth-child(n+1), .journalTable  th:nth-child(n+1)
+.journalTable td:nth-child(n+1), .journalTable th:nth-child(n+1)
 {
-  text-align:center;
+  text-align: center;
 }
 
 .journalTable td:nth-child(1), th:nth-child(1)
@@ -2273,14 +2280,32 @@ label.ui-btn {
   min-width: unset;
 }
 
-.journalTable td:nth-child(2), .journalTable  th:nth-child(2)
+.journalTable td:nth-child(2), .journalTable th:nth-child(2)
 {
   text-align:left;
 }
 
-.journalTable  th
+.journalTable th
 {
-  padding: 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.quickUpdateGrade {
+  margin-right: 10px;
+}
+
+.quickUpdateGradeAsInput {
+  margin-right: 10px;
+  height: 44px;
+}
+
+.quickUpdateAddInfo {
+  width: 150px;
+}
+
+.quickUpdateAddInfo input {
+  margin: 0px;
 }
 
 .entryWithAddInfoTootlip {
@@ -2383,17 +2408,12 @@ label.ui-btn {
 }
 
 .student-group-teacher-container .container {
-  border-top: none;
-  border-left: none;
-}
-
-.student-group-teacher-container .container table{
-  border-collapse: collapse;
+  padding: 0px
 }
 
 .student-group-teacher-table, .student-group-absence-table {
-  min-width: 100%;
   border-collapse: collapse;
+  min-width: 100%;
   font-size: 13px;
 }
 
@@ -2404,7 +2424,8 @@ label.ui-btn {
 .student-group-teacher-table th, .student-group-teacher-table td,
 .student-group-absence-table th, .student-group-absence-table td
 {
-  border: 1px solid lightgrey;
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #ccc;
 }
 
 .student-group-teacher-table tr:nth-child(3) th {

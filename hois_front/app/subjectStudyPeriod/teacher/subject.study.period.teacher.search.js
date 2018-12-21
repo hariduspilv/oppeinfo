@@ -18,7 +18,12 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController
         $scope.loadData();
     }
 
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(setCurrentStudyPeriod);
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(setCurrentStudyPeriod);
+    $scope.studyPeriods.$promise.then(function (response) {
+      response.forEach(function (studyPeriod) {
+        studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+      });
+    });
 
     $scope.load = function() {
         if (!$scope.searchForm.$valid) {

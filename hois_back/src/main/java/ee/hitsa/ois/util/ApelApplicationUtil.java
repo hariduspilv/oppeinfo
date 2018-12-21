@@ -25,7 +25,7 @@ public abstract class ApelApplicationUtil {
     public static boolean canView(HoisUserDetails user, ApelApplication application) {
         if (UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTA)) {
             return UserUtil.isSchoolAdmin(user, application.getSchool())
-                    || UserUtil.isSame(user, application.getStudent());
+                    || UserUtil.isStudent(user, application.getStudent());
         } else if (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTAKOM)) {
             return UserUtil.isSchoolAdmin(user, application.getSchool())
                     || (UserUtil.isTeacher(user, application.getSchool()) && isCommitteeMember(user, application)); 
@@ -37,7 +37,7 @@ public abstract class ApelApplicationUtil {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
         if (user.isStudent()) {
-            return ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status) && UserUtil.isSame(user, student);
+            return ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status) && UserUtil.isStudent(user, student);
         } else if (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)) {
             return (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)
                     || ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status))
@@ -96,7 +96,7 @@ public abstract class ApelApplicationUtil {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
         if (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)) {
-            return UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isSame(user, student);
+            return UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isStudent(user, student);
         }
         return false;
     }

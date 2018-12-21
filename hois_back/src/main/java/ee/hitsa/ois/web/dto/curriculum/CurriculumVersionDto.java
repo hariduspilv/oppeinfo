@@ -73,6 +73,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     
     private Boolean canChange;
     private Boolean canConfirm;
+    private Boolean canSetUnderRevision;
     private Boolean canClose;
     private Boolean canDelete;
     
@@ -278,6 +279,14 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
 
     public void setCanConfirm(Boolean canConfirm) {
         this.canConfirm = canConfirm;
+    }
+
+    public Boolean getCanSetUnderRevision() {
+        return canSetUnderRevision;
+    }
+
+    public void setCanSetUnderRevision(Boolean canSetUnderRevision) {
+        this.canSetUnderRevision = canSetUnderRevision;
     }
 
     public Boolean getCanClose() {

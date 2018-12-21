@@ -15,7 +15,8 @@ public class SubjectStudyPeriodDto {
     private List<AutocompleteResult> teachers;
     
     public static SubjectStudyPeriodDto of(SubjectStudyPeriod subjectStudyPeriod) {
-        SubjectStudyPeriodDto dto = EntityUtil.bindToDto(subjectStudyPeriod, new SubjectStudyPeriodDto(), "teachers");
+        SubjectStudyPeriodDto dto = EntityUtil.bindToDto(subjectStudyPeriod, new SubjectStudyPeriodDto(), "teachers", "studyPeriod");
+        dto.setStudyPeriod(AutocompleteResult.ofWithYear(subjectStudyPeriod.getStudyPeriod()));
         dto.setTeachers(StreamUtil.toMappedList(sspt -> AutocompleteResult.of(sspt.getTeacher()), 
                 subjectStudyPeriod.getTeachers()));
         return dto;

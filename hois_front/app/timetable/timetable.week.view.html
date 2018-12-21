@@ -141,7 +141,7 @@
                             <span ng-if="!event.public">{{'timetable.timetableEvent.occupied' | translate}}</span>
                         </div>
                         <div>
-                            {{event.teachers.length > 0 ? (auth.higher ? ('student.result.teacherHigher' | translate) : ('student.result.teacherVocational' | translate)) : ""}}
+                            {{event.teachers.length &gt; 0 ? (auth.higher ? ('student.result.teacherHigher' | translate) : ('student.result.teacherVocational' | translate)) : ""}}
                             <span ng-repeat="teacher in event.teachers track by $index">
                                 <a ng-if="teacher.id" ng-href="/#/timetable/teacher/{{::schoolId}}/{{teacher.id}}">{{teacher.name}}</a>
                                 <span ng-if="!teacher.id">{{teacher.name}}</span>
@@ -149,7 +149,7 @@
                             </span>
                         </div>
                         <div>
-                            {{event.rooms.length > 0 ? ('lessonplan.event.room' | translate) : ""}}
+                            {{event.rooms.length &gt; 0 ? ('lessonplan.event.room' | translate) : ""}}
                             <span ng-repeat="room in event.rooms track by $index">
                                 <a ng-if="room.id" ng-href="/#/timetable/room/{{::schoolId}}/{{room.id}}">{{room.buildingCode}}-{{room.roomCode}}</a>
                                 <span ng-if="!room.id">{{room.roomCode}}</span>
@@ -157,7 +157,7 @@
                             </span>
                         </div>
                         <div>
-                            {{event.studentGroups.length > 0 ? ('directive.student.studentGroup' | translate) : ""}}
+                            {{event.studentGroups.length &gt; 0 ? ('directive.student.studentGroup' | translate) : ""}}
                             <span ng-repeat="studentGroup in event.studentGroups track by $index">
                                 <a ng-href="/#/timetable/group/{{::schoolId}}/{{studentGroup.id}}">{{studentGroup.code}}</a>
                                 {{$last ? '' : ', '}}

@@ -32,9 +32,9 @@ public class ApelApplicationInformalSubjectOrModuleDto extends VersionedCommand{
         dto.setCurriculumVersionHmodule(subjectOrModule.getCurriculumVersionHmodule() != null
                 ? CurriculumVersionHigherModuleDto.of(subjectOrModule.getCurriculumVersionHmodule()) : null);
         dto.setCurriculumVersionOmodule(subjectOrModule.getCurriculumVersionOmodule() != null 
-                ? CurriculumVersionOccupationModuleDto.of(subjectOrModule.getCurriculumVersionOmodule()) : null);
+                ? CurriculumVersionOccupationModuleDto.forApelApplicationForm(subjectOrModule.getCurriculumVersionOmodule()) : null);
         dto.setCurriculumVersionOmoduleTheme(subjectOrModule.getCurriculumVersionOmoduleTheme() != null 
-                ? CurriculumVersionOccupationModuleThemeDto.of(subjectOrModule.getCurriculumVersionOmoduleTheme()) : null);
+                ? CurriculumVersionOccupationModuleThemeDto.forApelApplicationForm(subjectOrModule.getCurriculumVersionOmoduleTheme()) : null);
         dto.setOutcomes(StreamUtil.toMappedList(ApelApplicationInformalSubjectOrModuleOutcomesDto::of, subjectOrModule.getOutcomes()));
         return dto;
     }

@@ -7,6 +7,7 @@ public class CurriculumVersionOccupationModuleAutocompleteCommand extends Search
     private Long curriculumVersion;
     private Boolean curriculumModules;
     private Boolean closedCurriculumVersionModules;
+    private Boolean ignoreStatuses;
     private Long school;
     private Long student;
     private Boolean otherStudents;
@@ -33,6 +34,14 @@ public class CurriculumVersionOccupationModuleAutocompleteCommand extends Search
 
     public void setClosedCurriculumVersionModules(Boolean closedCurriculumVersionModules) {
         this.closedCurriculumVersionModules = closedCurriculumVersionModules;
+    }
+
+    public Boolean getIgnoreStatuses() {
+        return ignoreStatuses;
+    }
+
+    public void setIgnoreStatuses(Boolean ignoreStatuses) {
+        this.ignoreStatuses = ignoreStatuses;
     }
 
     public Long getSchool() {

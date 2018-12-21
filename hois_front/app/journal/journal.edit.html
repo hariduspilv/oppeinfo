@@ -1,10 +1,15 @@
-<div ng-include="'journal/journal.edit.buttons.tmpl.html'"></div>
 <div layout-padding>
+  <div ng-include="'journal/journal.edit.buttons.tmpl.html'"></div>
   <div flex>
     <div layout="row" flex>
       <div flex="50" layout="column" layout-align="start">
         <div class="common-label" flex>{{'journal.absencesLegend' | translate}}</div>
-        <div class="common-label" flex>{{'journal.entryTabelLegend' | translate}}</div>
+        <div class="common-label" flex>
+          <span>{{'student.statuses.academicLeaveShort' | translate}} - {{'student.statuses.academicLeave' | translate}}, </span>
+          <span>{{'student.statuses.individualCurriculumShort' | translate}} - {{'student.statuses.individualCurriculum' | translate}}, </span>
+          <span>{{'student.statuses.exmatriculatedShort' | translate}} - {{'student.statuses.exmatriculated' | translate}}, </span>
+          <span>{{'student.statuses.finishedShort' | translate}} - {{'student.statuses.finished' | translate}}</span>
+        </div>
       </div>
       <div flex="50" layout="row" layout-align="end">
         <md-input-container>
@@ -15,20 +20,30 @@
       </div>
     </div>
     <br>
+    <div ng-include="'journal/journal.entryType.buttons.tmpl.html'"></div>
     
-    <div class="container" fixed-column-table fixed-columns="2">
+    <div class="container" fixed-column-table fixed-columns="2" ng-style="{'overflow-y': journal.journalStudents.length < 11 ? 'hidden':'scroll'}">
       <table class="journalTable">
         <thead>
           <tr flex>
             <th>{{'main.nr' | translate}}</th>
             <th style="padding-right:11em;"><span>{{'student.label' | translate}}, {{'journal.studentGroup' | translate}}</span></th>
-            <th class="bordered journal-entry" ng-click="editJournalEntry(journalEntry.id)" style="padding-left:1em;"
-              md-colors="{background: getEntryColor(journalEntry.entryType.code)}"
-              ng-repeat="journalEntry in journal.journalEntriesByDate">
+            <th ng-if="journalEntryTypes[journalEntry.entryType.code]._selected" class="bordered"
+              md-colors="{background: getEntryColor(journalEntry.entryType.code)}" ng-repeat="journalEntry in journal.journalEntriesByDate">
               <span ng-if="journalEntry.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span>
-              <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}}</span>
-              <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_O'">{{'journal.outcome' | translate}}{{journalEntry.outcomeOrderNr + 1}}</span>
-              <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L' && journalEntry.entryType.code !== 'SISSEKANNE_O'">{{journalEntry.entryDate  ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
+              <span class="journal-entry" style="text-decoration: underline;" ng-click="editJournalEntry(journalEntry.id)">
+                <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}}</span>
+                <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_O'">{{'journal.outcome' | translate}}{{journalEntry.outcomeOrderNr + 1}}</span>
+                <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L' && journalEntry.entryType.code !== 'SISSEKANNE_O'">{{journalEntry.entryDate ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
+              </span>
+              <span style="float: right;">
+                <md-icon ng-if="!journalEntry.quickUpdate" ng-click="quickUpdate(journalEntry)" 
+                  title="{{'journal.changeResults' | translate}}" md-font-set="material-icons">forward_5</md-icon>
+                <md-icon ng-if="journalEntry.quickUpdate" ng-click="saveQuickUpdate(journalEntry)" md-font-set="material-icons" 
+                  title="{{'journal.saveQuickUpdate' | translate}}" md-colors="{color: 'green-500'}">done</md-icon>
+                <md-icon ng-if="journalEntry.quickUpdate" ng-click="cancelQuickUpdate(journalEntry)" md-font-set="material-icons" 
+                  title="{{'journal.cancelQuickUpdate' | translate}}" md-colors="{color: 'red-500'}">close</md-icon>
+              </span>
               <md-tooltip>
                 <span ng-if="journalEntry.startLessonNr">
                   <span ng-if="!journalEntry.lessons || journalEntry.lessons <= 1">{{journalEntry.startLessonNr}}. {{'journal.lesson' | translate}}</span> 
@@ -44,17 +59,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="row in journal.journalStudents" ng-class-odd="'odd'" ng-class-even="'even'" ng-init="$last && finished()">
+          <tr ng-repeat="row in journal.journalStudents" ng-class-odd="'odd'" ng-class-even="'even'" ng-init="$last && finished(false)">
             <td width="5%">{{$index + 1}}</td>
             <td width="10%">
               <span>
                 <i>
-                  <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'journal.academicLeaveAbbrev' | translate}}</span>
-                  <span ng-if="row.status === 'OPPURSTAATUS_L'">{{'journal.finishedAbbrev' | translate}}</span>
-                  <span ng-if="row.status === 'OPPURSTAATUS_K'">{{'journal.exmatriculatedAbbrev' | translate}}</span>
+                  <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'student.statuses.academicLeaveShort' | translate}}</span>
+                  <span ng-if="row.status === 'OPPURSTAATUS_L'">{{'student.statuses.finishedShort' | translate}}</span>
+                  <span ng-if="row.status === 'OPPURSTAATUS_K'">{{'student.statuses.exmatriculatedShort' | translate}}</span>
                   <span ng-if="row.isIndividualCurriculum">
                     <span ng-if="row.status !== 'OPPURSTAATUS_O' && row.status !== 'OPPURSTAATUS_V'">, </span>
-                    <span>{{'journal.individualCurriculumAbbrev' | translate}}</span>
+                    <span>{{'student.statuses.individualCurriculumShort' | translate}}</span>
                   </span>
                 </i>
                 <a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}
@@ -62,9 +77,9 @@
                 <span ng-if="row.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
               </span>
             </td>
-            <td class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate">
-              <div layout="row" style="padding-left:1em;">
-                <div ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
+            <td ng-if="journalEntryTypes[journalEntry.entryType.code]._selected" class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate">
+              <div layout="row">
+                <div layout="row" layout-align="start center" ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
                   <span ng-if="result.absence">
                     {{result.absence.value}}
                     <md-tooltip ng-if="result.absence.value" class="entryWithAddInfoTootlip">
@@ -92,17 +107,18 @@
                   </span>
 
                   <span ng-if="(result.absence.value || result.lessonAbsences.length > 0) 
-                    && (result.journalEntryStudentHistories.length > 0 || result.grade)">/</span>
+                    && (result.journalEntryStudentHistories.length > 0 || (result.grade && !journalEntry.quickUpdate))">/</span>
 
                   <span ng-repeat="historyResult in result.journalEntryStudentHistories | orderBy: 'gradeInserted' track by $index">
                     <span ng-class="{badResult: !gradeUtil.isPositive(historyResult.grade.code)}">{{historyResult.grade.value}}</span>
-                    <span>* / </span>
+                    <span>*</span>
+                    <span ng-if="!journalEntry.quickUpdate || $index !== result.journalEntryStudentHistories.length - 1"> / </span>
                     <md-tooltip>
                       {{historyResult.gradeInserted | hoisDate}}, &nbsp; {{historyResult.gradeInsertedBy}} 
                     </md-tooltip>
                   </span>
 
-                  <span>
+                  <span ng-if="!journalEntry.quickUpdate">
                     <span ng-class="{journalFinalResult: journalEntry.entryType.code === 'SISSEKANNE_L',
                                     badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
                     <span ng-if="!result.grade && result.journalEntryStudentHistories.length > 0"> - </span>
@@ -111,6 +127,22 @@
                       <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
                     </md-tooltip>
                   </span>
+                </div>
+                <div ng-if="journalEntry.quickUpdate" layout="row" layout-align="end center" flex>
+                  <md-input-container ng-if="formState.gradeInputAsSelect" class="quickUpdateGrade">
+                    <hois-select ng-model="journalEntry.quickUpdateStudents[row.id].grade" values="grades" show-property="value" value-property="code"
+                      aria-label="grade" ng-change="quickUpdateGradeChanged(journalEntry, row.id)" 
+                      ng-disabled="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType.code === 'SISSEKANNE_L')"></hois-select>
+                  </md-input-container>
+                  <md-input-container ng-if="!formState.gradeInputAsSelect" class="quickUpdateGradeAsInput">
+                    <input ng-model="journalEntry.quickUpdateStudents[row.id].gradeValue" style="width: 75px;" ng-model-options="{ allowInvalid: true}"
+                      ng-change="quickUpdateGradeChanged(journalEntry, row.id)" type="text" ng-pattern="gradeInputRegex" aria-label="grade">
+                  </md-input-container>
+                  <md-input-container class="quickUpdateAddInfo">
+                    <input type="text" ng-model="journalEntry.quickUpdateStudents[row.id].addInfo" md-maxlength="1000"
+                      aria-label="additional info" ng-change="quickUpdateAddInfoChanged(journalEntry, row.id)"
+                      ng-disabled="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType.code === 'SISSEKANNE_L')">
+                  </md-input-container>
                 </div>
               </div>
             </td>
@@ -124,23 +156,16 @@
   </div>
 </div>
 
-<div ng-include="'journal/journal.edit.buttons.tmpl.html'"></div>
+<div layout-padding>
+  <div ng-include="'journal/journal.entryType.buttons.tmpl.html'"></div>
+  <div ng-include="'journal/journal.edit.buttons.tmpl.html'"></div>
+</div>
 
 <div layout-padding>
   <div flex>
     <div layout="row">
       <div flex="10">
         <h2>{{'journal.entries' | translate}}</h2>
-      </div>
-      <div layout="row" layout-align="start end" layout-sm="column" layout-xs="column" flex="70">
-        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_T')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_T'])}}</span>
-        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_E')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_E'])}}</span>
-        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_I')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_I'])}}</span>
-        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_H')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_H'])}}</span>
-        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_P')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_P'])}}</span>
-        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_R')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_R'])}}</span>
-        <span ng-if="journal.moduleOutcomesAsEntries" class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_O')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_O'])}}</span>
-        <span class="capacity-type-legend" flex-offset="5" md-colors="{background: getEntryColor('SISSEKANNE_L')}">{{currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}</span>
       </div>
     </div>
     <md-table-container>

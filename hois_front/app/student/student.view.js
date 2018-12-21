@@ -225,7 +225,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         curriculumModulesById[it.id] = it;
       });
 
-      var extracurricularVocationalModuleResults = [];
+      var formalLearningResult = [];
       var moduleResultById = {};
       $scope.vocationalResults.results.forEach(function (it) {
         if (!angular.isObject(moduleResultById[it.module.id])) {
@@ -239,12 +239,15 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
           }
         } else {
           angular.extend(moduleResultById[it.module.id], it);
-          //extra curricula module results
-          if (!angular.isObject(curriculumModulesById[it.module.id])) {
-            extracurricularVocationalModuleResults.push(it);
+
+          // collect formal learning results
+          if (it.isApelTransfer && it.isFormalLearning) {
+            formalLearningResult.push(it);
           }
         }
       });
+
+                  
 
       $scope.moduleResultById = moduleResultById;
       $scope.positiveThemeResult = function (themeResult) {
@@ -252,14 +255,39 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       };
       $scope.vocationalResultsCurriculum = {};
       $scope.vocationalResultsCurriculum.vocationalResultsModules = $scope.vocationalResults.curriculumModules.sort(function (m1, m2) {
-        return $rootScope.currentLanguageNameField(m1.curriculumModule).localeCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
+        return m1.curriculumModule.orderNr - m2.curriculumModule.orderNr || $rootScope.currentLanguageNameField(m1.curriculumModule).localeCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
       });
       $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules = $scope.vocationalResults.extraCurriculaModules.sort(function (m1, m2) {
-        return $rootScope.currentLanguageNameField(m1.curriculumModule).localeCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
+        return m1.curriculumModule.orderNr - m2.curriculumModule.orderNr || $rootScope.currentLanguageNameField(m1.curriculumModule).localeCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
       });
-      var otherSchoolExtraCurriculaModuleResults = $filter('filter')($scope.vocationalResults.results, {'isOtherSchool': true});
-      $scope.vocationalResultsCurriculum.otherSchoolExtraCurriculaModuleResults = otherSchoolExtraCurriculaModuleResults.sort(function (r1, r2) {
-        return $rootScope.currentLanguageNameField(r1.module).localeCompare($rootScope.currentLanguageNameField(r2.module));
+
+      // remove modules that are replaced by apel formal learning
+      formalLearningResult.forEach(function (formalLearning) {
+        formalLearning.replacedModules.forEach(function (replacedModuleId) {
+          var replacedModule = $scope.vocationalResultsCurriculum.vocationalResultsModules.filter(function (module) {
+            return module.id === replacedModuleId;
+          })[0];
+          if (angular.isObject(replacedModule)) {
+            var curriculumModuleIndex = $scope.vocationalResultsCurriculum.vocationalResultsModules.indexOf(replacedModule);
+            if (curriculumModuleIndex > -1) {
+              $scope.vocationalResultsCurriculum.vocationalResultsModules.splice(curriculumModuleIndex, 1);
+            }
+
+            var extreaCurriculuaModuleIndex = $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.indexOf(replacedModule);
+            if (extreaCurriculuaModuleIndex > -1) {
+              $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.splice(extreaCurriculuaModuleIndex, 1);
+            }
+          }
+        });
+      });
+
+      var formalLearningReplacedModuleResults = $filter('filter')($scope.vocationalResults.results, {'isFormalLearning': true});
+      $scope.vocationalResultsCurriculum.formalLearningReplacedModuleResults = formalLearningReplacedModuleResults.sort(function (r1, r2) {
+        if (r1.module.nameEt && r2.module.nameEt) {
+          return $rootScope.currentLanguageNameField(r1.module).localeCompare($rootScope.currentLanguageNameField(r2.module));
+        } else {
+          return 0;
+        }
       });
 
       $scope.allThemesHavePositiveGrade = function (module) {
@@ -304,37 +332,16 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         var yearToModule = {};
         vocationalResults.forEach(function (it) {
           if (!angular.isObject(yearToModule[it.studyYear.code])) {
-            yearToModule[it.studyYear.code] = { studyYear: it.studyYear, studyYearStartDate: it.studyYearStartDate, /*kkh: 0, credits: 0, */ results: [] };
+            yearToModule[it.studyYear.code] = { studyYear: it.studyYear, studyYearStartDate: it.studyYearStartDate, results: [] };
           }
           yearToModule[it.studyYear.code].results.push(it);
         });
 
         var vocationalResultsStudyYear = Object.values(yearToModule);
-        /* TODO delete this code if credits aren't needed
-        vocationalResultsStudyYear.forEach(function (studyYearModulesThemes) {
-
-          var creditsSum = 0;
-          var gradeCreditsSum = 0;
-          var creditsSumForAverage = 0;
-          studyYearModulesThemes.results.forEach(function (moduleTheme) {
-            if (moduleTheme.grade && VocationalGradeUtil.isPositive(moduleTheme.grade.code)) {
-              if(VocationalGradeUtil.isDistinctive(moduleTheme.grade.code)) {
-                var grade = parseInt(moduleTheme.grade.value, 10);
-                creditsSumForAverage += moduleTheme.credits;
-                gradeCreditsSum += moduleTheme.credits * parseInt(grade, 10);
-              }
-              creditsSum += moduleTheme.credits;
-            }
-          });
-
-          if (creditsSumForAverage !== 0) {
-            studyYearModulesThemes.kkh = gradeCreditsSum / creditsSumForAverage;
-          }
-          studyYearModulesThemes.credits = creditsSum;
+        vocationalResultsStudyYear.sort(function (a, b) {
+          return new Date(b.studyYearStartDate).getTime() - new Date(a.studyYearStartDate).getTime();
         });
-        */
-
-        $scope.vocationalResultsStudyYear = vocationalResultsStudyYear.sort(function (a, b) { return a.studyYearStartDate < b.studyYearStartDate; });
+        $scope.vocationalResultsStudyYear = vocationalResultsStudyYear;
       });
     }
   };
@@ -530,7 +537,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
 
   }]).controller('StudentViewDocumentsController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', 'CertificateUtil', 'CertificateType', function ($q, $route, $scope, Classifier, QueryUtils, CertificateUtil, CertificateType) {
    // var studentId = (auth.isStudent() ? auth.student : $route.current.params.id);
-    $scope.studentId = ($route.current.locals.auth.isStudent() ? $route.current.locals.auth.student : $route.current.params.id);
+    $scope.studentId = ($route.current.locals.auth.isStudent() || $route.current.locals.auth.isParent() ? $route.current.locals.auth.student : $route.current.params.id);
     $scope.currentNavItem = 'student.documents';
     $scope.auth = $route.current.locals.auth;
 
@@ -541,6 +548,10 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.applications.content = applicationsMapper.objectmapper(result.content);
       $scope.applications.totalElements = result.totalElements;
     };
+
+    QueryUtils.endpoint('/students').get({ id: $scope.studentId }).$promise.then(function (student) {
+      $scope.studentInfo = student;
+    });
 
     $scope.loadApplications = function () {
       var query = QueryUtils.getQueryParams($scope.applicationsCriteria);
@@ -624,11 +635,19 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     $scope.currentNavItem = 'student.timetable';
     $scope.auth = $route.current.locals.auth;
 
-  }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'oisFileService', 'QueryUtils', 'DataUtils', 'dialogService', 'hoisDateFilter',
-    function ($location, $route, $scope, message, oisFileService, QueryUtils, DataUtils, dialogService, hoisDateFilter) {
+  }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'oisFileService', 'QueryUtils', 'DataUtils', 'dialogService', 'hoisDateFilter', '$rootScope',
+    function ($location, $route, $scope, message, oisFileService, QueryUtils, DataUtils, dialogService, hoisDateFilter, $rootScope) {
     var id = $route.current.params.id;
+    var cannotEditStatuses = Object.freeze({
+      OPPURSTAATUS_K: "OPPURSTAATUS_K",
+      OPPURSTAATUS_L: "OPPURSTAATUS_L"
+    });
 
     function afterLoad() {
+      if ($scope.student.status in cannotEditStatuses) {
+        message.error("main.messages.error.nopermission");
+        $rootScope.back("#/students/" + $scope.student.id + "/main");
+      }
       if($scope.student.photo) {
         $scope.student.imageUrl = oisFileService.getUrl($scope.student.photo, 'student');
       } else {

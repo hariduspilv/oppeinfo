@@ -25,8 +25,11 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         }
       };
 
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
+    QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query().$promise.then(function(response){
         $scope.studyPeriods = response;
+        $scope.studyPeriods.forEach(function (studyPeriod) {
+          studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+        });
         setCurrentStudyPeriod();
         $scope.loadData();
     });
@@ -85,7 +88,11 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
       $scope.studentGroup = QueryUtils.endpoint('/studentgroups').get({id: studentGroupId});
     }
 
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
+        response.forEach(function (studyPeriod) {
+            studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+        });
+    });
     $scope.subjects = QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query();
 
     if(id) {
@@ -176,10 +183,18 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
       return true;
     }
 
+    function unique(arr) {
+        var seen = {};
+        return arr.filter(function(item) {
+            return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+        });
+    }
+
     function prepareDtoForSaving() {
       if(studentGroupId) {
         $scope.record.studentGroups.push(studentGroupId);
       }
+      $scope.record.studentGroups = unique($scope.record.studentGroups);
       if($scope.record.teachers.length === 1) {
           $scope.record.teachers[0].isSignatory = true;
       }
@@ -245,7 +260,11 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     var id = $route.current.params.id;
 
     $scope.record = Endpoint.get({id: id});
-    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
+        response.forEach(function (studyPeriod) {
+            studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+        });
+    });
 
     QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
         $scope.studentGroups = result.map(function(el){
@@ -257,6 +276,18 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     });
 
     $scope.subjects = QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query();
+    $scope.record.$promise.then(function (response) {
+        QueryUtils.endpoint('/subjectStudyPeriods/subject').get({id: response.subject}, function (subject) {
+            $scope.subjects.$promise.then(function (subjects) {
+                for (var i = 0; i < subjects.length; i++) {
+                    if (subjects[i].id === subject.id) {
+                        return;
+                    }
+                }
+                subjects.push(subject);
+            });
+        });
+    });
   }
 ]).constant('DeclarationType', {
   'DEKLARATSIOON_EI': 'DEKLARATSIOON_EI',

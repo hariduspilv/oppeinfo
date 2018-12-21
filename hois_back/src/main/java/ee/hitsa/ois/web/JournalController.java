@@ -40,6 +40,7 @@ import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.JournalStudentHasAbsenceCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEndDateCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
+import ee.hitsa.ois.web.commandobject.timetable.JournalEntryQuickUpdateForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalReviewForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
@@ -52,6 +53,7 @@ import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentAcceptedAbsenceDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentResultDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryTableDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
@@ -141,6 +143,14 @@ public class JournalController {
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         JournalUtil.asssertCanChange(user, journal);
         journalService.deleteJournalEntry(user, entry);
+    }
+
+    @PostMapping("/{id:\\d+}/journalEntry/quickUpdate")
+    public Map<Long, List<JournalEntryStudentResultDto>> quickUpdateJournalEntry(HoisUserDetails user,
+            @WithEntity Journal journal, @RequestBody JournalEntryQuickUpdateForm journalEntryForm,
+            @RequestParam(required = false) Boolean allStudents) {
+        JournalUtil.asssertCanChange(user, journal);
+        return journalService.quickUpdateJournalEntry(user, journalEntryForm, allStudents);
     }
 
     @PostMapping("/{id:\\d+}/addStudentsToJournal")

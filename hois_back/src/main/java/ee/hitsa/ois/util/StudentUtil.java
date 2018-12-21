@@ -38,6 +38,10 @@ public abstract class StudentUtil {
     public static boolean hasQuit(Student student) {
         return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_K, student.getStatus());
     }
+    
+    public static boolean canBeEdited(Student student) {
+        return !hasFinished(student) && !hasQuit(student);
+    }
 
     public static boolean isNominalStudy(Student student) {
         LocalDate nominalStudyEnd = student.getNominalStudyEnd();

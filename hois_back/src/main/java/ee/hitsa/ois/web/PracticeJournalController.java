@@ -33,6 +33,7 @@ import ee.hitsa.ois.service.ContractService;
 import ee.hitsa.ois.service.PracticeJournalService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PracticeJournalUserRights;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -74,14 +75,21 @@ public class PracticeJournalController {
 
     @GetMapping("/{id:\\d+}")
     public PracticeJournalDto get(HoisUserDetails user, @WithEntity PracticeJournal practiceJournal) {
-        UserUtil.assertSameSchool(user, practiceJournal.getStudent().getSchool());
+        UserUtil.assertSameSchool(user, practiceJournal.getSchool());
+        if (user.isTeacher()) {
+            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(practiceJournal.getTeacher()).equals(user.getTeacherId()));
+        } else if (user.isStudent() || user.isRepresentative()) {
+            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(practiceJournal.getStudent()).equals(user.getStudentId()));
+        } else {
+            UserUtil.assertIsSchoolAdmin(user);
+        }
         return practiceJournalService.get(user, practiceJournal);
     }
 
     @PostMapping
     public PracticeJournalDto create(HoisUserDetails user,
             @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdmin(user);
         return get(user, practiceJournalService.create(user.getSchoolId(), practiceJournalForm));
     }
 
@@ -89,7 +97,10 @@ public class PracticeJournalController {
     public PracticeJournalDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) PracticeJournal practiceJournal,
             @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrTeacher(user, practiceJournal.getSchool());
+        if (user.isTeacher()) {
+            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(practiceJournal.getTeacher()).equals(user.getTeacherId()));
+        }
         return get(user, practiceJournalService.save(practiceJournal, practiceJournalForm));
     }
     
@@ -97,7 +108,10 @@ public class PracticeJournalController {
     public PracticeJournalDto confirm(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) PracticeJournal practiceJournal,
             @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrTeacher(user, practiceJournal.getSchool());
+        if (user.isTeacher()) {
+            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(practiceJournal.getTeacher()).equals(user.getTeacherId()));
+        }
         return get(user, practiceJournalService.confirm(practiceJournal, practiceJournalForm));
     }
 
@@ -105,7 +119,10 @@ public class PracticeJournalController {
     public void delete(HoisUserDetails user,
             @WithVersionedEntity(versionRequestParam = "version") PracticeJournal practiceJournal,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrTeacher(user, practiceJournal.getSchool());
+        if (user.isTeacher()) {
+            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(practiceJournal.getTeacher()).equals(user.getTeacherId()));
+        }
         if (!PracticeJournalUserRights.canDelete(user, practiceJournal.getEndDate())) {
             throw new AssertionFailedException("User cannot delete practice journal");
         }
@@ -130,7 +147,7 @@ public class PracticeJournalController {
     public PracticeJournalDto saveEntriesStudent(HoisUserDetails user,
             @WithEntity PracticeJournal practiceJournal,
             @RequestBody PracticeJournalEntriesStudentForm practiceJournalEntriesStudentForm) {
-        UserUtil.assertIsStudent(user);
+        UserUtil.assertIsStudent(user, practiceJournal.getStudent());
         return get(user, practiceJournalService.saveEntriesStudent(practiceJournal, practiceJournalEntriesStudentForm));
     }
 
@@ -138,7 +155,10 @@ public class PracticeJournalController {
     public PracticeJournalDto saveEntriesTeacher(HoisUserDetails user,
             @WithEntity PracticeJournal practiceJournal,
             @RequestBody PracticeJournalEntriesTeacherForm practiceJournalEntriesTeacherForm) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrTeacher(user, practiceJournal.getSchool());
+        if (user.isTeacher()) {
+            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(practiceJournal.getTeacher()).equals(user.getTeacherId()));
+        }
         return get(user, practiceJournalService.saveEntriesTeacher(user, practiceJournal, practiceJournalEntriesTeacherForm));
     }
 

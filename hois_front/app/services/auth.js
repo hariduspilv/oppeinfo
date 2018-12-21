@@ -12,14 +12,31 @@ angular.module('hitsaOis')
         $q.all(roleMapper.promises).then(function () {
           roleMapper.objectmapper(response.data.users);
           for (var i = 0; i < response.data.users.length; i++) {
+            response.data.users[i].nameEt = response.data.users[i].nameEt;
+            response.data.users[i].nameEn = response.data.users[i].nameEn ? response.data.users[i].nameEn : response.data.users[i].role.nameEt;
+            response.data.users[i].nameRu = response.data.users[i].role.nameRu;
+            switch (response.data.users[i].role.code) {
+              case "ROLL_T":
+                if (response.data.users[i].studentGroup) {
+                  var group = response.data.users[i].studentGroup.length > 12 ? response.data.users[i].studentGroup.slice(0, 13) + "..." : response.data.users[i].studentGroup;
+                  response.data.users[i].nameEn += ' (' + group + ')';
+                  response.data.users[i].nameEt += ' (' + group + ')';
+                  response.data.users[i].nameRu += ' (' + group + ')';
+                }
+                break;
+              case "ROLL_L":
+                if (response.data.users[i].studentName) {
+                  var name = response.data.users[i].studentName.length > 12 ? response.data.users[i].studentName.slice(0, 13) + "..." : response.data.users[i].studentName;
+                  response.data.users[i].nameEn += ' (' + name + ')';
+                  response.data.users[i].nameEt += ' (' + name + ')';
+                  response.data.users[i].nameRu += ' (' + name + ')';
+                }
+                break;
+            }
             if (response.data.users[i].schoolCode) {
-              response.data.users[i].nameEn = response.data.users[i].role.nameEn + ' ' + response.data.users[i].schoolCode;
-              response.data.users[i].nameEt = response.data.users[i].role.nameEt + ' ' + response.data.users[i].schoolCode;
-              response.data.users[i].nameRu = response.data.users[i].role.nameRu + ' ' + response.data.users[i].schoolCode;
-            } else {
-              response.data.users[i].nameEn = response.data.users[i].role.nameEn;
-              response.data.users[i].nameEt = response.data.users[i].role.nameEt;
-              response.data.users[i].nameRu = response.data.users[i].role.nameRu;
+              response.data.users[i].nameEn += ' ' + response.data.users[i].schoolCode;
+              response.data.users[i].nameEt += ' ' + response.data.users[i].schoolCode;
+              response.data.users[i].nameRu += ' ' + response.data.users[i].schoolCode;
             }
           }
         });

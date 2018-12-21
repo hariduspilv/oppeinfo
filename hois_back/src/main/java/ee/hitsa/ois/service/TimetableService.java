@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 import javax.xml.parsers.DocumentBuilder;
@@ -2043,13 +2044,15 @@ public class TimetableService {
                 "join student_group sg on sg.id = lp.student_group_id " +
                 "join curriculum c on c.id = sg.curriculum_id " +
                 "left join teacher t on sg.teacher_id = t.id " +
-                "left join person p on p.id = t.person_id");
+                "left join person p on p.id = t.person_id " +
+                "left join journal_teacher jt on jt.journal_id = j.id " + 
+                "left join teacher t2 on t2.id = jt.teacher_id " +
+                "left join person p2 on p2.id = t2.person_id");
         journalQuery.requiredCriteria("j.school_id = :schoolId", "schoolId", schoolId);
         journalQuery.requiredCriteria("jc.week_nr = :weekNr", "weekNr",  weekNr.longValue());
         journalQuery.requiredCriteria("jc.study_period_id = :studyPeriod", "studyPeriod",  studyPeriod.getId());
         journalQuery.filter("lp.is_usable = true");
-        journalQuery.filter("j.untis_code is not null");
-        journalQuery.groupBy("j.untis_code, j.name_et, sg.code, j.id, c.name_et, t.untis_code, t.id, p.firstname, p.lastname");
+        journalQuery.groupBy("j.untis_code, j.name_et, sg.code, j.id, c.name_et, t.untis_code, t.id, p.firstname, p.lastname, t2.id, p2.firstname, p2.lastname");
         String journalSelect = "j.untis_code as journalCode," + 
                 " j.name_et as journalName," + 
                 " sg.code as StudentGroupCode," + 
@@ -2058,10 +2061,17 @@ public class TimetableService {
                 " j.id as journalId," + 
                 " t.id as teacherId," +
                 " p.firstname," +
-                " p.lastname";
+                " p.lastname," +
+                " t2.id as teacher2id," +
+                " p2.firstname as teacher2firstname," +
+                " p2.lastname as teacher2lastname," +
+                " t2.untis_code as teacher2untiscode";
         List<?> dbJournals= journalQuery.select(journalSelect, em).getResultList();
         List<TeacherStudentGroupAndCode> teacherCodes = StreamUtil
         		.toMappedList(r-> new TeacherStudentGroupAndCode(resultAsString(r, 7) + " " + resultAsString(r, 8), resultAsString(r, 4)), dbJournals);
+        List<TeacherStudentGroupAndCode> timetableTeachers = StreamUtil
+        		.toMappedList(r-> new TeacherStudentGroupAndCode(resultAsString(r, 10) + " " + resultAsString(r, 11), resultAsString(r, 12)), dbJournals);
+        teacherCodes.addAll(timetableTeachers);
         List<JournalNameAndCode> journalCodes = StreamUtil.toMappedList(r-> new JournalNameAndCode(resultAsString(r, 1), resultAsString(r, 0)), dbJournals);
         teacherCodes = teacherCodes.stream()
         		.filter(p->(p.getTeacherCode() == null || "null".equals(p.getTeacherCode())) && !"null null".equals(p.getName())).collect(Collectors.toList());
@@ -2174,19 +2184,23 @@ public class TimetableService {
 		if (document != null) {
 			Integer weekNr = studyPeriod.getWeekNrForDate(startDate);
 			Long schoolId = user.getSchoolId();
-	        
-	        Timetable timetable = em.createQuery("select tt from Timetable tt "
-	        		+ "where tt.school.id = ?1 "
-	        		+ "and tt.studyPeriod.id = ?2 "
-	        		+ "and tt.startDate = ?3 "
-	        		+ "and tt.endDate = ?4 " 
-	        		+ "and tt.isHigher = ?5", Timetable.class)
-	        		.setParameter(1, schoolId)
-	        		.setParameter(2, studyPeriod.getId())
-	        		.setParameter(3, startDate)
-	        		.setParameter(4, endDate)
-	        		.setParameter(5, isHigher)
-	        		.getSingleResult();
+			Timetable timetable;
+	        try {
+	        	timetable = em.createQuery("select tt from Timetable tt "
+		        		+ "where tt.school.id = ?1 "
+		        		+ "and tt.studyPeriod.id = ?2 "
+		        		+ "and tt.startDate = ?3 "
+		        		+ "and tt.endDate = ?4 " 
+		        		+ "and tt.isHigher = ?5", Timetable.class)
+		        		.setParameter(1, schoolId)
+		        		.setParameter(2, studyPeriod.getId())
+		        		.setParameter(3, startDate)
+		        		.setParameter(4, endDate)
+		        		.setParameter(5, isHigher)
+		        		.getSingleResult();
+	        } catch (NoResultException nre) {
+	        	throw new HoisException("Nädala " +  documentDateFormatHois.format(startDate) + " - " +  documentDateFormatHois.format(endDate) + " kohta puudub tunniplaan.");
+	        }
 	        
 	        // Delete existing imported timetable events and remove them from java object
 	        EntityUtil.setUsername(user.getUsername(), em);

@@ -59,12 +59,7 @@
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <div flex="45" flex-sm="100" flex-xs="100">
-            <div layout="column" flex>
-              <md-input-container>
-                <label class="textInput">{{'studentGroup.label' | translate}}</label>
-                <hois-select ng-model="criteria.studentGroup" type="studentgroup" criteria="{valid: true}"></hois-select>
-              </md-input-container>
-            </div>
+            <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" additional-query-params="{valid: true}" label="{{'studentGroup.label'}}"></hois-autocomplete>
           </div>
         </div>
 

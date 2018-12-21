@@ -16,7 +16,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); } },
-      data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LOPTEEMA]}
+      data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPTEEMA]}
     })
     .when('/finalThesis/:id/edit', {
       templateUrl: 'finalThesis/final.thesis.edit.html',
@@ -28,7 +28,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           return QueryUtils.endpoint('/finalThesis').get({id: $route.current.params.id}).$promise;
         }
       },
-      data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LOPTEEMA]}
+      data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LOPTEEMA]}
     })
     .when('/finalThesis/:id/view', {
       templateUrl: 'finalThesis/final.thesis.view.html',

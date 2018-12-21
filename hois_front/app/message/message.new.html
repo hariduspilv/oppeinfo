@@ -41,13 +41,12 @@
             <div ng-show="targetGroup && targetGroup === 'ROLL_T' && auth.isAdmin()" layout="column">
                 <md-input-container flex="50" flex-sm="100" flex-xs="100">
                     <label>{{'message.curriculumStudents' | translate}}</label>
-                    <hois-select multiple ng-model="curriculum" type="curriculum"></hois-select>
+                    <hois-select multiple ng-model="curriculum" type="curriculum" criteria="{closed: false}" sorted-query="true"></hois-select>
                 </md-input-container>
 
-                <md-input-container flex="50" flex-sm="100" flex-xs="100">
-                    <label>{{'message.studyGroupStudents' | translate}}</label>
-                    <hois-select multiple ng-model="studentGroup" values="studentGroups"></hois-select>
-                </md-input-container>
+                <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" display="code" ha-attribute="id"
+                  ng-model="studentGroup" url="/message/studentgroups" multiple label="message.studyGroupStudents"
+                  additional-query-params="{curriculums: curriculum, studyForm: studyForm}" no-paging="true"></hois-autocomplete>
 
                 <md-input-container flex="50" flex-sm="100" flex-xs="100">
                     <label>{{'message.studyFormStudents' | translate}}</label>
@@ -85,19 +84,16 @@
                 <label>{{'message.subjectStudentParent' | translate}}</label>
                 <hois-select multiple ng-model="subjectStudentParent" values="subjects"></hois-select>
             </md-input-container>
-
-            <md-input-container flex="50" flex-sm="100" flex-xs="100"
-            ng-show="targetGroup && targetGroup === 'ROLL_T' && groupSearchType === 'SEARCH_STUDENT_GROUP' && auth.isTeacher()">
-                <label>{{'message.studyGroupStudents' | translate}}</label>
-                <hois-select multiple ng-model="studentGroup" values="studentGroups"></hois-select>
-            </md-input-container>
-
-            <md-input-container flex="50" flex-sm="100" flex-xs="100"
-            ng-show="targetGroup && targetGroup === 'ROLL_L' && groupSearchType === 'SEARCH_STUDENT_GROUP' && auth.isTeacher()">
-                <label>{{'message.studyGroupStudentsParents' | translate}}</label>
-                <hois-select multiple ng-model="studyGroupStudentsParents" values="studentGroups"></hois-select>
-            </md-input-container>
             
+            <hois-autocomplete flex="50" flex-sm="100" flex-xs="100"
+              ng-show="targetGroup && targetGroup === 'ROLL_T' && groupSearchType === 'SEARCH_STUDENT_GROUP' && auth.isTeacher()" display="code" ha-attribute="id"
+              ng-model="studentGroup" url="/message/studentgroups" multiple label="message.studyGroupStudents"
+              additional-query-params="{curriculums: curriculum, studyForm: studyForm}" no-paging="true"></hois-autocomplete>
+
+            <hois-autocomplete flex="50" flex-sm="100" flex-xs="100"
+              ng-show="targetGroup && targetGroup === 'ROLL_L' && groupSearchType === 'SEARCH_STUDENT_GROUP' && auth.isTeacher()" display="code" ha-attribute="id"
+              ng-model="studyGroupStudentsParents" url="/message/studentgroups" multiple label="message.studyGroupStudentsParents"
+              additional-query-params="{curriculums: curriculum, studyForm: studyForm}" no-paging="true"></hois-autocomplete>
 
             <h2 ng-class="{invalid: messageNewForm.$submitted && receivers.length === 0}">{{'message.messageReceiver' | translate}} *</h2>
             <table md-table class="secondary-table">

@@ -5,6 +5,28 @@
 
 <div layout-padding ng-cloak>
   <div flex>
+    <div layout="row" layout-xs="column" flex class="form-readonly">
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label>{{'student.label' | translate}}</label>
+          <hois-value value="studentInfo.person.firstname + ' ' + studentInfo.person.lastname"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'student.idcode' | translate}}</label>
+          <hois-value value="studentInfo.person.idcode"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label>{{'student.studyForm' | translate}}</label>
+          <hois-classifier-value ng-model="studentInfo.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'student.curriculum' | translate}}</label>
+          <hois-value value="currentLanguageNameField(studentInfo.curriculumVersion)"></hois-value>
+        </md-input-container>
+      </div>
+    </div>
     <hois-collapsable label="('student.application.label' | translate)">
       <md-table-container>
         <table md-table md-progress="applications.$promise" class="secondary-table">
@@ -26,7 +48,7 @@
               <td md-cell>{{currentLanguageNameField(row.status)}}</td>
               <td md-cell>{{::row.confirmDate | hoisDate}}</td>
               <td md-cell>
-                <a ng-if="(row.status.code === 'AVALDUS_STAATUS_KOOST') || (row.status.code === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())"
+                <a ng-if="studentInfo.userCanEditStudent && ((row.status.code === 'AVALDUS_STAATUS_KOOST') || (row.status.code === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin()))"
                   md-no-ink class="md-button md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</a>
               </td>
             </tr>
@@ -171,7 +193,7 @@
               <td md-cell>{{::row.contractDate | hoisDate}}</td>
               <td md-cell>{{currentLanguageNameField(row.status)}}</td>
               <td md-cell>
-                <md-button ng-if="auth.isAdmin() && row.status.code === 'LEPING_STAATUS_S'" 
+                <md-button ng-if="studentInfo.userCanEditStudent && (auth.isAdmin() && row.status.code === 'LEPING_STAATUS_S')" 
                   md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/edit">{{'main.button.edit' | translate}}</md-button>
                 <md-button ng-if="!auth.isAdmin() || (auth.isAdmin() && row.status.code !== 'LEPING_STAATUS_S')"
                   md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>

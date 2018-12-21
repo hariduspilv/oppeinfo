@@ -141,14 +141,6 @@ public class ModuleProtocolControllerTests {
     }
 
     @Test
-    public void teachers() {
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("teachers");
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
-        Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    }
-
-    @Test
     public void occupationModule() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("occupationModule")
                 .pathSegment(

@@ -11,6 +11,7 @@ public class ApplicationSearchDto {
     private Long id;
     private AutocompleteResult student;
     private String status;
+    private Boolean canEditStudent;
     private String rejectReason;
     private String type;
     private LocalDateTime inserted;
@@ -64,4 +65,11 @@ public class ApplicationSearchDto {
         this.submitted = submitted;
     }
 
+    public Boolean getCanEditStudent() {
+        return canEditStudent;
+    }
+
+    public void setCanEditStudent(Boolean canEditStudent) {
+        this.canEditStudent = canEditStudent;
+    }
 }

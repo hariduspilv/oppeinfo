@@ -22,6 +22,7 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
     }
     
     $scope.criteria = {};
+    $scope.directiveControllers = [];
     $scope.formState = {
       studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(setCurrentStudyYearAndWeek), 
       studyWeeks: []
@@ -67,10 +68,6 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
       });
     }
 
-    $scope.$watch('criteria.studentGroupObject', function () {
-      $scope.criteria.studentGroup = $scope.criteria.studentGroupObject ? $scope.criteria.studentGroupObject.id : null;
-    });
-
     function setCurrentStudyWeek() {
       var currentDate = new Date();
       var currentTime = currentDate.getTime();
@@ -110,12 +107,16 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
         $scope.content = result;
         setJournals(result.journalsByDates);
         setStudentAbsences(result.studentAbsences);
+        $scope.$broadcast('refreshFixedColumns');
       });
       stateStorageService.changeState(schoolId, stateKey, $scope.criteria);
     };
   
     $scope.clearCriteria = function() {
       $scope.criteria = {};
+      $scope.directiveControllers.forEach(function (c) {
+        c.clear();
+      });
     };
 
     function setJournals(journalsByDates) {

@@ -29,7 +29,7 @@ public class SubjectStudyPeriodDto {
         return new SubjectStudyPeriodDto(ssp.getId(),
                 new AutocompleteResult(subj.getId(), SubjectUtil.subjectName(subj.getCode(), subj.getNameEt()), SubjectUtil.subjectName(subj.getCode(), subj.getNameEn())),
                 teachers,
-                AutocompleteResult.of(ssp.getStudyPeriod()),
+                AutocompleteResult.ofWithYear(ssp.getStudyPeriod()),
                 EntityUtil.getCode(subj.getAssessment()));
     }
 

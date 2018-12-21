@@ -19,27 +19,24 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       }
     }
     QueryUtils.createQueryForm($scope, '/reports/students', {order: 'p.lastname,p.firstname', isHigher: $scope.auth.higher}, afterLoad);
+    
+    $scope.directiveControllers = [];
     var _clearCriteria = $scope.clearCriteria;
     $scope.clearCriteria = function() {
       _clearCriteria();
       $scope.criteria.isHigher = $scope.auth.higher;
+      $scope.directiveControllers.forEach(function (c) {
+        c.clear();
+      });
     };
 
     $scope.formState = {
-      studentGroups: QueryUtils.endpoint('/autocomplete/studentgroups').query(),
-      filterStudentGroups: [],
       xlsUrl: 'reports/students/students.xls'
     };
 
     $scope.curriculumVersionChanged = function() {
-      $scope.formState.filterStudentGroups = [];
-      if ($scope.criteria.curriculumVersion) {
-        $scope.formState.studentGroups.forEach(function(studentGroup) {
-          if (studentGroup.curriculumVersion !== $scope.criteria.curriculumVersion.id) {
-            $scope.formState.filterStudentGroups.push(studentGroup.id);
-          }
-        });
-      }
+      $scope.studentGroupName = null;
+      $scope.criteria.studentGroup = null;
     };
 
     $q.all(certificateMapper.promises).then(function() {
@@ -118,12 +115,16 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
     $scope.auth = $route.current.locals.auth;
     var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', status: 'OPPURSTAATUS'});
     $scope.formState = {xlsUrl: 'reports/curriculums/completion/curriculumscompletion.xls'};
+    $scope.directiveControllers = [];
 
     QueryUtils.createQueryForm($scope, '/reports/curriculums/completion', {order: 'p.lastname,p.firstname', isHigher: $scope.auth.higher}, clMapper.objectmapper);
     var _clearCriteria = $scope.clearCriteria;
     $scope.clearCriteria = function() {
       _clearCriteria();
       $scope.criteria.isHigher = $scope.auth.higher;
+      $scope.directiveControllers.forEach(function (c) {
+        c.clear();
+      });
     };
 
     $q.all(clMapper.promises).then($scope.loadData);
@@ -293,11 +294,12 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
   if ($scope.auth.isTeacher()) {
     $scope.teacherId = $scope.auth.teacher;
   }
+  
+  $scope.directiveControllers = [];
 
   $scope.formState = {
     studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), 
     studyPeriods: {},
-    studentGroups: QueryUtils.endpoint('/autocomplete/studentgroups').query({valid: true, higher: false, studentGroupTeacherId: $scope.teacherId}),
     xlsUrl: 'reports/studentgroupteacher/studentgroupteacher.xls',
     pdfUrl: 'reports/studentgroupteacher/studentgroupteacher.pdf'
   };
@@ -437,6 +439,9 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
     $scope.formState.studyPeriod = null;
     $scope.formState.studentGroup = null;
     $scope.criteria = {};
+    $scope.directiveControllers.forEach(function (c) {
+      c.clear();
+    });
   };
 
   $scope.openAddInfoDialog = function (student) {

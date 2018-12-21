@@ -85,9 +85,7 @@ public class StudentController {
 
     @PutMapping("/{id:\\d+}")
     public StudentViewDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Student student, @Valid @RequestBody StudentForm form) {
-        if(!UserUtil.canEditStudent(user, student)) {
-            throw new AssertionFailedException("User cannot edit student data");
-        }
+        UserUtil.throwAccessDeniedIf(!UserUtil.canEditStudent(user, student), "User cannot edit student data");
         return get(user, studentService.save(user, student, form));
     }
 

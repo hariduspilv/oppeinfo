@@ -738,6 +738,9 @@ angular.module('hitsaOis')
             name: 'main.menu.subjectProgram.label',
             url: "/subjectProgram?_menu",
             icon: "description",
+            studyLevel: {
+              higher: true
+            }
           },
           {
             name: 'main.menu.study.material.higher',

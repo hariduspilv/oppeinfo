@@ -19,7 +19,12 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
     }
 
     if(!studyPeriodId) {
-      $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(setCurrentStudyPeriod);
+      $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(setCurrentStudyPeriod);
+      $scope.studyPeriods.$promise.then(function (response) {
+        response.forEach(function (studyPeriod) {
+            studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+        });
+      });
     }
 
     if(studentGroup) {

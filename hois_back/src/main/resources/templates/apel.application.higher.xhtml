@@ -121,6 +121,8 @@
             <td>
                 {% if formalSubjectOrModule.transfer %}
                   {{ "yes" | translate }}
+                {% else %}
+                  {{ "no" | translate }}
                 {% endif %}
             </td>
           </tr>
@@ -169,7 +171,11 @@
             <td>{{ informalSubjectOrModule.module }}</td>
             <td><p style="word-wrap: break-word;">{{ informalSubjectOrModule.skills }}</p></td>
             <td>
-              {% if informalSubjectOrModule.transfer %} X {% endif %}
+              {% if informalSubjectOrModule.transfer %}
+                {{ "yes" | translate }}
+              {% else %}
+                {{ "no" | translate }}
+              {% endif %}
             </td>
           </tr>
 

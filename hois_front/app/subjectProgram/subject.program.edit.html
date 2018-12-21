@@ -143,7 +143,7 @@
         <label>{{'subjectProgram.studyLiterature' | translate}}</label>
         <textarea ng-model="subjectProgram.studyLiterature" name="studyLiterature" md-maxlength="20000" max-rows="10" ></textarea>
       </md-input-container>
-      <br>
+      <div>&nbsp;</div>
       <div flex class="study-content">
         <fieldset tabindex="1">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.studyContent' | translate}}</legend>
@@ -201,7 +201,7 @@
           </div>
         </fieldset>
       </div>
-      <br>
+      <div>&nbsp;</div>
       <div flex>
         <fieldset tabindex="2">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.assessmentCriteria' | translate}}</legend>
@@ -258,7 +258,7 @@
           </div>
         </fieldset>
       </div>
-      <br>
+      <div>&nbsp;</div>
       <div flex>
         <fieldset tabindex="3">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.publicLevel' | translate}}</legend>
@@ -276,11 +276,11 @@
           </div>
         </fieldset>
       </div>
-      <br>
+      <div>&nbsp;</div>
       <div flex class="form-readonly" layout="column">
         <md-input-container flex>
           <label class="textInput">{{'subjectProgram.status' | translate}}</label>
-          <hois-classifier-value ng-model="subjectProgram.status" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-value>
+          <hois-classifier-value ng-model="subjectProgram.status" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value>
         </md-input-container>
         <md-input-container flex ng-if="subjectProgram.status === 'AINEPROGRAMM_STAATUS_K'">
           <label>{{'subjectProgram.confirmedDate' | translate}}</label>
@@ -295,7 +295,7 @@
     </div>
     <md-button class="md-raised md-primary" ng-click="save()">{{"main.button.save" | translate}}</md-button>
     <md-button class="md-raised" ng-if="subjectProgram.status === 'AINEPROGRAMM_STAATUS_I'" ng-click="completeProgram()">{{"subjectProgram.operation.complete.label" | translate}}</md-button>
-    <md-button class="md-raised" ng-if="subjectProgram.id" ng-href="{{pdfUrl()}}" target='_blank'>{{"main.button.print" | translate}}</md-button>
+    <md-button class="md-raised" ng-if="subjectProgram.id" ng-href="{{pdfUrl()}}" target="_blank">{{"main.button.print" | translate}}</md-button>
     <md-button class="md-raised" ng-if="subjectProgram.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
     <md-button class="md-raised" ng-click="back(getDefaultBack(), subjectProgramForm)">{{"main.button.back" | translate}}</md-button>
   </form>

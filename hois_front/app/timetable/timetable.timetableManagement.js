@@ -29,7 +29,7 @@ angular.module('hitsaOis').controller('TimetableManagementController',
             var ImportTimetableEndpoint = QueryUtils.endpoint('/timetables/importXml/' + studyPeriod);
             var newFile = new ImportTimetableEndpoint(data.oisFile);
             newFile.$save(startDate).then(function(response) {
-                if (response.status != null) {
+                if (response.status !== null) {
                   message.error(response.status);
                 }
                 message.info('main.messages.create.success');

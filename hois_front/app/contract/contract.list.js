@@ -14,6 +14,15 @@ angular.module('hitsaOis').controller('ContractListController', function ($scope
     };
   }
 
+  $scope.directiveControllers = [];
+  var clearCriteria = $scope.clearCriteria;
+  $scope.clearCriteria = function () {
+    clearCriteria();
+    $scope.directiveControllers.forEach(function (c) {
+      c.clear();
+    });
+  };
+
   $q.all(clMapper.promises).then($scope.loadData);
 
   $scope.newContract = function () {

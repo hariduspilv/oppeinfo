@@ -13,6 +13,7 @@ import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 public class ApelApplicationDto extends InsertedChangedVersionDto {
 
     private Long id;
+    private AutocompleteResult school;
     private AutocompleteResult student;
     private AutocompleteResult curriculum;
     private String status;
@@ -53,6 +54,14 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public AutocompleteResult getSchool() {
+        return school;
+    }
+
+    public void setSchool(AutocompleteResult school) {
+        this.school = school;
     }
 
     public AutocompleteResult getStudent() {

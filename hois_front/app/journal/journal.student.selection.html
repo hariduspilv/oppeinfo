@@ -15,7 +15,7 @@
               <tr md-row md-select="row.studentId" ng-repeat="row in tabledata.content | orderBy: ['studentGroup', 'lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>
                   <i>
-                    <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'journal.academicLeaveAbbrev' | translate}}</span>
+                    <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'student.statuses.academicLeaveShort' | translate}}</span>
                   </i>
                   <span>{{row.fullname}}</span>
                 </td>

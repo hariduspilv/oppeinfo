@@ -24,6 +24,7 @@ import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.service.ContractService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -53,6 +54,13 @@ public class ContractController {
     @GetMapping("/{id:\\d+}")
     public ContractDto get(HoisUserDetails user, @WithEntity Contract contract) {
         UserUtil.assertSameSchool(user, contract.getStudent().getSchool());
+        if (user.isTeacher()) {
+            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(contract.getTeacher()).equals(user.getTeacherId()));
+        } else if (user.isStudent() || user.isRepresentative()) {
+            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(contract.getStudent()).equals(user.getStudentId()));
+        } else {
+            UserUtil.assertIsSchoolAdmin(user);
+        }
         return contractService.get(contract);
     }
 

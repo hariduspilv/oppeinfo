@@ -1,6 +1,11 @@
 'use strict';
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
+
+  function canViewContract(authUser, authRoles) {
+    return authRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LEPING) || authUser.roleCode === "ROLL_L";
+  }
+
   $routeProvider
     .when('/contracts', {
         templateUrl: 'contract/contract.list.html',
@@ -54,7 +59,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LEPING]
+          authorizedRoles: canViewContract
         }
       });
 }]);
