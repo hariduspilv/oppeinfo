@@ -37,7 +37,7 @@
 			<div layout="row" flex>
 				<md-input-container layout="row" flex="45">
 					<hois-classifier-radio layout="row" name="consecution" ng-model="curriculum.consecution" model-value-attr="code" main-classifier-code="OPPEKAVA_TYPE"
-            filter-values watch-model="curriculum.origStudyLevel" connect-main-classifier-code="OPPEASTE" search-from-connect select-first-value default-value="OPPEKAVA_TYPE_E" required disabled></hois-classifier-radio>
+            			filter-values watch-model="curriculum.origStudyLevel" connect-main-classifier-code="OPPEASTE" search-from-connect select-first-value default-value="OPPEKAVA_TYPE_E" required disabled></hois-classifier-radio>
 				</md-input-container>
 				<div md-colors="{color: 'warn-A400'}"  ng-if="vocationalCurriculumForm.$submitted" ng-messages="vocationalCurriculumForm.consecution.$error">
 					<div ng-message="required">{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
@@ -45,11 +45,11 @@
 				<md-input-container flex="50" flex-offset="5">
 					<label>{{'curriculum.code' | translate}}</label>
 					<input ng-model="curriculum.code" name="code" type="text" required ng-readonly="formState.notEditableBasicData" md-maxlength="25" unique="codeUniqueQuery" ng-model-options="{ debounce: 250 }">
-          <div ng-messages="vocationalCurriculumForm.code.$error" ng-show="vocationalCurriculumForm.code.$dirty">
-            <div ng-message="notUnique">
-              {{'main.messages.error.mustBeUnique' | translate}}
-            </div>
-          </div>
+					<div ng-messages="vocationalCurriculumForm.code.$error" ng-show="vocationalCurriculumForm.code.$dirty">
+						<div ng-message="notUnique">
+						{{'main.messages.error.mustBeUnique' | translate}}
+						</div>
+					</div>
 				</md-input-container>
 			</div>
 			<div layout="row" flex>
@@ -93,7 +93,7 @@
 			</div>
 			<div layout="row" flex>
 				<md-input-container flex="45">
-					 <label>{{'curriculum.studyLevel' | translate}}</label>
+					<label>{{'curriculum.studyLevel' | translate}}</label>
 					<hois-classifier-select ng-model="curriculum.origStudyLevel" model-value-attr="code" main-classifier-code="OPPEASTE"
 						show-only-values="schoolOrigStudyLevel" required ng-disabled="formState.notEditableBasicData"></hois-classifier-select>
 				</md-input-container>

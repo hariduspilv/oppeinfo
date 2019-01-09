@@ -1,6 +1,5 @@
 package ee.hitsa.ois.web;
 
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +35,7 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationListSubmitForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipCommitteeSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipDecisionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipStudentApplicationForm;
@@ -85,11 +85,9 @@ public class ScholarshipController {
     }
 
     @GetMapping("/committees")
-    public List<AutocompleteResult> committees(HoisUserDetails user, 
-            @RequestParam(value = "validDate", required = false) LocalDate validDate,
-            @RequestParam(value = "curriculums", required = false) List<Long> curriclumIds) {
+    public List<AutocompleteResult> committees(HoisUserDetails user, ScholarshipCommitteeSearchCommand command) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
-        return scholarshipService.committeesForSelection(user, validDate, curriclumIds);
+        return scholarshipService.committeesForSelection(user, command);
     }
 
     @GetMapping("/decision/canCreate")
@@ -267,9 +265,8 @@ public class ScholarshipController {
         } else if (user.isTeacher()) {
             Committee committee = application.getScholarshipTerm().getCommittee();
             UserUtil.throwAccessDeniedIf(!user.getTeacherId().equals(EntityUtil.getNullableId(application.getStudentGroup().getTeacher()))
-                    && committee != null && !committee.getMembers().stream()
-                    .filter(m -> user.getPersonId().equals(EntityUtil.getId(m.getPerson())))
-                    .findAny().isPresent(), 
+                    && (committee == null || !committee.getMembers().stream()
+                    .anyMatch(m -> user.getPersonId().equals(EntityUtil.getId(m.getPerson())))), 
                     "User teacher does not match application student group teacher or is not part of committee");
         } else {
             throw new AccessDeniedException("User is not application student or school admin or application student group teacher or part of committee");

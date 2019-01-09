@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javax.validation.Valid;
 
@@ -27,6 +28,7 @@ import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.RoomAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
+import ee.hitsa.ois.web.commandobject.SpecialitiesAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
@@ -48,6 +50,7 @@ import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithLogo;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
+import ee.hitsa.ois.web.dto.SpecialityAutocompleteResult;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearIdDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
@@ -173,8 +176,8 @@ public class AutocompleteController {
     }
 
     @GetMapping("/apelschools")
-    public List<ApelSchoolResult> apelSchools(HoisUserDetails user) {
-        return autocompleteService.apelSchools(user.getSchoolId());
+    public List<ApelSchoolResult> apelSchools(HoisUserDetails user, SearchCommand lookup) {
+        return autocompleteService.apelSchools(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/schooldepartments")
@@ -205,6 +208,11 @@ public class AutocompleteController {
     @GetMapping("/teachersList")
     public List<OccupiedAutocompleteResult> teachersAsList(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         return autocompleteService.teachers(user.getSchoolId(), lookup, false);
+    }
+    
+    @GetMapping("/highspecialities")
+    public Set<SpecialityAutocompleteResult> specialities(HoisUserDetails user, SpecialitiesAutocompleteCommand lookup) {
+        return autocompleteService.specialities(user, lookup);
     }
 
     @GetMapping("/students")

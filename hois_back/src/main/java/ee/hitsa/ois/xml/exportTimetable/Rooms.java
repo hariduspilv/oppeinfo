@@ -27,7 +27,7 @@ public class Rooms {
     }
     public void add(Room room) {
         if (this.rooms == null) {
-            this.rooms = new HashSet<Room>();
+            this.rooms = new HashSet<>();
         }
         this.rooms.add(room);
     }

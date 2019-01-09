@@ -46,7 +46,6 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
         dto.setBasicDataCanBeEdited(Boolean.valueOf(CurriculumUtil.basicDataCanBeEdited(curriculum)));
         dto.setOccupation(curriculum.getOccupation());
         dto.setCanHaveOccupations(Boolean.valueOf(CurriculumUtil.canHaveOccupations(curriculum)));
-        dto.setOrderNr(Long.valueOf(CurriculumUtil.vocationalModuleOrderNr(module)));
         if (module.getBaseModule() != null) {
             dto.setBaseModule(new CurriculumModuleForm.BaseModuleInfo(module.getBaseModule().getId(), module.getBaseModule().getNameEt(), module.getBaseModule().getNameEn()));
         }
@@ -71,6 +70,22 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
         if (module.getBaseModule() != null) {
             dto.setBaseModule(new CurriculumModuleForm.BaseModuleInfo(module.getBaseModule().getId(), module.getBaseModule().getNameEt(), module.getBaseModule().getNameEn()));
         }
+        return dto;
+    }
+
+    /**
+     * Is used on curriculum fulfillment view
+     * 
+     * @return dto which only contains fields to display module name
+     */
+    public static CurriculumModuleDto forCurriculumFulfillment(CurriculumModule module) {
+        CurriculumModuleDto dto = new CurriculumModuleDto();
+        dto.setId(EntityUtil.getId(module));
+        dto.setNameEt(module.getNameEt());
+        dto.setNameEn(module.getNameEn());
+        dto.setCredits(module.getCredits());
+        dto.setModule(EntityUtil.getCode(module.getModule()));
+        dto.setOrderNr(Long.valueOf(CurriculumUtil.vocationalModuleOrderNr(module)));
         return dto;
     }
 

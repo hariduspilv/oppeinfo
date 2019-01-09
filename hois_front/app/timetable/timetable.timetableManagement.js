@@ -21,7 +21,7 @@ angular.module('hitsaOis').controller('TimetableManagementController',
     };
 
     $scope.openAddFileDialog = function (studyPeriod, startDate) {
-      dialogService.showDialog('timetable/dialog/file.import.dialog.html', function(scope){
+      dialogService.showDialog('timetable/dialog/file.import.dialog.html', function() {
       }, function (submitScope) {
         var data = submitScope.data;
         oisFileService.getFromLfFile(data.file[0], function(file) {

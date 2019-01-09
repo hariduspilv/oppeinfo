@@ -1,4 +1,4 @@
-VERSIOON:  1.1.2/20181221
+VERSIOON:  1.1.3/20190109
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.1.1/20181129
+EELDUS: ver. 1.1.2/20181221
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skripti on db/install20181221.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skripti on db/install20190109.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20181221.sql skript, nt
+1. käivitada install20190109.sql skript, nt
    
-   psql -h devhois -f install20181221.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20190109.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20181221.sql - install faili nimi
+   -f install20190109.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
@@ -57,6 +57,3 @@ RAKENDUSE INSTALLEERIMINE:
 		OPTIONS https://bdr.plumbr.io/api/browser/data/xhr?accountId=PLUMBR_ACCOUNT_ID 401
 		Failed to load https://bdr.plumbr.io/api/browser/data/xhr?accountId=PLUMBR_ACCOUNT_ID: Response for preflight does not have HTTP ok status.
 		
-3. Uue ID-kaardi tugi
-	1. Laadida uute ID-kaartide juursertifikaadid nginx serveris asuva id.crt faili ja teha nginx serverile restart
-	2. Laadida uute ID-kaartide juursertefikaadid java keystore'i (et saaks allkirjastada)

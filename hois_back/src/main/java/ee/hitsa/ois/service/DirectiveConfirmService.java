@@ -623,7 +623,10 @@ public class DirectiveConfirmService {
             for(ScholarshipApplication sa : scholarships) {
                 if(ClassifierUtil.equals(DirectiveType.KASKKIRI_AKAD, directiveStudent.getDirective().getType())) {
                     // only those matching period and not allowed during academic leave
-                    if(startDate.isAfter(DateUtils.endDate(sa)) || endDate.isBefore(DateUtils.startDate(sa)) ||
+                    LocalDate scholarshipEndDate = DateUtils.endDate(sa);
+                    LocalDate scholarshipStartDate = DateUtils.startDate(sa);
+                    if((scholarshipEndDate != null && startDate.isAfter(scholarshipEndDate)) || 
+                            (scholarshipStartDate != null && endDate.isBefore(scholarshipStartDate)) ||
                             Boolean.TRUE.equals(sa.getScholarshipTerm().getIsAcademicLeave())) {
                         continue;
                     }

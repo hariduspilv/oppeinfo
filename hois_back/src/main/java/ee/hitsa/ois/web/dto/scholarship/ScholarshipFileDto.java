@@ -3,7 +3,6 @@ package ee.hitsa.ois.web.dto.scholarship;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplicationFile;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.OisFileViewDto;
-import ee.hitsa.ois.web.dto.OisFileDto;
 
 public class ScholarshipFileDto {
     private OisFileViewDto oisFile;

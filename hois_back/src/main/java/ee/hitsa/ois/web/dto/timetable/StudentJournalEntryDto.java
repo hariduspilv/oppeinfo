@@ -3,7 +3,6 @@ package ee.hitsa.ois.web.dto.timetable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 public class StudentJournalEntryDto {
     private final Long id;

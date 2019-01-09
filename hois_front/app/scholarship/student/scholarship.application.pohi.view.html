@@ -58,10 +58,32 @@
           </md-checkbox>
         </div>
       </div>
-      <div layout="row" flex>
-        <md-input-container flex="45" flex-xs="100">
-          <label class="textInput">{{'stipend.studyPeriodDates' | translate}}</label>
-          <hois-value value="stipend.matriculationRange"></hois-value>
+      <div layout="row">
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+          <label>{{'stipend.studyPeriodDates' | translate}}</label>
+          <input type="hidden">
+        </md-input-container>
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <label>{{'main.from' | translate}}</label>
+          <hois-value value="stipend.studyStartPeriodStart | hoisDate"></hois-value>
+        </md-input-container>
+        <md-input-container flex="50" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <label>{{'main.thru' | translate}}</label>
+          <hois-value value="stipend.studyStartPeriodEnd | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="row">
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+          <label>{{'stipend.paymentPeriod' | translate}}</label>
+          <input type="hidden">
+        </md-input-container>
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <label>{{'main.from' | translate}}</label>
+          <hois-value value="stipend.paymentStart | hoisDate"></hois-value>
+        </md-input-container>
+        <md-input-container flex="50" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <label>{{'main.thru' | translate}}</label>
+          <hois-value value="stipend.paymentEnd | hoisDate"></hois-value>
         </md-input-container>
       </div>
     </div>

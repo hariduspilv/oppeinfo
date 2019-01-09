@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
 import java.util.List;
+import java.util.Set;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -14,6 +15,7 @@ public class CurriculumVersionResult extends AutocompleteResult {
     private final String studyForm;
     private final Boolean isVocational;
     private List<String> studyLang;
+    private Set<Long> specialities;
 
     public CurriculumVersionResult(Long id, String nameEt, String nameEn, Long curriculum, Long schoolDepartment, String studyForm, Boolean isVocational) {
         super(id, nameEt, nameEn);
@@ -46,5 +48,13 @@ public class CurriculumVersionResult extends AutocompleteResult {
 
     public void setStudyLang(List<String> studyLang) {
         this.studyLang = studyLang;
+    }
+
+    public Set<Long> getSpecialities() {
+        return specialities;
+    }
+
+    public void setSpecialities(Set<Long> specialities) {
+        this.specialities = specialities;
     }
 }

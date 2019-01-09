@@ -7,6 +7,7 @@ public class CurriculumAutocompleteCommand extends SearchCommand {
     private Boolean higher;
     private Boolean closed;
     private Long teacher;
+    private Integer minSpecialities;
 
     public Boolean getHigher() {
         return higher;
@@ -30,6 +31,14 @@ public class CurriculumAutocompleteCommand extends SearchCommand {
 
     public void setTeacher(Long teacher) {
         this.teacher = teacher;
+    }
+
+    public Integer getMinSpecialities() {
+        return minSpecialities;
+    }
+
+    public void setMinSpecialities(Integer minSpecialities) {
+        this.minSpecialities = minSpecialities;
     }
 
 }

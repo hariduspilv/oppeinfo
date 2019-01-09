@@ -1,12 +1,13 @@
 package ee.hitsa.ois.web.dto.student;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class StudentVocationalResultDto {
 
-    private List<StudentVocationalResultModuleThemeDto> results;
-    private List<StudentVocationalModuleDto> curriculumModules;
-    private List<StudentVocationalModuleDto> extraCurriculaModules;
+    private List<StudentVocationalResultModuleThemeDto> results = new ArrayList<>();
+    private List<StudentVocationalModuleDto> curriculumModules = new ArrayList<>();
+    private List<StudentVocationalModuleDto> extraCurriculaModules = new ArrayList<>();
 
     public List<StudentVocationalResultModuleThemeDto> getResults() {
         return results;

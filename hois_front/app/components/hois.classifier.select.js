@@ -10,6 +10,9 @@
 angular.module('hitsaOis')
   .directive('hoisClassifierSelect', function (Classifier, ClassifierConnect, hoisValidDatesFilter) {
     return {
+      // ng-hide on md-option causes a problem with being not closed after selecting value. Replaced ng-hide by ng-if.
+      // @since 07.01.2019: We need to use ng-hide to have an opportunity to fill a selected value which were placed before.
+      // It means that object had a value, but now it should be hidden. Still we need to display value as selected.
       template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }" >'+ // md-on-open="queryPromise" this causes some bugs
       '<md-option ng-if="!isMultiple && ((!isRequired && !ngRequired) || isShowEmpty)" md-option-empty></md-option>'+
       '<md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-hide="option.hide" ' +

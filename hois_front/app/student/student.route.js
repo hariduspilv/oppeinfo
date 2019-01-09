@@ -134,5 +134,18 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
           USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK
         ]
       }
+    }).when('/students/specialities', {
+      templateUrl: 'student/speciality/student.speciality.list.html',
+      controller: 'StudentSpecialitySearchController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: function(Session, roles) {
+          return Session.school.higher === true && Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPUR) !== -1;
+        }
+      }
     });
 });

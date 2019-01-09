@@ -284,7 +284,7 @@
     scope.informalLearningColspan = getInformalLearningColspan(scope.application, scope.formState.viewForm);
   }
 
-  angular.module('hitsaOis').controller('ApelApplicationEditController', function ($filter, $scope, $route, ArrayUtils, HigherGradeUtil, VocationalGradeUtil, QueryUtils, 
+  angular.module('hitsaOis').controller('ApelApplicationEditController', function ($filter, $rootScope, $scope, $route, ArrayUtils, HigherGradeUtil, VocationalGradeUtil, QueryUtils, 
     oisFileService, dialogService, message, $location, Classifier, DataUtils, config, $q) {
 
     var ApelApplicationEndpoint = QueryUtils.endpoint('/apelApplications');
@@ -365,7 +365,7 @@
 
     function getInformalSubjectOrModuleIndex(record, subjectOrModuleId) {
       for (var i = 0; i < record.informalSubjectsOrModules.length; i++) {
-        if (record.informalSubjectsOrModules[i].id === subjectOrModuleId) {
+        if (record.informalSubjectsOrModules[i].id && subjectOrModuleId && record.informalSubjectsOrModules[i].id === subjectOrModuleId) {
           return i;
         }
       }
@@ -373,7 +373,7 @@
 
     function getFormalSubjectOrModuleIndex(record, subjectOrModuleId) {
       for (var i = 0; i < record.formalSubjectsOrModules.length; i++) {
-        if (record.formalSubjectsOrModules[i].id === subjectOrModuleId) {
+        if (record.formalSubjectsOrModules[i].id && subjectOrModuleId && record.formalSubjectsOrModules[i].id === subjectOrModuleId) {
           return i;
         }
       }
@@ -812,7 +812,8 @@
                 credits: copy.credits,
                 subjectCode: copy.subjectCode,
                 curriculumVersionHmodule: copy.curriculumVersionHmodule,
-                isOptional: copy.isOptional
+                isOptional: copy.isOptional,
+                transferableModuleIndex: copy.transferableModuleIndex
               };
               getGrades(dialogScope.record.newTransferableSubjectOrModule.assessment);
               if (copy.isMySchool === true) {
@@ -878,7 +879,7 @@
 
         function setTransferableModules(typeCode, modules) {
           // type could be changed before query has finished therefore it needs to check if type code is still the same
-          if (dialogScope.record.newTransferableSubjectOrModule.type === typeCode) {
+          if (dialogScope.record.newTransferableSubjectOrModule && dialogScope.record.newTransferableSubjectOrModule.type === typeCode) {
             dialogScope.transferableModules = modules;
           }
           setCurriculumVersionOmodule();
@@ -956,6 +957,10 @@
         };
 
         dialogScope.apelSchoolChanged = function (apelSchool) {
+          if (!angular.isDefined(apelSchool.id)) {
+            // apel school is created in this formal learning block
+            dialogScope.record.newTransferableSubjectOrModule.newApelSchool = apelSchool;
+          }
           Classifier.get(apelSchool.country).$promise.then(function (country) {
             dialogScope.record.newTransferableSubjectOrModule.country = country;
           });
@@ -1057,6 +1062,7 @@
         }
 
         dialogScope.addNewSchool = function () {
+          dialogScope.newSchoolEst = false;
           dialogScope.formState.isNewSchool = true;
           if (dialogScope.record.newTransferableSubjectOrModule && dialogScope.record.newTransferableSubjectOrModule.apelSchool) {
             dialogScope.record.newTransferableSubjectOrModule.apelSchool = null;
@@ -1073,8 +1079,8 @@
               return transfer.curriculumVersionOmodule.id;
             }
           });
-          var addedModule = angular.isDefined(transferableModule.curriculumVersionOmodule) 
-            && transferableModule.curriculumVersionOmodule !== null ? transferableModule.curriculumVersionOmodule.id : null;
+          var addedModule = angular.isDefined(transferableModule.curriculumVersionOmodule) && 
+            transferableModule.curriculumVersionOmodule !== null ? transferableModule.curriculumVersionOmodule.id : null;
           return alreadyTransferedModules.indexOf(addedModule) !== -1;
         }
 
@@ -1097,7 +1103,46 @@
             }            
             transferableModule.grade = dialogScope.gradesMap[transferableModule.grade];
             dialogScope.record.formalSubjectsOrModules.push(transferableModule);
+
+            if (dialogScope.formState.isNewSchool) {
+              addNewSchoolToSelection(transferableModule);
+            }
           }
+        };
+
+        function addNewSchoolToSelection(transferableModule) {
+          if (isNewSchoolAlreadyAdded(transferableModule.newApelSchool)) {
+            return;
+          }
+          dialogScope.apelSchools.push(transferableModule.newApelSchool);
+          dialogScope.apelSchools = dialogScope.apelSchools.sort(function (s1, s2) {
+            return $rootScope.currentLanguageNameField(s1).localeCompare($rootScope.currentLanguageNameField(s2));
+          });
+        }
+
+        function isNewSchoolAlreadyAdded(newSchool) {
+          var schoolAlreadyAdded = false;
+          for (var i = 0; i < dialogScope.apelSchools.length; i++) {
+            if (newSchool.ehisSchool) {
+              if (dialogScope.apelSchools[i].ehisSchool === newSchool.ehisSchool) {
+                schoolAlreadyAdded = true;
+              }
+            } else {
+              if (dialogScope.apelSchools[i].nameEt === newSchool.nameEt && 
+                dialogScope.apelSchools[i].country === newSchool.country) {
+                schoolAlreadyAdded = true;
+              }
+            }
+          }
+          return schoolAlreadyAdded;
+        }
+
+        dialogScope.apelSchoolsEhisCodes = function () {
+          return dialogScope.apelSchools.filter(function (it) { return it.ehisSchool; }).map(function(it) {
+            if (dialogScope.record.newTransferableSubjectOrModule.newApelSchool.ehisSchool !== it.ehisSchool) {
+              return it.ehisSchool;
+            }
+          });
         };
 
         dialogScope.addSelectedSubject = function () {
@@ -1112,6 +1157,7 @@
 
         dialogScope.editTransferableModule = function (transferableModuleIndex) {
           dialogScope.record.newTransferableSubjectOrModule = angular.copy(dialogScope.record.formalSubjectsOrModules[transferableModuleIndex]);
+          dialogScope.record.newTransferableSubjectOrModule.transferableModuleIndex = transferableModuleIndex;
           
           dialogScope.formState.isMySchool = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].isMySchool;
           dialogScope.formState.isNewSchool = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].isNewSchool;
@@ -1140,18 +1186,20 @@
         dialogScope.changeTransferableModule = function (changedTransferableModule) {
           dialogScope.dialogForm.$setSubmitted();
           if (dialogScope.dialogForm.$valid) {
-            var transferableModuleIndex = getFormalSubjectOrModuleIndex(dialogScope.record, changedTransferableModule.id);
-            dialogScope.record.formalSubjectsOrModules[transferableModuleIndex] = changedTransferableModule;
+            dialogScope.record.formalSubjectsOrModules[changedTransferableModule.transferableModuleIndex] = changedTransferableModule;
             dialogScope.record.newTransferableSubjectOrModule = null;
             addMissingValuesToFormalModules(dialogScope.record.formalSubjectsOrModules);
+            
+            if (dialogScope.formState.isNewSchool) {
+              addNewSchoolToSelection(changedTransferableModule);
+            }
           }
         };
 
         dialogScope.deleteTransferableModule = function (transferableModule) {
           if (transferableModule) {
-            var transferableModuleIndex = getFormalSubjectOrModuleIndex(dialogScope.record, transferableModule.id);
-            if (transferableModuleIndex >= 0) {
-              dialogScope.record.formalSubjectsOrModules.splice(transferableModuleIndex, 1);
+            if (transferableModule.transferableModuleIndex >= 0) {
+              dialogScope.record.formalSubjectsOrModules.splice(transferableModule.transferableModuleIndex, 1);
             } else {
               dialogScope.record.newTransferableSubjectOrModule = null;    
             }

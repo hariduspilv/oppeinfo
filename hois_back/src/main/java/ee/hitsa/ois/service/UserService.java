@@ -147,6 +147,13 @@ public class UserService {
             user.setValidThru(null);
         }
     }
+    
+    public void enableUser(User user, LocalDate enabledDate) {
+        if (user != null) {
+            user.setValidFrom(enabledDate);
+            user.setValidThru(null);
+        }
+    }
 
     /**
      * Find all active users for given person
@@ -224,6 +231,10 @@ public class UserService {
 
     private static void disableUser(Person person, Long id, Role role, LocalDate disabledDate) {
         User user = userFor(person, id, role);
+        disableUser(user, disabledDate);
+    }
+
+    public static void disableUser(User user, LocalDate disabledDate) {
         if(user != null && (user.getValidThru() == null || disabledDate.isBefore(user.getValidThru()))) {
             user.setValidThru(disabledDate);
         }

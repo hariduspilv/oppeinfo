@@ -14,6 +14,7 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
     private Long maxAbsences;
     private String addInfo;
     private Boolean isTeacherConfirm;
+    private Boolean isFamilyIncomes;
     private String status;
     private LocalDate decisionDate;
     private String rejectComment;
@@ -87,6 +88,14 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
 
     public void setIsTeacherConfirm(Boolean isTeacherConfirm) {
         this.isTeacherConfirm = isTeacherConfirm;
+    }
+
+    public Boolean getIsFamilyIncomes() {
+        return isFamilyIncomes;
+    }
+
+    public void setIsFamilyIncomes(Boolean isFamilyIncomes) {
+        this.isFamilyIncomes = isFamilyIncomes;
     }
 
     public String getStatus() {

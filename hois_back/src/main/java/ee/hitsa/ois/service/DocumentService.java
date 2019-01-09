@@ -594,13 +594,41 @@ public class DocumentService {
         }
         Directive directive = directiveStudent.getDirective();
         Student student = directiveStudent.getStudent();
-        Long studentId = EntityUtil.getId(student);
         Diploma diploma = em.createQuery("select d from Diploma d where d.directive = ?1 and d.student = ?2", 
                 Diploma.class)
                 .setParameter(1, directive)
                 .setParameter(2, student)
                 .getSingleResult();
-        School school = directive.getSchool();
+        FinalDocSigner signer1 = em.getReference(FinalDocSigner.class, form.getSigner1Id());
+        UserUtil.assertSameSchool(user, signer1.getSchool());
+        FinalDocSigner signer2 = em.getReference(FinalDocSigner.class, form.getSigner2Id());
+        UserUtil.assertSameSchool(user, signer2.getSchool());
+        
+        updateSupplementHigher(supplement, student, estonianFields, englishFields, form.getShowSubjectCode(), form.getShowTeacher(),
+                directiveStudent.getCurriculumGrade());
+        
+        if (estonianFields && englishFields) {
+            supplement.setDiploma(diploma);
+            supplement.setSigner1Name(signer1.getName());
+            supplement.setSigner2Name(signer2.getName());
+        }
+        if (estonianFields) {
+            supplement.setSigner1Position(signer1.getPosition());
+            supplement.setSigner2Position(signer2.getPosition());
+        }
+        if (englishFields) {
+            supplement.setSigner1PositionEn(signer1.getPositionEn());
+            supplement.setSigner2PositionEn(signer2.getPositionEn());
+        }
+        
+        EntityUtil.save(supplement, em);
+    }
+    
+    private void updateSupplementHigher(DiplomaSupplement supplement, Student student, 
+            boolean estonianFields, boolean englishFields, Boolean showSubjectCode, Boolean showTeacher,
+            CurriculumGrade curriculumGrade) {
+        Long studentId = EntityUtil.getId(student);
+        School school = student.getSchool();
         Person person = student.getPerson();
         Curriculum curriculum = student.getCurriculumVersion().getCurriculum();
         Classifier studyLoad = student.getStudyLoad();
@@ -608,18 +636,10 @@ public class DocumentService {
         if (studyLanguage == null) {
             studyLanguage = em.getReference(Classifier.class, StudyLanguage.OPPEKEEL_E.name());
         }
-        StudentCurriculumCompletion completion = em.createQuery("select scc from StudentCurriculumCompletion scc where scc.student = ?1",
-                StudentCurriculumCompletion.class)
-                .setParameter(1, student)
-                .getSingleResult();
-        FinalDocSigner signer1 = em.getReference(FinalDocSigner.class, form.getSigner1Id());
-        UserUtil.assertSameSchool(user, signer1.getSchool());
-        FinalDocSigner signer2 = em.getReference(FinalDocSigner.class, form.getSigner2Id());
-        UserUtil.assertSameSchool(user, signer2.getSchool());
+        StudentCurriculumCompletion completion = getStudentCurriculumCompletion(student);
         Classifier status = em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_K.name());
         if (estonianFields && englishFields) {
             supplement.setSchoolNameEt(school.getNameEt());
-            supplement.setDiploma(diploma);
             supplement.setStudent(student);
             supplement.setFirstname(person.getFirstname());
             supplement.setLastname(person.getLastname());
@@ -628,10 +648,10 @@ public class DocumentService {
             supplement.setMerCode(curriculum.getMerCode());
             supplement.setCredits(curriculum.getCredits());
             supplement.setCurriculumMerRegDate(curriculum.getMerRegDate());
-            supplement.setAverageMark(completion.getAverageMark());
+            if (completion != null) {
+                supplement.setAverageMark(completion.getAverageMark());
+            }
             supplement.setStudyPeriod(curriculum.getStudyPeriod());
-            supplement.setSigner1Name(signer1.getName());
-            supplement.setSigner2Name(signer2.getName());
             supplement.setPrinted(LocalDate.now());
             setStudyResultsHigher(supplement, studentId);
         }
@@ -647,7 +667,6 @@ public class DocumentService {
             if (PROFESSIONAL_DIPLOMA_STUDY_LEVEL.equals(EntityUtil.getCode(curriculum.getOrigStudyLevel()))) {
                 supplement.setFinal21(TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.ET));
             } else {
-                CurriculumGrade curriculumGrade = directiveStudent.getCurriculumGrade();
                 if (curriculumGrade != null) {
                     supplement.setFinal21(curriculumGrade.getNameEt());
                 }
@@ -659,10 +678,8 @@ public class DocumentService {
             supplement.setFinal61(curriculum.getFinal61());
             supplement.setFinal62(school.getFinal62());
             supplement.setStatus(status);
-            supplement.setSigner1Position(signer1.getPosition());
-            supplement.setSigner2Position(signer2.getPosition());
             supplement.setPgNrEt(Integer.valueOf(pdfService.getPageCount(SUPPLEMENT_TEMPLATE_NAME, 
-                    getViewReport(supplement, form.getShowSubjectCode(), form.getShowTeacher(),
+                    getViewReport(supplement, showSubjectCode, showTeacher,
                             isSchoolUsingLetterGrades(student), Language.ET),
                     Language.ET)));
         }
@@ -680,7 +697,6 @@ public class DocumentService {
                 supplement.setFinalEn21(TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.ET) + "\n" +
                         TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.EN));
             } else {
-                CurriculumGrade curriculumGrade = directiveStudent.getCurriculumGrade();
                 if (curriculumGrade != null) {
                     supplement.setFinalEn21(curriculumGrade.getNameEt() + "\n" + curriculumGrade.getNameEn());
                 }
@@ -692,26 +708,32 @@ public class DocumentService {
             supplement.setFinalEn61(curriculum.getFinalEn61());
             supplement.setFinalEn62(school.getFinalEn62());
             supplement.setStatusEn(status);
-            supplement.setSigner1PositionEn(signer1.getPositionEn());
-            supplement.setSigner2PositionEn(signer2.getPositionEn());
             supplement.setPgNrEn(Integer.valueOf(pdfService.getPageCount(SUPPLEMENT_EN_TEMPLATE_NAME, 
-                    getViewReport(supplement, form.getShowSubjectCode(), form.getShowTeacher(),
+                    getViewReport(supplement, showSubjectCode, showTeacher,
                             isSchoolUsingLetterGrades(student), Language.EN),
                     Language.EN)));
         }
-        
-        EntityUtil.save(supplement, em);
+    }
+
+    private StudentCurriculumCompletion getStudentCurriculumCompletion(Student student) {
+        List<StudentCurriculumCompletion> result = em.createQuery("select scc from StudentCurriculumCompletion scc where scc.student = ?1",
+                StudentCurriculumCompletion.class)
+                .setParameter(1, student)
+                .getResultList();
+        return result.isEmpty() ? null : result.get(0);
     }
     
     private static String getCurriculumCompletion(CurriculumVersion curriculumVersion, Language lang) {
         Map<String, BigDecimal> moduleCredits = new HashMap<>();
         for (CurriculumVersionHigherModule module : curriculumVersion.getModules()) {
-            Classifier type = module.getType();
-            String name = ClassifierUtil.equals(HigherModuleType.KORGMOODUL_M, type) ?
-                    (Language.EN.equals(lang) ? module.getTypeNameEn() : module.getTypeNameEt()) :
-                        TranslateUtil.name(type, lang);
-            moduleCredits.put(name, moduleCredits.computeIfAbsent(name, k -> BigDecimal.valueOf(0))
-                    .add(module.getTotalCredits()));
+            if (!Boolean.TRUE.equals(module.getMinorSpeciality())) {
+                Classifier type = module.getType();
+                String name = ClassifierUtil.equals(HigherModuleType.KORGMOODUL_M, type) ?
+                        (Language.EN.equals(lang) ? module.getTypeNameEn() : module.getTypeNameEt()) :
+                            TranslateUtil.name(type, lang);
+                        moduleCredits.put(name, moduleCredits.computeIfAbsent(name, k -> BigDecimal.valueOf(0))
+                                .add(module.getTotalCredits()));
+            }
         }
         return moduleCredits.entrySet().stream()
                 .map(e -> e.getKey() + " " + e.getValue() + " EAP")
@@ -801,13 +823,26 @@ public class DocumentService {
         }
         Directive directive = directiveStudent.getDirective();
         Student student = directiveStudent.getStudent();
-        Long studentId = EntityUtil.getId(student);
         Diploma diploma = em.createQuery("select d from Diploma d where d.directive = ?1 and d.student = ?2", 
                 Diploma.class)
                 .setParameter(1, directive)
                 .setParameter(2, student)
                 .getSingleResult();
-        School school = directive.getSchool();
+        FinalDocSigner signer1 = em.getReference(FinalDocSigner.class, form.getSigner1Id());
+        UserUtil.assertSameSchool(user, signer1.getSchool());
+        supplement.setDiploma(diploma);
+        
+        updateSupplementVocational(supplement, student);
+        
+        supplement.setSigner1Name(signer1.getName());
+        supplement.setSigner1Position(signer1.getPosition());
+        
+        EntityUtil.save(supplement, em);
+    }
+    
+    private void updateSupplementVocational(DiplomaSupplement supplement, Student student) {
+        Long studentId = EntityUtil.getId(student);
+        School school = student.getSchool();
         Person person = student.getPerson();
         Curriculum curriculum = student.getCurriculumVersion().getCurriculum();
         Classifier origStudyLevel = curriculum.getOrigStudyLevel();
@@ -819,10 +854,8 @@ public class DocumentService {
         if (studyLanguage == null) {
             studyLanguage = em.getReference(Classifier.class, StudyLanguage.OPPEKEEL_E.name());
         }
-        FinalDocSigner signer1 = em.getReference(FinalDocSigner.class, form.getSigner1Id());
-        UserUtil.assertSameSchool(user, signer1.getSchool());
         Classifier status = em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_K.name());
-        supplement.setDiploma(diploma);
+        
         supplement.setStudent(student);
         supplement.setSchoolNameEt(school.getNameEt());
         supplement.setSchoolNameEn(school.getNameEn());
@@ -849,14 +882,11 @@ public class DocumentService {
         supplement.setStudyLanguageNameEt(toNullableLowerCase(studyLanguage.getNameEt()));
         supplement.setStudyLanguageNameEn(toNullableLowerCase(studyLanguage.getNameEn()));
         supplement.setOutcomesEt(curriculum.getOutcomesEt());
-        supplement.setSigner1Name(signer1.getName());
-        supplement.setSigner1Position(signer1.getPosition());
         supplement.setStatus(status);
+        
         setStudyResultsVocational(supplement, studentId);
         
         supplement.setPgNrEt(Integer.valueOf(pdfService.getPageCount(SUPPLEMENT_VOCATIONAL_TEMPLATE_NAME, getViewReport(supplement))));
-        
-        EntityUtil.save(supplement, em);
     }
 
     private void setStudyResultsVocational(DiplomaSupplement supplement, Long studentId) {
@@ -981,9 +1011,13 @@ public class DocumentService {
                 .collect(Collectors.toList());
     }
 
-    private static String getSupplementTemplateName(Directive directive, Language lang) {
-        return Boolean.TRUE.equals(directive.getIsHigher()) ? 
+    private static String getSupplementTemplateName(Boolean isHigher, Language lang) {
+        return Boolean.TRUE.equals(isHigher) ? 
                 (Language.EN.equals(lang) ? SUPPLEMENT_EN_TEMPLATE_NAME : SUPPLEMENT_TEMPLATE_NAME) : SUPPLEMENT_VOCATIONAL_TEMPLATE_NAME;
+    }
+
+    private static String getSupplementTemplateName(Directive directive, Language lang) {
+        return getSupplementTemplateName(directive.getIsHigher(), lang);
     }
 
     private static String getSupplementTemplateName(DirectiveStudent directiveStudent, Language lang) {
@@ -1009,6 +1043,24 @@ public class DocumentService {
         return pdfService.generate(getSupplementTemplateName(directiveStudent, form.getLang()), 
                 getViewReport(getSupplement(directiveStudent), form.getShowSubjectCode(), form.getShowTeacher(),
                         isSchoolUsingLetterGrades(directiveStudent.getStudent()), form.getLang()), form.getLang());
+    }
+    
+    public byte[] supplementPreview(HoisUserDetails user, Long studentId, Boolean isHigher, Language language) {
+        Student student = student(user, studentId);
+        Language lang = language == null ? Language.ET : language;
+        DiplomaSupplement supplement = new DiplomaSupplement();
+        updateSupplement(supplement, student, isHigher);
+        return pdfService.generate(getSupplementTemplateName(isHigher, lang), 
+                getViewReport(supplement, Boolean.TRUE, Boolean.TRUE,
+                        isSchoolUsingLetterGrades(student), lang), lang);
+    }
+    
+    private void updateSupplement(DiplomaSupplement supplement, Student student, Boolean isHigher) {
+        if (Boolean.TRUE.equals(isHigher)) {
+            updateSupplementHigher(supplement, student, true, true, Boolean.TRUE, Boolean.TRUE, null);
+        } else {
+            updateSupplementVocational(supplement, student);
+        }
     }
 
     private static DiplomaSupplementReport getViewReport(DiplomaSupplement supplement) {
@@ -1192,6 +1244,12 @@ public class DocumentService {
         DiplomaSupplement supplement = em.getReference(DiplomaSupplement.class, supplementId);
         UserUtil.assertSameSchool(user, supplement.getDiploma().getDirective().getSchool());
         return supplement;
+    }
+
+    private Student student(HoisUserDetails user, Long studentId) {
+        Student student = em.getReference(Student.class, studentId);
+        UserUtil.assertSameSchool(user, student.getSchool());
+        return student;
     }
 
     private Boolean isSchoolUsingLetterGrades(Student student) {

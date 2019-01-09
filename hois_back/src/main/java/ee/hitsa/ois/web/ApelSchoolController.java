@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,39 +33,44 @@ public class ApelSchoolController {
 
     @Autowired
     private ApelSchoolService apelSchoolService;
-    
+
     @GetMapping
     public Page<ApelSchoolSearchDto> search(ApelSchoolSearchCommand command, Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
         return apelSchoolService.search(user, command, pageable);
     }
-    
+
     @GetMapping("/{id:\\d+}")
     public ApelSchoolDto get(HoisUserDetails user, @WithEntity ApelSchool school) {
         UserUtil.assertIsSchoolAdminOrStudent(user);
         return apelSchoolService.get(school);
     }
-    
+
     @PostMapping
     public ApelSchoolDto create(HoisUserDetails user, @Valid @RequestBody ApelSchoolForm schoolForm) {
         UserUtil.assertIsSchoolAdminOrStudent(user);
         ApelSchool school = apelSchoolService.create(user, schoolForm);
         return get(user, school);
     }
-    
+
     @PutMapping("/{id:\\d+}")
-    public ApelSchoolDto save(HoisUserDetails user,
-            @WithVersionedEntity(versionRequestBody = true) ApelSchool school, 
+    public ApelSchoolDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) ApelSchool school,
             @Valid @RequestBody ApelSchoolForm form) {
         UserUtil.assertIsSchoolAdmin(user);
         return get(user, apelSchoolService.save(user, school, form));
     }
-    
+
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user,
-            @WithVersionedEntity(versionRequestParam = "version") ApelSchool school,
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") ApelSchool school,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user);
         apelSchoolService.delete(user, school);
     }
+
+    @GetMapping("/usedEhisSchoolCodes")
+    public List<String> usedEhisSchoolCodes(HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return apelSchoolService.usedEhisSchoolCodes(user.getSchoolId());
+    }
+
 }

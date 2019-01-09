@@ -80,13 +80,13 @@ public abstract class UserUtil {
     }
 
     public static boolean canViewStudent(HoisUserDetails user, Student student) {
-        return isSchoolAdmin(user, student.getSchool()) || isStudent(user, student) || isStudentRepresentative(user, student) || isTeacher(user, student.getSchool());
+        return isSchoolAdmin(user, student.getSchool()) || isStudent(user, student) || isActiveStudentRepresentative(user, student) || isTeacher(user, student.getSchool());
     }
 
     public static boolean canEditStudent(HoisUserDetails user, Student student) {
         return ((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
                 || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || isAdultStudent(user, student) || isStudentRepresentative(user, student))
+                || isAdultStudent(user, student) || isActiveStudentRepresentative(user, student))
                 && StudentUtil.canBeEdited(student);
     }
 
@@ -201,7 +201,20 @@ public abstract class UserUtil {
      * @return
      */
     public static boolean isStudentRepresentative(HoisUserDetails user, Student student) {
-        return user.isRepresentative() && user.getStudentId().equals(student.getId());//student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
+        return user.isRepresentative() && user.getStudentId().equals(student.getId());
+    }
+    
+    /**
+     * Same as isStudnentRepresentative, but also controls if given student information is visible for a representative.
+     * 
+     * @param user
+     * @param student
+     * @return
+     */
+    public static boolean isActiveStudentRepresentative(HoisUserDetails user, Student student) {
+        return isStudentRepresentative(user, student) && student.getRepresentatives().stream()
+                .filter(rep -> user.getPersonId().equals(EntityUtil.getId(rep.getPerson())) && Boolean.TRUE.equals(rep.getIsStudentVisible()))
+                .findFirst().isPresent();
     }
 
     public static boolean isStudentGroupTeacher(HoisUserDetails user, Student student) {

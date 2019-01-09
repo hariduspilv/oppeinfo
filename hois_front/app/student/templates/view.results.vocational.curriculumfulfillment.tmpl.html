@@ -3,20 +3,9 @@
   <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.list.tmpl.html'"></div>
 </div>
 
-<hois-collapsable ng-repeat="result in ::vocationalResultsCurriculum.formalLearningReplacedModuleResults" expanded="false" hide-collapse-button="true">
-  <hois-collapsable-header>
-    <div layout="column" layout-gt-sm="row" class="curriculum-fulfillment-result">
-      <div>
-        <span class="apelAsterisk">*</span>
-        <span>{{currentLanguageNameField(result.module)}}</span>
-      </div>
-      <div flex-offset-gt-sm="5">
-        <div ng-if="positiveGrade(result.grade.code)" class="bold" md-colors="{color: 'green-600'}">{{result.grade.value}} ({{result.credits}} {{'student.result.ekap' | translate}})</div>
-        <div ng-if="!positiveGrade(result.grade.code)" class="bold" md-colors="{color: 'red-500'}">{{result.grade.value}} ({{result.credits}} {{'student.result.ekap' | translate}})</div>
-      </div>
-    </div>
-  </hois-collapsable-header>
-</hois-collapsable>
+<div ng-repeat="result in ::vocationalResultsCurriculum.replacedModuleResults">
+  <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.formallearning.tmpl.html'"></div>
+</div>
 
 <div ng-if="vocationalResultsCurriculum.extraCurriculaVocationalResultsModules && vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.length !== 0">
   <h3>{{'student.result.otherModuleResults' | translate}}</h3>
@@ -24,6 +13,10 @@
   <div ng-repeat="module in ::vocationalResultsCurriculum.extraCurriculaVocationalResultsModules">
     <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.list.tmpl.html'"></div>
   </div>
+</div>
+
+<div ng-repeat="result in ::vocationalResultsCurriculum.replacedExtraCurriculaModuleResults">
+  <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.formallearning.tmpl.html'"></div>
 </div>
 
 <div ng-if="vocationalResultsCurriculum.vocationalResultsModules && vocationalResultsCurriculum.vocationalResultsModules.length==0 && vocationalResultsCurriculum.extraCurriculaVocationalResultsModules && vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.length === 0">

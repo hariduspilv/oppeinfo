@@ -47,12 +47,36 @@
           <hois-value value="stipend.lastPeriodMark"></hois-value>
         </md-input-container>
       </div>
-      <div layout="row" layout-xs="column" flex>
-        <md-input-container flex="45" flex-xs="100">
-          <label class="textInput">{{'stipend.studyPeriodDates' | translate}}</label>
-          <hois-value value="stipend.matriculationRange"></hois-value>
+      <div layout="row">
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+          <label>{{'stipend.studyPeriodDates' | translate}}</label>
+          <input type="hidden">
         </md-input-container>
-        <div flex="50" flex-offset="5" flex-xs="100" flex-offset-xs="0">
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <label>{{'main.from' | translate}}</label>
+          <hois-value value="stipend.studyStartPeriodStart | hoisDate"></hois-value>
+        </md-input-container>
+        <md-input-container flex="50" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <label>{{'main.thru' | translate}}</label>
+          <hois-value value="stipend.studyStartPeriodEnd | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="row">
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+          <label>{{'stipend.paymentPeriod' | translate}}</label>
+          <input type="hidden">
+        </md-input-container>
+        <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <label>{{'main.from' | translate}}</label>
+          <hois-value value="stipend.paymentStart | hoisDate"></hois-value>
+        </md-input-container>
+        <md-input-container flex="50" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <label>{{'main.thru' | translate}}</label>
+          <hois-value value="stipend.paymentEnd | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="row" flex>
+        <div flex>
           <md-checkbox ng-model="stipend.isTeacherConfirm" disabled aria-label="Is teacher confirm">
             {{'stipend.isTeacherConfirm' | translate}}
           </md-checkbox>
@@ -147,7 +171,7 @@
             <hois-value value="application.addInfo"></hois-value>
           </md-input-container>
         </div>
-        <div ng-include="'scholarship/student/scholarship.family.table.view.html'"></div>
+        <div ng-if="stipend.isFamilyIncomes" ng-include="'scholarship/student/scholarship.family.table.view.html'"></div>
         <br/>
         <div ng-include="'scholarship/scholarship.relatedFiles.edit.html'"></div>
         <div layout="row">

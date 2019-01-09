@@ -262,9 +262,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
 function ($scope, $location, $q, message, QueryUtils, $route, Classifier) {
   var baseUrl = '/scholarships';
   $scope.scholarshipType = $route.current.params.type;
-  $scope.formState = {
-    committees: QueryUtils.endpoint(baseUrl + "/committees").query()
-  };
+  $scope.formState = {};
   var clMapper = Classifier.valuemapper({
     status: 'STIPTOETUS_STAATUS',
     type: 'STIPTOETUS',
@@ -276,6 +274,10 @@ function ($scope, $location, $q, message, QueryUtils, $route, Classifier) {
   }, function (result) {
     $scope.formState.committee = result.committeeId;
     $scope.selectedCommitteeChanged();
+    $scope.formState.committees = QueryUtils.endpoint(baseUrl + "/committees").query({
+      validDate: new Date().withoutTime(),
+      id: result.committeeId
+    });
     $scope.submittedType = result.applications[0].type;
     $q.all(clMapper.promises).then(function () {
       $scope.applications = clMapper.objectmapper(result.applications);

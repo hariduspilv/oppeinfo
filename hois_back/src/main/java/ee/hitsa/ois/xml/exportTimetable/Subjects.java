@@ -28,7 +28,7 @@ public class Subjects {
     }
     public void add(Subject subject) {
         if (this.subjects == null) {
-            this.subjects = new HashSet<Subject>();
+            this.subjects = new HashSet<>();
         }
         this.subjects.add(subject);
     }

@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
-import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.service.sais.SaisApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;

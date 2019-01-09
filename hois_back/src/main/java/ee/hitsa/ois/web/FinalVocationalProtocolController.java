@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
+import org.digidoc4j.Container;
+import org.digidoc4j.DataToSign;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -60,6 +62,7 @@ import ee.hitsa.ois.web.dto.finalprotocol.FinalVocationalProtocolStudentDto;
 public class FinalVocationalProtocolController {
     
     private static final String BDOC_TO_SIGN = "vocationalFinalProtocolBdocContainerToSign";
+    private static final String BDOC_CONT = "vocationalFinalProtocolBdocContainer";
     private static final String MOBILE_SESSCODE = "vocationalFinalProtocolBdocMobileSesscode";
     
     @Autowired
@@ -166,7 +169,8 @@ public class FinalVocationalProtocolController {
                                 new FinalProtocolReport(savedProtocol, isLetterGrades)),
                         protocolSignForm.getCertificate());
 
-        httpSession.setAttribute(BDOC_TO_SIGN, unsignedBdocContainer);
+        httpSession.setAttribute(BDOC_TO_SIGN, unsignedBdocContainer.getDataToSign());
+        httpSession.setAttribute(BDOC_CONT, unsignedBdocContainer.getContainer());
         return EntitySignDto.of(savedProtocol, unsignedBdocContainer);
     }
 
@@ -175,9 +179,13 @@ public class FinalVocationalProtocolController {
             @Valid @RequestBody SignatureCommand signatureCommand, HttpSession httpSession) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
 
-        UnsignedBdocContainer unsignedBdocContainer = (UnsignedBdocContainer) httpSession.getAttribute(BDOC_TO_SIGN);
-        protocol.setOisFile(bdocService.getSignedBdoc(unsignedBdocContainer, signatureCommand.getSignature(), "protokoll"));
+        DataToSign dataToSign = (DataToSign) httpSession.getAttribute(BDOC_TO_SIGN);
+        Container container = (Container) httpSession.getAttribute(BDOC_CONT);
+        
+        protocol.setOisFile(bdocService.getSignedBdoc(container, dataToSign, signatureCommand.getSignature(), "protokoll"));
+        
         httpSession.removeAttribute(BDOC_TO_SIGN);
+        httpSession.removeAttribute(BDOC_CONT);
         return get(user, finalProtocolService.confirm(user, protocol, null));
     }
 

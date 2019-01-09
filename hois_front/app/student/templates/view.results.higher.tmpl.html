@@ -52,6 +52,17 @@
       </div>
     </div>
 
+    <div layout="row" layout-xs="column" flex>
+      <div flex="90">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" ng-if="student.curriculumSpeciality">
+            <label>{{'student.curriculumSpeciality' | translate}}</label>
+            <hois-value value="currentLanguageNameField(student.curriculumSpeciality)"></hois-value>
+          </md-input-container>
+        </div>
+      </div>
+    </div>
+
     <div ng-controller="StudentViewResultsHigherController as controller" flex="90" ng-cloak>
       <md-content>
         <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection">
@@ -85,6 +96,10 @@
       </md-content>
     </div>
 
+    <div layout="row">
+      <a ng-href="{{supplementPreviewPdfUrl}}?isHigher=true" ng-if="supplementPreviewPdfUrl" target="_blank" class="md-button md-raised">{{'student.result.higher.supplementPreview' | translate}}</a>
+      <a ng-href="{{supplementPreviewPdfUrl}}?isHigher=true&lang=EN" ng-if="supplementPreviewPdfUrl" target="_blank" class="md-button md-raised">{{'student.result.higher.supplementPreviewEn' | translate}}</a>
+    </div>
 
   </div>
 </div>

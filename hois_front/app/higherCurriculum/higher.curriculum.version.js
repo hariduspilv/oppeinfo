@@ -133,7 +133,7 @@ angular.module('hitsaOis')
         updateSuccess: 'curriculum.statuschange.version.success.opened'
       };
       var setStatusEndpoint = QueryUtils.endpoint('/curriculumVersion/underrevision');
-      changeStatus(setStatusEndpoint, messages)
+      changeStatus(setStatusEndpoint, messages);
     };
 
     $scope.saveAndConfirm = function() {

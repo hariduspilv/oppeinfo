@@ -28,6 +28,7 @@ import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
@@ -58,7 +59,7 @@ public class StudentGroupController {
 
     @GetMapping("/{id:\\d+}")
     public StudentGroupDto get(HoisUserDetails user, @WithEntity StudentGroup studentGroup) {
-        UserUtil.assertSameSchool(user, studentGroup.getSchool());
+        assertCanView(user, studentGroup);
         return studentGroupService.get(user, studentGroup);
     }
 
@@ -86,9 +87,33 @@ public class StudentGroupController {
         return studentGroupService.curriculumData(curriculum);
     }
 
+    @GetMapping("/existsPendingLessonPlans/{id:\\d+}")
+    public Map<String, Boolean> existsPendingLessonPlans(HoisUserDetails user, @WithEntity StudentGroup studentGroup,
+            Long formCurriculumVersion) {
+        UserUtil.assertIsSchoolAdmin(user, studentGroup.getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_OPPERYHM);
+        return studentGroupService.existsPendingLessonPlans(studentGroup, formCurriculumVersion);
+    }
+
     @GetMapping("/findstudents")
     public List<StudentGroupStudentDto> searchStudents(HoisUserDetails user, @Valid StudentGroupSearchStudentsCommand criteria) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
         return studentGroupService.searchStudents(user.getSchoolId(), criteria);
+    }
+    
+    private static boolean canView(HoisUserDetails user, StudentGroup group) {
+        if (UserUtil.isSchoolAdmin(user, group.getSchool())) {
+            return true;
+        }
+        if (user.isStudent()) {
+            return group.getStudents().stream().filter(student -> student.getId().equals(user.getStudentId())).findAny().isPresent();
+        }
+        return false;
+    }
+    
+    private static void assertCanView(HoisUserDetails user, StudentGroup group) {
+        if (!canView(user, group)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
     }
 }

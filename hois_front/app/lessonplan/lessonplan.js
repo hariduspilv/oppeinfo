@@ -158,6 +158,9 @@
             });
 
             $scope.search = function (text) {
+              if (!text) {
+                return [];
+              }
               var regExp = new RegExp('^.*' + text.replace("%", ".*").toUpperCase() + '.*$');
               return $scope.formState.studentGroups.filter(function (group) {
                 return regExp.test($scope.$parent.currentLanguageNameField(group).toUpperCase());

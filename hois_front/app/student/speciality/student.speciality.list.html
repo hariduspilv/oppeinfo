@@ -1,0 +1,71 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form name="searchForm" ng-submit="loadData()" novalidate>
+            <div layout="column">
+              <hois-autocomplete flex="100" ng-model="criteria.curriculum" ha-attribute="id" ha-controller="autocompletes"
+                method="curriculumsauto" no-paging="true" additional-query-params="{higher: true, closed: false, minSpecialities:2}"
+                label="student.curriculum" required></hois-autocomplete>
+              <md-input-container flex="100" ng-show="filteredVersions.length > 0">
+                <label>{{'student.curriculumVersion' | translate}}</label>
+                <md-select ng-model="criteria.curriculumVersion" required>
+                  <md-option ng-value="opt.id" ng-repeat="opt in filteredVersions">{{currentLanguageNameField(opt)}}</md-option>
+                </md-select>
+              </md-input-container>
+              <div ng-show="criteria.curriculum && filteredVersions.length === 0" class="md-body-1" md-colors="{color: 'warn'}">
+                {{'student.speciality.error.notNeeded' | translate}}
+              </div>
+              <md-input-container flex="100">
+                <md-checkbox ng-model="criteria.woSpeciality">
+                  {{'student.speciality.showWithoutSpec' | translate}}
+                </md-checkbox>
+              </md-input-container>
+            </div>
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back('#/students?_menu')">{{'main.button.back' | translate}}</md-button>
+          </div>
+        </form>
+      </fieldset>
+    </div>
+  </div>
+  <div layout-padding>
+    <div flex>
+      <md-table-container>
+        <table md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th md-column>{{'student.name' | translate}}</th>
+              <th md-column>{{'student.idcode' | translate}}</th>
+              <th md-column>{{'student.studentGroup' | translate}}</th>
+              <th md-column>{{'student.curriculumSpeciality' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{row.name}}</td>
+              <td md-cell>{{row.idcode}}</td>
+              <td md-cell>{{currentLanguageNameField(row.group)}}</td>
+              <td md-cell>
+                <md-input-container style="width: 100%;">
+                  <md-select ng-model="row.speciality.id">
+                    <md-option md-option-empty></md-option>
+                    <md-option ng-value="spec.id" ng-repeat="spec in availableSpecialities">{{currentLanguageNameField(spec)}}</md-option>
+                  </md-select>
+                </md-input-container>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                           md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                           md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+    </div>
+    <div layout="row" style="margin-top: -1.5em;" ng-if="tabledata.totalElements > 0">
+      <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+    </div>
+  </div>
+  

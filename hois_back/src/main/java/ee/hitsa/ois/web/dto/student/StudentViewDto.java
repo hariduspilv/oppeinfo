@@ -23,8 +23,8 @@ public class StudentViewDto extends StudentForm {
     private String status;
     private Long curriculum;
     private AutocompleteResult curriculumVersion;
-    private AutocompleteResult curriculumSpeciality;
     private AutocompleteResult studentGroup;
+    private String speciality;
     private Short course;
     private LocalDate studyStart;
     private LocalDate studyEnd;
@@ -39,6 +39,7 @@ public class StudentViewDto extends StudentForm {
     private BigDecimal curriculumCredits;
     private BigDecimal credits;
     private BigDecimal kkh;
+    private Boolean isCurriculumFulfilled;
     private List<StudentOccupationCertificateDto> occupationCertificates;
 
     public Long getId() {
@@ -89,20 +90,20 @@ public class StudentViewDto extends StudentForm {
         this.curriculumVersion = curriculumVersion;
     }
 
-    public AutocompleteResult getCurriculumSpeciality() {
-        return curriculumSpeciality;
-    }
-
-    public void setCurriculumSpeciality(AutocompleteResult curriculumSpeciality) {
-        this.curriculumSpeciality = curriculumSpeciality;
-    }
-
     public AutocompleteResult getStudentGroup() {
         return studentGroup;
     }
 
     public void setStudentGroup(AutocompleteResult studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public String getSpeciality() {
+        return speciality;
+    }
+
+    public void setSpeciality(String speciality) {
+        this.speciality = speciality;
     }
 
     public Short getCourse() {
@@ -209,6 +210,14 @@ public class StudentViewDto extends StudentForm {
         this.kkh = kkh;
     }
 
+    public Boolean getIsCurriculumFulfilled() {
+        return isCurriculumFulfilled;
+    }
+
+    public void setIsCurriculumFulfilled(Boolean isCurriculumFulfilled) {
+        this.isCurriculumFulfilled = isCurriculumFulfilled;
+    }
+
     public List<StudentOccupationCertificateDto> getOccupationCertificates() {
         return occupationCertificates;
     }
@@ -235,6 +244,13 @@ public class StudentViewDto extends StudentForm {
         if (!Boolean.TRUE.equals(dto.getIsVocational())) {
             dto.setStudyCompany(null);
             dto.setBoardingSchool(null);
+            if (student.getCurriculumSpeciality() != null) {
+                dto.setCurriculumSpeciality(AutocompleteResult.of(student.getCurriculumSpeciality()));
+            }
+        } else {
+            if (student.getStudentGroup() != null && student.getStudentGroup().getSpeciality() != null) {
+                dto.setSpeciality(student.getStudentGroup().getSpeciality().getCode());   
+            }
         }
         dto.setCurriculum(EntityUtil.getId(curriculum));
         dto.setCurriculumCredits(curriculum.getCredits());

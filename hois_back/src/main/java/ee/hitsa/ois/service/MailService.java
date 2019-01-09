@@ -17,6 +17,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.util.StreamUtil;
+
 @Service
 public class MailService {
 
@@ -63,7 +65,7 @@ public class MailService {
     }
 
     public void sendMail(ee.hitsa.ois.domain.Message message, List<String> receivers) {
-        sendMail(message.getSender().getEmail(), String.join(",", receivers), message.getSubject(), message.getContent());
+        sendMail(message.getSender().getEmail(), String.join(",", StreamUtil.toFilteredList(r -> r != null, receivers)), message.getSubject(), message.getContent());
     }
 
 }
