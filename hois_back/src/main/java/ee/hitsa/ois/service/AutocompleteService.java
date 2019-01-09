@@ -38,6 +38,8 @@ import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.Timetable;
@@ -74,6 +76,7 @@ import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.RoomAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
+import ee.hitsa.ois.web.commandobject.SpecialitiesAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
@@ -95,6 +98,7 @@ import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithLogo;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
+import ee.hitsa.ois.web.dto.SpecialityAutocompleteResult;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearIdDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
@@ -318,7 +322,7 @@ public class AutocompleteService {
     }
 
     public List<CurriculumResult> curriculums(Long schoolId, CurriculumAutocompleteCommand term, boolean setMaxResults) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum c");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum c left join curriculum_speciality cs on cs.curriculum_id = c.id").groupBy("c.id");
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains(Language.EN.equals(term.getLang()) ? "concat(c.code, ' - ', c.name_en)" : "concat(c.code, ' - ', c.name_et)", "name", term.getName());
@@ -330,23 +334,33 @@ public class AutocompleteService {
             qb.requiredCriteria("c.status_code != :status", "status", CurriculumStatus.OPPEKAVA_STAATUS_C);
         }
 
-        if (term.getTeacher() != null) {
-            qb.filter("c.id in (select sg.curriculum_id from student_group sg where sg.teacher_id = "
-                    + term.getTeacher() + ")");
-        }
+        qb.optionalCriteria("c.id in (select sg.curriculum_id from student_group sg where sg.teacher_id = :teacherId)", "teacherId", term.getTeacher());
 
         qb.sort(Language.EN.equals(term.getLang()) ? "c.name_en, c.code" : "c.name_et, c.code");
-        List<?> data = qb.select("c.id, c.name_et, c.name_en, c.code", em)
+        List<?> data = qb.select("c.id, c.name_et, c.name_en, c.code, string_agg(cs.id\\:\\:character varying, ';') as spec", em)
                 .setMaxResults(setMaxResults ? MAX_ITEM_COUNT : Integer.MAX_VALUE).getResultList();
-        return StreamUtil.toMappedList(r -> new CurriculumResult(resultAsLong(r, 0), resultAsString(r, 1),
-                resultAsString(r, 2), resultAsString(r, 3)), data);
+        return data.stream().map(r -> {
+            CurriculumResult dto = new CurriculumResult(resultAsLong(r, 0), resultAsString(r, 1),
+                resultAsString(r, 2), resultAsString(r, 3));
+            String specs = resultAsString(r, 4);
+            if (specs != null) {
+                dto.setSpecialities(Arrays.stream(specs.split(";")).map(Long::parseLong).collect(Collectors.toSet()));
+            }
+            return dto;
+        }).filter(res -> {
+            if (term.getMinSpecialities() != null) {
+                return res.getSpecialities() != null && res.getSpecialities().size() >= term.getMinSpecialities().intValue();
+            }
+            return true;
+        }).collect(Collectors.toList());
     }
 
     public List<CurriculumVersionResult> curriculumVersions(Long schoolId, CurriculumVersionAutocompleteCommand lookup) {
-        String from = "from curriculum_version cv inner join curriculum c on cv.curriculum_id = c.id "+
+        String from = "from curriculum_version cv inner join curriculum c on cv.curriculum_id = c.id " +
+            "left join curriculum_version_speciality cvs on cvs.curriculum_version_id = cv.id " +
             "left outer join curriculum_study_form sf on cv.curriculum_study_form_id = sf.id";
 
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from).groupBy("cv.id, c.id, sf.id");
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         if(Boolean.TRUE.equals(lookup.getValid())) {
@@ -368,11 +382,17 @@ public class AutocompleteService {
         qb.optionalContains(Arrays.asList("cv.code", "cv.code || ' ' || c.name_et", "cv.code || ' ' || c.name_en"), "name", lookup.getName());
 
         qb.sort(Language.EN.equals(lookup.getLang()) ? "cv.code, c.name_et" : "cv.code, c.name_en");
-        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, cv.school_department_id, sf.study_form_code, c.is_higher", em).getResultList();
+        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, cv.school_department_id, sf.study_form_code, c.is_higher, string_agg(cvs.curriculum_speciality_id\\:\\:character varying, ';') as spec",
+                em).getResultList();
         List<CurriculumVersionResult> result = StreamUtil.toMappedList(r -> {
             String code = resultAsString(r, 1);
-            return new CurriculumVersionResult(resultAsLong(r, 0), CurriculumUtil.versionName(code, resultAsString(r, 2)),
+            CurriculumVersionResult dto = new CurriculumVersionResult(resultAsLong(r, 0), CurriculumUtil.versionName(code, resultAsString(r, 2)),
                     CurriculumUtil.versionName(code, resultAsString(r, 3)), resultAsLong(r, 4), resultAsLong(r, 5), resultAsString(r, 6), Boolean.valueOf(!Boolean.TRUE.equals(resultAsBoolean(r, 7))));
+            String specs = resultAsString(r, 8);
+            if (specs != null) {
+                dto.setSpecialities(Arrays.stream(specs.split(";")).map(Long::parseLong).collect(Collectors.toSet()));
+            }
+            return dto;
         }, data);
 
         if(Boolean.TRUE.equals(lookup.getLanguages())) {
@@ -688,10 +708,11 @@ public class AutocompleteService {
         }, data);
     }
     
-    public List<ApelSchoolResult> apelSchools(Long schoolId) {
+    public List<ApelSchoolResult> apelSchools(Long schoolId, SearchCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from apel_school s");
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         
+        qb.sort(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et");
         List<?> data = qb.select("s.id, s.name_et, s.name_en, s.ehis_school_code, s.country_code", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             return new ApelSchoolResult(
@@ -927,6 +948,7 @@ public class AutocompleteService {
                 "from teacher t inner join person p on t.person_id = p.id").sort("p.lastname", "p.firstname");
 
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("t.id = :tId", "tId", lookup.getId());
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"),  "name", lookup.getName());
         qb.optionalCriteria("t.is_higher = :higher", "higher", lookup.getHigher());
         if(Boolean.TRUE.equals(lookup.getValid())) {
@@ -1322,6 +1344,33 @@ public class AutocompleteService {
             String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
+    }
+
+    /**
+     * Collects all the specialities by curriculum or curriculum version id.
+     * If student or representative asks then studentId is used during search.
+     * 
+     * @param user HoisUserDetails
+     * @param lookup search criteria
+     * @return list of specialities with {@link CurriculumSpeciality} id/name(estonian, english, russian)/{@link CurriculumVersion} id}
+     */
+    public Set<SpecialityAutocompleteResult> specialities(HoisUserDetails user, SpecialitiesAutocompleteCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_speciality cs " + 
+                "join curriculum c on c.id = cs.curriculum_id " + 
+                "left join curriculum_version_speciality cvs on cvs.curriculum_speciality_id = cs.id " +
+                "left join curriculum_version cv on cv.id = cvs.curriculum_version_id ").groupBy("cs.id, c.id");
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalCriteria("c.id = :cId", "cId", lookup.getCurriculum());
+        qb.optionalCriteria("cv.id = :cvId", "cvId", lookup.getCurriculumVersion());
+        if (user.isStudent() || user.isRepresentative()) {
+            qb.requiredCriteria("cv.id in (select s.curriculum_version_id from student s where s.id = :studentId)", "studentId", user.getStudentId());
+        }
+        List<?> results = qb.select("cs.id, cs.name_et, cs.name_en, c.id as cid, string_agg(cv.id\\:\\:character varying, ';') as versions", em).getResultList();
+        return StreamUtil.toMappedSet(r -> {
+            String versions = resultAsString(r, 4);
+            return new SpecialityAutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3),
+                    versions == null ? null : Arrays.stream(versions.split(";")).map(Long::parseLong).collect(Collectors.toSet()));
+        }, results);
     }
     
 }

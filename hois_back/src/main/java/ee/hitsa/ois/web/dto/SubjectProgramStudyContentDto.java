@@ -2,9 +2,6 @@ package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDate;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-
 import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramStudyContent;

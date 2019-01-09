@@ -66,7 +66,11 @@
             <label>{{'student.studyLanguage' | translate}}</label>
             <hois-classifier-value ng-model="student.studyLanguage" main-classifier-code="OPPEKEEL"></hois-classifier-value>
           </md-input-container>
-          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isVocational">
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="student.isVocational && student.speciality">
+            <label class="textInput">{{'studentGroup.speciality' | translate}}</label>
+            <hois-classifier-value ng-model="student.speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isVocational && student.curriculumSpeciality">
             <label>{{'student.curriculumSpeciality' | translate}}</label>
             <hois-value value="currentLanguageNameField(student.curriculumSpeciality)"></hois-value>
           </md-input-container>
@@ -76,7 +80,7 @@
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.studentGroup' | translate}}</label>
             <hois-value value="currentLanguageNameField(student.studentGroup)"
-                        href-value="!auth.isTeacher() ? ('#/studentgroups/' + student.studentGroup.id + '/view') : undefined"></hois-value>
+                        href-value="auth.isAdmin() || auth.isStudent() ? '#/studentgroups/' + student.studentGroup.id + '/view' : undefined"></hois-value>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.course' | translate}}</label>

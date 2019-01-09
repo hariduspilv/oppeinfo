@@ -63,6 +63,9 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
 
     @Valid
     private Set<CurriculumVersionOccupationModuleThemeCapacityDto> capacities;
+    
+    // used for curriculum fulfillment
+    private Boolean otherCurriculumVersionModuleTheme;
 
     public static CurriculumVersionOccupationModuleThemeDto of(CurriculumVersionOccupationModuleTheme theme) {
         CurriculumVersionOccupationModuleThemeDto dto = EntityUtil.bindToDto(theme, new CurriculumVersionOccupationModuleThemeDto(),
@@ -81,6 +84,15 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         dto.setCredits(theme.getCredits());
         dto.setHours(theme.getHours());
         dto.setOutcomes(StreamUtil.toMappedSet(o -> EntityUtil.getId(o.getOutcome()), theme.getOutcomes()));
+        dto.setModule(EntityUtil.getId(theme.getModule()));
+        return dto;
+    }
+
+    public static CurriculumVersionOccupationModuleThemeDto forCurriculumFulfillment(CurriculumVersionOccupationModuleTheme theme) {
+        CurriculumVersionOccupationModuleThemeDto dto = new CurriculumVersionOccupationModuleThemeDto();
+        dto.setId(theme.getId());
+        dto.setNameEt(theme.getNameEt());
+        dto.setCredits(theme.getCredits());
         dto.setModule(EntityUtil.getId(theme.getModule()));
         return dto;
     }
@@ -157,61 +169,49 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         this.capacities = capacities;
     }
 
-
     public String getAssessment() {
         return assessment;
     }
-
 
     public void setAssessment(String assessment) {
         this.assessment = assessment;
     }
 
-
     public String getTotalGradeDescription() {
         return totalGradeDescription;
     }
-
 
     public void setTotalGradeDescription(String totalGradeDescription) {
         this.totalGradeDescription = totalGradeDescription;
     }
 
-
     public String getPassDescription() {
         return passDescription;
     }
-
 
     public void setPassDescription(String passDescription) {
         this.passDescription = passDescription;
     }
 
-
     public String getGrade3Description() {
         return grade3Description;
     }
-
 
     public void setGrade3Description(String grade3Description) {
         this.grade3Description = grade3Description;
     }
 
-
     public String getGrade4Description() {
         return grade4Description;
     }
-
 
     public void setGrade4Description(String grade4Description) {
         this.grade4Description = grade4Description;
     }
 
-
     public String getGrade5Description() {
         return grade5Description;
     }
-
 
     public void setGrade5Description(String grade5Description) {
         this.grade5Description = grade5Description;
@@ -223,5 +223,13 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
 
     public void setModule(Long module) {
         this.module = module;
+    }
+
+    public Boolean getOtherCurriculumVersionModuleTheme() {
+        return otherCurriculumVersionModuleTheme;
+    }
+
+    public void setOtherCurriculumVersionModuleTheme(Boolean otherCurriculumVersionModuleTheme) {
+        this.otherCurriculumVersionModuleTheme = otherCurriculumVersionModuleTheme;
     }
 }

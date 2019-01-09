@@ -11,6 +11,7 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudentForm extends VersionedCommand {
 
@@ -22,6 +23,7 @@ public class StudentForm extends VersionedCommand {
     // study
     @ClassifierRestriction(MainClassCode.OPPEKEEL)
     private String studyLanguage;
+    private AutocompleteResult curriculumSpeciality;
     private LocalDate nominalStudyEnd;
     @ClassifierRestriction(MainClassCode.FINTAPSUSTUS)
     private String finSpecific;
@@ -60,6 +62,14 @@ public class StudentForm extends VersionedCommand {
 
     public void setStudyLanguage(String studyLanguage) {
         this.studyLanguage = studyLanguage;
+    }
+
+    public AutocompleteResult getCurriculumSpeciality() {
+        return curriculumSpeciality;
+    }
+
+    public void setCurriculumSpeciality(AutocompleteResult curriculumSpeciality) {
+        this.curriculumSpeciality = curriculumSpeciality;
     }
 
     public LocalDate getNominalStudyEnd() {

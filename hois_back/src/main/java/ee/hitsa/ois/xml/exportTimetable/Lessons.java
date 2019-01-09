@@ -29,7 +29,7 @@ public class Lessons {
 	
     public void add(Lesson lesson) {
         if (this.lessons == null) {
-            this.lessons = new HashSet<Lesson>();
+            this.lessons = new HashSet<>();
         }
         this.lessons.add(lesson);
     }

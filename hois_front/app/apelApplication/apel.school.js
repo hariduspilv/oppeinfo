@@ -7,16 +7,28 @@ angular.module('hitsaOis').controller('ApelSchoolListController', function ($sco
   });
   $q.all().then($scope.loadData);
   
-}).controller('ApelSchoolEditController', function ($scope, $route, dialogService, message, QueryUtils, $location, Classifier) {
+}).controller('ApelSchoolEditController', function ($scope, $route, dialogService, message, ArrayUtils, QueryUtils, $location, Classifier) {
     var id = $route.current.params.id;
     var baseUrl = '/apelSchool';
     var Endpoint = QueryUtils.endpoint(baseUrl);
 
+    function loadEhisSchoolCodes(currentEhisCode) {
+      QueryUtils.endpoint(baseUrl + '/usedEhisSchoolCodes').query().$promise.then(function (codes) {
+        ArrayUtils.remove(codes, currentEhisCode);
+        $scope.usedEhisSchoolCodes = codes;
+      })
+    }
+
     if (id) {
       $scope.apelSchool = Endpoint.get({id: id});
+      $scope.apelSchool.$promise.then(function () {
+        loadEhisSchoolCodes($scope.apelSchool.ehisSchool);
+      });
     } else {
       $scope.apelSchool = new Endpoint();
+      loadEhisSchoolCodes();
     }
+    loadEhisSchoolCodes();
 
     $scope.update = function() {
       $scope.apelSchoolForm.$setSubmitted();

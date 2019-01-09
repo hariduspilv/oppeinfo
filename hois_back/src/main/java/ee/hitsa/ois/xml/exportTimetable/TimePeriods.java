@@ -29,7 +29,7 @@ public class TimePeriods {
 	
     public void add(TimePeriod timeperiod) {
         if (this.timeperiods == null) {
-            this.timeperiods = new HashSet<TimePeriod>();
+            this.timeperiods = new HashSet<>();
         }
         this.timeperiods.add(timeperiod);
     }

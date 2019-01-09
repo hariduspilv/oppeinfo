@@ -76,6 +76,7 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshiApplicationRejectionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationListSubmitForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipCommitteeSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipDecisionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipStudentApplicationForm;
@@ -230,21 +231,28 @@ public class ScholarshipService {
         return EntityUtil.save(scholarshipTerm, em);
     }
     
-    public List<AutocompleteResult> committeesForSelection(HoisUserDetails user, LocalDate validDate, List<Long> curriclumIds) {
+    public List<AutocompleteResult> committeesForSelection(HoisUserDetails user, ScholarshipCommitteeSearchCommand command) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from committee c"
                 + " left join committee_member cm on c.id = cm.committee_id"
                 + " left join person p on p.id = cm.person_id ");
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("c.type_code = :type", "type", CommitteeType.KOMISJON_T.name());
-        qb.optionalCriteria("c.valid_from <= :validDate", "validDate", validDate);
-        qb.optionalCriteria("c.valid_thru >= :validDate", "validDate", validDate);
+        if (command.getValidDate() != null && command.getId() != null) {
+            qb.parameter("validDate", command.getValidDate());
+            qb.parameter("id", command.getId());
+            qb.filter("((c.valid_from <= :validDate and c.valid_thru >= :validDate) or c.id = :id)");
+        } else {
+            qb.optionalCriteria("c.valid_from <= :validDate", "validDate", command.getValidDate());
+            qb.optionalCriteria("c.valid_thru >= :validDate", "validDate", command.getValidDate());
+            qb.optionalCriteria("c.id = :id", "id", command.getId());
+        }
         qb.optionalCriteria("(exists(select cc.id"
                     + " from committee_curriculum cc"
                     + " where cc.committee_id = c.id and cc.curriculum_id in :curriclums) "
                 + " or not exists(select cc.id"
                     + " from committee_curriculum cc"
-                    + " where cc.committee_id = c.id))", "curriclums", curriclumIds);
+                    + " where cc.committee_id = c.id))", "curriclums", command.getCurriclumIds());
         qb.groupBy(" c.id ");
 
         List<?> committees = qb.select("distinct c.id,c.name_et,"

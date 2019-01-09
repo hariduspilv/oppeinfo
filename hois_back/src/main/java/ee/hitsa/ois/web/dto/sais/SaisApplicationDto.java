@@ -2,10 +2,8 @@ package ee.hitsa.ois.web.dto.sais;
 
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SaisAdmissionUtil;

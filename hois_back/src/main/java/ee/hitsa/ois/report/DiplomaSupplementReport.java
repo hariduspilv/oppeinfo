@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import ee.hitsa.ois.domain.Form;
+import ee.hitsa.ois.domain.diploma.Diploma;
 import ee.hitsa.ois.domain.diploma.DiplomaSupplement;
 import ee.hitsa.ois.domain.diploma.DiplomaSupplementStudyResult;
 import ee.hitsa.ois.enums.Language;
@@ -69,8 +70,11 @@ public class DiplomaSupplementReport {
     public DiplomaSupplementReport(DiplomaSupplement diplomaSupplement, List<String> additionalNrs, 
             Boolean showSubjectCode, Boolean showTeacher, Boolean isLetterGrades, Language lang) {
         this.lang = lang;
-        Form diplomaForm = diplomaSupplement.getDiploma().getForm();
+        
+        Diploma diploma = diplomaSupplement.getDiploma();
+        Form diplomaForm = diploma != null ? diploma.getForm() : null;
         this.diplomaNr = diplomaForm != null ? diplomaForm.getFullCode() : "XXXXXX";
+        
         this.additionalNrs = additionalNrs;
         this.showSubjectCode = showSubjectCode;
         this.showTeacher = showTeacher;

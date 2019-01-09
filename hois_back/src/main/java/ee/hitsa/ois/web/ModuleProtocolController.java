@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -8,6 +9,10 @@ import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import org.digidoc4j.Container;
+import org.digidoc4j.DataToSign;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -62,7 +67,10 @@ import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 public class ModuleProtocolController {
 
     private static final String BDOC_TO_SIGN = "moduleProtocolBdocContainerToSign";
+    private static final String BDOC_CONT = "moduleProtocolBdocContainer";
     private static final String MOBILE_SESSCODE = "moduleProtocolBdocMobileSesscode";
+    
+    protected static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Autowired
     private ModuleProtocolService moduleProtocolService;
@@ -154,29 +162,33 @@ public class ModuleProtocolController {
     public EntitySignDto signToConfirm(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSignForm moduleProtocolSignForm, HttpSession httpSession) {
-        
+    	
         ModuleProtocolUtil.assertCanConfirm(user, protocol);
-
         Protocol savedProtocol = moduleProtocolService.save(protocol, moduleProtocolSignForm);
-
-        UnsignedBdocContainer unsignedBdocContainer = bdocService.createUnsignedBdocContainer("mooduli_protokoll.pdf",
+        UnsignedBdocContainer unsignedBdocContainer = bdocService.createUnsignedBdocContainer("mooduli_protokoll.pdf", 
                 MediaType.APPLICATION_PDF_VALUE, pdfService.generate(ModuleProtocolReport.TEMPLATE_NAME,
-                        moduleProtocolService.moduleProtocolReport(protocol)),
+                        moduleProtocolService.moduleProtocolReport(protocol)), 
                 moduleProtocolSignForm.getCertificate());
 
-        httpSession.setAttribute(BDOC_TO_SIGN, unsignedBdocContainer);
+        httpSession.setAttribute(BDOC_TO_SIGN, unsignedBdocContainer.getDataToSign());
+        httpSession.setAttribute(BDOC_CONT, unsignedBdocContainer.getContainer());
+        
         return EntitySignDto.of(savedProtocol, unsignedBdocContainer);
     }
 
     @PostMapping("/{id:\\d+}/signToConfirmFinalize")
     public ModuleProtocolDto signToConfirmFinalize(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody SignatureCommand signatureCommand, HttpSession httpSession) {
-
+    	
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
-
-        UnsignedBdocContainer unsignedBdocContainer = (UnsignedBdocContainer) httpSession.getAttribute(BDOC_TO_SIGN);
-        protocol.setOisFile(bdocService.getSignedBdoc(unsignedBdocContainer, signatureCommand.getSignature(), "protokoll"));
+        
+        DataToSign dataToSign = (DataToSign) httpSession.getAttribute(BDOC_TO_SIGN);
+        Container container = (Container) httpSession.getAttribute(BDOC_CONT);
+        
+        protocol.setOisFile(bdocService.getSignedBdoc(container, dataToSign, signatureCommand.getSignature(), "protokoll"));
+        
         httpSession.removeAttribute(BDOC_TO_SIGN);
+        httpSession.removeAttribute(BDOC_CONT);
         return get(user, moduleProtocolService.confirm(user, protocol, null));
     }
 

@@ -49,7 +49,7 @@
                   <md-input-container flex="30" flex-sm="100" flex-xs="100">
                     <label>{{'apel.formalLearnings.schoolNameEt' | translate}}</label>
                     <md-select ng-model="record.newTransferableSubjectOrModule.apelSchool" aria-label="apelSchool" ng-change="apelSchoolChanged(record.newTransferableSubjectOrModule.apelSchool)"
-                      ng-model-options="{trackBy: '$value.id'}" required>
+                      ng-model-options="{trackBy: '$value.id + $value.nameEt'}" required>
                       <md-option ng-repeat="val in apelSchools" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
                     </md-select>
                   </md-input-container>
@@ -76,7 +76,7 @@
                         <label>{{'apel.formalLearnings.schoolEHIS' | translate}}</label>
                         <hois-classifier-select ng-model="record.newTransferableSubjectOrModule.newApelSchool.ehisSchool" aria-label="EHIS" model-value-attr="code"
                           main-classifier-code="EHIS_KOOL" ng-change="ehisSchoolChanged(record.newTransferableSubjectOrModule.newApelSchool.ehisSchool)"
-                          required></hois-classifier-select>
+                          filter-values="apelSchoolsEhisCodes()" required></hois-classifier-select>
                       </md-input-container>
                     </div>
                     <div layout="row" layout-sm="column" layout-xs="column">
@@ -217,7 +217,7 @@
                 <tr md-row ng-repeat="row in record.formalSubjectsOrModules track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell ng-if="row.apelSchool">{{currentLanguageNameField(row.apelSchool)}}</td>
                   <td md-cell ng-if="!row.apelSchool && !row.newApelSchool">{{currentLanguageNameField(record.school)}}</td>
-                  <td md-cell ng-if="row.newApelSchool">{{currentLanguageNameField(row.newApelSchool)}}</td>
+                  <td md-cell ng-if="row.newApelSchool && !row.apelSchool">{{currentLanguageNameField(row.newApelSchool)}}</td>
                   <td md-cell ng-if="row.module && !row.module.nameEn">{{row.module.nameEt}}</td>
                   <td md-cell ng-if="row.module && row.module.nameEn">{{row.module.nameEt}}/{{row.module.nameEn}}</td>
                   <td md-cell ng-if="!row.module && !row.nameEn">{{row.nameEt}}</td>

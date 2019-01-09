@@ -43,6 +43,7 @@ import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentModuleListChangeForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentSpecialitySearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
@@ -50,12 +51,13 @@ import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
 import ee.hitsa.ois.web.dto.student.StudentForeignstudyDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherResultDto;
+import ee.hitsa.ois.web.dto.student.StudentModuleResultDto;
+import ee.hitsa.ois.web.dto.student.StudentPracticeContractDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
+import ee.hitsa.ois.web.dto.student.StudentSpecialitySearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalConnectedEntity;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultByTimeDto;
-import ee.hitsa.ois.web.dto.student.StudentModuleResultDto;
-import ee.hitsa.ois.web.dto.student.StudentPracticeContractDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 
 @RestController
@@ -74,6 +76,19 @@ public class StudentController {
     @GetMapping
     public Page<StudentSearchDto> search(HoisUserDetails user, @Valid StudentSearchCommand criteria, Pageable pageable) {
         UserUtil.throwAccessDeniedIf(user.isStudent(), "Students cannot search other students");
+        return studentService.search(user, criteria, pageable);
+    }
+    
+    /**
+     * 
+     * @param user
+     * @param criteria
+     * @param pageable
+     * @return
+     */
+    @GetMapping("/highspecialities")
+    public Page<StudentSpecialitySearchDto> search(HoisUserDetails user, @Valid StudentSpecialitySearchCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
         return studentService.search(user, criteria, pageable);
     }
 
@@ -156,7 +171,6 @@ public class StudentController {
         return studentService.practiceContracts(user, student, pageable);
     }
 
-
     @GetMapping("/{id:\\d+}/foreignstudies")
     public Page<StudentForeignstudyDto> foreignstudies(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
         assertCanView(user, student);
@@ -167,6 +181,12 @@ public class StudentController {
     public List<AutocompleteResult> subjects(HoisUserDetails user, @WithEntity Student student) {
         assertCanView(user, student);
         return studentService.subjects(student);
+    }
+    
+    @GetMapping("/{id:\\d+}/specialities")
+    public List<AutocompleteResult> specialities(HoisUserDetails user, @WithEntity Student student) {
+        assertCanView(user, student);
+        return studentService.specialities(student);
     }
 
     @PostMapping("/ehisStudentExport")
@@ -192,46 +212,25 @@ public class StudentController {
         assertCanView(user, student);
         return studentResultHigherService.higherResults(student);
     }
-    
+
     @GetMapping("/{id:\\d+}/vocationalConnectedEntities")
     public List<StudentVocationalConnectedEntity> vocationalConnectedEntities(HoisUserDetails user, @WithEntity Student student) {
         assertIsSchoolAdminOrStudentGroupTeacher(user, student);
         return studentService.vocationalConnectedEntities(student.getId());
     }
-    
-    @GetMapping("/{id:\\d+}/vocationalChangeableModules")
-    public List<StudentModuleResultDto> vocationalChangeableModules(HoisUserDetails user, @WithEntity Student student) {
-        assertIsSchoolAdmin(user);
-        return studentService.vocationalChangeableModules(student.getId());
-    }
-    
-    @GetMapping("/{id:\\d+}/vocationalCurriculumModules")
-    public List<AutocompleteResult> vocationalCurriculumModulesForSelection(HoisUserDetails user, @WithEntity Student student) {
-        assertIsSchoolAdmin(user);
-        return studentService.vocationalCurriculumModulesForSelection(student.getCurriculumVersion().getId());
-    }
-    
-    @PostMapping("/{id:\\d+}/changeVocationalCurriculumModules")
-    public List<StudentModuleResultDto> changeVocationalCurriculumModules(HoisUserDetails user, @WithEntity Student student, @Valid @RequestBody StudentModuleListChangeForm form) {
-        if(!StudentUtil.isActive(student) || !UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) {
-            throw new AssertionFailedException("User cannot edit student data");
-        }
-        studentService.changeVocationalCurriculumVersionModules(student, form);
-        return vocationalChangeableModules(user, student);
-    }
-    
+
     @GetMapping("/{id:\\d+}/higherChangeableModules")
     public List<StudentModuleResultDto> higherChangeableModules(HoisUserDetails user, @WithEntity Student student) {
         assertIsSchoolAdmin(user);
         return studentService.higherChangeableModules(student.getId());
     }
-    
+
     @GetMapping("/{id:\\d+}/higherCurriculumModules")
     public List<AutocompleteResult> higherCurriculumModulesForSelection(HoisUserDetails user, @WithEntity Student student) {
         assertIsSchoolAdmin(user);
         return studentService.higherCurriculumModulesForSelection(student.getCurriculumVersion().getId());
     }
-    
+
     @PostMapping("/{id:\\d+}/changeHigherCurriculumModules")
     public List<StudentModuleResultDto> changeHigherCurriculumModules(HoisUserDetails user, @WithEntity Student student, @Valid @RequestBody StudentModuleListChangeForm form) {
         if(!StudentUtil.isActive(student) || !UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) {
@@ -239,6 +238,12 @@ public class StudentController {
         }
         studentService.changeHigherCurriculumVersionModules(student, form);
         return higherChangeableModules(user, student);
+    }
+    
+    @PostMapping("/highspecialities")
+    public List<StudentSpecialitySearchDto> saveSpecialities(HoisUserDetails user, @RequestBody List<StudentSpecialitySearchDto> form) {
+        assertIsSchoolAdmin(user);
+        return studentService.saveSpecialities(user, form);
     }
 
     private static void assertCanView(HoisUserDetails user, Student student) {

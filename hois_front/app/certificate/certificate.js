@@ -145,7 +145,7 @@ angular.module('hitsaOis')
           message.error('main.messages.error.nopermission');
           $scope.back("#/");
         }
-      })
+      });
     } else {
       $scope.record = new Endpoint();
       afterLoad();

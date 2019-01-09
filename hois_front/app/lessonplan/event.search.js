@@ -2,9 +2,9 @@
 
 angular.module('hitsaOis').controller('LessonplanEventSearchController',
   function ($scope, $route, message, QueryUtils, USER_ROLES, AuthService) {
-    var beforeColon = /^[^:]+/;
-    var afterColon = /:(.*)/;
-    var beforeT = /.+?(?=T)/;
+    // var beforeColon = /^[^:]+/;
+    // var afterColon = /:(.*)/;
+    // var beforeT = /.+?(?=T)/;
     $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS);
     $scope.formState = {};

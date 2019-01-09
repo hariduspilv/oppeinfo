@@ -23,12 +23,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
@@ -71,6 +73,8 @@ public class StudentGroupService {
     private EntityManager em;
     @Autowired
     private StudentService studentService;
+    @Autowired
+    private StudyYearService studyYearService;
 
     /**
      * Search student groups
@@ -127,6 +131,28 @@ public class StudentGroupService {
         return StudentGroupDto.of(user, studentGroup);
     }
 
+    public Map<String, Boolean> existsPendingLessonPlans(StudentGroup studentGroup, Long formCurriculumVersion) {
+        List<LessonPlan> pendingLessonPlans = pendingLessonPlans(studentGroup, formCurriculumVersion);
+        Map<String, Boolean> result = new HashMap<>();
+        result.put("pendingLessonPlans", Boolean.valueOf(!pendingLessonPlans.isEmpty()));
+        return result;
+    }
+
+    private List<LessonPlan> pendingLessonPlans(StudentGroup studentGroup, Long formCurriculumVersion) {
+        StudyYear currentSy = studyYearService.getCurrentStudyYear(EntityUtil.getId(studentGroup.getSchool()));
+        List<StudyYear> nextStudyYears = studyYearService.getNextStudyYears(currentSy);
+
+        List<Long> pendingStudyYearIds = StreamUtil.toMappedList(r -> r.getId(), nextStudyYears);
+        pendingStudyYearIds.add(currentSy.getId());
+
+        return em.createQuery("select lp from LessonPlan lp "
+                + "where lp.studentGroup.id = ?1 and lp.curriculumVersion.id != ?2 and lp.studyYear.id in (?3)", LessonPlan.class)
+                .setParameter(1, studentGroup.getId())
+                .setParameter(2, formCurriculumVersion)
+                .setParameter(3, pendingStudyYearIds)
+                .getResultList();
+    }
+
     /**
      * Add new student group
      *
@@ -169,6 +195,15 @@ public class StudentGroupService {
         if(curriculumVersion != null && !curriculumId.equals(EntityUtil.getId(curriculumVersion.getCurriculum()))) {
             throw new AssertionFailedException("Curriculum mismatch");
         }
+        if (studentGroup.getCurriculumVersion() != null
+                && !studentGroup.getCurriculumVersion().equals(curriculumVersion)) {
+            List<LessonPlan> pendingLessonPlans = pendingLessonPlans(studentGroup, form.getCurriculumVersion());
+            for (LessonPlan lp : pendingLessonPlans) {
+                lp.setCurriculumVersion(curriculumVersion);
+                EntityUtil.save(lp, em);
+            }
+        }
+        
         studentGroup.setCurriculumVersion(curriculumVersion);
 
         // teacher is optional but must be from same school

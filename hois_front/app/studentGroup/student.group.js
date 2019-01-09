@@ -163,6 +163,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       $scope.formState.students = clMapper.objectmapper($scope.record.members);
       $scope.formState.selectedStudents = angular.copy($scope.formState.students);
       $scope.formState.readonly = $scope.record.id && $scope.formState.students && $scope.formState.students.length > 0;
+      $scope.formState.currentCurriculumVersion = $scope.record.curriculumVersion;
       $scope.curriculumChanged();
       $scope.validThruChanged();
       $scope.record.members.forEach(function(it, i) { it.rowno = i + 1; });
@@ -178,21 +179,38 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
 
     $scope.update = function() {
       $scope.studentGroupForm.$setSubmitted();
-      if(!$scope.studentGroupForm.$valid) {
+      if (!$scope.studentGroupForm.$valid) {
         message.error('main.messages.form-has-errors');
         return;
       }
 
+      if ($scope.record.id && $scope.formState.currentCurriculumVersion !== $scope.record.curriculumVersion) {
+        QueryUtils.endpoint(baseUrl + '/existsPendingLessonPlans/' + $scope.record.id)
+          .search({formCurriculumVersion: $scope.record.curriculumVersion}).$promise.then(function (result) {
+            if (result.pendingLessonPlans) {
+              dialogService.confirmDialog({prompt: 'studentGroup.updateLessonPlansConfirm', studentGroup: $scope.record.code}, function() {
+                updateStudentGroup();
+              });
+            } else {
+              updateStudentGroup();
+            }
+          });
+      } else {
+        updateStudentGroup();
+      }
+    };
+
+    function updateStudentGroup() {
       $scope.record.students = $scope.formState.selectedStudents.map(function(item) { return item.id; });
-      if($scope.record.id) {
+      if ($scope.record.id) {
         $scope.record.$update().then(afterLoad).then(message.updateSuccess).catch(angular.noop);
-      }else{
+      } else {
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
           $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
         }).catch(angular.noop);
       }
-    };
+    }
 
     $scope.delete = function() {
       dialogService.confirmDialog({prompt: 'studentGroup.deleteconfirm'}, function() {

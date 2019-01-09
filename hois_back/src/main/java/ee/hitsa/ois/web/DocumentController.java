@@ -175,4 +175,11 @@ public class DocumentController {
         HttpUtil.pdf(response, "diploma_supplement.pdf", documentService.viewSupplementPdf(user, supplementId, lang));
     }
 
+    @GetMapping("/supplement/{id:\\d+}/preview.pdf")
+    public void supplementPreview(HoisUserDetails user, @PathVariable("id") Long studentId, 
+            Boolean isHigher, Language lang, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_HINNETELEHT_TRUKKIMINE);
+        HttpUtil.pdf(response, "diploma_supplement_preview.pdf", documentService.supplementPreview(user, studentId, isHigher, lang));
+    }
+
 }

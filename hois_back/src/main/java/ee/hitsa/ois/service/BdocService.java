@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.List;
@@ -13,18 +14,21 @@ import javax.xml.soap.Detail;
 import javax.xml.soap.SOAPFault;
 import javax.xml.ws.soap.SOAPFaultException;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.digidoc4j.Configuration;
 import org.digidoc4j.Container;
 import org.digidoc4j.ContainerBuilder;
+import org.digidoc4j.DataFile;
 import org.digidoc4j.DataToSign;
 import org.digidoc4j.DigestAlgorithm;
-import org.digidoc4j.OCSPSourceBuilder;
 import org.digidoc4j.Signature;
 import org.digidoc4j.SignatureBuilder;
-import org.digidoc4j.SignatureProfile;
 import org.digidoc4j.TSLCertificateSource;
-import org.digidoc4j.impl.asic.SKCommonCertificateVerifier;
-import org.digidoc4j.impl.asic.tsl.LazyCertificatePool;
+import org.digidoc4j.impl.bdoc.SKCommonCertificateVerifier;
+import org.digidoc4j.impl.bdoc.ocsp.OcspSourceBuilder;
+import org.digidoc4j.impl.bdoc.ocsp.SKOnlineOCSPSource;
+import org.digidoc4j.impl.bdoc.tsl.LazyCertificatePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +41,6 @@ import ee.hitsa.ois.bdoc.UnsignedBdocContainer;
 import ee.hitsa.ois.config.MobileIdProperties;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.exception.HoisException;
-import ee.hitsa.ois.util.CertificateUtil;
 import ee.hois.soap.dds.service.AddDataFileRequest;
 import ee.hois.soap.dds.service.AddDataFileResponse;
 import ee.hois.soap.dds.service.CreateSignedDocResponse;
@@ -51,7 +54,6 @@ import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.OCSPCertificateVerifier;
 import eu.europa.esig.dss.x509.CertificateToken;
 import eu.europa.esig.dss.x509.RevocationToken;
-import eu.europa.esig.dss.x509.ocsp.OCSPSource;
 
 @Service
 public class BdocService {
@@ -81,50 +83,62 @@ public class BdocService {
         log.info("Digidoc4j is in {} mode", configuration.isTest() ? "TEST" : "PRODUCTION");
     }
 
-    private UnsignedBdocContainer createUnsignedBdocContainer(String fileName, String mediaType, ByteArrayInputStream data, String certificateInHex) {
+    public UnsignedBdocContainer createUnsignedBdocContainer(String fileName, String mediaType, byte[] data, String certificateInHex) {
+        DataFile dataFile = new DataFile(data, fileName, mediaType);
+        
+        InputStream in = null;
+        X509Certificate cert509 = null;
+
+        try {
+            byte[] certEntryBytes = Hex.decodeHex(certificateInHex.toCharArray());
+            in = new ByteArrayInputStream(certEntryBytes);
+            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+            cert509 = (X509Certificate) certFactory.generateCertificate(in);
+        } catch (Exception ex) {
+            log.error("BDOC PREPARE SIGNATURE ERROR: "+ex.getMessage());	
+            ex.printStackTrace();
+        } finally {
+            if (in != null) {
+                try {
+                	in.close();
+                } catch(IOException e) { e.printStackTrace(); }
+            }
+        }
+        
+        Container container = ContainerBuilder.aContainer()
+                .withConfiguration(configuration)
+                .withDataFile(dataFile)
+                .build();
+        	
+        DataToSign dataToSign = SignatureBuilder.aSignature(container)
+                .withSignatureDigestAlgorithm(DigestAlgorithm.SHA256)
+                .withSigningCertificate(cert509)
+                .buildDataToSign();
+        
         UnsignedBdocContainer unsignedBdocContainer = new UnsignedBdocContainer();
-        Container bdocContainer = createBdocContainer();
-        bdocContainer.addDataFile(data, fileName, mediaType);
-        unsignedBdocContainer.setContainer(bdocContainer);
-        unsignedBdocContainer.setDataToSign(getDataToSign(bdocContainer, certificateInHex));
+        unsignedBdocContainer.setContainer(container);
+        unsignedBdocContainer.setDataToSign(dataToSign);
+        
         return unsignedBdocContainer;
     }
 
-    public UnsignedBdocContainer createUnsignedBdocContainer(String fileName, String applicationPdfValue, byte[] file, String certificate) {
-        return createUnsignedBdocContainer(fileName, applicationPdfValue, new ByteArrayInputStream(file), certificate);
-    }
-
-    private DataToSign getDataToSign(Container container, String certificateInHex) {
-        SignatureBuilder signatureBuilder = SignatureBuilder.aSignature(container)
-                .withSignatureDigestAlgorithm(DigestAlgorithm.SHA256)
-                .withSigningCertificate(CertificateUtil.getCertificateFromHex(certificateInHex));
-        if (Boolean.TRUE.equals(isTestMode)) {
-            //using no profile mode to pass OCSP, for signing with PROD ID-card in TEST mode. https://github.com/open-eid/digidoc4j/wiki/Questions-&-Answers#if-ocsp-request-has-failed
-            //signatureBuilder.withSignatureProfile(SignatureProfile.B_EPES);
-        }
-        return signatureBuilder.buildDataToSign();
-    }
-
-    private Container createBdocContainer() {
-        return ContainerBuilder.aContainer("BDOC")
-        .withConfiguration(configuration)
-        .build();
-    }
-
-    private static InputStream getSignedBdoc(Container container, DataToSign dataToSign, String signatureInHex) {
-        Signature signature = dataToSign.finalize(CertificateUtil.hexToBytes(signatureInHex));
+    private static InputStream getSignedBdoc(Container container, DataToSign dataToSign, String signatureInHex) throws DecoderException {
+        Signature signature = dataToSign.finalize(Hex.decodeHex(signatureInHex.toCharArray()));
+        log.info("BDOC signature OK");
         container.addSignature(signature);
+        log.info("BDOC signature added to container");
         return container.saveAsStream();
     }
 
-    public OisFile getSignedBdoc(UnsignedBdocContainer unsignedBdocContainer, String signature, String fileNamePrefix) {
-        try(InputStream bdocInputStream = getSignedBdoc(unsignedBdocContainer.getContainer(), unsignedBdocContainer.getDataToSign(), signature)) {
+    public OisFile getSignedBdoc(Container container, DataToSign dataToSign, String signature, String fileNamePrefix) {
+        try(InputStream bdocInputStream = getSignedBdoc(container, dataToSign, signature)) {
             OisFile bdoc = new OisFile();
             bdoc.setFname(fileNamePrefix + ".bdoc");
             bdoc.setFtype(BDOC_MIME_TYPE);
             bdoc.setFdata(StreamUtils.copyToByteArray(bdocInputStream));
             return bdoc;
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error("BDOC_ERROR save file error");
             throw new HoisException("main.messages.error.bdocSigningFailed", e);
         }
     }
@@ -144,7 +158,7 @@ public class BdocService {
     }
 
     private RevocationToken doOcspCheck(X509Certificate certificate) {
-        OCSPSource ocspSource = OCSPSourceBuilder.anOcspSource().withConfiguration(configuration).build();
+        SKOnlineOCSPSource ocspSource = OcspSourceBuilder.anOcspSource().withConfiguration(configuration).build();
         CertificateVerifier certificateVerifier = getCertificateVerifier(ocspSource);
         LazyCertificatePool lazyCertificatePool = new LazyCertificatePool(certificateVerifier.getTrustedCertSource());
 
@@ -158,7 +172,7 @@ public class BdocService {
         return ocspCertificateVerifier.check(certificateToken);
     }
 
-    private CertificateVerifier getCertificateVerifier(OCSPSource ocspSource) {
+    private CertificateVerifier getCertificateVerifier(SKOnlineOCSPSource ocspSource) {
         //org.digidoc4j.impl.bdoc.xades.XadesValidationDssFacade
         CertificateVerifier certificateVerifier = new SKCommonCertificateVerifier();
         certificateVerifier.setOcspSource(ocspSource);

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.scholarship;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -15,22 +16,24 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
     private List<String> studyForms;
     private List<String> studyLoads;
     private BigDecimal amountPaid;
-    private String matriculationRange;
-    private String addInfo;
+    private LocalDate studyStartPeriodStart;
+    private LocalDate studyStartPeriodEnd;
+    private LocalDate paymentStart;
+    private LocalDate paymentEnd;
 
     public static ScholarshipTermApplicationDto of(ScholarshipTerm term) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         ScholarshipTermApplicationDto dto = new ScholarshipTermApplicationDto();
         EntityUtil.bindToDto(term, dto, "studyPeriod");
         dto.setStudyForms(StreamUtil.toMappedList(t -> EntityUtil.getCode(t.getStudyForm()),
                 term.getScholarshipTermStudyForms()));
-        if (term.getStudyStartPeriodStart() != null) {
-            dto.setMatriculationRange(term.getStudyStartPeriodStart().format(formatter) + "-"
-                    + (term.getStudyStartPeriodEnd() != null ? term.getStudyStartPeriodEnd().format(formatter) : ""));
-        }
+        
         dto.setStudyLoads(StreamUtil.toMappedList(t -> EntityUtil.getCode(t.getStudyLoad()),
                 term.getScholarshipTermStudyLoads()));
         dto.setStudyPeriod(StudyPeriodDto.of(term.getStudyPeriod()));
+        dto.setStudyStartPeriodStart(term.getStudyStartPeriodStart());
+        dto.setStudyStartPeriodEnd(term.getStudyStartPeriodEnd());
+        dto.setPaymentStart(term.getPaymentStart());
+        dto.setPaymentEnd(term.getPaymentEnd());
         dto.setAddInfo(term.getAddInfo());
         return dto;
     }
@@ -75,20 +78,36 @@ public class ScholarshipTermApplicationDto extends ScholarshipTermStudentDto {
         this.amountPaid = amountPaid;
     }
 
-    public String getMatriculationRange() {
-        return matriculationRange;
+    public LocalDate getStudyStartPeriodStart() {
+        return studyStartPeriodStart;
     }
 
-    public void setMatriculationRange(String matriculationRange) {
-        this.matriculationRange = matriculationRange;
+    public void setStudyStartPeriodStart(LocalDate studyStartPeriodStart) {
+        this.studyStartPeriodStart = studyStartPeriodStart;
     }
 
-    public String getAddInfo() {
-        return addInfo;
+    public LocalDate getStudyStartPeriodEnd() {
+        return studyStartPeriodEnd;
     }
 
-    public void setAddInfo(String addInfo) {
-        this.addInfo = addInfo;
+    public void setStudyStartPeriodEnd(LocalDate studyStartPeriodEnd) {
+        this.studyStartPeriodEnd = studyStartPeriodEnd;
+    }
+
+    public LocalDate getPaymentStart() {
+        return paymentStart;
+    }
+
+    public void setPaymentStart(LocalDate paymentStart) {
+        this.paymentStart = paymentStart;
+    }
+
+    public LocalDate getPaymentEnd() {
+        return paymentEnd;
+    }
+
+    public void setPaymentEnd(LocalDate paymentEnd) {
+        this.paymentEnd = paymentEnd;
     }
 
 }

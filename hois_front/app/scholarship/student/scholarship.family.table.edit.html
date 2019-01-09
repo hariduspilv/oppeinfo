@@ -5,15 +5,17 @@
   <div layout="row" flex>
     <md-input-container flex="45">
       <label>{{'stipend.student.familyMembers' | translate}}</label>
-      <input ng-model="application.familyMembers" type="number" autofocus aria-label="familyMembers" min="0">
+      <input ng-model="application.familyMembers" type="number" autofocus aria-label="familyMembers" min="0"
+        ng-disabled="!application.canApply">
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label>{{'stipend.student.familyMembersAdult' | translate}}</label>
-      <input ng-model="application.familyMembersAdult" type="number" autofocus aria-label="familyMembersAdult" min="0" max="{{application.familyMembers ? application.familyMembers : 0}}">
+      <input ng-model="application.familyMembersAdult" type="number" autofocus aria-label="familyMembersAdult" min="0" 
+        max="{{application.familyMembers ? application.familyMembers : 0}}" ng-disabled="!application.canApply">
     </md-input-container>
   </div>
 
-  <md-button class="md-raised" ng-click="addFamilyMember()" ng-if="editable">{{'stipend.student.addFamilyMember' | translate}}</md-button>
+  <md-button class="md-raised" ng-click="addFamilyMember()" ng-if="editable && application.canApply">{{'stipend.student.addFamilyMember' | translate}}</md-button>
   <md-table-container>
     <table md-table class="secondary-table">
       <thead md-head>
@@ -25,7 +27,7 @@
           <th md-column>{{'stipend.family.otherIncome' | translate}}</th>
           <th md-column>{{'stipend.family.unemployedBenefit' | translate}}</th>
           <th md-column>{{'main.sum' | translate}}</th>
-          <th md-column ng-if="editable"></th>
+          <th md-column ng-if="editable && application.canApply"></th>
         </tr>
       </thead>
       <tbody md-body>
@@ -37,7 +39,7 @@
           <td md-cell>{{member.otherIncome ? member.otherIncome : '-'}}</td>
           <td md-cell>{{member.unemployedBenefit ? member.unemployedBenefit : '-'}}</td>
           <td md-cell>{{member.sum ? member.sum : '-'}}</td>
-          <td md-cell ng-if="editable">
+          <td md-cell ng-if="editable && application.canApply">
             <md-button class="remove nomargin" ng-click="removeFromArray(application.family, member)">&times;</md-button>
           </td>
         </tr>

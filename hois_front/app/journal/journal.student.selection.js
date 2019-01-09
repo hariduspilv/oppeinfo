@@ -43,11 +43,12 @@ angular.module('hitsaOis').controller('JournalStudentSelectionController', funct
       function retainSearchedStudents() {
         for (var i = 0; i < dialogScope.tabledata.content.length; i++) {
           var exists = false;
-          dialogScope.searchedStudents.forEach(function (retainedStudent) {
-            if (dialogScope.tabledata.content[i].studentId === retainedStudent.studentId) {
+          for (var j = 0; j < dialogScope.searchedStudents.length; j++) {
+            if (dialogScope.tabledata.content[i].studentId === dialogScope.searchedStudents[j].studentId) {
               exists = true;
+              break;
             }
-          });
+          }
 
           if (!exists) {
             dialogScope.searchedStudents.push(dialogScope.tabledata.content[i]);

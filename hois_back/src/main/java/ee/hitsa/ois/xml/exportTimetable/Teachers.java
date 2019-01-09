@@ -28,7 +28,7 @@ public class Teachers {
     }
     public void add(Teacher teacher) {
         if (this.teachers == null) {
-            this.teachers = new HashSet<Teacher>();
+            this.teachers = new HashSet<>();
         }
         this.teachers.add(teacher);
     }

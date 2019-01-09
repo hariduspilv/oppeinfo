@@ -9,6 +9,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudentVocationalResultModuleThemeDto {
 
+    private Long curriculumVersionModuleId;
     private AutocompleteResult module;
     private AutocompleteResult theme;
     private BigDecimal credits;
@@ -19,8 +20,17 @@ public class StudentVocationalResultModuleThemeDto {
     private LocalDate studyYearStartDate;
     private Boolean isApelTransfer;
     private Boolean isFormalLearning;
+    private Boolean isCurrentCurriculumVersionResult; 
     private List<Long> replacedModules;
-    
+
+    public Long getCurriculumVersionModuleId() {
+        return curriculumVersionModuleId;
+    }
+
+    public void setCurriculumVersionModuleId(Long curriculumVersionModuleId) {
+        this.curriculumVersionModuleId = curriculumVersionModuleId;
+    }
+
     public AutocompleteResult getModule() {
         return module;
     }
@@ -99,6 +109,14 @@ public class StudentVocationalResultModuleThemeDto {
 
     public void setIsFormalLearning(Boolean isFormalLearning) {
         this.isFormalLearning = isFormalLearning;
+    }
+
+    public Boolean getIsCurrentCurriculumVersionResult() {
+        return isCurrentCurriculumVersionResult;
+    }
+
+    public void setIsCurrentCurriculumVersionResult(Boolean isCurrentCurriculumVersionResult) {
+        this.isCurrentCurriculumVersionResult = isCurrentCurriculumVersionResult;
     }
 
     public List<Long> getReplacedModules() {

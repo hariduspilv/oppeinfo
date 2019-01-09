@@ -40,6 +40,7 @@ angular.module('hitsaOis')
         haSearch: "=?",
         display: '@',
         mdMinLength: '@',
+        haIgnored: '@',
         multiple: '@',
         ngRequired: '=',
         required: '@', // todo add chip visuals
@@ -60,7 +61,49 @@ angular.module('hitsaOis')
             var lookup = QueryUtils.endpoint(url);
           }
           var controller = {};
-          scope.ngHolder = scope.ngModel;
+          if (angular.isDefined(scope.haIgnored) && scope.haIgnored === "true") {
+            scope.haSearch = [];
+          }
+          if (angular.isUndefined(scope.haSearch)) {
+            scope.haSearch = function (text) {
+              var deferred = $q.defer();
+              var query = {
+                lang: $translate.use().toUpperCase(),
+                name: text
+              };
+              if(scope.additionalQueryParams) {
+                  angular.extend(query, scope.additionalQueryParams);
+              }
+
+              if(url === '/autocomplete/curriculumversions') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else if(url === '/autocomplete/studentgroups') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else if(url === '/autocomplete/curriculumversionomodulesandthemes') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else if(url === '/autocomplete/journals') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else if(scope.noPaging === 'true') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else {
+                lookup.search(query, function (data) {
+                  deferred.resolve(data.content);
+                });
+              }
+
+              return deferred.promise;
+            };
+          }
 
           scope.isRequired = angular.isDefined(scope.required);
           element.attr('required', scope.isRequired);
@@ -74,6 +117,48 @@ angular.module('hitsaOis')
 
           if (angular.isDefined(attrs.multiple) && !angular.isArray(scope.ngHolder)) {
             scope.ngHolder = [];
+          }
+
+          function findValue(array, object, arrayKey) {
+            var res = array.filter(function(row) {
+              return arrayKey ? row[arrayKey] === object : row === object;
+            });
+            return res.length > 0 ? res[0] : null;
+          }
+
+          function findValues(array, objects, arrayKey) {
+            return array.filter(function(row) {
+              for (var i = 0; i < objects.length; i++) {
+                if ((arrayKey && row[arrayKey] === objects[i]) || (angular.isUndefined(arrayKey) && row === objects[i])) {
+                  return true;
+                }
+              }
+              return false;
+            });
+          }
+
+          /**
+           * We need to cache some results to be able to put some value in ngHolder instead of attribute which is given.
+           * Might be neccessary to put into watchers as well for ngModel value.
+           */
+          var cached = scope.haSearch();
+          if (angular.isDefined(scope.haAttribute)) {
+            if (angular.isObject(scope.ngModel) && scope.ngModel.hasOwnProperty(scope.haAttribute)) {
+              scope.ngHolder = scope.ngModel;
+            } else {
+              if (cached && angular.isFunction(cached.then)) {
+                cached.then(function(result) {
+                  scope.ngHolder = angular.isDefined(scope.multiple) ? findValues(result, scope.ngHolder ? scope.ngHolder : scope.ngModel, scope.haAttribute)
+                  : findValue(result, scope.ngHolder ? scope.ngHolder : scope.ngModel, scope.haAttribute);
+                });
+              } else if (cached && angular.isArray(cached)) {
+                scope.ngHolder = angular.isDefined(scope.multiple) ? findValues(cached, scope.ngModel, scope.haAttribute) : findValue(cached, scope.ngModel, scope.haAttribute);
+              } else {
+                scope.ngHolder = scope.ngModel;
+              }
+            }
+          } else {
+            scope.ngHolder = scope.ngModel;
           }
 
           function equals(model, holder) {
@@ -113,7 +198,7 @@ angular.module('hitsaOis')
                   scope.ngModel = [];
                   if (angular.isArray(newValue)) {
                     newValue.forEach(function (val) {
-                      scope.ngModel.push(val[scope.haAttribute]);
+                      scope.ngModel.push(angular.isObject(val) ? val[scope.haAttribute] : val);
                     });
                   }
                 } else {
@@ -193,47 +278,6 @@ angular.module('hitsaOis')
               }
             }
           };
-
-          if (angular.isUndefined(scope.haSearch)) {
-            scope.haSearch = function (text) {
-              var deferred = $q.defer();
-              var query = {
-                lang: $translate.use().toUpperCase(),
-                name: text
-              };
-              if(scope.additionalQueryParams) {
-                  angular.extend(query, scope.additionalQueryParams);
-              }
-
-              if(url === '/autocomplete/curriculumversions') {
-                lookup.query(query, function (data) {
-                  deferred.resolve(data);
-                });
-              } else if(url === '/autocomplete/studentgroups') {
-                lookup.query(query, function (data) {
-                  deferred.resolve(data);
-                });
-              } else if(url === '/autocomplete/curriculumversionomodulesandthemes') {
-                lookup.query(query, function (data) {
-                  deferred.resolve(data);
-                });
-              } else if(url === '/autocomplete/journals') {
-                lookup.query(query, function (data) {
-                  deferred.resolve(data);
-                });
-              } else if(scope.noPaging === 'true') {
-                lookup.query(query, function (data) {
-                  deferred.resolve(data);
-                });
-              } else {
-                lookup.search(query, function (data) {
-                  deferred.resolve(data.content);
-                });
-              }
-
-              return deferred.promise;
-            };
-          }
         }
       }
     };

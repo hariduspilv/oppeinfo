@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.student;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
@@ -12,13 +13,16 @@ public class StudentVocationalModuleDto {
 
     private Long id;
     private CurriculumModuleDto curriculumModule;
-    private List<CurriculumVersionOccupationModuleThemeDto> themes;
+    private List<CurriculumVersionOccupationModuleThemeDto> themes = new ArrayList<>();
+    // themes that belong to module that has the same curriculum module but not the same curriculum version module
+    private List<CurriculumVersionOccupationModuleThemeDto> otherCurriculumVersionModuleThemes = new ArrayList<>();
 
     public static StudentVocationalModuleDto of(CurriculumVersionOccupationModule module) {
-        StudentVocationalModuleDto dto = EntityUtil.bindToDto(module, new StudentVocationalModuleDto(), "curriculumModule", "themes");
-
-        dto.setCurriculumModule(CurriculumModuleDto.of(module.getCurriculumModule()));
-        dto.setThemes(StreamUtil.toMappedList(CurriculumVersionOccupationModuleThemeDto::of, module.getThemes()));
+        StudentVocationalModuleDto dto = new StudentVocationalModuleDto();
+        dto.setId(EntityUtil.getId(module));
+        dto.setCurriculumModule(CurriculumModuleDto.forCurriculumFulfillment(module.getCurriculumModule()));
+        dto.setThemes(StreamUtil.toMappedList(CurriculumVersionOccupationModuleThemeDto::forCurriculumFulfillment,
+                module.getThemes()));
         return dto;
     }
 
@@ -44,6 +48,15 @@ public class StudentVocationalModuleDto {
 
     public void setCurriculumModule(CurriculumModuleDto curriculumModule) {
         this.curriculumModule = curriculumModule;
+    }
+
+    public List<CurriculumVersionOccupationModuleThemeDto> getOtherCurriculumVersionModuleThemes() {
+        return otherCurriculumVersionModuleThemes;
+    }
+
+    public void setOtherCurriculumVersionModuleThemes(
+            List<CurriculumVersionOccupationModuleThemeDto> otherCurriculumVersionModuleThemes) {
+        this.otherCurriculumVersionModuleThemes = otherCurriculumVersionModuleThemes;
     }
 
 }

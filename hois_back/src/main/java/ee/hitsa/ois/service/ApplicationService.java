@@ -226,10 +226,6 @@ public class ApplicationService {
             ApplicationUtil.assertPeriod(application, 3, 0);
         } else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_O.name().equals(reason)) {
             // TODO: algusega mitte varem kui esimese õppeaasta teisest semestrist
-            if (!StudentUtil.isHigher(application.getStudent())) {
-                throw new ValidationFailedException("application.messages.studentIsNotHigher");
-            }
-
             long daysUsed = daysUsed(EntityUtil.getId(application.getStudent()), AcademicLeaveReason.AKADPUHKUS_POHJUS_O);
             ApplicationUtil.assertPeriod(application, 1, daysUsed);
         }

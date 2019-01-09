@@ -610,7 +610,7 @@ angular.module('hitsaOis')
       dialogService.confirmDialog({prompt: "curriculum.prompt.setStatusUnderRevision"}, function () {
         setTimeout(function () {
           var setStatusEndpoint = QueryUtils.endpoint(baseUrl + '/underrevision');
-          changeStatus(setStatusEndpoint, messages)
+          changeStatus(setStatusEndpoint, messages);
         });
       });
     };

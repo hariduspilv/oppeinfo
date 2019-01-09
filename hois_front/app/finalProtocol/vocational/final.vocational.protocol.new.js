@@ -17,10 +17,6 @@ angular.module('hitsaOis').controller('FinalVocationalProtocolNewController', fu
     status: 'OPPURSTAATUS'
   });
 
-  $scope.$watch('formState.teacherObject', function () {
-    $scope.formState.teacher = $scope.formState.teacherObject ? $scope.formState.teacherObject.id : null;
-  });
-
   $scope.$watch('formState.curriculumVersionObject', function () {
     $scope.formState.curriculumVersion = $scope.formState.curriculumVersionObject ? $scope.formState.curriculumVersionObject.id : null;
     $scope.formState.curriculumVersionOccupationModule = undefined;
@@ -45,7 +41,7 @@ angular.module('hitsaOis').controller('FinalVocationalProtocolNewController', fu
         }
       });
       
-      if (result.teacher) {
+      if (result.teacher && !$scope.auth.isTeacher()) {
         $scope.formState.teacherObject = result.teacher;
       }
     });

@@ -69,7 +69,7 @@
                       <label>{{'apel.formalLearnings.schoolEHIS' | translate}}</label>
                       <hois-classifier-select ng-model="record.newTransferableSubjectOrModule.newApelSchool.ehisSchool" aria-label="EHIS" model-value-attr="code"
                         main-classifier-code="EHIS_KOOL" ng-change="ehisSchoolChanged(record.newTransferableSubjectOrModule.newApelSchool.ehisSchool)"
-                        required></hois-classifier-select>
+                        filter-values="apelSchoolsEhisCodes()" required></hois-classifier-select>
                     </md-input-container>
                   </div>
                   <div layout="row" layout-sm="column" layout-xs="column">

@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.exception.AssertionFailedException;
-import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.util.HttpUtil;
 
 @Service
@@ -67,7 +66,7 @@ public class OisFileService {
 	        Cipher cipher = Cipher.getInstance("AES");
 	        cipher.init(Cipher.DECRYPT_MODE, aesKey);
 	        id = new String(cipher.doFinal(deCoded));
-        } catch(Exception e) {
+        } catch(@SuppressWarnings("unused") Exception e) {
         	response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         	return;
         }
@@ -75,9 +74,9 @@ public class OisFileService {
         List<OisFile> file = null;
         try {
         	file = em.createQuery(sql, OisFile.class)
-                    .setParameter(1, Long.parseLong(id))
+                    .setParameter(1, Long.valueOf(id))
                     .setMaxResults(1).getResultList();
-        } catch (NumberFormatException e) {
+        } catch (@SuppressWarnings("unused") NumberFormatException e) {
         	response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         	return;
         }

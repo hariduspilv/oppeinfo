@@ -13,8 +13,8 @@ function calculateSumsForFamilyBlock(familyData) {
   }
 }
 
-angular.module('hitsaOis').controller('StudentScholarshipApplicationEditController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'oisFileService', 'ArrayUtils',
-  function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, oisFileService, ArrayUtils) {
+angular.module('hitsaOis').controller('StudentScholarshipApplicationEditController', ['$location', '$scope', '$route', 'ArrayUtils', 'Classifier', 'DataUtils', 'QueryUtils', 'dialogService', 'message', 'oisFileService',
+  function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, QueryUtils, dialogService, message, oisFileService) {
     var templateMap = {
       STIPTOETUS_POHI: 'scholarship/student/scholarship.application.pohi.edit.html',
       STIPTOETUS_ERI: 'scholarship/student/scholarship.application.eri.edit.html',
@@ -30,6 +30,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
     var id = $route.current.params.id;
     QueryUtils.endpoint(baseUrl + '/' + id + '/application').get({}, function (result) {
       $scope.stipend = result.stipend;
+
       $scope.templateName = templateMap[result.stipend.type];
       if (result.stipend.type === 'STIPTOETUS_ERI') {
         calculateSumsForFamilyBlock($scope.application.family);
@@ -81,6 +82,8 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
     function afterLoad(result) {
       result.canApply = (result.id === null || result.status === 'STIPTOETUS_STAATUS_K' || result.status === 'STIPTOETUS_STAATUS_T');
       $scope.application = result;
+      DataUtils.convertStringToDates($scope.stipend, ['paymentStart', 'paymentEnd']);
+      DataUtils.convertStringToDates($scope.application, ['scholarshipFrom', 'scholarshipThru']);
     }
 
     $scope.apply = function (form) {

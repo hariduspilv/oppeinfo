@@ -17,7 +17,6 @@ import javax.transaction.Transactional;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 
-import org.opensaml.xmlsec.encryption.P;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,7 +103,7 @@ public class SaisAdmissionService {
                  .getResultList();
     	if (!admissions.isEmpty()) {
     		EntityUtil.setUsername(user.getUsername(), em);
-        	admissions.forEach(p->save(p, user, Boolean.TRUE));
+        	admissions.forEach(p->save(p, Boolean.TRUE));
     	}
     }
     
@@ -117,12 +116,12 @@ public class SaisAdmissionService {
                  .getResultList();
     	List<String> admissionCodes = admissions.stream().map(p->p.getCode()).collect(Collectors.toList());
     	if (!admissionCodes.contains(saisAdmission.getCode())) {
-    		save(saisAdmission, user, Boolean.FALSE);
+    		save(saisAdmission, Boolean.FALSE);
     	}
     	return SaisAdmissionDto.of(saisAdmission);
 	}
     
-    public SaisAdmission save(SaisAdmission admission, HoisUserDetails user, Boolean archived) {
+    public SaisAdmission save(SaisAdmission admission, Boolean archived) {
     	admission.setArchived(archived);
     	admission = EntityUtil.save(admission, em);
     	return admission;
@@ -195,14 +194,14 @@ public class SaisAdmissionService {
             }
 
             List<SaisAdmission> saisAdmissions = saisAdmissionRepository.findByCode(admission.getCode());
-            Optional<SaisAdmission> saisAdmissionNotArchived = saisAdmissions.stream().filter(p->p.getArchived() == null || !p.getArchived()).findFirst();
+            Optional<SaisAdmission> saisAdmissionNotArchived = saisAdmissions.stream().filter(p-> Boolean.FALSE.equals(p.getArchived())).findFirst();
             SaisAdmission saisAdmission = null;
             if (saisAdmissionNotArchived.isPresent()) {
             	saisAdmission = saisAdmissionNotArchived.get();
             }
             if(saisAdmission == null) {
                 saisAdmission = new SaisAdmission();
-                saisAdmission.setArchived(false);
+                saisAdmission.setArchived(Boolean.FALSE);
             }
             saisAdmission.setSaisId(admission.getId());
             saisAdmission.setCurriculumVersion(curriculumVersion);

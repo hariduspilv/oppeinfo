@@ -1,0 +1,16 @@
+<hois-collapsable expanded="false" hide-collapse-button="true">
+  <hois-collapsable-header>
+    <div layout="column" layout-gt-sm="row" class="curriculum-fulfillment-result">
+      <div>
+        <span class="apelAsterisk">*</span>
+        <span>{{currentLanguageNameField(result.module)}}</span>
+      </div>
+      <div flex-offset-gt-sm="5">
+        <div ng-if="positiveGrade(result.grade.code)" class="bold" md-colors="{color: 'green-600'}">{{result.grade.value}}
+          ({{result.credits}} {{'student.result.ekap' | translate}})</div>
+        <div ng-if="!positiveGrade(result.grade.code)" class="bold" md-colors="{color: 'red-500'}">{{result.grade.value}}
+          ({{result.credits}} {{'student.result.ekap' | translate}})</div>
+      </div>
+    </div>
+  </hois-collapsable-header>
+</hois-collapsable>

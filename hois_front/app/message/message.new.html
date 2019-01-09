@@ -46,7 +46,7 @@
 
                 <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" display="code" ha-attribute="id"
                   ng-model="studentGroup" url="/message/studentgroups" multiple label="message.studyGroupStudents"
-                  additional-query-params="{curriculums: curriculum, studyForm: studyForm}" no-paging="true"></hois-autocomplete>
+                  additional-query-params="{curriculums: curriculum, studyForm: studyForm}" no-paging="true" ha-ignored="{{auth.isAdmin() ? 'false' : 'true'}}"></hois-autocomplete>
 
                 <md-input-container flex="50" flex-sm="100" flex-xs="100">
                     <label>{{'message.studyFormStudents' | translate}}</label>
@@ -88,12 +88,12 @@
             <hois-autocomplete flex="50" flex-sm="100" flex-xs="100"
               ng-show="targetGroup && targetGroup === 'ROLL_T' && groupSearchType === 'SEARCH_STUDENT_GROUP' && auth.isTeacher()" display="code" ha-attribute="id"
               ng-model="studentGroup" url="/message/studentgroups" multiple label="message.studyGroupStudents"
-              additional-query-params="{curriculums: curriculum, studyForm: studyForm}" no-paging="true"></hois-autocomplete>
+              additional-query-params="{curriculums: curriculum, studyForm: studyForm}" no-paging="true" ha-ignored="{{auth.isTeacher() ? 'false' : 'true'}}"></hois-autocomplete>
 
             <hois-autocomplete flex="50" flex-sm="100" flex-xs="100"
               ng-show="targetGroup && targetGroup === 'ROLL_L' && groupSearchType === 'SEARCH_STUDENT_GROUP' && auth.isTeacher()" display="code" ha-attribute="id"
               ng-model="studyGroupStudentsParents" url="/message/studentgroups" multiple label="message.studyGroupStudentsParents"
-              additional-query-params="{curriculums: curriculum, studyForm: studyForm}" no-paging="true"></hois-autocomplete>
+              additional-query-params="{curriculums: curriculum, studyForm: studyForm}" no-paging="true" ha-ignored="{{auth.isTeacher() ? 'false' : 'true'}}"></hois-autocomplete>
 
             <h2 ng-class="{invalid: messageNewForm.$submitted && receivers.length === 0}">{{'message.messageReceiver' | translate}} *</h2>
             <table md-table class="secondary-table">

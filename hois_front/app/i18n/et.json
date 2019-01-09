@@ -80,7 +80,8 @@
       "sessionIsTimingOut": "Teie sessioon hakkab aeguma. Värskenda sessiooni?",
       "sessionHasTimedOut": "Teie sessioon on aegunud.",
       "update": {
-        "success": "Salvestamine õnnestus"
+        "success": "Salvestamine õnnestus",
+        "fail": "Salvestamine ebaõnnestus"
       },
       "create": {
         "success": "Salvestamine õnnestus",
@@ -942,6 +943,7 @@
       "informal": "Informaalne",
       "formal": "Formaalne",
       "practice": "Praktika",
+      "supplementPreview": "Hindamislehe eelvaade",
       "higher": {
         "curriculumVersion": "Õppekava versioon",
         "consideredCredits": "Kokku / õppekava täitmisel arvesse võetud EAP",
@@ -958,7 +960,9 @@
         "electiveModules": "Valikmoodulid",
         "electiveModulesRequired": "Kohustuslik täitmiseks",
         "required": "Kohustuslik",
-        "electiveModulesCompleted": "Täidetud"
+        "electiveModulesCompleted": "Täidetud",
+        "supplementPreview": "Akadeemilise õiendi eelvaade",
+        "supplementPreviewEn": "Akadeemilise õiendi i.k. eelvaade"
       }
     },
     "journal": {
@@ -993,6 +997,13 @@
         "journal": "Päevik",
         "content": "Sisu",
         "noTasks": "Antud nädalas puuduvad ülesanded"
+      }
+    },
+    "speciality": {
+      "button": "Spetsialiseerumise määramine",
+      "showWithoutSpec": "Kuva ilma spetsialiseerumiseta õppijad",
+      "error": {
+        "notNeeded": "Ühe spetsialiseerumisega õppekavades õppijatele spetsialiseerumise määramine ei ole vajalik"
       }
     },
     "statuses": {
@@ -2479,6 +2490,7 @@
     "curriculumVersionVocational": "Rakenduskava",
     "deleteconfirm": "Kas oled kindel, et soovid õpperühma kustutada?",
     "deletestudentconfirm": "Kas oled kindel, et soovid õppijat õpperühmast eemaldada?",
+    "updateLessonPlansConfirm": "Õpperühmal {{studentGroup}} on olemas tunnijaotusplaan, mis on seotud teise rakenduskavaga. Õpperühma rakenduskava muutmisel tuleb kindlasti üle vaadata tunnijaotusplaanid. Kas soovid jätkata?",
     "idcode": "Isikukood",
     "language": "Õppekeel",
     "mandatoryfields": "Kohustuslikud väljad täitmata",
@@ -4055,7 +4067,8 @@
         "noStudentsSelected": "Ühtegi õppijat ei ole valitud, valida tuleb vähemalt üks õppija",
         "studentDoesntComply": "Ei vasta toetuse tingimustele",
         "connectedDirectives": "Avaldustega on seotud käskkirju",
-        "noApplicationsWithoutDirectives": "Avaldusteta käskkirju ei ekisteeri"
+        "noApplicationsWithoutDirectives": "Avaldusteta käskkirju ei ekisteeri",
+        "cannotBeHigherThanStipEndDate": "Ei saa olla suurem kui maksmise periood"
       }
     },
     "reject": {

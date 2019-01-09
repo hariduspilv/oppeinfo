@@ -5,6 +5,7 @@ import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_
 import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_T;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
@@ -88,7 +90,6 @@ public class StudentRepresentativeService {
         StudentRepresentativeForm.StudentRepresentativePersonForm personForm = form.getPerson();
         if(representative.getId() != null) {
             p = representative.getPerson();
-
             representative.setIsStudentVisible(form.getIsStudentVisible());
         } else {
             // new representative
@@ -112,7 +113,12 @@ public class StudentRepresentativeService {
         }
 
         representative = EntityUtil.save(representative, em);
-        createUser(representative);
+        User user = createUser(representative);
+        if (Boolean.FALSE.equals(representative.getIsStudentVisible()) && (user.getValidThru() == null || LocalDate.now().isBefore(user.getValidThru()))) {
+            UserService.disableUser(user, LocalDate.now().minusDays(1));
+        } else if (Boolean.TRUE.equals(representative.getIsStudentVisible()) && user.getValidThru() != null && LocalDate.now().isAfter(user.getValidThru())) {
+            userService.enableUser(user, LocalDate.now());
+        }
         return representative;
     }
 
@@ -233,16 +239,20 @@ public class StudentRepresentativeService {
         }
     }
 
-    private void createUser(StudentRepresentative representative) {
+    private User createUser(StudentRepresentative representative) {
         // if there is no user for given person with role of parent/representative for school of student, create it
         Person person = representative.getPerson();
         Long schoolId = EntityUtil.getId(representative.getStudent().getSchool());
         Long studentId =  EntityUtil.getId(representative.getStudent());
 
-        if(!StreamUtil.nullSafeSet(person.getUsers()).stream().anyMatch(
-                u -> schoolId.equals(EntityUtil.getNullableId(u.getSchool())) && ClassifierUtil.equals(Role.ROLL_L, u.getRole()) && studentId.equals(EntityUtil.getNullableId(u.getStudent())))) {
-            userService.createUser(representative);
+        User user = StreamUtil.nullSafeSet(person.getUsers()).stream().filter(
+                u -> schoolId.equals(EntityUtil.getNullableId(u.getSchool())) 
+                && ClassifierUtil.equals(Role.ROLL_L, u.getRole()) 
+                && studentId.equals(EntityUtil.getNullableId(u.getStudent()))).findAny().orElse(null);
+        if (user == null) {
+            user = userService.createUser(representative);
         }
+        return user;
     }
 
     private void representativeCreatedMessage(StudentRepresentative representative) {

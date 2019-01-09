@@ -63,6 +63,13 @@
           <label>{{'student.studyLanguage' | translate}}</label>
           <hois-classifier-select ng-model="student.studyLanguage" name="studyLanguage" main-classifier-code="OPPEKEEL" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
+        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin && !student.isVocational">
+          <label>{{'student.curriculumSpeciality' | translate}}</label>
+          <md-select ng-model="student.curriculumSpeciality" name="studyLanguage" ng-model-options="{trackBy: '$value.id'}">
+            <md-option ng-value="null"></md-option>
+            <md-option ng-value="speciality" track ng-repeat="speciality in specialities">{{currentLanguageNameField(speciality)}}</md-option>
+          </md-select>
+        </md-input-container>
 
         <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin">
           <label>{{'student.nominalStudyEnd' | translate}}</label>

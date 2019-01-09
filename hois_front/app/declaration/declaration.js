@@ -238,7 +238,6 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
 
     var loadData = $scope.loadData;
     $scope.loadData = function() {
-      console.log($scope.criteria);
       $scope.declarationSearchForm.$setSubmitted();
       if(!$scope.declarationSearchForm.$valid) {
         message.error('main.messages.form-has-errors');
