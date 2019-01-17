@@ -13,9 +13,11 @@ angular.module('hitsaOis')
       // ng-hide on md-option causes a problem with being not closed after selecting value. Replaced ng-hide by ng-if.
       // @since 07.01.2019: We need to use ng-hide to have an opportunity to fill a selected value which were placed before.
       // It means that object had a value, but now it should be hidden. Still we need to display value as selected.
+      // @since 11.01.2019: `ng-if="!option.hide || (value.code === code || value === code)"` gives an opportunity to select given value before.
+      // So if we give a value to `ngModel` outside (`value` inside) then it will be visible.
       template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }" >'+ // md-on-open="queryPromise" this causes some bugs
       '<md-option ng-if="!isMultiple && ((!isRequired && !ngRequired) || isShowEmpty)" md-option-empty></md-option>'+
-      '<md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-hide="option.hide" ' +
+      '<md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-if="!option.hide || isSelected(option)" ' +
       'aria-label="{{getLabel(option)}}">{{getLabel(option)}}</md-option></md-select>',
       restrict: 'E',
       require: ['ngModel'],
@@ -31,6 +33,7 @@ angular.module('hitsaOis')
         connectMainClassifierCode: '@',
         criteria: '=',
         filterValues: '@', //model of array of classifiers (or other objects which contain classifier, then byProperty must be defined )
+        ignorePreselected: '@',
         byProperty: '@',
         showEmpty: '@',
         showOnlyValues: '@', //model of array of classifiers (if value === true, all items are shown)
@@ -48,6 +51,32 @@ angular.module('hitsaOis')
         scope.isShowEmpty = angular.isDefined(scope.showEmpty);
         //fix select not showing required visuals if <hois-classifier-select required> is used
         element.attr('required', scope.isRequired);
+        
+        scope.isSelected = function(option) {
+          if (scope.isMultiple) {
+            if (angular.isDefined(scope.modelValueAttr)) {
+              if (angular.isArray(scope.value)) {
+                return scope.value.filter(function(opt) {
+                  return opt === option[scope.modelValueAttr];
+                }).length > 0;
+              }
+              return false;
+            } else {
+              if (angular.isArray(scope.value)) {
+                return scope.value.filter(function(opt) {
+                  return opt.code === option.code;
+                }).length > 0;
+              }
+              return false;
+            }
+          } else {
+            if (angular.isDefined(scope.modelValueAttr)) {
+              return scope.value === option[scope.modelValueAttr];
+            } else {
+              return scope.value.code === option.code;
+            }
+          }
+        };
 
         scope.getLabel = angular.isDefined(scope.onlyValid) ? hoisValidDatesFilter : scope.$root.currentLanguageNameField;
 
@@ -153,18 +182,21 @@ angular.module('hitsaOis')
 
     var postLoad = function() {
       var deselectHiddenValue = function() {
-        if (angular.isArray(scope.value)) {
-          scope.value.forEach(function(valueCode) {
-            if(angular.isString(valueCode) && (!angular.isDefined(scope.optionsByCode[valueCode]) || scope.optionsByCode[valueCode].hide)) {
-              scope.value = undefined;
-            }
-          });
-        } else if(angular.isObject(scope.value) && angular.isString(scope.value.code) &&
-          (!angular.isDefined(scope.optionsByCode[scope.value.code]) || scope.optionsByCode[scope.value.code].hide)) {
-          scope.value = undefined;
-        } else if(scope.modelValueAttr === 'code' && angular.isString(scope.value) &&
-          (!angular.isDefined(scope.optionsByCode[scope.value]) || scope.optionsByCode[scope.value].hide)) {
-          scope.value = undefined;
+        if (angular.isUndefined(scope.ignorePreselected)) {
+          if (angular.isArray(scope.value)) {
+            scope.value.forEach(function(valueCode, index, array) {
+              if(angular.isString(valueCode) && (!angular.isDefined(scope.optionsByCode[valueCode]) || scope.optionsByCode[valueCode].hide)) {
+                // Removed making scope.value undefined. (Several values might be there then only 1 value should be hidden)
+                array.splice(index, 1);
+              }
+            });
+          } else if(angular.isObject(scope.value) && angular.isString(scope.value.code) &&
+            (!angular.isDefined(scope.optionsByCode[scope.value.code]) || scope.optionsByCode[scope.value.code].hide)) {
+            scope.value = undefined;
+          } else if(scope.modelValueAttr === 'code' && angular.isString(scope.value) &&
+            (!angular.isDefined(scope.optionsByCode[scope.value]) || scope.optionsByCode[scope.value].hide)) {
+            scope.value = undefined;
+          }
         }
       };
 

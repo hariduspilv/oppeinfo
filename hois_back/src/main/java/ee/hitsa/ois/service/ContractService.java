@@ -51,6 +51,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ContractValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ContractForm;
@@ -95,7 +96,7 @@ public class ContractService {
 
     private static final String SEARCH_SELECT = "contract.id contract_id, contract.contract_nr, contract.status_code, contract.start_date, contract.end_date, contract.confirm_date, "
             + "student.id student_id, student_person.firstname student_person_firstname, student_person.lastname student_person_lastname, "
-            + "enterprise.name, enterprise.contact_person_name, "
+            + "enterprise.name, contract.supervisor_name, "
             + "teacher.id teacher_id, teacher_person.firstname teacher_person_firstname, teacher_person.lastname teacher_person_lastname";
 
 
@@ -248,8 +249,11 @@ public class ContractService {
      * @param contract
      * @return
      */
-    public ContractDto get(Contract contract) {
-        return ContractDto.of(contract);
+    public ContractDto get(HoisUserDetails user, Contract contract) {
+        ContractDto dto = ContractDto.of(contract);
+        dto.setCanEdit(Boolean.valueOf(UserUtil.isSchoolAdmin(user, contract.getStudent().getSchool()) &&
+                ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())));
+        return dto;
     }
 
     /**

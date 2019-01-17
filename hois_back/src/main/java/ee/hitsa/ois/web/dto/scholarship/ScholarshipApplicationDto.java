@@ -212,5 +212,5 @@ public class ScholarshipApplicationDto extends ScholarshipApplicationBaseDto {
     public void setUseSaisPoints(Boolean useSaisPoints) {
         this.useSaisPoints = useSaisPoints;
     }
-    
+
 }

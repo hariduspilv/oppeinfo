@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis').directive('hoisIdcodeLookup', function ($q, QueryUtils, message) {
   return {
-    template: '<input type="text" ng-blur="lookupPerson()" md-minlength="11" md-maxlength="11">',
+    template: '<input type="text" ng-blur="lookupPerson()" ng-minlength="11" md-maxlength="11">',
     restrict: 'E',
     replace: true,
     require: "ngModel",

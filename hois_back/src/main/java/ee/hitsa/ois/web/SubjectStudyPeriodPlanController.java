@@ -24,6 +24,7 @@ import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.SubjectStudyPeriodPlanService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
@@ -48,7 +49,8 @@ public class SubjectStudyPeriodPlanController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public SubjectStudyPeriodPlanDto get(@WithEntity SubjectStudyPeriodPlan plan) {
+    public SubjectStudyPeriodPlanDto get(HoisUserDetails user, @WithEntity SubjectStudyPeriodPlan plan) {
+        UserUtil.assertSameSchool(user, plan.getSubject().getSchool());
         return SubjectStudyPeriodPlanDto.of(plan);
     }
 
@@ -56,7 +58,7 @@ public class SubjectStudyPeriodPlanController {
     public SubjectStudyPeriodPlanDto create(HoisUserDetails user, @Valid @RequestBody SubjectStudyPeriodPlanDto form) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(),
                 "Only school administrator can save subjectStudyPeriodPlan");  
-        return get(subjectStudyPeriodPlanService.create(user.getSchoolId(), form));
+        return get(user, subjectStudyPeriodPlanService.create(user.getSchoolId(), form));
     }
 
     @PutMapping("/{id:\\d+}")
@@ -65,7 +67,7 @@ public class SubjectStudyPeriodPlanController {
             @Valid @RequestBody SubjectStudyPeriodPlanDto form) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(),
                 "Only school administrator can update subjectStudyPeriodPlan");  
-        return get(subjectStudyPeriodPlanService.save(user.getSchoolId(), subjectStudyPeriod, form));
+        return get(user, subjectStudyPeriodPlanService.save(user.getSchoolId(), subjectStudyPeriod, form));
     }
 
     @DeleteMapping("/{id:\\d+}")

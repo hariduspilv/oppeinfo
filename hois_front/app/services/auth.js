@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $rootScope, USER_CONFIRM_RIGHTS) {
+  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $rootScope, USER_CONFIRM_RIGHTS, ArrayUtils) {
     var JWT_TOKEN_HEADER = 'Authorization';
     var authService = {};
     var roleMapper = Classifier.valuemapper({role: 'ROLL'});
@@ -104,7 +104,7 @@ angular.module('hitsaOis')
     authService.isAuthorized = function (authorizedRoles) {
       if (authService.isAuthenticated()) {
         if(angular.isFunction(authorizedRoles)) {
-          return authorizedRoles(Session, Session.authorizedRoles);
+          return authorizedRoles(Session, Session.authorizedRoles, ArrayUtils);
         }
         if (!angular.isArray(authorizedRoles)) {
           authorizedRoles = [authorizedRoles];

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('Menu', function($location, $rootScope, $route) {
+  .factory('Menu', function($location, $rootScope, $route, ArrayUtils) {
 
     var sections = [];
 
@@ -1365,7 +1365,7 @@ angular.module('hitsaOis')
       if (rights && rights.hasOwnProperty('data')) {
         rights = rights.data.authorizedRoles;
         if(angular.isFunction(rights)) {
-          hasAccess = rights(authenticatedUser, roles);
+          hasAccess = rights(authenticatedUser, roles, ArrayUtils);
         } else if (rights.lastIndexOf('') !== -1) {
           hasAccess = true;
         } else {

@@ -1,16 +1,6 @@
 'use strict';
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
-
-  function checkRightsToEdit(message, $location, ArrayUtils, AuthResolver, USER_ROLES) {
-    AuthResolver.resolve().then(function(auth){
-      if(!auth.isAdmin() || !ArrayUtils.includes(auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINE)) {
-        message.error('main.messages.error.nopermission');
-        $location.path('');
-      }
-    });
-  }
-
   $routeProvider
     .when('/subject', {
       templateUrl: 'subject/subject.list.html',
@@ -21,7 +11,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINE]
+        authorizedRoles: function(Session, roles) {
+          return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINE) !== -1;
+        }
       }
     })
     .when('/subject/public', {
@@ -39,10 +31,12 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
-        checkAccess: checkRightsToEdit
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINE]
+        authorizedRoles: function(Session, roles) {
+          return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINE) !== -1;
+        }
       }
     })
     .when('/subject/:id/edit', {
@@ -51,10 +45,12 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
-        checkAccess: checkRightsToEdit
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINE]
+        authorizedRoles: function(Session, roles) {
+          return Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINE) !== -1;
+        }
       }
     })
     .when('/subject/:id', {
@@ -62,7 +58,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controller: 'SubjectViewController',
       controllerAs: 'controller',
       resolve: {
-        translationLoaded: function($translate) { return $translate.onReady(); }
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
       },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINE]

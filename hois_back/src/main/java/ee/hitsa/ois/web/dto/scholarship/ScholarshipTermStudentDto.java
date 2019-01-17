@@ -2,9 +2,12 @@ package ee.hitsa.ois.web.dto.scholarship;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
     private Long applicationId;
@@ -18,6 +21,15 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
     private String status;
     private LocalDate decisionDate;
     private String rejectComment;
+    private LocalDate studyStartPeriodStart;
+    private LocalDate studyStartPeriodEnd;
+    private LocalDate paymentStart;
+    private LocalDate paymentEnd;
+    private List<AutocompleteResult> curriculums;
+    private List<String> studyLoads;
+    private List<String> studyForms;
+    private List<String> courses;
+    private ScholarshipTermComplianceDto termCompliance;
 
     public ScholarshipTermStudentDto() {
 
@@ -31,6 +43,14 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
     public static ScholarshipTermStudentDto of(ScholarshipTerm term) {
         ScholarshipTermStudentDto dto = new ScholarshipTermStudentDto();
         EntityUtil.bindToDto(term, dto);
+        dto.setCourses(
+                StreamUtil.toMappedList(t -> EntityUtil.getCode(t.getCourse()), term.getScholarshipTermCourses()));
+        dto.setCurriculums(StreamUtil.toMappedList(t -> AutocompleteResult.of(t.getCurriculum()),
+                term.getScholarshipTermCurriculums()));
+        dto.setStudyLoads(StreamUtil.toMappedList(t -> EntityUtil.getCode(t.getStudyLoad()),
+                term.getScholarshipTermStudyLoads()));
+        dto.setStudyForms(StreamUtil.toMappedList(t -> EntityUtil.getCode(t.getStudyForm()),
+                term.getScholarshipTermStudyForms()));
         return dto;
     }
 
@@ -120,6 +140,78 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
 
     public void setRejectComment(String rejectComment) {
         this.rejectComment = rejectComment;
+    }
+
+    public LocalDate getStudyStartPeriodStart() {
+        return studyStartPeriodStart;
+    }
+
+    public void setStudyStartPeriodStart(LocalDate studyStartPeriodStart) {
+        this.studyStartPeriodStart = studyStartPeriodStart;
+    }
+
+    public LocalDate getStudyStartPeriodEnd() {
+        return studyStartPeriodEnd;
+    }
+
+    public void setStudyStartPeriodEnd(LocalDate studyStartPeriodEnd) {
+        this.studyStartPeriodEnd = studyStartPeriodEnd;
+    }
+
+    public LocalDate getPaymentStart() {
+        return paymentStart;
+    }
+
+    public void setPaymentStart(LocalDate paymentStart) {
+        this.paymentStart = paymentStart;
+    }
+
+    public LocalDate getPaymentEnd() {
+        return paymentEnd;
+    }
+
+    public void setPaymentEnd(LocalDate paymentEnd) {
+        this.paymentEnd = paymentEnd;
+    }
+
+    public List<AutocompleteResult> getCurriculums() {
+        return curriculums;
+    }
+
+    public void setCurriculums(List<AutocompleteResult> curriculums) {
+        this.curriculums = curriculums;
+    }
+
+    public List<String> getStudyLoads() {
+        return studyLoads;
+    }
+
+    public void setStudyLoads(List<String> studyLoads) {
+        this.studyLoads = studyLoads;
+    }
+
+    public List<String> getStudyForms() {
+        return studyForms;
+    }
+
+    public void setStudyForms(List<String> studyForms) {
+        this.studyForms = studyForms;
+    }
+
+    public List<String> getCourses() {
+        return courses;
+    }
+
+    public void setCourses(List<String> courses) {
+        this.courses = courses;
+    }
+
+    public ScholarshipTermComplianceDto getTermCompliance() {
+        return termCompliance;
+    }
+
+    public void setTermCompliance(ScholarshipTermComplianceDto termCompliance) {
+        this.termCompliance = termCompliance;
     }
 
 }

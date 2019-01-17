@@ -68,7 +68,6 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
   };
 
   $scope.gradeValue = function (code) {
-    console.log(code);
     var grade = clMapper.objectmapper({ grade: code }).grade;
     return grade ? ($scope.auth.school.letterGrades ? grade.value2 : grade.value) : undefined;
   };

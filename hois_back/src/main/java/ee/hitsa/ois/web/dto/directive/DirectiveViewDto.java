@@ -2,7 +2,6 @@ package ee.hitsa.ois.web.dto.directive;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -10,6 +9,8 @@ import java.util.stream.Stream;
 
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.util.DirectiveUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -209,7 +210,8 @@ public class DirectiveViewDto {
             // do not show canceled rows of directive
             students = students.filter(ds -> !Boolean.TRUE.equals(ds.getCanceled()));
         }
-        dto.setStudents(students.sorted(Comparator.comparing(DirectiveStudent::getId)).map(DirectiveViewStudentDto::of).collect(Collectors.toList()));
+        DirectiveType directiveType = DirectiveType.valueOf(dto.getType());
+        dto.setStudents(students.sorted(DirectiveUtil.getStudentDtoComparator(directiveType)).map(DirectiveViewStudentDto::of).collect(Collectors.toList()));
         return dto;
     }
 }

@@ -893,13 +893,15 @@ public class AutocompleteService {
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
         if (Boolean.TRUE.equals(lookup.getClosedCurriculumVersionSubjects())) {
-            qb.optionalCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
+            qb.optionalCriteria("cv.status_code = :cvStatusCode", "cvStatusCode",
+                    CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
         } else {
-            qb.optionalCriteria("cv.status_code != :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
+            qb.optionalCriteria("cv.status_code != :cvStatusCode", "cvStatusCode",
+                    CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
         }
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         if (!otherStudents) {
-            qb.requiredCriteria("s.status_code = :statusCode", "statusCode", SubjectStatus.AINESTAATUS_K);
+            qb.requiredCriteria("s.status_code = :subjectStatusCode", "subjectStatusCode", SubjectStatus.AINESTAATUS_K);
         }
         qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "name", lookup.getName());
         qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "code", lookup.getCode());
@@ -911,8 +913,9 @@ public class AutocompleteService {
             if (otherStudents) {
                 qb.requiredCriteria("shr.grade_code in (:postiveGrades)", "postiveGrades", POSITIVE_HIGHER_GRADES);
                 
-                qb.requiredCriteria(
-                        "shr.student_id in (select s2.id from student s join student s2 on s.person_id=s2.person_id and s.id!=s2.id where s2.id!=:studentId and s.id = :studentId)",
+                qb.requiredCriteria("shr.student_id in (select s2.id from student s join"
+                        + " student s2 on s.person_id=s2.person_id and s.id!=s2.id"
+                        + " where s2.id!=:studentId and s.id = :studentId)",
                         "studentId", lookup.getStudent());
             }
             qb.requiredCriteria("s.id not in (select shr2.subject_id from student_higher_result shr2 "
@@ -1096,7 +1099,8 @@ public class AutocompleteService {
                 + " from study_period sp"
                 + " join study_year sy on sy.id = sp.study_year_id"
                 + " join classifier c on sy.year_code = c.code"
-                + " where sy.school_id = ?1")
+                + " where sy.school_id = ?1"
+                + " order by sp_start_date")
                 .setParameter(1, schoolId)
                 .getResultList();
         return StreamUtil.toMappedList(r -> {

@@ -26,6 +26,7 @@ import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hois.soap.LogContext;
 import ee.hois.xroad.ehis.generated.KhlIsikuandmedLisa;
 import ee.hois.xroad.ehis.generated.KhlLisamine;
@@ -131,7 +132,7 @@ public abstract class EhisService {
         }
 
         if (setOppekava) {
-            muutmine.setOppekava(curriculumCode(student.getCurriculumVersion().getCurriculum()));
+            muutmine.setOppekava(requiredCurriculumCode(student));
         }
         khlOppur.setMuutmine(muutmine);
         return khlOppur;
@@ -168,6 +169,18 @@ public abstract class EhisService {
         KhlOppur khlOppur = new KhlOppur();
         khlOppur.setLisamine(lisamine);
         return khlOppur;
+    }
+
+    protected static BigInteger requiredCurriculumCode(Curriculum curriculum, Student student) {
+        BigInteger code = curriculumCode(curriculum);
+        if (code == null) {
+            throw new ValidationFailedException("Õppija " + getPersonId(student.getPerson()) + " õppekaval puudub HTM kood");
+        }
+        return code;
+    }
+
+    protected static BigInteger requiredCurriculumCode(Student student) {
+        return requiredCurriculumCode(student.getCurriculumVersion().getCurriculum(), student);
     }
 
     protected XMLGregorianCalendar date(LocalDate date) {

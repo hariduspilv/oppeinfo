@@ -26,7 +26,8 @@ import ee.hitsa.ois.web.commandobject.CertificateForm;
 @Service
 public class CertificateValidationService {
 
-    private static final Set<String> ONLY_ACTIVE = EnumUtil.toNameSet(CertificateType.TOEND_LIIK_OPI, CertificateType.TOEND_LIIK_KONTAKT);
+    private static final Set<String> ONLY_ACTIVE = EnumUtil.toNameSet(CertificateType.TOEND_LIIK_OPI, 
+            CertificateType.TOEND_LIIK_SESS, CertificateType.TOEND_LIIK_KONTAKT);
 
     @Autowired
     private EntityManager em;
@@ -75,7 +76,7 @@ public class CertificateValidationService {
     public void assertCanDelete(HoisUserDetails user, Certificate certificate) {
         UserUtil.assertIsSchoolAdminOrStudent(user, certificate.getSchool());
         Student student = certificate.getStudent();
-        if(!StudentUtil.canBeEdited(student) || ((user.isStudent() && !UserUtil.isStudent(user, certificate.getStudent())) || !entering(certificate))) {
+        if((user.isStudent() && (student == null || !UserUtil.isStudent(user, student))) || !entering(certificate)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
@@ -83,7 +84,7 @@ public class CertificateValidationService {
     public void assertCanSendToEkis(HoisUserDetails user, Certificate certificate) {
         UserUtil.assertIsSchoolAdminOrStudent(user, certificate.getSchool());
         Student student = certificate.getStudent();
-        if (!StudentUtil.canBeEdited(student) || ((user.isStudent() && !UserUtil.isStudent(user, certificate.getStudent())) || !entering(certificate))) {
+        if ((user.isStudent() && (student == null || !UserUtil.isStudent(user, student))) || !entering(certificate)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
@@ -93,8 +94,7 @@ public class CertificateValidationService {
     }
 
     public boolean canBeChanged(HoisUserDetails user, Certificate certificate) {
-        Student student = certificate.getStudent();
-        return StudentUtil.canBeEdited(student) && UserUtil.isSchoolAdmin(user, certificate.getSchool()) && entering(certificate);
+        return UserUtil.isSchoolAdmin(user, certificate.getSchool()) && entering(certificate);
     }
 
     public boolean canBeChanged(HoisUserDetails user, String status) {

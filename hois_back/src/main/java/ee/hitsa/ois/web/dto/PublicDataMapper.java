@@ -296,7 +296,7 @@ public class PublicDataMapper {
         CURRICULUM_VERSION_HIGHER_MODULE.put("type", CurriculumVersionHigherModule::getType);
         CURRICULUM_VERSION_HIGHER_MODULE.put("subjects", CurriculumVersionHigherModule::getSubjects);
         CURRICULUM_VERSION_HIGHER_MODULE.put("electiveModules", CurriculumVersionHigherModule::getElectiveModules);
-        CURRICULUM_VERSION_HIGHER_MODULE.put("specialities", CurriculumVersionHigherModule::getSpecialities);
+        CURRICULUM_VERSION_HIGHER_MODULE.put("specialities", c -> c.getSpecialities().stream().map(s -> s.getSpeciality()).collect(Collectors.toList()));
 
         CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("optional", CurriculumVersionHigherModuleSubject::getOptional);
         CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("subject", CurriculumVersionHigherModuleSubject::getSubject);
@@ -338,7 +338,7 @@ public class PublicDataMapper {
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("grade3Description", CurriculumVersionOccupationModuleTheme::getGrade3Description);
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("grade4Description", CurriculumVersionOccupationModuleTheme::getGrade4Description);
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("grade5Description", CurriculumVersionOccupationModuleTheme::getGrade5Description);
-        CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("outcomes", CurriculumVersionOccupationModuleTheme::getOutcomes);
+        CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("outcomes", c -> c.getOutcomes().stream().map(o -> o.getOutcome()).map(AutocompleteResult::of).collect(Collectors.toList()));
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("capacities", CurriculumVersionOccupationModuleTheme::getCapacities);
 
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME_CAPACITY.put("capacityType", CurriculumVersionOccupationModuleThemeCapacity::getCapacityType);

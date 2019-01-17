@@ -411,6 +411,7 @@ angular.module('hitsaOis')
     },
     onlyActiveStudents: function(certificateTypeCode) {
       return CertificateType.TOEND_LIIK_KONTAKT === certificateTypeCode ||
+             CertificateType.TOEND_LIIK_SESS === certificateTypeCode ||
              CertificateType.TOEND_LIIK_OPI === certificateTypeCode;
     },
     onlyFinishedStudents: function(certificateTypeCode) {

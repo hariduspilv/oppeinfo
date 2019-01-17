@@ -19,7 +19,7 @@
           <div flex="80">
             {{file.oisFile.fname ? file.oisFile.fname : file.fname}}
           </div>
-          <div flex>
+          <div ng-if="file.oisFile" flex>
             <a ng-href="{{getUrl(file.oisFile, 'scholarshipapplication')}}" download target="_blank" rel="noopener noreferrer">
               <md-icon md-font-set="material-icons">file_download</md-icon>
             </a>

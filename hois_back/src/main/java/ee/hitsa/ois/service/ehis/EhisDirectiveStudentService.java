@@ -162,11 +162,11 @@ public class EhisDirectiveStudentService extends EhisService {
         KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
         khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine()
-                .setOppekava(curriculumCode(history.getCurriculumVersion().getCurriculum()));
+                .setOppekava(requiredCurriculumCode(history.getCurriculumVersion().getCurriculum(), student));
 
         KhlOppekavaMuutus khlOppekavaMuutus = new KhlOppekavaMuutus();
         khlOppekavaMuutus.setMuutusKp(date(directive.getConfirmDate()));
-        khlOppekavaMuutus.setUusOppekava(curriculumCode(directiveStudent.getCurriculumVersion().getCurriculum()));
+        khlOppekavaMuutus.setUusOppekava(requiredCurriculumCode(directiveStudent.getCurriculumVersion().getCurriculum(), student));
 
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
         khlKorgharidusMuuda.setOppekavaMuutus(khlOppekavaMuutus);
@@ -267,7 +267,7 @@ public class EhisDirectiveStudentService extends EhisService {
         khlOppurOppekava.getMuutmine().setKorgharidus(khlKorgharidusMuuda);
 
         KhlEnnistamine khlEnnistamine = new KhlEnnistamine();
-        khlEnnistamine.setUusOppekava(curriculumCode(student.getCurriculumVersion().getCurriculum()));
+        khlEnnistamine.setUusOppekava(requiredCurriculumCode(student));
         khlEnnistamine.setMuutusKp(date(directive.getConfirmDate()));
 
         khlKorgharidusMuuda.setEnnistamine(khlEnnistamine);
@@ -343,7 +343,7 @@ public class EhisDirectiveStudentService extends EhisService {
         khlKorgharidusLisa.setOppimaAsumKp(date(student.getStudyStart()));
         Short course = student.getStudentGroup().getCourse();
         khlKorgharidusLisa.setKursus(course != null ? BigInteger.valueOf(course.longValue()) : null);
-        khlKorgharidusLisa.setOppekava(curriculumCode(student.getCurriculumVersion().getCurriculum()));
+        khlKorgharidusLisa.setOppekava(requiredCurriculumCode(student));
         khlKorgharidusLisa.setKlOppekeel(ehisValue(student.getLanguage()));
         khlKorgharidusLisa.setKlOppevorm(ehisValue(student.getStudyForm()));
         Classifier studyLoad = student.getStudyLoad() == null ? em.getReference(Classifier.class, StudyLoad.OPPEKOORMUS_MTA.name()) : student.getStudyLoad();

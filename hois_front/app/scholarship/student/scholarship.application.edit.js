@@ -25,11 +25,13 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
       STIPTOETUS_TULEMUS: 'scholarship/student/scholarship.application.scho.edit.html'
     };
     $scope.application = {};
+    $scope.formState = {};
     var baseUrl = '/scholarships';
     $scope.editable = true;
     var id = $route.current.params.id;
     QueryUtils.endpoint(baseUrl + '/' + id + '/application').get({}, function (result) {
       $scope.stipend = result.stipend;
+      $scope.termCompliance = result.termCompliance;
 
       $scope.templateName = templateMap[result.stipend.type];
       if (result.stipend.type === 'STIPTOETUS_ERI') {
@@ -80,10 +82,31 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
     }
 
     function afterLoad(result) {
-      result.canApply = (result.id === null || result.status === 'STIPTOETUS_STAATUS_K' || result.status === 'STIPTOETUS_STAATUS_T');
       $scope.application = result;
-      DataUtils.convertStringToDates($scope.stipend, ['paymentStart', 'paymentEnd']);
-      DataUtils.convertStringToDates($scope.application, ['scholarshipFrom', 'scholarshipThru']);
+      if ($scope.stipend.type === 'STIPTOETUS_ERI') {
+        DataUtils.convertStringToDates($scope.stipend, ['paymentStart', 'paymentEnd']);
+        DataUtils.convertStringToDates($scope.application, ['scholarshipFrom', 'scholarshipThru']);
+        $scope.updateScholarshipDateValidation();
+      }
+    }
+
+    $scope.updateScholarshipDateValidation = function () {
+      var paymentStart = $scope.stipend.paymentStart ? moment($scope.stipend.paymentStart) : null;
+      var paymentEnd = $scope.stipend.paymentEnd ? moment($scope.stipend.paymentEnd) : null;
+      var scholarshipFrom = $scope.application.scholarshipFrom ? moment($scope.application.scholarshipFrom) : null;
+      var scholarshipThru = $scope.application.scholarshipThru ? moment($scope.application.scholarshipThru) : null;
+      
+      $scope.formState.scholarshipFromMax = paymentEnd && scholarshipThru ? moment.min(paymentEnd, scholarshipThru).toDate() :
+        $scope.stipend.paymentEnd || $scope.application.scholarshipThru;
+
+      $scope.formState.scholarshipThruMin = paymentStart && scholarshipFrom ? moment.max(paymentStart, scholarshipFrom).toDate() :
+        $scope.stipend.paymentStart || $scope.application.scholarshipFrom;
+    };
+
+    function loadTermCompliances(application) {
+      QueryUtils.endpoint(baseUrl + '/studentTermCompliance/' + application.id).search(function (termCompliance) {
+        $scope.termCompliance = termCompliance;
+      });
     }
 
     $scope.apply = function (form) {
@@ -96,6 +119,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
             $location.url(baseUrl + '/applications/' + result.id + '?_noback');
           });
         });
+        loadTermCompliances($scope.application);
       });
     };
 
@@ -168,6 +192,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
       QueryUtils.endpoint(baseUrl + '/application/' + id).get({}, function (result) {
         $scope.stipend = result.stipend;
         $scope.application = result.application;
+
         $scope.templateName = templateMap[result.stipend.type];
         if (result.stipend.type === 'STIPTOETUS_ERI') {
           calculateSumsForFamilyBlock($scope.application.family);

@@ -21,30 +21,28 @@
           </md-input-container>
         </div>
         <div layout="row">
-          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-            <label>{{'stipend.applicationPeriod' | translate}}</label>
-            <input type="hidden">
-          </md-input-container>
-          <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <div flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+            <label class="date-period-label">{{'stipend.applicationPeriod' | translate}}</label>
+          </div>
+          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
             <label>{{'main.from' | translate}}</label>
             <hois-value value="stipend.applicationStart | hoisDate"></hois-value>
           </md-input-container>
-          <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
             <label>{{'main.thru' | translate}}</label>
             <hois-value value="stipend.applicationEnd | hoisDate"></hois-value>
           </md-input-container>
 
         </div>
         <div layout="row">
-          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-            <label>{{'stipend.paymentPeriod' | translate}}</label>
-            <input type="hidden">
-          </md-input-container>
-          <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <div flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+            <label class="date-period-label">{{'stipend.paymentPeriod' | translate}}</label>
+          </div>
+          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
             <label>{{'main.from' | translate}}</label>
             <hois-value value="stipend.paymentStart | hoisDate"></hois-value>
           </md-input-container>
-          <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
             <label>{{'main.thru' | translate}}</label>
             <hois-value value="stipend.paymentEnd | hoisDate"></hois-value>
           </md-input-container>
@@ -60,12 +58,21 @@
           </md-input-container>
         </div>
         <div>
-          <div layout="row" flex>
-            <md-input-container flex>
-              <label>{{'stipend.curriculums' | translate}}</label>
-              <hois-value value="curriculumsDisplay.join(', ')"></hois-value>
-            </md-input-container>
-          </div>
+          <fieldset>
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.curriculums' | translate}}</legend>
+            <md-table-container>
+              <table md-table class="secondary-table">
+                <tbody md-body>
+                  <tr md-row ng-repeat="curriculum in stipend.curriculums | orderBy: ['curriculum.' + currentLanguageNameField(), 'code']" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell>{{currentLanguageNameField(curriculum)}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </md-table-container>
+          </fieldset>
+
+          <div>&nbsp;</div>
+          
           <div layout="row" flex>
             <md-input-container flex="45">
               <label class="textInput">{{'stipend.studyForm' | translate}}</label>
@@ -82,111 +89,128 @@
               <hois-value value="stipend.addInfo"></hois-value>
             </md-input-container>
           </div>
-          <div layout="row" flex>
-            <md-input-container flex="45">
-              <label class="textInput">{{'stipend.averageMark' | translate}}</label>
-              <hois-value value="stipend.averageMark"></hois-value>
-            </md-input-container>
-            <md-input-container flex="50" flex-offset="5">
-              <label class="textInput">{{'stipend.priority' | translate}}</label>
-              <hois-classifier-value ng-model="stipend.averageMarkPriority" main-classifier-code="PRIORITEET"></hois-classifier-value>
-            </md-input-container>
-          </div>
-          <h3>{{'stipend.considerFollowing' | translate}}</h3>
-          <div layout="row" flex>
-            <md-checkbox ng-model="stipend.isOutcomes" disabled flex="50">
-              {{'stipend.isOutcomes' | translate}}
-            </md-checkbox>
-            <md-checkbox ng-model="stipend.isModuleGrade" disabled flex="50">
-              {{'stipend.isModuleGrade' | translate}}
-            </md-checkbox>
-          </div>
-          <div layout="row" flex>
-            <md-checkbox ng-model="stipend.isPeriodGrade" disabled flex="50">
-              {{'stipend.isPeriodGrade' | translate}}
-            </md-checkbox>
-            <md-checkbox ng-model="stipend.isApelGrade" disabled flex="50">
-              {{'stipend.isApelGrade' | translate}}
-            </md-checkbox>
-          </div>
-          <div layout="row" flex>
-            <md-checkbox ng-model="stipend.isJournalFinalGrade" disabled flex="50">
-              {{'stipend.isJournalFinalGrade' | translate}}
-            </md-checkbox>
-            <md-checkbox ng-model="stipend.isJournalGrade" disabled flex="50">
-              {{'stipend.isJournalGrade' | translate}}
-            </md-checkbox>
-          </div>
-          <div layout="row" flex>
-            <md-input-container flex="45">
-              <label class="textInput">{{'stipend.lastPeriodMark' | translate}}</label>
-              <hois-value value="stipend.lastPeriodMark"></hois-value>
-            </md-input-container>
-            <md-input-container flex="50" flex-offset="5">
-              <label class="textInput">{{'stipend.priority' | translate}}</label>
-              <hois-classifier-value ng-model="stipend.lastPeriodMarkPriority" main-classifier-code="PRIORITEET"></hois-classifier-value>
-            </md-input-container>
-          </div>
-          <h3>{{'stipend.considerFollowing' | translate}}</h3>
-          <div layout="row" flex>
-            <md-checkbox ng-model="stipend.isLastPeriodOutcomes" disabled flex="50">
-              {{'stipend.isOutcomes' | translate}}
-            </md-checkbox>
-            <md-checkbox ng-model="stipend.isLastPeriodModuleGrade" disabled flex="50">
-              {{'stipend.isModuleGrade' | translate}}
-            </md-checkbox>
-          </div>
-          <div layout="row" flex>
-            <md-checkbox ng-model="stipend.isLastPeriodPeriodGrade" disabled flex="50">
-              {{'stipend.isPeriodGrade' | translate}}
-            </md-checkbox>
-            <md-checkbox ng-model="stipend.isLastPeriodApelGrade" disabled flex="50">
-              {{'stipend.isApelGrade' | translate}}
-            </md-checkbox>
-          </div>
-          <div layout="row" flex>
-            <md-checkbox ng-model="stipend.isLastPeriodJournalFinalGrade" disabled flex="50">
-              {{'stipend.isJournalFinalGrade' | translate}}
-            </md-checkbox>
-            <md-checkbox ng-model="stipend.isLastPeriodJournalGrade" disabled flex="50">
-              {{'stipend.isJournalGrade' | translate}}
-            </md-checkbox>
-          </div>
-          <div layout="row">
-            <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-              <label>{{'stipend.lastPeriodGrade' | translate}}</label>
-              <input type="hidden">
-            </md-input-container>
-            <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
-              <label>{{'main.from' | translate}}</label>
-              <hois-value value="stipend.lastPeriodGradeFrom | hoisDate"></hois-value>
-            </md-input-container>
-            <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
-              <label>{{'main.thru' | translate}}</label>
-              <hois-value value="stipend.lastPeriodGradeThru | hoisDate"></hois-value>
-            </md-input-container>
-          </div>
-          <div layout="row" flex>
-            <md-input-container flex="45">
-              <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
-              <hois-value value="stipend.curriculumCompletion"></hois-value>
-            </md-input-container>
-            <md-input-container flex="50" flex-offset="5">
-              <label class="textInput">{{'stipend.priority' | translate}}</label>
-              <hois-classifier-value ng-model="stipend.curriculumCompletionPriority" main-classifier-code="PRIORITEET"></hois-classifier-value>
-            </md-input-container>
-          </div>
+
+          <fieldset>
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.generalCriteria' | translate}}</legend>
+            <div>&nbsp;</div>
+            <div layout="row" flex>
+              <md-input-container flex="45">
+                <label class="textInput">{{'stipend.averageMark' | translate}}</label>
+                <hois-value value="stipend.averageMark"></hois-value>
+              </md-input-container>
+              <md-input-container flex="50" flex-offset="5">
+                <label class="textInput">{{'stipend.priority' | translate}}</label>
+                <hois-classifier-value ng-model="stipend.averageMarkPriority" main-classifier-code="PRIORITEET"></hois-classifier-value>
+              </md-input-container>
+            </div>
+            <h3>{{'stipend.considerFollowing' | translate}}</h3>
+            <div layout="row" flex>
+              <md-checkbox ng-model="stipend.isOutcomes" disabled flex="50">
+                {{'stipend.isOutcomes' | translate}}
+              </md-checkbox>
+              <md-checkbox ng-model="stipend.isModuleGrade" disabled flex="50">
+                {{'stipend.isModuleGrade' | translate}}
+              </md-checkbox>
+            </div>
+            <div layout="row" flex>
+              <md-checkbox ng-model="stipend.isPeriodGrade" disabled flex="50">
+                {{'stipend.isPeriodGrade' | translate}}
+              </md-checkbox>
+              <md-checkbox ng-model="stipend.isApelGrade" disabled flex="50">
+                {{'stipend.isApelGrade' | translate}}
+              </md-checkbox>
+            </div>
+            <div layout="row" flex>
+              <md-checkbox ng-model="stipend.isJournalFinalGrade" disabled flex="50">
+                {{'stipend.isJournalFinalGrade' | translate}}
+              </md-checkbox>
+              <md-checkbox ng-model="stipend.isJournalGrade" disabled flex="50">
+                {{'stipend.isJournalGrade' | translate}}
+              </md-checkbox>
+            </div>
+          </fieldset>
+
+          <div>&nbsp;</div>
+          <fieldset>
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.previousPeriodCriteria' | translate}}</legend>
+            <div>&nbsp;</div>
+            <div layout="row" flex>
+              <md-input-container flex="45">
+                <label class="textInput">{{'stipend.lastPeriodMark' | translate}}</label>
+                <hois-value value="stipend.lastPeriodMark"></hois-value>
+              </md-input-container>
+              <md-input-container flex="50" flex-offset="5">
+                <label class="textInput">{{'stipend.priority' | translate}}</label>
+                <hois-classifier-value ng-model="stipend.lastPeriodMarkPriority" main-classifier-code="PRIORITEET"></hois-classifier-value>
+              </md-input-container>
+            </div>
+            <h3>{{'stipend.considerFollowing' | translate}}</h3>
+            <div layout="row" flex>
+              <md-checkbox ng-model="stipend.isLastPeriodOutcomes" disabled flex="50">
+                {{'stipend.isOutcomes' | translate}}
+              </md-checkbox>
+              <md-checkbox ng-model="stipend.isLastPeriodModuleGrade" disabled flex="50">
+                {{'stipend.isModuleGrade' | translate}}
+              </md-checkbox>
+            </div>
+            <div layout="row" flex>
+              <md-checkbox ng-model="stipend.isLastPeriodPeriodGrade" disabled flex="50">
+                {{'stipend.isPeriodGrade' | translate}}
+              </md-checkbox>
+              <md-checkbox ng-model="stipend.isLastPeriodApelGrade" disabled flex="50">
+                {{'stipend.isApelGrade' | translate}}
+              </md-checkbox>
+            </div>
+            <div layout="row" flex>
+              <md-checkbox ng-model="stipend.isLastPeriodJournalFinalGrade" disabled flex="50">
+                {{'stipend.isJournalFinalGrade' | translate}}
+              </md-checkbox>
+              <md-checkbox ng-model="stipend.isLastPeriodJournalGrade" disabled flex="50">
+                {{'stipend.isJournalGrade' | translate}}
+              </md-checkbox>
+            </div>
+            <div>&nbsp;</div>
+            <div layout="row">
+              <div flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+                <label class="date-period-label">{{'stipend.lastPeriodGrade' | translate}}</label>
+              </div>
+              <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+                <label>{{'main.from' | translate}}</label>
+                <hois-value value="stipend.lastPeriodGradeFrom | hoisDate"></hois-value>
+              </md-input-container>
+              <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+                <label>{{'main.thru' | translate}}</label>
+                <hois-value value="stipend.lastPeriodGradeThru | hoisDate"></hois-value>
+              </md-input-container>
+            </div>
+            <div layout="row" flex>
+              <md-input-container flex="45">
+                <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
+                <hois-value value="stipend.curriculumCompletion"></hois-value>
+              </md-input-container>
+              <md-input-container flex="50" flex-offset="5">
+                <label class="textInput">{{'stipend.priority' | translate}}</label>
+                <hois-classifier-value ng-model="stipend.curriculumCompletionPriority" main-classifier-code="PRIORITEET"></hois-classifier-value>
+              </md-input-container>
+            </div>
+            <div layout="row">
+              <md-checkbox ng-model="stipend.isStudyBacklog" disabled aria-label="Is academic leave">
+                {{'stipend.isStudyBacklog' | translate}}
+              </md-checkbox>
+            </div>
+          </fieldset>
+          <div>&nbsp;</div>
+          <div>&nbsp;</div>
 
           <div layout="row">
-            <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-              <label>{{'stipend.studyPeriodDates' | translate}}</label>
-              <input type="hidden">
-            </md-input-container>
-            <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+            <div flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+              <label class="date-period-label">{{'stipend.studyPeriodDates' | translate}}</label>
+            </div>
+            <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
               <label>{{'main.from' | translate}}</label>
               <hois-value value="stipend.studyStartPeriodStart | hoisDate"></hois-value>
             </md-input-container>
-            <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+            <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
               <label>{{'main.thru' | translate}}</label>
               <hois-value value="stipend.studyStartPeriodEnd | hoisDate"></hois-value>
             </md-input-container>
@@ -194,11 +218,6 @@
           <div layout="row">
             <md-checkbox ng-model="stipend.isTeacherConfirm" disabled aria-label="Is academic leave">
               {{'stipend.isTeacherConfirm' | translate}}
-            </md-checkbox>
-          </div>
-          <div layout="row">
-            <md-checkbox ng-model="stipend.isStudyBacklog" disabled aria-label="Is academic leave">
-              {{'stipend.isStudyBacklog' | translate}}
             </md-checkbox>
           </div>
           <div layout="row">

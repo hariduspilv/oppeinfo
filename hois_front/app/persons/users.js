@@ -37,6 +37,13 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
       }, {});
     }
 
+    function transformDate(response) {
+      response.validFrom = new Date(response.validFrom);
+      if (response.validThru) {
+        response.validThru = new Date(response.validThru);
+      }
+    }
+
     function getRightsForRole() {
       var rightsForRole = [];
 
@@ -116,6 +123,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
         if ($scope.user.id) {
           $scope.user.$update().then(message.updateSuccess).then(function() {
             afterLoad($scope.user.rights);
+            transformDate($scope.user);
           });
         } else {
           $scope.user.$save().then(function (response) {
@@ -127,9 +135,9 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
     };
 
     if (userId) {
-      $scope.user = Endpoint.get({id: userId});
+      $scope.user = Endpoint.get({id: userId}, transformDate);
     } else {
-      $scope.user = Endpoint.search();
+      $scope.user = Endpoint.search({}, transformDate);
     }
 
     $q.all([$scope.objects.$promise, $scope.permissions.$promise, $scope.userRoleDefaults.$promise, $scope.user.$promise]).then(function() {

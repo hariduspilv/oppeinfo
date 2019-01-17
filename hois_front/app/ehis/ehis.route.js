@@ -12,7 +12,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           higher: function() { return true; }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_EHIS]
+          authorizedRoles: function(Session, roles) {
+            return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_EHIS) !== -1;
+          }
         }
       })
     .when('/ehis/teacher/export/vocational', {
@@ -25,7 +27,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           higher: function() { return false; }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_EHIS]
+          authorizedRoles: function(Session, roles) {
+            return Session.vocational && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_ANDMEVAHETUS_EHIS) !== -1;
+          }
         }
       })
     .when('/ehis/student/export', {

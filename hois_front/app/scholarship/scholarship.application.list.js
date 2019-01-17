@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'DataUtils', '$q', '$sessionStorage', 'AuthService', 'USER_ROLES',
-  function (Classifier, $scope, $location, message, QueryUtils, $route, DataUtils, $q, $sessionStorage, AuthService, USER_ROLES) {
+angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$location', '$route', '$scope', '$sessionStorage', '$q', 'AuthService', 'Classifier', 'USER_ROLES', 'QueryUtils', 'dialogService', 'message',
+  function ($location, $route, $scope, $sessionStorage, $q, AuthService, Classifier, USER_ROLES, QueryUtils, dialogService, message) {
     var baseUrl = '/scholarships';
     $scope.criteria = {};
     $scope.formState = {};
@@ -184,7 +184,10 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
       if (applications.length > 0) {
         QueryUtils.endpoint(baseUrl + '/checkComplies').save(applications, function (result) {
           $scope.applications.forEach(function (application) {
-            application.nonCompliant = !result[application.id];
+            if (result[application.id]) {
+              application.nonCompliant = result[application.id].fullyComplies === false;
+              application.termCompliance = result[application.id];
+            }
           });
         }).$promise.then(function () {
           message.info('stipend.messages.compliesChecked');  
@@ -192,6 +195,13 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['Clas
       } else {
         message.error('stipend.messages.error.noApplicationsWithoutDirectives');
       }
+    };
+
+    $scope.scholarshipTermCompliances = function (application) {
+      dialogService.showDialog('scholarship/templates/scholarship.term.compliance.dialog.html', function (dialogScope) {
+        dialogScope.stipend = application;
+        dialogScope.stipend.nameEt = application.termNameEt;
+      });
     };
 
     $scope.committeeDecision = function () {

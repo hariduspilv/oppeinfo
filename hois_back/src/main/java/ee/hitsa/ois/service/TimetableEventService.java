@@ -997,8 +997,11 @@ public class TimetableEventService {
         return false;
     }
     
-    public TimetableSingleEventForm get(TimetableEventTime eventTime) {
-        return TimetableSingleEventForm.of(eventTime);
+    public TimetableSingleEventForm get(HoisUserDetails user, TimetableEventTime eventTime) {
+        TimetableSingleEventForm dto = TimetableSingleEventForm.of(eventTime);
+        dto.setCanEdit(Boolean.valueOf(UserUtil.isSchoolAdmin(user, em.getReference(School.class, user.getSchoolId())) ||
+                isTeachersEvent(user, StreamUtil.toMappedList(t -> t.getTeacher().getId(), eventTime.getTimetableEventTeachers()))));
+        return dto;
     }
     
 

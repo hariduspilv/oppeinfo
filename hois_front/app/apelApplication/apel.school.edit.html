@@ -4,7 +4,7 @@
       <md-input-container class="md-block">
         <label>{{'apel.apelSchool.country' | translate}}</label>
         <hois-classifier-select ng-model="apelSchool.country" aria-label="country" model-value-attr="code" 
-            main-classifier-code="RIIK" required></hois-classifier-select>
+          main-classifier-code="RIIK" ng-change="countryChanged(apelSchool.country)" required></hois-classifier-select>
       </md-input-container>
 
       <md-input-container class="md-block" ng-if="apelSchool.country === 'RIIK_EST'">

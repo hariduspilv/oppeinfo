@@ -115,10 +115,6 @@ angular.module('hitsaOis')
             scope.mdMinLength = 1;
           }
 
-          if (angular.isDefined(attrs.multiple) && !angular.isArray(scope.ngHolder)) {
-            scope.ngHolder = [];
-          }
-
           function findValue(array, object, arrayKey) {
             var res = array.filter(function(row) {
               return arrayKey ? row[arrayKey] === object : row === object;
@@ -159,6 +155,10 @@ angular.module('hitsaOis')
             }
           } else {
             scope.ngHolder = scope.ngModel;
+          }
+          
+          if (angular.isDefined(attrs.multiple) && !angular.isArray(scope.ngHolder)) {
+            scope.ngHolder = [];
           }
 
           function equals(model, holder) {

@@ -38,9 +38,7 @@ import ee.hitsa.ois.domain.apelapplication.ApelApplicationInformalSubjectOrModul
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationRecord;
 import ee.hitsa.ois.domain.apelapplication.ApelSchool;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.school.School;
@@ -52,7 +50,6 @@ import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.message.ApelApplicationCreated;
-import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApelApplicationUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -85,8 +82,6 @@ public class ApelApplicationService {
     private EntityManager em;
     @Autowired
     private ApelSchoolService apelSchoolService;
-    @Autowired
-    private CurriculumVersionRepository curriculumVersionRepository;
     @Autowired
     private AutomaticMessageService automaticMessageService;
 
@@ -546,8 +541,7 @@ public class ApelApplicationService {
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_E);
         application = EntityUtil.save(application, em);
         ApelApplicationCreated data = new ApelApplicationCreated(application);
-        automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_VOTA, application.getStudent(), data);
-        automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_VOTA, application.getSchool(), data);
+        automaticMessageService.sendMessageToStudentAndSchoolAdmins(MessageType.TEATE_LIIK_VOTA, application.getStudent(), data);
         return application;
     }
 
@@ -838,23 +832,18 @@ public class ApelApplicationService {
         return EntityUtil.save(application, em);
     }
 
-    public CurriculumVersionHigherModuleDto subjectModule(Subject subject) {
-        List<CurriculumVersion> versions = curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId());
-        List<CurriculumVersionHigherModule> modules = new ArrayList<>(); 
+    public CurriculumVersionHigherModuleDto subjectModule(Long curriculumVersionId, Long subjectId) {
+        List<CurriculumVersionHigherModule> modules = em.createQuery(
+                "select cvhs.module from CurriculumVersionHigherModuleSubject cvhs "
+                        + "where cvhs.module.curriculumVersion.id = ?1 and cvhs.subject.id = ?2",
+                CurriculumVersionHigherModule.class)
+                .setParameter(1, curriculumVersionId)
+                .setParameter(2, subjectId)
+                .setMaxResults(1).getResultList();
 
-        versions.forEach(v -> v.getModules().forEach(m -> modules.add(m)));
-
-        for (CurriculumVersionHigherModule module : modules) {
-            List<CurriculumVersionHigherModuleSubject> moduleSubjects = new ArrayList<>(module.getSubjects());
-            for (CurriculumVersionHigherModuleSubject moduleSubject : moduleSubjects) {
-                if (EntityUtil.getId(moduleSubject.getSubject()).equals(subject.getId())) {
-                    return CurriculumVersionHigherModuleDto.of(module);
-                }
-            }
-        }
-        return null;
+        return !modules.isEmpty() ? CurriculumVersionHigherModuleDto.of(modules.get(0)) : null;
     }
-    
+
     public List<AutocompleteResult> committeesForSelection(HoisUserDetails user, ApelApplication application) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from committee c"
                 + " join committee_member cm on c.id = cm.committee_id"

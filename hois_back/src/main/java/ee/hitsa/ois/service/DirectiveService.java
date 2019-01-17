@@ -790,8 +790,13 @@ public class DirectiveService {
             break;
         case KASKKIRI_STIPTOETL:
             // should exists confirmed KASKKIRI_STIPTOET
-            qb.requiredCriteria("exists(select ds3.id from directive_student ds3 inner join directive d3 on ds3.directive_id = d3.id where ds3.student_id = s.id and ds3.canceled = false and d3.type_code = :scholarshipDirectiveType and d3.status_code = :scholarshipDirectiveStatus)", "scholarshipDirectiveType", DirectiveType.KASKKIRI_STIPTOET);
+            qb.requiredCriteria(
+                    "exists(select ds3.id from directive_student ds3 inner join directive d3 on ds3.directive_id = d3.id " +
+                    "where ds3.student_id = s.id and ds3.canceled = false and d3.type_code = :scholarshipDirectiveType " +
+                    "and d3.status_code = :scholarshipDirectiveStatus and d3.scholarship_type_code = :scholarshipTypeCode)",
+                    "scholarshipDirectiveType", DirectiveType.KASKKIRI_STIPTOET);
             qb.parameter("scholarshipDirectiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+            qb.parameter("scholarshipTypeCode", criteria.getScholarshipType());
             break;
         default:
             break;

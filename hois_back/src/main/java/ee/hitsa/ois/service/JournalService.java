@@ -888,9 +888,9 @@ public class JournalService {
     private Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResults(Set<Long> omodules, Set<Long> students) {
         String informalApelResults = "select aa.student_id, " +
             "case when aai.curriculum_version_omodule_theme_id is not null then false else true end as module, " +
-            "case when aai.curriculum_version_omodule_theme_id is not null then cvot.name_et || ' (' || cm.name_et || ' - ' || mcl.name_et || ')' " + 
+            "case when aai.curriculum_version_omodule_theme_id is not null then cm.name_et || ' - ' || mcl.name_et || '/' || cvot.name_et " + 
                 "else cm.name_et || ' - ' || mcl.name_et end as my_theme, " + 
-            "case when aai.curriculum_version_omodule_theme_id is not null then cvot.name_et || ' (' || cm.name_en || ' - ' || mcl.name_en || ')' " + 
+            "case when aai.curriculum_version_omodule_theme_id is not null then cm.name_en || ' - ' || mcl.name_en || '/' || cvot.name_et " + 
                 "else cm.name_en || ' - ' || mcl.name_en end as my_theme_en, " + 
             "aai.grade_code, aa.confirmed, false as is_formal_learning from apel_application aa " + 
             "join apel_application_record aar on aa.id=aar.apel_application_id " + 
@@ -901,18 +901,23 @@ public class JournalService {
             "join classifier mcl on mcl.code = cm.module_code " + 
             "where aa.student_id in (:studentIds) and cvo.id in (:moduleIds) and aa.status_code='VOTA_STAATUS_C' and aai.transfer = true ";
         
-        String formalApelResults = "select distinct aa.student_id, true as module, cm.name_et || ' - ' || mcl.name_et as module_et, " +
-            "cm.name_en || ' - ' || mcl.name_en as module_en, " +
-                "(case when (select count( aaf2.grade_code ) from apel_application_formal_subject_or_module aaf2 " +
+        String formalApelResults = "select distinct aa.student_id, " +
+            "case when aafr.curriculum_version_omodule_theme_id is not null then false else true end as module, " +
+            "case when aafr.curriculum_version_omodule_theme_id is not null then cm.name_et || ' - ' || mcl.name_et || '/' || cvot.name_et " + 
+                "else cm.name_et || ' - ' || mcl.name_et end as my_theme, " + 
+            "case when aafr.curriculum_version_omodule_theme_id is not null then cm.name_en || ' - ' || mcl.name_en || '/' || cvot.name_et " + 
+                "else cm.name_en || ' - ' || mcl.name_en end as my_theme_en, " +
+            "(case when (select count( aaf2.grade_code ) from apel_application_formal_subject_or_module aaf2 " +
                 "where aaf2.apel_application_record_id = aar.id and aaf2.transfer = true) = 1 then " +
                 "(select aaf2.grade_code from apel_application_formal_subject_or_module aaf2 where aaf2.apel_application_record_id = aar.id " +
                 "and aaf2.transfer = true ) else 'KUTSEHINDAMINE_A' end), " +
-                "aa.confirmed, true as is_formal_learning " +
+            "aa.confirmed, true as is_formal_learning " +
             "from apel_application aa " +
             "join apel_application_record aar on aa.id = aar.apel_application_id " +
             "join apel_application_formal_subject_or_module aaf on aar.id = aaf.apel_application_record_id " +
             "join apel_application_formal_replaced_subject_or_module aafr on aar.id = aafr.apel_application_record_id " +
             "join curriculum_version_omodule cvo on aafr.curriculum_version_omodule_id=cvo.id " +
+            "left join curriculum_version_omodule_theme cvot on aafr.curriculum_version_omodule_theme_id=cvot.id " +
             "join curriculum_module cm on cvo.curriculum_module_id=cm.id " +
             "join classifier mcl on mcl.code = cm.module_code " +
             "where aa.student_id in (:studentIds) and cvo.id in (:moduleIds) and aa.status_code='VOTA_STAATUS_C' and aaf.transfer = true";

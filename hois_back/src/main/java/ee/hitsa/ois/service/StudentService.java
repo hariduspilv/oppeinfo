@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -1041,6 +1042,9 @@ public class StudentService {
     }
 
     private List<StudentVocationalModuleDto> curriculumVersionOccupationModules(Set<Long> moduleIds) {
+        if (moduleIds == null || moduleIds.isEmpty()) {
+            return new LinkedList<>();
+        }
         List<CurriculumVersionOccupationModule> modules = em
                 .createQuery("select cvo from CurriculumVersionOccupationModule cvo where cvo.id in (?1)",
                         CurriculumVersionOccupationModule.class)

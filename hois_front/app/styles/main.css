@@ -699,6 +699,13 @@ md-toast.toastError .md-toast-content {
     background-color: red;
 }
 
+md-toast.toastInfo .md-toast-content span,
+md-toast.toastWarn .md-toast-content span,
+md-toast.toastError .md-toast-content span {
+  position: relative;
+  margin: auto;
+}
+
 /*.numberInput{
     max-width: 80px;
 }*/
@@ -2519,4 +2526,14 @@ input[type=number], md-input-container input[type=number] {
   padding: 1px;
   float: right;
   cursor: pointer;
+}
+
+
+.date-period-label {
+  font-size: 13px;
+}
+
+.form-readonly .date-period-label {
+  top: -15px;
+  position: relative;
 }

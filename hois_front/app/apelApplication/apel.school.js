@@ -16,7 +16,7 @@ angular.module('hitsaOis').controller('ApelSchoolListController', function ($sco
       QueryUtils.endpoint(baseUrl + '/usedEhisSchoolCodes').query().$promise.then(function (codes) {
         ArrayUtils.remove(codes, currentEhisCode);
         $scope.usedEhisSchoolCodes = codes;
-      })
+      });
     }
 
     if (id) {
@@ -28,7 +28,6 @@ angular.module('hitsaOis').controller('ApelSchoolListController', function ($sco
       $scope.apelSchool = new Endpoint();
       loadEhisSchoolCodes();
     }
-    loadEhisSchoolCodes();
 
     $scope.update = function() {
       $scope.apelSchoolForm.$setSubmitted();
@@ -52,6 +51,10 @@ angular.module('hitsaOis').controller('ApelSchoolListController', function ($sco
         $scope.apelSchool.nameEt = ehisSchool.nameEt;
         $scope.apelSchool.nameEn = ehisSchool.nameEn;
       });
+    };
+
+    $scope.countryChanged = function () {
+      $scope.apelSchool.ehisSchool = null;
     };
 
     $scope.delete = function() {

@@ -9,7 +9,7 @@ import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 @DateRange
 public class StudentGroupSearchCommand {
 
-    private String code;
+    private String name;
     private EntityConnectionCommand curriculum;
     private List<Long> curriculums;
     private List<Long> curriculumVersion;
@@ -28,12 +28,12 @@ public class StudentGroupSearchCommand {
         this.teachers = teachers;
     }
 
-    public String getCode() {
-        return code;
+    public String getName() {
+        return name;
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public EntityConnectionCommand getCurriculum() {

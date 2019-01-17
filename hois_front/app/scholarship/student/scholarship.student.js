@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudentScholarshipController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'DataUtils', 'ArrayUtils', '$q',
-  function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, DataUtils, ArrayUtils, $q) {
+angular.module('hitsaOis').controller('StudentScholarshipController', ['$route', '$scope', '$q', 'Classifier', 'QueryUtils', 'dialogService',
+  function ($route, $scope, $q, Classifier, QueryUtils, dialogService) {
     var baseUrl = '/scholarships';
     var drGrant = $route.current.locals.drGrant;
     var clMapper = Classifier.valuemapper({
@@ -21,13 +21,22 @@ angular.module('hitsaOis').controller('StudentScholarshipController', ['dialogSe
           var match = $scope.studentStipends.find(function (application) {
             return application.termId === possible.id;
           });
-          if (match) {
-            possible.canApply = false;
-          } else {
-            possible.canApply = true;
-          }
+          possible.canApply = possible.termCompliance.fullyComplies ? !angular.isDefined(match) : false;
+          possible.alreadyApplied = !angular.isDefined(match) ? false : true;
         });
       });
     });
+
+    $scope.scholarshipTerms = function (stipend) {
+      dialogService.showDialog('scholarship/templates/scholarship.term.dialog.html', function (dialogScope) {
+        dialogScope.stipend = stipend;
+      });
+    };
+
+    $scope.scholarshipTermCompliances = function (stipend) {
+      dialogService.showDialog('scholarship/templates/scholarship.term.compliance.dialog.html', function (dialogScope) {
+        dialogScope.stipend = stipend;
+      });
+    };
   }
 ]);

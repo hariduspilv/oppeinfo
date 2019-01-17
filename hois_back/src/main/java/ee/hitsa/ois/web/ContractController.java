@@ -61,7 +61,7 @@ public class ContractController {
         } else {
             UserUtil.assertIsSchoolAdmin(user);
         }
-        return contractService.get(contract);
+        return contractService.get(user, contract);
     }
 
     @PostMapping

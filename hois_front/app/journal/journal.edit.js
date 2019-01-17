@@ -15,9 +15,9 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   var STUDENT_ROW_WITH_INPUT_HEIGHT = 49;
 
   $scope.formState = {
-    gradeInputAsSelect: true
+    gradeInputAsSelect: true,
+    showAllStudentsModel: false
   };
-  $scope.showAllStudentsModel = false;
 
   var state = stateStorageService.loadState(schoolId, stateKey);
 
@@ -94,7 +94,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     $scope.journal = entity;
     $scope.$parent.$parent.moodleCourseId = entity.moodleCourseId;
     loadJournalEntries();
-    loadJournalStudents($scope.showAllStudentsModel);
+    loadJournalStudents($scope.formState.showAllStudentsModel);
   }
 
   var entity = $route.current.locals.entity;
@@ -141,7 +141,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     }, function (submittedDialogScope) {
       QueryUtils.endpoint('/journals/' + entity.id + '/addStudentsToJournal').save({ students: submittedDialogScope.selectedStudents }, function () {
         message.info('journal.messages.studentSuccesfullyAdded');
-        loadJournalStudents($scope.showAllStudentsModel);
+        loadJournalStudents($scope.formState.showAllStudentsModel);
       });
     });
   };
@@ -176,7 +176,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     dialogService.confirmDialog({ prompt: 'journal.studentDeleteconfirm' }, function () {
       QueryUtils.endpoint('/journals/' + entity.id + '/removeStudentsFromJournal').save({ students: [studentId] }, function () {
         message.info('journal.messages.studentSuccesfullyRemoved');
-        loadJournalStudents($scope.showAllStudentsModel);
+        loadJournalStudents($scope.formState.showAllStudentsModel);
       });
     });
   };
@@ -581,7 +581,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
             message.info('main.messages.delete.success');
             loadUsedHours();
             loadJournalEntries();
-            loadJournalStudents($scope.showAllStudentsModel);
+            loadJournalStudents($scope.formState.showAllStudentsModel);
           }).catch(angular.noop);
         });
       };
@@ -601,14 +601,14 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           message.info('main.messages.create.success');
           loadUsedHours();
           loadJournalEntries();
-          loadJournalStudents($scope.showAllStudentsModel);
+          loadJournalStudents($scope.formState.showAllStudentsModel);
         });
       } else {
         journalEntry.$save().then(function () {
           message.info('main.messages.create.success');
           loadUsedHours();
           loadJournalEntries();
-          loadJournalStudents($scope.showAllStudentsModel);
+          loadJournalStudents($scope.formState.showAllStudentsModel);
         });
       }
     });
@@ -659,7 +659,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     QueryUtils.endpoint('/journals/' + $scope.journal.id + '/journalEntry/quickUpdate').save({
       journalEntryId: journalEntry.id,
       journalEntryStudents: journalEntryStudents,
-      allStudents: $scope.showAllStudentsModel
+      allStudents: $scope.formState.showAllStudentsModel
     }).$promise.then(function (result) {
       var updatedEntryStudents = [];
       for (var p in result) {
@@ -743,8 +743,8 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     });
   };
 
-  $scope.showAllStudents = function (show) {
-    loadJournalStudents(show);
+  $scope.showAllStudents = function () {
+    loadJournalStudents($scope.formState.showAllStudentsModel);
   };
 
   var ConfirmEndpoint = QueryUtils.endpoint('/journals/confirm');
@@ -753,9 +753,13 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   function confirm() {
     new ConfirmEndpoint().$update({id: $scope.journal.id}).then(function (response) {
       message.info('journal.messages.confirmed');
-      $scope.journal.canBeConfirmed = response.canBeConfirmed;
-      $scope.journal.canBeUnconfirmed = response.canBeUnconfirmed;
-      $scope.$parent.journal.status = response.status;
+      if ($scope.auth.roleCode !== 'ROLL_A') {
+        $scope.back("#/journal/" + response.id + "/view");
+      } else {
+        $scope.journal.canBeConfirmed = response.canBeConfirmed;
+        $scope.journal.canBeUnconfirmed = response.canBeUnconfirmed;
+        $scope.$parent.journal.status = response.status;
+      }
     });
   }
 

@@ -37,10 +37,15 @@
           <a href="#/scholarships/applications/{{application.id}}">{{application.termNameEt}}</a>
         </td>
         <td md-cell>{{application.curriculumCode ? application.curriculumCode : '-'}}</td>
-        <td md-cell>
-          <a href="#/students/{{application.studentId}}/main" ng-style="application.nonCompliant ? {color: 'red'} : {}">
-            {{application.studentName ? application.studentName : '-'}}
-          </a>
+        <td md-cell class="one-row">
+          <div layout="row" layout-align="start center" flex>
+            <a href="#/students/{{application.studentId}}/main" ng-style="application.nonCompliant ? {color: 'red'} : {}">
+              {{application.studentName ? application.studentName : '-'}}
+            </a>
+            <md-button ng-if="application.nonCompliant && !application.hasDirective" flex class="md-icon-button" ng-click="scholarshipTermCompliances(application)">
+              <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">warning</md-icon>
+            </md-button>
+          </div>
         </td>
         <td md-cell>{{application.idcode ? application.idcode : '-'}}</td>
         <td md-cell>

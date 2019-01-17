@@ -7,30 +7,29 @@
 <div layout="row" flex>
   <md-input-container flex>
     <label class="textInput">{{'stipend.studyPeriod' | translate}}</label>
-    <hois-select required ng-model="stipend.studyPeriod" type="studyperiodyear" preselect-current></hois-select>
+    <hois-select required ng-model="stipend.studyPeriod" type="studyperiodyear" sorted-query="true" preselect-current></hois-select>
   </md-input-container>
 </div>
 <div layout="row">
-  <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-    <label class="required">{{'stipend.applicationPeriod' | translate}}</label>
-    <input type="hidden">
+  <div flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+    <label class="date-period-label">{{'stipend.applicationPeriod' | translate}} *</label>
+  </div>
+  <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+    <md-datepicker required ng-model="stipend.applicationStart" md-max-date="stipend.applicationEnd" md-placeholder="{{'main.from' | translate}}"
+      ng-change="applicationEndChanged()"></md-datepicker>
   </md-input-container>
-  <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
-    <md-datepicker required ng-model="stipend.applicationStart" md-max-date="stipend.applicationEnd" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
-  </md-input-container>
-  <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+  <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
     <md-datepicker required ng-model="stipend.applicationEnd" md-min-date="stipend.applicationStart" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
   </md-input-container>
 </div>
 <div layout="row">
-  <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-    <label class="required">{{'stipend.paymentPeriod' | translate}}</label>
-    <input type="hidden">
-  </md-input-container>
-  <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+  <div flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+    <label class="date-period-label">{{'stipend.paymentPeriod' | translate}} *</label>
+  </div>
+  <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
     <md-datepicker required ng-model="stipend.paymentStart" md-max-date="stipend.paymentEnd" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
   </md-input-container>
-  <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+  <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
     <md-datepicker required ng-model="stipend.paymentEnd" md-min-date="stipend.paymentStart" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
   </md-input-container>
 </div>
@@ -71,14 +70,13 @@
     </md-input-container>
   </div>
   <div layout="row">
-    <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-      <label>{{'stipend.studyPeriodDates' | translate}}</label>
-      <input type="hidden">
-    </md-input-container>
-    <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+    <div flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+      <label class="date-period-label">{{'stipend.studyPeriodDates' | translate}}</label>
+    </div>
+    <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
       <md-datepicker ng-model="stipend.studyStartPeriodStart" md-max-date="stipend.studyStartPeriodEnd" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
     </md-input-container>
-    <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
+    <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
       <md-datepicker ng-model="stipend.studyStartPeriodEnd" md-min-date="stipend.studyStartPeriodStart" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
     </md-input-container>
   </div>

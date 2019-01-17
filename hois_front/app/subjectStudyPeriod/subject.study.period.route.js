@@ -11,7 +11,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK]
+          authorizedRoles: function(Session, roles, ArrayUtils) {
+            return Session.higher && ArrayUtils.intersection(roles, [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK]).length === 2;
+          }
         }
       }).when('/subjectStudyPeriod/:id/edit', {
         templateUrl: 'subjectStudyPeriod/subject.study.period.edit.html',
@@ -44,7 +46,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK]
+          authorizedRoles: function(Session, roles, ArrayUtils) {
+            return Session.higher && ArrayUtils.intersection(roles,
+              [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK]).length === 2;
+          }
         }
       }).when('/subjectStudyPeriods/studentGroups', {
         templateUrl: 'subjectStudyPeriod/studentGroup/subject.study.period.student.group.search.html',
@@ -55,7 +60,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: function(Session, roles) {
+            return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+          }
         }
       }).when('/subjectStudyPeriods/studentGroups/new', {
         templateUrl: 'subjectStudyPeriod/studentGroup/subject.study.period.student.group.edit.html',
@@ -66,7 +73,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: function(Session, roles) {
+            return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+          }
         }
       }).when('/subjectStudyPeriods/studentGroups/:studentGroupId/:studyPeriodId/edit', {
         templateUrl: 'subjectStudyPeriod/studentGroup/subject.study.period.student.group.edit.html',
@@ -99,7 +108,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: function(Session, roles) {
+            return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+          }
         }
       }).when('/subjectStudyPeriods/teachers/new', {
         templateUrl: 'subjectStudyPeriod/teacher/subject.study.period.teacher.edit.html',
@@ -110,7 +121,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: function(Session, roles) {
+            return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+          }
         }
       }).when('/subjectStudyPeriods/teachers/:teacherId/:studyPeriodId/edit', {
         templateUrl: 'subjectStudyPeriod/teacher/subject.study.period.teacher.edit.html',
@@ -145,7 +158,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: function(Session, roles) {
+            return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+          }
         }
       }).when('/subjectStudyPeriods/subjects/new', {
         templateUrl: 'subjectStudyPeriod/subject/subject.study.period.subject.edit.html',
@@ -156,7 +171,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: function(Session, roles) {
+            return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+          }
         }
       }).when('/subjectStudyPeriods/subjects/:subjectId/:studyPeriodId/edit', {
         templateUrl: 'subjectStudyPeriod/subject/subject.study.period.subject.edit.html',

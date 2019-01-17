@@ -357,6 +357,7 @@ public class MessageService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_group sg join curriculum c on sg.curriculum_id=c.id").sort("code");
 
         qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalContains("sg.code","studentGroupCode", criteria.getName());
         qb.optionalCriteria("c.id in (:curriculums)", "curriculums", criteria.getCurriculums());
         qb.optionalCriteria("sg.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         if(user.isTeacher()) {

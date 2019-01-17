@@ -88,7 +88,8 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     @ClassifierRestriction(MainClassCode.VALISKOOL_PROGRAMM)
     private String abroadProgramme;
-    
+
+    @Size(max = 10000)
     private String otherText;
 
     private Set<OisFileForm> files;

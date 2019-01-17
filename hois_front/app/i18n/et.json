@@ -3994,6 +3994,8 @@
     "lastPeriodGrade": "Saadud tulemused lähevad arvesse ajavahemikus",
     "hasDirective": "Käskkiri",
     "addAllCurriculums": "Lisa kõik õppekavad",
+    "generalCriteria": "Üldised taotluse kriteeriumid",
+    "previousPeriodCriteria": "Eelmise perioodi kriteeriumid",
     "confirmations": {
       "publish": "Kas oled kindel, et soovid stipendiumi avalikustada?",
       "saveAndPublish": "Kas oled kindel, et soovid õppetoetuse salvestada ja avalikustada?",
@@ -4014,6 +4016,7 @@
       "isTeacherConfirm": "Rühmajuh. kinnitus",
       "needsConfirm": "Taotlus vajab rühmajuh. kinnitust",
       "apply": "Taotle",
+      "additionDate": "Lisamise kuupäev",
       "decisionDate": "Otsuse kuupäev",
       "applications": "Taotlused",
       "myData": "Minu andmed",
@@ -4037,7 +4040,8 @@
       "view": "Vaata",
       "specificReason": "Täpsustus",
       "showMore": "Näita rohkem",
-      "showLess": "Näita vähem"
+      "showLess": "Näita vähem",
+      "alreadyApplied": "Taotlus olemas"
     },
     "family": {
       "name": "Pereliige",
@@ -4090,6 +4094,23 @@
       "chairman": "Esimees",
       "member": "Liige",
       "deleteconfirm": "Kas oled kindel, et soovid otsuse kustutada?"
+    },
+    "termCompliances": {
+      "onAcademicLeave": "Õppija on akadeemilise puhkusel",
+      "noStudentGroup": "Õppija ei kuulu ühtegi õpperühma",
+      "existsAcademicLeaveDirective": "Õppijal on akadeemilisele puhkusele lubamise käskkiri staatusega 'Koostamisel' või 'Kinnitamisel'",
+      "existsExmatriculationDirective": "Õppijal on eksmatrikuleerimise käskkiri staatusega 'Koostamisel' või 'Kinnitamisel'",
+      "invalidCourse": "Õppeaasta õppija õpperühmas ei vasta tingimustele",
+      "invalidStudyLoad": "Õppekoormus ei vasta tingimustele",
+      "invalidStudyForm": "Õppevorm ei vasta tingimustele",
+      "invalidCurriculum": "Õppekava ei vasta tingimustele",
+      "invalidStudyStartPeriod": "Immatrikuleerimise vahemik toetuse tingimustes ei vasta õppija immatrikuleerimise kuupäevale",
+      "invalidNominalStudyEnd": "Eeldatav nominaalaja lõpp ei vasta tingimustele",
+      "existsStudyBacklog": "Võlgnevustega õppijal taotlemine ei ole lubatud",
+      "invalidAverageMark": "Keskmine hinne ei vasta tingimustele",
+      "invalidLastPeriodMark": "Eelmise perioodi keskmine hinne ei vasta tingimustele",
+      "invalidCurriculumCompletion": "Õppekava täidetus ei vasta tingimustele",
+      "invalidAbsences": "Puudumiste arv ei vasta tingimustele"
     }
   },
   "public": {

@@ -11,42 +11,30 @@
     <md-dialog-content>
       <span flex></span>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
-        <div layout="row" flex>
-          <md-input-container flex="80" flex-md="100" flex-sm="100" flex-xs="100">
-            <label>{{'stipend.family.name' | translate}}</label>
-            <input type="text" ng-model="member.name" name="name" required md-maxlength="100">
-          </md-input-container>
-        </div>
-        <div layout="row">
-          <md-input-container flex="80">
-            <label>{{'stipend.family.netSalary' | translate}}</label>
-            <input ng-model="member.netSalary" type="number" aria-label="places" min="0">
-          </md-input-container>
-        </div>
-        <div layout="row">
-          <md-input-container flex="80">
-            <label>{{'stipend.family.pension' | translate}}</label>
-            <input ng-model="member.pension" type="number" aria-label="places" min="0">
-          </md-input-container>
-        </div>
-        <div layout="row">
-          <md-input-container flex="80">
-            <label>{{'stipend.family.stateBenefit' | translate}}</label>
-            <input ng-model="member.stateBenefit" type="number" aria-label="places" min="0">
-          </md-input-container>
-        </div>
-        <div layout="row">
-          <md-input-container flex="80">
-            <label>{{'stipend.family.otherIncome' | translate}}</label>
-            <input ng-model="member.otherIncome" type="number" aria-label="places" min="0">
-          </md-input-container>
-        </div>
-        <div layout="row">
-          <md-input-container flex="80">
-            <label>{{'stipend.family.unemployedBenefit' | translate}}</label>
-            <input ng-model="member.unemployedBenefit" type="number" aria-label="places" min="0">
-          </md-input-container>
-        </div>
+        <md-input-container flex>
+          <label>{{'stipend.family.name' | translate}}</label>
+          <input type="text" ng-model="member.name" name="name" required md-maxlength="100">
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'stipend.family.netSalary' | translate}}</label>
+          <input ng-model="member.netSalary" type="number" aria-label="places" min="0">
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'stipend.family.pension' | translate}}</label>
+          <input ng-model="member.pension" type="number" aria-label="places" min="0">
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'stipend.family.stateBenefit' | translate}}</label>
+          <input ng-model="member.stateBenefit" type="number" aria-label="places" min="0">
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'stipend.family.otherIncome' | translate}}</label>
+          <input ng-model="member.otherIncome" type="number" aria-label="places" min="0">
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'stipend.family.unemployedBenefit' | translate}}</label>
+          <input ng-model="member.unemployedBenefit" type="number" aria-label="places" min="0">
+        </md-input-container>
       </div>
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start start">

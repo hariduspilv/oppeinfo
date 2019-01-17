@@ -98,6 +98,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'HigherModuleController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); },
           checkAccess: checkRightsToEdit
         },
@@ -109,6 +110,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'HigherModuleController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); },
           checkAccess: checkRightsToEdit
         },
@@ -120,6 +122,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'HigherModuleController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
@@ -130,6 +133,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'MinorSpecialityController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); },
           checkAccess: checkRightsToEdit
         },
@@ -141,6 +145,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'MinorSpecialityController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); },
           checkAccess: checkRightsToEdit
         },
@@ -152,6 +157,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'MinorSpecialityController',
         controllerAs: 'controller',
         resolve: {
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {

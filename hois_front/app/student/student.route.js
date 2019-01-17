@@ -2,7 +2,8 @@
 
 angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
   var authorizedRoles = {authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR]};
-
+  // https://stackoverflow.com/a/24864967 [AngularJS regex route for similar url to load different controller and view]
+  var $route = $routeProvider.$get[$routeProvider.$get.length-1]({$on:function(){}});
   $routeProvider
     .when('/students/:id/main', {
       templateUrl: 'student/view.main.html',
@@ -148,4 +149,9 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         }
       }
     });
+    // Regex for paths
+    $route.routes['/students/:id/main'].regexp = /^\/(?:students\/(\d+))\/main$/;
+    $route.routes['/students/:id/main/'].regexp = /^\/(?:students\/(\d+))\/main\/$/;
+    $route.routes['/students/:id/edit'].regexp = /^\/(?:students\/(\d+))\/edit$/;
+    $route.routes['/students/:id/edit/'].regexp = /^\/(?:students\/(\d+))\/edit\/$/;
 });

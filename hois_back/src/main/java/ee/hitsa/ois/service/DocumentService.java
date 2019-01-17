@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -729,15 +730,19 @@ public class DocumentService {
             if (!Boolean.TRUE.equals(module.getMinorSpeciality())) {
                 Classifier type = module.getType();
                 String name = ClassifierUtil.equals(HigherModuleType.KORGMOODUL_M, type) ?
-                        (Language.EN.equals(lang) ? module.getTypeNameEn() : module.getTypeNameEt()) :
-                            TranslateUtil.name(type, lang);
-                        moduleCredits.put(name, moduleCredits.computeIfAbsent(name, k -> BigDecimal.valueOf(0))
-                                .add(module.getTotalCredits()));
+                        getModuleName(module.getTypeNameEt(), module.getTypeNameEn(), lang) :
+                            getModuleName(type.getNameEt(), type.getNameEn(), lang);
+                moduleCredits.put(name, moduleCredits.computeIfAbsent(name, k -> BigDecimal.valueOf(0))
+                        .add(module.getTotalCredits()));
             }
         }
         return moduleCredits.entrySet().stream()
                 .map(e -> e.getKey() + " " + e.getValue() + " EAP")
                 .collect(Collectors.joining(", "));
+    }
+    
+    private static String getModuleName(String nameEt, String nameEn, Language lang) {
+        return Language.EN.equals(lang) ? StringUtils.defaultIfEmpty(nameEn, nameEt) : nameEt;
     }
 
     private void setStudyResultsHigher(DiplomaSupplement supplement, Long studentId) {

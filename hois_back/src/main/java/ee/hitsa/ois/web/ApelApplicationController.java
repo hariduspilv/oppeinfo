@@ -22,7 +22,6 @@ import ee.hitsa.ois.domain.apelapplication.ApelApplication;
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationComment;
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationFile;
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationRecord;
-import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.report.apelapplication.ApelApplicationReport;
 import ee.hitsa.ois.service.ApelApplicationService;
 import ee.hitsa.ois.service.PdfService;
@@ -266,10 +265,11 @@ public class ApelApplicationController {
         HttpUtil.pdf(response, application.getId() + ".pdf", pdfService.generate(templateName, report));
     }
 
-    @GetMapping("/subjectModule/{subjectId:\\d+}")
-    public CurriculumVersionHigherModuleDto subjectModule(HoisUserDetails user, @WithEntity("subjectId") Subject subject) {
+    @GetMapping("/subjectModule")
+    public CurriculumVersionHigherModuleDto subjectModule(HoisUserDetails user, @RequestParam Long curriculumVersionId,
+            @RequestParam Long subjectId) {
         UserUtil.assertIsSchoolAdminOrStudent(user);
-        return apelApplicationService.subjectModule(subject);
+        return apelApplicationService.subjectModule(curriculumVersionId, subjectId);
     }
 
     @GetMapping("/{applicationId:\\d+}/committees")

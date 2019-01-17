@@ -15,6 +15,14 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
 
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
+    entity.$promise.then(function(response) {
+      if (response.canEdit === false) {
+        message.error("main.messages.error.nopermission");
+        $scope.back("#/");
+      }
+    });
+  }
+  if (angular.isDefined(entity)) {
     entityToForm(entity);
   } else {
     $scope.formState.isHigher = $scope.auth.school.higher === true && (($scope.auth.school.vocational === true && $route.current.params.higher === true) || $scope.auth.school.vocational === false);

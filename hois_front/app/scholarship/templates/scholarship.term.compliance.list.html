@@ -1,0 +1,17 @@
+<ul>
+  <li ng-if="termCompliance.onAcademicLeave">{{'stipend.termCompliances.onAcademicLeave' | translate}}</li>
+  <li ng-if="termCompliance.studentGroup">{{'stipend.termCompliances.noStudentGroup' | translate}}</li>
+  <li ng-if="termCompliance.isCourse && !termCompliance.studentGroup">{{'stipend.termCompliances.invalidCourse' | translate}}</li>
+  <li ng-if="termCompliance.academicLeaveDirectives">{{'stipend.termCompliances.existsAcademicLeaveDirective' | translate}}</li>
+  <li ng-if="termCompliance.exmatriculationDirectives">{{'stipend.termCompliances.existsExmatriculationDirective' | translate}}</li>
+  <li ng-if="termCompliance.isStudyLoad">{{'stipend.termCompliances.invalidStudyLoad' | translate}}</li>
+  <li ng-if="termCompliance.isStudyForm">{{'stipend.termCompliances.invalidStudyForm' | translate}}</li>
+  <li ng-if="termCompliance.isCurriculum">{{'stipend.termCompliances.invalidCurriculum' | translate}}</li>
+  <li ng-if="termCompliance.isStudyStartPeriod">{{'stipend.termCompliances.invalidStudyStartPeriod' | translate}}</li>
+  <li ng-if="termCompliance.isNominalStudyEnd">{{'stipend.termCompliances.invalidNominalStudyEnd' | translate}}</li>
+  <li ng-if="termCompliance.studyBacklog">{{'stipend.termCompliances.existsStudyBacklog' | translate}}</li>
+  <li ng-if="termCompliance.averageMark">{{'stipend.termCompliances.invalidAverageMark' | translate}}</li>
+  <li ng-if="termCompliance.isLastPeriodMark">{{'stipend.termCompliances.invalidLastPeriodMark' | translate}}</li>
+  <li ng-if="termCompliance.isCurriculumCompletion">{{'stipend.termCompliances.invalidCurriculumCompletion' | translate}}</li>
+  <li ng-if="termCompliance.isAbsences">{{'stipend.termCompliances.invalidAbsences' | translate}}</li>
+</ul>

@@ -283,7 +283,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: function(Session, roles) {
+          return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1;
+        }
       }
     })
     .when('/scholarships/applications/scholarships', {
@@ -306,7 +308,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: function(Session, roles) {
+          return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1;
+        }
       }
     })
     .when('/scholarships/applications/:type/annul', {

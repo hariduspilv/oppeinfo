@@ -10,7 +10,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       auth: function (AuthResolver) { return AuthResolver.resolve(); }
     },
     data: {
-      authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_EKSAM]
+      authorizedRoles: function(Session, roles) {
+        return (Session.roleCode === 'ROLL_A' || Session.roleCode === 'ROLL_O') && Session.higher &&
+          roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_EKSAM) !== -1;
+      }
     }
   })
   .when('/examRegistration', {
@@ -22,7 +25,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       auth: function (AuthResolver) { return AuthResolver.resolve(); }
     },
     data: {
-      authorizedRoles: function(Session) { return Session.roleCode === 'ROLL_T'; }
+      authorizedRoles: function(Session) { return Session.roleCode === 'ROLL_T' && Session.higher; }
     }
   })
   .when('/exams/new', {

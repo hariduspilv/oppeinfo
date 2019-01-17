@@ -11,10 +11,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [
-          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
-          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA
-        ], 
+        authorizedRoles: function(Session, roles, ArrayUtils) {
+          return Session.roleCode === 'ROLL_A' && Session.vocational && ArrayUtils.intersection(roles,
+              [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA]).length === 2;
+        }, 
         currentNavItem: 'lessonplan.vocational'
       }
     })
@@ -27,10 +27,11 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [
-          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
-          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA
-        ], currentNavItem: 'lessonplan.vocational-byteacher'
+        authorizedRoles: function(Session, roles, ArrayUtils) {
+          return Session.vocational && ArrayUtils.intersection(roles,
+              [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA]).length === 2;
+        },
+        currentNavItem: 'lessonplan.vocational-byteacher'
       }
     })
     .when('/lessonplans/vocational/:id/edit', {

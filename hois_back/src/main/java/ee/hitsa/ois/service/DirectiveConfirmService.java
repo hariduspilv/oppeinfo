@@ -8,7 +8,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -72,6 +71,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.DirectiveUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
@@ -128,7 +128,7 @@ public class DirectiveConfirmService {
         List<DirectiveViewStudentDto> invalidStudents = new ArrayList<>();
         // validate each student's data for given directive
         long rowNum = 0;
-        directive.getStudents().sort(Comparator.comparing(DirectiveStudent::getId));
+        directive.getStudents().sort(DirectiveUtil.getStudentDtoComparator(directiveType));
         for(DirectiveStudent ds : directive.getStudents()) {
             if(directiveType.validationGroup() != null) {
                 Set<ConstraintViolation<DirectiveStudent>> errors = validator.validate(ds, directiveType.validationGroup());
@@ -257,7 +257,7 @@ public class DirectiveConfirmService {
         if(!ekis) {
             setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL);
         }
-        directive.getStudents().sort(Comparator.comparing(ds -> ds.getPerson().getLastname()));
+        directive.getStudents().sort(DirectiveUtil.getStudentEkisComparator(directiveType));
         directive = EntityUtil.save(directive, em);
         if(ekis) {
             ekisService.registerDirective(EntityUtil.getId(directive));

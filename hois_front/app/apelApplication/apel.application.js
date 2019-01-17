@@ -604,7 +604,10 @@
             var subjectId = dialogScope.selectedSubject.id;
             QueryUtils.endpoint('/subject').get({id: subjectId}).$promise.then(function (subject) {
               var credits = subject.credits;
-              QueryUtils.endpoint('/apelApplications/subjectModule/' + subject.id).search().$promise.then(function (hModule) {
+              QueryUtils.endpoint('/apelApplications/subjectModule').search({
+                curriculumVersionId: dialogScope.curriculumVersionId,
+                subjectId: subject.id
+              }).$promise.then(function (hModule) {
                 var isOptional = getSubjectIsOptional(subjectId, hModule);
                 addNewSubtitutableSubjectRow(subject, hModule, isOptional, credits);
               });
@@ -942,11 +945,8 @@
         };
 
         dialogScope.newSchoolCountryChanged = function (countryCode) {
-          if (countryCode === 'RIIK_EST') {
-            dialogScope.newSchoolEst = true;
-          } else {
-            dialogScope.newSchoolEst = false;
-          } 
+          dialogScope.newSchoolEst = countryCode === 'RIIK_EST' ? true : false;
+          dialogScope.record.newTransferableSubjectOrModule.newApelSchool.ehisSchool = null;
         };
 
         dialogScope.ehisSchoolChanged = function (ehisCode) {
@@ -1062,12 +1062,22 @@
         }
 
         dialogScope.addNewSchool = function () {
-          dialogScope.newSchoolEst = false;
           dialogScope.formState.isNewSchool = true;
-          if (dialogScope.record.newTransferableSubjectOrModule && dialogScope.record.newTransferableSubjectOrModule.apelSchool) {
-            dialogScope.record.newTransferableSubjectOrModule.apelSchool = null;
-          }
+          emptyNewSchoolForm();
         };
+
+        dialogScope.cancelCreatingNewSchool = function () {
+          dialogScope.formState.isNewSchool = false;
+          emptyNewSchoolForm();
+        };
+        
+        function emptyNewSchoolForm() {
+          dialogScope.newSchoolEst = false;
+          if (dialogScope.record.newTransferableSubjectOrModule) {
+            dialogScope.record.newTransferableSubjectOrModule.apelSchool = null;
+            dialogScope.record.newTransferableSubjectOrModule.newApelSchool = null;
+          }
+        }
 
         dialogScope.addNewTransferableModule = function () {
           addNewEmptyFormalSubjectOrModule();
@@ -1504,8 +1514,15 @@
     };
 
     $scope.sendToConfirm = function () {
-      recordsToIdentifiers(DataUtils, $scope.application.records);
+      if (atLeastOneLearningTransferred()) {
+        recordsToIdentifiers(DataUtils, $scope.application.records);
+        sendToConfirm();
+      } else {
+        message.error('apel.error.atLeastOneLearningMustBeTransferred');
+      }
+    };
 
+    function sendToConfirm() {
       if ($scope.application.status === 'VOTA_STAATUS_V') {
         dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
           dialogScope.sendToConfirm = true;
@@ -1537,7 +1554,7 @@
           });
         });
       }
-    };
+    }
 
     $scope.sendToCommittee = function () {
       recordsToIdentifiers(DataUtils, $scope.application.records);
@@ -1707,8 +1724,15 @@
     };
 
     $scope.sendToConfirm = function () {
-      recordsToIdentifiers(DataUtils, $scope.application.records);
+      if (atLeastOneLearningTransferred()) {
+        recordsToIdentifiers(DataUtils, $scope.application.records);
+        sendToConfirm();
+      } else {
+        message.error('apel.error.atLeastOneLearningMustBeTransferred');
+      }
+    };
 
+    function sendToConfirm() {
       if ($scope.application.status === 'VOTA_STAATUS_V') {
         dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
           dialogScope.sendToConfirm = true;
@@ -1740,7 +1764,7 @@
           });
         });
       }
-    };
+    }
 
     $scope.sendToCommittee = function () {
       recordsToIdentifiers(DataUtils, $scope.application.records);

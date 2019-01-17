@@ -16,6 +16,11 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
     if (id) {
       $scope.timetableEvent = Endpoint.get({
         id: id
+      }, function(response) {
+        if (response.canEdit === false) {
+          message.error("main.messages.error.nopermission");
+          $scope.back("#/");
+        }
       });
       $scope.timetableEvent.$promise.then(afterLoad);
     } else {

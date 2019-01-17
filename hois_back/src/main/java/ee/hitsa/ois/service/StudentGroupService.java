@@ -89,7 +89,7 @@ public class StudentGroupService {
 
         qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
 
-        qb.optionalContains("sg.code", "code", criteria.getCode());
+        qb.optionalContains("sg.code", "code", criteria.getName());
         qb.optionalCriteria("curriculum.id = :curriculum", "curriculum", criteria.getCurriculum());
         qb.optionalCriteria("curriculum.id in (:curriculums)", "curriculums", criteria.getCurriculums());
         qb.optionalCriteria("sg.curriculum_version_id in (:curriculumVersion)", "curriculumVersion", criteria.getCurriculumVersion());

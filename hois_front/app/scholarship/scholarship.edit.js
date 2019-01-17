@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$rootScope', 'Classifier', '$location', 'message', 'QueryUtils', 'dialogService', '$route',
-  function ($scope, $rootScope, Classifier, $location, message, QueryUtils, dialogService, $route) {
+angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$scope', '$location', 'Classifier', 'DataUtils', 'QueryUtils', 'dialogService', 'message',
+  function ($route, $scope, $location, Classifier, DataUtils, QueryUtils, dialogService, message) {
     var templateMap = {
       STIPTOETUS_POHI: 'scholarship/term/scholarship.pohi.edit.html',
       STIPTOETUS_ERI: 'scholarship/term/scholarship.eri.edit.html',
@@ -39,7 +39,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
     function reloadCommittees() {
       $scope.formState.committees = QueryUtils.endpoint(baseUrl + "/committees").query({
         validDate: $scope.stipend.applicationEnd,
-        curriculums: $scope.stipend.curriculums.map(function (curriculum) {
+        curriclumIds: $scope.stipend.curriculums.map(function (curriculum) {
           return curriculum.id;
         })
       });
@@ -55,6 +55,8 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       $scope.stipendTypeChanged();
       $scope.applicationEndChanged();
       $scope.stipendForm.$setPristine();
+      DataUtils.convertStringToDates($scope.stipend, ['applicationStart', 'applicationEnd', 'paymentStart', 'paymentEnd', 
+        'lastPeriodGradeFrom', 'lastPeriodGradeThru', 'studyStartPeriodStart', 'studyStartPeriodEnd']);
     }
 
     if (id) {
@@ -200,9 +202,8 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       return otherValues.indexOf(value.code) === -1;
     };
   }
-]).controller('ScholarshipViewController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'AuthService', 'USER_ROLES', 
-    'ScholarshipUtils',
-  function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, AuthService, USER_ROLES, ScholarshipUtils) {
+]).controller('ScholarshipViewController', ['$route', '$scope', 'AuthService', 'ScholarshipUtils', 'USER_ROLES', 'QueryUtils', 'dialogService', 
+  function ($route, $scope, AuthService, ScholarshipUtils, USER_ROLES, QueryUtils, dialogService) {
     var templateMap = {
       STIPTOETUS_POHI: 'scholarship/term/scholarship.pohi.view.html',
       STIPTOETUS_ERI: 'scholarship/term/scholarship.eri.view.html',
@@ -222,7 +223,6 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$scope', '$
       $scope.stipend = result;
       $scope.templateName = templateMap[result.type];
       $scope.formState.typeIsScholarship = (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf(result.type) !== -1);
-      $scope.curriculumsDisplay = result.curriculums.map($scope.currentLanguageNameField);
 
       QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(function (studyPeriods) {
         $scope.formState.readonlyStudyPeriod = studyPeriods.find(function (it) {

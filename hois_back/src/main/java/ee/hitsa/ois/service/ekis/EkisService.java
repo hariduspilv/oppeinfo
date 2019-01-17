@@ -53,6 +53,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.StudentAbsenceService;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.DirectiveUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -165,6 +166,7 @@ public class EkisService {
         request.setCreateTime(date(directive.getInserted()));
         request.setManager(manager != null ? manager.getIdcode() : null);
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
+        directive.getStudents().sort(DirectiveUtil.getStudentEkisComparator(directiveType));
         request.setContent(StreamUtil.toMappedList(ds -> studentForRegisterDirective(directiveType, ds), directive.getStudents()));
         request.setWdId(directive.getWdId() != null ? directive.getWdId().intValue() : MISSING_WD_ID);
 

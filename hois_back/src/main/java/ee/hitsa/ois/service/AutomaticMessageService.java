@@ -68,6 +68,23 @@ public class AutomaticMessageService {
         }
     }
 
+    public void sendMessageToStudentAndSchoolAdmins(MessageType type, Student student, Object dataBean) {
+        School school = student.getSchool();
+        Person studentPerson = student.getPerson();
+
+        List<Person> persons = getPersonsWithRole(school, Role.ROLL_A);
+        if (!persons.contains(studentPerson)) {
+            persons.add(studentPerson);
+        }
+
+        Message message = sendMessageToPersons(type, school, persons, dataBean);
+
+        if(message != null) {
+            List<String> receivers = StreamUtil.toMappedList(Person::getEmail, persons);
+            mailService.sendMail(message, receivers);
+        }
+    }
+
     public void sendMessageToStudent(MessageType type, Student student, Object dataBean) {
         sendMessageToStudent(type, student, dataBean, null);
     }

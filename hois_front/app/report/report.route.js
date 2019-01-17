@@ -83,7 +83,9 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controller: 'StudentGroupTeacherController',
       controllerAs: 'controller',
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RYHMAJUHATAJA]
+        authorizedRoles: function(Session, roles) {
+          return Session.vocational && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RYHMAJUHATAJA) !== -1;
+        }
       },
       resolve: {
         auth: function (AuthResolver) { return AuthResolver.resolve(); },

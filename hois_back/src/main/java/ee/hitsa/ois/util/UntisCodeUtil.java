@@ -78,7 +78,7 @@ public class UntisCodeUtil {
 				}
 			}
 		}
-		List<Journal> filtered = journals.stream().filter(p->generatedCode.equals(p.getUntisCode())).collect(Collectors.toList());
+		List<Journal> filtered = journals.stream().filter(p->generatedCode.equals(p.getUntisCode()) && !p.getId().equals(journal.getId())).collect(Collectors.toList());
 		if (!filtered.isEmpty()) {
 			generatedCode += "/";
 			for (StudentGroup studentgroup : studentGroups) {
@@ -95,7 +95,7 @@ public class UntisCodeUtil {
 				filtered = journals.stream().filter(p->generatedCode.equals(p.getUntisCode())).collect(Collectors.toList());
 			}
 		}
-		filtered = journals.stream().filter(p->generatedCode.equals(p.getUntisCode())).collect(Collectors.toList());
+		filtered = journals.stream().filter(p->generatedCode.equals(p.getUntisCode()) && !p.getId().equals(journal.getId())).collect(Collectors.toList());
 		if (!filtered.isEmpty()) {
 			generatedCode += "_" + journal.getId();
 		}

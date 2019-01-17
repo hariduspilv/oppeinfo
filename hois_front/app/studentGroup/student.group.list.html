@@ -6,7 +6,7 @@
 				<div flex layout="column">
 					<md-input-container flex>
 						<label class="textInput">{{'studentGroup.code' | translate}}</label>
-						<input ng-model="criteria.code" name="code" type="text" md-maxlength="255" autofocus>
+						<input ng-model="criteria.name" name="name" type="text" md-maxlength="255" autofocus>
 					</md-input-container>
 
 					<div layout="row" flex>
@@ -31,7 +31,7 @@
 					<div layout="row" flex="45">
 						<md-input-container>
 							<label>{{'main.validFrom' | translate}}</label>
-							<md-datepicker ng-model="criteria.validFrom"></md-datepicker>
+							<md-datepicker ng-model="criteria.validFrom" md-max-date="criteria.validThru"></md-datepicker>
 						</md-input-container>
 						<md-input-container  flex-offset="5">
 							<label>{{'main.validThru' | translate}}</label>

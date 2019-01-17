@@ -8,7 +8,7 @@
 
       <md-input-container class="md-block">
         <label class="textInput">{{'directive.coordinator.idcode' | translate}}</label>
-        <input ng-model="record.idcode" name="idcode" type="text" required md-minlength="11" md-maxlength="11">
+        <hois-idcode-lookup ng-model="record.idcode"></hois-idcode-lookup>
       </md-input-container>
       <div layout="column">
           <md-checkbox ng-model="record.isDirective"

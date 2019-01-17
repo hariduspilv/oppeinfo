@@ -123,7 +123,7 @@
         </div>
         <div flex="50" layout="row" layout-align="end">
           <md-input-container>
-            <md-checkbox ng-model="showAllStudentsModel" aria-label="show all students" ng-change="showAllStudents(showAllStudentsModel)">
+            <md-checkbox ng-model="formState.showAllStudentsModel" aria-label="show all students" ng-change="showAllStudents()">
               {{'journal.showAll' | translate}}
             </md-checkbox>
           </md-input-container>

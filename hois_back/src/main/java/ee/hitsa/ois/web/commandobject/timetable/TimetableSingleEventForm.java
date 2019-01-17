@@ -40,6 +40,8 @@ public class TimetableSingleEventForm {
     private String otherTeacher;
     private String otherRoom;
     private Boolean isSingleEvent;
+    
+    private Boolean canEdit;
 
     public static TimetableSingleEventForm of(TimetableEventTime event) {
         TimetableSingleEventForm form = new TimetableSingleEventForm();
@@ -204,6 +206,14 @@ public class TimetableSingleEventForm {
 
     public void setIsSingleEvent(Boolean isSingleEvent) {
         this.isSingleEvent = isSingleEvent;
+    }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
     }
 
 }
