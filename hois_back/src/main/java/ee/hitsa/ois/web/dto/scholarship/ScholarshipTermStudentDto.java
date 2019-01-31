@@ -29,6 +29,7 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
     private List<String> studyLoads;
     private List<String> studyForms;
     private List<String> courses;
+    private Boolean isStudyBacklog;
     private ScholarshipTermComplianceDto termCompliance;
 
     public ScholarshipTermStudentDto() {
@@ -204,6 +205,14 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
 
     public void setCourses(List<String> courses) {
         this.courses = courses;
+    }
+
+    public Boolean getIsStudyBacklog() {
+        return isStudyBacklog;
+    }
+
+    public void setIsStudyBacklog(Boolean isStudyBacklog) {
+        this.isStudyBacklog = isStudyBacklog;
     }
 
     public ScholarshipTermComplianceDto getTermCompliance() {

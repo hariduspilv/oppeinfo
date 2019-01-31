@@ -748,7 +748,7 @@ public class DocumentService {
     private void setStudyResultsHigher(DiplomaSupplement supplement, Long studentId) {
         List<?> result = em.createNativeQuery("SELECT sv.subject_name_et,sv.subject_name_en,sv.credits,sv.grade,lower(clf.name_et) as grade_name_et,lower(clf.name_en) as grade_name_en,sv.teachers,"
                 + " sv.grade_date,sv.subject_code,"
-                + " case when (select count (*) from apel_application_formal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id) > 0 then true else false end as is_apel_formal,"
+                + " case when (select count (*) from apel_application_formal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id and not aaf.is_my_school) > 0 then true else false end as is_apel_formal,"
                 + " case when (select count (*) from apel_application_informal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id) > 0 then true else false end as is_apel_informal,"
                 + " aps.name_et as aps_name_et,aps.name_en as aps_name_en, apc.code as apc_code,apc.name_et as apc_name_et,apc.name_en as apc_name_en,"
                 + " case when pp.is_final=true then true else false end as is_final,"
@@ -896,7 +896,7 @@ public class DocumentService {
 
     private void setStudyResultsVocational(DiplomaSupplement supplement, Long studentId) {
         List<?> result = em.createNativeQuery("SELECT sv.module_name_et,sv.module_name_en,sv.credits,sv.grade,lower(clf.name_et) as grade_name_et,lower(clf.name_en) as grade_name_en,sv.teachers,"
-                + " case when (select count (*) from apel_application_formal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id) > 0 then true else false end as is_apel_formal,"
+                + " case when (select count (*) from apel_application_formal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id and not aaf.is_my_school) > 0 then true else false end as is_apel_formal,"
                 + " case when (select count (*) from apel_application_informal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id) > 0 then true else false end as is_apel_informal,"
                 + " aps.name_et,aps.name_en,case when pp.is_final=true then true else false end as is_final"
                 + " from student_vocational_result sv"

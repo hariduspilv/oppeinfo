@@ -105,8 +105,8 @@
       <!--KUTSETE/OSAKUTSETE MOODULID-->
       <div ng-repeat="occupation in occupations | orderBy: 'occupation.nameEt'" layout="column">
         <div class="occupation-header align-center">
-          <span ng-show="isOccupation">{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
-          <span ng-show="!isOccupation">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
+          <span ng-show="isOccupation">{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp; {{occupation.occupation | hoisValidDates }}</span>
+          <span ng-show="!isOccupation">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp; {{occupation.occupation | hoisValidDates }}</span>
         </div>
         <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(occupation.occupation.code, modules)"
           class="lowerBorder">
@@ -133,7 +133,7 @@
         <!--OSAKUTSETE MOODULID-->
         <div ng-repeat="partOccupation in occupation.partOccupations | orderBy" layout="column">
           <div class="occupation-header2 align-center">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp;
-            <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE"></hois-classifier-value>
+            <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE" show-date></hois-classifier-value>
           </div>
           <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(partOccupation, modules)"
             class="lowerBorder">
@@ -161,7 +161,7 @@
         <!--SPETSKUTSETE MOODULID-->
         <div ng-repeat="speciality in occupation.specialities | orderBy" layout="column">
           <div class="occupation-header2 align-center">{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: &nbsp;
-            <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
+            <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE" show-date></hois-classifier-value>
           </div>
           <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality, modules)"
             class="lowerBorder">

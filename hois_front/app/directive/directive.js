@@ -302,6 +302,9 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       if(directiveType === 'KASKKIRI_STIPTOET' || directiveType === 'KASKKIRI_STIPTOETL') {
         data.scholarshipType = $scope.record.scholarshipType;
       }
+      if (directiveType === 'KASKKIRI_LOPET') {
+        data.isHigher = $scope.record.isHigher;
+      }
       $mdDialog.show({
         controller: function($scope) {
           var baseUrl = '/directives/findstudents';

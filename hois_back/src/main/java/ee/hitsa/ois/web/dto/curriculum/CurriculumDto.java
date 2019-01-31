@@ -74,6 +74,17 @@ public class CurriculumDto extends CurriculumForm {
 
         return dto;
     }
+    
+    public static CurriculumDto forModuleMinimum(Curriculum curriculum) {
+        CurriculumDto dto = new CurriculumDto();
+        dto.setId(curriculum.getId());
+        dto.setNameEt(curriculum.getNameEt());
+        dto.setNameEn(curriculum.getNameEn());
+        dto.setCode(curriculum.getCode());
+        dto.setStatus(curriculum.getStatus().getCode());
+        dto.setDraft(curriculum.getDraft().getCode());
+        return dto;
+    }
 
     /**
      * Versions are set in service, as it depends on user rights

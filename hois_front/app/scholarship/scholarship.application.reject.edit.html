@@ -28,8 +28,8 @@
       </tr>
     </tbody>
   </table>
-  <div layout="row" ng-if="rejections.length > 0">
-    <md-button class="md-raised md-primary" ng-click="reject()">{{'main.button.reject' | translate}}</md-button>
+  <div layout="row">
+    <md-button class="md-raised md-primary" ng-if="rejections.length > 0" ng-click="reject()">{{'main.button.reject' | translate}}</md-button>
     <md-button class="md-raised" ng-click="back('#/scholarships/applications/' + scholarshipType)">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

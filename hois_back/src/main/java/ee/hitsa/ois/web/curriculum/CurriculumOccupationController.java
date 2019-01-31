@@ -57,7 +57,7 @@ public class CurriculumOccupationController {
             @NotNull @Valid @RequestBody CurriculumOccupationDto dto) {
         Curriculum curriculum = em.getReference(Curriculum.class, dto.getCurriculum());
         validate(user, curriculum);
-        CurriculumUtil.assertOccupationCanBeChanged(curriculum.getDraft());
+        //CurriculumUtil.assertOccupationCanBeChanged(curriculum.getDraft());
         return get(user, curriculumOccupationService.create(user, dto));
     }
 
@@ -72,7 +72,7 @@ public class CurriculumOccupationController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithEntity("id") CurriculumOccupation curriculumOccupation) {
         validate(user, curriculumOccupation.getCurriculum());
-        CurriculumUtil.assertOccupationCanBeChanged(curriculumOccupation.getCurriculum().getDraft());
+        //CurriculumUtil.assertOccupationCanBeDeleted(curriculumOccupation);
         curriculumOccupationService.delete(user, curriculumOccupation);
     }
 

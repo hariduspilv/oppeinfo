@@ -76,6 +76,14 @@ public abstract class CurriculumUtil {
         return occupationCanBeChanged(draft) || user.isSchoolAdmin();
     }
 
+    private static boolean occupationCanBeDeleted(CurriculumOccupation occupation) {
+        return !occupation.getCurriculum().getModules().stream()
+                .flatMap(mod -> mod.getOccupations().stream())
+                .map(occ -> occ.getOccupation())
+                .filter(occ -> occupation.getOccupation().getCode().equals(occ.getCode()))
+                .findAny().isPresent();
+    }
+
     public static boolean isFreeModule(CurriculumModule m) {
         return ClassifierUtil.equals(CurriculumModuleType.KUTSEMOODUL_V, m.getModule());
     }
@@ -258,6 +266,11 @@ public abstract class CurriculumUtil {
         }
     }
 
+    public static void assertOccupationCanBeDeleted(CurriculumOccupation occupation) {
+        if(!occupationCanBeDeleted(occupation)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
     public static void assertCanSetUnderRevision(HoisUserDetails user, Curriculum curriculum) {
         if (!canSetUnderRevision(user, curriculum)) {
             throw new ValidationFailedException("main.messages.error.nopermission");

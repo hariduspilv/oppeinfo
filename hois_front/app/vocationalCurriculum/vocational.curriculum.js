@@ -445,8 +445,7 @@ angular.module('hitsaOis')
             loadPartOccupationsAndSpecialities(dialogScope);
           });
           dialogScope.formState = {
-            readOnly: $scope.formState.readOnly || $scope.formState.notEditableBasicData,
-            limitedEditing: !$scope.occupationCanBeChanged()
+            readOnly: $scope.formState.readOnly || $scope.formState.notEditableBasicData
           };
           dialogScope.selectedSpecialities = {};
 
@@ -538,23 +537,28 @@ angular.module('hitsaOis')
                     QueryUtils.endpoint('/autocomplete/classifiers/withparents').query({mainClassCode: "OSAKUTSE"}).$promise,
                     QueryUtils.endpoint('/autocomplete/classifiers/withparents').query({mainClassCode: "KUTSE"}).$promise
               ]).then(function(data){
-                  dialogScope.partOccupations = data[0];
-                  dialogScope.occupations = data[1].filter(Classifier.isValid).filter(function(el1){
-                        for(var i = 0; i < dialogScope.partOccupations.length; i++){
-                            if(ArrayUtils.includes(dialogScope.partOccupations[i].parents, el1.code)) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    });
-                    if(angular.isDefined(curriculumPartOccupation)) {
-                        dialogScope.partOccupationAquired = dialogScope.partOccupations.find(function(el){
-                            return el.code === curriculumPartOccupation.occupation.code;
-                        });
-                        dialogScope.occupation = dialogScope.occupations.find(function(el){
-                            return ArrayUtils.includes(dialogScope.partOccupationAquired.parents, el.code);
-                        });
+                dialogScope.partOccupations = data[0];
+                if(angular.isDefined(curriculumPartOccupation)) {
+                  dialogScope.partOccupationAquired = dialogScope.partOccupations.find(function(el){
+                    return el.code === curriculumPartOccupation.occupation.code;
+                  });
+                }
+                dialogScope.occupations = data[1].filter(function(el) {
+                  if (angular.isUndefined(dialogScope.partOccupationAquired)) {
+                    return Classifier.isValid(el);
+                  } else if (angular.isUndefined(dialogScope.occupation) && ArrayUtils.includes(dialogScope.partOccupationAquired.parents, el.code)) {
+                    dialogScope.occupation = el;
+                    return true;
+                  }
+                  return Classifier.isValid(el);
+                }).filter(function(el1){
+                  for(var i = 0; i < dialogScope.partOccupations.length; i++){
+                    if(ArrayUtils.includes(dialogScope.partOccupations[i].parents, el1.code)) {
+                      return true;
                     }
+                  }
+                  return false;
+                });
               });
 
             dialogScope.filterPartOccupations = function(partOccupation){
@@ -574,7 +578,7 @@ angular.module('hitsaOis')
             //   });
             }
             dialogScope.formState = {
-              readOnly: $scope.formState.readOnly || !$scope.occupationCanBeChanged() || $scope.formState.notEditableBasicData
+              readOnly: $scope.formState.readOnly || $scope.formState.notEditableBasicData
             };
           },
           function(submittedDialogScope) {

@@ -76,7 +76,8 @@
                   <input type="text" ng-model="member.memberName" md-maxlength="100" aria-label="{{'committee.name' | translate}} {{member.memberName}}" required>
                 </md-input-container>
                 <md-input-container ng-if="!member.isExternal && !showPersonSearch">
-                  <hois-select ng-model="member.teacher" type="teacher" aria-label="{{'committee.name' | translate}} {{member.memberName}}" required></hois-select>
+                  <hois-select ng-model="member.teacher" type="teacher" criteria="{valid: true, selectedTeacherId: member.teacher}"
+                    aria-label="{{'committee.name' | translate}} {{member.memberName}}" required></hois-select>
                 </md-input-container>
                 <div layout="row" flex="100" ng-if="showPersonSearch">
                   <hois-autocomplete flex ng-model="member.person" method="committeeMembers" no-paging="true" label="committee.member" aria-label="{{'committee.member' | translate}} {{member.memberName}}" required></hois-autocomplete>

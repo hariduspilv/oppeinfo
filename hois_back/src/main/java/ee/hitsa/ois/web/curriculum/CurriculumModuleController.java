@@ -26,7 +26,6 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumModuleForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumModuleTypesCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleDto;
@@ -93,8 +92,8 @@ public class CurriculumModuleController {
     }
     
     @GetMapping("/curriculumMin/{id:\\d+}")
-    public AutocompleteResult getCurriculumMin(@WithEntity Curriculum curriculum) {
-        return AutocompleteResult.of(curriculum);
+    public CurriculumDto getCurriculumMin(@WithEntity Curriculum curriculum) {
+        return CurriculumDto.forModuleMinimum(curriculum);
     }
     
     @GetMapping("/competences/curriculum/{id:\\d+}")

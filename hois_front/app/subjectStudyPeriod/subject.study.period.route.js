@@ -12,7 +12,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles, ArrayUtils) {
-            return Session.higher && ArrayUtils.intersection(roles, [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK]).length === 2;
+            return Session.higher && ArrayUtils.intersect(roles, [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK]);
           }
         }
       }).when('/subjectStudyPeriod/:id/edit', {
@@ -47,8 +47,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles, ArrayUtils) {
-            return Session.higher && ArrayUtils.intersection(roles,
-              [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK]).length === 2;
+            return Session.higher && ArrayUtils.intersect(roles,
+              [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK]);
           }
         }
       }).when('/subjectStudyPeriods/studentGroups', {

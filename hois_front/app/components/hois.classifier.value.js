@@ -9,7 +9,7 @@
  * This element must be inside md-input-container for label to properly work
  */
 angular.module('hitsaOis')
-  .directive('hoisClassifierValue', function (Classifier, ArrayUtils) {
+  .directive('hoisClassifierValue', function (Classifier, ArrayUtils, hoisValidDatesFilter) {
     return {
       template:'<div class="hois-classifier-value">{{value}}</div>',
       restrict: 'E',
@@ -17,11 +17,13 @@ angular.module('hitsaOis')
       scope: {
         ngModel: '=',
         mainClassifierCode: '@',
-        mainClassifierCodes: '@'
+        mainClassifierCodes: '@',
+        showDate: '@'
       },
       link: function postLink(scope, element) {
         element[0].parentElement.classList.add("md-input-has-value");
         var classifiervalues;
+        scope.getLabel = angular.isDefined(scope.showDate) ? hoisValidDatesFilter : scope.$root.currentLanguageNameField;
         scope.$watch('ngModel', function(newVal) {
           var params = null;
           if(angular.isObject(newVal)) {
@@ -57,7 +59,7 @@ angular.module('hitsaOis')
                 }
               });
               if(selected.length > 0) {
-                var nameStrings = selected.map(scope.$root.currentLanguageNameField);
+                var nameStrings = selected.map(scope.getLabel);
                 scope.value = nameStrings.join(', ');
               }
             };

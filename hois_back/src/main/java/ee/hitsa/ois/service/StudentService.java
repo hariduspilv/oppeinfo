@@ -527,7 +527,7 @@ public class StudentService {
     public List<AutocompleteResult> subjects(Student student) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject s "
                 + "inner join curriculum_version_hmodule_subject cvhms on cvhms.subject_id = s.id "
-                + "inner join curriculum_version_hmodule cvh on cvh.id = cvhms.curriculum_version_hmodule_id");
+                + "inner join curriculum_version_hmodule cvh on cvh.id = cvhms.curriculum_version_hmodule_id").groupBy("s.id");
         qb.requiredCriteria("cvh.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", EntityUtil.getId(student.getCurriculumVersion()));
 
         List<?> data = qb.select("s.id, s.name_et, s.name_en, s.code, s.credits", em).getResultList();

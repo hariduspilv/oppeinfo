@@ -1217,9 +1217,9 @@ public class ScholarshipService {
                 && (!student.getStudyStart().isEqual(term.getStudyStartPeriodEnd())
                         || !student.getStudyStart().isEqual(term.getStudyStartPeriodStart())));
 
-        compliance.setNominalStudyEnd(
-                ClassifierUtil.oneOf(term.getType(), ScholarshipType.STIPTOETUS_DOKTOR, ScholarshipType.STIPTOETUS_POHI)
-                        && student.getNominalStudyEnd().isBefore(LocalDate.now()));
+        compliance.setNominalStudyEnd(ClassifierUtil.oneOf(term.getType(), ScholarshipType.STIPTOETUS_DOKTOR,
+                ScholarshipType.STIPTOETUS_POHI)
+                && (student.getNominalStudyEnd() == null || student.getNominalStudyEnd().isBefore(LocalDate.now())));
 
         StudentResults results = getStudentResults(term, student);
 

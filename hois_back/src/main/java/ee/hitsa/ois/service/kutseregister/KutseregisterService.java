@@ -194,7 +194,8 @@ public class KutseregisterService {
                     }
                     String type = certificate.getTyyp();
                     Classifier occupation = null, partOccupation = null, speciality = null;
-                    if(OCCUPATION_CERTIFICATE_TYPE_OCCUPATION.equalsIgnoreCase(type)) {
+                    if(OCCUPATION_CERTIFICATE_TYPE_OCCUPATION.equalsIgnoreCase(type) 
+                            || (type != null && type.toLowerCase().contains("kantav kutse"))) {
                         // check for specialty certificate
                         speciality = findOccupation(certificate.getSpetsialiseerumine(), SPECIALIZATION_PREFIX, certificate.getValjaantud(), occupations);
                         if(speciality != null) {
@@ -203,7 +204,8 @@ public class KutseregisterService {
                             // just occupation certificate
                             occupation = findOccupation(certificate.getStandard(), OCCUPATION_PREFIX, certificate.getValjaantud(), occupations);
                         }
-                    } else if(OCCUPATION_CERTIFICATE_TYPE_PARTOCCUPATION.equalsIgnoreCase(type)) {
+                    } else if(OCCUPATION_CERTIFICATE_TYPE_PARTOCCUPATION.equalsIgnoreCase(type) 
+                            || (type != null && type.toLowerCase().contains("kantav osakutse"))) {
                         partOccupation = findOccupation(certificate.getOsakutse(), PARTOCCUPATION_PREFIX, certificate.getValjaantud(), occupations);
                         occupation = ClassifierUtil.parentFor(partOccupation, MainClassCode.KUTSE).orElse(null);
                     }
