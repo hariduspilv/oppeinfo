@@ -1,4 +1,4 @@
-VERSIOON:  1.1.5/20190130
+VERSIOON:  1.2.0/20190215
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,7 +10,7 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.1.4/20190117
+EELDUS: ver. 1.1.5/20190130
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
