@@ -621,14 +621,20 @@ public class DirectiveService {
             return Collections.emptyList();
         }
 
-        Map<Long, ScholarshipApplication> scholarshipApps = isScholarship(cmd.getType()) ? em.createQuery(
-                "select sa from ScholarshipApplication sa where sa.student.school.id = ?1 and sa.student.id in (?2) and sa.scholarshipTerm.type.code = ?3 and sa.status.code = ?4", ScholarshipApplication.class)
+		Map<Long, ScholarshipApplication> scholarshipApps = isScholarship(cmd.getType()) ? em.createQuery(
+                "select sa from ScholarshipApplication sa " +
+                "where sa.student.school.id = ?1 and sa.student.id in (?2) " +
+                "and sa.scholarshipTerm.type.code = ?3 and sa.status.code = ?4 " +
+                "and not exists (select 1 from DirectiveStudent dsa join dsa.directive dsad " +
+                "where dsa.scholarshipApplication.id = sa.id and dsa.canceled = false and dsad.type.code = ?5)", ScholarshipApplication.class)
             .setParameter(1, schoolId)
             .setParameter(2, studentIds)
             .setParameter(3, cmd.getScholarshipType())
             .setParameter(4, ScholarshipStatus.STIPTOETUS_STAATUS_A.name())
+            .setParameter(5, DirectiveType.KASKKIRI_STIPTOET.name())
             .getResultList()
             .stream().collect(Collectors.toMap(r -> EntityUtil.getId(r.getStudent()), r -> r, (o, n) -> o)) : Collections.emptyMap();
+
 
         ApplicationType applicationType = applicationType(directiveType);
         Map<Long, Application> applications = applicationType != null ? em.createQuery(
@@ -777,7 +783,7 @@ public class DirectiveService {
         case KASKKIRI_EKSMAT:
             // no confirmed scholarship
             qb.requiredCriteria("not exists(select a.id from directive_student ds join directive d on ds.directive_id = d.id join scholarship_application a on ds.scholarship_application_id = a.id join scholarship_term t on a.scholarship_term_id = t.id " +
-                    "where ds.canceled = false and d.status_code = :scholarshipDirectiveStatus and t.is_academic_leave = false and a.student_id = s.id " +
+                    "where ds.canceled = false and d.status_code = :scholarshipDirectiveStatus and t.is_academic_leave = false and a.student_id = s.id and coalesce(ds.end_date, to_Date(to_char(now(),'dd.mm.yyyy'),'dd.mm.yyyy') - 1) >= to_Date(to_char(now(),'dd.mm.yyyy'),'dd.mm.yyyy') " +
                     "and not exists(select 1 from directive_student ds2 join directive d2 on ds2.directive_id = d2.id and ds2.canceled = false and ds2.scholarship_application_id = ds.scholarship_application_id and d2.status_code = :scholarshipDirectiveStatus and d2.type_code = :scholarshipEndDirectiveType))",
                     "scholarshipDirectiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
             qb.parameter("scholarshipEndDirectiveType", DirectiveType.KASKKIRI_STIPTOETL.name());
