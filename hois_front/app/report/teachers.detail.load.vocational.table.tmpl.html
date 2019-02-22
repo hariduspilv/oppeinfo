@@ -1,0 +1,83 @@
+<div ng-if="periodCapacitiesRow" class="tertiary-table-container" fixed-column-table fixed-columns="{{reportData.byJournals ? 2 : 1}}">
+  <table class="tertiary-table detail-load-table">
+    <thead>
+      <tr>
+        <th class="dividerBorder" colspan="{{reportData.byJournals ? 2 : 1}}"></th>
+        <th ng-if="reportData.criteria.byStudyPeriods" colspan="{{periodColspan}}" class="dividerBorder"
+          ng-repeat="sp in reportData.studyPeriods">{{currentLanguageNameField(sp)}} ({{sp.startDate | hoisDayMonth}}-{{sp.endDate | hoisDayMonth}})</th>
+        <th ng-if="reportData.criteria.byMonths" colspan="{{periodColspan}}" class="dividerBorder"
+          ng-repeat="month in months">{{'main.month.' + month.name | translate}}</th>
+        <th ng-if="reportData.criteria.byWeeks" colspan="{{periodColspan}}" class="dividerBorder"
+          ng-repeat="weekNr in weekNrs">
+          <span>{{weekNr}}. {{'report.teachersDetailLoad.week' | translate}}</span>
+          <md-tooltip>{{reportData.weekBeginningDateMap[weekNr] | hoisDate}}</md-tooltip>
+        </th>
+        <th colspan="{{periodColspan + 1}}" class="dividerBorder">{{'report.teachersDetailLoad.total' | translate}}</th>
+      </tr>
+      <tr>
+        <th class="dividerBorder" colspan="{{reportData.byJournals ? 2 : 1}}"></th>
+        <th colspan="{{column.colspan}}" ng-repeat="column in periodTypesRow" class="fix" ng-class="{dividerBorder: column.occurredLessons}">
+          <span ng-if="column.plannedLessons">{{'report.teachersDetailLoad.planned' | translate}}</span>
+          <span ng-if="column.occurredLessons">{{'report.teachersDetailLoad.occurred' | translate}}</span>
+        </th>
+        <th ng-if="reportData.criteria.showPlannedLessons" colspan="{{plannedLessonsColspan}}">{{'report.teachersDetailLoad.planned' | translate}}</th>
+        <th colspan="{{occurredLessonsColspan + 1}}" class="dividerBorder">{{'report.teachersDetailLoad.occurred' | translate}}</th>
+      </tr>
+      <tr>
+        <th ng-class="{dividerBorder: reportData.byTeachers}">
+          <span ng-if="reportData.byTeachers">{{auth.higher ? ('teacher.labelHigher' | translate) : ('teacher.labelVocational' | translate)}}</span>
+          <span ng-if="reportData.byJournals">{{'report.teachersDetailLoad.journal' | translate}}</span>
+        </th>
+        <th ng-if="reportData.byJournals" class="dividerBorder">{{'report.teachersDetailLoad.studentGroups' | translate}}</th>
+        <th ng-repeat="column in periodCapacitiesRow track by $index"
+          ng-class="{dividerBorder: (column.substitutableEvents && !reportData.criteria.showSingleEvents) || column.singleEvent}">
+          <span ng-if="column.value">{{column.value.toUpperCase()}}</span>
+          <span ng-if="column.name">{{'report.teachersDetailLoad.' + column.name | translate}}</span>
+        </th>
+        <th ng-if="reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons" 
+          ng-repeat="c in reportData.teacherCapacities">{{c.value.toUpperCase()}}</th>
+        <th ng-if="reportData.criteria.byCapacities" ng-repeat="c in reportData.teacherCapacities">{{c.value.toUpperCase()}}</th>
+        <th ng-if="!reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">{{'report.teachersDetailLoad.study' | translate}}</th>
+        <th ng-if="reportData.criteria.byCapacities && entriesWithoutCapacity">?</th>
+        <th ng-if="!reportData.criteria.byCapacities">{{'report.teachersDetailLoad.study' | translate}}</th>
+        <th>{{'report.teachersDetailLoad.substitute' | translate}}</th>
+        <th ng-if="reportData.criteria.showSingleEvents">
+          {{'report.teachersDetailLoad.singleEvent' | translate}}</th>
+        <th class="dividerBorder">{{('report.teachersDetailLoad.total' | translate).toUpperCase()}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="row in content" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td ng-class="{dividerBorder: reportData.byTeachers}">
+          <a ng-if="reportData.byTeachers" ng-click="teacherJournalsDialog(row.teacher)">{{currentLanguageNameField(row.teacher)}}</a>
+          <span ng-if="reportData.byJournals">{{currentLanguageNameField(row.journal)}} {{row.journal.id}}</span>
+        </td>
+        <td ng-if="reportData.byJournals" class="dividerBorder" style="text-align: left;">
+          <div ng-repeat="group in row.studentGroups">{{group}}</div>
+        </td>
+        <td ng-repeat="column in periodCapacitiesRow track by $index" 
+          ng-class="{dividerBorder: (column.substitutableEvents && !reportData.criteria.showSingleEvents) || column.singleEvent}">
+          <span ng-if="reportData.criteria.byCapacities">
+            <span ng-if="column.plannedLessons">{{row.capacityPlannedHours[column.index][column.code] || ''}}</span>
+            <span ng-if="column.occurredLessons">{{row.capacityOccurredLessons[column.index][column.code] || ''}}</span>
+          </span>
+          <span ng-if="!reportData.criteria.byCapacities">
+            <span ng-if="column.plannedLessons">{{row.plannedHours[column.index] || ''}}</span>
+            <span ng-if="column.occurredLessons">{{row.occurredLessons[column.index] || ''}}</span>
+          </span>
+          <span ng-if="column.substitutableEvents">{{row.substitutedLessons[column.index] || ''}}</span>
+          <span ng-if="column.singleEvent">{{row.singleEvents[column.index] || ''}}</span>
+        </td>
+        <td ng-if="!reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">{{row.totalPlannedHours || ''}}</td>
+        <td ng-if="!reportData.criteria.byCapacities">{{row.totalOccurredLessons || ''}}</td>
+        <td ng-if="reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons" ng-repeat="c in reportData.teacherCapacities">
+          {{row.totalCapacityPlannedHours[c.code] || ''}}</td>
+        <td ng-if="reportData.criteria.byCapacities" ng-repeat="c in reportData.teacherCapacities">{{row.totalCapacityOccurredLessons[c.code] || ''}}</td>
+        <td ng-if="reportData.criteria.byCapacities && entriesWithoutCapacity">{{row.totalCapacityOccurredLessons['?'] || ''}}</td>
+        <td>{{row.totalSubstitutedLessons || ''}}</td>
+        <td ng-if="reportData.criteria.showSingleEvents">{{row.totalSingleEvents || ''}}</td>
+        <td class="dividerBorder">{{row.totalOccurredLessons + row.totalSubstitutedLessons + row.totalSingleEvents || ''}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

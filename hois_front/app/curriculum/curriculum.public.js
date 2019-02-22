@@ -35,5 +35,25 @@ function ($scope, Classifier, DataUtils, QueryUtils, $q, $route) {
   
   $scope.version = $route.current.locals.curriculumVersion;
   $scope.curriculum = $route.current.locals.curriculum;
+
+  $scope.years = [];
+  $scope.mappedSubjects = {};
+
+  $scope.version.$promise.then(function(response) {
+    $scope.years = [];
+    $scope.mappedSubjects = {};
+
+    response.modules.forEach(function (mod) {
+      for (var i = 0; i < mod.subjects.length; i++) {
+        if (mod.subjects[i].studyYearNumber !== null) {
+          if (!$scope.mappedSubjects[mod.subjects[i].studyYearNumber]) {
+            $scope.years.push(mod.subjects[i].studyYearNumber);
+            $scope.mappedSubjects[mod.subjects[i].studyYearNumber] = [];
+          }
+          $scope.mappedSubjects[mod.subjects[i].studyYearNumber].push(mod.subjects[i]);
+        }
+      }
+    });
+  });
 }]);
 

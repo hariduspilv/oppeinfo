@@ -77,19 +77,42 @@
         <label>{{'subject.additionalInfo' | translate}}</label>
         <hois-value value="subject.additionalInfo"></hois-value>
       </md-input-container>
-      <md-input-container>
-        <label>{{'subject.mandatoryPrerequisiteSubjects' | translate}}</label>
-        <hois-value ng-repeat="it in subject.mandatoryPrerequisiteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+(isPublic ? 'public/' : '')+it.id"></hois-value>
-      </md-input-container>
-      <md-input-container>
-        <label>{{'subject.recommendedPrerequisiteSubjects' | translate}}</label>
-        <hois-value ng-repeat="it in subject.recommendedPrerequisiteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+(isPublic ? 'public/' : '')+it.id"></hois-value>
-      </md-input-container>
-      <md-input-container>
-        <label>{{'subject.substituteSubjects' | translate}}</label>
-        <hois-value ng-repeat="it in subject.substituteSubjects" value="currentLanguageNameField(it)" href-value="'#/subject/'+(isPublic ? 'public/' : '')+it.id"></hois-value>
-      </md-input-container>
-      <br>
+      <div flex layout="column" ng-show="subject.mandatoryPrerequisiteSubjects.length > 0 || subject.recommendedPrerequisiteSubjects.length > 0 || subject.substituteSubjects.length > 0">
+        <fieldset tabindex="1">        
+          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subject.prerequisiteAndSubstituteSubjects' | translate}}</legend>
+          <div ng-show="subject.mandatoryPrerequisiteSubjects.length > 0">
+            <h3>{{'subject.mandatoryPrerequisiteSubjects' | translate}}</h3>
+            <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.mandatoryPrerequisiteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
+              <div layout="row" flex layout-align="start center">
+                <div flex="5">&nbsp;</div>
+                <div flex="50"><a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
+              </div>
+            </div>
+            <md-divider></md-divider>
+          </div>
+          <div ng-if="subject.recommendedPrerequisiteSubjects.length > 0">
+            <h3>{{'subject.recommendedPrerequisiteSubjects' | translate}}</h3>
+            <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.recommendedPrerequisiteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
+              <div layout="row" flex layout-align="start center">
+                <div flex="5">&nbsp;</div>
+                <div flex="50"><a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
+              </div>
+            </div>
+            <md-divider></md-divider>
+          </div>
+          <div ng-if="subject.substituteSubjects.length > 0">
+            <h3>{{'subject.substituteSubjects' | translate}}</h3>
+            <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.substituteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
+              <div layout="row" flex layout-align="start center">
+                <div flex="5">&nbsp;</div>
+                <div flex="50"><a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
+              </div>
+            </div>
+            <md-divider></md-divider>
+          </div>
+        </fieldset>
+        <div>&nbsp;</div>
+      </div>
       <md-input-container flex>
         <label>{{'subject.linkDepartment' | translate}}</label>
         <hois-value value="currentLanguageNameField(subject.schoolDepartment)"></hois-value>
@@ -106,14 +129,50 @@
         <label>{{'public.url' | translate}}</label>
         <input ng-model="publicUrl" type="text" readonly>
       </md-input-container>
-      <h3>{{'subject.subjectIsPrerequisite' | translate}}</h3>
-      <div ng-repeat="row in subject.primarySubjects | orderBy: currentLanguageNameField()">
-        <a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{row.id}}">{{currentLanguageNameField(row)}}</a>
+      <div flex ng-show="subject.primarySubjects.length > 0">
+        <fieldset tabindex="2">
+            <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subject.subjectIsPrerequisite' | translate}}</legend>
+          <div ng-repeat="row in subject.primarySubjects | orderBy: currentLanguageNameField()">
+            <a class="md-body-1" ng-href="#/subject{{isPublic ? '/public' : ''}}/{{row.id}}">{{currentLanguageNameField(row)}}</a>
+          </div>
+        </fieldset>
       </div>
-      <h3>{{'subject.belongsCurriculum' | translate}}</h3>
-      <div ng-repeat="row in subject.curriculumVersions | orderBy: currentLanguageNameField()">
-        <span>{{currentLanguageNameField(row)}}</span>
+      <div flex ng-show="subject.curriculumVersions.length > 0">
+        <div>&nbsp;</div>
+        <fieldset tabindex="3">
+          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subject.belongsCurriculum' | translate}}</legend>
+          <div ng-repeat="row in subject.curriculumVersions | orderBy: currentLanguageNameField()">
+            <span class="md-body-1">{{currentLanguageNameField(row) }}</span>
+          </div>
+        </fieldset>
       </div>
+      <div flex ng-if="subject.programs.length > 0">
+        <div>&nbsp;</div>
+        <fieldset tabindex="4">
+          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subject.subjectProgram.label' | translate}}</legend>
+          <div layout="column">
+            <md-table-container>
+              <table md-table class="secondary-table">
+                <thead md-head>
+                  <tr md-row>
+                    <th md-column>{{'subject.subjectProgram.teacher' | translate}}</th>
+                    <th md-column>{{'subject.subjectProgram.studyPeriod' | translate}}</th>
+                    <th md-column ng-if="!isPublic && (auth.isAdmin() || auth.isTeacher())">{{'subject.subjectProgram.status' | translate}}</th>
+                  </tr>
+                </thead>
+                <tbody md-body>
+                  <tr md-row ng-repeat="program in subject.programs">
+                    <td md-cell><a href="#/subjectProgram/{{::(isPublic || !(auth.isAdmin() || auth.isTeacher())  ? 'public' : 'periods')}}/{{::program.id}}/view">{{program.teacherName}}</a></td>
+                    <td md-cell><a href="#/subjectProgram/{{::(isPublic || !(auth.isAdmin() || auth.isTeacher()) ? 'public' : 'periods')}}/{{::program.id}}/view">{{currentLanguageNameField(program.studyPeriod)}}</a></td>
+                    <td md-cell ng-if="!isPublic && (auth.isAdmin() || auth.isTeacher())"><hois-classifier-value ng-model="program.status" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value></td>
+                  </tr>
+                </tbody>
+              </table>
+            </md-table-container>
+          </div>
+        </fieldset>
+      </div>
+      <div>&nbsp;</div>
       <hois-created-modified object="subject"></hois-created-modified>
       <div layout="row">
         <md-button ng-if="subject.canEdit" ng-href="#/subject/{{subject.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>

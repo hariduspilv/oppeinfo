@@ -1420,4 +1420,60 @@ angular.module('hitsaOis')
       }).$promise;
     };
 
+    /**
+     * Default comparator from orderBy.js
+     * 
+     * @param {Object} v1 
+     * @param {Object} v2 
+     */
+    function defaultCompare(v1, v2) {
+      var result = 0;
+      var type1 = v1.type;
+      var type2 = v2.type;
+  
+      if (type1 === type2) {
+        var value1 = v1.value;
+        var value2 = v2.value;
+  
+        if (type1 === 'string') {
+          // Compare strings case-insensitively
+          value1 = value1.toLowerCase();
+          value2 = value2.toLowerCase();
+        } else if (type1 === 'object') {
+          // For basic objects, use the position of the object
+          // in the collection instead of the value
+          if (angular.isObject(value1)) {
+            value1 = v1.index;
+          }
+          if (angular.isObject(value2)) {
+            value2 = v2.index;
+          }
+        }
+  
+        if (value1 !== value2) {
+          result = value1 < value2 ? -1 : 1;
+        }
+      } else {
+        result = (type1 === 'undefined') ? 1 :
+          (type2 === 'undefined') ? -1 :
+          (type1 === 'null') ? 1 :
+          (type2 === 'null') ? -1 :
+          (type1 < type2) ? -1 : 1;
+      }
+  
+      return result;
+    }
+
+    $scope.compareUsingLanguage = function (o1, o2) {
+      if (angular.isObject(o1) && angular.isObject(o2)) {
+        var nameOb1 = $scope.currentLanguageNameField(o1.value);
+        var nameOb2 = $scope.currentLanguageNameField(o2.value);
+        if (!nameOb1 && !nameOb2) {
+          return defaultCompare(o1, o2);
+        }
+        return defaultCompare({type: typeof nameOb1, value: nameOb1, index: o1.index}, {type: typeof nameOb2, value: nameOb2, index: o2.index});
+      }
+      return defaultCompare(o1, o2);
+    };
+
   });

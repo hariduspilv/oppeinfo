@@ -1,9 +1,10 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-    <div layout="column">
-      <div layout="row" flex="100" flex-sm="100" flex-xs="100">
-        {{scholarshipType === 'scholarships' ? 'stipend.annul.stipendStudentList' : 'stipend.annul.grantStudentList' | translate}}
-      </div>
+  <div layout="column">
+    <div layout="row" flex="100" flex-sm="100" flex-xs="100">
+      {{scholarshipType === 'scholarships' ? 'stipend.annul.stipendStudentList' : 'stipend.annul.grantStudentList' | translate}}
     </div>
+  </div>
+  <form name="annulForm">
     <table md-table class="secondary-table">
       <thead md-head>
         <tr md-row>
@@ -18,7 +19,9 @@
           <td md-cell>{{rejection.fullName}}</td>
           <td md-cell>{{rejection.idCode}}</td>
           <td md-cell>
-            <div flex><input flex type="text" ng-model="rejection.rejectComment" style="width: 100%" autofocus maxlength="100"></div>
+            <md-input-container flex>
+              <input flex type="text" ng-model="rejection.rejectComment" style="width: 100%" autofocus md-maxlength="100">
+            </md-input-container>
           </td>
           <td md-cell>
             <md-button class="remove nomargin" ng-click="removeFromArray(rejections, rejection)">&times;</md-button>
@@ -26,9 +29,10 @@
         </tr>
       </tbody>
     </table>
-    <div layout="row" ng-if="rejections.length > 0">
-      <md-button class="md-raised md-primary" ng-click="annul()">{{'main.button.annul' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="back('#/scholarships/applications/' + scholarshipType)">{{'main.button.back' | translate}}</md-button>
-    </div>
+  </form>
+  <div layout="row">
+    <md-button class="md-raised md-primary" ng-if="rejections.length > 0" ng-click="annul()">{{'main.button.annul' | translate}}</md-button>
+    <md-button class="md-raised" ng-click="back('#/scholarships/applications/' + scholarshipType)">{{'main.button.back' | translate}}</md-button>
   </div>
+</div>
   

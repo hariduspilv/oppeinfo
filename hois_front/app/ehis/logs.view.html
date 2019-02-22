@@ -37,6 +37,7 @@
 
             <div flex="35" ng-if="!criteria.messageType || messageTypesWithTeacher.indexOf(criteria.messageType) !== -1">
               <hois-autocomplete label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}" ng-model="criteria.teacher"
+              ha-attribute="id" ha-controller="directiveControllers"
                 method="teachers"></hois-autocomplete>
             </div>
           </div>

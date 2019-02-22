@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,6 +33,7 @@ import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.PracticeJournalForm;
+import ee.hitsa.ois.web.commandobject.PracticeJournalModuleSubjectForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.PracticeJournalDto;
 import ee.hitsa.ois.web.dto.PracticeJournalSearchDto;
@@ -120,7 +122,7 @@ public class PracticeJournalControllerTests {
 
         // update
         form.setVersion(responseEntity.getBody().getVersion());
-        form.setCredits(BigDecimal.TEN);
+        form.getModuleSubjects().get(0).setCredits(BigDecimal.TEN);
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(practiceJournal.getId().toString());
         responseEntity = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.PUT, new HttpEntity<>(form),
                 PracticeJournalDto.class);
@@ -172,9 +174,13 @@ public class PracticeJournalControllerTests {
     private PracticeJournalForm createForm() {
         PracticeJournalForm form = new PracticeJournalForm();
         form.setStudent(AutocompleteResult.of(student));
-        form.setModule(curriculumVersionOccupationModuleId());
-        form.setCredits(BigDecimal.ONE);
-        form.setHours(Short.valueOf((short) 1));
+        PracticeJournalModuleSubjectForm moduleSubject = new PracticeJournalModuleSubjectForm();
+        moduleSubject.setModule(curriculumVersionOccupationModuleId());
+        moduleSubject.setCredits(BigDecimal.ONE);
+        moduleSubject.setHours(Short.valueOf((short) 1));
+        List<PracticeJournalModuleSubjectForm> moduleSubjects = new ArrayList<>();
+        moduleSubjects.add(moduleSubject);
+        form.setModuleSubjects(moduleSubjects);
         form.setStartDate(LocalDate.now());
         form.setEndDate(LocalDate.now().plusDays(1));
         form.setPracticePlace("place");

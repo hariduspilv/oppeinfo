@@ -28,6 +28,12 @@ public class CurriculumVersionHigherModuleSubject extends BaseEntityWithId {
     @JoinColumn(name = "curriculum_version_elective_module_id")
     private CurriculumVersionElectiveModule electiveModule;
 
+    private Short studyYearNumber;
+    @Column(name="is_autumn")
+    private Boolean autumn;
+    @Column(name="is_spring")
+    private Boolean spring;
+
     public CurriculumVersionElectiveModule getElectiveModule() {
         return electiveModule;
     }
@@ -58,5 +64,29 @@ public class CurriculumVersionHigherModuleSubject extends BaseEntityWithId {
 
     public void setModule(CurriculumVersionHigherModule module) {
         this.module = module;
+    }
+
+    public Short getStudyYearNumber() {
+        return studyYearNumber;
+    }
+
+    public void setStudyYearNumber(Short studyYearNumber) {
+        this.studyYearNumber = studyYearNumber;
+    }
+
+    public Boolean getAutumn() {
+        return autumn;
+    }
+
+    public void setAutumn(Boolean autumn) {
+        this.autumn = autumn;
+    }
+
+    public Boolean getSpring() {
+        return spring;
+    }
+
+    public void setSpring(Boolean spring) {
+        this.spring = spring;
     }
 }

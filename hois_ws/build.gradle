@@ -70,7 +70,8 @@ wsdl2java {
                 ['-bareMethods', '-b', 'src/main/resources/wsdl/kutseregister/bindings.xml', '-p', 'ee.hois.xroad.kutseregister.generated', 'src/main/resources/wsdl/kutseregister/kutseregister.wsdl'],
                 ['-bareMethods', '-b', 'src/main/resources/wsdl/sais/sais3wsdlbindingfile.xml', '-p', 'ee.hois.xroad.sais2.generated', 'src/main/resources/wsdl/sais/sais3.wsdl'],
                 ['-bareMethods', '-b', 'src/main/resources/wsdl/rtip/bindings.xml', '-p', 'ee.hois.xroad.rtip.generated', 'src/main/resources/wsdl/rtip/rtip.wsdl'],
-                ['-bareMethods', '-p', 'ee.hois.soap.dds.generated', 'src/main/resources/wsdl/dds/dds_literal.wsdl']
+                ['-bareMethods', '-p', 'ee.hois.soap.dds.generated', 'src/main/resources/wsdl/dds/dds_literal.wsdl'],
+                ['-bareMethods', '-p', 'ee.hois.xroad.ariregister.generated', 'src/main/resources/wsdl/ariregister/ariregister.wsdl']
    ]
 }
 

@@ -14,7 +14,7 @@
         </md-input-container>
         <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
         ng-if="auth.isTeacher()">
-          <hois-autocomplete ng-model="criteria.studentObject" method="students" name="student"
+          <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.studentObject" method="students" name="student"
             label="student.label"></hois-autocomplete>
         </div>
       </div>
@@ -25,7 +25,7 @@
         </md-input-container>
         <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
         ng-if="auth.isAdmin()">
-          <hois-autocomplete ng-model="criteria.studentObject" method="students" name="student"
+          <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.studentObject" method="students" name="student"
             label="student.label"></hois-autocomplete>
         </div>
         <md-input-container flex-gt-sm="50" flex="100" flex-offset-gt-sm="5" ng-if="auth.isTeacher()">
@@ -78,9 +78,9 @@
                 <md-button md-no-ink class="md-primary change-button" ng-if="row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_L'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
                   ng-href="#/subjectProgram/{{::row.subject.id}}/{{::row.id}}/periods/new">{{'main.button.create' | translate}}</md-button>
                 <md-button md-no-ink class="md-primary change-button" ng-if="row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_I'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
-                    ng-href="#/subjectProgram/{{::row.subject.id}}/{{::row.id}}/periods/{{::row.subjectProgramId}}/edit">{{'main.button.change' | translate}}</md-button>
+                    ng-href="#/subjectProgram/periods/{{::row.subjectProgramId}}/edit">{{'main.button.change' | translate}}</md-button>
                 <md-button md-no-ink class="md-primary change-button" ng-if="row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_V' || row.subjectProgramStatus === 'AINEPROGRAMM_STAATUS_K'" style="padding:0 !important; margin: 0 !important; min-width: 0 !important"
-                  ng-href="#/subjectProgram/{{::row.subject.id}}/{{::row.id}}/periods/{{::row.subjectProgramId}}/view">{{'main.button.view' | translate}}</md-button>
+                  ng-href="#/subjectProgram/periods/{{::row.subjectProgramId}}/view">{{'main.button.view' | translate}}</md-button>
               </div>
             </td>
             <td md-cell>

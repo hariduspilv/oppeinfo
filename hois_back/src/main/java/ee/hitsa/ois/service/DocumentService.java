@@ -98,6 +98,8 @@ public class DocumentService {
     private static final int FREE_FORM_COUNT = 4;
     private static final String PROFESSIONAL_DIPLOMA_STUDY_LEVEL = "OPPEASTE_514";
     private static final String PROFESSIONAL_DIPLOMA_KEY = "diploma.qualification.name.professional";
+    private static final String EXAM_OCCUPATION_KEY = "diploma.exam.occupation";
+    private static final String EXAM_PARTOCCUPATION_KEY = "diploma.exam.partoccupation";
 
     @Autowired
     private EntityManager em;
@@ -898,7 +900,8 @@ public class DocumentService {
         List<?> result = em.createNativeQuery("SELECT sv.module_name_et,sv.module_name_en,sv.credits,sv.grade,lower(clf.name_et) as grade_name_et,lower(clf.name_en) as grade_name_en,sv.teachers,"
                 + " case when (select count (*) from apel_application_formal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id and not aaf.is_my_school) > 0 then true else false end as is_apel_formal,"
                 + " case when (select count (*) from apel_application_informal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id) > 0 then true else false end as is_apel_informal,"
-                + " aps.name_et,aps.name_en,case when pp.is_final=true then true else false end as is_final"
+                + " aps.name_et,aps.name_en,case when pp.is_final=true then true else false end as is_final,"
+                + " occup.name_et as occup_name_et, partoccup.name_et as partoccup_name_et, speciality.name_et as speciality_name_et"
                 + " from student_vocational_result sv"
                 + " join ("
                 + " select coalesce(svm.curriculum_version_omodule_id,sv.curriculum_version_omodule_id) as curriculum_version_omodule_id, "
@@ -919,6 +922,10 @@ public class DocumentService {
                 + " join classifier clf on clf.code=sv.grade_code"
                 + " left join apel_school aps on sv.apel_school_id=aps.id"
                 + " left join (protocol_student ps join protocol pp on ps.protocol_id=pp.id)  on ps.id=sv.protocol_student_id"
+                + " left join (protocol_student_occupation pso join student_occupation_certificate soc on pso.student_occupation_certificate_id = soc.id) on pso.protocol_student_id = ps.id"
+                + " left join classifier occup on occup.code = soc.occupation_code"
+                + " left join classifier partoccup on partoccup.code = soc.part_occupation_code"
+                + " left join classifier speciality on speciality.code = soc.speciality_code"
                 + " order by case coalesce(x.md,'KUTSEMOODUL_V') when 'KUTSEMOODUL_P' then 1  when 'KUTSEMOODUL_Y' then 2  when 'KUTSEMOODUL_V' then 3  when 'KUTSEMOODUL_L' then 4 else 3 end, "
                 + " upper(sv.module_name_et), sv.grade_date asc")
                 .setParameter(1, studentId)
@@ -943,7 +950,27 @@ public class DocumentService {
             studyResult.setIsApelInformal(resultAsBoolean(r, 8));
             studyResult.setApelSchoolNameEt(resultAsString(r, 9));
             studyResult.setApelSchoolNameEn(resultAsString(r, 10));
-            studyResult.setIsFinal(resultAsBoolean(r, 11));
+            Boolean isFinal = resultAsBoolean(r, 11);
+            studyResult.setIsFinal(isFinal);
+            if (Boolean.TRUE.equals(isFinal)) {
+                String occupation = resultAsString(r, 12);
+                String partoccupation = resultAsString(r, 13);
+                StringBuilder nameBuilder = new StringBuilder();
+                if (!StringUtils.isEmpty(partoccupation)) {
+                    nameBuilder.append(TranslateUtil.translate(EXAM_PARTOCCUPATION_KEY, Language.ET))
+                        .append(" - ").append(partoccupation);
+                } else if (!StringUtils.isEmpty(occupation)) {
+                    nameBuilder.append(TranslateUtil.translate(EXAM_OCCUPATION_KEY, Language.ET))
+                        .append(" - ").append(occupation);
+                }
+                if (nameBuilder.length() != 0) {
+                    String speciality = resultAsString(r, 14);
+                    if (!StringUtils.isEmpty(speciality)) {
+                        nameBuilder.append(", ").append(speciality);
+                    }
+                    studyResult.setNameEt(nameBuilder.toString());
+                }
+            }
             return studyResult;
         }, result));
     }

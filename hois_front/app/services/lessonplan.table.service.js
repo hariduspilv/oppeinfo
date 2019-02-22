@@ -35,6 +35,10 @@ angular.module('hitsaOis')
     var CROSS = 'cross';
     var DIVIDER = 'dividerBorder';
     var FIX = 'fix';
+    var TEACHER_STUDY_LOAD = 'lessonplan-teacher-load';
+    var TEACHER_LOAD_LABEL = 'lessonplan-teacher-load-label';
+    var TEACHER_CAPACITIES = 'material-icons pointer';
+    var TOTAL_ROW = 'lessonplan-total-row';
 
     lessonPlanTableService.generateLessonPlan = function (scope) {
       var table = document.getElementById("lessonplan-table-body");
@@ -42,6 +46,7 @@ angular.module('hitsaOis')
 
       //table.appendChild(tableHeader(scope));
 
+      var journalDialogFunctions = [];
       for (var moduleIndex = 0; moduleIndex < scope.record.modules.length; moduleIndex++) {
         var module = scope.record.modules[moduleIndex];
         table.appendChild(moduleRow(scope, module, moduleIndex));
@@ -50,6 +55,10 @@ angular.module('hitsaOis')
         for (var journalIndex = 0; journalIndex < module.journals.length; journalIndex++) {
           var journal = module.journals[journalIndex];
           table.appendChild(journalRow(scope, journal));
+
+          if (journal.teachers.length === 1) {
+            table.appendChild(teachersStudyLoadRow(scope, journal.teachers[0].teacher.id));
+          }
 
           var capacityTypes = getCapacityTypes(scope.formState.capacityTypes, journal.hours);
           for (var ctIndex = 0; ctIndex < capacityTypes.length; ctIndex++) {
@@ -62,13 +71,12 @@ angular.module('hitsaOis')
               journalInfoColumn.className = FIX;
               journalInfoColumn.rowSpan = Object.keys(capacityTypes).length + 1;
 
+              var journalInfoColumnDiv = document.createElement('div');
+              journalInfoColumnDiv.setAttribute('layout', 'row');
+              journalInfoColumnDiv.setAttribute('layout-align', 'space-between stretch');
+
               var journalInfoDiv = document.createElement('div');
-              journalInfoDiv.className = 'layout-column';
-
-              var teachersGroupsEditDiv = document.createElement('div');
-
               var teachersGroupsSpan = document.createElement('span');
-              teachersGroupsSpan.style = 'float: left';
               for (var sgIndex = 0; sgIndex < journal.studentGroups.length; sgIndex++) {
                 var studentGroupCode = journal.studentGroups[sgIndex];
                 if (scope.record.studentGroupCode !== studentGroupCode) {
@@ -92,31 +100,43 @@ angular.module('hitsaOis')
                 teacherDiv.innerHTML = teacher.teacher.nameEt;
                 teachersGroupsSpan.appendChild(teacherDiv);
               }
-              teachersGroupsEditDiv.appendChild(teachersGroupsSpan);
-
-              var editJournalSpan = document.createElement('span');
-              editJournalSpan.style = 'float: right';
-              var editJournalLink = document.createElement('a');
-              editJournalLink.className = BUTTON;
-              editJournalLink.innerHTML = $translate.instant('main.button.change');
-              editJournalLink.href = editJournalUrl(journal);
-              editJournalSpan.appendChild(editJournalLink);
-
-              teachersGroupsEditDiv.appendChild(editJournalSpan);
-
-              journalInfoDiv.appendChild(teachersGroupsEditDiv);
-              journalInfoColumn.appendChild(journalInfoDiv);
-
-              journalInfoColumn.appendChild(document.createElement('br'));
-
+              journalInfoDiv.appendChild(teachersGroupsSpan);
+              
               if (journal.groupProportion.code !== 'PAEVIK_GRUPI_JAOTUS_1') {
+                journalInfoDiv.appendChild(document.createElement('br'));
+
                 var groupProportionDiv = document.createElement('div');
                 groupProportionDiv.className = 'layout-row';
                 groupProportionDiv.innerHTML = $translate.instant('lessonplan.journal.groupProportion') + '&nbsp;' +
                   scope.currentLanguageNameField(journal.groupProportion);
-                journalInfoColumn.appendChild(groupProportionDiv);
+                journalInfoDiv.appendChild(groupProportionDiv);
+              }
+              journalInfoColumnDiv.appendChild(journalInfoDiv);
+
+              var journalButtonsDiv = document.createElement('div');
+              journalButtonsDiv.setAttribute('layout', 'column');
+              journalButtonsDiv.setAttribute('layout-align', 'space-around center');
+
+              if (journal.teachers.length > 1) {
+                var journalTeacherCapacitySpan = document.createElement('i');
+                journalTeacherCapacitySpan.className = TEACHER_CAPACITIES;
+                journalTeacherCapacitySpan.innerHTML = '*';
+                journalTeacherCapacitySpan.title = $translate.instant('lessonplan.teacherSpecificLoads');
+
+                journalDialogFunctions[journal.id] = scope.teacherCapacities.bind(this, journal);
+                journalTeacherCapacitySpan.addEventListener('click', journalDialogFunctions[journal.id]);
+
+                journalButtonsDiv.appendChild(journalTeacherCapacitySpan);
               }
 
+              var editJournalLink = document.createElement('a');
+              editJournalLink.className = BUTTON;
+              editJournalLink.innerHTML = $translate.instant('main.button.change');
+              editJournalLink.href = editJournalUrl(journal);
+              journalButtonsDiv.appendChild(editJournalLink);
+
+              journalInfoColumnDiv.appendChild(journalButtonsDiv);
+              journalInfoColumn.appendChild(journalInfoColumnDiv);
               ctRow.appendChild(journalInfoColumn);
             }
 
@@ -207,6 +227,18 @@ angular.module('hitsaOis')
       return getLegendByWeek(scope, weekNr);
     };
 
+    lessonPlanTableService.getCapacityTypes = function (capacityTypes, hours) {
+      return getCapacityTypes(capacityTypes, hours);
+    };
+
+    lessonPlanTableService.getTeacherStudyLoad = function (teachers, teacherId) {
+      return getTeacherStudyLoad(teachers, teacherId);
+    };
+
+    lessonPlanTableService.getTeacherLoad = function (studyPeriods, teachers, teacherId) {
+      return getTeacherLoad(studyPeriods, teachers, teacherId);
+    };
+
     function getUniqueJournalThemes(themes) {
       return themes.filter(function (obj, index, themes) {
         return themes.map(function (mapObj) {
@@ -225,6 +257,12 @@ angular.module('hitsaOis')
 
     function getLegendByWeek(scope, weekNr) {
       return scope.formState.legends[weekNr];
+    }
+
+    function getTeacherStudyLoad(teachers, teacherId) {
+      return teachers.filter(function (teacher) {
+        return teacher.id === teacherId;
+      })[0];
     }
 
     function newJournalUrl(lessonPlanId, module) {
@@ -446,6 +484,43 @@ angular.module('hitsaOis')
       return row;
     }
 
+    function teachersStudyLoadRow(scope, teacherId) {
+      var teacher = getTeacherStudyLoad(scope.record.teachers, teacherId);
+      var studyLoadRow = document.createElement('tr');
+      studyLoadRow.appendChild(document.createElement('td'));
+
+      var loadLabelColumn = document.createElement('td');
+      loadLabelColumn.colSpan = 2;
+      loadLabelColumn.classList.add(TEACHER_LOAD_LABEL);
+      loadLabelColumn.classList.add(FIX);
+      loadLabelColumn.classList.add(DIVIDER);
+      loadLabelColumn.innerHTML = $translate.instant('lessonplan.load') + ' ' + totalColumnValue(teacher.plannedLessons);
+      studyLoadRow.appendChild(loadLabelColumn);
+
+      if (scope.formState.showWeeks) {
+        for (var weekIndex = 0; weekIndex < scope.formState.weekNrs.length; weekIndex++) {
+          var week = scope.formState.weekNrs[weekIndex];
+          if (week.show) {
+            var loadByWeek = teacher.studyLoadByWeek ? teacher.studyLoadByWeek[weekIndex] : null;
+            var wTotalColumn = weekTotalColumn(null, loadByWeek, week);
+            wTotalColumn.classList.add(TEACHER_STUDY_LOAD);
+            studyLoadRow.appendChild(wTotalColumn);
+          }
+        }
+      } else {
+        for (var spIndex = 0; spIndex < scope.formState.studyPeriods.length; spIndex++) {
+          var studyPeriod = scope.formState.studyPeriods[spIndex];
+          if (studyPeriod._selected) {
+            var loadByPeriod = teacher.studyLoadByPeriod ? teacher.studyLoadByPeriod[spIndex] : null;
+            var spTotalColumn = studyPeriodTotalColumn(null, loadByPeriod, studyPeriod);
+            spTotalColumn.classList.add(TEACHER_STUDY_LOAD);
+            studyLoadRow.appendChild(spTotalColumn);
+          }
+        }
+      }
+      return studyLoadRow;
+    }
+
     function addModuleTotalRows(scope, table, module, moduleIndex) {
       // capacity totals
       var capacityTypes = getCapacityTypes(scope.formState.capacityTypes, scope.formState.moduleTotals[module.id]);
@@ -466,7 +541,7 @@ angular.module('hitsaOis')
         moduleCtTotalRow.appendChild(capacityTypeValueColumn(capacityType));
 
         var capacityTotalId = MODULE_CAPACITY_TOTAL + SEPARATOR + moduleIndex + SEPARATOR + capacityType.code;
-        var capacityTotalValue = totalColumnValue(scope.formState.moduleTotals[module.id].__);
+        var capacityTotalValue = totalColumnValue(scope.formState.moduleTotals[module.id]._[capacityType.code]);
         moduleCtTotalRow.appendChild(totalColumn(capacityTotalId, capacityTotalValue));
 
         if (!scope.atLeastOneShownPeriod) {
@@ -553,8 +628,8 @@ angular.module('hitsaOis')
         var capacityType = totalCapacityTypes[ctIndex];
 
         var totalCtRow = document.createElement('tr');
-        totalCtRow.style = 'background: rgb(238, 238, 238)';
-        totalCtRow.className = FIX;
+        totalCtRow.classList.add(FIX);
+        totalCtRow.classList.add(TOTAL_ROW);
 
         if (ctIndex === 0) {
           var totalsStringColumn = document.createElement('td');
@@ -601,8 +676,8 @@ angular.module('hitsaOis')
 
     function grandTotalRow(scope) {
       var row = document.createElement('tr');
-      row.style = 'background: rgb(238, 238, 238)';
-      row.className = FIX;
+      row.classList.add(FIX);
+      row.classList.add(TOTAL_ROW);
 
       var totalsStringColumn = document.createElement('td');
       totalsStringColumn.className = FIX;
@@ -665,6 +740,7 @@ angular.module('hitsaOis')
 
         var isValidInput = this.value === '' || isPositiveWholeNumber(this.value);
         input.style = isValidInput ? null : 'border: 1px solid rgb(221,44,0);';
+        input.classList.add(CENTER); 
         journal.hours[capacityCode][weekIndex] = isValidInput ? this.value : null;
         scope.updateTotals(journal, capacityCode, weekIndex);
 
@@ -726,7 +802,7 @@ angular.module('hitsaOis')
         var grandCapacityPeriodTotal = document.getElementById(GRAND_CAPACITY_PERIOD_TOTAL + SEPARATOR + capacityCode + SEPARATOR + spIndex);
         grandCapacityPeriodTotal.innerHTML = totalColumnValue(scope.formState.capGrandTotalsSp[capacityCode][spIndex]);
 
-        var grandPeriodTotal = document.getElementById(GRAND_PERIOD_TOTAL + SEPARATOR + spIndex)[0];
+        var grandPeriodTotal = document.getElementById(GRAND_PERIOD_TOTAL + SEPARATOR + spIndex);
         grandPeriodTotal.innerHTML = totalColumnValue(scope.formState.grandTotalsSp[spIndex]);
 
         changeTotalsIrrespectiveOfChosenPeriod(scope, module, journal, moduleIndex, journalIndex, capacityCode);
@@ -810,7 +886,7 @@ angular.module('hitsaOis')
       return column;
     }
 
-    function weekTotalColumn(id, value, week) {
+    function weekTotalColumn(id, value, week, fontColor) {
       var totalHourColumn = document.createElement('td');
       totalHourColumn.id = id;
       totalHourColumn.innerHTML = value;
@@ -818,17 +894,18 @@ angular.module('hitsaOis')
       if (week.endOfPeriod) {
         totalHourColumn.classList.add(DIVIDER);
       }
+      totalHourColumn.style.color = fontColor;
       return totalHourColumn;
     }
 
-    function studyPeriodTotalColumn(id, value, studyPeriod) {
+    function studyPeriodTotalColumn(id, value, studyPeriod, fontColor) {
       var totalHourColumn = document.createElement('td');
       totalHourColumn.id = id;
       totalHourColumn.innerHTML = value;
       totalHourColumn.colSpan = studyPeriod.weekNrs.length;
       totalHourColumn.classList.add(CENTER);
       totalHourColumn.classList.add(DIVIDER);
-
+      totalHourColumn.style.color = fontColor;
       return totalHourColumn;
     }
 

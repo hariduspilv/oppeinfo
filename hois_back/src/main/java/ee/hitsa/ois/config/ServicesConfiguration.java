@@ -14,6 +14,7 @@ import ee.hitsa.ois.services.EkisSoapService;
 import ee.hois.moodle.MoodleClient;
 import ee.hois.soap.dds.service.DigiDocServiceClient;
 import ee.hois.soap.ekis.client.EkisClient;
+import ee.hois.xroad.ariregister.service.AriregisterClient;
 import ee.hois.xroad.ehis.service.EhisClient;
 import ee.hois.xroad.handler.CustomValidationEventHandler;
 import ee.hois.xroad.kutseregister.service.KutseregisterClient;
@@ -124,5 +125,13 @@ public class ServicesConfiguration {
     @Bean
     public MoodleClient moodleClient() {
         return new MoodleClient();
+    }
+    
+    /**
+     * Ariregister client
+     */
+    @Bean
+    public AriregisterClient ariregisterClient() {
+        return new AriregisterClient();
     }
 }

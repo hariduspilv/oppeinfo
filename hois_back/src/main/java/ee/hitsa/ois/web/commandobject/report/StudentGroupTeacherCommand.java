@@ -6,13 +6,14 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 public class StudentGroupTeacherCommand {
-    
+
     private Long studyYear;
     private Long studyPeriod;
     private LocalDate studyPeriodStart;
     private LocalDate studyPeriodEnd;
     @NotNull
     private Long studentGroup;
+    private Long student;
     private Long curriculumVersion;
     private LocalDate from;
     private LocalDate thru;
@@ -20,23 +21,23 @@ public class StudentGroupTeacherCommand {
     private Boolean moduleGrade;
     private Boolean absencesPerJournals;
     private Boolean journalsWithEntries;
-    
+
     public Long getStudyYear() {
         return studyYear;
     }
-    
+
     public void setStudyYear(Long studyYear) {
         this.studyYear = studyYear;
     }
-    
+
     public Long getStudyPeriod() {
         return studyPeriod;
     }
-    
+
     public void setStudyPeriod(Long studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
-    
+
     public LocalDate getStudyPeriodStart() {
         return studyPeriodStart;
     }
@@ -56,11 +57,19 @@ public class StudentGroupTeacherCommand {
     public Long getStudentGroup() {
         return studentGroup;
     }
-    
+
     public void setStudentGroup(Long studentGroup) {
         this.studentGroup = studentGroup;
     }
-    
+
+    public Long getStudent() {
+        return student;
+    }
+
+    public void setStudent(Long student) {
+        this.student = student;
+    }
+
     public Long getCurriculumVersion() {
         return curriculumVersion;
     }
@@ -116,5 +125,5 @@ public class StudentGroupTeacherCommand {
     public void setJournalsWithEntries(Boolean journalsWithEntries) {
         this.journalsWithEntries = journalsWithEntries;
     }
-    
+
 }

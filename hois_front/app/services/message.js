@@ -2,8 +2,18 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('message', function($mdToast, $translate) {
+  .factory('message', function($mdToast, $translate, $rootScope) {
     var factory = {};
+
+    function translateParam(param) {
+      if (typeof param === 'object') {
+        var translatedValue = $rootScope.currentLanguageNameField(param);
+        if (translatedValue) {
+          return translatedValue;
+        }
+      }
+      return param;
+    }
 
     function showMessage(message, toastClass) {
       $mdToast.show(
@@ -16,7 +26,11 @@ angular.module('hitsaOis')
     }
 
     function showTranslatedMessage(messageText, toastClass, params) {
-      $translate(messageText, params).then(function(message) {
+      var translatedParams = {};
+      for (var key in params) {
+        translatedParams[key] = translateParam(params[key]);
+      }
+      $translate(messageText, translatedParams).then(function(message) {
           showMessage(message, toastClass);
         })
         .catch(function() {

@@ -9,7 +9,10 @@ import java.util.stream.Collectors;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.SubjectConnect;
+import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.SubjectConnection;
+import ee.hitsa.ois.enums.SubjectProgramStatus;
+import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -45,23 +48,39 @@ public class SubjectDto extends SubjectForm {
     private String changedBy;
 
     private Set<CurriculumVersionResult> curriculumVersions;
-
+    
+    private Set<AutocompleteResult> programs;
+    
+    public static SubjectDto forPublic(Subject subject, List<CurriculumVersion> curriculumVersions) {
+        return SubjectDto.of(subject, curriculumVersions, true);
+    }
+    
     public static SubjectDto of(Subject subject, List<CurriculumVersion> curriculumVersions) {
+        return SubjectDto.of(subject, curriculumVersions, false);
+    }
+
+    private static SubjectDto of(Subject subject, List<CurriculumVersion> curriculumVersions, boolean isPublic) {
         SubjectDto dto = EntityUtil.bindToDto(subject, new SubjectDto(), "languages", "curriculumVersions");
         dto.setLanguages(StreamUtil.toMappedSet(r -> EntityUtil.getCode(r.getLanguage()), subject.getSubjectLanguages()));
-        dto.setCurriculumVersions(StreamUtil.toMappedSet(AutocompleteResult::of, curriculumVersions));
+        dto.setCurriculumVersions(StreamUtil.nullSafeList(curriculumVersions).stream()
+            .filter(cv -> !isPublic || ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K, cv.getStatus()))
+            .map(AutocompleteResult::of).collect(Collectors.toSet()));
 
         dto.setPrimarySubjects(
-                StreamUtil.nullSafeSet(subject.getParentConnections()).stream()
-                        .filter(it -> ClassifierUtil.equals(SubjectConnection.AINESEOS_EK, it.getConnection()))
-                        .map(it -> AutocompleteResult.of(it.getPrimarySubject()))
-                        .collect(Collectors.toSet()));
+            StreamUtil.nullSafeSet(subject.getParentConnections()).stream()
+                .filter(it -> ClassifierUtil.equals(SubjectConnection.AINESEOS_EK, it.getConnection()))
+                .filter(it -> !isPublic || ClassifierUtil.equals(SubjectStatus.AINESTAATUS_K, it.getPrimarySubject().getStatus()))
+                .map(it -> AutocompleteResult.of(it.getPrimarySubject()))
+                .collect(Collectors.toSet()));
 
         Set<EntityConnectionCommand> mandatoryPrerequisiteSubjects = new HashSet<>();
         Set<EntityConnectionCommand> recommendedPrerequisiteSubjects = new HashSet<>();
         Set<EntityConnectionCommand> substituteSubjects = new HashSet<>();
 
         for (SubjectConnect connection: subject.getSubjectConnections()) {
+            if (isPublic && !ClassifierUtil.equals(SubjectStatus.AINESTAATUS_K, connection.getConnectSubject().getStatus())) {
+                continue;
+            }
             AutocompleteResult s = AutocompleteResult.of(connection.getConnectSubject());
             String connectionCode = EntityUtil.getCode(connection.getConnection());
             if (SubjectConnection.AINESEOS_EK.name().equals(connectionCode)) {
@@ -77,6 +96,11 @@ public class SubjectDto extends SubjectForm {
         dto.setMandatoryPrerequisiteSubjects(mandatoryPrerequisiteSubjects);
         dto.setRecommendedPrerequisiteSubjects(recommendedPrerequisiteSubjects);
         dto.setSubstituteSubjects(substituteSubjects);
+        dto.setPrograms(StreamUtil.nullSafeSet(subject.getSubjectStudyPeriods()).stream()
+                .flatMap(peroid -> peroid.getTeachers().stream())
+                .flatMap(teacher -> teacher.getSubjectPrograms().stream())
+                .filter(p -> !isPublic || ClassifierUtil.equals(SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, p.getStatus()))
+                .map(AutocompleteResult::of).collect(Collectors.toSet()));
 
         return dto;
     }
@@ -167,6 +191,14 @@ public class SubjectDto extends SubjectForm {
 
     public void setCanSetPassive(Boolean canSetPassive) {
         this.canSetPassive = canSetPassive;
+    }
+
+    public Set<AutocompleteResult> getPrograms() {
+        return programs;
+    }
+
+    public void setPrograms(Set<AutocompleteResult> programs) {
+        this.programs = programs;
     }
 
 }

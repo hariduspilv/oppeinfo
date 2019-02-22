@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.dto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
@@ -11,6 +12,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JournalUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.ProtocolUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 
 public class ModuleProtocolStudentDto {
@@ -76,15 +78,13 @@ public class ModuleProtocolStudentDto {
         if (protocolStudent.getStudent().getPracticeJournals() != null) {
             protocolStudent.getStudent().getPracticeJournals().stream()
                 .filter(pj -> EntityUtil.getNullableCode(pj.getGrade()) != null)
-                .filter(pj -> pj.getModule() != null && EntityUtil.getId(pj.getModule())
-                        .equals(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule())))
+                .filter(pj -> StreamUtil.nullSafeSet(pj.getModuleSubjects()).stream().filter(r -> r.getModule() != null)
+                        .map(r -> EntityUtil.getId(r.getModule())).collect(Collectors.toList())
+                        .contains(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule())))
                 .forEach(pj -> dto.getPracticeJournalResults()
-                        .add(new ModuleProtocolPracticeJournalResultDto(pj.getId(), EntityUtil.getCode(pj.getGrade()),
-                                pj.getTheme() != null ? AutocompleteResult.of(pj.getTheme()) : null,
+                        .add(new ModuleProtocolPracticeJournalResultDto(pj.getId(), pj.getModuleSubjects(), EntityUtil.getCode(pj.getGrade()),
                                 pj.getGradeInserted() != null ? pj.getGradeInserted() : pj.getInserted())));
         }
-        
-        
         dto.setCanBeDeleted(Boolean.valueOf(ProtocolUtil.studentCanBeDeleted(protocolStudent)));
         return dto;
     }

@@ -118,8 +118,8 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
             message.info('stipend.messages.applicationSuccessful');
             $location.url(baseUrl + '/applications/' + result.id + '?_noback');
           });
+          loadTermCompliances(result);
         });
-        loadTermCompliances($scope.application);
       });
     };
 

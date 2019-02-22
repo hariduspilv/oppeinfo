@@ -6,7 +6,7 @@
           <div layout="row" layout-sm="column" layout-xs="column" flex-sm="100" flex-xs="100">
               <md-input-container>
                 <label>{{'timetable.lessonTime.validFrom' | translate}}</label>
-                <md-datepicker ng-model="validFrom" md-min-date="minValidFrom" required></md-datepicker>
+                <md-datepicker ng-model="validFrom" md-min-date="minValidFrom" required ng-disabled="blocks.length === 0"></md-datepicker>
               </md-input-container>
           </div>
 
@@ -121,8 +121,8 @@
           </div>
         </div>
 
-        <div >
-          <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+        <div>
+          <md-button class="md-raised md-primary" ng-click="save()" ng-if="isEdit() || blocks.length > 0">{{blocks.length > 0 ? ('main.button.save' | translate) : ('main.button.delete' | translate)}}</md-button>
           <md-button ng-click="back('#/timetable/lessonTime/search', lessonTimeForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>
       </div>

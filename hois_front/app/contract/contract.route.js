@@ -29,7 +29,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           isCreate: function (){return true;}
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LEPING]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LEPING]
         }
       })
       .when('/contracts/:id/edit', {
@@ -44,7 +44,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LEPING]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LEPING]
         }
       })
       .when('/contracts/:id/view', {
@@ -54,7 +54,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
           auth: function (AuthResolver) { return AuthResolver.resolve(); },
-          entity: function(QueryUtils, $route) {
+          entity: function(QueryUtils, $route, Classifier) {
+            var clMapper = Classifier.valuemapper({ status: 'LEPING_STAATUS' });
             return QueryUtils.endpoint('/contracts').get({id: $route.current.params.id}).$promise;
           }
         },

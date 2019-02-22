@@ -63,6 +63,8 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     @Required
     @ClassifierRestriction(MainClassCode.KORGMOODUL)
     private String type;
+    
+    private Short studyYears;
 
     private Set<CurriculumVersionHigherModuleSubjectDto> subjects;
 
@@ -109,6 +111,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
             dto.setCurriculumSpecialities(StreamUtil.toMappedSet(m ->
             EntityUtil.getId(m.getSpeciality().getCurriculumSpeciality()), module.getSpecialities()));
         }
+        dto.setStudyYears(Short.valueOf((short) Math.ceil(module.getCurriculumVersion().getCurriculum().getStudyPeriod().doubleValue() / 12)));
         return dto;
     }
     
@@ -258,6 +261,14 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
 
     public Long getCurriculumVersion() {
         return curriculumVersion;
+    }
+
+    public Short getStudyYears() {
+        return studyYears;
+    }
+
+    public void setStudyYears(Short studyYears) {
+        this.studyYears = studyYears;
     }
 
     public void setCurriculumVersion(Long curriculumVersion) {

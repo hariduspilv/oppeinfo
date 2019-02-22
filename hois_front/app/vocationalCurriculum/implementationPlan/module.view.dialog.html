@@ -1,6 +1,6 @@
 <md-dialog aria-label="module add dialog" flex="60" flex-xs="100" class="form-readonly">
   <form ng-cloak name="dialogForm">
-    <md-toolbar>
+    <md-toolbar style="min-height: 64px;">
       <div class="md-toolbar-tools">
         <h2 flex>{{"module.viewToughtModule" | translate}}</h2>
         <md-button class="md-icon-button" ng-click="cancel()">
@@ -28,13 +28,13 @@
           <div layout="column">
             <div ng-repeat="item in module.curriculumOccupations | orderBy: 'occupation'">
               <md-checkbox ng-model="occupationsSelected[item.occupation]" disabled>
-                <hois-classifier-value ng-model="item.occupation" main-classifier-codes="KUTSE,OSAKUTSE" class="inline"></hois-classifier-value>
+                <hois-classifier-value ng-model="item.occupation" main-classifier-codes="KUTSE,OSAKUTSE" class="inline" show-date></hois-classifier-value>
               </md-checkbox>
               <div layout="column">
                 <div ng-repeat="partOccupation in item.partOccupations | orderBy" flex layout="row">
                   <div flex="5">&nbsp;</div>
                   <md-checkbox ng-model="occupationsSelected[partOccupation]" disabled>
-                    <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE" class="inline"></hois-classifier-value>
+                    <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE" class="inline" show-date></hois-classifier-value>
                   </md-checkbox>
                 </div>
               </div>
@@ -43,7 +43,7 @@
                 <div ng-repeat="speciality in item.specialities | orderBy" layout="row">
                   <div flex="5">&nbsp;</div>
                   <md-checkbox ng-model="specialitiesSelected[speciality]" disabled>
-                    <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE" class="inline"></hois-classifier-value>
+                    <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE" class="inline" show-date></hois-classifier-value>
                   </md-checkbox>
                 </div>
               </div>

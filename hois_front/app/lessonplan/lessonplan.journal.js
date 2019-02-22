@@ -78,6 +78,16 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       return true;
     }
 
+    $scope.searchStudentGroups = function (text) {
+      if (!text) {
+        return [];
+      }
+      var regExp = new RegExp('^.*' + text.replace("%", ".*").toUpperCase() + '.*$');
+      return $scope.formState.studentGroups.filter(function (group) {
+        return regExp.test($scope.$parent.currentLanguageNameField(group).toUpperCase());
+      });
+    }
+
     $scope.orderByThemeName = function (themeId) {
       return $scope.currentLanguageNameField($scope.formState.themeMap[themeId]);
     };
@@ -280,12 +290,12 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
     };
 
     $scope.addGroup = function () {
-      var group = JSON.parse(JSON.stringify($scope.filter($scope.formState.group, $scope.formState.studentGroups)));
+      var group = $scope.formState.group;
       if ($scope.record.groups === null || typeof $scope.record.groups === 'undefined') {
         $scope.record.groups = [];
       }
       if ($scope.record.groups.some(function (e) {
-          return e.group.id === $scope.formState.group;
+          return e.group.id === group.id;
         })) {
         message.error('lessonplan.journal.duplicategroup');
         return;

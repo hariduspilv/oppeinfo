@@ -1,0 +1,102 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="45" flex-sm="100" flex-xs="100">
+            <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" 
+            label="{{'practiceApplication.studentGroup'}}"></hois-autocomplete>
+          </div>
+          <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+            <label>{{'practiceApplication.submitFrom' | translate}}</label>
+            <md-datepicker ng-model="criteria.submitFrom" md-max-date="criteria.submitThru"></md-datepicker>
+          </md-input-container>
+
+          <md-input-container flex="25" flex-sm="100" flex-xs="100">
+            <label>{{'practiceApplication.submitThru' | translate}}</label>
+            <md-datepicker ng-model="criteria.submitThru" md-min-date="criteria.submitFrom"></md-datepicker>
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'practiceApplication.studentName' | translate}}</label>
+            <input ng-model="criteria.studentName" name="studentName" type="text" md-maxlength="255">
+          </md-input-container>
+          <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'practiceApplication.status' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" name="status" model-value-attr="code" main-classifier-code="PR_TAOTLUS"></hois-classifier-select>
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="45" flex-sm="100" flex-xs="100">
+            <hois-autocomplete flex ng-model="criteria.enterprise" method="enterprises" name="enterprise" label="enterprise.label"
+            ha-attribute="id" ha-controller="directiveControllers"></hois-autocomplete>
+          </div>
+        </div>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table class="secondary-table">
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'practiceApplication.studentName' | translate}}</th>
+            <th md-column>{{'practiceApplication.studentGroup' | translate}}</th>
+            <th md-column>{{'practiceApplication.status' | translate}}</th>
+            <th md-column>{{'practiceApplication.submitDate' | translate}}</th>
+            <th md-column>{{'practiceApplication.addInfoFromStudent' | translate}}</th>
+            <th md-column>{{'practiceApplication.enterpriseName' | translate}}</th>
+            <th md-column>{{'practiceApplication.applyPeriod' | translate}}</th>
+            <th md-column>&nbsp;</th>
+            <th md-column>&nbsp;</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="application in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <div layout="row" layout-align="start center" flex>
+                <a href="#/students/{{application.studentId}}/main">{{::application.studentName}}</a>
+              </div>
+            </td>
+            <td md-cell>{{::application.studentGroup}}</td>
+            <td md-cell>{{currentLanguageNameField(application.status)}}
+              <md-tooltip ng-if="'PR_TAOTLUS_T' === application.status.code && application.rejectReason">{{::application.rejectReason}}</md-tooltip>
+            </td>
+            <td md-cell>{{application.submitDate | hoisDate}}</td>
+            <td md-cell>{{::application.addInfo}}</td>
+            <td md-cell>{{::application.enterpriseName}}</td>
+            <td md-cell>{{application.validFrom | hoisDate}} - {{application.validThru | hoisDate}}</td>
+            <td md-cell>
+              <span ng-if="['PR_TAOTLUS_E', 'PR_TAOTLUS_T'].indexOf(application.status.code) !== -1">
+                <md-button md-no-ink class="md-primary change-button" ng-click="accept(application)">{{'main.button.accept' | translate}}</md-button>
+              </span>
+              <span ng-if="'PR_TAOTLUS_A' === application.status.code && !application.contractId">
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/contracts/new?practiceApplication={{::application.id}}">{{'practiceApplication.addContract' | translate}}</md-button>
+              </span>
+              <span ng-if="'PR_TAOTLUS_A' === application.status.code && application.contractId">
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::application.contractId}}/view">{{'practiceApplication.viewContract' | translate}}</md-button>
+              </span>
+            </td>
+            <td md-cell>
+              <span ng-if="'PR_TAOTLUS_E' === application.status.code || ('PR_TAOTLUS_A' === application.status.code && !application.contractId)">
+                <md-button md-no-ink class="md-primary change-button" ng-click="reject(application)">{{'main.button.reject' | translate}}</md-button>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

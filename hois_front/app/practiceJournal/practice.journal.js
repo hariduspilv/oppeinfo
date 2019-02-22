@@ -1,12 +1,11 @@
 'use strict';
 
 angular.module('hitsaOis').controller('PracticeJournalEditController', 
-function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message, dialogService, DataUtils, USER_ROLES) {
-  var CREDITS_TO_HOURS_MULTIPLIER = 26;
+function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message, dialogService, DataUtils, USER_ROLES, ArrayUtils) {
   var DAYS_AFTER_CAN_EDIT = 30;
 
   $scope.auth = $route.current.locals.auth;
-  $scope.practiceJournal = {};
+  $scope.practiceJournal = {moduleSubjects: [{}]};
   $scope.formState = {};
 
   function noPermission() {
@@ -31,7 +30,10 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
     
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
     $scope.formState.isHigher = entity.isHigher;
-    DataUtils.convertObjectToIdentifier(entity, ['module', 'theme', 'teacher', 'subject']);
+    DataUtils.convertObjectToIdentifier(entity, ['teacher']);
+    entity.moduleSubjects.forEach(function (it) {
+      DataUtils.convertObjectToIdentifier(it, ['module', 'theme', 'subject']);
+    });
     $scope.practiceJournal = entity;
   }
 
@@ -65,17 +67,26 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
     QueryUtils.endpoint('/practiceJournals/studentPracticeModules/' + student.id).query(function (result) {
       $scope.formState.modulesById = {};
       $scope.formState.themesById = {};
+      $scope.formState.themesByModuleId = {};
       result.forEach(function (it) {
         $scope.formState.modulesById[it.module.id] = it;
         it.themes.forEach(function (it) {
           $scope.formState.themesById[it.theme.id] = it;
         });
+        $scope.formState.themesByModuleId[it.module.id] = it.themes.map(function (it) { return it.theme; });
       });
       $scope.formState.modules = result.map(function (it) { return it.module; });
-      if (angular.isNumber($scope.practiceJournal.module)) {
-        updateModuleThemes($scope.practiceJournal.module);
-      }
+      removeUnsuitableModules();
     });
+  }
+
+  function removeUnsuitableModules() {
+    var modules = $scope.formState.modules.map(function (it) { return it.id; });
+    for (var i = $scope.practiceJournal.moduleSubjects.length - 1; i >= 0; i--) {
+      if ($scope.practiceJournal.moduleSubjects[i].module && modules.indexOf($scope.practiceJournal.moduleSubjects[i].module) === -1) {
+        ArrayUtils.remove($scope.practiceJournal.moduleSubjects, $scope.practiceJournal.moduleSubjects[i]);
+      }
+    }
   }
 
   function loadStudentPracticeSubjects(student) {
@@ -85,51 +96,69 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
         $scope.formState.subjectsById[it.id] = it;
       });
       $scope.formState.subjects = result;
+      removeUnsuitableSubjects();
     });
   }
 
-  function updateModuleThemes(moduleId) {
+  function removeUnsuitableSubjects() {
+    var subjects = $scope.formState.subjects.map(function (it) { return it.id; });
+    for (var i = $scope.practiceJournal.moduleSubjects.length - 1; i >= 0; i--) {
+      if ($scope.practiceJournal.moduleSubjects[i].subject && subjects.indexOf($scope.practiceJournal.moduleSubjects[i].subject) === -1) {
+        ArrayUtils.remove($scope.practiceJournal.moduleSubjects, $scope.practiceJournal.moduleSubjects[i]);
+      }
+    }
+  }
+
+  function setModuleCredits(moduleSubject) {
+    if(moduleSubject.module && !moduleSubject.theme) {
+      moduleSubject.credits = $scope.formState.modulesById[moduleSubject.module].credits;
+      moduleSubject.hours = DataUtils.creditsToHours(moduleSubject.credits);
+    }
+  }
+
+  $scope.addModuleSubject = function () {
+    $scope.practiceJournal.moduleSubjects.push({});
+  };
+
+  $scope.removeModuleSubject = function (item) {
+    ArrayUtils.remove($scope.practiceJournal.moduleSubjects, item);
+  };
+
+  $scope.getAstronomicalHours = DataUtils.getAstronomicalHours;
+
+  $scope.moduleChanged = function (moduleId, moduleSubject) {
     var module = $scope.formState.modulesById[moduleId];
     if (module) {
-      $scope.formState.themes = module.themes.map(function (it) { return it.theme; });
-    }
-  }
+      var themeIds = module.themes.map(function (it) { return it.theme.id; });
+      if (themeIds.indexOf(moduleSubject.theme) === -1) {
+        moduleSubject.theme = null;
+      }
+      
+      setModuleCredits(moduleSubject);
 
-  function setModuleCredits() {
-    if($scope.practiceJournal.module && !$scope.practiceJournal.theme) {
-      $scope.practiceJournal.credits = $scope.formState.modulesById[$scope.practiceJournal.module].credits;
-      $scope.practiceJournal.hours = $scope.practiceJournal.credits * CREDITS_TO_HOURS_MULTIPLIER;
-    }
-  }
-
-  $scope.moduleChanged = function (moduleId) {
-    if ($scope.formState.modulesById[moduleId]) {
-      setModuleCredits();
-      updateModuleThemes(moduleId);
-
-      if (!angular.isDefined(entity) && angular.isString($scope.formState.modulesById[moduleId].assessmentMethodsEt)) {
-        $scope.practiceJournal.practicePlan = $scope.formState.modulesById[moduleId].assessmentMethodsEt;
+      if (!angular.isDefined(entity) && angular.isString(module.assessmentMethodsEt)) {
+        $scope.practiceJournal.practicePlan = module.assessmentMethodsEt;
       }
     }
   };
 
-  $scope.themeChanged = function (themeId) {
+  $scope.themeChanged = function (themeId, moduleSubject) {
     if ($scope.formState.themesById[themeId]) {
-      $scope.practiceJournal.credits = $scope.formState.themesById[themeId].credits;
-      $scope.practiceJournal.hours = $scope.practiceJournal.credits * CREDITS_TO_HOURS_MULTIPLIER;
+      moduleSubject.credits = $scope.formState.themesById[themeId].credits;
+      moduleSubject.hours = DataUtils.creditsToHours(moduleSubject.credits);
 
       if (!angular.isDefined(entity) && angular.isString($scope.formState.themesById[themeId].subthemes)) {
         $scope.practiceJournal.practicePlan = $scope.formState.themesById[themeId].subthemes;
       }
     } else {
-      setModuleCredits();
+      setModuleCredits(moduleSubject);
     }
   };
 
-  $scope.subjectChanged = function (subjectId) {
+  $scope.subjectChanged = function (subjectId, moduleSubject) {
     if ($scope.formState.subjectsById[subjectId]) {
-      $scope.practiceJournal.credits = $scope.formState.subjectsById[subjectId].credits;
-      $scope.practiceJournal.hours = $scope.practiceJournal.credits * CREDITS_TO_HOURS_MULTIPLIER;
+      moduleSubject.credits = $scope.formState.subjectsById[subjectId].credits;
+      moduleSubject.hours = DataUtils.creditsToHours(moduleSubject.credits);
 
       if (!angular.isDefined(entity) && angular.isString($scope.formState.subjectsById[subjectId].outcomesEt)) {
         $scope.practiceJournal.practicePlan = $scope.formState.subjectsById[subjectId].outcomesEt;
@@ -137,15 +166,15 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
     }
   };
 
-  $scope.updateHours = function () {
-    if (angular.isNumber($scope.practiceJournal.credits)) {
-      $scope.practiceJournal.hours = DataUtils.creditsToHours($scope.practiceJournal.credits);
-      $scope.practiceJournalForm.hours.$setDirty();
+  $scope.updateHours = function (moduleSubject, index) {
+    if (angular.isNumber(moduleSubject.credits)) {
+      moduleSubject.hours = DataUtils.creditsToHours(moduleSubject.credits);
+      $scope.practiceJournalForm['hours[' + index + ']'].$setDirty();
     }
   };
-  $scope.updateCredits = function () {
-    $scope.practiceJournal.credits = DataUtils.hoursToCredits($scope.practiceJournal.hours);
-    $scope.practiceJournalForm.credits.$setDirty();
+  $scope.updateCredits = function (moduleSubject, index) {
+    moduleSubject.credits = DataUtils.hoursToCredits(moduleSubject.hours);
+    $scope.practiceJournalForm['credits[' + index + ']'].$setDirty();
   };
 
   function validationPassed() {
@@ -154,6 +183,12 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
       message.error('main.messages.form-has-errors');
       return false;
     }
+
+    if($scope.practiceJournal.moduleSubjects.length === 0) {
+      message.error($scope.formState.isHigher ? 'practiceJournal.messages.atleastOneSubjectRequired' : 'practiceJournal.messages.atleastOneModuleRequired');
+      return false;
+    }
+
     return true;
   }
 

@@ -14,21 +14,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.report.studentgroupteacher.StudentGroupTeacherReport;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.ReportService;
 import ee.hitsa.ois.service.StudentGroupTeacherReportService;
+import ee.hitsa.ois.service.TeacherDetailLoadService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
-import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
+import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentGroupTeacherCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsCommand;
+import ee.hitsa.ois.web.commandobject.report.TeacherDetailLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.VotaCommand;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
@@ -38,6 +42,8 @@ import ee.hitsa.ois.web.dto.report.StudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.TeacherLoadDto;
 import ee.hitsa.ois.web.dto.report.VotaDto;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentGroupTeacherDto;
+import ee.hitsa.ois.web.dto.report.teacherdetailload.TeacherDetailLoadDto;
+import ee.hitsa.ois.web.dto.report.teacherdetailload.TeacherDetailLoadReportDataDto;
 
 @RestController
 @RequestMapping("/reports")
@@ -47,6 +53,8 @@ public class ReportController {
     private ReportService reportService;
     @Autowired
     private StudentGroupTeacherReportService studentGroupTeacherReportService;
+    @Autowired
+    private TeacherDetailLoadService teacherDetailLoadService;
     @Autowired
     private PdfService pdfService;
     @Autowired
@@ -137,13 +145,13 @@ public class ReportController {
         UserUtil.assertIsSchoolAdmin(user);
         return reportService.vota(user.getSchoolId(), criteria, pageable);
     }
-    
+
     @GetMapping("/studentgroupteacher")
     public StudentGroupTeacherDto studentGroupTeacher(HoisUserDetails user, @Valid StudentGroupTeacherCommand criteria) {
         UserUtil.assertIsSchoolAdminOrStudentGroupTeacher(user, em.getReference(StudentGroup.class, criteria.getStudentGroup()));
         return studentGroupTeacherReportService.studentGroupTeacher(criteria);
     }
-    
+
     @GetMapping("/studentgroupteacher/studentgroupteacher.xls")
     public void studentGroupTeacherAsExcel(HoisUserDetails user, @Valid StudentGroupTeacherCommand criteria,
             HttpServletResponse response) throws IOException {
@@ -151,7 +159,7 @@ public class ReportController {
         HttpUtil.xls(response, "student_group_teacher.xls", studentGroupTeacherReportService
                 .studentGroupTeacherAsExcel(criteria, new ClassifierCache(classifierService)));
     }
-    
+
     @GetMapping("/studentgroupteacher/studentgroupteacher.pdf")
     public void studentGroupTeacherAsPdf(HoisUserDetails user, @Valid StudentGroupTeacherCommand criteria,
             HttpServletResponse response) throws IOException {
@@ -161,4 +169,41 @@ public class ReportController {
         HttpUtil.pdf(response, criteria.getStudentGroup() + ".pdf",
                 pdfService.generate(StudentGroupTeacherReport.TEMPLATE_NAME, report));
     }
-}   
+
+    @GetMapping("/teachers/detailload/vocational/data")
+    public TeacherDetailLoadReportDataDto teacherDetailLoadReportData(HoisUserDetails user,
+            @Valid TeacherDetailLoadCommand criteria) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return teacherDetailLoadService.teacherDetailLoadReportData(criteria);
+    }
+
+    @GetMapping("/teachers/detailload/vocational")
+    public Page<TeacherDetailLoadDto> teacherDetailLoad(HoisUserDetails user,
+            @Valid TeacherDetailLoadCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return teacherDetailLoadService.teacherDetailLoad(user.getSchoolId(), criteria, pageable);
+    }
+
+    @GetMapping("/teachers/detailload/vocational/teachersdetailloadvocational.xlsx")
+    public void teacherDetailLoadAsExcel(HoisUserDetails user,
+            @Valid TeacherDetailLoadCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "teachersdetailload.xlsx",
+                teacherDetailLoadService.teacherDetailLoadAsExcel(user.getSchoolId(), criteria));
+    }
+
+    @GetMapping("/teachers/detailload/vocational/{id:\\d+}")
+    public TeacherDetailLoadDto teacherDetailLoadJournals(HoisUserDetails user,
+            @Valid TeacherDetailLoadCommand criteria, @WithEntity Teacher teacher) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return teacherDetailLoadService.teacherDetailLoadJournals(user.getSchoolId(), criteria, teacher);
+    }
+
+    @GetMapping("/teachers/detailload/vocational/{id:\\d+}/teachersdetailloadvocational.xlsx")
+    public void teacherDetailLoadJournalsAsExcel(HoisUserDetails user, @Valid TeacherDetailLoadCommand criteria,
+            @WithEntity Teacher teacher, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "teachersdetailload.xlsx",
+                teacherDetailLoadService.teacherDetailLoadJournalsAsExcel(user.getSchoolId(), criteria, teacher));
+    }
+}

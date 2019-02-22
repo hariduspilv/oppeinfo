@@ -6,6 +6,8 @@ public class FormSearchDto {
     private String code;
     private Long from;
     private Long thru;
+    private String fromFullCode;
+    private String thruFullCode;
     private Long count;
     private String status;
     private String defectReason;
@@ -38,6 +40,18 @@ public class FormSearchDto {
         this.thru = thru;
     }
     
+    public String getFromFullCode() {
+        return fromFullCode;
+    }
+    public void setFromFullCode(String fromFullCode) {
+        this.fromFullCode = fromFullCode;
+    }
+    public String getThruFullCode() {
+        return thruFullCode;
+    }
+    public void setThruFullCode(String thruFullCode) {
+        this.thruFullCode = thruFullCode;
+    }
     public Long getCount() {
         return count;
     }

@@ -2,9 +2,14 @@ package ee.hitsa.ois.web.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class ContractDto extends VersionedCommand {
@@ -34,14 +39,34 @@ public class ContractDto extends VersionedCommand {
     private AutocompleteResult subject;
     private Long wdId;
     private Boolean isPracticeAbsence;
-    
+    private Boolean isPracticeHidden;
+    private Boolean isPracticeSchool;
+    private Boolean isPracticeTelework;
+    private Boolean isPracticeEnterprise;
+    private Boolean isPracticeOther;
+    private Long practiceApplication;
+    private AutocompleteResult practiceEvaluation;
+    private String cancelReason;
+    private LocalDate canceled;
+    private String cancelDesc;
+    private String canceledBy;
+    private List<ContractSupervisorDto> supervisors;
+    private List<ContractModuleSubjectDto> moduleSubjects;
     private Boolean canEdit;
+    private Boolean isHigher;
 
     public static ContractDto of(Contract contract) {
         if (contract == null) {
             return null;
         }
-        return EntityUtil.bindToDto(contract, new ContractDto());
+        ContractDto dto = EntityUtil.bindToDto(contract, new ContractDto(), "contractSupervisors", "moduleSubjects");
+        dto.setSupervisors(contract.getContractSupervisors().stream().map(p -> ContractSupervisorDto.of(p))
+                .collect(Collectors.toList()));
+        dto.setModuleSubjects(StreamUtil.toMappedList(ContractModuleSubjectDto::of, contract.getModuleSubjects()));
+        dto.getModuleSubjects().sort(Comparator.comparing(ms -> ms.getModule() != null ? ms.getModule().getNameEt() : ms.getSubject().getNameEt(), 
+                String.CASE_INSENSITIVE_ORDER));
+        dto.setIsHigher(Boolean.valueOf(StudentUtil.isHigher(contract.getStudent())));
+        return dto;
     }
 
     public Long getId() {
@@ -244,12 +269,124 @@ public class ContractDto extends VersionedCommand {
         this.isPracticeAbsence = isPracticeAbsence;
     }
 
+    public Boolean getIsPracticeHidden() {
+        return isPracticeHidden;
+    }
+
+    public void setIsPracticeHidden(Boolean isPracticeHidden) {
+        this.isPracticeHidden = isPracticeHidden;
+    }
+
+    public Long getPracticeApplication() {
+        return practiceApplication;
+    }
+
+    public void setPracticeApplication(Long practiceApplication) {
+        this.practiceApplication = practiceApplication;
+    }
+
     public Boolean getCanEdit() {
         return canEdit;
     }
 
     public void setCanEdit(Boolean canEdit) {
         this.canEdit = canEdit;
+    }
+
+	public String getCancelReason() {
+		return cancelReason;
+	}
+
+	public void setCancelReason(String cancelReason) {
+		this.cancelReason = cancelReason;
+	}
+
+	public LocalDate getCanceled() {
+		return canceled;
+	}
+
+	public void setCanceled(LocalDate canceled) {
+		this.canceled = canceled;
+	}
+
+	public String getCancelDesc() {
+		return cancelDesc;
+	}
+
+	public void setCancelDesc(String cancelDesc) {
+		this.cancelDesc = cancelDesc;
+	}
+
+    public String getCanceledBy() {
+        return canceledBy;
+    }
+
+    public void setCanceledBy(String canceledBy) {
+        this.canceledBy = canceledBy;
+    }
+
+    public Boolean getIsPracticeSchool() {
+        return isPracticeSchool;
+    }
+
+    public void setIsPracticeSchool(Boolean isPracticeSchool) {
+        this.isPracticeSchool = isPracticeSchool;
+    }
+
+    public Boolean getIsPracticeTelework() {
+        return isPracticeTelework;
+    }
+
+    public void setIsPracticeTelework(Boolean isPracticeTelework) {
+        this.isPracticeTelework = isPracticeTelework;
+    }
+
+    public Boolean getIsPracticeEnterprise() {
+        return isPracticeEnterprise;
+    }
+
+    public void setIsPracticeEnterprise(Boolean isPracticeEnterprise) {
+        this.isPracticeEnterprise = isPracticeEnterprise;
+    }
+
+    public Boolean getIsPracticeOther() {
+        return isPracticeOther;
+    }
+
+    public void setIsPracticeOther(Boolean isPracticeOther) {
+        this.isPracticeOther = isPracticeOther;
+    }
+
+    public List<ContractSupervisorDto> getSupervisors() {
+        return supervisors;
+    }
+
+    public void setSupervisors(List<ContractSupervisorDto> supervisors) {
+        this.supervisors = supervisors;
+    }
+
+    public List<ContractModuleSubjectDto> getModuleSubjects() {
+        return moduleSubjects;
+    }
+
+    public void setModuleSubjects(List<ContractModuleSubjectDto> moduleSubjects) {
+        this.moduleSubjects = moduleSubjects;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
+    }
+
+    public AutocompleteResult getPracticeEvaluation() {
+        return practiceEvaluation;
+    }
+
+    public void setPracticeEvaluation(AutocompleteResult practiceEvaluation) {
+        this.practiceEvaluation = practiceEvaluation;
     }
 
 }

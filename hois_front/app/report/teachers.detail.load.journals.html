@@ -1,0 +1,40 @@
+<md-dialog aria-label="teacher detail load dialog" flex="80" flex-xs="100">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>{{currentLanguageNameField(teacher)}} {{'report.teachersDetailLoad.journals' | translate}}</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <span flex></span>
+    <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+      <div layout="column" layout-align="start">
+        <div flex layout="row">
+          <div layout="row" class="common-label" md-colors="{color: 'default-background-400'}">
+            <span ng-repeat="c in reportData.teacherCapacities">
+              <span ng-if="!$first">|</span>
+              <span>{{::c.value.toUpperCase()}} - {{currentLanguageNameField(c)}}</span>
+            </span>
+            <span ng-if="entriesWithoutCapacity">
+              <span>|</span>
+              <span> ? - {{'report.teachersDetailLoad.capacityMissing' | translate}}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div ng-if="!periodCapacitiesRow" layout="row" layout-sm="column" layout-align="space-around">
+        <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+      </div>
+      <div ng-include="'report/teachers.detail.load.vocational.table.tmpl.html'"></div>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row" layout-align="start center">
+		<md-button ng-href="{{$root.excel(xlsUrl, criteria)}}" class="md-button md-raised">{{'main.button.printXls'| translate}}</md-button>
+		<md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

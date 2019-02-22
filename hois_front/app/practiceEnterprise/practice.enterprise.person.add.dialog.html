@@ -1,0 +1,142 @@
+<md-dialog aria-label="add enterprise dialog" flex="50">
+<form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
+    <md-toolbar>
+    <div class="md-toolbar-tools">
+        <h2 flex>{{"enterprise.personsTab.addNew" | translate}}</h2>
+        <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+    </div>
+    </md-toolbar>
+    <md-dialog-content>
+    <div class="md-dialog-content" flex>
+        <div layout="row" class="form-readonly">
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label>{{'enterprise.name' | translate}}</label>
+                    <hois-value value="enterprise.name"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label>{{'enterprise.personsTab.regCode' | translate}}</label>
+                    <hois-value value="enterprise.regCode"></hois-value>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row">
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'person.firstname' | translate}}</label>
+                    <input type="text" ng-model="enterprise.firstname" name="firstname" md-maxlength="100" required>
+                    <div ng-messages="dialogForm.firstname.$error">
+                        <div ng-message="md-maxlength">
+                            {{'main.messages.error.maxlength' | translate}}
+                        </div>
+                    </div>
+                </md-input-container>
+            </div>
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'person.lastname' | translate}}</label>
+                    <input type="text" ng-model="enterprise.lastname" name="lastname" md-maxlength="100" required>
+                    <div ng-messages="dialogForm.lastname.$error">
+                        <div ng-message="md-maxlength">
+                            {{'main.messages.error.maxlength' | translate}}
+                        </div>
+                    </div>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row">
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.personsTab.phone' | translate}}</label>
+                    <input ng-model="enterprise.phone" name="phone" type="text" pattern="^\d+$" md-maxlength="100" required>
+                    <div ng-messages="dialogForm.phone.$error">
+                        <div ng-message="md-maxlength">
+                            {{'main.messages.error.maxlength' | translate}}
+                        </div>
+                        <div ng-message="pattern">
+                            {{'enterprise.personsTab.number' | translate}}
+                        </div>
+                    </div>
+                </md-input-container>
+            </div>
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.personsTab.email' | translate}}</label>
+                    <input ng-model="enterprise.email"  name="email" type="email" md-maxlength="100" ng-required="enterprise.contact">
+                    <div ng-messages="dialogForm.email.$error">
+                        <div ng-message="md-maxlength">
+                            {{'main.messages.error.maxlength' | translate}}
+                        </div>
+                    </div>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row">
+            <div layout="column" flex="50" ng-if="enterprise.country === 'RIIK_EST'">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.personsTab.personIdCode' | translate}}</label>
+                    <input ng-model="enterprise.idcode" name="idcode" type="text" ng-pattern="'^[1-6][0-9]{2}[0-1][0-9][0-3][0-9][0-9]{4}'" minlength="11" md-maxlength="11">
+                    <div ng-messages="dialogForm.idcode.$error">
+                        <div ng-message="pattern">
+                            {{'certificate.invalidIdcode' | translate}}
+                        </div>
+                        <div ng-message="md-maxlength">
+                            {{'main.messages.error.max' | translate: {max: 11} }}
+                        </div>
+                        <div ng-message="minlength">
+                            {{'main.messages.error.min' | translate: {min: 11} }}
+                        </div>
+                    </div>
+                </md-input-container>
+            </div>
+            <div layout="column" flex="50" ng-if="enterprise.country !== 'RIIK_EST'">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.personsTab.personIdCode' | translate}}</label>
+                    <input ng-model="enterprise.idcode" name="idcode" type="text" md-maxlength="50">
+                    <div ng-messages="dialogForm.idcode.$error">
+                        <div ng-message="md-maxlength">
+                            {{'main.messages.error.max' | translate: {max: 50} }}
+                        </div>
+                    </div>
+                </md-input-container>
+            </div>
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.personsTab.personIdCodeCountry' | translate}}</label>
+                    <hois-classifier-select ng-model="enterprise.country" name="country" model-value-attr="code" main-classifier-code="RIIK"></hois-classifier-select>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row">
+            <md-input-container flex>
+                <label class="textInput">{{'enterprise.personsTab.proffession' | translate}}</label>
+                <input type="text" ng-model="enterprise.position" name="proffession" md-maxlength="100">
+                <div ng-messages="dialogForm.proffession.$error">
+                    <div ng-message="md-maxlength">
+                        {{'main.messages.error.maxlength' | translate}}
+                    </div>
+                </div>
+            </md-input-container>
+        </div>
+        <div layout="row">
+            <md-checkbox ng-model="enterprise.supervisor">
+                {{'enterprise.personsTab.supervisor' | translate}}
+            </md-checkbox>
+            <md-checkbox ng-model="enterprise.contact">
+                {{'enterprise.personsTab.contactPerson' | translate}}
+            </md-checkbox>
+        </div>
+    </div>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row" layout-align="start start">
+    <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+    <md-button ng-show="enterprise.id" flex-xs="100" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+    <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+</form>
+</md-dialog>

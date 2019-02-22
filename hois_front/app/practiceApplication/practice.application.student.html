@@ -1,0 +1,87 @@
+<div class="ois-form-layout-padding" ng-cloak>
+
+  <fieldset>
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practiceApplication.openAdmissions' | translate}}</legend>
+    <md-table-container>
+      <table md-table class="secondary-table">
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'practiceApplication.enterpriseName' | translate}}</th>
+            <th md-column>{{'practiceApplication.period' | translate}}</th>
+            <th md-column>{{'practiceApplication.places' | translate}}</th>
+            <th md-column>{{'practiceApplication.submittedApplications' | translate}}</th>
+            <th md-column>{{'practiceApplication.addInfo' | translate}}</th>
+            <th md-column>{{'practiceApplication.submitDate' | translate}}</th>
+            <th md-column>{{'practiceApplication.status' | translate}}</th>
+            <th md-column>&nbsp;</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="admission in openAdmissions" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{admission.enterpriseName}}</td>
+            <td md-cell>{{admission.validFrom | hoisDate}} - {{admission.validThru | hoisDate}}</td>
+            <td md-cell>{{admission.places}}</td>
+            <td md-cell>{{admission.submittedApplications}}</td>
+            <td md-cell>{{admission.addInfo}}</td>
+            <td md-cell>{{admission.submitDate | hoisDate}}</td>
+            <td md-cell>{{currentLanguageNameField(admission.status)}}
+              <md-tooltip ng-if="'PR_TAOTLUS_T' === admission.status.code && admission.rejectReason">{{admission.rejectReason}}</md-tooltip>
+            </td>
+            <td md-cell>
+              <span ng-if="!admission.status">
+                <md-button md-no-ink class="md-primary change-button" ng-click="apply(admission)">{{'practiceApplication.applyFor' | translate}}</md-button>
+              </span>
+              <span ng-if="'PR_TAOTLUS_E' === admission.status.code || ('PR_TAOTLUS_A' === admission.status.code && !admission.contractId)">
+                <md-button md-no-ink class="md-primary change-button" ng-click="annul(admission)">{{'practiceApplication.annul' | translate}}</md-button>
+              </span>
+              <span ng-if="'PR_TAOTLUS_A' === admission.status.code && admission.contractId">
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/contracts/{{admission.contractId}}/view">{{'practiceApplication.viewContract' | translate}}</md-button>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </fieldset>
+
+  <br/>
+
+  <fieldset>
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practiceApplication.passedAdmissions' | translate}}</legend>
+    <md-table-container>
+      <table md-table class="secondary-table">
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'practiceApplication.enterpriseName' | translate}}</th>
+            <th md-column>{{'practiceApplication.period' | translate}}</th>
+            <th md-column>{{'practiceApplication.places' | translate}}</th>
+            <th md-column>{{'practiceApplication.submittedApplications' | translate}}</th>
+            <th md-column>{{'practiceApplication.addInfo' | translate}}</th>
+            <th md-column>{{'practiceApplication.submitDate' | translate}}</th>
+            <th md-column>{{'practiceApplication.status' | translate}}</th>
+            <th md-column>&nbsp;</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="admission in passedAdmissions" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{admission.enterpriseName}}</td>
+            <td md-cell>{{admission.validFrom | hoisDate}} - {{admission.validThru | hoisDate}}</td>
+            <td md-cell>{{admission.places}}</td>
+            <td md-cell>{{admission.submittedApplications}}</td>
+            <td md-cell>{{admission.addInfo}}</td>
+            <td md-cell>{{admission.submitDate | hoisDate}}</td>
+            <td md-cell>{{currentLanguageNameField(admission.status)}}
+              <md-tooltip ng-if="'PR_TAOTLUS_T' === admission.status.code && admission.rejectReason">{{admission.rejectReason}}</md-tooltip>
+            </td>
+            <td md-cell>
+              <span ng-if="'PR_TAOTLUS_A' === admission.status.code && admission.contractId">
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/contracts/{{admission.contractId}}/view">{{'practiceApplication.viewContract' | translate}}</md-button>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </fieldset>
+
+</div>

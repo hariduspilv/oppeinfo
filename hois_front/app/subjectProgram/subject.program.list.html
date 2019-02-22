@@ -2,7 +2,7 @@
   <div flex>
     <fieldset>
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-    <form name="searchForm" ng-submit="load()" class="nomargin" layout="column">
+    <form name="searchController.searchForm" ng-submit="load()" class="nomargin" layout="column">
       <div layout-gt-sm="row" layout="column">
         <md-input-container flex-gt-sm="45" flex="100">
           <label class="textInput">{{'subjectProgram.search.subject' | translate}}</label>
@@ -29,7 +29,8 @@
           md-floating-label="{{'subjectProgram.search.teacher' | translate}}"
           md-no-cache
           class="small-margin"
-          flex-gt-sm="45" flex="100">
+          flex-gt-sm="45" flex="100"
+          ng-if="!myData">
           <md-item-template>
             <span md-highlight-text="teacherName" md-highlight-flags="^i">{{currentLanguageNameField(teacher)}}</span>
           </md-item-template>
@@ -37,7 +38,7 @@
             {{'main.messages.error.notFound' | translate}}
           </md-not-found>
         </md-autocomplete>
-        <md-input-container flex-gt-sm="50" flex="100" flex-offset-gt-sm="5">
+        <md-input-container flex-gt-sm="{{myData ? 45 : 50}}" flex="100" flex-offset-gt-sm="{{myData ? 0 : 5}}">
           <label>{{'subjectProgram.search.status' | translate}}</label>
           <md-select ng-model="criteria.status">
             <md-option ng-value=""></md-option>
@@ -61,7 +62,7 @@
           <tr md-row>
             <th md-column style="width:40%">{{'subjectProgram.search.subject' | translate}}</th>
             <th md-column style="width:25%">{{'subjectProgram.search.studyPeriod' | translate}}</th>
-            <th md-column style="width:20%">{{'subjectProgram.search.teacher' | translate}}</th>
+            <th md-column style="width:20%" ng-if="!myData">{{'subjectProgram.search.teacher' | translate}}</th>
             <th md-column style="width:10%">{{'subjectProgram.search.status' | translate}}</th>
             <th md-column style="width:5%"></th>
           </tr>
@@ -70,13 +71,15 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
             <td md-cell>{{getStudyPeriodName(row.studyPeriod)}}</td>
-            <td md-cell>{{currentLanguageNameField(row.teacher)}}</td>
+            <td md-cell ng-if="!myData">{{currentLanguageNameField(row.teacher)}}</td>
             <td md-cell>
               <hois-classifier-value ng-model="row.status" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value>
             </td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" 
-              ng-href="#/subjectProgram/{{::row.subject.id}}/{{::row.subjectStudyPeriod}}/programs/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
+              ng-href="#/subjectProgram/{{::(myData ? 'teachers' : 'programs')}}/{{::row.id}}/{{::(row.status === 'AINEPROGRAMM_STAATUS_I' && !myData  ? 'edit' : 'view')}}">
+                {{row.status === 'AINEPROGRAMM_STAATUS_I' && !myData ? ('main.button.edit' | translate) : ('main.button.view' | translate)}}
+              </md-button>
             </td>
           </tr>
         </tbody>

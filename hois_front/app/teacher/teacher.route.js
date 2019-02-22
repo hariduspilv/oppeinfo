@@ -9,39 +9,44 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controller: 'TeacherListController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }},
-        data: authorizedRoles
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: authorizedRoles
     })
     .when('/teachers/new', {
       templateUrl: 'teacher/teacher.edit.html',
       controller: 'TeacherEditController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); } },
-        data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA]}
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA]}
     })
     .when('/teachers/:id/edit', {
       templateUrl: 'teacher/teacher.edit.html',
       controller: 'TeacherEditController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }},
-        data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA]}
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA]}
     })
     .when('/teachers/:id/editmydata', {
       templateUrl: 'teacher/teacher.edit.mydata.html',
       controller: 'TeacherEditController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }},
-        data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA]}
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA]}
     })
     .when('/teachers/:id/continuingEducation', {
       templateUrl: 'teacher/teacher.continuing.education.edit.html',
       controller: 'TeacherContinuingEducationEditController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }},
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: authorizedRoles
     })
     .when('/teachers/:id/qualification', {
@@ -57,7 +62,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controller: 'TeacherMobilityEditController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }},
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: authorizedRoles
     })
     .when('/teachers/:id/rtipAbsence', {
@@ -65,7 +71,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controller: 'TeacherRtipAbsenceEditController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }},
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: authorizedRoles
     })
     .when('/teachers/myData', {
@@ -78,12 +85,23 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
           auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
     })
+    .when('/teachers/:id/programs', {
+      templateUrl: 'teacher/teacher.programs.html',
+      controller: 'TeacherProgramController',
+      controllerAs: 'controller',
+      data: authorizedRoles,
+      resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
+    })
     .when('/teachers/:id', {
       templateUrl: 'teacher/teacher.view.html',
       controller: 'TeacherViewController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }},
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: authorizedRoles
     });
 });

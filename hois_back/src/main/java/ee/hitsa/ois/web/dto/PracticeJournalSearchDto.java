@@ -2,18 +2,17 @@ package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class PracticeJournalSearchDto {
 
     private Long id;
     private AutocompleteResult student;
     private String studentGroup;
-    private AutocompleteResult module;
-    private AutocompleteResult theme;
     private LocalDate startDate;
     private LocalDate endDate;
     private String enterpriseName;
-    private String enterpriseContactPersonName;
+    private String enterpriseSupervisors;
     private String practicePlace;
     private AutocompleteResult teacher;
     private LocalDateTime studentLastEntryDate;
@@ -22,8 +21,8 @@ public class PracticeJournalSearchDto {
     private Boolean canConfirm;
     private Boolean canStudentAddEntries;
     private Boolean canAddEntries;
-    private AutocompleteResult subject;
     private String contractStatus;
+    private List<PracticeJournalSearchModuleSubjectDto> moduleSubjects;
 
     public Long getId() {
         return id;
@@ -47,22 +46,6 @@ public class PracticeJournalSearchDto {
 
     public void setStudentGroup(String studentGroup) {
         this.studentGroup = studentGroup;
-    }
-
-    public AutocompleteResult getModule() {
-        return module;
-    }
-
-    public void setModule(AutocompleteResult module) {
-        this.module = module;
-    }
-
-    public AutocompleteResult getTheme() {
-        return theme;
-    }
-
-    public void setTheme(AutocompleteResult theme) {
-        this.theme = theme;
     }
 
     public LocalDate getStartDate() {
@@ -89,12 +72,12 @@ public class PracticeJournalSearchDto {
         this.enterpriseName = enterpriseName;
     }
 
-    public String getEnterpriseContactPersonName() {
-        return enterpriseContactPersonName;
+    public String getEnterpriseSupervisors() {
+        return enterpriseSupervisors;
     }
 
-    public void setEnterpriseContactPersonName(String enterpriseContactPersonName) {
-        this.enterpriseContactPersonName = enterpriseContactPersonName;
+    public void setEnterpriseSupervisors(String enterpriseSupervisors) {
+        this.enterpriseSupervisors = enterpriseSupervisors;
     }
 
     public String getPracticePlace() {
@@ -153,14 +136,6 @@ public class PracticeJournalSearchDto {
         this.canStudentAddEntries = canStudentAddEntries;
     }
 
-    public AutocompleteResult getSubject() {
-        return subject;
-    }
-
-    public void setSubject(AutocompleteResult subject) {
-        this.subject = subject;
-    }
-
     public Boolean getCanAddEntries() {
         return canAddEntries;
     }
@@ -176,4 +151,13 @@ public class PracticeJournalSearchDto {
     public void setContractStatus(String contractStatus) {
         this.contractStatus = contractStatus;
     }
+
+    public List<PracticeJournalSearchModuleSubjectDto> getModuleSubjects() {
+        return moduleSubjects;
+    }
+
+    public void setModuleSubjects(List<PracticeJournalSearchModuleSubjectDto> moduleSubjects) {
+        this.moduleSubjects = moduleSubjects;
+    }
+    
 }

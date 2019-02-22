@@ -10,6 +10,12 @@ angular.module('hitsaOis')
         backUrl: backUrl ? '#/' + backUrl : '#/subject'
       };
 
+      $scope.SUBJECT_TYPE = Object.freeze({
+        MANDATORY_PREPEQUISITE: 0,
+        RECOMMENDED_PREREQUISITE: 1,
+        SUBSTITUTE: 2
+      });
+
       $scope.subjectCodeUniqueQuery = {
         id: id,
         url: '/subject/unique/code'
@@ -26,7 +32,12 @@ angular.module('hitsaOis')
       if (id) {
         $scope.subject = Endpoint.get({id: id});
       } else {
-        $scope.subject = new Endpoint({status: 'AINESTAATUS_S'});
+        $scope.subject = new Endpoint({
+          status: 'AINESTAATUS_S',
+          mandatoryPrerequisiteSubjects: [],
+          recommendedPrerequisiteSubjects: [],
+          substituteSubjects: []
+        });
       }
 
       function afterTranslate(translated) {
@@ -59,6 +70,71 @@ angular.module('hitsaOis')
         message.error("main.messages.form-has-errors");
         return false;
       }
+
+      function indexOfSubject(array, subject) {
+        for (var idx = 0; idx < array.length; idx++) {
+          if (angular.isObject(array[idx]) && array[idx].id === subject.id) {
+            return idx;
+          }
+        }
+        return -1;
+      }
+
+      function addSubject(array, subject) {
+        if (!subject) {
+          return;
+        }
+        if (!angular.isArray(array)) {
+          array = [];
+        }
+        if (indexOfSubject(array, subject) === -1) {
+          array.push(subject);
+        }
+      }
+
+      function removeSubject(array, subject) {
+        if (!angular.isArray(array)) {
+          return;
+        }
+        var index = indexOfSubject(array, subject);
+        if (index !== -1) {
+          array.splice(index, 1);
+        }
+      }
+
+      $scope.addSubject = function (type) {
+        switch(type) {
+          case $scope.SUBJECT_TYPE.MANDATORY_PREPEQUISITE:
+            addSubject($scope.subject.mandatoryPrerequisiteSubjects, $scope.mandatoryPrerequisiteSubject);
+            $scope.mandatoryPrerequisiteSubject = undefined;
+            break;
+          case $scope.SUBJECT_TYPE.RECOMMENDED_PREREQUISITE:
+            addSubject($scope.subject.recommendedPrerequisiteSubjects, $scope.recommendedPrerequisiteSubject);
+            $scope.recommendedPrerequisiteSubject = undefined;
+            break;
+          case $scope.SUBJECT_TYPE.SUBSTITUTE:
+            addSubject($scope.subject.substituteSubjects, $scope.substituteSubject);
+            $scope.substituteSubject = undefined;
+            break;
+        }
+      };
+
+      $scope.deleteSubject = function (type, subject) {
+        if (!subject) {
+          return;
+        }
+        switch(type) {
+          case $scope.SUBJECT_TYPE.MANDATORY_PREPEQUISITE:
+            removeSubject($scope.subject.mandatoryPrerequisiteSubjects, subject);
+            break;
+          case $scope.SUBJECT_TYPE.RECOMMENDED_PREREQUISITE:
+            removeSubject($scope.subject.recommendedPrerequisiteSubjects, subject);
+            break;
+          case $scope.SUBJECT_TYPE.SUBSTITUTE:
+            removeSubject($scope.subject.substituteSubjects, subject);
+            break;
+        }
+      };
 
       $scope.update = function () {
         if (formIsValid()) {
@@ -119,6 +195,7 @@ angular.module('hitsaOis')
       $scope.isPublic = $route.current.locals.params && $route.current.locals.params.isPublic;
       var id = $route.current.params.id;
       var backUrl = $route.current.params.backUrl;
+      $scope.auth = $route.current.locals.auth;
 
       $scope.formState = {backUrl: backUrl ? '#/' + backUrl : ($scope.isPublic ? '#/subject/public' : '#/subject')};
       $scope.subject = QueryUtils.endpoint($scope.isPublic ? '/public/subject/view' : '/subject').get({id: id});

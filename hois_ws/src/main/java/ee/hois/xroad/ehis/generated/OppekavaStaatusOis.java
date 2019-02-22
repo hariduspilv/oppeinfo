@@ -1,6 +1,7 @@
 
 package ee.hois.xroad.ehis.generated;
 
+import java.math.BigInteger;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -17,7 +18,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="oppekavaKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="oppekavaKood" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="operatsioon" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="kommentaar" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
@@ -37,7 +38,7 @@ import javax.xml.bind.annotation.XmlType;
 public class OppekavaStaatusOis {
 
     @XmlElement(required = true)
-    protected String oppekavaKood;
+    protected BigInteger oppekavaKood;
     @XmlElement(required = true)
     protected String operatsioon;
     protected String kommentaar;
@@ -47,10 +48,10 @@ public class OppekavaStaatusOis {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getOppekavaKood() {
+    public BigInteger getOppekavaKood() {
         return oppekavaKood;
     }
 
@@ -59,10 +60,10 @@ public class OppekavaStaatusOis {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setOppekavaKood(String value) {
+    public void setOppekavaKood(BigInteger value) {
         this.oppekavaKood = value;
     }
 

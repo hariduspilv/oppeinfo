@@ -104,4 +104,58 @@ public class LessonPlanForm extends VersionedCommand {
             this.hours = hours;
         }
     }
+
+    public static class LessonPlanModuleJournalTeacherCapacitiesForm {
+        @NotNull
+        private Long id;
+        private Boolean capacityDiff;
+        private List<LessonPlanModuleJournalTeacherForm> teachers;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public Boolean getCapacityDiff() {
+            return capacityDiff;
+        }
+
+        public void setIsCapacityDiff(Boolean capacityDiff) {
+            this.capacityDiff = capacityDiff;
+        }
+
+        public List<LessonPlanModuleJournalTeacherForm> getTeachers() {
+            return teachers;
+        }
+
+        public void setTeachers(List<LessonPlanModuleJournalTeacherForm> teachers) {
+            this.teachers = teachers;
+        }
+
+    }
+
+    public static class LessonPlanModuleJournalTeacherForm {
+        @NotNull
+        private Long id;
+        private Map<String, List<Short>> hours;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public Map<String, List<Short>> getHours() {
+            return hours;
+        }
+
+        public void setHours(Map<String, List<Short>> hours) {
+            this.hours = hours;
+        }
+    }
 }

@@ -103,7 +103,7 @@
 
 
       <!--KUTSETE/OSAKUTSETE MOODULID-->
-      <div ng-repeat="occupation in occupations | orderBy: 'occupation.nameEt'" layout="column">
+      <div ng-repeat="occupation in occupations | orderBy: ['occupation', '-occupation.validThru', '-occupation.validFrom']:false:compareUsingLanguage" layout="column">
         <div class="occupation-header align-center">
           <span ng-show="isOccupation">{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp; {{occupation.occupation | hoisValidDates }}</span>
           <span ng-show="!isOccupation">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp; {{occupation.occupation | hoisValidDates }}</span>
@@ -131,7 +131,7 @@
           </div>
         </div>
         <!--OSAKUTSETE MOODULID-->
-        <div ng-repeat="partOccupation in occupation.partOccupations | orderBy" layout="column">
+        <div ng-repeat="partOccupation in occupation.partOccupations | orderBy: [partOccupation, '-validThru', '-validFrom']:false:compareUsingLanguage" layout="column">
           <div class="occupation-header2 align-center">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp;
             <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE" show-date></hois-classifier-value>
           </div>
@@ -159,7 +159,7 @@
           </div>
         </div>
         <!--SPETSKUTSETE MOODULID-->
-        <div ng-repeat="speciality in occupation.specialities | orderBy" layout="column">
+        <div ng-repeat="speciality in occupation.specialities | orderBy: [speciality, '-validThru', '-validFrom']:false:compareUsingLanguage" layout="column">
           <div class="occupation-header2 align-center">{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: &nbsp;
             <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE" show-date></hois-classifier-value>
           </div>
@@ -238,28 +238,30 @@
     <hois-created-modified object="implementationPlan"></hois-created-modified>
   </form>
 
-  <div layout="row" layout-xs="column">
-    <div ng-show="implementationPlan.status === VERSION_STATUS.S" layout-xs="column">
-      <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="implementationPlan.canChange">{{'main.button.change' | translate}}</md-button>
-      <md-button ng-click="confirm()" class="md-raised" ng-if="implementationPlan.canConfirm">{{'curriculum.statuschange.implementationPlan.button.verify' | translate}}</md-button>
-      <md-button ng-click="setStatusClosed()" class="md-raised" ng-if="implementationPlan.canClose">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
-      <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
+  <div layout="row">
+    <div flex layout-xs="column">
+      <span ng-show="implementationPlan.status === VERSION_STATUS.S" layout-xs="column">
+        <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="implementationPlan.canChange">{{'main.button.change' | translate}}</md-button>
+        <md-button ng-click="confirm()" class="md-raised" ng-if="implementationPlan.canConfirm">{{'curriculum.statuschange.implementationPlan.button.verify' | translate}}</md-button>
+        <md-button ng-click="setStatusClosed()" class="md-raised" ng-if="implementationPlan.canClose">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
+      </span>
+      <span ng-show="implementationPlan.status === VERSION_STATUS.K" layout-xs="column">
+        <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="implementationPlan.canChange">{{'main.button.change' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="implementationPlan.canChange && implementationPlan.canSetUnderRevision">{{'curriculum.statuschange.implementationPlan.button.changeStatusUnderRevision' | translate}}</md-button>
+        <md-button ng-click="setStatusClosed()" class="md-raised" ng-if="implementationPlan.canClose">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
+      </span>
+      <span ng-show="implementationPlan.status === VERSION_STATUS.C" layout-xs="column">
+        <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
+      </span>
+      <!--
+      <a href="{{implementationPlanPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="implementationPlan.id">{{'main.button.print' | translate}}</a>
+      -->
+      <a href="{{curriculumVersionPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="showPrintButton()">{{'module.implementationPlan.print' | translate}}</a>
+      <a href="{{curriculumVersionModulesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="showPrintButton()">{{'module.implementationPlan.printModules' | translate}}</a>
+      <md-button class="md-raised md-default" ng-click="back('#/vocationalCurriculum/' + curriculumId + '/view')">{{'main.button.back' | translate}}</md-button>
     </div>
-    <div ng-show="implementationPlan.status === VERSION_STATUS.K" layout-xs="column">
-      <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="implementationPlan.canChange">{{'main.button.change' | translate}}</md-button>
-      <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="implementationPlan.canChange && implementationPlan.canSetUnderRevision">{{'curriculum.statuschange.implementationPlan.button.changeStatusUnderRevision' | translate}}</md-button>
-      <md-button ng-click="setStatusClosed()" class="md-raised" ng-if="implementationPlan.canClose">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
-      <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
-    </div>
-    <div ng-show="implementationPlan.status === VERSION_STATUS.C">
-      <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.canChange">{{'main.button.copy' | translate}}</md-button>
-    </div>
-    <!--
-    <a href="{{implementationPlanPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="implementationPlan.id">{{'main.button.print' | translate}}</a>
-    -->
-    <a href="{{curriculumVersionPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="showPrintButton()">{{'module.implementationPlan.print' | translate}}</a>
-    <a href="{{curriculumVersionModulesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="showPrintButton()">{{'module.implementationPlan.printModules' | translate}}</a>
-    <md-button class="md-raised md-default" ng-click="back('#/vocationalCurriculum/' + curriculumId + '/view')">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>
 

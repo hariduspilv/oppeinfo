@@ -52,7 +52,13 @@
                     <span ng-repeat="journalResult in row.practiceJournalResults | orderBy: 'inserted'">
                       <span>
                         <span>{{gradeValue(journalResult.grade)}}</span>
-                        <md-tooltip>{{journalResult.theme ? currentLanguageNameField(journalResult.theme) : currentLanguageNameField(protocol.protocolVdata.curriculumVersionOccupationModule)}}</md-tooltip>
+                        <md-tooltip>
+                          <span ng-if="journalResult.themes.length === 0">{{currentLanguageNameField(protocol.protocolVdata.curriculumVersionOccupationModule)}}</span>
+                          <span ng-if="journalResult.themes.length > 0" ng-repeat="theme in journalResult.themes track by $index">
+                            <span ng-if="!$first">,</span>
+                            <span>{{currentLanguageNameField(theme)}}</span>
+                          </span>
+                        </md-tooltip>
                         <span ng-if="!$last">/</span>
                       </span>
                     </span>

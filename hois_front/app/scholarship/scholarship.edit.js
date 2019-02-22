@@ -39,7 +39,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
     function reloadCommittees() {
       $scope.formState.committees = QueryUtils.endpoint(baseUrl + "/committees").query({
         validDate: $scope.stipend.applicationEnd,
-        curriclumIds: $scope.stipend.curriculums.map(function (curriculum) {
+        curriclumIds: ($scope.stipend.curriculums || []).map(function (curriculum) {
           return curriculum.id;
         })
       });

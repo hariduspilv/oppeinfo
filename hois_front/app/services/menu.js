@@ -144,14 +144,42 @@ angular.module('hitsaOis')
             }
           },
           {
-            name: 'main.menu.documents.practiceContracts',
+            name: 'main.menu.documents.representativeApplications',
+            url: "/studentrepresentatives/applications?_menu",
+            icon:"explicit"
+          }
+        ]
+      });
+
+      sections.push({
+        name: 'main.menu.practice.label',
+        type: 'toggle',
+        icon: "local_parking",
+        pages: [
+          {
+            name: 'main.menu.practice.practiceEnterprises',
+            url: "/practice/enterprise?_menu",
+            icon:"search"
+          },
+          {
+            name: 'main.menu.practice.practiceApplications',
+            url: '/practice/applications?_menu',
+            icon:"font_download"
+          },
+          {
+            name: 'main.menu.practice.practiceEvaluations',
+            url: '/practice/evaluation?_menu',
+            icon:"rate_review"
+          },
+          {
+            name: 'main.menu.practice.practiceContracts',
             url: "/contracts?_menu",
             icon:"assignment"
           },
           {
-            name: 'main.menu.documents.representativeApplications',
-            url: "/studentrepresentatives/applications?_menu",
-            icon:"explicit"
+            name: 'main.menu.practice.statistics',
+            url: "/practice/student/statistics?_menu",
+            icon:"blur_circular"
           }
         ]
       });
@@ -343,6 +371,14 @@ angular.module('hitsaOis')
             icon:"gradient",
             studyLevel: {
               higher: true
+            }
+          },
+          {
+            name: 'main.menu.reports.teachersLoadDetailVocational',
+            url: "/reports/teachers/detailload/vocational?_menu",
+            icon:"grain",
+            studyLevel: {
+              vocational: true
             }
           },
           {
@@ -995,6 +1031,11 @@ angular.module('hitsaOis')
             studyLevel: {
               vocational: true
             }
+          },
+          {
+            name: 'main.menu.myStudyInformation.practiceApplications',
+            url: '/practice/application/myData?_menu',
+            icon:"font_download"
           },
           {
             name: 'main.menu.myStudyInformation.practiceJournals',

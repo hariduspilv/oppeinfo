@@ -1,0 +1,23 @@
+<md-dialog aria-label="apply for practice dialog" flex="50">
+  <form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
+    <md-dialog-content>
+      <div class="md-dialog-content" flex>
+        <div layout="row">{{'practiceApplication.prompt.rejectConfirm' | translate}}</div>
+
+        <br/>
+
+        <div layout="row">
+          <md-input-container flex>
+            <label class="textInput">{{'practiceApplication.rejectReason' | translate}}</label>
+            <textarea ng-model="application.rejectReason" name="rejectReason" md-maxlength="4000" max-rows="5" required></textarea>
+          </md-input-container>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row" layout-align="start start">
+      <md-button class="md-raised md-primary" type="submit">{{'main.yes' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.no" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

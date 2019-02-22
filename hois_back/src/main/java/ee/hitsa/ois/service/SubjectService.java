@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,7 @@ import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 
@@ -247,7 +249,12 @@ public class SubjectService {
      * @return
      */
     public SubjectDto get(HoisUserDetails user, Subject subject) {
-        SubjectDto dto = SubjectDto.of(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
+        SubjectDto dto;
+        if (user.isSchoolAdmin() || user.isTeacher()) {
+            dto = SubjectDto.of(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
+        } else {
+            dto = SubjectDto.forPublic(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
+        }
         dto.setCanEdit(Boolean.valueOf(SubjectUserRights.canEdit(user, subject)));
         dto.setCanDelete(Boolean.valueOf(SubjectUserRights.canDelete(user, subject)));
         dto.setCanSetActive(Boolean.valueOf(SubjectUserRights.canSetActive(user, subject)));
@@ -289,12 +296,16 @@ public class SubjectService {
         bindSubjectConnect(target, SubjectConnection.AINESEOS_EV, connections, newConnections, subjects.stream().filter(it -> recommended.contains(it.getId())).collect(Collectors.toSet()));
         bindSubjectConnect(target, SubjectConnection.AINESEOS_A, connections, newConnections, subjects.stream().filter(it -> substitute.contains(it.getId())).collect(Collectors.toSet()));
 
-        List<Long> ids = new ArrayList<>();
+        Set<Long> ids = new HashSet<>();
         ids.add(target.getId());
         for (SubjectConnect subjectConnect : newConnections) {
             Long id = EntityUtil.getId(subjectConnect.getConnectSubject());
             if (ids.contains(id)) {
-                throw new ValidationFailedException(EntityUtil.getCode(subjectConnect.getConnection()), "same-subject-multipile");
+                Map<Object, Object> params = new HashMap<>();
+                params.put("type", new AutocompleteResult(null, subjectConnect.getConnection()));
+                params.put("subject", AutocompleteResult.of(subjectConnect.getConnectSubject()));
+                throw new ValidationFailedException("subject.alreadyConnectedOrSameSubject", params);
+                //throw new ValidationFailedException(EntityUtil.getCode(subjectConnect.getConnection()), "same-subject-multipile");
             }
             ids.add(id);
         }

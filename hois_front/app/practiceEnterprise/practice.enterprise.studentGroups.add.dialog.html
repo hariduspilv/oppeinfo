@@ -1,0 +1,74 @@
+<md-dialog aria-label="add enterprise dialog" flex="50">
+        <form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
+            <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2 flex>{{"enterprise.iscedTab.addNew" | translate}}</h2>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                <md-icon md-font-set="material-icons">close</md-icon>
+                </md-button>
+            </div>
+            </md-toolbar>
+            <md-dialog-content>
+            <div class="md-dialog-content" flex>
+                <div layout="row" class="form-readonly">
+                    <div layout="column" flex="50">
+                        <md-input-container flex>
+                            <label>{{'enterprise.name' | translate}}</label>
+                            <hois-value value="enterprise.name"></hois-value>
+                        </md-input-container>
+                    </div>
+                    <div layout="column" flex="50">
+                        <md-input-container flex>
+                            <label>{{'enterprise.iscedTab.regCode' | translate}}</label>
+                            <hois-value value="enterprise.regCode"></hois-value>
+                        </md-input-container>
+                    </div>
+                </div>
+                <div layout="row">
+                    <div layout="column" flex="65">
+                        <md-input-container flex>
+                            <label class="textInput">{{'enterprise.iscedTab.iscedClass' | translate}}</label>
+                            <hois-classifier-select ng-model="enterprise.iscedClass" required model-value-attr="code" main-classifier-code="ISCED_RYHM"></hois-classifier-select>
+                        </md-input-container>
+                    </div>
+                    <div layout="column" flex="30" flex-offset="5">
+                        <md-input-container flex>
+                            <label>{{'enterprise.iscedTab.places' | translate}}</label>
+                            <input ng-model="enterprise.places" name="internSpots" type="text" pattern="^\d+$" md-maxlength="4" md-minlength="0" required>
+                            <div ng-messages="dialogForm.internSpots.$error">
+                                <div ng-message="md-maxlength">
+                                    {{'main.messages.error.maxlength' | translate}}
+                                </div>
+                                <div ng-message="pattern">
+                                    {{'enterprise.personsTab.number' | translate}}
+                                </div>
+                                <div ng-message="md-minlength">
+                                    {{'main.messages.error.minlength' | translate}}
+                                </div>
+                            </div>
+                        </md-input-container>
+                    </div>
+                </div>
+                <div layout="row">
+                    <div layout="column" flex="100">
+                        <md-input-container flex>
+                            <label class="textInput">{{'enterprise.iscedTab.addInfo' | translate}}</label>
+                            <input name="info" ng-model="enterprise.addInfo" md-maxlength="255">
+                            <div ng-messages="dialogForm.info.$error">
+                                <div ng-message="md-maxlength">
+                                    {{'main.messages.error.maxlength' | translate}}
+                                </div>
+                            </div>
+                        </md-input-container>
+                    </div>
+                </div>
+            </div>
+            </md-dialog-content>
+        
+            <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
+                <md-button flex-xs="100" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+                <md-button ng-show="enterprise.id" flex-xs="100" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+                <md-button flex-xs="100" class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+            </md-dialog-actions>
+        </form>
+        </md-dialog>

@@ -19,8 +19,7 @@
         </div>
         <div layout="row" ng-if="showPersonSearch">
           <hois-autocomplete flex ng-model="criteria.person" method="committeeMembers" no-paging="true" 
-          ha-attribute="id" ha-controller="directiveControllers"
-          label="committee.member"></hois-autocomplete>
+          ha-controller="directiveControllers" label="committee.member"></hois-autocomplete>
         </div>
         <div layout="row" ng-if="showName">
           <md-input-container flex="100">

@@ -1,0 +1,132 @@
+<style>
+.popup {
+  position: absolute;
+  z-index: 1;
+  border: 1px solid black;
+  background-color:whitesmoke;
+}
+
+@keyframes disappear {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.popup.ng-leave {
+  animation: 1s disappear;
+}
+</style>
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+      <fieldset ng-if="auth.isAdmin()">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+          <div layout="column" flex>
+
+            <div layout="row">
+              <div flex="50" flex-xs="100">
+                <div layout="column" flex>
+                  <md-input-container>
+                    <label class="textInput">{{'enterprise.name' | translate}}</label>
+                    <input ng-model="criteria.enterpriseName" type="text" md-maxlength="255">
+                  </md-input-container>
+                </div>
+              </div>
+            </div>
+
+            <div layout="row">
+              <div flex="25" flex-xs="100">
+                <div layout="column" flex>
+                  <md-input-container>
+                    <label class="textInput">{{'enterprise.regCode' | translate}}</label>
+                    <input ng-model="criteria.enterpriseCode" type="text" md-maxlength="20">
+                  </md-input-container>
+                </div>
+              </div>
+            </div>
+
+            <div layout="row">
+              <div flex="50" flex-xs="100">
+                <div layout="column" flex>
+                  <md-input-container>
+                      <label>{{'enterprise.schoolGrade' | translate}}</label>
+                      <hois-classifier-select ng-model="criteria.ratingCode" model-value-attr="code" main-classifier-code="PR_HINNANG"></hois-classifier-select>
+                  </md-input-container>
+                </div>
+              </div>
+            </div>
+
+            <md-input-container flex="45">
+                <md-checkbox ng-model="criteria.enterpriseActive" aria-label="required">
+                  {{'enterprise.isActive' | translate}}
+                </md-checkbox>
+            </md-input-container>
+  
+            <div layout="row" layout-xs="column">
+              <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+              <md-button ng-href="#/practice/enterprise/new" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" class="md-raised">{{'main.button.create' | translate}}</md-button>
+              <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" ng-click="importEnterprise()">{{'enterprise.import' | translate}}</md-button>
+              <a ng-href="{{csvSampleFileUrl}}" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" class="md-button md-raised">{{'main.button.csvSampleFile' | translate}}</a>
+            </div>
+
+          </div>
+          <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+        </form>
+      </fieldset>
+    </div>
+  </div>
+  <div layout-padding>
+    <div flex>
+      <md-table-container>
+        <table md-table md-progress="tabledata.$promise" class="secondary-table">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th md-column md-order-by="en.name">{{'enterprise.name' | translate}}</th>
+              <th md-column>{{'enterprise.regCode' | translate}}</th>
+              <th md-column>{{'main.country' | translate}}</th>
+              <th md-column>{{'building.address' | translate}}</th>
+              <th md-column>{{'enterprise.contactPerson' | translate}}</th>
+              <th md-column>{{'enterprise.schoolGrade' | translate}}</th>
+              <th md-column></th>
+              <th md-column>{{'enterprise.isActive' | translate}}</th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell><a href="#/practice/enterprise/{{::row.id}}/view">{{row.enterpriseName ? row.enterpriseName : '-'}}</a></td>
+              <td md-cell>{{row.regCode ? row.regCode : '-'}}</td>
+              <td md-cell>{{row.countryCode ? row.countryCode : '-'}}</td>
+              <td md-cell>{{row.address ? row.address : '-'}}</td>
+              <td md-cell>{{row.contactPersons ? row.contactPersons : '-'}}</td>
+              <td ng-style="{ background: true ? getCurrentColor(row.ratingCode.code, row.ratingThru) : 'white' }"  style="position: relative; padding:3px;"
+                ng-mouseover="row.visible=true" ng-mouseleave="row.visible=false" md-cell>
+                <div class="popup" ng-if="row.visible && row.ratingThru">
+                  <span>{{row.ratingThru ? (row.ratingThru | hoisDate) : '-'}}</span>
+                </div>
+                <div flex>
+                  <span>
+                    {{currentLanguageNameField(row.ratingCode) ? currentLanguageNameField(row.ratingCode) : 'Puudub'}}
+                  </span>
+                </div>
+              </td>
+              <td md-cell></td>
+              <td md-cell>{{row.isActive ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
+              <td ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" md-cell>
+              <md-button md-no-ink class="md-primary change-button" 
+                    ng-href="#/practice/enterprise/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+        md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select></md-table-pagination>
+    </div>
+  </div>
+  

@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;choice&gt;
- *           &lt;element name="puudubKehtivKutsestandard" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oneOrZeroInteger" minOccurs="0"/&gt;
+ *           &lt;element name="puudubKehtivKutsestandard" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oneOnlyInteger" minOccurs="0"/&gt;
  *           &lt;element name="kutsestandard" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisKutsestandard" maxOccurs="unbounded" minOccurs="0"/&gt;
  *         &lt;/choice&gt;
  *       &lt;/sequence&gt;

@@ -224,6 +224,7 @@ angular.module('hitsaOis')
     '/stateCurriculum/public/:id/view',
     '/subject/public',
     '/subject/public/:id',
+    '/subjectProgram/public/:subjectProgramId/view',
     '/timetables',
     '/timetable/generalTimetableByGroup/:schoolId?',
     '/timetable/generalTimetableByTeacher/:schoolId?',
@@ -243,7 +244,7 @@ angular.module('hitsaOis')
       this.userId = user.user;
       this.studentId = user.student;
       this.teacherId = user.teacher;
-      this.hasCurriculums = user.hasCurriculums;
+      this.isCurriculumTeacher = user.isCurriculumTeacher;
       this.authorizedRoles = user.authorizedRoles;
       this.school = angular.extend(this.school || {}, user.school);
       this.roleCode = user.roleCode;
@@ -256,7 +257,7 @@ angular.module('hitsaOis')
       this.userId = null;
       this.studentId = null;
       this.teacherId = null;
-      this.hasCurriculums = null;
+      this.isCurriculumTeacher = null;
       this.authorizedRoles = [];
       this.school = {};
       this.roleCode = null;
@@ -285,6 +286,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_V_TEEMAOIGUS_DOKALLKIRI: 'ROLE_OIGUS_V_TEEMAOIGUS_DOKALLKIRI',	//Dokumentide kooskõlastajad
     ROLE_OIGUS_V_TEEMAOIGUS_EKSAM: 'ROLE_OIGUS_V_TEEMAOIGUS_EKSAM',	//Eksamid
     ROLE_OIGUS_V_TEEMAOIGUS_ESINDAVALDUS: 'ROLE_OIGUS_V_TEEMAOIGUS_ESINDAVALDUS',	//Esindajate avaldused
+    ROLE_OIGUS_V_TEEMAOIGUS_ETTEVOTE: 'ROLE_OIGUS_V_TEEMAOIGUS_ETTEVOTE', //Ettevõtted
     ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT: 'ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT',	//Akad. õiendid/hinnetelehed
     ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE: 'ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE',
     ROLE_OIGUS_V_TEEMAOIGUS_HOONERUUM: 'ROLE_OIGUS_V_TEEMAOIGUS_HOONERUUM',	//Hooned/ruumid
@@ -315,8 +317,11 @@ angular.module('hitsaOis')
     ROLE_OIGUS_V_TEEMAOIGUS_OPPUR: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPUR',	//Õppurid
     ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK: 'ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK',	//Päevikud
     ROLE_OIGUS_V_TEEMAOIGUS_PARING: 'ROLE_OIGUS_V_TEEMAOIGUS_PARING',	//Päringud
+    ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAAVALDUS: 'ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAAVALDUS',
     ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAPAEVIK: 'ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAPAEVIK',	//Praktika päevikud
     ROLE_OIGUS_V_TEEMAOIGUS_PROTOKOLL: 'ROLE_OIGUS_V_TEEMAOIGUS_PROTOKOLL',	//Protokollid
+    ROLE_OIGUS_V_TEEMAOIGUS_PRHINDAMISVORM: 'ROLE_OIGUS_V_TEEMAOIGUS_PRHINDAMISVORM',
+    ROLE_OIGUS_V_TEEMAOIGUS_PRSTATISTIKA: 'ROLE_OIGUS_V_TEEMAOIGUS_PRSTATISTIKA',	//Praktika statistika
     ROLE_OIGUS_V_TEEMAOIGUS_PUUDUMINE: 'ROLE_OIGUS_V_TEEMAOIGUS_PUUDUMINE',	//Puudumistõendid
     ROLE_OIGUS_V_TEEMAOIGUS_RIIKLIKOPPEKAVA: 'ROLE_OIGUS_V_TEEMAOIGUS_RIIKLIKOPPEKAVA',	//Riiklikud õppekavad
     ROLE_OIGUS_V_TEEMAOIGUS_RYHMAJUHATAJA: 'ROLE_OIGUS_V_TEEMAOIGUS_RYHMAJUHATAJA', // Rühmajuhataja aruanne
@@ -350,6 +355,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_M_TEEMAOIGUS_DOKALLKIRI: 'ROLE_OIGUS_M_TEEMAOIGUS_DOKALLKIRI',	//Dokumentide kooskõlastajad
     ROLE_OIGUS_M_TEEMAOIGUS_EKSAM: 'ROLE_OIGUS_M_TEEMAOIGUS_EKSAM',	//Eksamid
     ROLE_OIGUS_M_TEEMAOIGUS_ESINDAVALDUS: 'ROLE_OIGUS_M_TEEMAOIGUS_ESINDAVALDUS',	//Esindajate avaldused
+    ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE: 'ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE', //Ettevõtted
     ROLE_OIGUS_M_TEEMAOIGUS_HINNETELEHT: 'ROLE_OIGUS_M_TEEMAOIGUS_HINNETELEHT',	//Akad. õiendid/hinnetelehed
     ROLE_OIGUS_M_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE: 'ROLE_OIGUS_M_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE',
     ROLE_OIGUS_M_TEEMAOIGUS_HOONERUUM: 'ROLE_OIGUS_M_TEEMAOIGUS_HOONERUUM',	//Hooned/ruumid
@@ -380,8 +386,11 @@ angular.module('hitsaOis')
     ROLE_OIGUS_M_TEEMAOIGUS_OPPUR: 'ROLE_OIGUS_M_TEEMAOIGUS_OPPUR',	//Õppurid
     ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK: 'ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK',	//Päevikud
     ROLE_OIGUS_M_TEEMAOIGUS_PARING: 'ROLE_OIGUS_M_TEEMAOIGUS_PARING',	//Päringud
+    ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAAVALDUS: 'ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAAVALDUS',
     ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK: 'ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK',	//Praktika päevikud
     ROLE_OIGUS_M_TEEMAOIGUS_PROTOKOLL: 'ROLE_OIGUS_M_TEEMAOIGUS_PROTOKOLL',	//Protokollid
+    ROLE_OIGUS_M_TEEMAOIGUS_PRHINDAMISVORM: 'ROLE_OIGUS_M_TEEMAOIGUS_PRHINDAMISVORM',
+    ROLE_OIGUS_M_TEEMAOIGUS_PRSTATISTIKA: 'ROLE_OIGUS_M_TEEMAOIGUS_PRSTATISTIKA',	//Praktika statistika
     ROLE_OIGUS_M_TEEMAOIGUS_PUUDUMINE: 'ROLE_OIGUS_M_TEEMAOIGUS_PUUDUMINE',	//Puudumistõendid
     ROLE_OIGUS_M_TEEMAOIGUS_RIIKLIKOPPEKAVA: 'ROLE_OIGUS_M_TEEMAOIGUS_RIIKLIKOPPEKAVA',	//Riiklikud õppekavad
     ROLE_OIGUS_M_TEEMAOIGUS_RYHMAJUHATAJA: 'ROLE_OIGUS_V_TEEMAOIGUS_RYHMAJUHATAJA', // Rühmajuhataja aruanne

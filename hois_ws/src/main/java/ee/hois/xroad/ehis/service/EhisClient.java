@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.xml.ws.BindingProvider;
 
 import ee.hois.soap.LogContext;
+import ee.hois.soap.SoapAttachment;
 import ee.hois.soap.SoapHandler;
 import ee.hois.soap.SoapUtil;
 import ee.hois.xroad.ehis.generated.EhisPortType;
@@ -17,8 +18,9 @@ import ee.hois.xroad.ehis.generated.LaeOppejoudResponse;
 import ee.hois.xroad.ehis.generated.LaePedagoogid;
 import ee.hois.xroad.ehis.generated.LaePedagoogidResponse;
 import ee.hois.xroad.ehis.generated.OisOppekava;
+import ee.hois.xroad.ehis.generated.OisOppekavaResponse;
 import ee.hois.xroad.ehis.generated.OisOppekavaStaatus;
-import ee.hois.xroad.ehis.generated.OisResponse;
+import ee.hois.xroad.ehis.generated.OisOppekavaStaatusResponse;
 import ee.hois.xroad.ehis.generated.OppeasutusList;
 import ee.hois.xroad.ehis.generated.OppejoudList;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
@@ -66,12 +68,15 @@ public class EhisClient {
         return result != null ? result : new EhisLaePedagoogidResponse(ctx, null, null, null);
     }
 
-    public EhisOisOppekavaResponse oisOppekava(XRoadHeaderV4 header, OisOppekava oisOppekava) {
+    public EhisOisOppekavaResponse oisOppekava(XRoadHeaderV4 header, OisOppekava oisOppekava, SoapAttachment attachment) {
         EhisPortType port = initializePort(header);
+        Map<String, Object> context = ((BindingProvider) port).getRequestContext();
+        context.put("mtom-enabled", Boolean.TRUE);
+        context.put(SoapHandler.ATTACHMENT, attachment);
         LogContext ctx = ctx(port);
 
         EhisOisOppekavaResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
-            OisResponse resp = port.oisOppekava(oisOppekava);
+            OisOppekavaResponse resp = port.oisOppekava(oisOppekava);
             return new EhisOisOppekavaResponse(ctx, resp.getInfoteated().getInfoteade());
         });
         return result != null ? result : new EhisOisOppekavaResponse(ctx, null);
@@ -82,7 +87,7 @@ public class EhisClient {
         LogContext ctx = ctx(port);
 
         EhisOisOppekavaStaatusResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
-            OisResponse resp = port.oisOppekavaStaatus(oisOppekavaStaatus);
+            OisOppekavaStaatusResponse resp = port.oisOppekavaStaatus(oisOppekavaStaatus);
             return new EhisOisOppekavaStaatusResponse(ctx, resp.getInfoteated().getInfoteade());
         });
         return result != null ? result : new EhisOisOppekavaStaatusResponse(ctx, null);

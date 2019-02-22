@@ -5,12 +5,12 @@
       <form name="searchForm" ng-submit="loadData()" novalidate>
         <div layout="row" layout-sm="column" layout-xs="column">
           <div flex="45" flex-sm="100" flex-xs="100">
-            <hois-autocomplete flex ng-model="criteria.studentObject" method="students" name="student" label="apel.student"></hois-autocomplete>
+            <hois-autocomplete flex ha-controller="directiveControllers" ng-model="criteria.studentObject" method="students" name="student" label="apel.student"></hois-autocomplete>
           </div>
           <div flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="column" flex>
               <div layout="row" flex>
-                <hois-autocomplete flex ng-model="criteria.committeeObject" method="committees" name="committee" 
+                <hois-autocomplete flex ha-controller="directiveControllers" ng-model="criteria.committeeObject" method="committees" name="committee" 
                   additional-query-params="{type: 'KOMISJON_V', memberPerson: auth.isTeacher() ? auth.user : null}" label="apel.committee"></hois-autocomplete>
               </div>
             </div>

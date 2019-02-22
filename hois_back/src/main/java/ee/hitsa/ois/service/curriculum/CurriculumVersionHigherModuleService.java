@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service.curriculum;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -94,7 +95,7 @@ public class CurriculumVersionHigherModuleService {
                 CurriculumVersionHigherModuleSubject subject = dto.getId() == null ? new CurriculumVersionHigherModuleSubject() :
                     EntityUtil.find(dto.getId(), module.getSubjects()).get();
 
-                EntityUtil.bindToEntity(dto, subject, "nameEt", "nameEt", "credits", "school", "subjectId", "electiveModule");
+                EntityUtil.bindToEntity(dto, subject, "nameEt", "nameEt", "credits", "school", "subjectId", "electiveModule", "assessment");
                 subject.setSubject(em.getReference(Subject.class, dto.getSubjectId()));
                 subject.setModule(module);
                 
@@ -219,6 +220,11 @@ public class CurriculumVersionHigherModuleService {
         return StreamUtil.toMappedList(
                 s -> new AutocompleteResult(EntityUtil.getId(s), s.getCurriculumSpeciality().getNameEt(), 
                         s.getCurriculumSpeciality().getNameEn()), version.getSpecialities());
+    }
+
+    public Short getCurriculumStudyYears(Long curriculumId) {
+        List<?> results = em.createNativeQuery("select c.study_period from curriculum c where c.id = ?1 limit 1").setParameter(1, curriculumId).getResultList();
+        return results.isEmpty() ? Short.valueOf((short) 0) : Short.valueOf((short) Math.ceil(resultAsInteger(results.get(0), 0).doubleValue() / 12));
     }
 
 }

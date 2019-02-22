@@ -9,11 +9,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -37,6 +35,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
@@ -124,10 +123,13 @@ public class KutseregisterService {
         }
 
         // existing occupation certificates
-        data = em.createNativeQuery("select soc.student_id, soc.certificate_nr from student_occupation_certificate soc where soc.student_id in (?1)")
+        List<StudentOccupationCertificate> certData = em.createQuery("select soc from StudentOccupationCertificate soc"
+                + " where soc.student.id in (?1)", StudentOccupationCertificate.class)
                 .setParameter(1, StreamUtil.toMappedList(r -> resultAsLong(r, 0), students))
                 .getResultList();
-        Map<Long, Set<String>> certificates = data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> resultAsString(r, 1), Collectors.toSet())));
+        Map<Long, Map<String, StudentOccupationCertificate>> certificates = certData.stream()
+                .collect(Collectors.groupingBy(soc -> EntityUtil.getId(soc.getStudent()), 
+                        Collectors.toMap(soc -> soc.getCertificateNr(), soc -> soc)));
 
         List<StudentOccupationCertificate> addedCerts = new ArrayList<>();
         for(Object s : students) {
@@ -136,7 +138,7 @@ public class KutseregisterService {
             Long curriculumVersionId = resultAsLong(s, 2);
             addedCerts.addAll(kutsetunnistus(studentDto, criteria.getFrom(), criteria.getThru(),
                     occupations.getOrDefault(curriculumVersionId, Collections.emptyList()),
-                    certificates.computeIfAbsent(studentId, key -> new HashSet<>())));
+                    certificates.computeIfAbsent(studentId, key -> new HashMap<>())));
         }
         return StreamUtil.toMappedList(StudentOccupationCertificateDto::new, addedCerts);
     }
@@ -172,7 +174,8 @@ public class KutseregisterService {
         });
     }
 
-    private List<StudentOccupationCertificate> kutsetunnistus(StudentDto studentDto, LocalDate from, LocalDate thru, List<OccupationDto> occupations, Set<String> existingCertificates) {
+    private List<StudentOccupationCertificate> kutsetunnistus(StudentDto studentDto, LocalDate from, LocalDate thru, 
+            List<OccupationDto> occupations, Map<String, StudentOccupationCertificate> existingCertificates) {
         Kutsetunnistus request = new Kutsetunnistus();
         request.setIsikukood(studentDto.getIdcode());
         request.setValjastatudalgus(from);
@@ -187,46 +190,48 @@ public class KutseregisterService {
                     if(!studentDto.getIdcode().equals(certificate.getIsikukood())) {
                         continue;
                     }
+                    StudentOccupationCertificate studentCertificate;
                     String certificateNr = certificate.getRegistrinumber();
-                    if(existingCertificates.contains(certificateNr)) {
+                    if(existingCertificates.containsKey(certificateNr)) {
                         // certificate already exists
-                        continue;
-                    }
-                    String type = certificate.getTyyp();
-                    Classifier occupation = null, partOccupation = null, speciality = null;
-                    if(OCCUPATION_CERTIFICATE_TYPE_OCCUPATION.equalsIgnoreCase(type) 
-                            || (type != null && type.toLowerCase().contains("kantav kutse"))) {
-                        // check for specialty certificate
-                        speciality = findOccupation(certificate.getSpetsialiseerumine(), SPECIALIZATION_PREFIX, certificate.getValjaantud(), occupations);
-                        if(speciality != null) {
-                            occupation = ClassifierUtil.parentFor(speciality, MainClassCode.KUTSE).orElse(null);
-                        } else {
-                            // just occupation certificate
-                            occupation = findOccupation(certificate.getStandard(), OCCUPATION_PREFIX, certificate.getValjaantud(), occupations);
+                        studentCertificate = existingCertificates.get(certificateNr);
+                    } else {
+                        String type = certificate.getTyyp();
+                        Classifier occupation = null, partOccupation = null, speciality = null;
+                        if(OCCUPATION_CERTIFICATE_TYPE_OCCUPATION.equalsIgnoreCase(type) 
+                                || (type != null && type.toLowerCase().contains("kantav kutse"))) {
+                            // check for specialty certificate
+                            speciality = findOccupation(certificate.getSpetsialiseerumine(), SPECIALIZATION_PREFIX, certificate.getValjaantud(), occupations);
+                            if(speciality != null) {
+                                occupation = ClassifierUtil.parentFor(speciality, MainClassCode.KUTSE).orElse(null);
+                            } else {
+                                // just occupation certificate
+                                occupation = findOccupation(certificate.getStandard(), OCCUPATION_PREFIX, certificate.getValjaantud(), occupations);
+                            }
+                        } else if(OCCUPATION_CERTIFICATE_TYPE_PARTOCCUPATION.equalsIgnoreCase(type) 
+                                || (type != null && type.toLowerCase().contains("kantav osakutse"))) {
+                            partOccupation = findOccupation(certificate.getOsakutse(), PARTOCCUPATION_PREFIX, certificate.getValjaantud(), occupations);
+                            occupation = ClassifierUtil.parentFor(partOccupation, MainClassCode.KUTSE).orElse(null);
                         }
-                    } else if(OCCUPATION_CERTIFICATE_TYPE_PARTOCCUPATION.equalsIgnoreCase(type) 
-                            || (type != null && type.toLowerCase().contains("kantav osakutse"))) {
-                        partOccupation = findOccupation(certificate.getOsakutse(), PARTOCCUPATION_PREFIX, certificate.getValjaantud(), occupations);
-                        occupation = ClassifierUtil.parentFor(partOccupation, MainClassCode.KUTSE).orElse(null);
+                        if(occupation == null) {
+                            // no matching (part)occupation
+                            continue;
+                        }
+                        // add new occupation certificate
+                        studentCertificate = new StudentOccupationCertificate();
+                        studentCertificate.setStudent(student);
+                        studentCertificate.setCertificateNr(certificateNr);
+                        studentCertificate.setOccupation(occupation);
+                        studentCertificate.setPartOccupation(partOccupation);
+                        studentCertificate.setSpeciality(speciality);
+                        studentCertificate.setValidFrom(certificate.getKehtibalates());
+                        studentCertificate.setValidThru(certificate.getKehtibkuni());
+                        studentCertificate.setIssuer(certificate.getValjastaja());
+                        studentCertificate.setIssueDate(certificate.getValjaantud());
+                        studentCertificate.setLanguage(certificate.getKeel());
+                        em.persist(studentCertificate);
+                        existingCertificates.put(certificateNr, studentCertificate);
                     }
-                    if(occupation == null) {
-                        // no matching (part)occupation
-                        continue;
-                    }
-                    // add new occupation certificate
-                    StudentOccupationCertificate studentCertificate = new StudentOccupationCertificate();
-                    studentCertificate.setStudent(student);
-                    studentCertificate.setCertificateNr(certificateNr);
-                    studentCertificate.setOccupation(occupation);
-                    studentCertificate.setPartOccupation(partOccupation);
-                    studentCertificate.setSpeciality(speciality);
-                    studentCertificate.setValidFrom(certificate.getKehtibalates());
-                    studentCertificate.setValidThru(certificate.getKehtibkuni());
-                    studentCertificate.setIssuer(certificate.getValjastaja());
-                    studentCertificate.setIssueDate(certificate.getValjaantud());
-                    studentCertificate.setLanguage(certificate.getKeel());
-                    em.persist(studentCertificate);
-                    existingCertificates.add(certificateNr);
                     certificates.add(studentCertificate);
                     // change "occupation exam passed" flag on directive
                     em.createNativeQuery("update directive_student set is_occupation_exam_passed = true " +

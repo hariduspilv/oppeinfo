@@ -1,0 +1,100 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+  <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/student/statistics" name="practice.students">
+      {{'practice.student.statistics' | translate}}</md-nav-item>
+  <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/contract/statistics" name="practice.contracts">
+    {{'practice.contract.statistics' | translate}}</md-nav-item>
+  <!--<md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/studyYear/statistics" name="practice.studyYear">
+    {{'practice.studyYear.statistics' | translate}}</md-nav-item>-->
+</md-nav-bar>
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset ng-if="auth.isAdmin()">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+        <div layout="column" flex>
+
+          <div layout="row">
+            <div flex="50">
+              <hois-autocomplete flex ng-model="criteria.enterprise" method="enterprises" name="enterprise" label="enterprise.label"
+              ha-attribute="id" ha-controller="directiveControllers"></hois-autocomplete>
+            </div>
+            <div flex-offset="5">
+              <md-input-container>
+                  <label>{{'practice.student.startDate' | translate}}</label>
+                  <md-datepicker name="date" ng-model="criteria.startDate" md-max-date="criteria.endDate" md-open-on-focus></md-datepicker>
+              </md-input-container>
+            </div>
+            <div flex-offset="5">
+              <md-input-container>
+                  <label>{{'practice.student.endDate' | translate}}</label>
+                  <md-datepicker name="date" ng-model="criteria.endDate" md-min-date="criteria.startDate" md-open-on-focus></md-datepicker>
+              </md-input-container>
+            </div>
+          </div>
+
+          <div layout="row">
+            <div flex="50">
+              <hois-autocomplete flex ng-model="criteria.student" method="students" name="student" label="apel.student"
+                ha-attribute="id" ha-controller="directiveControllers"></hois-autocomplete>
+            </div>
+            <md-input-container  flex-offset="5">
+              <label>{{'practice.student.contractStatus' | translate}}</label>
+              <hois-classifier-select ng-model="criteria.status" main-classifier-code="LEPING_STAATUS" model-value-attr="code"></hois-classifier-select>
+            </md-input-container>
+          </div>
+
+          <div layout="row">
+            <hois-autocomplete flex="50" ng-model="criteria.studentGroup" ha-attribute="id" 
+              ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
+              label="{{'lessonplan.studentGroup'}}"></hois-autocomplete>
+          </div>
+
+          <div layout="row" layout-xs="column">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'document.button.excel' | translate}}</a>
+          </div>
+
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise" class="secondary-table">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="p.firstname, p.lastname">{{'practice.student.label' | translate}}</th>
+            <th md-column>{{'practice.student.studentGroup' | translate}}</th>
+            <th md-column>{{'practice.student.contractNr' | translate}}</th>
+            <th md-column>{{'practice.student.contractDate' | translate}}</th>
+            <th md-column>{{'practice.student.enterprise' | translate}}</th>
+            <th md-column>{{'practice.student.status' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{row.student ? row.student : '-'}}</td>
+            <td md-cell>{{row.studentGroup ? row.studentGroup : '-'}}</td>
+            <td md-cell>{{row.contractNr ? row.contractNr : '-'}}</td>
+            <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
+            <td md-cell>{{row.enterprise ? row.enterprise : '-'}}</td>
+            <td md-cell>{{row.status ? currentLanguageNameField(row.status) : "-"}}</td>
+            <td md-cell>
+            <md-button md-no-ink class="md-primary change-button" 
+                  ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+      md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>
+  

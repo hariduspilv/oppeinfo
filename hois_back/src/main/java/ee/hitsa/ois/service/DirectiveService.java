@@ -92,6 +92,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.DirectiveUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -296,7 +297,7 @@ public class DirectiveService {
         Directive directive = new Directive();
         directive.setSchool(em.getReference(School.class, user.getSchoolId()));
         directive.setStatus(em.getReference(Classifier.class, DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name()));
-        return save(directive, form);
+        return save(user, directive, form);
     }
 
     /**
@@ -306,7 +307,7 @@ public class DirectiveService {
      * @param form
      * @return
      */
-    public Directive save(Directive directive, DirectiveForm form) {
+    public Directive save(HoisUserDetails user, Directive directive, DirectiveForm form) {
         assertModifyable(directive);
 
         EntityUtil.bindToEntity(form, directive, classifierRepository, "students");
@@ -495,7 +496,7 @@ public class DirectiveService {
             }
             // remove possible existing directive students not included in update command
             students.removeAll(studentMapping.values());
-            studentMapping.values().forEach(this::studentRemovedFromDirective);
+            studentMapping.values().forEach(ds -> studentRemovedFromDirective(user, ds));
             if(!DirectiveType.KASKKIRI_IMMAT.equals(directiveType) && !DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
                 for (DirectiveStudent directiveStudent : messagesToStudents) {
                     StudentDirectiveCreated data = new StudentDirectiveCreated(directiveStudent);
@@ -560,7 +561,7 @@ public class DirectiveService {
         }
         EntityUtil.setUsername(user.getUsername(), em);
         // update possible applications as free for directives
-        directive.getStudents().forEach(this::studentRemovedFromDirective);
+        directive.getStudents().forEach(ds -> studentRemovedFromDirective(user, ds));
         EntityUtil.deleteEntity(directive, em);
     }
 
@@ -621,7 +622,7 @@ public class DirectiveService {
             return Collections.emptyList();
         }
 
-		Map<Long, ScholarshipApplication> scholarshipApps = isScholarship(cmd.getType()) ? em.createQuery(
+        Map<Long, ScholarshipApplication> scholarshipApps = isScholarship(cmd.getType()) ? em.createQuery(
                 "select sa from ScholarshipApplication sa " +
                 "where sa.student.school.id = ?1 and sa.student.id in (?2) " +
                 "and sa.scholarshipTerm.type.code = ?3 and sa.status.code = ?4 " +
@@ -634,7 +635,6 @@ public class DirectiveService {
             .setParameter(5, DirectiveType.KASKKIRI_STIPTOET.name())
             .getResultList()
             .stream().collect(Collectors.toMap(r -> EntityUtil.getId(r.getStudent()), r -> r, (o, n) -> o)) : Collections.emptyMap();
-
 
         ApplicationType applicationType = applicationType(directiveType);
         Map<Long, Application> applications = applicationType != null ? em.createQuery(
@@ -1107,7 +1107,7 @@ public class DirectiveService {
         return directiveStudent;
     }
 
-    private void studentRemovedFromDirective(DirectiveStudent directiveStudent) {
+    private void studentRemovedFromDirective(HoisUserDetails user, DirectiveStudent directiveStudent) {
         Application app = directiveStudent.getApplication();
         if(app != null && !ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT, app.getType())) {
             // student with application is removed from directive
@@ -1115,6 +1115,7 @@ public class DirectiveService {
             app.setStatus(em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
             EntityUtil.save(app, em);
         }
+        DirectiveUtil.cancelFormsAndDocuments(user.getUsername(), directiveStudent, em);
     }
 
     private List<StudentGroup> findValidStudentGroups(Long schoolId) {

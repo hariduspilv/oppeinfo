@@ -42,6 +42,8 @@ public class Journal extends BaseEntityWithId {
     private LocalDate reviewDate;
     private String reviewInfo;
     private String untisCode;
+    @Column(name = "is_capacity_diff")
+    private Boolean capacityDiff;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
@@ -234,4 +236,12 @@ public class Journal extends BaseEntityWithId {
 		this.untisCode = untisCode;
 	}
     
+    public Boolean getCapacityDiff() {
+        return capacityDiff;
+    }
+
+    public void setCapacityDiff(Boolean capacityDiff) {
+        this.capacityDiff = capacityDiff;
+    }
+
 }

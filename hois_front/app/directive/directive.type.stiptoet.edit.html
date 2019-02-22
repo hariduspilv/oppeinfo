@@ -17,22 +17,29 @@
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{::row.bankAccount}}</td>
         <td md-cell>
-          <hois-value ng-if="!formState.scholarshipEditable" value="row.amountPaid"></hois-value>
-          <input ng-if="formState.scholarshipEditable" type="text" name="students[{{$index}}].amountPaid" ng-model="row.amountPaid">
+          <md-input-container>
+            <hois-value ng-if="!formState.scholarshipEditable" value="row.amountPaid"></hois-value>
+            <input ng-if="formState.scholarshipEditable" type="number" name="students[{{$index}}].amountPaid" ng-model="row.amountPaid" min="0" max="9999">
+          </md-input-container>
+          <div ng-messages="directiveForm['students['+$index+'].amountPaid'].$error" ng-show="directiveForm['students['+$index+'].amountPaid'].$dirty">
+            <div ng-message="max">
+              {{'curriculum.error.max9999' | translate}}
+            </div>
+          </div>
           <div class="invalid" ng-show="directiveForm['students['+$index+'].amountPaid'].$error.required">
             {{'main.required' | translate}}
           </div>
         </td>
         <td md-cell>
           <hois-value ng-if="!formState.scholarshipEditable" value="row.startDate | hoisDate"></hois-value>
-          <md-datepicker ng-if="formState.scholarshipEditable" name="students[{{$index}}].startDate" ng-model="row.startDate"></md-datepicker>
+          <md-datepicker ng-if="formState.scholarshipEditable" md-max-date="row.endDate" name="students[{{$index}}].startDate" ng-model="row.startDate"></md-datepicker>
           <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.required">
             {{'main.required' | translate}}
           </div>
         </td>
         <td md-cell>
           <hois-value ng-if="!formState.scholarshipEditable" value="row.endDate | hoisDate"></hois-value>
-          <md-datepicker ng-if="formState.scholarshipEditable" name="students[{{$index}}].endDate" ng-model="row.endDate"></md-datepicker>
+          <md-datepicker ng-if="formState.scholarshipEditable" md-min-date="row.startDate" name="students[{{$index}}].endDate" ng-model="row.endDate"></md-datepicker>
           <div class="invalid" ng-show="directiveForm['students['+$index+'].endDate'].$error.required">
             {{'main.required' | translate}}
           </div>

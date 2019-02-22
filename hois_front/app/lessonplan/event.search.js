@@ -36,9 +36,13 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
     });
 
     var _clearCriteria = $scope.clearCriteria;
+    $scope.directiveControllers = []; 
     $scope.clearEventCriteria = function () {
       _clearCriteria();
       $scope.criteria.singleEvent = false;
+      $scope.directiveControllers.forEach(function (c) { 
+        c.clear(); 
+      }); 
     };
 
     $scope.afterNow = function (date, time) {

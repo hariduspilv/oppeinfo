@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.AbstractMap.SimpleEntry;
 
+import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.subject.Subject;
@@ -47,9 +49,17 @@ public class SubjectProgramController {
     @Autowired
     private SubjectProgramUtil util;
     @Autowired
+    private EntityManager em;
+    @Autowired
     private SubjectService subjectService;
     @Autowired
     private PdfService pdfService;
+    
+    @GetMapping("/myPrograms")
+    public Page<SubjectProgramSearchDto> searchMyPrograms(HoisUserDetails user, SubjectProgramSearchCommand cmd, Pageable pageable) {
+        util.assertCanSearch(user);
+        return service.searchMyPrograms(user, cmd, pageable);
+    }
     
     @GetMapping()
     public Page<SubjectProgramSearchDto> search(HoisUserDetails user, SubjectProgramSearchCommand cmd, Pageable pageable) {
@@ -64,9 +74,15 @@ public class SubjectProgramController {
     }
     
     @GetMapping("/subject/{id:\\d+}")
-    public SubjectDto get(HoisUserDetails user, @WithEntity Subject subject) {
-        util.assertCanSearch(user);
-        UserUtil.isSameSchool(user, subject.getSchool());
+    public SubjectDto get(HoisUserDetails user, @WithEntity Subject subject, @RequestParam(value="program", required=false) Long programId) {
+        if (programId != null) {
+            SubjectProgram program = em.getReference(SubjectProgram.class, programId);
+            util.hasConnection(program, subject);
+            util.assertCanView(user, program);
+        } else {
+            util.assertCanSearch(user);
+            UserUtil.assertSameSchool(user, subject.getSchool());
+        }
         return subjectService.get(user, subject);
     }
     
@@ -94,10 +110,16 @@ public class SubjectProgramController {
         return service.getProgramsRelatedToTeacher(user, subject);
     }
     
-    @GetMapping("/subjects")
-    public Set<AutocompleteResult> getSubjects(HoisUserDetails user) {
+    @GetMapping("/program/subjects")
+    public Set<AutocompleteResult> getSubjectsViaPrograms(HoisUserDetails user, @RequestParam(value="teacher", required=false) Long teacherId) {
         util.assertCanSearch(user);
-        return service.getSubjects(user);
+        return service.getSubjectsViaPrograms(user, teacherId);
+    }
+    
+    @GetMapping("/curriculum/subjects")
+    public Set<AutocompleteResult> getSubjectsViaCurriculums(HoisUserDetails user) {
+        util.assertCanSearch(user);
+        return service.getSubjectsViaCurriculums(user);
     }
     
     @GetMapping("/complete/{id:\\d+}")

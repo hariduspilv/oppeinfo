@@ -9,8 +9,8 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     };
 
   }
-]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'USER_ROLES', 'ArrayUtils', 'QueryUtils', '$resource', 'config', 'Session', '$filter',
-  function ($rootScope, $scope, $timeout, AUTH_EVENTS, AuthService, USER_ROLES, ArrayUtils, QueryUtils, $resource, config, Session, $filter) {
+]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'USER_ROLES', 'ArrayUtils', 'QueryUtils', '$resource', 'config', 'Session', '$filter', '$mdDialog', 'message',
+  function ($rootScope, $scope, $timeout, AUTH_EVENTS, AuthService, USER_ROLES, ArrayUtils, QueryUtils, $resource, config, Session, $filter, $mdDialog, message) {
     /**
      * Still under question if we need to add a delay for timeout.
      */
@@ -92,7 +92,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 
     $scope.pageLoadingHandler = new PageLoadingHandler($scope.finish);
 
-    $scope.criteria = {size: 5, page: 1, order: 'inserted, title, id'};
+    $scope.criteria = {size: 5, page: 1}; // Sorting is defined in backend.
     $scope.generalmessages = {};
     $scope.loadGeneralMessages = function() {
       $scope.showGeneralMessages = ['ROLL_P', 'ROLL_V'].indexOf(Session.roleCode) === -1;
@@ -151,6 +151,8 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       $scope.pageLoadingHandler.reset();
       $scope.loadGeneralMessages();
       $scope.loadUnreadMessages();
+      checkIfCanCreateAbsence();
+      checkIfCanApplyForPractice();
       checkIfHasSubjectProgramNotification();
       checkIfHasExpiredBaseModules();
       checkIfHasUnacceptedAbsences();
@@ -178,6 +180,28 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     }
     $scope.$on(AUTH_EVENTS.loginSuccess, afterAuthentication);
     $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
+
+    function checkIfCanCreateAbsence() {
+      $scope.canCreateAbsence = false;
+      $scope.studentName = undefined;
+      $scope.studentGroup = undefined;
+      if (['ROLL_L', 'ROLL_T'].indexOf(Session.roleCode) !== -1 && Session.vocational) {
+        QueryUtils.endpoint("/students/" + Session.studentId + "/canCreateAbsence").get({}, function(response) {
+          $scope.canCreateAbsence = response.canCreate;
+          $scope.studentName = response.studentName;
+          $scope.studentGroup = response.studentGroup;
+        });
+      }
+    }
+
+    function checkIfCanApplyForPractice() {
+      $scope.canApplyForPractice = false;
+      if (['ROLL_T'].indexOf(Session.roleCode) !== -1) {
+        QueryUtils.endpoint("/practiceApplication/canApply").get({}, function(response) {
+          $scope.canApplyForPractice = response.canApply;
+        });
+      }
+    }
 
     function checkIfHasSubjectProgramNotification() {
       if (['ROLL_O'].indexOf(Session.roleCode) !== -1 && Session.higher) {
@@ -336,6 +360,35 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         }
       }
     }
+
+    $scope.addAbsence = function() {
+      var AbsenceEndpoint = QueryUtils.endpoint('/students/' + Session.studentId + '/absences');
+      var absence = {};
+      absence.studentName = $scope.studentName;
+      absence.studentGroup = $scope.studentGroup;
+
+      $mdDialog.show({
+        controller: function ($scope) {
+          $scope.record = new AbsenceEndpoint(absence || {});
+
+          $scope.cancel = $mdDialog.hide;
+          $scope.update = function () {
+            $scope.studentAbsenceForm.$setSubmitted();
+            if (!$scope.studentAbsenceForm.$valid) {
+              message.error('main.messages.form-has-errors');
+              return;
+            }
+            function afterSave() {
+              message.info('main.messages.create.success');
+              $mdDialog.hide();
+            }
+            $scope.record.$save().then(afterSave);
+          };
+        },
+        templateUrl: 'student/absence.edit.dialog.html',
+        clickOutsideToClose: false
+      });
+    };
 
     /**
      * Returns a grouped arrays by given key.

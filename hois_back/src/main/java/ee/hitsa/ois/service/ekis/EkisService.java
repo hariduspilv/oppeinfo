@@ -14,6 +14,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -30,7 +31,8 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Contract;
-import ee.hitsa.ois.domain.Enterprise;
+import ee.hitsa.ois.domain.ContractModuleSubject;
+import ee.hitsa.ois.domain.ContractSupervisor;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsEkisLog;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
@@ -39,6 +41,7 @@ import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.directive.DirectiveStudentOccupation;
+import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
@@ -233,18 +236,25 @@ public class EkisService {
         request.setStForm(student.getStudyForm() != null ? student.getStudyForm().getNameEt() : null);
         StudentGroup sg = student.getStudentGroup();
         request.setStCourse(sg != null ? sg.getCourse().toString() : null);
-        request.setStEkap(contract.getCredits() != null ? contract.getCredits().toString() : null);
-        request.setStHours(contract.getHours() != null ? contract.getHours().toString() : null);
+        
+        List<ContractModuleSubject> moduleSubjects = contract.getModuleSubjects();
+        request.setStEkap(moduleSubjects.stream().map(ContractModuleSubject::getCredits)
+                .reduce(BigDecimal.ZERO, BigDecimal::add).toString());
+        request.setStHours(Integer.toString(moduleSubjects.stream().map(ContractModuleSubject::getHours)
+                .mapToInt(Short::intValue).sum()));
 
         boolean higher = StudentUtil.isHigher(student);
-        Translatable module = higher ? contract.getSubject() : contract.getModule().getCurriculumModule();
-        String stModule = module != null ? module.getNameEt() : null;
-        if(!higher) {
-            // add theme
-            List<String> names = Arrays.asList(stModule, contract.getTheme() != null ? contract.getTheme().getNameEt() : null);
-            stModule = names.stream().filter(r -> r != null).collect(Collectors.joining(", "));
+        Stream<String> moduleStream;
+        if (higher) {
+            moduleStream = moduleSubjects.stream().map(ms -> ms.getSubject().getNameEt());
+        } else {
+            moduleStream = moduleSubjects.stream().map(ms -> {
+                List<String> names = Arrays.asList(ms.getModule().getCurriculumModule().getNameEt(), 
+                        ms.getTheme() != null ? ms.getTheme().getNameEt() : null);
+                return names.stream().filter(r -> r != null).collect(Collectors.joining(", "));
+            });
         }
-        request.setStModule(stModule);
+        request.setStModule(moduleStream.sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.joining(", ")));
 
         Enterprise enterprise = contract.getEnterprise();
         request.setOrgName(enterprise.getName());
@@ -252,19 +262,29 @@ public class EkisService {
         request.setOrgContactName(contract.getContactPersonName());
         request.setOrgTel(contract.getContactPersonPhone());
         request.setOrgEmail(contract.getContactPersonEmail());
-        request.setOrgTutorName(contract.getSupervisorName());
-        request.setOrgTutorTel(contract.getSupervisorPhone());
-        request.setOrgTutorEmail(contract.getSupervisorEmail());
+        List<ContractSupervisor> supervisors = contract.getContractSupervisors();
+        request.setOrgTutorName(String.join(",", supervisors.stream().map(p->p.getSupervisorName()).collect(Collectors.toList())));
+        request.setOrgTutorTel(String.join(",", supervisors.stream().map(p->p.getSupervisorPhone()).collect(Collectors.toList())));
+        request.setOrgTutorEmail(String.join(",", supervisors.stream().map(p->p.getSupervisorEmail()).collect(Collectors.toList())));
         request.setProgramme(contract.getPracticePlan());
         request.setStartDate(date(contract.getStartDate()));
         request.setEndDate(date(contract.getEndDate()));
         request.setSchoolTutorId(contract.getContractCoordinator() != null ? contract.getContractCoordinator().getIdcode() : null);
         request.setPlace(contract.getPracticePlace());
+        if (request.getPlace() == null) {
+            if (contract.getIsPracticeSchool() != null && contract.getIsPracticeSchool().booleanValue()) {
+                request.setPlace("Praktika sooritatakse koolis");
+            } else if (contract.getIsPracticeTelework() != null && contract.getIsPracticeTelework().booleanValue()) {
+                request.setPlace("Praktika sooritatakse kaugtööna");
+            }
+        }
 
         return withResponse(ekis.registerPracticeContract(ctx(), request), (result) -> {
             contract.setWdId(Long.valueOf(result.getWdId()));
             contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_Y.name()));
-            studentAbsenceService.createContractAbsence(contract);
+            if (Boolean.TRUE.equals(contract.getIsPracticeAbsence()) || Boolean.TRUE.equals(contract.getIsPracticeHidden())) {
+                studentAbsenceService.createContractAbsence(contract);
+            }
             return save(contract);
         }, contract.getStudent().getSchool(), contract, l -> l.setContract(contract));
     }

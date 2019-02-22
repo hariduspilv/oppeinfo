@@ -56,7 +56,7 @@
                   <th md-column ng-if="protocol.isFinalThesis">{{'finalProtocol.theme' | translate}}</th>
                   <th md-column>{{'finalProtocol.grade' | translate}}</th>
                   <th md-column ng-if="formState.canChangeConfirmedProtocolGrade">{{'finalProtocol.changeReason' | translate}}</th>
-                  <th md-column ng-repeat="occupation in protocol.occupations">{{currentLanguageNameField(occupation)}}</th>
+                  <th md-column ng-repeat="occupation in protocol.occupations">{{occupation | hoisValidDates}}</th>
                   <th md-column></th>
                 </tr>
               </thead>

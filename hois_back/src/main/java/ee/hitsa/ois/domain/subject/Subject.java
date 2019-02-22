@@ -67,7 +67,7 @@ public class Subject extends BaseEntityWithId implements Translatable {
     private Set<SubjectStudyPeriod> subjectStudyPeriods;
 
     public Set<SubjectStudyPeriod> getSubjectStudyPeriods() {
-        return subjectStudyPeriods;
+        return subjectStudyPeriods != null ? subjectStudyPeriods : (subjectStudyPeriods = new HashSet<>());
     }
 
     public void setSubjectStudyPeriods(Set<SubjectStudyPeriod> subjectStudyPeriods) {

@@ -1,8 +1,8 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form layout="column">
+    <form layout="column" style="display: block;">
       <div layout="column" layout-sm="column" layout-xs="column" flex>
-        <div layout="row" layout-sm="column" layout-xs="column" flex-sm="100" flex-xs="100">
+        <div layout="row" class="form-readonly" layout-sm="column" layout-xs="column" flex-sm="100" flex-xs="100">
             <md-input-container flex>
               <label>{{'timetable.lessonTime.validFrom' | translate}}</label>
               <hois-value value="validFrom | hoisDate"></hois-value>

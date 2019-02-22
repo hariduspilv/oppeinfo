@@ -1,0 +1,428 @@
+
+package ee.hois.xroad.ariregister.generated;
+
+import java.math.BigInteger;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.datatype.XMLGregorianCalendar;
+
+
+/**
+ * <p>Java class for detailandmed_v5_teg_aeg complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="detailandmed_v5_teg_aeg"&gt;
+ *   &lt;complexContent&gt;
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
+ *       &lt;sequence&gt;
+ *         &lt;element name="kirje_id" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
+ *         &lt;element name="kaardi_piirkond" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
+ *         &lt;element name="kaardi_nr" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
+ *         &lt;element name="kaardi_tyyp" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="kande_nr" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
+ *         &lt;element name="tyyp" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="tyyp_tekstina" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="sisu" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="periood_algus_kpv" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="periood_lopp_kpv" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="periood" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="periood_tekstina" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="algus_kpv" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
+ *         &lt;element name="lopp_kpv" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
+ *       &lt;/sequence&gt;
+ *     &lt;/restriction&gt;
+ *   &lt;/complexContent&gt;
+ * &lt;/complexType&gt;
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "detailandmed_v5_teg_aeg", propOrder = {
+    "kirjeId",
+    "kaardiPiirkond",
+    "kaardiNr",
+    "kaardiTyyp",
+    "kandeNr",
+    "tyyp",
+    "tyypTekstina",
+    "sisu",
+    "perioodAlgusKpv",
+    "perioodLoppKpv",
+    "periood",
+    "perioodTekstina",
+    "algusKpv",
+    "loppKpv"
+})
+public class DetailandmedV5TegAeg {
+
+    @XmlElement(name = "kirje_id")
+    protected BigInteger kirjeId;
+    @XmlElement(name = "kaardi_piirkond")
+    protected BigInteger kaardiPiirkond;
+    @XmlElement(name = "kaardi_nr")
+    protected BigInteger kaardiNr;
+    @XmlElement(name = "kaardi_tyyp")
+    protected String kaardiTyyp;
+    @XmlElement(name = "kande_nr")
+    protected BigInteger kandeNr;
+    protected String tyyp;
+    @XmlElement(name = "tyyp_tekstina")
+    protected String tyypTekstina;
+    protected String sisu;
+    @XmlElement(name = "periood_algus_kpv")
+    protected String perioodAlgusKpv;
+    @XmlElement(name = "periood_lopp_kpv")
+    protected String perioodLoppKpv;
+    protected String periood;
+    @XmlElement(name = "periood_tekstina")
+    protected String perioodTekstina;
+    @XmlElement(name = "algus_kpv")
+    @XmlSchemaType(name = "date")
+    protected XMLGregorianCalendar algusKpv;
+    @XmlElement(name = "lopp_kpv")
+    @XmlSchemaType(name = "date")
+    protected XMLGregorianCalendar loppKpv;
+
+    /**
+     * Gets the value of the kirjeId property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link BigInteger }
+     *     
+     */
+    public BigInteger getKirjeId() {
+        return kirjeId;
+    }
+
+    /**
+     * Sets the value of the kirjeId property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link BigInteger }
+     *     
+     */
+    public void setKirjeId(BigInteger value) {
+        this.kirjeId = value;
+    }
+
+    /**
+     * Gets the value of the kaardiPiirkond property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link BigInteger }
+     *     
+     */
+    public BigInteger getKaardiPiirkond() {
+        return kaardiPiirkond;
+    }
+
+    /**
+     * Sets the value of the kaardiPiirkond property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link BigInteger }
+     *     
+     */
+    public void setKaardiPiirkond(BigInteger value) {
+        this.kaardiPiirkond = value;
+    }
+
+    /**
+     * Gets the value of the kaardiNr property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link BigInteger }
+     *     
+     */
+    public BigInteger getKaardiNr() {
+        return kaardiNr;
+    }
+
+    /**
+     * Sets the value of the kaardiNr property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link BigInteger }
+     *     
+     */
+    public void setKaardiNr(BigInteger value) {
+        this.kaardiNr = value;
+    }
+
+    /**
+     * Gets the value of the kaardiTyyp property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getKaardiTyyp() {
+        return kaardiTyyp;
+    }
+
+    /**
+     * Sets the value of the kaardiTyyp property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setKaardiTyyp(String value) {
+        this.kaardiTyyp = value;
+    }
+
+    /**
+     * Gets the value of the kandeNr property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link BigInteger }
+     *     
+     */
+    public BigInteger getKandeNr() {
+        return kandeNr;
+    }
+
+    /**
+     * Sets the value of the kandeNr property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link BigInteger }
+     *     
+     */
+    public void setKandeNr(BigInteger value) {
+        this.kandeNr = value;
+    }
+
+    /**
+     * Gets the value of the tyyp property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getTyyp() {
+        return tyyp;
+    }
+
+    /**
+     * Sets the value of the tyyp property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setTyyp(String value) {
+        this.tyyp = value;
+    }
+
+    /**
+     * Gets the value of the tyypTekstina property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getTyypTekstina() {
+        return tyypTekstina;
+    }
+
+    /**
+     * Sets the value of the tyypTekstina property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setTyypTekstina(String value) {
+        this.tyypTekstina = value;
+    }
+
+    /**
+     * Gets the value of the sisu property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getSisu() {
+        return sisu;
+    }
+
+    /**
+     * Sets the value of the sisu property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setSisu(String value) {
+        this.sisu = value;
+    }
+
+    /**
+     * Gets the value of the perioodAlgusKpv property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getPerioodAlgusKpv() {
+        return perioodAlgusKpv;
+    }
+
+    /**
+     * Sets the value of the perioodAlgusKpv property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setPerioodAlgusKpv(String value) {
+        this.perioodAlgusKpv = value;
+    }
+
+    /**
+     * Gets the value of the perioodLoppKpv property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getPerioodLoppKpv() {
+        return perioodLoppKpv;
+    }
+
+    /**
+     * Sets the value of the perioodLoppKpv property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setPerioodLoppKpv(String value) {
+        this.perioodLoppKpv = value;
+    }
+
+    /**
+     * Gets the value of the periood property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getPeriood() {
+        return periood;
+    }
+
+    /**
+     * Sets the value of the periood property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setPeriood(String value) {
+        this.periood = value;
+    }
+
+    /**
+     * Gets the value of the perioodTekstina property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getPerioodTekstina() {
+        return perioodTekstina;
+    }
+
+    /**
+     * Sets the value of the perioodTekstina property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setPerioodTekstina(String value) {
+        this.perioodTekstina = value;
+    }
+
+    /**
+     * Gets the value of the algusKpv property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link XMLGregorianCalendar }
+     *     
+     */
+    public XMLGregorianCalendar getAlgusKpv() {
+        return algusKpv;
+    }
+
+    /**
+     * Sets the value of the algusKpv property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link XMLGregorianCalendar }
+     *     
+     */
+    public void setAlgusKpv(XMLGregorianCalendar value) {
+        this.algusKpv = value;
+    }
+
+    /**
+     * Gets the value of the loppKpv property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link XMLGregorianCalendar }
+     *     
+     */
+    public XMLGregorianCalendar getLoppKpv() {
+        return loppKpv;
+    }
+
+    /**
+     * Sets the value of the loppKpv property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link XMLGregorianCalendar }
+     *     
+     */
+    public void setLoppKpv(XMLGregorianCalendar value) {
+        this.loppKpv = value;
+    }
+
+}

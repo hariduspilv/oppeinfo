@@ -6,6 +6,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 
 
@@ -20,6 +21,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="okFail" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisFail" maxOccurs="unbounded"/&gt;
+ *         &lt;element name="contentID" type="{http://www.w3.org/2001/XMLSchema}anyURI"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -30,12 +32,16 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "oisFailid", propOrder = {
-    "okFail"
+    "okFail",
+    "contentID"
 })
 public class OisFailid {
 
     @XmlElement(required = true)
     protected List<OisFail> okFail;
+    @XmlElement(required = true)
+    @XmlSchemaType(name = "anyURI")
+    protected String contentID;
 
     /**
      * Gets the value of the okFail property.
@@ -64,6 +70,30 @@ public class OisFailid {
             okFail = new ArrayList<OisFail>();
         }
         return this.okFail;
+    }
+
+    /**
+     * Gets the value of the contentID property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getContentID() {
+        return contentID;
+    }
+
+    /**
+     * Sets the value of the contentID property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setContentID(String value) {
+        this.contentID = value;
     }
 
 }

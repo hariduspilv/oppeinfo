@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="oppekavaNimetus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="oppekavaNimetus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="oppekavaKood" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
  *         &lt;element name="oppekavaStaatus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="teade" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
@@ -41,7 +41,6 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class OisInfoteade {
 
-    @XmlElement(required = true)
     protected String oppekavaNimetus;
     protected BigInteger oppekavaKood;
     protected String oppekavaStaatus;

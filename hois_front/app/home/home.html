@@ -1,5 +1,16 @@
 <div layout-padding>
   <div ng-if="state.currentUser" ng-controller="AuthenticatedHomeController as ctrl" layout="column">
+    <div flex ng-if="canCreateAbsence">
+      <md-button ng-click="addAbsence()" class="md-primary md-raised">{{'home.student.absence.addAbsence' | translate}}</md-button>
+    </div>
+    <div ng-if="canApplyForPractice">
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'accent'}">
+          <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+          <span>{{'practiceApplication.canApplyForPractice' | translate}} <a href="/#/practice/application/myData?_menu">{{'main.button.view' | translate}}</a></span>
+        </div>
+      </md-whiteframe>
+    </div>
     <div ng-if="hasUnconfirmedPrograms.has">
       <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
         <div md-colors="{color: 'warn'}">
@@ -7,7 +18,6 @@
           <span>{{'subjectProgram.youHaveUnconfirmedPrograms' | translate}} <a ng-href="/#/subjectProgram?_menu">{{'main.button.view' | translate}}</a></span>
         </div>
       </md-whiteframe>
-      
     </div>
     <div ng-if="hasUncompletedPrograms.has">
       <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">

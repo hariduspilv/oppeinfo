@@ -2,6 +2,8 @@
 package ee.hois.xroad.ehis.generated;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -18,7 +20,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="osakutseReaId" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
+ *         &lt;element name="osakutseReaId" type="{http://www.w3.org/2001/XMLSchema}integer" maxOccurs="unbounded"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -34,30 +36,35 @@ import javax.xml.bind.annotation.XmlType;
 public class OisOsakutse {
 
     @XmlElement(required = true)
-    protected BigInteger osakutseReaId;
+    protected List<BigInteger> osakutseReaId;
 
     /**
      * Gets the value of the osakutseReaId property.
      * 
-     * @return
-     *     possible object is
-     *     {@link BigInteger }
-     *     
-     */
-    public BigInteger getOsakutseReaId() {
-        return osakutseReaId;
-    }
-
-    /**
-     * Sets the value of the osakutseReaId property.
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the osakutseReaId property.
      * 
-     * @param value
-     *     allowed object is
-     *     {@link BigInteger }
-     *     
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getOsakutseReaId().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link BigInteger }
+     * 
+     * 
      */
-    public void setOsakutseReaId(BigInteger value) {
-        this.osakutseReaId = value;
+    public List<BigInteger> getOsakutseReaId() {
+        if (osakutseReaId == null) {
+            osakutseReaId = new ArrayList<BigInteger>();
+        }
+        return this.osakutseReaId;
     }
 
 }

@@ -1,0 +1,75 @@
+<md-dialog aria-label="add enterprise dialog" flex="50">
+<form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
+    <md-toolbar>
+    <div class="md-toolbar-tools">
+        <h2 flex>{{"enterprise.locationsTab.addNew" | translate}}</h2>
+        <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+    </div>
+    </md-toolbar>
+    <md-dialog-content>
+    <div class="md-dialog-content" flex>
+        <div layout="row" class="form-readonly">
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label>{{'enterprise.name' | translate}}</label>
+                    <hois-value value="enterprise.name"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label>{{'enterprise.personsTab.regCode' | translate}}</label>
+                    <hois-value value="enterprise.regCode"></hois-value>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row">
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.locationsTab.name' | translate}}</label>
+                    <input type="text" ng-model="enterprise.nameEt" name="name" md-maxlength="255" required>
+                    <div ng-messages="dialogForm.name.$error">
+                        <div ng-message="md-maxlength">
+                            {{'main.messages.error.maxlength' | translate}}
+                        </div>
+                    </div>
+                </md-input-container>
+            </div>
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.locationsTab.language' | translate}}</label>
+                    <hois-classifier-select ng-model="enterprise.language" name="language" model-value-attr="code" main-classifier-code="OPPEKEEL" required></hois-classifier-select>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row">
+            <div layout="column" flex="30">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.locationsTab.country' | translate}}</label>
+                    <hois-classifier-select ng-model="enterprise.country" name="country" model-value-attr="code" main-classifier-code="RIIK" required></hois-classifier-select>
+                </md-input-container>
+            </div>
+            <div flex="70" style="margin-left: 1%" ng-show="enterprise.country === 'RIIK_EST'">
+                <hois-ads-adapter flex="100" ng-if="enterprise.country === 'RIIK_EST'" class="md-text" ng-model="enterprise.addressAds" ads-oid-model="enterprise.addressOid" address-model="enterprise.address"></hois-ads-adapter>
+            </div>
+            <md-input-container flex="70" style="margin-left: 1%" ng-if="enterprise.country !== 'RIIK_EST'">
+                <label>{{'building.address' | translate}}</label>
+                <input ng-model="enterprise.address" name="address" type="text" md-maxlength="100" required>
+                <div ng-messages="dialogForm.address.$error">
+                    <div ng-message="md-maxlength">
+                    {{'main.messages.error.maxlength' | translate}}
+                    </div>
+                </div>
+            </md-input-container>
+        </div>
+    </div>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
+        <md-button flex-xs="100" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-show="enterprise.id" flex-xs="100" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button flex-xs="100" class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+</form>
+</md-dialog>

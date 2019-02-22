@@ -1,0 +1,96 @@
+<md-dialog aria-label="teacher capacities dialog" flex="80" flex-sm="80" flex-xs="100">
+  <form name="dialogForm" ng-submit="dialogForm.$valid && submit()" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{'lessonplan.teacherSpecificLoads' | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <div class="md-dialog-content">
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <md-checkbox ng-model="journal.capacityDiff" aria-label="{{'lessonplan.journal.loadsDiffer' | translate}}">
+          {{'lessonplan.journal.loadsDiffer' | translate}}
+        </md-checkbox>
+        <div class="container" fixed-column-table fixed-columns="3" style="height: 500px">
+          <table class="lessonplan">
+            <thead>
+              <tr>
+                <th colspan="3" class="dividerBorder"></th>
+                <th ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></th>
+                <th ng-if="sp._selected" colspan="{{sp.weekNrs.length}}" class="dividerBorder" ng-repeat="sp in ::formState.studyPeriods track by $index">
+                  {{currentLanguageNameField(sp)}} ({{sp.startDate | hoisDayMonth}}-{{sp.endDate | hoisDayMonth}})</th>
+              </tr>
+              <tr ng-if="formState.showWeeks">
+                <th colspan="3" class="cross dividerBorder">&nbsp;</th>
+                <th ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></th>
+                <th ng-if="w.show" ng-repeat="w in ::formState.weekNrs track by $index" class="center" ng-class="{dividerBorder: w.endOfPeriod}"
+                  ng-style="{ background: true ? getLegendByWeek(w.nr) :  'white' }" title="{{formState.weekBeginningDates[$index] | hoisDate}}">{{w.nr}}</th>
+              </tr>
+            </thead>
+            <tbody class="teacher-capacity-tbody" ng-repeat="teacher in journal.teachers track by $index">
+              <tr>
+                <td></td>
+                <td class="lessonplan-teacher-load-label fix dividerBorder" colspan="2">
+                  {{'lessonplan.load' | translate}} {{(teacherLoad = getTeacherStudyLoad(teacher.teacher.id)).plannedLessons}}
+                </td>
+                <td ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></td>
+                <td ng-if="formState.showWeeks && formState.weekNrs[$index].show" ng-repeat="h in ::teacherLoad.studyLoadByWeek track by $index"
+                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center lessonplan-teacher-load">{{h}}</td>
+                <td ng-if="!formState.showWeeks && sp._selected" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in ::formState.studyPeriods track by $index" 
+                  class="center dividerBorder lessonplan-teacher-load">{{teacherLoad.studyLoadByPeriod[$index]}}</td>
+              </tr>
+              <tr ng-repeat="ct in journalCapacities" class="fix" ng-style="{'border-top': $first ? 'border-top: solid 2px #777 !important;' : 'inherit'}">
+                <td rowspan="{{::journalCapacities.length}}" ng-if="$first" class="fix"
+                  title="{{'lessonplan.teacherLoad' | translate : getTeacherLoad(teacher.teacher.id)}}">{{currentLanguageNameField(teacher.teacher)}}</td>
+                <td class="center fix">{{ct.value.toUpperCase()}}</td>
+                <td class="dividerBorder center fix">{{formState.teacherTotals[teacher.id][ct.code]}}</td>
+                <td ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></td>
+                <td ng-if="formState.showWeeks && formState.weekNrs[$index].show" ng-repeat="h in ::teacher.hours[ct.code] track by $index"
+                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">
+                  <input type="number" min="0" step="1" ng-model="teacher.hours[ct.code][$index]"
+                    ng-change="updateTotals(teacher, ct.code, $index)" ng-disabled="!journal.capacityDiff">
+                </td>
+                <td ng-if="!formState.showWeeks && sp._selected" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in ::formState.studyPeriods track by $index" 
+                  class="center dividerBorder">
+                  <input type="number" min="0" step="1" ng-model="teacher.spHours[ct.code][$index]" 
+                    ng-change="updateLessonCountByStudyPeriod(teacher, ct.code, $index)" ng-disabled="!journal.capacityDiff">
+                </td>
+              </tr>
+            </tbody>
+            <tbody>
+              <tr ng-repeat="ct in journalCapacities" class="fix lessonplan-total-row">
+                <td rowspan="{{::journalCapacities.length + 1}}" ng-if="$first" class="fix">{{'lessonplan.journal.total' | translate}}</td>
+                <td class="center fix">{{ct.value.toUpperCase()}}</td>
+                <td class="center fix dividerBorder">{{formState.journalTotals[journal.id][ct.code]}}</td>
+                <th ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></th>
+                <td ng-if="formState.showWeeks && formState.weekNrs[$index].show" ng-repeat="h in ::journal.hours[ct.code] track by $index"
+                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{journal.hours[ct.code][$index]}}</td>
+                <td ng-if="!formState.showWeeks && sp._selected" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in ::formState.studyPeriods track by $index"
+                  class="center dividerBorder">{{journal.spHours[ct.code][$index]}}</td>
+              </tr>
+              <tr ng-repeat-end class="fix lessonplan-total-row">
+                <td class="fix">{{'lessonplan.total' | translate}}</td>
+                <td class="center fix dividerBorder">{{formState.journalTotals[journal.id].__ ? (formState.journalTotals[journal.id].__ | hoisNumber:1) : 0}}</td>
+                <th ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></th>
+                <td ng-if="formState.showWeeks && formState.weekNrs[$index].show" ng-repeat="w in ::formState.weekNrs track by $index"
+                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{formState.journalTotals[journal.id]._[$index]}}</td>
+                <td ng-if="!formState.showWeeks && sp._selected" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in ::formState.studyPeriods track by $index"
+                  class="center dividerBorder">{{formState.journalTotals[journal.id]._spTotals[$index]}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

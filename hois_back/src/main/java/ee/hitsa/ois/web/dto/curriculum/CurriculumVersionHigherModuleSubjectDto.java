@@ -25,6 +25,12 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     private String ehisSchoolCode;
     private BigDecimal credits;
     private String code;
+    
+    private Short studyYearNumber;
+    private Boolean autumn = Boolean.FALSE;
+    private Boolean spring = Boolean.FALSE;
+    
+    private String assessment;
 
     public static CurriculumVersionHigherModuleSubjectDto of (Subject subject) {
         CurriculumVersionHigherModuleSubjectDto dto = new CurriculumVersionHigherModuleSubjectDto();
@@ -35,7 +41,6 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
         dto.setSubjectId(subject.getId());
         dto.setSchoolCode(subject.getSchool().getCode());
         dto.setEhisSchoolCode(EntityUtil.getCode(subject.getSchool().getEhisSchool()));
-
         return dto;
     }
 
@@ -67,6 +72,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
         dto.setSchoolCode(subject.getSubject().getSchool().getCode());
         dto.setEhisSchoolCode(EntityUtil.getCode(subject.getSubject().getSchool().getEhisSchool()));
         dto.setElectiveModule(EntityUtil.getNullableId(subject.getElectiveModule()));
+        dto.setAssessment(subject.getSubject().getAssessment().getValue());
         return dto;
     }
 
@@ -180,4 +186,37 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
+
+    public Short getStudyYearNumber() {
+        return studyYearNumber;
+    }
+
+    public void setStudyYearNumber(Short studyYearNumber) {
+        this.studyYearNumber = studyYearNumber;
+    }
+
+    public Boolean getAutumn() {
+        return autumn;
+    }
+
+    public void setAutumn(Boolean autumn) {
+        this.autumn = autumn;
+    }
+
+    public Boolean getSpring() {
+        return spring;
+    }
+
+    public void setSpring(Boolean spring) {
+        this.spring = spring;
+    }
+
+    public String getAssessment() {
+        return assessment;
+    }
+
+    public void setAssessment(String assessment) {
+        this.assessment = assessment;
+    }
+    
 }

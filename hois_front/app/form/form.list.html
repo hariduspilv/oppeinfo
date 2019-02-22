@@ -61,8 +61,8 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>
             <td md-cell>{{::row.code}}</td>
-            <td md-cell>{{::row.from}}</td>
-            <td md-cell>{{::row.thru}}</td>
+            <td md-cell>{{::row.fromFullCode}}</td>
+            <td md-cell>{{::row.thruFullCode}}</td>
             <td md-cell>{{::row.count}}</td>
             <td md-cell>
               {{currentLanguageNameField(row.status)}}

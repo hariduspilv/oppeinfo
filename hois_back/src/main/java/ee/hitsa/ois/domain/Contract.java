@@ -3,12 +3,16 @@ package ee.hitsa.ois.domain;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import org.hibernate.validator.constraints.Email;
@@ -16,6 +20,9 @@ import org.hibernate.validator.constraints.Email;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
+import ee.hitsa.ois.domain.enterprise.Enterprise;
+import ee.hitsa.ois.domain.enterprise.PracticeApplication;
+import ee.hitsa.ois.domain.enterprise.PracticeEvaluation;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.subject.Subject;
@@ -50,6 +57,9 @@ public class Contract extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
+    
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Classifier cancelReason;
 
     @Column(nullable = false)
     private BigDecimal credits;
@@ -63,7 +73,6 @@ public class Contract extends BaseEntityWithId {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    @Column(nullable = false)
     private String practicePlace;
 
     private String contractNr;
@@ -75,31 +84,44 @@ public class Contract extends BaseEntityWithId {
     @Column(nullable = false)
     @Email
     private String contactPersonEmail;
-
-    @Column(nullable = false)
-    private String supervisorName;
-    private String supervisorPhone;
-
-    @Column(nullable = false)
-    @Email
-    private String supervisorEmail;
-    private String supervisorUrl;
     private String otherSupervisor;
     @Column(nullable = false)
     private String practicePlan;
-
+    private String canceledBy;
+    
+    private LocalDate canceled;
     private LocalDateTime ekisDate;
     private LocalDate confirmDate;
+    
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "contract_id", nullable = false, updatable = false , insertable = false)
+    private List<ContractSupervisor> contractSupervisors = new ArrayList<>();
+    
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "contract_id", nullable = false, updatable = false , insertable = false)
+    private List<ContractModuleSubject> moduleSubjects = new ArrayList<>();
 
+    private String cancelDesc;
     private Long wdId;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    private PracticeEvaluation practiceEvaluation;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Subject subject;
     
     private Boolean isPracticeAbsence;
+    private Boolean isPracticeHidden;
+    private Boolean isPracticeSchool;
+    private Boolean isPracticeTelework;
+    private Boolean isPracticeEnterprise;
+    private Boolean isPracticeOther;
     
     @OneToOne(mappedBy = "contract")
     private StudentAbsence studentAbsence;
+    
+    @OneToOne
+    private PracticeApplication practiceApplication;
 
     public Student getStudent() {
         return student;
@@ -229,38 +251,6 @@ public class Contract extends BaseEntityWithId {
         this.contactPersonEmail = contactPersonEmail;
     }
 
-    public String getSupervisorName() {
-        return supervisorName;
-    }
-
-    public void setSupervisorName(String supervisorName) {
-        this.supervisorName = supervisorName;
-    }
-
-    public String getSupervisorPhone() {
-        return supervisorPhone;
-    }
-
-    public void setSupervisorPhone(String supervisorPhone) {
-        this.supervisorPhone = supervisorPhone;
-    }
-
-    public String getSupervisorEmail() {
-        return supervisorEmail;
-    }
-
-    public void setSupervisorEmail(String supervisorEmail) {
-        this.supervisorEmail = supervisorEmail;
-    }
-
-    public String getSupervisorUrl() {
-        return supervisorUrl;
-    }
-
-    public void setSupervisorUrl(String supervisorUrl) {
-        this.supervisorUrl = supervisorUrl;
-    }
-
     public String getOtherSupervisor() {
         return otherSupervisor;
     }
@@ -317,6 +307,14 @@ public class Contract extends BaseEntityWithId {
         this.isPracticeAbsence = isPracticeAbsence;
     }
 
+    public Boolean getIsPracticeHidden() {
+        return isPracticeHidden;
+    }
+
+    public void setIsPracticeHidden(Boolean isPracticeHidden) {
+        this.isPracticeHidden = isPracticeHidden;
+    }
+
     public StudentAbsence getStudentAbsence() {
         return studentAbsence;
     }
@@ -324,4 +322,101 @@ public class Contract extends BaseEntityWithId {
     public void setStudentAbsence(StudentAbsence studentAbsence) {
         this.studentAbsence = studentAbsence;
     }
+
+    public PracticeApplication getPracticeApplication() {
+        return practiceApplication;
+    }
+
+    public void setPracticeApplication(PracticeApplication practiceApplication) {
+        this.practiceApplication = practiceApplication;
+    }
+
+	public LocalDate getCanceled() {
+		return canceled;
+	}
+
+	public void setCanceled(LocalDate canceled) {
+		this.canceled = canceled;
+	}
+
+	public Classifier getCancelReason() {
+		return cancelReason;
+	}
+
+	public void setCancelReason(Classifier cancelReason) {
+		this.cancelReason = cancelReason;
+	}
+
+	public String getCancelDesc() {
+		return cancelDesc;
+	}
+
+	public void setCancelDesc(String cancelDesc) {
+		this.cancelDesc = cancelDesc;
+	}
+
+    public String getCanceledBy() {
+        return canceledBy;
+    }
+
+    public void setCanceledBy(String canceledBy) {
+        this.canceledBy = canceledBy;
+    }
+
+    public Boolean getIsPracticeSchool() {
+        return isPracticeSchool;
+    }
+
+    public void setIsPracticeSchool(Boolean isPracticeSchool) {
+        this.isPracticeSchool = isPracticeSchool;
+    }
+
+    public Boolean getIsPracticeTelework() {
+        return isPracticeTelework;
+    }
+
+    public void setIsPracticeTelework(Boolean isPracticeTelework) {
+        this.isPracticeTelework = isPracticeTelework;
+    }
+
+    public Boolean getIsPracticeEnterprise() {
+        return isPracticeEnterprise;
+    }
+
+    public void setIsPracticeEnterprise(Boolean isPracticeEnterprise) {
+        this.isPracticeEnterprise = isPracticeEnterprise;
+    }
+
+    public Boolean getIsPracticeOther() {
+        return isPracticeOther;
+    }
+
+    public void setIsPracticeOther(Boolean isPracticeOther) {
+        this.isPracticeOther = isPracticeOther;
+    }
+
+    public List<ContractSupervisor> getContractSupervisors() {
+        return contractSupervisors;
+    }
+
+    public void setContractSupervisors(List<ContractSupervisor> contractSupervisors) {
+        this.contractSupervisors = contractSupervisors;
+    }
+
+    public List<ContractModuleSubject> getModuleSubjects() {
+        return moduleSubjects;
+    }
+
+    public void setModuleSubjects(List<ContractModuleSubject> moduleSubjects) {
+        this.moduleSubjects = moduleSubjects;
+    }
+
+    public PracticeEvaluation getPracticeEvaluation() {
+        return practiceEvaluation;
+    }
+
+    public void setPracticeEvaluation(PracticeEvaluation practiceEvaluation) {
+        this.practiceEvaluation = practiceEvaluation;
+    }
+    
 }

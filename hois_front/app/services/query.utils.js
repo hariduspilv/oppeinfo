@@ -55,8 +55,12 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
     var createQueryForm = function(scope, url, defaultParams, postLoad) {
       scope.criteria = angular.extend({}, defaultPagingParams);
 
+      scope.directiveControllers = [];
       scope.clearCriteria = function() {
         clearQueryParams(scope.criteria);
+        scope.directiveControllers.forEach(function (c) { 
+          c.clear(); 
+        }); 
       };
 
       if(scope.fromStorage === undefined) {

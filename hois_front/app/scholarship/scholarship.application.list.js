@@ -232,8 +232,8 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$loc
       previousType = $scope.criteria.type;
     };
   }
-]).controller('ScholarshipRejectionController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'ArrayUtils',
-  function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, ArrayUtils) {
+]).controller('ScholarshipRejectionController', ['dialogService', 'Classifier', '$scope', '$location', 'message', 'QueryUtils', '$route', 'ArrayUtils', 'FormUtils',
+  function (dialogService, Classifier, $scope, $location, message, QueryUtils, $route, ArrayUtils, FormUtils) {
     var baseUrl = '/scholarships';
     $scope.scholarshipType = $route.current.params.type;
     QueryUtils.endpoint(baseUrl + '/studentProfilesRejection').query({
@@ -249,11 +249,13 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$loc
     });
 
     $scope.reject = function () {
-      QueryUtils.endpoint(baseUrl + '/rejectApplications').put({
-        applications: $scope.rejections
-      }, function () {
-        message.info('stipend.messages.applicationRejected');
-        $location.path('/scholarships/applications/' + $scope.scholarshipType);
+      FormUtils.withValidForm($scope.rejectForm, function() {
+        QueryUtils.endpoint(baseUrl + '/rejectApplications').put({
+          applications: $scope.rejections
+        }, function () {
+          message.info('stipend.messages.applicationRejected');
+          $location.path('/scholarships/applications/' + $scope.scholarshipType);
+        });
       });
     };
 
@@ -303,6 +305,9 @@ function ($scope, $location, $q, message, QueryUtils, $route, Classifier) {
     }
     return [];
   }
+  function getApplicationIds(ids) {
+    return angular.isArray(ids) ? ids : [ids];
+  }
 
   $scope.selectedCommitteeChanged = function () {
     if ($scope.formState.committee) {
@@ -320,7 +325,7 @@ function ($scope, $location, $q, message, QueryUtils, $route, Classifier) {
     }
     angular.extend($scope.decision, {
       presentCommitteeMembers: getPresentCommitteeMembers($scope.formState.committeeMembers),
-      applicationIds: $route.current.params.ids
+      applicationIds: getApplicationIds($route.current.params.ids)
     });
     QueryUtils.endpoint(baseUrl + '/decide').save($scope.decision, function () {
       message.info('main.messages.update.success');

@@ -56,18 +56,21 @@ public class JournalDto {
         dto.setStudyYear(EntityUtil.getCode(journal.getStudyYear().getYear()));
         dto.setStudyYearStartDate(journal.getStudyYear().getStartDate());
         dto.setStudyYearEndDate(journal.getStudyYear().getEndDate());
-        
-        if (journal.getJournalOccupationModuleThemes().get(0) != null) {
-            CurriculumVersionOccupationModule cvom = journal.getJournalOccupationModuleThemes().get(0).getCurriculumVersionOccupationModuleTheme().getModule();
+
+        if (!journal.getJournalOccupationModuleThemes().isEmpty()
+                && journal.getJournalOccupationModuleThemes().get(0) != null) {
+            CurriculumVersionOccupationModule cvom = journal.getJournalOccupationModuleThemes().get(0)
+                    .getCurriculumVersionOccupationModuleTheme().getModule();
             CurriculumModule module = cvom.getCurriculumModule();
-            JournalModuleDescriptionDto moduleDescription = EntityUtil.bindToDto(cvom, new JournalModuleDescriptionDto());
+            JournalModuleDescriptionDto moduleDescription = EntityUtil.bindToDto(cvom,
+                    new JournalModuleDescriptionDto());
             moduleDescription.setNameEt(module.getNameEt());
             moduleDescription.setNameEn(module.getNameEn());
             moduleDescription.setIsModule(Boolean.TRUE);
             moduleDescription.setAssessment(EntityUtil.getCode(cvom.getAssessment()));
             dto.moduleDescriptions.add(moduleDescription);
         }
-        
+
         for (JournalOccupationModuleTheme theme : journal.getJournalOccupationModuleThemes()) {
             CurriculumVersionOccupationModuleTheme cvomt = theme.getCurriculumVersionOccupationModuleTheme();
             

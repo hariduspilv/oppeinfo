@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.commandobject;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class ContractSearchCommand {
 
@@ -15,7 +16,7 @@ public class ContractSearchCommand {
     private String enterpriseName;
     private String enterpriseContactPersonName;
     private Long teacher;
-    private String status;
+    private List<String> status;
 
     public LocalDate getStartFrom() {
         return startFrom;
@@ -105,11 +106,11 @@ public class ContractSearchCommand {
         this.teacher = teacher;
     }
 
-    public String getStatus() {
+    public List<String> getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(List<String> status) {
         this.status = status;
     }
 

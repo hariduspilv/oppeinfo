@@ -124,9 +124,9 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
             authenticatedUser.setTeacherGroupIds(StreamUtil.toMappedList(r -> resultAsLong(r, 0), result));
             if (schoolId != null && em.createNativeQuery("select c.id from curriculum c where c.teacher_id = ?1 and c.school_id = ?2")
                     .setParameter(1, teacherId).setParameter(2, schoolId).getResultList().size() > 0) {
-                authenticatedUser.setHasCurriculums(Boolean.TRUE);
+                authenticatedUser.setIsCurriculumTeacher(Boolean.TRUE);
             } else {
-                authenticatedUser.setHasCurriculums(Boolean.FALSE);
+                authenticatedUser.setIsCurriculumTeacher(Boolean.FALSE);
             }
         }
         authenticatedUser.setSchool(authenticatedSchool);

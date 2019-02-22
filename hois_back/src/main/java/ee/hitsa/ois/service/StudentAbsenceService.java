@@ -242,7 +242,9 @@ public class StudentAbsenceService {
         studentAbsence.setContract(contract);
         studentAbsence.setIsLessonAbsence(Boolean.FALSE);
         EntityUtil.save(studentAbsence, em);
-        updateJournalEntryStudentAbsences(studentAbsence, Absence.PUUDUMINE_PR);
+        Absence absenceCode = Boolean.TRUE.equals(contract.getIsPracticeAbsence()) ? Absence.PUUDUMINE_PR
+                : Absence.PUUDUMINE_V;
+        updateJournalEntryStudentAbsences(studentAbsence, absenceCode);
         EntityUtil.save(contract, em);
     }
 }

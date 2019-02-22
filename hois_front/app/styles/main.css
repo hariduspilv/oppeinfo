@@ -941,6 +941,11 @@ table.md-table thead.md-head > tr.md-row
 	background-color:#1976D2;
 }
 
+table.nowrap-first th:first-child,
+table.nowrap-first td:first-child {
+  white-space: nowrap;
+}
+
 .occupation-header
 {
 	background-color:#E0E0E0!important;
@@ -1188,7 +1193,6 @@ hois-created-modified {
 fieldset{
 	border-style: solid;
 	border-width: 1px;
-  height: 100%;
   min-width: 0;
 }
 
@@ -1377,6 +1381,23 @@ label.required::after {
 	text-align: center;
   border: none;
   background: none;
+}
+
+.lessonplan input[type="text"].ng-dirty.ng-invalid, .lessonplan input[type="number"].ng-dirty.ng-invalid {
+  border: 1px solid rgb(221,44,0);
+}
+
+.lessonplan-teacher-load, .lessonplan-teacher-load-label {
+  color: #9E9E9E;
+  font-size: 11px;
+}
+
+.lessonplan-teacher-load-label {
+  text-align: right;
+}
+
+.lessonplan-total-row {
+  background: rgb(238, 238, 238);
 }
 
 .subject-study-period {
@@ -1808,7 +1829,7 @@ tr.scholarship-bottom-border td {
   font-size: 13px;
 }
 
-.journal-entry {
+.pointer {
   cursor: pointer;
 }
 
@@ -2418,21 +2439,57 @@ label.ui-btn {
   padding: 0px
 }
 
-.student-group-teacher-table, .student-group-absence-table {
-  border-collapse: collapse;
-  min-width: 100%;
-  font-size: 13px;
+.tertiary-table-container {
+  width: 100%;
+  overflow-y: hidden;
+  border-top:1px solid #ccc;
+  border-left:1px solid #ccc;
 }
 
-.student-group-teacher-table thead, .student-group-absence-table thead {
+.tertiary-table {
+  min-width: 100%;
+  font-size: 13px;
+  border-spacing: 0px;
+  border-collapse: separate;
+}
+
+.tertiary-table th, .tertiary-table .fixed-cell {
+  background: #FAFAFA;
+  position: relative;
+  z-index: 10;
+}
+
+.tertiary-table thead {
   background-color: #fcfcfc;
 }
 
-.student-group-teacher-table th, .student-group-teacher-table td,
-.student-group-absence-table th, .student-group-absence-table td
-{
+.tertiary-table th, .tertiary-table td {
   border-bottom: 1px solid #ccc;
   border-right: 1px solid #ccc;
+}
+
+.tertiary-table th, .tertiary-table td {
+  height: 30px;
+}
+
+.detail-load-table thead tr:first-child th:first-child {
+  width: 20%;
+  min-width: 250px;
+}
+
+.detail-load-table thead tr:first-child {
+  font-weight: bold;
+}
+
+.detail-load-table thead tr:first-child th:not(:first-child),
+.detail-load-table thead tr:not(:first-child) th,
+.detail-load-table tbody tr td:not(:first-child) {
+  text-align: center;
+}
+
+.detail-load-table th, .detail-load-table td {
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 .student-group-teacher-table tr:nth-child(3) th {
@@ -2443,10 +2500,6 @@ label.ui-btn {
 .student-group-teacher-table tr:nth-child(3) th a, 
 .student-group-absence-table tr:nth-child(2) th a {
   color: rgba(0,0,0,0.87) !important;
-}
-
-.student-group-teacher-table td, .student-group-absence-table td {
-  height: 30px;
 }
 
 .student-group-teacher-table td div{

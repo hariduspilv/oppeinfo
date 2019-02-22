@@ -8,6 +8,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,6 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
@@ -49,14 +53,17 @@ public class GeneralMessageService {
             // do now show general messages to users which have no school
             return new PageImpl<>(Collections.emptyList());
         }
-
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from general_message g").sort(pageable);
+        List<Order> order = new LinkedList<>();
+        order.add(new Order(Direction.DESC, "show_date"));
+        order.add(new Order(Direction.ASC, "g.title"));
+        order.add(new Order(Direction.ASC, "g.id"));
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from general_message g").sort(new Sort(order));
         qb.requiredCriteria("g.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("(g.valid_from is null or g.valid_from <= :now) and (g.valid_thru is null or g.valid_thru >= :now)", "now", LocalDate.now());
         qb.requiredCriteria("g.id in (select gt.general_message_id from general_message_target gt where gt.role_code = :role)", "role", user.getRole());
 
-        Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, "g.id, g.title, g.content, g.inserted", em, pageable);
-        return messages.map(d -> new GeneralMessageDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsString(d, 2), resultAsLocalDateTime(d, 3)));
+        Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, "g.id, g.title, g.content, g.inserted, coalesce(g.valid_from, g.inserted) as show_date", em, pageable);
+        return messages.map(d -> new GeneralMessageDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsString(d, 2), resultAsLocalDateTime(d, 4)));
     }
 
     public Page<GeneralMessageDto> search(Long schoolId, GeneralMessageSearchCommand criteria, Pageable pageable) {

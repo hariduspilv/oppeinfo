@@ -63,7 +63,7 @@ public class FormService {
         qb.optionalCriteria("f.numeral >= :from", "from", criteria.getFrom());
         qb.optionalCriteria("f.numeral <= :thru", "thru", criteria.getThru());
         
-        List<?> data = qb.select("type_code, status_code, code, defect_reason, numeral", em)
+        List<?> data = qb.select("type_code, status_code, code, defect_reason, numeral, full_code", em)
             .getResultList();
         List<FormSearchDto> result = new ArrayList<>();
         FormSearchDto dto = null;
@@ -75,6 +75,7 @@ public class FormService {
             String code = resultAsString(r, 2);
             String defectReason = resultAsString(r, 3);
             Long numeral = resultAsLong(r, 4);
+            String fullCode = resultAsString(r, 5);
             if (dto == null || !Objects.equals(typeCode, dto.getType()) || !Objects.equals(statusCode, dto.getStatus())
                     || !Objects.equals(code, dto.getCode()) || !Objects.equals(defectReason, dto.getDefectReason())
                     || numeral.longValue() != (lastNumeral + 1)) {
@@ -87,9 +88,11 @@ public class FormService {
                 dto.setCode(code);
                 dto.setDefectReason(defectReason);
                 dto.setFrom(numeral);
+                dto.setFromFullCode(fullCode);
                 counter = 1;
             }
             dto.setThru(numeral);
+            dto.setThruFullCode(fullCode);
             dto.setCount(Long.valueOf(counter++));
             lastNumeral = numeral.longValue();
         }

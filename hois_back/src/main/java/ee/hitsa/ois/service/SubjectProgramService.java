@@ -53,6 +53,28 @@ public class SubjectProgramService {
     private EntityManager em;
     @Autowired
     private ClassifierRepository classifierRepository;
+    
+    public Page<SubjectProgramSearchDto> searchMyPrograms(HoisUserDetails user, SubjectProgramSearchCommand cmd, Pageable pageable) {
+        StringBuilder from = new StringBuilder("from subject_program sp ");
+        from.append("join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id ");
+        from.append("join subject_study_period ssp on ssp.id = sspt.subject_study_period_id ");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable);
+        qb.optionalCriteria("sp.status_code = :status", "status", cmd.getStatus());
+        qb.optionalCriteria("sspt.teacher_id = :teacherId", "teacherId", user.isTeacher() ? user.getTeacherId() : cmd.getTeacher() != null ? cmd.getTeacher().getId() : null);
+        qb.optionalCriteria("ssp.subject_id = :subjectId", "subjectId", cmd.getSubject());
+        qb.optionalCriteria("ssp.study_period_id = :periodId", "periodId", cmd.getStudyPeriod());
+        return JpaQueryUtil.pagingResult(qb, "distinct sp.id, ssp.subject_id, ssp.study_period_id, sspt.teacher_id, sp.status_code, ssp.id as sspId",
+                em, pageable).map(r -> {
+            SubjectProgramSearchDto dto = new SubjectProgramSearchDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setSubject(AutocompleteResult.of(em.getReference(Subject.class, resultAsLong(r, 1))));
+            dto.setStudyPeriod(AutocompleteResult.of(em.getReference(StudyPeriod.class, resultAsLong(r, 2))));
+            dto.setTeacher(AutocompleteResult.of(em.getReference(Teacher.class, resultAsLong(r, 3))));
+            dto.setStatus(resultAsString(r, 4));
+            dto.setSubjectStudyPeriod(resultAsLong(r, 5));
+            return dto;
+        });
+    }
 
     public Page<SubjectProgramSearchDto> search(HoisUserDetails user, SubjectProgramSearchCommand cmd,
             Pageable pageable) {
@@ -85,6 +107,11 @@ public class SubjectProgramService {
     
     public SubjectProgramDto get(SubjectProgram program) {
         SubjectProgramDto dto = SubjectProgramDto.of(program);
+        Long subjectId = ((List<?>) em.createNativeQuery("select ssp.subject_id from subject_program sp " +
+                "join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id " +
+                "join subject_study_period ssp on ssp.id = sspt.subject_study_period_id " +
+                "where sp.id = ?1").setParameter(1, program.getId()).getResultList()).stream().map(row -> resultAsLong(row, 0)).findAny().orElse(null);
+        dto.setSubjectId(subjectId);
         List<?> results = em.createNativeQuery("select distinct c.teacher_id " + 
                 "from subject_program sp " + 
                 "join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id " + 
@@ -214,8 +241,19 @@ public class SubjectProgramService {
         entity.setSubjectProgram(program);
         return EntityUtil.bindToEntity(dto, entity);
     }
+    
+    public Set<AutocompleteResult> getSubjectsViaPrograms(HoisUserDetails user, Long teacherId) {
+        StringBuilder from = new StringBuilder("from subject_program sp "); 
+        from.append("join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id "); 
+        from.append("join subject_study_period ssp on ssp.id = sspt.subject_study_period_id "); 
+        from.append("join subject s on s.id = ssp.subject_id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).groupBy("s.id");
+        qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", user.isTeacher() ? user.getTeacherId() : teacherId);
+        List<?> results = qb.select("s.id, s.name_et, s.name_en, s.code, s.credits", em, true).getResultList();
+        return getSubjects(results);
+    }
 
-    public Set<AutocompleteResult> getSubjects(HoisUserDetails user) {
+    public Set<AutocompleteResult> getSubjectsViaCurriculums(HoisUserDetails user) {
         StringBuilder from = new StringBuilder("from curriculum c "); 
         from.append("join curriculum_version cv on c.id = cv.curriculum_id "); 
         from.append("left join curriculum_version_hmodule cvhm on cvhm.curriculum_version_id = cv.id "); 
@@ -225,13 +263,17 @@ public class SubjectProgramService {
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("c.teacher_id = :teacherId", "teacherId", user.getTeacherId());
         List<?> results = qb.select("s.id, s.name_et, s.name_en, s.code, s.credits", em, true).getResultList();
+        return getSubjects(results);
+    }
+    
+    private static Set<AutocompleteResult> getSubjects(List<?> data) {
         return StreamUtil.toMappedSet(r -> {
             String code = resultAsString(r, 3);
             BigDecimal credits = resultAsDecimal(r, 4);
             return new AutocompleteResult(resultAsLong(r, 0),
                     String.format("%s - %s (%.1f EAP)", code, resultAsString(r, 1), credits),
                     String.format("%s - %s (%.1f EAP)", code, resultAsString(r, 2), credits));
-        }, results);
+        }, data);
     }
 
     public SubjectProgram reject(HoisUserDetails user, SubjectProgram program, String rejectInfo) {

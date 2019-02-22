@@ -199,7 +199,8 @@ public class StudentGroupTeacherReportService {
         }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(journalFrom);
         qb.requiredCriteria("sg.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
-        qb.filter("(lp.student_group_id=sg.id  or j.id not in "
+        qb.optionalCriteria("js.student_id = :studentId", "studentId", criteria.getStudent());
+        qb.filter("(lp.student_group_id=sg.id or j.id not in "
                 + "(select jot2.journal_id from journal_omodule_theme jot2 "
                 + "join lesson_plan_module lpm2 on jot2.lesson_plan_module_id = lpm2.id "
                 + "join lesson_plan lp2 on lpm2.lesson_plan_id = lp2.id "
@@ -274,7 +275,8 @@ public class StudentGroupTeacherReportService {
                 " join student_group sg on s.student_group_id = sg.id" +
                 " left join curriculum_version cv on s.curriculum_version_id = cv.id");
         qb.requiredCriteria("sg.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
-        
+        qb.optionalCriteria("s.id = :studentId", "studentId", criteria.getStudent());
+
         qb.sort("p.lastname, p.firstname");
         List<?> data = qb.select("s.id, p.firstname, p.lastname, s.status_code, cv.is_individual", em).getResultList();
 

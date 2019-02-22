@@ -1,0 +1,90 @@
+<md-dialog aria-label="add enterprise dialog" flex="50">
+<md-toolbar>
+    <div class="md-toolbar-tools">
+        <h2 flex>{{"enterprise.personsTab.label" | translate}}</h2>
+        <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+    </div>
+</md-toolbar>
+<md-dialog-content>
+    <div class="md-dialog-content form-readonly" flex>
+        <div layout="row" class="form-readonly">
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label>{{'enterprise.name' | translate}}</label>
+                    <hois-value value="enterprise.name"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label>{{'enterprise.personsTab.regCode' | translate}}</label>
+                    <hois-value value="enterprise.regCode"></hois-value>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row">
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'person.firstname' | translate}}</label>
+                    <hois-value value="enterprise.firstname"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'person.lastname' | translate}}</label>
+                    <hois-value value="enterprise.lastname"></hois-value>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row">
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.personsTab.phone' | translate}}</label>
+                    <hois-value value="enterprise.phone"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.personsTab.email' | translate}}</label>
+                    <hois-value value="enterprise.email"></hois-value>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row">
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.personsTab.personIdCode' | translate}}</label>
+                    <hois-value value="enterprise.idcode"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="column" flex="50">
+                <md-input-container flex>
+                    <label class="textInput">{{'enterprise.personsTab.personIdCodeCountry' | translate}}</label>
+                    <hois-value value="currentLanguageNameField(enterprise.country)"></hois-value>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row">
+            <md-input-container flex>
+                <label class="textInput">{{'enterprise.personsTab.proffession' | translate}}</label>
+                <hois-value type="text" value="enterprise.position"></hois-value>
+            </md-input-container>
+        </div>
+        <div layout="row">
+            <md-input-container flex>
+                <label>{{'enterprise.personsTab.supervisor' | translate}}</label>
+                <hois-value value="enterprise.supervisor ? 'main.yes' : 'main.no' | translate"></hois-value>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'enterprise.personsTab.contactPerson' | translate}}</label>
+                <hois-value value="enterprise.contact ? 'main.yes' : 'main.no' | translate"></hois-value>
+            </md-input-container>
+        </div>
+    </div>
+</md-dialog-content>
+
+<md-dialog-actions layout="row" layout-align="start start">
+    <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+</md-dialog-actions>
+</md-dialog>

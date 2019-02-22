@@ -186,6 +186,17 @@ public class XlsService {
             }
             return DateUtils.date(localDate);
         }
+
+        public List<?> colspanArray(int colspan) {
+            return new ArrayList<>(Collections.nCopies(colspan - 1, null));
+        }
+
+        public Long hideZeroValue(int value) {
+            if (value == 0) {
+                return null;
+            }
+            return Long.valueOf(value);
+        }
     }
     
 }

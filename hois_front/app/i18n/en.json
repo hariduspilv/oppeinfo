@@ -206,6 +206,12 @@
     "email": "E-mail address",
     "sum": "In total",
     "menu": {
+      "practice" : {
+        "label": "Internship",
+        "practiceContracts": "Internship contracts",
+        "practiceEnterprises": "Internship enterprises",
+        "statistics": "Internship statistics"
+      },
       "scholarships" : {
         "label": "Study allowances and scholarships",
         "search": "Search of scholarships",
@@ -448,6 +454,7 @@
         "directives": "Directives",
         "certificates": "Certificates",
         "practiceContracts": "Internship contracts",
+        "practiceEnterprises": "Internship enterprises",
         "representativeApplications": "Applications of representatives",
         "apel": "VÕTA"
       },
@@ -2524,7 +2531,15 @@
       "rooms": "Rooms",
       "occupied": "Occupied",
       "duplicateroom": "Room already available",
-      "duplicateTeacher": "Teacher already available"
+      "duplicateTeacher": "Teacher already available",
+      "error": {
+        "duplicateRoom": "Duplicate room",
+        "duplicateTeacherHigher": "Duplicate teacher",
+        "duplicateTeacherVocational": "Duplicate teacher",
+        "duplicateStudentGroup": "Duplicate student group",
+        "duplicateSupervisor": "Duplicate supervisor",
+        "endIsEarlierThanStart": "End time can not be earlier than start time"
+      }
     },
     "subjectTeacherPairs": "Subject-teacher pairs",
     "search": {
@@ -2990,6 +3005,8 @@
     }
   },
   "contract": {
+    "supervisorEvaluation": "Enterprise supervisor evaluation",
+    "sendAgain": "Send again",
     "startFrom": "Starting date since",
     "startThru": "Starting date until",
     "ekisconfirm": "Are you sure you wish to send to EKIS?",
@@ -3010,18 +3027,28 @@
     "start": "Start of contract",
     "end": "End of contract",
     "practicePlace": "Internship location",
+    "practicePlaceDistanceWork": "Long distance internship",
+    "practicePlaceEnterprise": "Enterprise internship",
+    "practicePlaceSchool": "School internship",
+    "practicePlaceElse": "Other",
+    "otherPlace": "Other internship explanation",
+    "practicePlaceEnterpriseLocation": "Enterprise location",
     "contactPersonName": "Name of contact person",
     "contactPersonPhone": "Telephone of contact person",
     "contactPersonEmail": "E-mail address of contact person ",
     "supervisorName": "Name of instructor",
     "supervisorPhone": "Telephone of instructor",
     "supervisorEmail": "E-mail address of instructor ",
+    "supervisors": "Enterprise supervisors",
     "contractCoordinator": "Body conducting proceedings of contract in EKIS",
     "practicePlan": "Internship program",
     "otherSupervisor": "Other instructors",
     "deleteconfirm":"Are you sure you wish to delete contract?",
     "vocationalOrHigherSelect": "Either professional training or higher education?",
     "vocationalOrHigherContract": "Please select whether you wish to add contract of professional training or higher education?",
+    "cancel": "Cancel contract",
+    "cancelInfo": "Cancellation info",
+    "canceledBy": "Canceled by",
     "button": {
       "vocational": "Professional training",
       "higher": "Higher education",
@@ -3034,6 +3061,7 @@
           "studentEmailMissing": "Learner does not have e-mail address at educational institution"
         }
       },
+      "updatingOnlyAllowedForStatusKandY": "To cancel contract, contract needs to be in status Koostamisel or Lõpetatud",
       "subjectRequired": "Subject is mandatory!",
       "moduleRequired": "Module is mandatory!"
     }
@@ -3195,14 +3223,141 @@
     }
   },
   "enterprise": {
+    "strict": "Strict",
+    "delete": "Are you sure you wish to delete enterprise school data, persons, locations, student groups and grades?",
+    "error": "Registry code is not valid",
+    "minlength": "Minimum field length is 8",
     "label": "Company",
     "supervisor": "Instructor of company",
     "create": "Add company",
     "name": "Name of company",
     "regCode": "Registry code",
+    "isActive": "Active",
+    "isApplication": "Student can apply",
+    "import": "Impordi from CSV file",
+    "contactPerson": "Contact persons",
     "contactPersonName": "Name of contact person",
     "contactPersonPhone": "Telephone of contact person",
-    "contactPersonEmail": "E-mail address of contact person"
+    "contactPersonEmail": "E-mail address of contact person",
+    "basicData": "Basic data",
+    "schoolData": "Schoolbase data",
+    "fie": "Self-employed entrepreneur",
+    "language": "Workers languages",
+    "explanation": "Internspot explanation",
+    "internSpots": "Internsports",
+    "postcode": "Postal code",
+    "persons": "Related Persons",
+    "locations": "Locations",
+    "studentGroups": "Student groups",
+    "contracts": "Contracts",
+    "grades": "Evaluation",
+    "lastEnterpriseUpdate": "Last updated",
+    "requests": "Requests",
+    "schoolGrade": "Grade",
+    "personsTab": {
+      "name": "Name",
+      "phone": "Contact nr",
+      "email": "E-mail address",
+      "personIdCode": "Persons Id Code",
+      "personIdCodeCountry": "Persons Id Code Country",
+      "proffession": "Proffession",
+      "mentor": "Instructor",
+      "contactPerson": "Contact person",
+      "label": "Related persons",
+      "addNew": "Add new related person",
+      "regCode": "Enterprise register code",
+      "addInfo": "Additional info",
+      "supervisor": "Supervisor",
+      "deleteConfirm": "Are you sure you wish to delete the related person?",
+      "number": "Must be a number"
+    },
+    "iscedTab": {
+      "regCode": "Enterprise registry code",
+      "iscedClass": "Student group",
+      "addInfo": "Explanation",
+      "addNew": "Add new student group",
+      "deleteConfirm": "Are you sure you wish to delete the student group?",
+      "places": "Intern spots",
+      "warning": "Student group is not bound to unexpired curriculum."
+    },
+    "contractTab": {
+      "contractNr": "Contract nr",
+      "student": "Student",
+      "duration": "Contract duration",
+      "enterpriseSupervisors": "Enterprise supervisor",
+      "schoolSupervisors": "School supervisor",
+      "contractDate": "Contract start date",
+      "status": "Status"
+    },
+    "gradesTab": {
+      "schoolGrade": "School grade",
+      "grade": "Grade",
+      "endDate": "Expiration date",
+      "explanation": "Explanation",
+      "school": "School",
+      "delete": "Delete grade"
+    },
+    "admissionTab": {
+      "period": "Admission period",
+      "studentGroups": "Student groups",
+      "places": "Places",
+      "addInfo": "Additional information",
+      "addNew": "Add new admission",
+      "deleteConfirm": "Are you sure you wish to delete the admission period?",
+      "allStudentGroups": "Add all student groups"
+    },
+    "csv": {
+      "label": "CSV file Enterprises",
+      "addedEnterprises": "Enterprises added with CSV file",
+      "csvFileRow": "CSV file row nr",
+      "name": "Name",
+      "regCode": "Registry code",
+      "failed": "Failed enterprises",
+      "note": "Note"
+    }
+  },
+  "practice": {
+    "student": {
+      "statistics": "Students with internship contract",
+      "startDate": "From",
+      "endDate": "Until",
+      "contractStatus": "Contract status",
+      "label": "Student",
+      "studentGroup": "Student group",
+      "contractNr": "Contract nr",
+      "contractDate": "Contract duration",
+      "enterprise": "Enterprise",
+      "status": "Status"
+    },
+    "contract": {
+      "statistics": "Canceled contract statistics",
+      "startDate": "Canceled from",
+      "endDate": "Canceled until",
+      "contractStatus": "Lepingu staatus",
+      "label": "Õppija",
+      "studentGroup": "Õpperühm",
+      "contractNr": "Lepingu nr",
+      "contractDate": "Lepingu kehtivus",
+      "enterprise": "Ettevõte",
+      "info": "Selgitus",
+      "cancelReason": "Tühistamise põhjus",
+      "date": "Tühistamise kp",
+      "studyYear": "Õppeaasta"
+    },
+    "studyYear": {
+      "statistics": "Koondaruanne",
+      "studentGroup": "Õpperühm",
+      "curriculumName": "Õppekava nimetus",
+      "curriculumCode": "Õppekava kood",
+      "curriculumGroup": "Õppekavarühm",
+      "course": "Kursus",
+      "totalWent": "Praktikale suunatud õpilasi kokku",
+      "totalCompleted": "Praktika sooritajaid kokku",
+      "totalFailed": "Praktika mittesooritajaid kokku",
+      "nameAndReason": "Nimed ja põhjus praktika mittesooritamise kohta",
+      "grade": "Praktika sooritamise keskmine hinne",
+      "enterprises": "Praktikaettevõtted, kus praktika toimus"
+    }
   },
   "midtermTask": {
     "add": "Add/change interim performance",

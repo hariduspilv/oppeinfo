@@ -55,7 +55,6 @@
   </fieldset>
 
   <span ng-if="version.modules.length > 0">
-    <div>&nbsp;</div>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.modules' | translate}}</legend>
       <hois-collapsable ng-repeat="module in version.modules | orderBy: 'nameEt'" expanded="false" label="currentLanguageNameField(module) + ' ' + module.totalCredits + ' ' + ('curriculum.public.higherCreditsUnit' | translate)">
@@ -63,12 +62,19 @@
           <table ng-if="(mandatorySubjects = (module.subjects | filter : {optional: false})).length > 0" md-table class="secondary-table">
             <thead md-head>
               <tr md-row style="background: #E0E0E0 !important">
-                <th md-column colspan="3">{{'curriculum.public.mandatorySubjects' | translate}}</th>
+                <th md-column colspan="6">{{'curriculum.public.mandatorySubjects' | translate}}</th>
               </tr>
               <tr md-row>
-                <th md-column width="40%">{{'curriculum.public.name' | translate}}</th>
-                <th md-column width="20%">{{'curriculum.public.higherStudyLoad' | translate}}</th>
-                <th md-column width="40%">{{'curriculum.public.assessment' | translate}}</th>
+                <th md-column style="width: 35%">{{'curriculum.public.name' | translate}}</th>
+                <th md-column style="width: 20%">{{'curriculum.public.higherStudyLoad' | translate}}</th>
+                <th md-column style="width: 20%">{{'curriculum.public.assessment' | translate}}</th>
+                <th md-column style="width: 10%;">{{'module.studyYear' | translate}}</th>
+                <th md-column style="width: 10%;">
+                  <hois-classifier-value ng-value="'OPPEPERIOOD_S'" main-classifier-code="OPPEPERIOOD"></hois-classifier-value>
+                </th>
+                <th md-column style="width: 10%;">
+                  <hois-classifier-value ng-value="'OPPEPERIOOD_K'" main-classifier-code="OPPEPERIOOD"></hois-classifier-value>
+                </th>
               </tr>
             </thead>
             <tbody md-body>
@@ -76,6 +82,9 @@
                 <td md-cell>{{currentLanguageNameField(subject.subject)}}</td>
                 <td md-cell>{{subject.subject.credits}}</td>
                 <td md-cell>{{subject.subject.assessment}}</td>
+                <td md-cell>{{subject.studyYearNumber}}</td>
+                <td md-cell>{{subject.autumn ? ('main.no' | translate) : ('main.yes' | translate)}}</td>
+                <td md-cell>{{subject.spring ? ('main.no' | translate) : ('main.yes' | translate)}}</td>
               </tr>
             </tbody>
           </table>
@@ -85,12 +94,19 @@
           <table ng-if="(optionalSubjects = (module.subjects | filter : {optional: true})).length > 0" md-table class="secondary-table">
             <thead md-head>
               <tr md-row style="background: #E0E0E0 !important">
-                <th md-column colspan="3">{{'curriculum.public.optionalSubjects' | translate}}</th>
+                <th md-column colspan="6">{{'curriculum.public.optionalSubjects' | translate}}</th>
               </tr>
               <tr md-row>
-                <th md-column width="40%">{{'curriculum.public.name' | translate}}</th>
-                <th md-column width="20%">{{'curriculum.public.higherStudyLoad' | translate}}</th>
-                <th md-column width="40%">{{'curriculum.public.assessment' | translate}}</th>
+                <th md-column style="width: 35%">{{'curriculum.public.name' | translate}}</th>
+                <th md-column style="width: 20%">{{'curriculum.public.higherStudyLoad' | translate}}</th>
+                <th md-column style="width: 20%">{{'curriculum.public.assessment' | translate}}</th>
+                <th md-column style="width: 10%;">{{'module.studyYear' | translate}}</th>
+                <th md-column style="width: 10%;">
+                  <hois-classifier-value ng-value="'OPPEPERIOOD_S'" main-classifier-code="OPPEPERIOOD"></hois-classifier-value>
+                </th>
+                <th md-column style="width: 10%;">
+                  <hois-classifier-value ng-value="'OPPEPERIOOD_K'" main-classifier-code="OPPEPERIOOD"></hois-classifier-value>
+                </th>
               </tr>
             </thead>
             <tbody md-body>
@@ -98,6 +114,9 @@
                 <td md-cell>{{currentLanguageNameField(subject.subject)}}</td>
                 <td md-cell>{{subject.subject.credits}}</td>
                 <td md-cell>{{subject.subject.assessment}}</td>
+                <td md-cell>{{subject.studyYearNumber}}</td>
+                <td md-cell>{{subject.autumn ? ('main.no' | translate) : ('main.yes' | translate)}}</td>
+                <td md-cell>{{subject.spring ? ('main.no' | translate) : ('main.yes' | translate)}}</td>
               </tr>
             </tbody>
           </table>
@@ -142,8 +161,99 @@
       </hois-collapsable>
     </fieldset>
   </span>
-
+  
+  
+  <hois-collapsable expanded="false" ng-if="version.modules.length > 0 && years.length > 0">
+    <hois-collapsable-header>
+        <span>{{'curriculum.version.typicalTrainingPlan' | translate}}</span>
+    </hois-collapsable-header>
+    <md-table-container style="padding: 1px;">
+      <table class="custom-table">
+        <thead class="secondary-table-header">
+          <th style="width: 35%;">{{'subject.name' | translate}}</th>
+          <th style="width: 20%;">{{'subject.code' | translate}}</th>
+          <th style="width: 10%;">EAP</th>
+          <th style="width: 10%;">{{'subject.assessment' | translate}}</th>
+          <th style="width: 10%;">{{'subject.mandatory' | translate}}</th>
+        </thead>
+        <tbody ng-repeat="year in years | orderBy">
+          <tr class="sub-header1" ng-show="(mappedSubjects[year] | filter: {spring: true}).length > 0">
+            <td colspan="6">
+              {{'module.springSemesterYear' | translate: {year: year} }}
+            </td>
+          </tr>
+          <tr class="higher-curriculum-subject-row" ng-repeat="subject in mappedSubjects[year] | filter: {spring: true} | orderBy: currentLanguageNameField()">
+            <td>{{currentLanguageNameField(subject.subject)}}</td>
+            <td>{{subject.subject.code}}</td>
+            <td>{{subject.subject.credits}}</td>
+            <td>{{subject.assessment}}</td>
+            <td>{{subject.optional ? ('main.no' | translate) : ('main.yes' | translate)}}</td>
+          </tr>
+          <tr class="sub-header1" ng-show="(mappedSubjects[year] | filter: {autumn: true}).length > 0">
+            <td colspan="6">
+                {{'module.autumnSemesterYear' | translate: {year: year} }}
+            </td>
+          </tr>
+          <tr class="higher-curriculum-subject-row" ng-repeat="subject in mappedSubjects[year] | filter: {autumn: true} | orderBy: currentLanguageNameField()">
+            <td>{{currentLanguageNameField(subject.subject)}}</td>
+            <td>{{subject.subject.code}}</td>
+            <td>{{subject.subject.credits}}</td>
+            <td>{{subject.assessment}}</td>
+            <td>{{subject.optional ? ('main.no' | translate) : ('main.yes' | translate)}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </hois-collapsable>
   <div layout="row">
     <md-button ng-click="back('#/curriculums/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>
+
+<style>
+table.custom-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table.custom-table th:first-child,
+table.custom-table td:first-child {
+  padding-left: 2.5em;
+}
+
+table.custom-table th:last-child,
+table.custom-table td:last-child {
+  padding-right: 1.5em;
+}
+
+table.custom-table th,
+table.custom-table td{
+  padding-right: 0.5em;
+  text-align: left;
+  white-space: nowrap;
+}
+
+table.custom-table tr.occupation-header {
+  height: 38px !important;
+}
+
+table.custom-table tr.occupation-header td:first-child {
+  padding-left: 0.5em !important;
+}
+
+table.custom-table tr.sub-header1 {
+  height: 32px !important;
+}
+
+table.custom-table tr.sub-header1 td:first-child {
+  padding-left: 1.5em !important;
+}
+
+table.custom-table tr {
+  height: 28px;
+}
+
+table.custom-table td md-checkbox {
+  margin: auto;
+}
+</style>

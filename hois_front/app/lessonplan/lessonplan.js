@@ -98,6 +98,33 @@
     totals.__ = rowSum(totals._._);
   }
 
+  function updateLessonCountByStudyPeriod(scope, journalObject, capacityType, spIndex, updateTotals) {
+    var studyPeriod = scope.formState.studyPeriods[spIndex];
+    var newTotalHours = journalObject.spHours[capacityType][spIndex];
+    var lessonsByWeek = newTotalHours / studyPeriod.weekNrs.length;
+    if (lessonsByWeek % 1 !== 0) {
+      lessonsByWeek = Math.ceil(lessonsByWeek);
+    }
+    var lessonsAdded = 0;
+    var weekIndex = studyPeriod.weekIndex[0];
+    for (var weekNr = 0; weekNr < studyPeriod.weekNrs.length; weekNr++) {
+      journalObject.hours[capacityType][weekIndex] = lessonsByWeek;
+      lessonsAdded += lessonsByWeek;
+
+      if (updateTotals) {
+        scope.updateTotals(journalObject, capacityType, weekIndex);
+      }
+
+      if (lessonsAdded === Number(newTotalHours)) {
+        lessonsByWeek = 0;
+      }
+      if (((newTotalHours - lessonsAdded) / (studyPeriod.weekNrs.length - weekNr - 1)) % 1 === 0) {
+        lessonsByWeek = (newTotalHours - lessonsAdded) / (studyPeriod.weekNrs.length - weekNr - 1);
+      }
+      weekIndex += 1;
+    }
+  }
+
   angular.module('hitsaOis').controller('LessonplanSearchController',
     function ($location, $mdDialog, $route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService, message) {
       $scope.auth = $route.current.locals.auth;
@@ -291,7 +318,9 @@
       var stateKey = 'lessonplan';
       var baseUrl = '/lessonplans';
       var journalMapper = Classifier.valuemapper({groupProportion: 'PAEVIK_GRUPI_JAOTUS'});
+      var LessonPlanEndpoint = QueryUtils.endpoint(baseUrl);
       $scope.lessonPlanId = id;
+
 
       $scope.formState = {
         showWeeks: true,
@@ -299,10 +328,10 @@
       };
       var saveScrollPosition = true;
 
-      var containter = angular.element(document.getElementById('lessonplan-container'));
-      containter.bind('scroll', function() {
+      var container = angular.element(document.getElementById('lessonplan-container'));
+      container.bind('scroll', function() {
         if (saveScrollPosition) {
-          $scope.formState.scrollPosition = containter[0].scrollTop;
+          $scope.formState.scrollPosition = container[0].scrollTop;
         }
       });
 
@@ -316,7 +345,7 @@
 
       function setLessonplanContainerScroll(scrollValue) {
         saveScrollPosition = false;
-        containter[0].scrollTop = scrollValue;
+        container[0].scrollTop = scrollValue;
         $timeout(function () {
           saveScrollPosition = true;
         }, 1000);
@@ -470,25 +499,11 @@
         QueryUtils.loadingWheel($scope, false);
         $scope.windowWidth = $window.innerWidth;
 
-        angular.element(document.getElementsByClassName("container")).css('height', $window.innerHeight-340 + 'px');
+        angular.element(angular.element(document.getElementById('lessonplan-container'))).css('height', $window.innerHeight-340 + 'px');
       });
 
-      /*
-      $scope.finished = function () {
-        var tb;
-        tb = angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].clientHeight+340+18;
-        //console.log(document.getElementById('ng-repeat-table-test').getBoundingClientRect());
-        //console.log("x: "+angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].clientHeight+"_"+tb);
-        //console.log("x: "+angular.element(document.getElementsByClassName("lessonplan"))[0].offsetHeight+"_"+tb);
-        //console.log("x: "+angular.element(document.getElementsByClassName("lessonplan")).find("tbody")[0].offsetHeight+"_"+tb);
-        //angular.element(document.getElementsByClassName("container")).css('height', (tb > $window.innerHeight ? $window.innerHeight : tb) -250 + 'px');
-        $scope.tb=tb;
-      };
-      */
-
       angular.element($window).bind('resize', function(){
-        //angular.element(document.getElementsByClassName("container")).css('height', ($scope.tb > $window.innerHeight ? $window.innerHeight : $scope.tb)-340 + 'px');
-        angular.element(document.getElementsByClassName("container")).css('height', $window.innerHeight - 340 + 'px');
+        angular.element(angular.element(document.getElementById('lessonplan-container'))).css('height', $window.innerHeight - 340 + 'px');
       });
 
       function setSelectedStudyPeriods(selectedStudyPeriods) {
@@ -584,6 +599,16 @@
           }
           initializeSpGrandTotals($scope, capacityType);
         });
+
+        result.teachers.forEach(function (teacher) {
+          teacher.studyLoadByPeriod = {};
+          $scope.formState.studyPeriods.forEach(function (sp) {
+            if (teacher.studyLoadByWeek) {
+              teacher.studyLoadByPeriod[sp.arrayIndex] = rowSum(teacher.studyLoadByWeek.slice(sp.weekIndex[0], sp.weekIndex[1]));
+            }
+          });
+        });
+
         $scope.record = result;
         updateCopyOfRecord();
         $scope.updateStudyPeriods();
@@ -625,26 +650,7 @@
       };
 
       $scope.updateLessonCountByStudyPeriod = function (journal, capacityType, spIndex) {
-        var studyPeriod = $scope.formState.studyPeriods[spIndex];
-        var newTotalHours = journal.spHours[capacityType][spIndex];
-        var lessonsByWeek = newTotalHours / studyPeriod.weekNrs.length;
-        if (lessonsByWeek % 1 !== 0) {
-          lessonsByWeek = Math.ceil(lessonsByWeek);
-        }
-        var lessonsAdded = 0;
-        var weekIndex = studyPeriod.weekIndex[0];
-        for (var weekNr = 0; weekNr < studyPeriod.weekNrs.length; weekNr++) {
-          journal.hours[capacityType][weekIndex] = lessonsByWeek;
-          lessonsAdded += lessonsByWeek;
-          $scope.updateTotals(journal, capacityType, weekIndex);
-          if (lessonsAdded === Number(newTotalHours)) {
-            lessonsByWeek = 0;
-          }
-          if (((newTotalHours - lessonsAdded) / (studyPeriod.weekNrs.length - weekNr - 1)) % 1 === 0) {
-            lessonsByWeek = (newTotalHours - lessonsAdded) / (studyPeriod.weekNrs.length - weekNr - 1);
-          }
-          weekIndex += 1;
-        }
+        updateLessonCountByStudyPeriod($scope, journal, capacityType, spIndex, true);
       };
 
       $scope.updateSpGrandTotals = function (capacityType, index) {
@@ -671,8 +677,10 @@
       };
       
       $scope.update = function () {
-        $scope.record.$update().then(message.updateSuccess).then(function() {
-          initializeTotals($scope.record);
+        var record = new LessonPlanEndpoint($scope.record);
+        record.$update().then(function(result) {
+          message.updateSuccess();
+          initializeTotals(result);
           updateCopyOfRecord();
           $scope.$broadcast('refreshFixedColumns');
         });
@@ -682,9 +690,76 @@
         copyOfRecord = angular.toJson($scope.record);
       }
 
+      $scope.teacherCapacities = function (journal) {
+        dialogService.showDialog('lessonplan/teacher.capacities.dialog.html', function (dialogScope) {
+          dialogScope.formState = $scope.formState;
+          dialogScope.formState.teacherTotals = {};
+          dialogScope.atLeastOneShownPeriod = $scope.atLeastOneShownPeriod;
+          dialogScope.teachers = $scope.record.teachers;
+          dialogScope.journal = journal;
+          dialogScope.journalCapacities = LessonPlanTableService.getCapacityTypes(dialogScope.formState.capacityTypes, journal.hours);
+
+          dialogScope.journal.teachers.forEach(function (journalTeacher) {
+            dialogScope.formState.teacherTotals[journalTeacher.id] = {};
+            journalTeacher.spHours = {};
+            dialogScope.journalCapacities.forEach(function (ct) {
+              var capacityType = ct.code;
+              journalTeacher.spHours[capacityType] = {};
+              var hours = journalTeacher.hours[capacityType];
+              if (hours !== undefined) {
+                dialogScope.formState.studyPeriods.forEach(function (sp) {
+                  journalTeacher.spHours[capacityType][sp.arrayIndex] = rowSum(hours.slice(sp.weekIndex[0], sp.weekIndex[1]));
+                });
+              }
+
+              var sum = rowSum(hours);
+              dialogScope.formState.teacherTotals[journalTeacher.id][capacityType] = sum;
+            });
+          });
+
+          dialogScope.updateTotals = function (teacher, capacityType, index) {
+            var hours = teacher.hours[capacityType];
+            var value = parseInt(hours[index], 10);
+            if (isNaN(value) || value < 0) {
+              value = undefined;
+            }
+            if (value !== hours[index]) {
+              hours[index] = value;
+            }
+            var sum = rowSum(teacher.hours[capacityType]);
+            dialogScope.formState.teacherTotals[teacher.id][capacityType] = sum;
+          };
+
+          dialogScope.getLegendByWeek = function (weekNr) {
+            return LessonPlanTableService.getLegendByWeek(dialogScope, weekNr);
+          };
+
+          dialogScope.updateLessonCountByStudyPeriod = function (journalTeacher, capacityType, spIndex) {
+            updateLessonCountByStudyPeriod(dialogScope, journalTeacher, capacityType, spIndex, false);
+          };
+
+          dialogScope.getTeacherStudyLoad = function (teacherId) {
+            return LessonPlanTableService.getTeacherStudyLoad(dialogScope.teachers, teacherId);
+          };
+
+          dialogScope.getTeacherLoad = function (teacherId) {
+            return LessonPlanTableService.getTeacherLoad(dialogScope.formState.studyPeriods, dialogScope.formState.teachers, teacherId);
+          };
+
+        }, function (submittedDialogScope) {
+          QueryUtils.endpoint(baseUrl + '/' +  id + '/teacherCapacities').save(submittedDialogScope.journal).$promise.then(function(result) {
+            initializeTotals(result);
+            updateCopyOfRecord();
+            $scope.$broadcast('refreshFixedColumns');
+            message.info('main.messages.update.success');
+          }).catch(angular.noop);
+        });
+      };
+
       $scope.delete = function () {
         dialogService.confirmDialog({prompt: 'lessonplan.prompt.deleteLessonplan'}, function() {
-          $scope.record.$delete().then(function() {
+          var record = new LessonPlanEndpoint($scope.record);
+          record.$delete().then(function() {
             message.info('main.messages.delete.success');
             redirectBack();
           }).catch(angular.noop);
@@ -701,7 +776,8 @@
             cancel: 'main.no'
           },
           function () {
-            $scope.record.$update().then(message.updateSuccess).then(redirectBack);
+            var record = new LessonPlanEndpoint($scope.record);
+            record.$update().then(message.updateSuccess).then(redirectBack);
           },
           function() {
             redirectBack();
@@ -715,7 +791,6 @@
 
     }
   ]).controller('LessonplanTeacherViewController', ['$route', '$scope', 'LessonPlanTableService', 'QueryUtils',
-
     function ($route, $scope, LessonPlanTableService, QueryUtils) {
       $scope.auth = $route.current.locals.auth;
       var id = $route.current.params.id;

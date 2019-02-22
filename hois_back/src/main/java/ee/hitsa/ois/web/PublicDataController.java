@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
 import java.util.List;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,13 +17,18 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.report.SubjectProgramReport;
 import ee.hitsa.ois.service.AutocompleteService;
+import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.PublicDataService;
 import ee.hitsa.ois.service.StateCurriculumService;
 import ee.hitsa.ois.service.StudyMaterialService;
 import ee.hitsa.ois.service.SubjectService;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.HttpUtil;
+import ee.hitsa.ois.util.SubjectProgramUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
@@ -52,6 +59,10 @@ public class PublicDataController {
     private SubjectService subjectService;
     @Autowired
     private AutocompleteService autocompleteService;
+    @Autowired
+    private PdfService pdfService;
+    @Autowired
+    private SubjectProgramUtil subjectProgramUtil;
 
     @GetMapping("/curriculum/{id:\\d+}")
     public Object curriculum(@PathVariable("id") Long id) {
@@ -66,6 +77,18 @@ public class PublicDataController {
     @GetMapping("/subject/{id:\\d+}")
     public Object subject(@PathVariable("id") Long id) {
         return publicDataService.subject(id);
+    }
+    
+    @GetMapping("/subjectProgram/{id:\\d+}")
+    public Object subjectProgram(@WithEntity SubjectProgram program) {
+        subjectProgramUtil.assertCanView(null, program);
+        return publicDataService.subjectProgram(program);
+    }
+    
+    @GetMapping("/print/subjectProgram/{id:\\d+}/program.pdf")
+    public void print(@WithEntity SubjectProgram program, HttpServletResponse response) throws IOException {
+        subjectProgramUtil.assertCanView(null, program);
+        HttpUtil.pdf(response, "subject_program_" + program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getCode() + ".pdf", pdfService.generate(SubjectProgramReport.TEMPLATE_NAME, new SubjectProgramReport(program)));
     }
 
     @GetMapping("/curriculumsearch")

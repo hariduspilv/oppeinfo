@@ -11,6 +11,7 @@ public class StudentAutocompleteCommand extends SearchCommand {
     private Boolean academicLeave;
     private Boolean nominalStudy;
     private Boolean higher;
+    private Boolean showStudentGroup;
     private List<Long> curriculumVersion;
     private List<Long> studentGroup;
 
@@ -68,6 +69,14 @@ public class StudentAutocompleteCommand extends SearchCommand {
 
     public void setHigher(Boolean higher) {
         this.higher = higher;
+    }
+
+    public Boolean getShowStudentGroup() {
+        return showStudentGroup;
+    }
+
+    public void setShowStudentGroup(Boolean showStudentGroup) {
+        this.showStudentGroup = showStudentGroup;
     }
 
     public List<Long> getCurriculumVersion() {

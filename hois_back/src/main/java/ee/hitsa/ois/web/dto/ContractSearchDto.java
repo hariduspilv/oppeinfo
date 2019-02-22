@@ -1,6 +1,16 @@
 package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.util.StringUtils;
+
+import ee.hitsa.ois.domain.Contract;
+import ee.hitsa.ois.domain.enterprise.Enterprise;
+import ee.hitsa.ois.domain.enterprise.EnterpriseSchoolPerson;
+import ee.hitsa.ois.util.EntityUtil;
 
 public class ContractSearchDto {
 
@@ -14,7 +24,27 @@ public class ContractSearchDto {
     private AutocompleteResult teacher;
     private LocalDate confirmDate;
     private String status;
-
+    private String studentGroup;
+    
+    public static ContractSearchDto of(Contract contract) {
+    	ContractSearchDto contractSearchDto = EntityUtil.bindToDto(contract, new ContractSearchDto());
+    	contractSearchDto.setStatus(contract.getStatus().getNameEt());
+    	Enterprise enterprise = contract.getEnterprise();
+    	if (enterprise != null && !enterprise.getEnterpriseSchools().isEmpty()) {
+    		List<EnterpriseSchoolPerson> enterpriseContactPersons = new ArrayList<>();
+    		enterprise.getEnterpriseSchools().forEach(p->enterpriseContactPersons.addAll(p.getEnterpriseSchoolPersons()));
+    		List<String> pairs = enterpriseContactPersons.stream().map(p->p.getFirstname() + ' ' + p.getLastname()).collect(Collectors.toList());
+    		pairs.removeIf(p->p.trim().equals(""));
+    		contractSearchDto.setEnterpriseContactPersonName(String.join(", ", pairs));
+    		if (StringUtils.isEmpty(contractSearchDto.getEnterpriseContactPersonName())) {
+    			contractSearchDto.setEnterpriseContactPersonName(contract.getContactPersonName());
+    		}
+    	} else {
+    		contractSearchDto.setEnterpriseContactPersonName(contract.getContactPersonName());
+    	}
+		return contractSearchDto;
+	}
+    
     public Long getId() {
         return id;
     }
@@ -93,6 +123,14 @@ public class ContractSearchDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(String studentGroup) {
+        this.studentGroup = studentGroup;
     }
 
 }

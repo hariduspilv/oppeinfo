@@ -23,7 +23,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TOEND]
+          authorizedRoles: function(Session, roles) {
+            return Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TOEND) !== -1;
+          }
         }
       })
       .when('/certificate/:typeCode/new', {

@@ -14,12 +14,14 @@
         <th>{{ "studyyearschedule.code" | translate }}</th>
         <th>{{ "studyyearschedule.nameEt" | translate }}</th>
         <th>{{ "studyyearschedule.nameEn" | translate }}</th>
+        <th>{{ "studyyearschedule.color" | translate }}</th>
       </tr>
       {% for item in content.legends %}
 	  <tr>
 	  	<td>{{ item.code }}</td>
 	  	<td>{{ item.nameEt }}</td>
 	  	<td>{{ item.nameEn }}</td>
+	  	<td style="width: 50px; background-color: {{item.color}}; color: {{item.brightText ? 'white' : 'black'}}"></td>
 	  </tr>
 	  {% endfor %}
     </table>
@@ -45,7 +47,11 @@
           <tr>
             <td>{{ studentGroup.group.code }}</td>
             {% for schedule in studentGroup.schedule %}
-            <td>{{ schedule is not empty ? schedule.code : "" }}</td>
+            {% if schedule is not empty %}
+            	<td style="background-color: {{schedule.color}}; color: {{schedule.brightText ? 'white' : 'black'}}">{{ schedule.code }}</td>
+            {% else %}
+            	<td></td>
+            {% endif %}
             {% endfor %}
           </tr>
           {% endfor %}

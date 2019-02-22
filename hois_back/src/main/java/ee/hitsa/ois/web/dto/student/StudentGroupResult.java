@@ -16,6 +16,10 @@ public class StudentGroupResult extends AutocompleteResult {
     private LocalDate validFrom;
     private LocalDate validThru;
     private Boolean isOccupied;
+    
+    public StudentGroupResult() {
+    	
+    }
 
     public StudentGroupResult(Long id, String code) {
         super(id, code, code);

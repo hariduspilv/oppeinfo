@@ -40,6 +40,9 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapac
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionSpeciality;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.SubjectLanguage;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramStudyContent;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.CurriculumVersionYearCapacitiesUtil;
@@ -66,6 +69,9 @@ public class PublicDataMapper {
     private static final Map<String, Function<CurriculumVersionOccupationModuleThemeCapacity, ?>> CURRICULUM_VERSION_OCCUPATION_MODULE_THEME_CAPACITY = new LinkedHashMap<>();
     private static final Map<String, Function<CurriculumVersionOccupationModuleYearCapacity, ?>> CURRICULUM_VERSION_OCCUPATION_MODULE_YEAR_CAPACITY = new LinkedHashMap<>();
     private static final Map<String, Function<Subject, ?>> SUBJECT = new LinkedHashMap<>();
+    private static final Map<String, Function<SubjectProgram, ?>> SUBJECT_PROGRAM = new LinkedHashMap<>();
+    private static final Map<String, Function<SubjectStudyPeriodTeacher, ?>> SUBJECT_STUDY_PERIOD_TEACHER = new LinkedHashMap<>();
+    private static final Map<String, Function<SubjectProgramStudyContent, ?>> SUBJECT_PROGRAM_STUDY_CONTENT = new LinkedHashMap<>();
 
     private final Language lang;
 
@@ -74,62 +80,71 @@ public class PublicDataMapper {
     }
 
     public Object map(Object o) {
-        if(o instanceof Curriculum) {
+        if (o instanceof Curriculum) {
             return map((Curriculum)o, CURRICULUM);
         }
-        if(o instanceof CurriculumJointPartner) {
+        if (o instanceof CurriculumJointPartner) {
             return map((CurriculumJointPartner)o, CURRICULUM_JOINT_PARTNER);
         }
-        if(o instanceof CurriculumModule) {
+        if (o instanceof CurriculumModule) {
             return map((CurriculumModule)o, CURRICULUM_MODULE);
         }
-        if(o instanceof CurriculumOccupation) {
+        if (o instanceof CurriculumOccupation) {
             return map((CurriculumOccupation)o, CURRICULUM_OCCUPATION);
         }
-        if(o instanceof CurriculumSpeciality) {
+        if (o instanceof CurriculumSpeciality) {
             return map((CurriculumSpeciality)o, CURRICULUM_SPECIALITY);
         }
-        if(o instanceof CurriculumVersion) {
+        if (o instanceof CurriculumVersion) {
             return map((CurriculumVersion)o, CURRICULUM_VERSION);
         }
-        if(o instanceof CurriculumVersionElectiveModule) {
+        if (o instanceof CurriculumVersionElectiveModule) {
             return map((CurriculumVersionElectiveModule)o, CURRICULUM_VERSION_ELECTIVE_MODULE);
         }
-        if(o instanceof CurriculumVersionHigherModule) {
+        if (o instanceof CurriculumVersionHigherModule) {
             return map((CurriculumVersionHigherModule)o, CURRICULUM_VERSION_HIGHER_MODULE);
         }
-        if(o instanceof CurriculumVersionHigherModuleSubject) {
+        if (o instanceof CurriculumVersionHigherModuleSubject) {
             return map((CurriculumVersionHigherModuleSubject)o, CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT);
         }
-        if(o instanceof CurriculumVersionOccupationModule) {
+        if (o instanceof CurriculumVersionOccupationModule) {
             return map((CurriculumVersionOccupationModule)o, CURRICULUM_VERSION_OCCUPATION_MODULE);
         }
-        if(o instanceof CurriculumVersionOccupationModuleCapacity) {
+        if (o instanceof CurriculumVersionOccupationModuleCapacity) {
             return map((CurriculumVersionOccupationModuleCapacity)o, CURRICULUM_VERSION_OCCUPATION_MODULE_CAPACITY);
         }
-        if(o instanceof CurriculumVersionOccupationModuleTheme) {
+        if (o instanceof CurriculumVersionOccupationModuleTheme) {
             return map((CurriculumVersionOccupationModuleTheme)o, CURRICULUM_VERSION_OCCUPATION_MODULE_THEME);
         }
-        if(o instanceof CurriculumVersionOccupationModuleThemeCapacity) {
+        if (o instanceof CurriculumVersionOccupationModuleThemeCapacity) {
             return map((CurriculumVersionOccupationModuleThemeCapacity)o, CURRICULUM_VERSION_OCCUPATION_MODULE_THEME_CAPACITY);
         }
-        if(o instanceof CurriculumVersionOccupationModuleYearCapacity) {
+        if (o instanceof CurriculumVersionOccupationModuleYearCapacity) {
             return map((CurriculumVersionOccupationModuleYearCapacity)o, CURRICULUM_VERSION_OCCUPATION_MODULE_YEAR_CAPACITY);
         }
-        if(o instanceof CurriculumVersionSpeciality) {
+        if (o instanceof CurriculumVersionSpeciality) {
             // TODO
             return null;
         }
-        if(o instanceof Subject) {
+        if (o instanceof Subject) {
             return map((Subject)o, SUBJECT);
         }
-        if(o instanceof Translatable) {
+        if (o instanceof SubjectProgram) {
+            return map((SubjectProgram)o, SUBJECT_PROGRAM);
+        }
+        if (o instanceof SubjectStudyPeriodTeacher) {
+            return map((SubjectStudyPeriodTeacher)o, SUBJECT_STUDY_PERIOD_TEACHER);
+        }
+        if (o instanceof SubjectProgramStudyContent) {
+            return map((SubjectProgramStudyContent)o, SUBJECT_PROGRAM_STUDY_CONTENT);
+        }
+        if (o instanceof Translatable) {
             return TranslateUtil.name((Translatable)o, lang);
         }
-        if(o instanceof Collection) {
+        if (o instanceof Collection) {
             return StreamUtil.toMappedList(this::map, (Collection<?>)o);
         }
-        if(o instanceof BaseEntity || o instanceof BaseLog || o instanceof BaseTask) {
+        if (o instanceof BaseEntity || o instanceof BaseLog || o instanceof BaseTask) {
             // don't let any entity classes pass thru to avoid disclosure of private data
             LOG.warn("Bad public data class: {}", o.getClass().getName());
             return null;
@@ -300,6 +315,10 @@ public class PublicDataMapper {
 
         CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("optional", CurriculumVersionHigherModuleSubject::getOptional);
         CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("subject", CurriculumVersionHigherModuleSubject::getSubject);
+        CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("studyYearNumber", CurriculumVersionHigherModuleSubject::getStudyYearNumber);
+        CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("autumn", CurriculumVersionHigherModuleSubject::getAutumn);
+        CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("spring", CurriculumVersionHigherModuleSubject::getSpring);
+        CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("assessment", ms -> ms.getSubject().getAssessment().getValue());
 
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("nameEt", cvom -> cvom.getCurriculumModule().getNameEt());
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("nameEn", cvom -> cvom.getCurriculumModule().getNameEn());
@@ -372,5 +391,31 @@ public class PublicDataMapper {
         SUBJECT.put("isPractice", Subject::getIsPractice);
         SUBJECT.put("schoolDepartment", Subject::getSchoolDepartment);
         SUBJECT.put("subjectLanguages", s -> StreamUtil.toMappedList(SubjectLanguage::getLanguage, s.getSubjectLanguages()));
+
+        SUBJECT_PROGRAM.put("id", SubjectProgram::getId);
+        SUBJECT_PROGRAM.put("subjectId", p -> p.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getId());
+        SUBJECT_PROGRAM.put("assessmentDescription", SubjectProgram::getAssessmentDescription);
+        SUBJECT_PROGRAM.put("passDescription", SubjectProgram::getPassDescription);
+        SUBJECT_PROGRAM.put("npassDescription", SubjectProgram::getNpassDescription);
+        SUBJECT_PROGRAM.put("grade0Description", SubjectProgram::getGrade0Description);
+        SUBJECT_PROGRAM.put("grade1Description", SubjectProgram::getGrade1Description);
+        SUBJECT_PROGRAM.put("grade2Description", SubjectProgram::getGrade2Description);
+        SUBJECT_PROGRAM.put("grade3Description", SubjectProgram::getGrade3Description);
+        SUBJECT_PROGRAM.put("grade4Description", SubjectProgram::getGrade4Description);
+        SUBJECT_PROGRAM.put("grade5Description", SubjectProgram::getGrade5Description);
+        SUBJECT_PROGRAM.put("independentStudy", SubjectProgram::getIndependentStudy);
+        SUBJECT_PROGRAM.put("studyContents", SubjectProgram::getStudyContents);
+        SUBJECT_PROGRAM.put("studyContentType", p -> p.getStudyContentType().getCode());
+        SUBJECT_PROGRAM.put("studyDescription", SubjectProgram::getStudyDescription);
+        SUBJECT_PROGRAM.put("studyLiterature", SubjectProgram::getStudyLiterature);
+        SUBJECT_PROGRAM.put("subjectStudyPeriodTeacher", p -> p.getSubjectStudyPeriodTeacher());
+
+        SUBJECT_STUDY_PERIOD_TEACHER.put("id", sspt -> sspt.getTeacher().getId());
+        SUBJECT_STUDY_PERIOD_TEACHER.put("name", sspt -> sspt.getTeacher().getPerson().getFullname());
+
+        SUBJECT_PROGRAM_STUDY_CONTENT.put("id", SubjectProgramStudyContent::getId);
+        SUBJECT_PROGRAM_STUDY_CONTENT.put("weekNr", SubjectProgramStudyContent::getWeekNr);
+        SUBJECT_PROGRAM_STUDY_CONTENT.put("studyDt", SubjectProgramStudyContent::getStudyDt);
+        SUBJECT_PROGRAM_STUDY_CONTENT.put("studyInfo", SubjectProgramStudyContent::getStudyInfo);
     }
 }

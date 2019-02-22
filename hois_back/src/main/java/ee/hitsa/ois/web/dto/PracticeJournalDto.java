@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 import ee.hitsa.ois.domain.PracticeJournal;
@@ -36,6 +37,7 @@ public class PracticeJournalDto extends VersionedCommand {
     private ContractDto contract;
     private List<PracticeJournalEntryDto> practiceJournalEntries;
     private List<PracticeJournalFileDto> practiceJournalFiles;
+    private List<PracticeJournalModuleSubjectDto> moduleSubjects;
     private Boolean canEdit;
     private Boolean canDelete;
     private Boolean canConfirm;
@@ -44,12 +46,15 @@ public class PracticeJournalDto extends VersionedCommand {
 
     public static PracticeJournalDto of(PracticeJournal practiceJournal) {
         PracticeJournalDto dto = EntityUtil.bindToDto(practiceJournal, new PracticeJournalDto(), "contract",
-                "practiceJournalEntries", "practiceJournalFiles");
+                "practiceJournalEntries", "practiceJournalFiles", "moduleSubjects");
         dto.setContract(ContractDto.of(practiceJournal.getContract()));
         dto.setPracticeJournalEntries(
                 StreamUtil.toMappedList(PracticeJournalEntryDto::of, practiceJournal.getPracticeJournalEntries()));
         dto.setPracticeJournalFiles(
                 StreamUtil.toMappedList(PracticeJournalFileDto::of, practiceJournal.getPracticeJournalFiles()));
+        dto.setModuleSubjects(StreamUtil.toMappedList(PracticeJournalModuleSubjectDto::of, practiceJournal.getModuleSubjects()));
+        dto.getModuleSubjects().sort(Comparator.comparing(ms -> ms.getModule() != null ? ms.getModule().getNameEt() : ms.getSubject().getNameEt(), 
+                String.CASE_INSENSITIVE_ORDER));
         dto.setStudentCurriculumVersion(AutocompleteResult.of(practiceJournal.getStudent().getCurriculumVersion()));
         dto.setStudentStudyForm(EntityUtil.getCode(practiceJournal.getStudent().getStudyForm()));
         dto.setIsHigher(Boolean.valueOf(StudentUtil.isHigher(practiceJournal.getStudent())));
@@ -238,6 +243,14 @@ public class PracticeJournalDto extends VersionedCommand {
 
     public void setPracticeJournalFiles(List<PracticeJournalFileDto> practiceJournalFiles) {
         this.practiceJournalFiles = practiceJournalFiles;
+    }
+
+    public List<PracticeJournalModuleSubjectDto> getModuleSubjects() {
+        return moduleSubjects;
+    }
+
+    public void setModuleSubjects(List<PracticeJournalModuleSubjectDto> moduleSubjects) {
+        this.moduleSubjects = moduleSubjects;
     }
 
     public Boolean getCanEdit() {

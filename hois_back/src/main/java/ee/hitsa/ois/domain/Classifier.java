@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.validation.Required;
-
 @Entity
 public class Classifier extends BaseEntity implements Translatable {
     private static final long serialVersionUID = 3111361264166192650L;

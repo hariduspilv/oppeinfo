@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.finalprotocol;
 
+import java.time.LocalDate;
+
 public class FinalProtocolOccupationDto {
     
     private Long id;
@@ -7,13 +9,17 @@ public class FinalProtocolOccupationDto {
     private String nameEt;
     private String nameEn;
     private Boolean isOccupationGrant;
+    private LocalDate validFrom;
+    private LocalDate validThru;
     
-    public FinalProtocolOccupationDto(Long id, String code, String nameEt, String nameEn, Boolean isOccupationGrant) {
+    public FinalProtocolOccupationDto(Long id, String code, String nameEt, String nameEn, Boolean isOccupationGrant, LocalDate validFrom, LocalDate validThru) {
         this.id = id;
         this.code = code;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
         this.isOccupationGrant = isOccupationGrant;
+        this.validFrom = validFrom;
+        this.validThru = validThru;
     }
 
     public Long getId() {
@@ -54,6 +60,22 @@ public class FinalProtocolOccupationDto {
 
     public void setIsOccupationGrant(Boolean isOccupationGrant) {
         this.isOccupationGrant = isOccupationGrant;
+    }
+
+    public LocalDate getValidFrom() {
+        return validFrom;
+    }
+
+    public void setValidFrom(LocalDate validFrom) {
+        this.validFrom = validFrom;
+    }
+
+    public LocalDate getValidThru() {
+        return validThru;
+    }
+
+    public void setValidThru(LocalDate validThru) {
+        this.validThru = validThru;
     }
     
 }

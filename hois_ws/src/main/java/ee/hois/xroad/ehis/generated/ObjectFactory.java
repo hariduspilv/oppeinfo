@@ -1969,6 +1969,62 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link OisOppekava }
+     * 
+     */
+    public OisOppekava createOisOppekava() {
+        return new OisOppekava();
+    }
+
+    /**
+     * Create an instance of {@link OisOppekavad }
+     * 
+     */
+    public OisOppekavad createOisOppekavad() {
+        return new OisOppekavad();
+    }
+
+    /**
+     * Create an instance of {@link OisOppekavaStaatus }
+     * 
+     */
+    public OisOppekavaStaatus createOisOppekavaStaatus() {
+        return new OisOppekavaStaatus();
+    }
+
+    /**
+     * Create an instance of {@link OisOppekavadStaatus }
+     * 
+     */
+    public OisOppekavadStaatus createOisOppekavadStaatus() {
+        return new OisOppekavadStaatus();
+    }
+
+    /**
+     * Create an instance of {@link OisOppekavaResponse }
+     * 
+     */
+    public OisOppekavaResponse createOisOppekavaResponse() {
+        return new OisOppekavaResponse();
+    }
+
+    /**
+     * Create an instance of {@link OisInfoteated }
+     * 
+     */
+    public OisInfoteated createOisInfoteated() {
+        return new OisInfoteated();
+    }
+
+    /**
+     * Create an instance of {@link OisOppekavaStaatusResponse }
+     * 
+     */
+    public OisOppekavaStaatusResponse createOisOppekavaStaatusResponse() {
+        return new OisOppekavaStaatusResponse();
+    }
+
+    /**
      * Create an instance of {@link EisOppeasutus }
      * 
      */
@@ -3534,6 +3590,118 @@ public class ObjectFactory {
      */
     public SaisYldhOping createSaisYldhOping() {
         return new SaisYldhOping();
+    }
+
+    /**
+     * Create an instance of {@link OppekavaOis }
+     * 
+     */
+    public OppekavaOis createOppekavaOis() {
+        return new OppekavaOis();
+    }
+
+    /**
+     * Create an instance of {@link OisOppekeeled }
+     * 
+     */
+    public OisOppekeeled createOisOppekeeled() {
+        return new OisOppekeeled();
+    }
+
+    /**
+     * Create an instance of {@link OisOKSpetsialiseerumised }
+     * 
+     */
+    public OisOKSpetsialiseerumised createOisOKSpetsialiseerumised() {
+        return new OisOKSpetsialiseerumised();
+    }
+
+    /**
+     * Create an instance of {@link OisToimumiseKohad }
+     * 
+     */
+    public OisToimumiseKohad createOisToimumiseKohad() {
+        return new OisToimumiseKohad();
+    }
+
+    /**
+     * Create an instance of {@link OisYhisOppekava }
+     * 
+     */
+    public OisYhisOppekava createOisYhisOppekava() {
+        return new OisYhisOppekava();
+    }
+
+    /**
+     * Create an instance of {@link OisValisOAS }
+     * 
+     */
+    public OisValisOAS createOisValisOAS() {
+        return new OisValisOAS();
+    }
+
+    /**
+     * Create an instance of {@link OisKutsestandardid }
+     * 
+     */
+    public OisKutsestandardid createOisKutsestandardid() {
+        return new OisKutsestandardid();
+    }
+
+    /**
+     * Create an instance of {@link OisKutsestandard }
+     * 
+     */
+    public OisKutsestandard createOisKutsestandard() {
+        return new OisKutsestandard();
+    }
+
+    /**
+     * Create an instance of {@link OiskutseSpetsialiseerumine }
+     * 
+     */
+    public OiskutseSpetsialiseerumine createOiskutseSpetsialiseerumine() {
+        return new OiskutseSpetsialiseerumine();
+    }
+
+    /**
+     * Create an instance of {@link OisOsakutse }
+     * 
+     */
+    public OisOsakutse createOisOsakutse() {
+        return new OisOsakutse();
+    }
+
+    /**
+     * Create an instance of {@link OisFailid }
+     * 
+     */
+    public OisFailid createOisFailid() {
+        return new OisFailid();
+    }
+
+    /**
+     * Create an instance of {@link OisFail }
+     * 
+     */
+    public OisFail createOisFail() {
+        return new OisFail();
+    }
+
+    /**
+     * Create an instance of {@link OppekavaStaatusOis }
+     * 
+     */
+    public OppekavaStaatusOis createOppekavaStaatusOis() {
+        return new OppekavaStaatusOis();
+    }
+
+    /**
+     * Create an instance of {@link OisInfoteade }
+     * 
+     */
+    public OisInfoteade createOisInfoteade() {
+        return new OisInfoteade();
     }
 
     /**

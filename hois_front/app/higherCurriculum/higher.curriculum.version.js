@@ -29,6 +29,10 @@ angular.module('hitsaOis')
       canChange: true
     };
 
+    // years are needed to sort mappedSubjects because we cannot sort object
+    $scope.years = [];
+    $scope.mappedSubjects = {};
+
     if(id) {
       $scope.version = Endpoint.get({id: id}).$promise.then(function(response){
         $scope.version = response;
@@ -44,6 +48,22 @@ angular.module('hitsaOis')
 
     function dtoToModel() {
       DataUtils.convertStringToDates($scope.version, ["validFrom", "validThru"]);
+
+      $scope.years = [];
+      $scope.mappedSubjects = {};
+
+      $scope.version.modules.forEach(function (mod) {
+        for (var i = 0; i < mod.subjects.length; i++) {
+          if (mod.subjects[i].studyYearNumber !== null) {
+            if (!$scope.mappedSubjects[mod.subjects[i].studyYearNumber]) {
+              $scope.years.push(mod.subjects[i].studyYearNumber);
+              $scope.mappedSubjects[mod.subjects[i].studyYearNumber] = [];
+            }
+            $scope.mappedSubjects[mod.subjects[i].studyYearNumber].push(mod.subjects[i]);
+          }
+        }
+      });
+
       $scope.formState.curriculumPdfUrl = config.apiUrl + baseUrl + '/print/' + $scope.version.id + '/curriculum.pdf';
       $scope.formState.curriculumXmlUrl = config.apiUrl + baseUrl + '/xml/' + $scope.version.id + '/curriculum.version.xml';
     }

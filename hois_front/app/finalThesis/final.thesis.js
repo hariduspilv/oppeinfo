@@ -29,6 +29,18 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($sc
     }
   }
 
+  if (angular.isUndefined(entity) && $scope.auth.isStudent()) {
+    QueryUtils.endpoint(endpoint + '/studentFinalThesis').get().$promise.then(function (result) {
+      if (result.finalThesisRequired) {
+        if (result.finalThesis) {
+          $location.url(endpoint + '/' + result.finalThesis + '/view?_noback');
+        }
+      } else {
+        $location.url(endpoint);
+      }
+    });
+  }
+
   $scope.$watch('thesis.student', function () {
     if ($scope.thesis.student) {
       QueryUtils.endpoint('/students/' + $scope.thesis.student.id).get(function (result) {

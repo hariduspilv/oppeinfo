@@ -165,6 +165,9 @@ public class ScholarshipService {
 
     public ScholarshipTerm save(ScholarshipTerm scholarshipTerm, ScholarshipTermForm form) {
         EntityUtil.bindToEntity(form, scholarshipTerm, classifierRepository, "curriculums", "studyLoads", "courses");
+        if (ScholarshipType.STIPTOETUS_SOIDU.name().equals(form.getType())) {
+            scholarshipTerm.setIsStudyBacklog(Boolean.TRUE);
+        }
         scholarshipTerm.setStudyPeriod(em.getReference(StudyPeriod.class, form.getStudyPeriod()));
         Long committeeId = form.getCommittee();
         scholarshipTerm.setCommittee(committeeId != null ? em.getReference(Committee.class, committeeId) : null);
@@ -582,18 +585,18 @@ public class ScholarshipService {
     private StudentResults getVocationalResults(ScholarshipTerm term, Student student) {
         StudentResults results = new StudentResults();
         results.setCredits(BigDecimal.ZERO);
-        
+
         List<String> lastPeriodGrades = getLastPeriodVocationalStudentGrades(term, student);
         if (ScholarshipType.STIPTOETUS_POHI.name().equals(EntityUtil.getNullableCode(term.getType()))
                 || ScholarshipType.STIPTOETUS_ERI.name().equals(EntityUtil.getNullableCode(term.getType()))) {
             results.setAverageMark(getCurrentPeriodAverageGrade(term, student));
             results.setLastPeriodMark(getAverageGrade(lastPeriodGrades));
             results.setCurriculumCompletion(getVocationalCurriculumCompletion(lastPeriodGrades));
+            results.setIsStudyBacklog(getIsStudyBacklog(lastPeriodGrades));
         }
         if (ScholarshipType.STIPTOETUS_POHI.name().equals(EntityUtil.getNullableCode(term.getType()))) {
             results.setAbsences(getAbsences(term, student));
         }
-        results.setIsStudyBacklog(getIsStudyBacklog(lastPeriodGrades));
         return results;
     }
 
@@ -1229,13 +1232,13 @@ public class ScholarshipService {
         compliance.setAverageMark(false);
         if (term.getAverageMark() != null && BigDecimal.ZERO.compareTo(term.getAverageMark()) != 0) {
             BigDecimal comparable = useSaisPoints(term, student) ? getSaisPoints(student) : results.getAverageMark();
-            if (comparable == null || comparable.compareTo(term.getAverageMark()) < 0) {
-                compliance.setAverageMark(true);
-            }
+            compliance.setAverageMark(comparable == null || comparable.compareTo(term.getAverageMark()) < 0);
         }
 
-        compliance.setLastPeriodMark(term.getLastPeriodMark() != null && (results.getLastPeriodMark() == null
-                || results.getLastPeriodMark().compareTo(term.getLastPeriodMark()) < 0));
+        if (term.getLastPeriodMark() != null && BigDecimal.ZERO.compareTo(term.getLastPeriodMark()) != 0) {
+            compliance.setLastPeriodMark((results.getLastPeriodMark() == null
+                    || results.getLastPeriodMark().compareTo(term.getLastPeriodMark()) < 0));
+        }
 
         compliance.setCurriculumCompletion(term.getCurriculumCompletion() != null
                 && results.getCurriculumCompletion().compareTo(term.getCurriculumCompletion()) < 0);

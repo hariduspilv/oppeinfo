@@ -17,6 +17,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 import ee.hitsa.ois.util.Translatable;
+import ee.hitsa.ois.validation.ValidationFailedException;
 
 @Entity
 public class StudyPeriod extends BaseEntityWithId implements Translatable {
@@ -103,6 +104,10 @@ public class StudyPeriod extends BaseEntityWithId implements Translatable {
         spStart = startDate;
         if (startDate.getDayOfWeek() != DayOfWeek.MONDAY) {
             spStart = startDate.with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
+        }
+        
+        if (spStart.isBefore(yearStart)) {
+            throw new ValidationFailedException("Study period's start date cannot be before study year's start date");
         }
 
         //find the first week in the current study period

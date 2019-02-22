@@ -1,17 +1,15 @@
 package ee.hitsa.ois.web.commandobject;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
-import javax.validation.constraints.DecimalMax;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import org.hibernate.validator.constraints.NotEmpty;
+
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.validation.PracticeJournalValidation;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 @DateRange(from = "startDate", thru = "endDate")
@@ -19,17 +17,6 @@ public class PracticeJournalForm extends VersionedCommand {
 
     @NotNull
     private AutocompleteResult student;
-    @NotNull(groups = PracticeJournalValidation.Vocational.class)
-    private Long module;
-    private Long theme;
-    @NotNull
-    @DecimalMin("0")
-    @DecimalMax("999.9")
-    private BigDecimal credits;
-    @NotNull
-    @Min(0)
-    @Max(Short.MAX_VALUE)
-    private Short hours;
     @NotNull
     private LocalDate startDate;
     @NotNull
@@ -42,9 +29,10 @@ public class PracticeJournalForm extends VersionedCommand {
     @NotNull
     @Size(max = 20000)
     private String practicePlan;
-    @NotNull(groups = PracticeJournalValidation.Higher.class)
-    private Long subject;
     private Boolean isHigher;
+    @NotEmpty
+    @Valid
+    private List<PracticeJournalModuleSubjectForm> moduleSubjects;
 
     public AutocompleteResult getStudent() {
         return student;
@@ -52,38 +40,6 @@ public class PracticeJournalForm extends VersionedCommand {
 
     public void setStudent(AutocompleteResult student) {
         this.student = student;
-    }
-
-    public Long getModule() {
-        return module;
-    }
-
-    public void setModule(Long module) {
-        this.module = module;
-    }
-
-    public Long getTheme() {
-        return theme;
-    }
-
-    public void setTheme(Long theme) {
-        this.theme = theme;
-    }
-
-    public BigDecimal getCredits() {
-        return credits;
-    }
-
-    public void setCredits(BigDecimal credits) {
-        this.credits = credits;
-    }
-
-    public Short getHours() {
-        return hours;
-    }
-
-    public void setHours(Short hours) {
-        this.hours = hours;
     }
 
     public LocalDate getStartDate() {
@@ -126,20 +82,20 @@ public class PracticeJournalForm extends VersionedCommand {
         this.practicePlan = practicePlan;
     }
 
-    public Long getSubject() {
-        return subject;
-    }
-
-    public void setSubject(Long subject) {
-        this.subject = subject;
-    }
-
     public Boolean getIsHigher() {
         return isHigher;
     }
 
     public void setIsHigher(Boolean isHigher) {
         this.isHigher = isHigher;
+    }
+
+    public List<PracticeJournalModuleSubjectForm> getModuleSubjects() {
+        return moduleSubjects;
+    }
+
+    public void setModuleSubjects(List<PracticeJournalModuleSubjectForm> moduleSubjects) {
+        this.moduleSubjects = moduleSubjects;
     }
 
 }

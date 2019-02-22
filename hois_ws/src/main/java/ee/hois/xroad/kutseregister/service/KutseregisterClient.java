@@ -3,6 +3,7 @@ package ee.hois.xroad.kutseregister.service;
 import java.util.Collections;
 import java.util.Map;
 
+import javax.jws.WebService;
 import javax.xml.ws.BindingProvider;
 
 import ee.hois.soap.LogContext;

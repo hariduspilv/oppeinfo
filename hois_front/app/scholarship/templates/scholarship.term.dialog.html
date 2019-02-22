@@ -84,8 +84,8 @@
               <hois-value value="application.maxAbsences"></hois-value>
             </md-input-container>
           </div>
-          <div layout="row">
-            <md-checkbox ng-model="stipend.isStudyBacklog" disabled aria-label="Is academic leave">
+          <div ng-if="stipend.type.code !== 'STIPTOETUS_SOIDU'" layout="row">
+            <md-checkbox ng-model="stipend.isStudyBacklog" disabled aria-label="is study backlog">
               {{'stipend.isStudyBacklog' | translate}}
             </md-checkbox>
           </div>

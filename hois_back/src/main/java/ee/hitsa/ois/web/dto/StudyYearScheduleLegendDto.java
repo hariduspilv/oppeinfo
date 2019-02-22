@@ -4,6 +4,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
+import ee.hitsa.ois.util.ColorUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
@@ -21,12 +22,18 @@ public class StudyYearScheduleLegendDto extends VersionedCommand {
     @NotNull
     @Size(max = 7)
     private String color;
+    private Boolean brightText;
     private Boolean inUse;
 
     public static StudyYearScheduleLegendDto of(StudyYearScheduleLegend l) {
         StudyYearScheduleLegendDto dto = new StudyYearScheduleLegendDto();
         EntityUtil.bindToDto(l, dto);
         dto.setInUse(Boolean.valueOf(!l.getStudyYearSchedules().isEmpty()));
+        if (l.getColor() != null && ColorUtil.getDeltaE_CIE76(l.getColor(), ColorUtil.WHITE_LAB) > ColorUtil.getDeltaE_CIE76(l.getColor(), ColorUtil.BLACK_LAB)) {
+            dto.setBrightText(Boolean.TRUE);
+        } else {
+            dto.setBrightText(Boolean.FALSE);
+        }
         return dto;
     }
 
@@ -68,6 +75,14 @@ public class StudyYearScheduleLegendDto extends VersionedCommand {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public Boolean getBrightText() {
+        return brightText;
+    }
+
+    public void setBrightText(Boolean brightText) {
+        this.brightText = brightText;
     }
 
     public Boolean getInUse() {

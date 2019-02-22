@@ -25,6 +25,7 @@ import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
+import ee.hitsa.ois.web.commandobject.PracticeEvaluationAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.RoomAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
@@ -43,7 +44,6 @@ import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteComm
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
-import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.JournalAutocompleteResult;
 import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.PersonDto;
@@ -55,12 +55,14 @@ import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearIdDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.SubjectResult;
+import ee.hitsa.ois.web.dto.SupervisorDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOModulesAndThemesResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
+import ee.hitsa.ois.web.dto.enterprise.EnterpriseResult;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 
@@ -283,8 +285,33 @@ public class AutocompleteController {
     }
 
     @GetMapping("/enterprises")
-    public List<EnterpriseResult> enterprises() {
-        return autocompleteService.enterprises();
+    public List<EnterpriseResult> enterprises(HoisUserDetails user, SearchCommand lookup) {
+        return autocompleteService.enterprises(lookup);
+    }
+    
+    @GetMapping("/activeEnterprises")
+    public List<EnterpriseResult> activeEnterprises(HoisUserDetails user, SearchCommand lookup) {
+        return autocompleteService.activeEnterprises(user, lookup);
+    }
+    
+    @GetMapping("/enterpriseLocations")
+    public List<AutocompleteResult> enterpriseLocations(HoisUserDetails user, SearchCommand lookup) {
+        return autocompleteService.enterpriseLocations(user, lookup);
+    }
+    
+    @GetMapping("/practiceEvaluation")
+    public List<AutocompleteResult> practiceEvaluation(HoisUserDetails user, PracticeEvaluationAutocompleteCommand lookup) {
+        return autocompleteService.practiceEvaluation(user, lookup);
+    }
+    
+    @GetMapping("/supervisors")
+    public List<SupervisorDto> enterpriseSupervisors(HoisUserDetails user, SearchCommand lookup) {
+        return autocompleteService.enterpriseSupervisors(user, lookup);
+    }
+    
+    @GetMapping("/enterpriseContacts")
+    public List<SupervisorDto> enterpriseContacts(HoisUserDetails user, SearchCommand lookup) {
+        return autocompleteService.enterpriseContacts(user, lookup);
     }
 
     @GetMapping("/committees")

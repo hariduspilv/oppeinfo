@@ -275,6 +275,7 @@ public class LessonPlanDto extends LessonPlanForm {
         private List<LessonPlanModuleJournalThemeDto> themes;
         private List<LessonPlanModuleJournalTeacherDto> teachers;
         private List<String> studentGroups;
+        private Boolean capacityDiff;
 
         public static LessonPlanModuleJournalDto of(LessonPlan lessonPlan, Journal journal, LessonPlanCapacityMapper capacityMapper) {
             LessonPlanModuleJournalDto dto = new LessonPlanModuleJournalDto();
@@ -288,7 +289,8 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setThemes(lessonPlanThemes.stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme()))
                     .sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER))
                     .collect(Collectors.toList()));
-            dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new)
+            dto.setTeachers(journal.getJournalTeachers().stream()
+                    .map(jt -> LessonPlanModuleJournalTeacherDto.of(journal, jt, capacityMapper))
                     .sorted(Comparator.comparing(r -> r.getTeacher().getNameEt(), String.CASE_INSENSITIVE_ORDER))
                     .collect(Collectors.toList()));
             List<String> studenGroups = StreamUtil.toMappedList(
@@ -297,9 +299,10 @@ public class LessonPlanDto extends LessonPlanForm {
             studenGroups = studenGroups.stream().distinct().collect(Collectors.toList());
             Collections.sort(studenGroups, (Comparator.comparing(r -> r, String.CASE_INSENSITIVE_ORDER)));
             dto.setStudentGroups(studenGroups);
+            dto.setCapacityDiff(journal.getCapacityDiff());
 
             // all hours mapped by capacity type and week nr
-            dto.setHours(capacityMapper.mapOutput(journal));
+            dto.setHours(capacityMapper.mapJournalOutput(journal));
             return dto;
         }
 
@@ -342,6 +345,14 @@ public class LessonPlanDto extends LessonPlanForm {
         public void setStudentGroups(List<String> studentGroups) {
             this.studentGroups = studentGroups;
         }
+
+        public Boolean getCapacityDiff() {
+            return capacityDiff;
+        }
+
+        public void setCapacityDiff(Boolean capacityDiff) {
+            this.capacityDiff = capacityDiff;
+        }
     }
 
     public static class LessonPlanModuleJournalForTeacherDto extends LessonPlanModuleJournalDto {
@@ -354,15 +365,27 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setId(journal.getId());
             dto.setNameEt(journal.getNameEt());
             dto.setGroupProportion(EntityUtil.getNullableCode(journal.getGroupProportion()));
-            dto.setThemes(journal.getJournalOccupationModuleThemes().stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme())).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
-            dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new).sorted(Comparator.comparing(r -> r.getTeacher().getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+            dto.setThemes(journal.getJournalOccupationModuleThemes().stream()
+                    .map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme()))
+                    .sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER))
+                    .collect(Collectors.toList()));
+            dto.setTeachers(journal.getJournalTeachers().stream()
+                    .map(jt -> LessonPlanModuleJournalTeacherDto.of(journal, jt, capacityMapper))
+                    .sorted(Comparator.comparing(r -> r.getTeacher().getNameEt(), String.CASE_INSENSITIVE_ORDER))
+                    .collect(Collectors.toList()));
             Long teacherId = EntityUtil.getId(teacher);
-            JournalTeacher currentTeacher = journal.getJournalTeachers().stream().filter(t -> EntityUtil.getId(t.getTeacher()).equals(teacherId)).findFirst().get();
+            JournalTeacher currentTeacher = journal.getJournalTeachers().stream()
+                    .filter(t -> EntityUtil.getId(t.getTeacher()).equals(teacherId)).findFirst().get();
             dto.setIsConfirmer(currentTeacher.getIsConfirmer());
             dto.setIsFiller(currentTeacher.getIsFiller());
             dto.setStudentGroups(JournalDto.of(journal).getStudentGroups().stream().distinct().collect(Collectors.toList()));
             // all hours mapped by capacity type and week nr
-            dto.setHours(capacityMapper.mapOutput(journal));
+            if (Boolean.TRUE.equals(journal.getCapacityDiff())) {
+                dto.setHours(capacityMapper.mapTeacherOutput(journal, currentTeacher));
+            } else {
+                dto.setHours(capacityMapper.mapJournalOutput(journal));
+            }
+            dto.setCapacityDiff(journal.getCapacityDiff());
             return dto;
         }
 
@@ -414,18 +437,27 @@ public class LessonPlanDto extends LessonPlanForm {
         }
     }
 
-    public static class LessonPlanModuleJournalTeacherDto {
+    public static class LessonPlanModuleJournalTeacherDto extends LessonPlanModuleJournalTeacherForm {
 
-        private final AutocompleteResult teacher;
+        private AutocompleteResult teacher;
 
-        public LessonPlanModuleJournalTeacherDto(JournalTeacher journalTeacher) {
-            teacher = AutocompleteResult.of(journalTeacher.getTeacher());
+        public static LessonPlanModuleJournalTeacherDto of(Journal journal, JournalTeacher journalTeacher,
+                LessonPlanCapacityMapper capacityMapper) {
+            LessonPlanModuleJournalTeacherDto dto = new LessonPlanModuleJournalTeacherDto();
+            dto.setId(EntityUtil.getId(journalTeacher));
+            dto.setTeacher(AutocompleteResult.of(journalTeacher.getTeacher()));
+            dto.setHours(capacityMapper.mapTeacherOutput(journal, journalTeacher));
+            return dto;
         }
 
         public AutocompleteResult getTeacher() {
             return teacher;
         }
-        
+
+        public void setTeacher(AutocompleteResult teacher) {
+            this.teacher = teacher;
+        }
+
     }
 
     public static class StudyPeriodDto {
@@ -499,33 +531,51 @@ public class LessonPlanDto extends LessonPlanForm {
     
     public static class LessonPlanTeacherDto {
         
-        private final Long id;
-        private final Short scheduleLoad;
-        private final Boolean isStudyPeriodScheduleLoad;
-        private final Long plannedLessons;
-        
-        public LessonPlanTeacherDto(Long id, Short scheduleLoad, Boolean isStudyPeriodScheduleLoad, Long plannedLessons) {
-            this.id = id;
-            this.scheduleLoad = scheduleLoad;
-            this.isStudyPeriodScheduleLoad = isStudyPeriodScheduleLoad;
-            this.plannedLessons = plannedLessons;
-        }
+        private Long id;
+        private Short scheduleLoad;
+        private Boolean isStudyPeriodScheduleLoad;
+        private Long plannedLessons;
+        private List<Long> studyLoadByWeek;
 
         public Long getId() {
             return id;
         }
-        
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
         public Short getScheduleLoad() {
             return scheduleLoad;
         }
-        
+
+        public void setScheduleLoad(Short scheduleLoad) {
+            this.scheduleLoad = scheduleLoad;
+        }
+
         public Boolean getIsStudyPeriodScheduleLoad() {
             return isStudyPeriodScheduleLoad;
+        }
+
+        public void setIsStudyPeriodScheduleLoad(Boolean isStudyPeriodScheduleLoad) {
+            this.isStudyPeriodScheduleLoad = isStudyPeriodScheduleLoad;
         }
 
         public Long getPlannedLessons() {
             return plannedLessons;
         }
-        
+
+        public void setPlannedLessons(Long plannedLessons) {
+            this.plannedLessons = plannedLessons;
+        }
+
+        public List<Long> getStudyLoadByWeek() {
+            return studyLoadByWeek;
+        }
+
+        public void setStudyLoadByWeek(List<Long> studyLoadByWeek) {
+            this.studyLoadByWeek = studyLoadByWeek;
+        }
+
     }
 }

@@ -72,7 +72,7 @@ public class FinalHigherProtocolDto extends VersionedCommand {
             String occupationCode = EntityUtil.getCode(s.getOccupation());
             if (!addedOccupations.contains(occupationCode)) {
                 dto.getOccupations().add(new FinalProtocolOccupationDto(null, occupationCode,
-                        s.getOccupation().getNameEt(), s.getOccupation().getNameEn(), null));
+                        s.getOccupation().getNameEt(), s.getOccupation().getNameEn(), null, s.getOccupation().getValidFrom(), s.getOccupation().getValidThru()));
             }
         });
         dto.setCurriculumGrades(StreamUtil.toMappedList(g -> CurriculumGradeDto.of(g), curriculum.getGrades()));

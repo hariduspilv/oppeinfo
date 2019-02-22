@@ -92,7 +92,7 @@ public class DirectiveController {
     @PutMapping("/{id:\\d+}")
     public DirectiveDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Directive directive, @Valid @RequestBody DirectiveForm form) {
         assertCanEditDirective(user, directive);
-        return get(user, directiveService.save(directive, form));
+        return get(user, directiveService.save(user, directive, form));
     }
 
     @DeleteMapping("/{id:\\d+}")

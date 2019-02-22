@@ -9,6 +9,7 @@ public enum ContractStatus {
     /** Lõpetatud */
     LEPING_STAATUS_L,
     /** Kehtiv */
-    LEPING_STAATUS_K
-
+    LEPING_STAATUS_K,
+    /** Tühistatud */
+    LEPING_STAATUS_T
 }

@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Contract;
+import ee.hitsa.ois.domain.ContractSupervisor;
 import ee.hitsa.ois.domain.Message;
 import ee.hitsa.ois.domain.MessageReceiver;
 import ee.hitsa.ois.domain.MessageTemplate;
@@ -128,10 +129,10 @@ public class AutomaticMessageService {
         }
     }
 
-    public void sendMessageToEnterprise(Contract contract, School school, MessageType type, Object dataBean) {
+    public void sendMessageToEnterprise(ContractSupervisor supervisor, School school, MessageType type, Object dataBean) {
         Message message = getMessage(type, school, dataBean);
 
-        String to = contract.getSupervisorEmail();
+        String to = supervisor.getSupervisorEmail();
         if (message != null && StringUtils.hasText(to)) {
             Person automaticSender = em.getReference(Person.class, PersonUtil.AUTOMATIC_SENDER_ID);
             mailService.sendMail(automaticSender.getEmail(), to, message.getSubject(), message.getContent());

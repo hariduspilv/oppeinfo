@@ -8106,191 +8106,207 @@
 			</complexType>
 			
             <!-- =================================== oisOppekava =================================== -->
+			<element name="oisOppekava">
+				<complexType>
+					<sequence>
+						<element maxOccurs="1" minOccurs="1" name="regNumber" nillable="false" type="string"/>
+						<element maxOccurs="1" minOccurs="1" name="kasutajaIk" nillable="false" type="string"/>
+						<element maxOccurs="1" minOccurs="1" name="oppekavad" nillable="false" type="tns:oisOppekavad"/>
+					</sequence>
+				</complexType>
+			</element>
 
-            <element name="oisOppekava">
-                <complexType>
-                    <sequence>
-                        <element name="regNumber" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                        <element name="kasutajaIk" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                        <element name="oppekavad" type="tns:oisOppekavad" minOccurs="1" maxOccurs="1" nillable="false" />
-                        </sequence>
-                </complexType>
-            </element>
+			<complexType name="oisOppekavad">
+				<sequence>
+					<element maxOccurs="unbounded" minOccurs="1" name="oppekava" nillable="false" type="tns:oppekavaOis"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oisOppekavad">
-                <sequence>
-                    <element name="oppekava" type="tns:oppekavaOis" minOccurs="1" maxOccurs="unbounded" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oppekavaOis">
+				<sequence>
+					<element maxOccurs="1" minOccurs="0" name="oppekavaKood" nillable="false" type="integer"/>
+					<element maxOccurs="1" minOccurs="1" name="oppekavaLiik" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="1" name="oppekavaNimetus" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="1" name="oppekavaNimetusEng" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="1" name="tase" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="1" name="oasKinnitDoc" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="1" name="oasKinnitKp" nillable="false" type="date"/>
+					<element maxOccurs="1" minOccurs="1" name="oppekeeled" nillable="false" type="tns:oisOppekeeled"/>
+					<element maxOccurs="1" minOccurs="1" name="nomKestusAasta" nillable="false" type="integer"/>
+					<element maxOccurs="1" minOccurs="0" name="nomKestusKuud" nillable="false" type="tns:monthsInteger"/>
+					<element maxOccurs="1" minOccurs="1" name="oppekavaMaht" nillable="false" type="integer"/>
+					<element maxOccurs="1" minOccurs="1" name="oppekavaRyhm" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="1" name="oppekavaGrupp" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="0" name="opetajaKoolitus" nillable="false" type="tns:oneOrZeroInteger"/>
+					<element maxOccurs="1" minOccurs="0" name="akadKraad" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="1" name="praktikaMaht" nillable="false" type="decimal"/>
+					<element maxOccurs="1" minOccurs="1" name="spetsialiseerumised" nillable="false" type="tns:oisOKSpetsialiseerumised"/>
+					<element maxOccurs="1" minOccurs="0" name="vastavusRiikOppekava" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="0" name="toimumiseKohad" nillable="false" type="tns:oisToimumiseKohad"/>
+					<element maxOccurs="unbounded" minOccurs="0" name="yhisOppekavaOas" nillable="false" type="tns:oisYhisOppekava"/>
+					<element maxOccurs="1" minOccurs="1" name="kutsestandardid" nillable="false" type="tns:oisKutsestandardid"/>
+					<element maxOccurs="1" minOccurs="1" name="failid" nillable="false" type="tns:oisFailid"/>
+					<element maxOccurs="1" minOccurs="0" name="kommentaar" nillable="false" type="string"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oppekavaOis">
-                <sequence>
-                    <element name="oppekavaKood" type="integer" minOccurs="0" maxOccurs="1" nillable="false" />
-                    <element name="oppekavaLiik" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="oppekavaNimetus" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="oppekavaNimetusEng" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="tase" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="oasKinnitDoc" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="oasKinnitKp" type="date" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="oppekeeled" type="tns:oisOppekeeled" minOccurs="1" maxOccurs="unbounded" nillable="false" />
-                    <element name="nomKestusAasta" type="integer" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="nomKestusKuud" type="tns:monthsInteger" minOccurs="0" maxOccurs="1" nillable="false" />
-                    <element name="oppekavaMaht" type="integer" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="oppekavaRyhm" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="oppekavaGrupp" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="opetajaKoolitus" type="tns:oneOrZeroInteger" minOccurs="0" maxOccurs="1" nillable="false" />
-                    <element name="akadKraad" type="string" minOccurs="0" maxOccurs="1" nillable="false" />
-                    <element name="praktikaMaht" type="integer" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="spetsialiseerumised" type="tns:oisOKSpetsialiseerumised" minOccurs="1" maxOccurs="unbounded" nillable="false" />
-                    <element name="vastavusRiikOppekava" type="string" minOccurs="0" maxOccurs="1" nillable="false" />
-                    <element name="toimumiseKohad" type="tns:oisToimumiseKohad" minOccurs="0" maxOccurs="unbounded" nillable="false" />
-                    <element name="yhisOppekavaOas" type="tns:oisYhisOppekava" minOccurs="0" maxOccurs="unbounded" nillable="false" />
-                    <element name="kutsestandardid" type="tns:oisKutsestandardid" minOccurs="1" nillable="false" />
-                    <element name="failid" type="tns:oisFailid" minOccurs="1" nillable="false" />
-                    <element name="kommentaar" type="string" minOccurs="0" maxOccurs="1" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oisOppekeeled">
+				<sequence>
+					<element maxOccurs="unbounded" minOccurs="1" name="oppekeeleKood" nillable="false" type="string"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oisOppekeeled">
-                <sequence>
-                    <element name="oppekeeleKood" type="string" minOccurs="1" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oisOKSpetsialiseerumised">
+				<sequence>
+					<element maxOccurs="unbounded" minOccurs="1" name="okSpetsialiseerumiseKood" nillable="false" type="string"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oisOKSpetsialiseerumised">
-                <sequence>
-                    <element name="okSpetsialiseerumiseKood" type="string" minOccurs="1" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oisToimumiseKohad">
+				<sequence>
+					<element maxOccurs="unbounded" minOccurs="0" name="toimumiseKohtEHAK" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="0" name="toimumiseKohtValismaa" nillable="false" type="tns:oneOnlyInteger"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oisToimumiseKohad">
-                <sequence>
-                    <element name="toimumiseKohtEHAK" type="string" minOccurs="1" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oisYhisOppekava">
+				<sequence>
+					<choice maxOccurs="1" minOccurs="1">
+						<element maxOccurs="1" minOccurs="0" name="regNumberEestiOAS" nillable="false" type="string"/>
+						<element maxOccurs="1" minOccurs="0" name="valisOAS" nillable="false" type="tns:oisValisOAS"/>
+					</choice>
+				</sequence>
+			</complexType>
 
-            <complexType name="oisYhisOppekava">
-                <sequence>
-                    <choice minOccurs="1" maxOccurs="1">
-                        <element name="regNumberEestiOAS" type="string" minOccurs="0" maxOccurs="1" nillable="false" />
-                        <element name="valisOAS" type="tns:oisValisOAS" minOccurs="0" maxOccurs="1" nillable="false" />
-                    </choice>
-                </sequence>
-            </complexType>
+			<complexType name="oisValisOAS">
+				<sequence>
+					<element maxOccurs="1" minOccurs="1" name="valisOASKood" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="0" name="valisOASNimetus" nillable="false" type="string"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oisValisOAS">
-                <sequence>
-                    <element name="valisOASKood" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="valisOASNimetus" type="string" minOccurs="0" maxOccurs="1" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oisKutsestandardid">
+				<sequence>
+					<choice maxOccurs="1" minOccurs="1">
+						<element maxOccurs="1" minOccurs="0" name="puudubKehtivKutsestandard" nillable="false" type="tns:oneOnlyInteger"/>
+						<element maxOccurs="unbounded" minOccurs="0" name="kutsestandard" nillable="false" type="tns:oisKutsestandard"/>
+					</choice>
+				</sequence>
+			</complexType>
 
-            <complexType name="oisKutsestandardid">
-                <sequence>
-                    <choice minOccurs="1" maxOccurs="1">
-                        <element name="puudubKehtivKutsestandard" type="tns:oneOrZeroInteger" minOccurs="0" maxOccurs="1" nillable="false" />
-                        <element name="kutsestandard" type="tns:oisKutsestandard" minOccurs="0" maxOccurs="unbounded" nillable="false" />
-                    </choice>
-                </sequence>
-            </complexType>
+			<complexType name="oisKutsestandard">
+				<sequence>
+					<element maxOccurs="1" minOccurs="1" name="standardReaId" nillable="false" type="integer"/>
+					<element maxOccurs="1" minOccurs="0" name="kutseSpetsialiseerumised" nillable="false" type="tns:oiskutseSpetsialiseerumine"/>
+					<element maxOccurs="1" minOccurs="0" name="osakutsed" nillable="false" type="tns:oisOsakutse"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oisKutsestandard">
-                <sequence>
-                    <element name="standardReaId" type="integer" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="kutseSpetsialiseerumised" type="tns:oiskutseSpetsialiseerumine" minOccurs="0" maxOccurs="unbounded" nillable="false" />
-                    <element name="osakutsed" type="tns:oisOsakutse" minOccurs="0" maxOccurs="unbounded" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oiskutseSpetsialiseerumine">
+				<sequence>
+					<element maxOccurs="unbounded" minOccurs="1" name="kutseSpetsialiseerumineReaId" nillable="false" type="integer"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oiskutseSpetsialiseerumine">
-                <sequence>
-                    <element name="kutseSpetsialiseerumineReaId" type="integer" minOccurs="1" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oisOsakutse">
+				<sequence>
+					<element maxOccurs="unbounded" minOccurs="1" name="osakutseReaId" nillable="false" type="integer"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oisOsakutse">
-                <sequence>
-                    <element name="osakutseReaId" type="integer" minOccurs="1" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oisFailid">
+				<sequence>
+					<element maxOccurs="unbounded" minOccurs="1" name="okFail" nillable="false" type="tns:oisFail"/>
+					<element maxOccurs="1" minOccurs="1" name="contentID" nillable="false" type="anyURI"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oisFailid">
-                <sequence>
-                    <element name="okFail" type="tns:oisFail" minOccurs="1" maxOccurs="unbounded" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oisFail">
+				<sequence>
+					<element maxOccurs="1" minOccurs="1" name="tyyp" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="1" name="nimi" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="0" name="kommentaar" nillable="false" type="string"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oisFail">
-                <sequence>
-                    <element name="tyyp" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="kommentaar" type="string" minOccurs="0" maxOccurs="1" nillable="false" />
-                    <element name="contentID" type="anyURI" minOccurs="1" maxOccurs="1" nillable="false" />
-                </sequence>
-            </complexType>
+			<simpleType name="oneOrZeroInteger">
+				<restriction base="integer">
+					<minInclusive value="0"/>
+					<maxInclusive value="1"/>
+				</restriction>
+			</simpleType>
 
-            <simpleType name="oneOrZeroInteger">
-                <restriction base="integer">
-                    <minInclusive value="0" />
-                    <maxInclusive value="1" />
-                </restriction>
-            </simpleType>
+			<simpleType name="oneOnlyInteger">
+				<restriction base="integer">
+					<minInclusive value="1"/>
+					<maxInclusive value="1"/>
+				</restriction>
+			</simpleType>
 
-            <simpleType name="monthsInteger">
-                <restriction base="integer">
-                    <minInclusive value="0" />
-                    <maxInclusive value="11" />
-                </restriction>
-            </simpleType>
+			<simpleType name="monthsInteger">
+				<restriction base="integer">
+					<minInclusive value="0"/>
+					<maxInclusive value="11"/>
+				</restriction>
+			</simpleType>
 
-<!-- =================================== oisOppekavaStaatus =================================== -->
-            <element name="oisOppekavaStaatus">
-                <complexType>
-                    <sequence>
-                        <element name="regNumber" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                        <element name="kasutajaIk" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                        <element name="oppekavad" type="tns:oisOppekavadStaatus" minOccurs="1" maxOccurs="1" nillable="false" />
-                    </sequence>
-                </complexType>
-            </element>
+			<!-- =================================== oisOppekavaStaatus =================================== -->
+			<element name="oisOppekavaStaatus">
+				<complexType>
+					<sequence>
+						<element maxOccurs="1" minOccurs="1" name="regNumber" nillable="false" type="string"/>
+						<element maxOccurs="1" minOccurs="1" name="kasutajaIk" nillable="false" type="string"/>
+						<element maxOccurs="1" minOccurs="1" name="oppekavad" nillable="false" type="tns:oisOppekavadStaatus"/>
+					</sequence>
+				</complexType>
+			</element>
 
-            <complexType name="oisOppekavadStaatus">
-                <sequence>
-                    <element name="oisOppekava" type="tns:oppekavaStaatusOis" minOccurs="1" maxOccurs="unbounded" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oisOppekavadStaatus">
+				<sequence>
+					<element maxOccurs="unbounded" minOccurs="1" name="oisOppekava" nillable="false" type="tns:oppekavaStaatusOis"/>
+				</sequence>
+			</complexType>
 
-            <complexType name="oppekavaStaatusOis">
-                <sequence>
-                    <element name="oppekavaKood" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="operatsioon" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="kommentaar" type="string" minOccurs="0" maxOccurs="1" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oppekavaStaatusOis">
+				<sequence>
+					<element maxOccurs="1" minOccurs="1" name="oppekavaKood" nillable="false" type="integer"/>
+					<element maxOccurs="1" minOccurs="1" name="operatsioon" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="0" name="kommentaar" nillable="false" type="string"/>
+				</sequence>
+			</complexType>
 
-<!-- =================================== oisResponse =================================== -->
-            <element name="oisResponse">
-                <complexType>
-                    <sequence>
-                        <element name="infoteated" type="tns:oisInfoteated" minOccurs="1" maxOccurs="1" nillable="false" />
-                    </sequence>
-                </complexType>
-            </element>
+			<!-- =================================== oisResponse =================================== -->
+			<element name="oisOppekavaResponse">
+				<complexType>
+					<sequence>
+						<element maxOccurs="1" minOccurs="1" name="infoteated" nillable="false" type="tns:oisInfoteated"/>
+					</sequence>
+				</complexType>
+			</element>
 
-            <complexType name="oisInfoteated">
-                <sequence>
-                    <element name="infoteade" type="tns:oisInfoteade" minOccurs="1" maxOccurs="unbounded" nillable="false" />
-                </sequence>
-            </complexType>
+			<element name="oisOppekavaStaatusResponse">
+				<complexType>
+					<sequence>
+						<element maxOccurs="1" minOccurs="1" name="infoteated" nillable="false" type="tns:oisInfoteated"/>
+					</sequence>
+				</complexType>
+			</element>
 
-            <complexType name="oisInfoteade">
-                <sequence>
-                    <element name="oppekavaNimetus" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="oppekavaKood" type="integer" minOccurs="0" maxOccurs="1" nillable="false" />
-                    <element name="oppekavaStaatus" type="string"  minOccurs="0" maxOccurs="1" nillable="false" />
-                    <element name="teade" type="string" minOccurs="1" maxOccurs="1" nillable="false" />
-                    <element name="veakood" type="integer" minOccurs="1" maxOccurs="1" nillable="false" />
-                </sequence>
-            </complexType>
+			<complexType name="oisInfoteated">
+				<sequence>
+					<element maxOccurs="unbounded" minOccurs="1" name="infoteade" nillable="false" type="tns:oisInfoteade"/>
+				</sequence>
+			</complexType>
+
+			<complexType name="oisInfoteade">
+				<sequence>
+					<element maxOccurs="1" minOccurs="0" name="oppekavaNimetus" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="0" name="oppekavaKood" nillable="false" type="integer"/>
+					<element maxOccurs="1" minOccurs="0" name="oppekavaStaatus" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="1" name="teade" nillable="false" type="string"/>
+					<element maxOccurs="1" minOccurs="1" name="veakood" nillable="false" type="integer"/>
+				</sequence>
+			</complexType>
 
         </schema>
     </types>
@@ -8789,18 +8805,18 @@
 	</message>
 
     <message name="oisOppekava">
-        <part name="body" element="tns:oisOppekava" />
-    </message>
-    <message name="oisOppekavaResponse">
-        <part name="body" element="tns:oisResponse" />
-    </message>
+		<part element="tns:oisOppekava" name="body"/>
+	</message>
+	<message name="oisOppekavaResponse">
+		<part element="tns:oisOppekavaResponse" name="body"/>
+	</message>
 
-    <message name="oisOppekavaStaatus">
-        <part name="body" element="tns:oisOppekavaStaatus" />
-    </message>
-    <message name="oisOppekavaStaatusResponse">
-        <part name="body" element="tns:oisResponse" />
-    </message>
+	<message name="oisOppekavaStaatus">
+		<part element="tns:oisOppekavaStaatus" name="body"/>
+	</message>
+	<message name="oisOppekavaStaatusResponse">
+		<part element="tns:oisOppekavaStaatusResponse" name="body"/>
+	</message>
 
 
     <message name="header">
@@ -9099,13 +9115,20 @@
             <output message="tns:eeIsikukaartResponse" name="eeIsikukaartResponse"/>
         </operation>
         <operation name="oisOppekava">
-            <input name="oisOppekava" message="tns:oisOppekava"/>
-            <output name="oisOppekavaResponse" message="tns:oisOppekavaResponse"/>
-        </operation>
-        <operation name="oisOppekavaStaatus">
-            <input name="oisOppekavaStaatus" message="tns:oisOppekavaStaatus"/>
-            <output name="oisOppekavaStaatusResponse" message="tns:oisOppekavaStaatusResponse"/>
-        </operation>
+			<documentation>
+				<xroad:title>Õppekavade andmete laadimine</xroad:title>
+			</documentation>
+			<input message="tns:oisOppekava" name="oisOppekava"/>
+			<output message="tns:oisOppekavaResponse" name="oisOppekavaResponse"/>
+		</operation>
+
+		<operation name="oisOppekavaStaatus">
+			<documentation>
+				<xroad:title>Õppekavade staatuse kontrollimine ja muutmine</xroad:title>
+			</documentation>
+			<input message="tns:oisOppekavaStaatus" name="oisOppekavaStaatus"/>
+			<output message="tns:oisOppekavaStaatusResponse" name="oisOppekavaStaatusResponse"/>
+		</operation>
 
     </portType>
 
@@ -10935,57 +10958,58 @@
             </output>
         </operation>
         <operation name="oisOppekava">
-            <soap:operation soapAction="" />
-            <xroad:version>v1</xroad:version>
-            <input>
-                <soap:header message="tns:header" part="client" use="literal" />
-                <soap:header message="tns:header" part="service" use="literal" />
-                <soap:header message="tns:header" part="centralService" use="literal" />
-                <soap:header message="tns:header" part="id" use="literal" />
-                <soap:header message="tns:header" part="userId" use="literal" />
-                <soap:header message="tns:header" part="requestHash" use="literal" />
-                <soap:header message="tns:header" part="issue" use="literal" />
-                <soap:header message="tns:header" part="protocolVersion" use="literal" />
-                <soap:body use="literal" />
-            </input>
-            <output>
-                <soap:header message="tns:header" part="client" use="literal" />
-                <soap:header message="tns:header" part="service" use="literal" />
-                <soap:header message="tns:header" part="centralService" use="literal" />
-                <soap:header message="tns:header" part="id" use="literal" />
-                <soap:header message="tns:header" part="userId" use="literal" />
-                <soap:header message="tns:header" part="requestHash" use="literal" />
-                <soap:header message="tns:header" part="issue" use="literal" />
-                <soap:header message="tns:header" part="protocolVersion" use="literal" />
-                <soap:body use="literal" />
-            </output>
-        </operation>
-        <operation name="oisOppekavaStaatus">
-            <soap:operation soapAction="" />
-            <xroad:version>v1</xroad:version>
-            <input>
-                <soap:header message="tns:header" part="client" use="literal" />
-                <soap:header message="tns:header" part="service" use="literal" />
-                <soap:header message="tns:header" part="centralService" use="literal" />
-                <soap:header message="tns:header" part="id" use="literal" />
-                <soap:header message="tns:header" part="userId" use="literal" />
-                <soap:header message="tns:header" part="requestHash" use="literal" />
-                <soap:header message="tns:header" part="issue" use="literal" />
-                <soap:header message="tns:header" part="protocolVersion" use="literal" />
-                <soap:body use="literal" />
-            </input>
-            <output>
-                <soap:header message="tns:header" part="client" use="literal" />
-                <soap:header message="tns:header" part="service" use="literal" />
-                <soap:header message="tns:header" part="centralService" use="literal" />
-                <soap:header message="tns:header" part="id" use="literal" />
-                <soap:header message="tns:header" part="userId" use="literal" />
-                <soap:header message="tns:header" part="requestHash" use="literal" />
-                <soap:header message="tns:header" part="issue" use="literal" />
-                <soap:header message="tns:header" part="protocolVersion" use="literal" />
-                <soap:body use="literal" />
-            </output>
-        </operation>
+			<soap:operation soapAction=""/>
+			<xroad:version>v1</xroad:version>
+			<input>
+				<soap:header message="tns:header" part="client" use="literal"/>
+				<soap:header message="tns:header" part="service" use="literal"/>
+				<soap:header message="tns:header" part="centralService" use="literal"/>
+				<soap:header message="tns:header" part="id" use="literal"/>
+				<soap:header message="tns:header" part="userId" use="literal"/>
+				<soap:header message="tns:header" part="requestHash" use="literal"/>
+				<soap:header message="tns:header" part="issue" use="literal"/>
+				<soap:header message="tns:header" part="protocolVersion" use="literal"/>
+				<soap:body use="literal"/>
+			</input>
+			<output>
+				<soap:header message="tns:header" part="client" use="literal"/>
+				<soap:header message="tns:header" part="service" use="literal"/>
+				<soap:header message="tns:header" part="centralService" use="literal"/>
+				<soap:header message="tns:header" part="id" use="literal"/>
+				<soap:header message="tns:header" part="userId" use="literal"/>
+				<soap:header message="tns:header" part="requestHash" use="literal"/>
+				<soap:header message="tns:header" part="issue" use="literal"/>
+				<soap:header message="tns:header" part="protocolVersion" use="literal"/>
+				<soap:body use="literal"/>
+			</output>
+		</operation>
+
+		<operation name="oisOppekavaStaatus">
+			<soap:operation soapAction=""/>
+			<xroad:version>v1</xroad:version>
+			<input>
+				<soap:header message="tns:header" part="client" use="literal"/>
+				<soap:header message="tns:header" part="service" use="literal"/>
+				<soap:header message="tns:header" part="centralService" use="literal"/>
+				<soap:header message="tns:header" part="id" use="literal"/>
+				<soap:header message="tns:header" part="userId" use="literal"/>
+				<soap:header message="tns:header" part="requestHash" use="literal"/>
+				<soap:header message="tns:header" part="issue" use="literal"/>
+				<soap:header message="tns:header" part="protocolVersion" use="literal"/>
+				<soap:body use="literal"/>
+			</input>
+			<output>
+				<soap:header message="tns:header" part="client" use="literal"/>
+				<soap:header message="tns:header" part="service" use="literal"/>
+				<soap:header message="tns:header" part="centralService" use="literal"/>
+				<soap:header message="tns:header" part="id" use="literal"/>
+				<soap:header message="tns:header" part="userId" use="literal"/>
+				<soap:header message="tns:header" part="requestHash" use="literal"/>
+				<soap:header message="tns:header" part="issue" use="literal"/>
+				<soap:header message="tns:header" part="protocolVersion" use="literal"/>
+				<soap:body use="literal"/>
+			</output>
+		</operation>
     </binding>
 
     <!--============================================== SERVICE ==============================================-->

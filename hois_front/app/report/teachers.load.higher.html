@@ -17,11 +17,11 @@
 
         <div layout="row">
           <div flex="45" flex-sm="100" flex-xs="100">
-            <hois-autocomplete ng-model="criteria.subject" method="subjects" label="{{'report.teachersload.subject' | translate}}"></hois-autocomplete>
+            <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.subject" method="subjects" label="{{'report.teachersload.subject' | translate}}"></hois-autocomplete>
           </div>
 
           <div flex="50" flex-offset="5">
-            <hois-autocomplete ng-model="criteria.teacher" method="teachers" 
+            <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.teacher" method="teachers" 
               label="{{auth.higher ? ('report.teachersload.teacherHigher' | translate) : ('report.teachersload.teacherVocational' | translate)}}"></hois-autocomplete>
           </div>
         </div>

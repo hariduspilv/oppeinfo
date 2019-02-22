@@ -90,7 +90,7 @@
             <div layout="column" flex>
               <md-input-container>
                 <label class="textInput">{{'contract.status' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.status" main-classifier-code="LEPING_STAATUS" model-value-attr="code"></hois-classifier-select>
+                <hois-classifier-select ng-model="criteria.status" main-classifier-code="LEPING_STAATUS" model-value-attr="code" multiple="true"></hois-classifier-select>
               </md-input-container>
             </div>
           </div>
@@ -124,6 +124,7 @@
             <th ng-if="auth.isAdmin()" md-column md-order-by="student_person.lastname,student_person.firstname">{{'student.label' | translate}}</th>
             <th md-column>{{'contract.contractNumber' | translate}}</th>
             <th md-column>{{'contract.validity' | translate}}</th>
+            <th md-column>{{'studentGroup.label' | translate}}</th>
             <th md-column>{{'enterprise.label' | translate}}</th>
             <th md-column>{{'enterprise.supervisor' | translate}}</th>
             <th md-column>{{'contract.schoolSupervisor' | translate}}</th>
@@ -137,6 +138,7 @@
             <td ng-if="auth.isAdmin()" md-cell>{{currentLanguageNameField(row.student)}}</td>
             <td md-cell>{{row.contractNr}}</td>
             <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
+            <td md-cell>{{row.studentGroup}}</td>
             <td md-cell>{{row.enterpriseName}}</td>
             <td md-cell>{{row.enterpriseContactPersonName}}</td>
             <td md-cell>{{currentLanguageNameField(row.teacher)}}</td>

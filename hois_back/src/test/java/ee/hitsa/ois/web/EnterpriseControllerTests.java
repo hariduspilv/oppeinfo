@@ -19,7 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.EnterpriseForm;
-import ee.hitsa.ois.web.dto.EnterpriseDto;
+import ee.hitsa.ois.web.dto.enterprise.EnterpriseDto;
 
 @Transactional
 @RunWith(SpringRunner.class)

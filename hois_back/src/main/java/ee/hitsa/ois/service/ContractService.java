@@ -5,12 +5,16 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
@@ -26,12 +30,17 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Contract;
-import ee.hitsa.ois.domain.Enterprise;
+import ee.hitsa.ois.domain.ContractModuleSubject;
+import ee.hitsa.ois.domain.ContractSupervisor;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
+import ee.hitsa.ois.domain.enterprise.Enterprise;
+import ee.hitsa.ois.domain.enterprise.PracticeApplication;
+import ee.hitsa.ois.domain.enterprise.PracticeEvaluation;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
@@ -54,7 +63,9 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ContractValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.ContractCancelForm;
 import ee.hitsa.ois.web.commandobject.ContractForm;
+import ee.hitsa.ois.web.commandobject.ContractModuleSubjectForm;
 import ee.hitsa.ois.web.commandobject.ContractSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ContractDto;
@@ -63,6 +74,7 @@ import ee.hitsa.ois.web.dto.ContractStudentHigherModuleDto;
 import ee.hitsa.ois.web.dto.ContractStudentModuleDto;
 import ee.hitsa.ois.web.dto.ContractStudentSubjectDto;
 import ee.hitsa.ois.web.dto.ContractStudentThemeDto;
+import ee.hitsa.ois.web.dto.ContractSupervisorDto;
 
 @Transactional
 @Service
@@ -86,18 +98,25 @@ public class ContractService {
     @Value("${hois.frontend.baseUrl}")
     private String frontendBaseUrl;
 
-    private static final String SEARCH_FROM = "from contract contract "
-            + "inner join student student on contract.student_id = student.id "
+    private static final String SEARCH_FROM = "from contract "
+            + "inner join student on contract.student_id = student.id "
+            + "inner join student_group sg on student.student_group_id = sg.id "
             + "inner join person student_person on student.person_id = student_person.id "
-            + "inner join enterprise enterprise on contract.enterprise_id = enterprise.id "
-            + "inner join teacher teacher on contract.teacher_id = teacher.id "
+            + "inner join enterprise on contract.enterprise_id = enterprise.id "
+            + "inner join teacher on contract.teacher_id = teacher.id "
             + "inner join person teacher_person on teacher.person_id = teacher_person.id "
-            + "left join curriculum_version_omodule curriculum_version_omodule on contract.curriculum_version_omodule_id = curriculum_version_omodule.id ";
+            + "left join curriculum_version_omodule curriculum_version_omodule on contract.curriculum_version_omodule_id = curriculum_version_omodule.id "
+            + "left join contract_supervisor cs on cs.contract_id = contract.id ";
 
-    private static final String SEARCH_SELECT = "contract.id contract_id, contract.contract_nr, contract.status_code, contract.start_date, contract.end_date, contract.confirm_date, "
-            + "student.id student_id, student_person.firstname student_person_firstname, student_person.lastname student_person_lastname, "
-            + "enterprise.name, contract.supervisor_name, "
-            + "teacher.id teacher_id, teacher_person.firstname teacher_person_firstname, teacher_person.lastname teacher_person_lastname";
+    private static final String SEARCH_SELECT = "contract.id as contractId, contract.contract_nr, contract.status_code, contract.start_date, contract.end_date, contract.confirm_date, "
+            + "student.id, student_person.firstname as student_person_firstname, student_person.lastname as student_person_lastname, "
+            + "enterprise.name, string_agg(cs.supervisor_name, ', '), "
+            + "teacher.id as teacherId, teacher_person.firstname as teacher_person_firstname, teacher_person.lastname as teacher_person_lastname, sg.code";
+    
+    private static final String GROUP_BY = "contract.id, contract.contract_nr, contract.status_code, contract.start_date, contract.end_date, contract.confirm_date, "
+            + "student.id, student_person.firstname, student_person.lastname, "
+            + "enterprise.name, "
+            + "teacher.id, teacher_person.firstname, teacher_person.lastname, sg.code";
 
 
     private static final String MODULES_FROM = "from student s "
@@ -131,7 +150,7 @@ public class ContractService {
      * @return
      */
     public Page<ContractSearchDto> search(HoisUserDetails user, ContractSearchCommand command, Pageable pageable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable).groupBy(GROUP_BY);
         qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
 
         qb.optionalCriteria("contract.start_date >= :startFrom", "startFrom", command.getStartFrom());
@@ -143,9 +162,9 @@ public class ContractService {
         qb.optionalCriteria("student.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", command.getCurriculumVersion());
         qb.optionalCriteria("student.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
         qb.optionalContains("enterprise.name", "enterpriseName", command.getEnterpriseName());
-        qb.optionalContains("enterprise.contact_person_name", "enterpriseContactPersonName", command.getEnterpriseContactPersonName());
+        qb.optionalContains("cs.supervisor_name", "enterpriseContactPersonName", command.getEnterpriseContactPersonName());
         qb.optionalCriteria("contract.teacher_id = :teacherId", "teacherId", command.getTeacher());
-        qb.optionalCriteria("contract.status_code = :status", "status", command.getStatus());
+        qb.optionalCriteria("contract.status_code in (:status)", "status", command.getStatus());
         qb.optionalCriteria("contract.student_id = :studentId", "studentId", command.getStudent());
 
         return JpaQueryUtil.pagingResult(qb, SEARCH_SELECT, em, pageable).map(r -> {
@@ -165,7 +184,7 @@ public class ContractService {
 
             String teacherName = PersonUtil.fullname(resultAsString(r, 12), resultAsString(r, 13));
             dto.setTeacher(new AutocompleteResult(resultAsLong(r, 11), teacherName, teacherName));
-
+            dto.setStudentGroup(resultAsString(r, 14));
             return dto;
         });
     }
@@ -265,7 +284,12 @@ public class ContractService {
     public Contract create(ContractForm contractForm) {
         Contract contract = new Contract();
         setContractStatus(contract, ContractStatus.LEPING_STAATUS_S);
-        contract.setSupervisorUrl(generateUniqueUrl());
+        //contract.setSupervisorUrl(generateUniqueUrl());
+
+        // credits and hours on contract entity are required but not used
+        contract.setCredits(BigDecimal.ZERO);
+        contract.setHours(Short.valueOf((short) 0));
+        
         return save(contract, contractForm);
     }
 
@@ -280,15 +304,50 @@ public class ContractService {
         assertValidationRules(contractForm);
 
         Contract changedContract = EntityUtil.bindToEntity(contractForm, contract,
-                "student", "module", "theme", "enterprise", "teacher", "contractCoordinator", "subject");
+                "student", "module", "theme", "enterprise", "teacher", "contractCoordinator", "subject", "practiceApplication", 
+                "contractSupervisors", "moduleSubjects", "practiceEvaluation");
+        changedContract.setPracticeEvaluation(EntityUtil.getOptionalOne(PracticeEvaluation.class, contractForm.getPracticeEvaluation(), em));
         changedContract.setStudent(EntityUtil.getOptionalOne(Student.class, contractForm.getStudent(), em));
-        changedContract.setModule(EntityUtil.getOptionalOne(CurriculumVersionOccupationModule.class, contractForm.getModule(), em));
-        changedContract.setTheme(EntityUtil.getOptionalOne(CurriculumVersionOccupationModuleTheme.class, contractForm.getTheme(), em));
         changedContract.setEnterprise(EntityUtil.getOptionalOne(Enterprise.class, contractForm.getEnterprise(), em));
         changedContract.setTeacher(EntityUtil.getOptionalOne(Teacher.class, contractForm.getTeacher(), em));
         changedContract.setContractCoordinator(EntityUtil.getOptionalOne(DirectiveCoordinator.class, contractForm.getContractCoordinator(), em));
-        changedContract.setSubject(EntityUtil.getOptionalOne(Subject.class, contractForm.getSubject(), em));
+        changedContract.setPracticeApplication(EntityUtil.getOptionalOne(PracticeApplication.class, contractForm.getPracticeApplication(), em));
+        EntityUtil.bindEntityCollection(changedContract.getModuleSubjects(), moduleSubject -> EntityUtil.getId(moduleSubject),
+                contractForm.getModuleSubjects(), ContractModuleSubjectForm::getId, dto -> {
+                    ContractModuleSubject moduleSubject = new ContractModuleSubject();
+                    moduleSubject.setContract(changedContract);
+                    return updateModuleSubject(dto, moduleSubject);
+                }, this::updateModuleSubject);
+        List<ContractSupervisor> updatedSupervisors = new ArrayList<>();
+        if (contractForm.getSupervisors() != null) {
+            for (ContractSupervisorDto supervisor : contractForm.getSupervisors()) {
+                if (supervisor.getId() == null) {
+                    ContractSupervisor newSupervisor = new ContractSupervisor();
+                    EntityUtil.bindToEntity(supervisor, newSupervisor);
+                    newSupervisor.setContract(changedContract);
+                    newSupervisor.setSupervisorUrl(generateUniqueUrl());
+                    updatedSupervisors.add(newSupervisor);
+                } else {
+                    ContractSupervisor oldSupervisor = em.getReference(ContractSupervisor.class, supervisor.getId());
+                    EntityUtil.bindToEntity(supervisor, oldSupervisor);
+                    oldSupervisor.setContract(changedContract);
+                    oldSupervisor.setSupervisorUrl(generateUniqueUrl());
+                    updatedSupervisors.add(oldSupervisor);
+                }
+            }
+            changedContract.getContractSupervisors().clear();
+            changedContract.getContractSupervisors().addAll(updatedSupervisors);
+        }
         return EntityUtil.save(changedContract, em);
+    }
+    
+    private ContractModuleSubject updateModuleSubject(ContractModuleSubjectForm form, ContractModuleSubject moduleSubject) {
+        moduleSubject.setModule(EntityUtil.getOptionalOne(CurriculumVersionOccupationModule.class, form.getModule(), em));
+        moduleSubject.setTheme(EntityUtil.getOptionalOne(CurriculumVersionOccupationModuleTheme.class, form.getTheme(), em));
+        moduleSubject.setSubject(EntityUtil.getOptionalOne(Subject.class, form.getSubject(), em));
+        moduleSubject.setCredits(form.getCredits());
+        moduleSubject.setHours(form.getHours());
+        return moduleSubject;
     }
 
     /**
@@ -343,7 +402,9 @@ public class ContractService {
         boolean firstSend = contract.getWdId() == null;
         ekisService.registerPracticeContract(EntityUtil.getId(contract));
         if(firstSend) {
-            sendUniqueUrlEmailToEnterpriseSupervisor(user, contract);
+            for (ContractSupervisor supervisor : contract.getContractSupervisors()) {
+                sendUniqueUrlEmailToEnterpriseSupervisor(user, supervisor);
+            }
         }
         return contract;
     }
@@ -384,18 +445,25 @@ public class ContractService {
         }
     }
 
-    private void sendUniqueUrlEmailToEnterpriseSupervisor(HoisUserDetails user, Contract contract) {
-        String url = getPracticeJournalSupervisorUrl(contract);
-        PracticeJournalUniqueUrlMessage data = new PracticeJournalUniqueUrlMessage(contract.getStudent(), url);
-        automaticMessageService.sendMessageToEnterprise(contract, em.getReference(School.class, user.getSchoolId()), MessageType.TEATE_LIIK_PRAKTIKA_URL, data);
+    public void sendUniqueUrlEmailToEnterpriseSupervisor(HoisUserDetails user, ContractSupervisor supervisor) {
+        String url = getPracticeJournalSupervisorUrl(supervisor);
+        PracticeJournalUniqueUrlMessage data = new PracticeJournalUniqueUrlMessage(supervisor.getContract().getStudent(), url);
+        automaticMessageService.sendMessageToEnterprise(supervisor, em.getReference(School.class, user.getSchoolId()), MessageType.TEATE_LIIK_PRAKTIKA_URL, data);
     }
 
-    private String getPracticeJournalSupervisorUrl(Contract contract) {
-        return frontendBaseUrl + "practiceJournals/supervisor/" + contract.getSupervisorUrl();
+    private String getPracticeJournalSupervisorUrl(ContractSupervisor supervisor) {
+        return frontendBaseUrl + "practiceJournals/supervisor/" + supervisor.getSupervisorUrl();
     }
 
     private PracticeJournal createPracticeJournal(Contract contract, Long schoolId) {
         PracticeJournal practiceJournal = EntityUtil.bindToEntity(contract, new PracticeJournal(), "contract", "school", "studyYear", "status");
+        if (practiceJournal.getPracticePlace() == null) {
+            if (contract.getIsPracticeSchool() != null && contract.getIsPracticeSchool().booleanValue()) {
+                practiceJournal.setPracticePlace("Praktika sooritatakse koolis");
+            } else if (contract.getIsPracticeTelework() != null && contract.getIsPracticeTelework().booleanValue()) {
+                practiceJournal.setPracticePlace("Praktika sooritatakse kaugtööna");
+            }
+        }
         practiceJournal.setContract(contract);
         practiceJournal.setSchool(em.getReference(School.class, schoolId));
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
@@ -423,12 +491,27 @@ public class ContractService {
     }
 
     private void assertValidationRules(ContractForm contractForm) {
-        if (Boolean.TRUE.equals(contractForm.getIsHigher()) &&
-                !validator.validate(contractForm, ContractValidation.Higher.class).isEmpty()) {
-            throw new ValidationFailedException("contract.messages.subjectRequired");
-        } else if (Boolean.FALSE.equals(contractForm.getIsHigher()) &&
-                !validator.validate(contractForm, ContractValidation.Vocational.class).isEmpty()) {
-            throw new ValidationFailedException("contract.messages.moduleRequired");
+        if (Boolean.TRUE.equals(contractForm.getIsHigher())) {
+            if (!validator.validate(contractForm, ContractValidation.Higher.class).isEmpty()) {
+                throw new ValidationFailedException("contract.messages.subjectRequired");
+            }
+            Set<Long> subjects = new HashSet<>();
+            for (ContractModuleSubjectForm moduleSubjectForm : contractForm.getModuleSubjects()) {
+                if (!subjects.add(moduleSubjectForm.getSubject())) {
+                    throw new ValidationFailedException("contract.messages.duplicateSubject");
+                }
+            }
+        } else if (Boolean.FALSE.equals(contractForm.getIsHigher())) {
+            if (!validator.validate(contractForm, ContractValidation.Vocational.class).isEmpty()) {
+                throw new ValidationFailedException("contract.messages.moduleRequired");
+            }
+            Map<Long, Set<Long>> moduleThemes = new HashMap<>();
+            for (ContractModuleSubjectForm moduleSubjectForm : contractForm.getModuleSubjects()) {
+                Set<Long> themes = moduleThemes.computeIfAbsent(moduleSubjectForm.getModule(), k -> new HashSet<>());
+                if (!themes.add(moduleSubjectForm.getTheme())) {
+                    throw new ValidationFailedException("contract.messages.duplicateModuleTheme");
+                }
+            }
         }
     }
 
@@ -439,4 +522,14 @@ public class ContractService {
     private static String generateUniqueUrl() {
         return UUID.randomUUID().toString();
     }
+
+	public Contract cancel(HoisUserDetails user, Contract contract, ContractCancelForm contractForm) {
+	    EntityUtil.bindToEntity(contractForm, contract, "cancelReason");
+		contract.setCancelReason(em.getReference(Classifier.class, contractForm.getCancelReason()));
+		Person canceler = em.getReference(Person.class, user.getPersonId());
+		contract.setCanceledBy(canceler.getFullname());
+		contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_T.name()));
+		EntityUtil.setUsername(user.getUsername(), em);
+		return EntityUtil.save(contract, em);
+	}
 }

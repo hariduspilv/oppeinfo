@@ -12,7 +12,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return Session.vocational && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPETOOGRAAFIK);
+            return Session.roleCode === 'ROLL_A' && Session.vocational && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPETOOGRAAFIK);
           }
         }
       }).when('/studyYearSchedule', {

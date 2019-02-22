@@ -28,7 +28,7 @@ angular.module('hitsaOis').filter('hoisDate', function ($filter) {
   return function (input) {
     var formatter = $filter('date');
     var value = formatter(input, 'dd.MM.yyyy HH:mm');
-    if (value.lastIndexOf('00:00') === -1) {
+    if (value !== undefined && value !== null && value.lastIndexOf('00:00') === -1) {
       return value;
     }
     return formatter(input, 'dd.MM.yyyy');

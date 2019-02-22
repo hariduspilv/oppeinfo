@@ -11,7 +11,7 @@
 
 					<div layout="row" flex>
 						<div flex="45">
-							<hois-autocomplete ng-model="criteria.curriculum" method="curriculums" name="curriculum" label="studentGroup.curriculum"></hois-autocomplete>
+							<hois-autocomplete ng-model="criteria.curriculum" ha-controller="directiveControllers" method="curriculums" name="curriculum" label="studentGroup.curriculum"></hois-autocomplete>
 						</div>
 						<md-input-container flex="50" flex-offset="5">
 							<label>{{formState.curriculumVersionLabel | translate}}</label>
@@ -25,7 +25,7 @@
 							<hois-select ng-model="criteria.studyForm" name="studyForm" value-property="code" values="formState.allStudyForms" filter-values="formState.hiddenStudyForms" multiple></hois-select>
 						</md-input-container>
 
-						<hois-autocomplete label="studentGroup.teacher" ng-if="!formState.onlyhigher" ng-model="criteria.teacher" method="teachers" flex="50" flex-offset="5"></hois-autocomplete>
+						<hois-autocomplete label="studentGroup.teacher" ha-controller="directiveControllers" ng-if="!formState.onlyhigher" ng-model="criteria.teacher" method="teachers" flex="50" flex-offset="5"></hois-autocomplete>
 					</div>
 
 					<div layout="row" flex="45">

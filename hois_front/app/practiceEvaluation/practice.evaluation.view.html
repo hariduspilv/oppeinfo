@@ -1,0 +1,53 @@
+<div class="ois-form-layout-padding ois-form-layout form-readonly" ng-cloak>
+  <form name="practiceEvaluationForm">
+    <md-input-container class="md-block">
+      <label class="textInput">{{'practiceEvaluation.nameEt' | translate}}</label>
+      <hois-value value="record.nameEt"></hois-value>
+    </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'practiceEvaluation.target' | translate}}</label>
+      <hois-classifier-value ng-model="record.target" main-classifier-code="PRAKTIKA_SIHTRYHM"></hois-classifier-value>
+    </md-input-container>
+    
+    <md-input-container class="md-block">
+      <label class="textInput">{{'practiceEvaluation.addInfo' | translate}}</label>
+      <hois-value value="record.addInfo"></hois-value>
+    </md-input-container>
+    
+    <md-input-container class="md-block">
+      <label class="textInput">{{'practiceEvaluation.isActive' | translate}}</label>
+      <hois-value value="record.isActive ? 'main.yes' : 'main.no' | translate"></hois-value>
+    </md-input-container>
+
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practiceEvaluation.criteria.label' | translate}}</legend>
+      <md-table-container>
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column>{{'practiceEvaluation.criteria.nameEt' | translate}}</th>
+              <th md-column>{{'practiceEvaluation.criteria.addInfo' | translate}}</th>
+              <th md-column>{{'practiceEvaluation.criteria.type' | translate}}</th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in record.criteria" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{::row.nameEt}}</td>
+              <td md-cell>{{::row.addInfo}}</td>
+              <td md-cell>{{currentLanguageNameField(criteriaMap[row.type])}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </fieldset>
+
+  </form>
+
+  <br>
+
+  <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PRHINDAMISVORM')" 
+    ng-href="#/practice/evaluation/{{record.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+  <md-button ng-href="#/practice/evaluation" class="md-raised">{{'main.button.back' | translate}}</md-button>
+</div>

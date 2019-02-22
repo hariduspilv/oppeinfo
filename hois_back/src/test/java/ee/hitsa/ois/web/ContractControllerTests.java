@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -24,9 +25,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
-import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
+import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ContractStatus;
@@ -36,6 +37,7 @@ import ee.hitsa.ois.service.PracticeJournalService;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.ContractForm;
+import ee.hitsa.ois.web.commandobject.ContractModuleSubjectForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ContractDto;
 import ee.hitsa.ois.web.dto.ContractSearchDto;
@@ -133,7 +135,7 @@ public class ContractControllerTests {
 
         //update
         form.setVersion(responseEntity.getBody().getVersion());
-        form.setCredits(BigDecimal.TEN);
+        form.getModuleSubjects().get(0).setCredits(BigDecimal.TEN);
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(contract.getId().toString());
         responseEntity = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.PUT, new HttpEntity<>(form), ContractDto.class);
         Assert.assertNotNull(responseEntity);
@@ -217,17 +219,19 @@ public class ContractControllerTests {
     private ContractForm createForm() {
         ContractForm form = new ContractForm();
         form.setStudent(AutocompleteResult.of(student));
-        form.setModule(curriculumVersionOccupationModuleId());
-        form.setCredits(BigDecimal.ONE);
-        form.setHours(Short.valueOf((short) 1));
+        ContractModuleSubjectForm moduleSubject = new ContractModuleSubjectForm();
+        moduleSubject.setModule(curriculumVersionOccupationModuleId());
+        moduleSubject.setCredits(BigDecimal.ONE);
+        moduleSubject.setHours(Short.valueOf((short) 1));
+        List<ContractModuleSubjectForm> moduleSubjects = new ArrayList<>();
+        moduleSubjects.add(moduleSubject);
+        form.setModuleSubjects(moduleSubjects);
         form.setStartDate(LocalDate.now());
         form.setEndDate(LocalDate.now().plusDays(1));
         form.setPracticePlace("place");
-        form.setEnterprise(enterprise().getId());
+        form.setEnterprise(AutocompleteResult.of(enterprise()));
         form.setContactPersonName("person name");
         form.setContactPersonEmail("test@test.ee");
-        form.setSupervisorName("supervisor");
-        form.setSupervisorEmail("test@test.ee");
         form.setTeacher(teacherId());
         form.setContractCoordinator(directiveCoordinator().getId());
         form.setPracticePlan("plan");

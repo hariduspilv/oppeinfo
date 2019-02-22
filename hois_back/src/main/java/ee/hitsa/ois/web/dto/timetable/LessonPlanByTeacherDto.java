@@ -18,6 +18,7 @@ import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalForTeacherDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.StudyPeriodDto;
 
 public class LessonPlanByTeacherDto {
@@ -30,18 +31,23 @@ public class LessonPlanByTeacherDto {
     private final List<LessonPlanByTeacherSubjectDto> subjects;
     private final Map<Long, Map<String, Long>> subjectTotals;
     private final List<LocalDate> weekBeginningDates;
+    private List<LessonPlanTeacherDto> teachers;
     private List<ClassifierDto> lessonPlanCapacities;
 
     public LessonPlanByTeacherDto(StudyYear studyYear, List<Journal> journals, List<LessonPlanByTeacherSubjectDto> subjects,
             Map<Long, Map<String, Long>> subjectTotals, Teacher teacher) {
         studyYearCode = EntityUtil.getCode(studyYear.getYear());
         teacherName = teacher.getPerson().getFullname();
-        studyPeriods = studyYear.getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList());
+        studyPeriods = studyYear.getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate))
+                .map(StudyPeriodDto::new).collect(Collectors.toList());
         weekNrs = studyPeriods.stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList());
-        weekBeginningDates = studyPeriods.stream().flatMap(r -> r.getWeekBeginningDates().stream()).collect(Collectors.toList());
+        weekBeginningDates = studyPeriods.stream().flatMap(r -> r.getWeekBeginningDates().stream())
+                .collect(Collectors.toList());
 
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(studyYear);
-        this.journals = journals.stream().map(r -> LessonPlanModuleJournalForTeacherDto.of(r, capacityMapper, teacher)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList());
+        this.journals = journals.stream().map(r -> LessonPlanModuleJournalForTeacherDto.of(r, capacityMapper, teacher))
+                .sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList());
         this.subjects = subjects;
         this.subjectTotals = subjectTotals;
     }
@@ -78,6 +84,14 @@ public class LessonPlanByTeacherDto {
         return weekBeginningDates;
     }
     
+    public List<LessonPlanTeacherDto> getTeachers() {
+        return teachers;
+    }
+
+    public void setTeachers(List<LessonPlanTeacherDto> teachers) {
+        this.teachers = teachers;
+    }
+
     public List<ClassifierDto> getLessonPlanCapacities() {
         return lessonPlanCapacities;
     }

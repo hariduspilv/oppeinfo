@@ -5,6 +5,8 @@
  * @name hitsaOis.directive:hoisCurriculumVersionSelect
  * @description
  * # hoisCurriculumVersionSelect
+ * 
+ * @since 22.01.2019 Added trackBy to md-select which uses `valueProperty` to ignore moment when mdSelect decides to put form into dirty state.
  */
 angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curriculum, School, QueryUtils, DataUtils) {
   return {
@@ -96,6 +98,14 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
             scope.options = QueryUtils.endpoint('/autocomplete/teachersList').query(scope.criteria);
           } else if (attrs.type === 'enterprise') {
             scope.options = QueryUtils.endpoint('/autocomplete/enterprises').query();
+          } else if (attrs.type === 'enterpriseLocations') {
+            scope.options = QueryUtils.endpoint('/autocomplete/enterpriseLocations').query(scope.criteria);
+          } else if (attrs.type === 'supervisors') {
+            scope.options = QueryUtils.endpoint('/autocomplete/supervisors').query(scope.criteria);
+          } else if (attrs.type === 'contacts') {
+            scope.options = QueryUtils.endpoint('/autocomplete/contacts').query(scope.criteria);
+          } else if (attrs.type === 'practiceEvaluation') {
+            scope.options = QueryUtils.endpoint('/autocomplete/practiceEvaluation').query(scope.criteria);
           } else if(attrs.type === 'saisadmissioncode') {
             scope.options = QueryUtils.endpoint('/autocomplete/saisAdmissionCodes').query();
           } else if(attrs.type === 'saisCurriculumClassifiers') {

@@ -87,7 +87,7 @@ public class EkisClient {
                     request.getStForm(), request.getStCourse(),
                     request.getStEkap(), request.getStHours(),
                     request.getStModule(), request.getOrgName(),
-                    request.getOrgCode(), request.getOrgContactName(),
+                    optional(request.getOrgCode()), request.getOrgContactName(),
                     optional(request.getOrgTel()), request.getOrgEmail(),
                     request.getOrgTutorName(), optional(request.getOrgTutorTel()),
                     optional(request.getOrgTutorEmail()), request.getProgramme(),

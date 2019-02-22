@@ -1,0 +1,107 @@
+<md-dialog aria-label="add enterprise dialog" flex="50">
+    <form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
+        <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2 flex>{{'enterprise.admissionTab.addNew' | translate}}</h2>
+            <md-button class="md-icon-button" ng-click="cancel()">
+            <md-icon md-font-set="material-icons">close</md-icon>
+            </md-button>
+        </div>
+        </md-toolbar>
+        <md-dialog-content>
+        <div class="md-dialog-content" flex>
+            <div layout="row" class="form-readonly">
+                <div layout="column" flex="50">
+                    <md-input-container flex>
+                        <label>{{'enterprise.name' | translate}}</label>
+                        <hois-value value="enterprise.name"></hois-value>
+                    </md-input-container>
+                </div>
+                <div layout="column" flex="50">
+                    <md-input-container flex>
+                        <label>{{'enterprise.personsTab.regCode' | translate}}</label>
+                        <hois-value value="enterprise.regCode"></hois-value>
+                    </md-input-container>
+                </div>
+            </div>
+            <div layout="row">
+                <div layout="column">
+                    <md-input-container flex>
+                        <label class="textInput">{{'enterprise.admissionTab.startDate' | translate}}</label>
+                        <md-datepicker name="date" ng-model="enterprise.validFrom" md-min-date="now" md-max-date="enterprise.validThru" required md-open-on-focus></md-datepicker>
+                    </md-input-container>
+                </div>
+                <div layout="column">
+                    <md-input-container flex>
+                        <label class="textInput">{{'enterprise.admissionTab.endDate' | translate}}</label>
+                        <md-datepicker name="date" ng-model="enterprise.validThru"  md-min-date="enterprise.validFrom ? enterprise.validFrom : now" required md-open-on-focus></md-datepicker>
+                    </md-input-container>
+                </div>
+                <div layout="column">
+                    <md-input-container flex>
+                        <label class="textInput">{{'enterprise.admissionTab.internSpots' | translate}}</label>
+                        <input ng-model="enterprise.places" name="places" type="text" pattern="^\d+$" md-maxlength="4" md-minlength="0" required>
+                        <div ng-messages="dialogForm.places.$error">
+                            <div ng-message="md-maxlength">
+                                {{'main.messages.error.maxlength' | translate}}
+                            </div>
+                            <div ng-message="pattern">
+                                {{'enterprise.personsTab.number' | translate}}
+                            </div>
+                            <div ng-message="md-minlength">
+                                {{'main.messages.error.minlength' | translate}}
+                            </div>
+                        </div>
+                    </md-input-container>
+                </div>
+                <md-input-container flex layout="column" layout-align="center center">
+                    <md-checkbox ng-model="enterprise.isStrict">
+                        {{'enterprise.strict' | translate}}
+                    </md-checkbox>
+                </md-input-container>
+            </div>
+            <div layout="row">
+                <div layout="column" flex="100">
+                    <md-input-container flex>
+                        <label class="textInput">{{'enterprise.admissionTab.addInfo' | translate}}</label>
+                        <input name="info" ng-model="enterprise.addInfo" md-maxlength="4000" required>
+                        <div ng-messages="dialogForm.info.$error">
+                            <div ng-message="md-maxlength">
+                                {{'main.messages.error.maxlength' | translate}}
+                            </div>
+                        </div>
+                    </md-input-container>
+                </div>
+            </div>
+            <div layout="row" flex="100">
+                <hois-autocomplete ng-if="!enterprise.allStudentGroups" label="timetable.timetableEvent.studentGroup" ng-model="enterprise.studentGroup" method="studentgroups" additional-query-params="{valid: true}" flex></hois-autocomplete>
+                <md-button flex-offset="5" ng-click="addAllStudentGroups()" class="md-raised">{{"enterprise.admissionTab.allStudentGroups" | translate}}</md-button>
+            </div>
+            <md-table-container ng-if="enterprise.studentGroups.length > 0" layout="row" flex="100" style="max-height: 100px">
+            <table md-table class="secondary-table">
+                <thead md-head>
+                <tr md-row>
+                    <th md-column width="90%">{{'enterprise.admissionTab.studentGroups' | translate}}</th>
+                    <th md-column width="10%"></th>
+                </tr>
+                </thead>
+                <tbody md-body>
+                <tr md-row ng-repeat="studentGroup in enterprise.studentGroups" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell>{{studentGroup.nameEt}}</td>
+                    <td md-cell>
+                    <a ng-click="deleteStudentGroup(studentGroup)" class="remove">&times;</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            </md-table-container>
+        </div>
+        </md-dialog-content>
+    
+        <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
+            <md-button flex-xs="100" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+            <md-button ng-show="enterprise.id" flex-xs="100" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+            <md-button flex-xs="100" class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+        </md-dialog-actions>
+    </form>
+</md-dialog>

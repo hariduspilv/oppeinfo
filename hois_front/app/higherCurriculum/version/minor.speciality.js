@@ -13,6 +13,7 @@ angular.module('hitsaOis')
       return url && url.indexOf("new") !== -1;
     });
 
+    $scope.studyYears = [];
     $scope.backToEditForm = '#/higherCurriculum/' + curriculumId + '/version/' + versionId + '/edit';
     $scope.backToViewForm = '#/higherCurriculum/' + curriculumId + '/version/' + versionId + '/view';
 
@@ -36,11 +37,24 @@ angular.module('hitsaOis')
     if (id) {
       Endpoint.get({ id: id }).$promise.then(afterLoad);
     } else {
+      QueryUtils.endpoint(baseUrl + "/curriculumYears").get({id: curriculumId}, function (response) {
+        fillStudyYears(response.years);
+      });
       $scope.data = new Endpoint(angular.extend({}, initial));
     }
 
     function afterLoad(response) {
       $scope.data = new Endpoint(response);
+      fillStudyYears(response.studyYears);
+    }
+
+    function fillStudyYears(years) {
+      $scope.studyYears = [];
+      if (typeof years === 'number') {
+        for (var i = 0; i < years; i++) {
+          $scope.studyYears.push(i + 1);
+        }
+      }
     }
 
     function getSubjects () {

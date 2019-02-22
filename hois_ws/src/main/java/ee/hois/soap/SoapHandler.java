@@ -5,6 +5,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Set;
 
 import javax.xml.namespace.QName;
+import javax.xml.soap.AttachmentPart;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.ws.handler.MessageContext;
@@ -19,6 +20,7 @@ public class SoapHandler implements SOAPHandler<SOAPMessageContext> {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     public static final String LOG_CONTEXT = "ee.hois.soap.LOG_CONTEXT";
+    public static final String ATTACHMENT = "ee.hois.soap.ATTACHMENT";
 
     @Override
     public boolean handleMessage(SOAPMessageContext context) {
@@ -37,6 +39,20 @@ public class SoapHandler implements SOAPHandler<SOAPMessageContext> {
             log.debug("Request {} outgoing message: {}", ctx.getId(), msgXml);
         } catch (SOAPException | IOException e) {
             log.error("logging soap outgoing message failed", e);
+        }
+        try {
+            SOAPMessage msg = context.getMessage();
+            SoapAttachment attachment = attachment(context);
+            if (attachment != null) {
+                byte[] content = attachment.getContent();
+                AttachmentPart attachmentPart = msg.createAttachmentPart();
+                attachmentPart.setRawContentBytes(content, 0, content.length, attachment.getContentType());
+                attachmentPart.setContentId(attachment.getContentId());
+                msg.addAttachmentPart(attachmentPart);
+                msg.saveChanges();
+            }
+        } catch (SOAPException e) {
+            log.error("adding attachment to soap outgoing message failed", e);
         }
         return true;
     }
@@ -78,6 +94,11 @@ public class SoapHandler implements SOAPHandler<SOAPMessageContext> {
     protected LogContext ctx(SOAPMessageContext context) {
         LogContext ctx = (LogContext) context.get(LOG_CONTEXT);
         return ctx;
+    }
+
+    protected SoapAttachment attachment(SOAPMessageContext context) {
+        SoapAttachment attachment = (SoapAttachment) context.get(ATTACHMENT);
+        return attachment;
     }
 
     @Override

@@ -1,0 +1,124 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.id" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/view?_noback" name="enterprise.data">
+        {{'enterprise.data' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/persons/view?_noback" name="enterprise.persons">
+        {{'enterprise.persons' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/locations/view?_noback" name="enterprise.locations">
+        {{'enterprise.locations' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/studentGroups/view?_noback" name="enterprise.studentGroups">
+        {{'enterprise.studentGroups' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/contracts/view?_noback" name="enterprise.contracts">
+        {{'enterprise.contracts' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/grades/view?_noback" name="enterprise.grades">
+        {{'enterprise.grades' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId && enterprise.application" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/admission/view?_noback" name="enterprise.admission">
+        {{'enterprise.requests' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<div class="ois-form-layout-padding ois-form-layout" layout="column" ng-cloak>
+      <fieldset ng-if="auth.isAdmin()">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'enterprise.basicData' | translate}}</legend>
+        <div class="ois-form-layout-padding form-readonly" layout="column" flex>
+          <div layout="row">
+            <md-input-container flex="50">
+              <label>{{'main.country' | translate}}</label>
+              <hois-classifier-value ng-model="enterprise.country"  main-classifier-code="RIIK"></hois-classifier-value>
+            </md-input-container>
+            <div flex="50" layout="column">
+            <md-input-container flex>
+                <label>{{'enterprise.fie' | translate}}</label>
+                <hois-value value="enterprise.person ? 'main.yes' : 'main.no' | translate"></hois-value>
+            </md-input-container>
+            </div>
+          </div>
+            <div layout="row" ng-show="!enterprise.person">
+            <md-input-container flex="50" flex-xs="100">
+                <!--TODO: delete regCode value when fie is checked-->
+                <label>{{'enterprise.regCode' | translate}}</label>
+                <hois-value value="enterprise.regCode"></hois-value>
+            </md-input-container>
+            </div>
+            <div layout="row">
+            <md-input-container flex="100" ng-if="enterprise.country === 'RIIK_EST' && !enterprise.person">
+                <label>{{'enterprise.address' | translate}}</label>
+                <hois-value value="enterprise.registerAddress"></hois-value>
+            </md-input-container>
+            </div>
+            <md-input-container flex="100">
+                <label>{{'enterprise.name' | translate}}</label>
+                <hois-value value="enterprise.name"></hois-value>
+            </md-input-container>
+        </div>
+      </fieldset>
+      <fieldset ng-if="auth.isAdmin()">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'enterprise.schoolData' | translate}}</legend>
+        <div class="ois-form-layout-padding form-readonly" style="padding-top: 1em">
+            <div  layout="row">
+                <md-input-container ng-show="enterprise.countryCode === 'RIIK_EST'" flex="70">
+                    <label>{{'building.address' | translate}}</label>
+                    <hois-value value="enterprise.addressAds"></hois-value>
+                </md-input-container>
+                <md-input-container ng-show="enterprise.countryCode !== 'RIIK_EST'" flex="70">
+                    <label>{{'building.address' | translate}}</label>
+                    <hois-value value="enterprise.address"></hois-value>
+                </md-input-container>
+                <md-input-container flex="30">
+                    <label>{{'enterprise.postcode' | translate}}</label>
+                    <hois-value value="enterprise.postcode"></hois-value>
+                </md-input-container>
+            </div>
+
+            <div layout="row" layout-xs="column">
+            <md-input-container flex="40" flex-xs="100">
+                <label>{{'teacher.email' | translate}}</label>
+                <hois-value value="enterprise.email"></hois-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-xs="100">
+                <label>{{'teacher.phone' | translate}}</label>
+                <hois-value value="enterprise.phone"></hois-value>
+            </md-input-container>
+            <md-input-container flex="40" flex-xs="100">
+                <label>{{'enterprise.language' | translate}}</label>
+                <hois-classifier-value ng-model="enterprise.language" name="language" model-value-attr="code" main-classifier-code="OPPEKEEL" aria-label="{{'enterprise.language' | translate}}"></hois-classifier-value>
+            </md-input-container>
+            </div>
+
+            <div layout="row" layout-xs="column">
+            <md-input-container flex="25" flex-xs="100">
+                <label>{{'enterprise.internSpots' | translate}}</label>
+                <hois-value value="enterprise.places"></hois-value>
+            </md-input-container>
+            <md-input-container flex="75" flex-xs="100">
+                <label>{{'enterprise.explanation' | translate}}</label>
+                <hois-value value="enterprise.placesDescr"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="row">
+                <md-input-container flex="100">
+                    <label>{{'main.notes' | translate}}</label>
+                    <hois-value value="enterprise.addInfo"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="row" flex="100">
+                <div flex="50" layout="column">
+                    <md-input-container flex>
+                        <label>{{'enterprise.isActive' | translate}}</label>
+                        <hois-value value="enterprise.active !== null ? (enterprise.active ? 'main.yes' : 'main.no') : '' | translate"></hois-value>
+                    </md-input-container>
+                </div>
+                <div flex="50" layout="column">
+                    <md-input-container flex>
+                        <label>{{'enterprise.isApplication' | translate}}</label>
+                        <hois-value value="enterprise.application !== null ? (enterprise.application ? 'main.yes' : 'main.no') : '' | translate"></hois-value>
+                    </md-input-container>
+                </div>
+            </div>
+        </div>
+      </fieldset>
+      <div layout="row" layout-xs="column">
+        <md-button ng-if="auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" class="md-raised md-primary" ng-href="#/practice/enterprise/{{::enterprise.id}}/edit">{{'main.button.change' | translate}}</md-button>
+        <md-button ng-if="auth.isAdmin()" ng-click="back('#/practice/enterprise')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="auth.isAdmin() && enterprise.country === 'RIIK_EST' && !enterprise.person && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" ng-click="update()" class="md-raised">{{'enterprise.updateFromRegister' | translate}}</md-button>
+        <div layout="row" layout-align="center center" ng-show="enterprise.ebusinessUpdated"><span>{{'enterprise.lastEnterpriseUpdate' | translate}} {{enterprise.ebusinessUpdated | hoisTimestamp}}</span></div>
+      </div>
+  </div>  

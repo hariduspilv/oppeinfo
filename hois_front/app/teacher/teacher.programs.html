@@ -1,0 +1,35 @@
+<md-nav-bar ng-if="separateController" md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+  <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/teachers/{{::teacher.id}}/edit?_noback" name="teacher.data">
+    {{'teacher.data' | translate}}</md-nav-item>
+  <md-nav-item ng-if="auth.isTeacher()" md-nav-href="#/teachers/{{::teacher.id}}/editmydata?_noback" name="teacher.data">
+    {{'teacher.data' | translate}}</md-nav-item>
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id && teacher.isVocational) || (auth.isTeacher() && teacher.isVocational)" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation?_noback" name="teacher.continuingEducation">
+    {{'teacher.continuingEducation.label' | translate}}</md-nav-item>
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id) || (teacher.teacherQualifications.length > 0 && auth.isTeacher())" md-nav-href="#/teachers/{{::teacher.id}}/qualification?_noback" name="teacher.qualification">
+    {{'teacher.qualification.qualification' | translate}}</md-nav-item>
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id && teacher.isHigher) || (auth.isTeacher() && teacher.teacherMobility.length > 0)" md-nav-href="#/teachers/{{::teacher.id}}/mobility?_noback" name="teacher.mobility">
+    {{'teacher.mobility.mobility' | translate}}</md-nav-item>
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id) || auth.isTeacher()" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence?_noback" name="teacher.rtipAbsence">
+    {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
+  <md-nav-item ng-if="((auth.isAdmin() && teacher.id) || auth.isTeacher()) && teacher.isHigher" md-nav-href="#/teachers/{{::teacher.id}}/programs?_noback" name="teacher.programs">
+    {{'teacher.subjectPrograms.label' | translate}}</md-nav-item>
+</md-nav-bar>
+<div layout-padding>
+  <div layout="row" layout-xs="column" flex class="form-readonly">
+    <div layout="row" layout-sm="column" layout-xs="column" flex>
+      <md-input-container flex>
+        <label>{{auth.higher ? ('teacher.person.nameHigher' | translate) : ('teacher.person.nameVocational' | translate)}}</label>
+        <hois-value value="teacher.person.firstname + ' ' + teacher.person.lastname"></hois-value>
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{auth.higher ? ('teacher.person.idcodeHigher' | translate) : ('teacher.person.idcodeVocational' | translate)}}</label>
+        <hois-value value="teacher.person.idcode"></hois-value>
+      </md-input-container>
+    </div>
+  </div>
+  <ng-include src="'subjectProgram/subject.program.list.html'" ng-controller="SubjectProgramSearch as searchController" style="padding: 0 !important;"></ng-include>
+  <div layout="row">
+    <md-button ng-if="auth.isAdmin() && separateController" ng-click="back('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="auth.isTeacher() && separateController" ng-click="back('#/teachers/myData')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

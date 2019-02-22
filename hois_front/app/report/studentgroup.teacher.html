@@ -3,13 +3,13 @@
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
       <form name="studentGroupTeacherReportForm" novalidate>
-        <div layout="row">
-          <md-input-container flex="30" flex-sm="100" flex-xs="100">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'report.studentGroupTeacher.studyYear' | translate}}</label>
             <hois-select ng-model="criteria.studyYear" values="formState.studyYears"></hois-select>
           </md-input-container>
 
-          <md-input-container flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
             <label class="textInput">{{'report.studentGroupTeacher.studyPeriod' | translate}}</label>
             <md-select ng-model="formState.studyPeriod" ng-change="studyPeriodChanged()" ng-model-options="{trackBy: '$value.id'}">
               <md-option md-option-empty></md-option>
@@ -18,11 +18,23 @@
               </md-option>
             </md-select>
           </md-input-container>
+        </div>
 
-          <hois-autocomplete flex="30" flex-offset="5" flex-sm="100" flex-xs="100" ng-model="formState.studentGroup"
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <hois-autocomplete flex="45" flex-sm="100" flex-xs="100" ng-model="formState.studentGroup"
             ha-controller="directiveControllers" md-selected-item-change="studentGroupChanged()" method="studentgroups" name="studentGroup"
             label="{{'report.studentGroupTeacher.studentGroup'}}" additional-query-params="{valid: true, higher: false, studentGroupTeacherId: teacherId}" required></hois-autocomplete>
-        </div>
+
+          
+          <md-input-container ng-if="!criteria.studentGroup" flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+            <label>{{'report.studentGroupTeacher.student' | translate}}</label>
+            <input ng-model="formState.student" disabled>
+          </md-input-container>
+
+          <hois-autocomplete ng-if="criteria.studentGroup" flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0" 
+            ng-model="formState.student" ha-controller="directiveControllers" md-selected-item-change="studentChanged()" method="students" name="student" 
+            label="{{'report.studentGroupTeacher.student'}}" additional-query-params="{studentGroup: [criteria.studentGroup]}"></hois-autocomplete>
+        </div>        
 
         <div layout="row">
           <md-input-container>
@@ -78,8 +90,8 @@
     </div>
   </div>
   <div flex class="student-group-teacher-container">
-    <div class="container" fixed-column-table fixed-columns="1" ng-style="{height: (record.students.length > 15) ? 15*32 + 165 + 'px' : record.students.length * 32 + 165 + 'px'}">
-      <table ng-if="record.moduleTypes.length > 0" class="student-group-teacher-table">
+    <div class="container" fixed-column-table fixed-columns="1" ng-style="{height: windowHeight() - 500 + 'px'}">
+      <table ng-if="record.moduleTypes.length > 0" class="tertiary-table student-group-teacher-table">
         <thead>
           <tr>
             <th></th>

@@ -1,44 +1,31 @@
 package ee.hitsa.ois.web.commandobject;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
-import javax.validation.constraints.DecimalMax;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import ee.hitsa.ois.validation.ContractValidation;
+import org.hibernate.validator.constraints.NotEmpty;
+
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ContractSupervisorDto;
 
 @DateRange(from = "startDate", thru = "endDate")
 public class ContractForm extends VersionedCommand {
 
     @NotNull
     private AutocompleteResult student;
-    @NotNull(groups = ContractValidation.Vocational.class)
-    private Long module;
-    private Long theme;
-    @NotNull
-    @DecimalMin("0")
-    @DecimalMax("999.9")
-    private BigDecimal credits;
-    @NotNull
-    @Min(0)
-    @Max(Short.MAX_VALUE)
-    private Short hours;
     @NotNull
     private LocalDate startDate;
     @NotNull
     private LocalDate endDate;
-    @NotNull
     @Size(max = 255)
     private String practicePlace;
     @NotNull
-    private Long enterprise;
+    private AutocompleteResult enterprise;
     @NotNull
     @Size(max = 100)
     private String contactPersonName;
@@ -48,14 +35,6 @@ public class ContractForm extends VersionedCommand {
     @Size(max = 100)
     private String contactPersonEmail;
     @NotNull
-    @Size(max = 100)
-    private String supervisorName;
-    @Size(max = 100)
-    private String supervisorPhone;
-    @NotNull
-    @Size(max = 100)
-    private String supervisorEmail;
-    @NotNull
     private Long teacher;
     @Size(max = 255)
     private String otherSupervisor;
@@ -64,10 +43,19 @@ public class ContractForm extends VersionedCommand {
     @NotNull
     @Size(max = 20000)
     private String practicePlan;
-    @NotNull(groups = ContractValidation.Higher.class)
-    private Long subject;
     private Boolean isHigher;
     private Boolean isPracticeAbsence;
+    private Boolean isPracticeHidden;
+    private Boolean isPracticeSchool;
+    private Boolean isPracticeTelework;
+    private Boolean isPracticeEnterprise;
+    private Boolean isPracticeOther;
+    private Long practiceEvaluation;
+    private Long practiceApplication;
+    private List<ContractSupervisorDto> supervisors;
+    @NotEmpty
+    @Valid
+    private List<ContractModuleSubjectForm> moduleSubjects;
 
     public AutocompleteResult getStudent() {
         return student;
@@ -75,38 +63,6 @@ public class ContractForm extends VersionedCommand {
 
     public void setStudent(AutocompleteResult student) {
         this.student = student;
-    }
-
-    public Long getModule() {
-        return module;
-    }
-
-    public void setModule(Long module) {
-        this.module = module;
-    }
-
-    public Long getTheme() {
-        return theme;
-    }
-
-    public void setTheme(Long theme) {
-        this.theme = theme;
-    }
-
-    public BigDecimal getCredits() {
-        return credits;
-    }
-
-    public void setCredits(BigDecimal credits) {
-        this.credits = credits;
-    }
-
-    public Short getHours() {
-        return hours;
-    }
-
-    public void setHours(Short hours) {
-        this.hours = hours;
     }
 
     public LocalDate getStartDate() {
@@ -133,11 +89,11 @@ public class ContractForm extends VersionedCommand {
         this.practicePlace = practicePlace;
     }
 
-    public Long getEnterprise() {
+    public AutocompleteResult getEnterprise() {
         return enterprise;
     }
 
-    public void setEnterprise(Long enterprise) {
+    public void setEnterprise(AutocompleteResult enterprise) {
         this.enterprise = enterprise;
     }
 
@@ -163,30 +119,6 @@ public class ContractForm extends VersionedCommand {
 
     public void setContactPersonEmail(String contactPersonEmail) {
         this.contactPersonEmail = contactPersonEmail;
-    }
-
-    public String getSupervisorName() {
-        return supervisorName;
-    }
-
-    public void setSupervisorName(String supervisorName) {
-        this.supervisorName = supervisorName;
-    }
-
-    public String getSupervisorPhone() {
-        return supervisorPhone;
-    }
-
-    public void setSupervisorPhone(String supervisorPhone) {
-        this.supervisorPhone = supervisorPhone;
-    }
-
-    public String getSupervisorEmail() {
-        return supervisorEmail;
-    }
-
-    public void setSupervisorEmail(String supervisorEmail) {
-        this.supervisorEmail = supervisorEmail;
     }
 
     public Long getTeacher() {
@@ -221,14 +153,6 @@ public class ContractForm extends VersionedCommand {
         this.practicePlan = practicePlan;
     }
 
-    public Long getSubject() {
-        return subject;
-    }
-
-    public void setSubject(Long subject) {
-        this.subject = subject;
-    }
-
     public Boolean getIsHigher() {
         return isHigher;
     }
@@ -243,6 +167,78 @@ public class ContractForm extends VersionedCommand {
 
     public void setIsPracticeAbsence(Boolean isPracticeAbsence) {
         this.isPracticeAbsence = isPracticeAbsence;
+    }
+
+    public Boolean getIsPracticeHidden() {
+        return isPracticeHidden;
+    }
+
+    public void setIsPracticeHidden(Boolean isPracticeHidden) {
+        this.isPracticeHidden = isPracticeHidden;
+    }
+
+    public Long getPracticeApplication() {
+        return practiceApplication;
+    }
+
+    public void setPracticeApplication(Long practiceApplication) {
+        this.practiceApplication = practiceApplication;
+    }
+
+    public Boolean getIsPracticeSchool() {
+        return isPracticeSchool;
+    }
+
+    public void setIsPracticeSchool(Boolean isPracticeSchool) {
+        this.isPracticeSchool = isPracticeSchool;
+    }
+
+    public Boolean getIsPracticeTelework() {
+        return isPracticeTelework;
+    }
+
+    public void setIsPracticeTelework(Boolean isPracticeTelework) {
+        this.isPracticeTelework = isPracticeTelework;
+    }
+
+    public Boolean getIsPracticeEnterprise() {
+        return isPracticeEnterprise;
+    }
+
+    public void setIsPracticeEnterprise(Boolean isPracticeEnterprise) {
+        this.isPracticeEnterprise = isPracticeEnterprise;
+    }
+
+    public Boolean getIsPracticeOther() {
+        return isPracticeOther;
+    }
+
+    public void setIsPracticeOther(Boolean isPracticeOther) {
+        this.isPracticeOther = isPracticeOther;
+    }
+
+    public List<ContractSupervisorDto> getSupervisors() {
+        return supervisors;
+    }
+
+    public void setSupervisors(List<ContractSupervisorDto> supervisors) {
+        this.supervisors = supervisors;
+    }
+
+    public List<ContractModuleSubjectForm> getModuleSubjects() {
+        return moduleSubjects;
+    }
+
+    public void setModuleSubjects(List<ContractModuleSubjectForm> moduleSubjects) {
+        this.moduleSubjects = moduleSubjects;
+    }
+
+    public Long getPracticeEvaluation() {
+        return practiceEvaluation;
+    }
+
+    public void setPracticeEvaluation(Long practiceEvaluation) {
+        this.practiceEvaluation = practiceEvaluation;
     }
 
 }

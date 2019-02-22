@@ -5,6 +5,7 @@ import javax.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.enums.SubjectProgramStatus;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -16,7 +17,46 @@ public class SubjectProgramUtil {
     @Autowired
     private EntityManager em;
 
+    public boolean hasConnection(SubjectProgram program, Subject subject) {
+        return !em.createNativeQuery("select sp.id " + 
+            "from subject_program sp " + 
+            "join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id " + 
+            "join subject_study_period ssp on ssp.id = sspt.subject_study_period_id " + 
+            "where sp.id = ?1 and ssp.subject_id = ?2")
+        .setParameter(1, program.getId()).setParameter(2, subject.getId()).getResultList().isEmpty();
+    }
+
     public boolean canView(HoisUserDetails user, SubjectProgram program) {
+        boolean isConfirmed = ClassifierUtil.equals(SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, program.getStatus());
+        if (isConfirmed && Boolean.TRUE.equals(program.getPublicAll())) {
+            return true;
+        }
+        if (isConfirmed && Boolean.TRUE.equals(program.getPublicHois())) {
+            return user != null;
+        } else if (user == null) {
+            return false;
+        }
+        if (isConfirmed && Boolean.TRUE.equals(program.getPublicStudent())) {
+            if (user.isStudent()) {
+                return !em.createNativeQuery("select sp.id"
+                        + "from subject_program sp "
+                        + "join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id "
+                        + "join declaration_subject ds on ds.subject_study_period_id = sspt.subject_study_period_id "
+                        + "join declaration d on d.id = ds.declaration_id "
+                        + "where d.student_id = ?1 and sp.id = ?2")
+                    .setParameter(1, user.getStudentId()).setParameter(2, program.getId()).getResultList().isEmpty();
+            }
+        }
+        if (user.isSchoolAdmin()) {
+            return !em.createNativeQuery("select sp.id " + 
+                    "from subject_program sp " + 
+                    "join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id " + 
+                    "join subject_study_period ssp on ssp.id = sspt.subject_study_period_id " + 
+                    "join subject s on s.id = ssp.subject_id " + 
+                    "where sp.id = ?1 and s.school_id = ?2")
+                .setParameter(1, program.getId()).setParameter(2, user.getSchoolId()).getResultList().isEmpty();
+        }
+        
         if (!user.isTeacher()) {
             return false;
         }
@@ -91,7 +131,7 @@ public class SubjectProgramUtil {
     }
 
     public boolean canSearch(HoisUserDetails user) {
-        if (!user.isTeacher()) {
+        if (!user.isTeacher() && !user.isSchoolAdmin()) {
             return false;
         }
         return true;

@@ -24,7 +24,7 @@ function ($scope, QueryUtils, Classifier, dialogService, oisFileService, config,
         dialogService.hide();
         doImport(file);
       });
-    });
+    }); 
   };
 
   $scope.csvSampleFileUrl = config.apiUrl + '/saisApplications/sample.csv';

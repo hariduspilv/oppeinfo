@@ -87,6 +87,14 @@ angular.module('hitsaOis')
                 lookup.query(query, function (data) {
                   deferred.resolve(data);
                 });
+              } else if(url === '/autocomplete/enterprises') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else if(url === '/autocomplete/activeEnterprises') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
               } else if(url === '/autocomplete/journals') {
                 lookup.query(query, function (data) {
                   deferred.resolve(data);
@@ -228,7 +236,9 @@ angular.module('hitsaOis')
             scope.$watch('ngModel', function (newValue, oldValue) {
               if (newValue !== oldValue && !equals(newValue, scope.ngHolder)) {
                 if (angular.isDefined(scope.haAttribute)) {
-                  if (newValue.hasOwnProperty(scope.haAttribute)) {
+                  if (newValue === undefined || newValue === null) {
+                    scope.ngHolder = newValue;
+                  } else if (newValue.hasOwnProperty(scope.haAttribute)) {
                     scope.ngHolder = newValue;
                   }
                 } else {

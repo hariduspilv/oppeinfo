@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.curriculum;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +12,7 @@ import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -123,6 +125,11 @@ public class CurriculumVersionHigherModuleController {
                 EntityUtil.getId(version.getCurriculum().getSchool()));
         classifiers.addAll(otherTypes);
         return classifiers;
+    }
+    
+    @GetMapping("/curriculumYears/{id:\\d+}")
+    public SimpleEntry<String, Short> getCurriculumStudyYears(@PathVariable("id") Long curriculumId) {
+        return new SimpleEntry<>("years", curriculumVersionHigherModuleService.getCurriculumStudyYears(curriculumId));
     }
 
     @GetMapping("/version/{id:\\d+}/specialities")

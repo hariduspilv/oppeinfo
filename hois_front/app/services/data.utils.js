@@ -153,6 +153,16 @@ angular.module('hitsaOis').factory('DataUtils',
         return Math.round((hours / HOURS_PER_CREDIT_POINT) * 10) / 10;
       },
 
+      getAstronomicalHours: function (academicHours) {
+        if (!angular.isNumber(academicHours)) {
+          return '-';
+        }
+        var total = academicHours * 3 / 4;
+        var hours = Math.floor(total);
+        var minutes = (total - hours) * 60;
+        return hours + 't' + (minutes ? (' ' + minutes + 'min') : '');
+      },
+
       isSameDay: function(date1, date2) {
         return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && 
           date1.getDate() === date2.getDate();

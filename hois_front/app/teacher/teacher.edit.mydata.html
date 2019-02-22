@@ -3,7 +3,7 @@
       {{'teacher.data' | translate}}</md-nav-item>
   <md-nav-item ng-if="auth.isTeacher()" md-nav-href="#/teachers/{{::teacher.id}}/editmydata?_noback" name="teacher.data">
       {{'teacher.data' | translate}}</md-nav-item>
-  <md-nav-item ng-if="(auth.isAdmin() && teacher.id && teacher.isVocational) || (auth.isTeacher() && !teacher.isHigher)" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation?_noback" name="teacher.continuingEducation">
+  <md-nav-item ng-if="(auth.isAdmin() && teacher.id && teacher.isVocational) || (auth.isTeacher() && teacher.isVocational)" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation?_noback" name="teacher.continuingEducation">
       {{'teacher.continuingEducation.label' | translate}}</md-nav-item>
   <md-nav-item ng-if="(auth.isAdmin() && teacher.id) || (teacher.teacherQualifications.length > 0 && auth.isTeacher())" md-nav-href="#/teachers/{{::teacher.id}}/qualification?_noback" name="teacher.qualification">
       {{'teacher.qualification.qualification' | translate}}</md-nav-item>
@@ -11,6 +11,8 @@
       {{'teacher.mobility.mobility' | translate}}</md-nav-item>
   <md-nav-item ng-if="(auth.isAdmin() && teacher.id) || auth.isTeacher()" md-nav-href="#/teachers/{{::teacher.id}}/rtipAbsence?_noback" name="teacher.rtipAbsence">
       {{'teacher.rtipAbsence.label' | translate}}</md-nav-item>
+  <md-nav-item ng-if="((auth.isAdmin() && teacher.id) || auth.isTeacher()) && teacher.isHigher" md-nav-href="#/teachers/{{::teacher.id}}/programs?_noback" name="teacher.programs">
+      {{'teacher.subjectPrograms.label' | translate}}</md-nav-item>
 </md-nav-bar>
     <md-content class="md-padding">
       <form name="teacherForm" role="form" class="form-readonly" novalidate>

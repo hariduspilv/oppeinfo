@@ -9,7 +9,7 @@
             <hois-select ng-model="criteria.studyYear" values="studyYears" required></hois-select>
           </md-input-container>
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <hois-autocomplete label="journal.label" ng-model="criteria.journalObject" method="journals" 
+            <hois-autocomplete label="journal.label" ng-model="criteria.journalObject" ha-controller="directiveControllers" method="journals" 
               additional-query-params="{studyYear: criteria.studyYear}"></hois-autocomplete>
           </div>
         </div>

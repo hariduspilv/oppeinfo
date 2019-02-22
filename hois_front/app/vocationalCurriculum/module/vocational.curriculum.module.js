@@ -226,6 +226,16 @@ angular.module('hitsaOis')
       });
     };
     
+    $scope.$watch('module.module', function(newValue, oldValue) {
+      if (newValue !== oldValue && angular.isDefined($scope.curriculum) && $scope.curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_RIIKLIK') {
+        if (oldValue === 'KUTSEMOODUL_Y' || oldValue === 'KUTSEMOODUL_P' ||
+          ($scope.module.id && !$scope.module.basicDataCanBeEdited && oldValue === 'KUTSEMOODUL_L')) {
+          dialogService.confirmDialog({prompt: 'curriculum.prompt.confirmModuleTypeChange'}, function() {}, function() {
+            $scope.module.module = oldValue;
+          });
+        }
+      }
+    });
     
 
     /****************

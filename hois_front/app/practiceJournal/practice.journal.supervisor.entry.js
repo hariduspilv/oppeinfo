@@ -20,6 +20,8 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
     entityToForm(entity);
   }
 
+  $scope.getAstronomicalHours = DataUtils.getAstronomicalHours;
+
   $scope.openAddFileDialog = function () {
     dialogService.showDialog('practiceJournal/practice.journal.entry.add.file.dialog.html', function (dialogScope) {
       dialogScope.addedFiles = $scope.practiceJournal.practiceJournalFiles;

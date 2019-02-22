@@ -5,13 +5,13 @@
             <div layout="column">
               <div ng-repeat="item in module.curriculumOccupations | orderBy: 'occupation'">
                   <md-checkbox ng-model="occupationsSelected[item.occupation]" disabled>
-                <hois-classifier-value ng-model="item.occupation" main-classifier-codes="KUTSE,OSAKUTSE" class="inline"></hois-classifier-value>
+                <hois-classifier-value ng-model="item.occupation" main-classifier-codes="KUTSE,OSAKUTSE" class="inline" show-date></hois-classifier-value>
               </md-checkbox>
               <div layout="column">
                 <div ng-repeat="partOccupation in item.partOccupations | orderBy" flex layout="row">
                   <div flex="5">&nbsp;</div>
                   <md-checkbox ng-model="occupationsSelected[partOccupation]" disabled>
-                    <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE" class="inline"></hois-classifier-value>
+                    <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE" class="inline" show-date></hois-classifier-value>
                   </md-checkbox>
                 </div>
               </div>
@@ -20,7 +20,7 @@
                 <div ng-repeat="speciality in item.specialities | orderBy" layout="row">
                   <div flex="5">&nbsp;</div>
                   <md-checkbox ng-model="specialitiesSelected[speciality]" disabled>
-                    <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE" class="inline"></hois-classifier-value>
+                    <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE" class="inline" show-date></hois-classifier-value>
                   </md-checkbox>
                 </div>
               </div>

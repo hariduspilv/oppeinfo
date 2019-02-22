@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Contract;
+import ee.hitsa.ois.domain.ContractSupervisor;
 import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.service.ContractService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -29,6 +30,7 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.ContractCancelForm;
 import ee.hitsa.ois.web.commandobject.ContractForm;
 import ee.hitsa.ois.web.commandobject.ContractSearchCommand;
 import ee.hitsa.ois.web.dto.ContractDto;
@@ -81,6 +83,17 @@ public class ContractController {
         }
         return get(user, contractService.save(contract, contractForm));
     }
+    
+    @PutMapping("/cancel/{id:\\d+}")
+    public ContractDto cancel(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) Contract contract,
+            @Valid @RequestBody ContractCancelForm contractForm) {
+        UserUtil.assertIsSchoolAdmin(user);
+        if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_K, contract.getStatus()) && !ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_Y, contract.getStatus())) {
+            throw new ValidationFailedException("contract.messages.updatingOnlyAllowedForStatusKandY");
+        }
+        return get(user, contractService.cancel(user, contract, contractForm));
+    }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user,
@@ -112,6 +125,12 @@ public class ContractController {
     public Map<String, ?> checkForEkis(HoisUserDetails user, @PathVariable("id") Long contractId) {
         UserUtil.assertIsSchoolAdmin(user);
         return contractService.checkForEkis(user, contractId);
+    }
+    
+    @PutMapping("/sendEmail/{id:\\d+}")
+    public void sendEmail(HoisUserDetails user, @WithEntity ContractSupervisor supervisor) {
+        UserUtil.assertIsSchoolAdmin(user);
+        contractService.sendUniqueUrlEmailToEnterpriseSupervisor(user, supervisor);
     }
 
     @PostMapping("/sendToEkis/{id:\\d+}")

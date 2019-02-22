@@ -2,7 +2,6 @@ package ee.hitsa.ois.web.dto;
 
 import ee.hitsa.ois.domain.Building;
 import ee.hitsa.ois.domain.Committee;
-import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
@@ -20,6 +19,8 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
+import ee.hitsa.ois.domain.enterprise.Enterprise;
+import ee.hitsa.ois.domain.enterprise.PracticeEvaluation;
 import ee.hitsa.ois.domain.sais.SaisAdmission;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
@@ -28,6 +29,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.studymaterial.StudyMaterial;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
 import ee.hitsa.ois.domain.timetable.Journal;
@@ -197,6 +199,11 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
         String code = studentGroup.getCode();
         return new AutocompleteResult(studentGroup.getId(), code, code);
     }
+    
+    public static AutocompleteResult of(PracticeEvaluation evaluation) {
+        String name = evaluation.getNameEt();
+        return new AutocompleteResult(evaluation.getId(), name, name);
+    }
 
     public static AutocompleteResult of(StudyMaterial studyMaterial) {
         String name = studyMaterial.getNameEt();
@@ -222,6 +229,12 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
 
     public static AutocompleteResult of(SubjectSearchDto subject) {
         return new AutocompleteResult(subject.getId(), SubjectUtil.subjectName(subject.getCode(), subject.getNameEt(), subject.getCredits()), SubjectUtil.subjectName(subject.getCode(), subject.getNameEn(), subject.getCredits()));
+    }
+    
+    public static AutocompleteResult of(SubjectProgram program) {
+        // TODO: What should be a name for Subject Program?
+        return new SubjectProgramResult(program.getId(), null, null, program.getSubjectStudyPeriodTeacher().getTeacher().getPerson().getFullname(),
+                program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getStudyPeriod(), program.getStatus().getCode());
     }
 
     public static AutocompleteResult of(Teacher teacher) {

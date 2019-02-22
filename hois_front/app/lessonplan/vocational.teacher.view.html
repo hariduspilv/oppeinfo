@@ -49,8 +49,8 @@
         <tr ng-repeat="ct in getCapacityTypes(journal.hours)" ng-if="formState.showCapacityTypes">
           <td rowspan="{{::keys(journal.hours).length+1}}" ng-if="$first">
             <div layout="column">
-              <div>
-                <span style="float:left">
+              <div layout="row" layout-align="space-around center">
+                <span>
                   <span ng-repeat="studentGroup in journal.studentGroups">
                     <br ng-if="!$first"> {{studentGroup}}
                     <br ng-if="$last">
@@ -60,12 +60,12 @@
                   <span ng-repeat="teacher in journal.teachers">
                     <br ng-if="!$first"> {{teacher.teacher.nameEt}}
                   </span>
+                  <br>
+                  <div ng-if="journal.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'" layout="row">
+                    <label>{{'lessonplan.journal.groupProportion' | translate}} &nbsp;</label>
+                    <hois-classifier-value ng-model="journal.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
+                  </div>
                 </span>
-              </div>
-              <br>
-              <div ng-if="journal.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'" layout="row">
-                <label>{{'lessonplan.journal.groupProportion' | translate}} &nbsp;</label>
-                <hois-classifier-value ng-model="journal.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
               </div>
             </div>
           </td>

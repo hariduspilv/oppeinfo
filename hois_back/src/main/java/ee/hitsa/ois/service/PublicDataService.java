@@ -21,6 +21,7 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
@@ -125,7 +126,7 @@ public class PublicDataService {
 
     public SubjectDto subjectView(Subject subject) {
         assertVisibleToPublic(subject);
-        return SubjectDto.of(subject, em.createQuery("select cvms.module.curriculumVersion from CurriculumVersionHigherModuleSubject cvms"
+        return SubjectDto.forPublic(subject, em.createQuery("select cvms.module.curriculumVersion from CurriculumVersionHigherModuleSubject cvms"
                 + " where cvms.subject.id = ?1 and cvms.module.curriculumVersion.status.code = ?2", CurriculumVersion.class)
                 .setParameter(1, subject.getId())
                 .setParameter(2, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K.name())
@@ -136,6 +137,10 @@ public class PublicDataService {
         if(!ClassifierUtil.equals(SubjectStatus.AINESTAATUS_K, subject.getStatus())) {
             throw new EntityNotFoundException();
         }
+    }
+
+    public Object subjectProgram(SubjectProgram program) {
+        return new PublicDataMapper(Language.ET).map(program);
     }
 
 }

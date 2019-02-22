@@ -19,7 +19,7 @@
                 <label class="textInput">{{'subjectStudyPeriodPlan.curriculum' | translate}}</label>
                 <hois-select ng-model="criteria.curriculum" values="curriculums"></hois-select>
             </md-input-container>
-            <hois-autocomplete ng-model="criteria.subjectObject" url="/subjectStudyPeriodPlans/subjects" name="subject"
+            <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.subjectObject" url="/subjectStudyPeriodPlans/subjects" name="subject"
                     label="subjectStudyPeriodPlan.subject"
                     additional-query-params="subjectQueryParams"></hois-autocomplete>
             <div layout="row">

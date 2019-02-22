@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,6 +23,7 @@ public class JournalXlsDto extends JournalDto {
     private List<JournalEntryDto> journalEntries = new ArrayList<>();
     private List<JournalStudentDto> journalStudents = new ArrayList<>();
     private List<JournalEntryByDateXlsDto> journalEntriesByDate = new ArrayList<>();
+    private LocalDate journalEndResultDate;
     private List<JournalEntryByDateXlsDto> journalEndResults = new ArrayList<>();
 
     public static JournalXlsDto of(Journal journal) {
@@ -92,6 +94,10 @@ public class JournalXlsDto extends JournalDto {
             }
         }
 
+        if (!dto.getJournalEndResults().isEmpty()) {
+            dto.setJournalEndResultDate(dto.getJournalEndResults().get(0).getEntryDate());
+        }
+
         Collections.sort(dto.getJournalEntries(),
                 Comparator.comparing(JournalEntryDto::getEntryDate, Comparator.nullsLast(Comparator.reverseOrder())));
         
@@ -142,6 +148,14 @@ public class JournalXlsDto extends JournalDto {
 
     public void setJournalEntriesByDate(List<JournalEntryByDateXlsDto> journalEntriesByDate) {
         this.journalEntriesByDate = journalEntriesByDate;
+    }
+
+    public LocalDate getJournalEndResultDate() {
+        return journalEndResultDate;
+    }
+
+    public void setJournalEndResultDate(LocalDate journalEndResultDate) {
+        this.journalEndResultDate = journalEndResultDate;
     }
 
     public List<JournalEntryByDateXlsDto> getJournalEndResults() {

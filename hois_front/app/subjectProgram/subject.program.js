@@ -5,19 +5,22 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
   
   var formTypes = Object.freeze({
     periods: "periods",
-    programs: "programs"
+    programs: "programs",
+    teachers: "teachers",
+    public: "public"
   });
 
   var subjectId = $route.current.params.subjectId;
   var subjectStudyPeriodId = $route.current.params.subjectStudyPeriodId;
-  var formType = formTypes[$route.current.params.form]; // Used to understand from where did user come.
+  var formType = formTypes[$route.current.params.form || ($route.current.locals.params ? $route.current.locals.params.form : undefined)]; // Used to understand from where did user come.
   if (angular.isUndefined(formType)) {
     message.error('main.messages.error.nopermission');
     $location.path('/');
   }
+  $scope.isPublic = formType === formTypes.public;
   var subjectProgramId = $route.current.params.subjectProgramId;
   var baseUrl = "/subject/subjectProgram";
-  var Endpoint = QueryUtils.endpoint(baseUrl);
+  var Endpoint = QueryUtils.endpoint("/" + ($scope.isPublic ? "public" : "subject") + "/subjectProgram");
   var initial = {
     studyContentType: 'OPPETOOSISU_T',
     status: 'AINEPROGRAMM_STAATUS_L'
@@ -27,15 +30,20 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     return url && url.indexOf("new") !== -1;
   });
 
+  $scope.auth = $route.current.locals.auth;
   $scope.selectedSubjectProgram = undefined;
-  $scope.subjectPrograms = QueryUtils.endpoint(baseUrl + "/teacher/" + subjectId).query();
 
   $scope.studyContentWk = [];
   $scope.studyContentDt = [];
-  $scope.userTeacherId = $route.current.locals.auth.teacher;
+  $scope.userTeacherId = $scope.auth ? $scope.auth.teacher : undefined;
   $scope.isSupervisor = false;
 
-  $scope.subject = QueryUtils.endpoint(baseUrl + "/subject").get({id: subjectId});
+  function getAdditionalData(sId, pId) {
+    $scope.subject = QueryUtils.endpoint(($scope.isPublic ? "/public/subject/view" : baseUrl + "/subject")).get({id: sId, program: pId});
+    if ($scope.auth && $scope.auth.isTeacher()) {
+      $scope.subjectPrograms = QueryUtils.endpoint(baseUrl + "/teacher/" + sId).query();
+    }
+  }
 
   function get() {
     if (subjectProgramId) {
@@ -45,9 +53,18 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
         } else {
           $scope.subjectProgram = Endpoint.get({id: subjectProgramId}, dtoToModel);
         }
+        $scope.subjectProgram.$promise.then(function(response) {
+          subjectId = response.subjectId;
+          getAdditionalData(subjectId, $scope.subjectProgram.id);
+        }).catch(function() {
+          $scope.back($scope.getDefaultBack());
+        });
       });
     } else {
       $scope.subjectProgram = new Endpoint(initial);
+    }
+    if (subjectId) {
+      getAdditionalData(subjectId);
     }
   }
 
@@ -62,7 +79,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
   function create() {
     $scope.subjectProgram.$save().then(function (response) {
       message.info("main.messages.create.success");
-      $location.url("/subjectProgram/" + subjectId + "/" + subjectStudyPeriodId + "/" + formType + "/" + response.id + "/edit");
+      $location.url("/subjectProgram/" + formType + "/" + response.id + "/edit");
     });
   }
 
@@ -92,12 +109,14 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
         return w1.weekNr - w2.weekNr;
       });
     }
-    $scope.isSupervisor = ArrayUtils.includes(response.supervisorIds, $scope.userTeacherId);
+    $scope.isSupervisor = ArrayUtils.includes(response.supervisorIds || [], $scope.userTeacherId);
   }
 
   function modelToDto() {
-    $scope.subjectProgram.subjectId = subjectId;
-    $scope.subjectProgram.subjectStudyPeriodId = subjectStudyPeriodId;
+    if (!$scope.subjectProgram.id) {
+      $scope.subjectProgram.subjectId = subjectId;
+      $scope.subjectProgram.subjectStudyPeriodId = subjectStudyPeriodId;
+    }
     if ($scope.subjectProgram.studyContentType === 'OPPETOOSISU_K') {
       $scope.subjectProgram.studyDescription = null;
       $scope.studyContentWk = [];
@@ -172,16 +191,19 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
   };
 
   $scope.pdfUrl = function () {
+    if ($scope.isPublic) {
+      return config.apiUrl + '/public/print/subjectProgram/' + $scope.subjectProgram.id + "/program.pdf";
+    }
     return config.apiUrl + baseUrl + "/print/" + $scope.subjectProgram.id + "/program.pdf";
   };
 
   $scope.edit = function () {
     if ($scope.subjectProgram.status !== 'AINEPROGRAMM_STAATUS_I') {
       dialogService.confirmDialog({prompt: 'subjectProgram.messages.editAccept'}, function() {
-        $location.url("/subjectProgram/" + subjectId + "/" + subjectStudyPeriodId + "/" + formType + "/" + subjectProgramId + "/edit");
+        $location.url("/subjectProgram/" + formType + "/" + subjectProgramId + "/edit");
       });
     } else {
-      $location.url("/subjectProgram/" + subjectId + "/" + subjectStudyPeriodId + "/" + formType + "/" + subjectProgramId + "/edit");
+      $location.url("/subjectProgram/" + formType + "/" + subjectProgramId + "/edit");
     }
   };
 
@@ -189,7 +211,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     dialogService.confirmDialog({prompt: 'subjectProgram.operation.complete.message'}, function() {
       QueryUtils.endpoint(baseUrl + "/complete").get({id: $scope.subjectProgram.id}).$promise.then(function () {
         message.info('subjectProgram.operation.complete.success');
-        $location.url("/subjectProgram/" + subjectId + "/" + subjectStudyPeriodId + "/" + formType + "/" + $scope.subjectProgram.id + "/view?_noback");
+        $location.url("/subjectProgram/" + formType + "/" + $scope.subjectProgram.id + "/view?_noback");
       });
     });
   };
@@ -247,24 +269,45 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
   $scope.getDefaultBack = function () {
     if (formType === formTypes.programs) {
       return "#/subjectProgram";
+    } else if (formType === formTypes.periods && ($scope.auth.isAdmin() || $scope.auth.isTeacher())) {
+      return "#/subjectStudyPeriods";
+    } else if (formType === formTypes.teachers && angular.isDefined($scope.subjectProgram) && angular.isDefined($scope.subjectProgram.subjectStudyPeriodTeacher)) {
+      return "#/teachers/" + ($scope.auth.isTeacher() ? "myData" : $scope.subjectProgram.subjectStudyPeriodTeacher.teacherId);
     }
-    return "#/subjectStudyPeriods";
+    return "#/";
   };
 
   get();
-}]).controller('SubjectProgramSearch', ['$scope', 'QueryUtils', '$route', 'DataUtils', 'Classifier', 'message',
-function ($scope, QueryUtils, $route, DataUtils, Classifier, message) {
+}]).controller('SubjectProgramSearch', ['$scope', 'QueryUtils', '$route', 'DataUtils', 'Classifier', 'message', '$q',
+function ($scope, QueryUtils, $route, DataUtils, Classifier, message, $q) {
+  $scope.myData = $route.current.locals.params.myData;
+
   var baseUrl = '/subject/subjectProgram';
-  QueryUtils.createQueryForm($scope, baseUrl);
+  QueryUtils.createQueryForm($scope, baseUrl + ($scope.myData ? '/myPrograms' : ''));
 
   $scope.auth = $route.current.locals.auth;
-  if (angular.isUndefined($scope.criteria.status)) {
+  if (angular.isUndefined($scope.criteria.status) && !$scope.myData) {
     $scope.criteria.status = 'AINEPROGRAMM_STAATUS_V';
   }
-  
+
   var autocompleteTeacher = QueryUtils.endpoint("/autocomplete/teachersList");
   var autocompleteStudyPeriod = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear');
-  var subjectsQuery = QueryUtils.endpoint(baseUrl + "/subjects");
+  var deferred = $q.defer();
+
+  if ($scope.auth.isAdmin() && $scope.myData && $scope.teacher) {
+    $scope.teacher.$promise.then(function (response) {
+      $scope.criteria.teacher = { id: response.id };
+      QueryUtils.endpoint(baseUrl + ($scope.myData ? "/program" : "/curriculum") + "/subjects" + "?teacher=" + response.id).query({}, function (response) {
+        $scope.subjects = response;
+        deferred.resolve(response);
+      });
+    });
+  } else {
+    QueryUtils.endpoint(baseUrl + ($scope.myData ? "/program" : "/curriculum") + "/subjects").query({}, function (response) {
+      $scope.subjects = response;
+      deferred.resolve(response);
+    });
+  }
 
   function preselectCurrentStudyYearOrPeriod() {
     if (!$scope.criteria.studyPeriod) {
@@ -277,8 +320,10 @@ function ($scope, QueryUtils, $route, DataUtils, Classifier, message) {
 
   function afterStudyPeriodsWithYearLoad() {
     preselectCurrentStudyYearOrPeriod();
-    $scope.subjects.$promise.then(function () {
-      $scope.loadData();
+    deferred.promise.then(function () {
+      if (!$scope.myData) {
+        $scope.loadData();
+      }
     });
     $scope.studyPeriods.forEach(function (studyPeriod) {
       studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + 
@@ -287,7 +332,6 @@ function ($scope, QueryUtils, $route, DataUtils, Classifier, message) {
   }
 
   $scope.studyPeriods = autocompleteStudyPeriod.query(afterStudyPeriodsWithYearLoad);
-  $scope.subjects = subjectsQuery.query();
 
   Classifier.queryForDropdown({mainClassCode: 'AINEPROGRAMM_STAATUS'}, function(response) {
       $scope.statusOptions = Classifier.toMap(response);
@@ -306,11 +350,10 @@ function ($scope, QueryUtils, $route, DataUtils, Classifier, message) {
   $scope.clearCriteriaBefore = function () {
     $scope.clearCriteria();
     preselectCurrentStudyYearOrPeriod();
-    $scope.criteria.status = 'AINEPROGRAMM_STAATUS_V';
   };
 
   $scope.load = function() {
-    if (!$scope.searchForm.$valid) {
+    if (!$scope.searchController.searchForm.$valid) {
       message.error('main.messages.form-has-errors');
       return false;
     } else {

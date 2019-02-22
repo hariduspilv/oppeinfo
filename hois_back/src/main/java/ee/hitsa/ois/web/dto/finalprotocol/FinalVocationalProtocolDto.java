@@ -57,7 +57,7 @@ public class FinalVocationalProtocolDto extends VersionedCommand {
                 dto.getOccupations()
                         .add(new FinalProtocolOccupationDto(oc.getId(), EntityUtil.getCode(oc.getOccupation()),
                                 oc.getOccupation().getNameEt(), oc.getOccupation().getNameEn(),
-                                oc.getOccupationGrant()));
+                                oc.getOccupationGrant(), oc.getOccupation().getValidFrom(), oc.getOccupation().getValidThru()));
             });
         }
         if (protocol.getOisFile() != null) {

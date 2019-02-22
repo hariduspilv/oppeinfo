@@ -32,6 +32,10 @@ public class PracticeJournal extends BaseEntityWithId {
     @JoinColumn(name = "practice_journal_id", nullable = false, updatable = false)
     private Set<PracticeJournalFile> practiceJournalFiles = new HashSet<>();
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "practice_journal_id", nullable = false, updatable = false)
+    private Set<PracticeJournalModuleSubject> moduleSubjects = new HashSet<>();
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private School school;
@@ -68,7 +72,6 @@ public class PracticeJournal extends BaseEntityWithId {
     @Column(nullable = false)
     private LocalDate endDate;
 
-    @Column(nullable = false)
     private String practicePlace;
 
     @Column(nullable = false)
@@ -111,6 +114,14 @@ public class PracticeJournal extends BaseEntityWithId {
 
     public void setPracticeJournalFiles(Set<PracticeJournalFile> practiceJournalFiles) {
         this.practiceJournalFiles = practiceJournalFiles;
+    }
+
+    public Set<PracticeJournalModuleSubject> getModuleSubjects() {
+        return moduleSubjects;
+    }
+
+    public void setModuleSubjects(Set<PracticeJournalModuleSubject> moduleSubjects) {
+        this.moduleSubjects = moduleSubjects;
     }
 
     public School getSchool() {

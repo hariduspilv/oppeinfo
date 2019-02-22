@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -114,6 +113,20 @@ public class StudentController {
     public void createAbsence(HoisUserDetails user, @WithEntity("studentId") Student student, @Valid @RequestBody StudentAbsenceForm form) {
         StudentAbsenceUtil.assertCanCreate(user, student);
         studentService.create(user, student, form);
+    }
+    
+    @GetMapping("/{studentId:\\d+}/canCreateAbsence")
+    public Map<String, Object> canCreateAbsence(HoisUserDetails user, @WithEntity("studentId") Student student) {
+        HashMap<String, Object> result = new HashMap<>();
+        boolean canCreate = StudentAbsenceUtil.canCreate(user, student);
+        result.put("canCreate", Boolean.valueOf(canCreate));
+        if (canCreate) {
+            result.put("studentName", student.getPerson().getFullname());
+            if (student.getStudentGroup() != null) {
+                result.put("studentGroup", student.getStudentGroup().getCode());
+            }
+        }
+        return result;
     }
 
     @PutMapping("/{studentId:\\d+}/absences/{id:\\d+}")

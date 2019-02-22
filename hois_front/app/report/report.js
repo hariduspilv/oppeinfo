@@ -267,8 +267,8 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       return index === 0 || table[index - 1].studyPeriod.id !== table[index].studyPeriod.id;
     };
   }
-]).controller('StudentGroupTeacherController', ['$httpParamSerializer', '$route', '$scope', '$sessionStorage', '$timeout', 'Classifier', 'DataUtils', 'VocationalGradeUtil', 'QueryUtils', 'config', 'dialogService', 'message',
-function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Classifier, DataUtils, VocationalGradeUtil, QueryUtils, config, dialogService, message) {
+]).controller('StudentGroupTeacherController', ['$httpParamSerializer', '$route', '$scope', '$sessionStorage', '$timeout', '$window', 'Classifier', 'DataUtils', 'VocationalGradeUtil', 'QueryUtils', 'config', 'dialogService', 'message',
+function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $window, Classifier, DataUtils, VocationalGradeUtil, QueryUtils, config, dialogService, message) {
   $scope.gradeUtil = VocationalGradeUtil;
   $scope.auth = $route.current.locals.auth;
   
@@ -334,6 +334,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
     $scope.criteria = $scope.storedCriteria;
     $scope.formState.studyPeriod = $scope.storedCriteria.formState.studyPeriod;
     $scope.formState.studentGroup = $scope.storedCriteria.formState.studentGroup;
+    $scope.formState.student = $scope.storedCriteria.formState.student;
     if ($scope.formState.studentGroup && ($scope.criteria.studyYear || $scope.criteria.from)) {
       $timeout(searchUsingStoredCriteria);
     }
@@ -384,6 +385,12 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
   $scope.studentGroupChanged = function () {
     $scope.criteria.studentGroup = $scope.formState.studentGroup ? $scope.formState.studentGroup.id : null;
     $scope.criteria.curriculumVersion = $scope.formState.studentGroup ? $scope.formState.studentGroup.curriculumVersion : null;
+    $scope.criteria.student = null;
+    $scope.formState.student = null;
+  };
+
+  $scope.studentChanged = function () {
+    $scope.criteria.student = $scope.formState.student ? $scope.formState.student.id : null;
   };
 
   $scope.search = function() {
@@ -434,7 +441,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
       $scope.$broadcast('refreshFixedColumns');
     });
   };
-
+  
   $scope.clearCriteria = function() {
     $scope.formState.studyPeriod = null;
     $scope.formState.studentGroup = null;
@@ -442,6 +449,10 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, Class
     $scope.directiveControllers.forEach(function (c) {
       c.clear();
     });
+  };
+
+  $scope.windowHeight = function () {
+    return $window.innerHeight;
   };
 
   $scope.openAddInfoDialog = function (student) {

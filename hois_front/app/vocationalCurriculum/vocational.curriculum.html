@@ -270,7 +270,7 @@
 					</tr>
 				</thead>
 				<tbody md-body>
-					<tr md-row ng-repeat="item in curriculum.curriculumOccupations | orderBy: 'occupation.nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
+					<tr md-row ng-repeat="item in curriculum.curriculumOccupations | orderBy: ['occupation', '-occupation.validThru', '-occupation.validFrom']:false:compareUsingLanguage" ng-class-odd="'odd'" ng-class-even="'even'">
 						<td md-cell>{{$index + 1}}</td>
 						<td md-cell>
 							<a href="" ng-click="curriculum.occupation ? openOccupationDialog(item) : openPartOccupationsDialog(item)">{{item.occupation | hoisValidDates }}</a>
@@ -310,7 +310,7 @@
             </div>
 
              <!--KUTSETE/OSAKUTSETE MOODULID-->
-            <div ng-repeat="occupation in curriculum.curriculumOccupations | orderBy: 'occupation.nameEt'" layout="column">
+            <div ng-repeat="occupation in curriculum.curriculumOccupations | orderBy: ['occupation', '-occupation.validThru', '-occupation.validFrom']:false:compareUsingLanguage" layout="column">
                 <div class="occupation-header align-center">
                     <span ng-show="curriculum.occupation" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && (!occupationHasPModule(occupation.occupation.code) || !isOccutationsCreditsValid(occupation))}">
 						{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp; {{occupation.occupation | hoisValidDates }}
@@ -332,7 +332,7 @@
                     </div>
                 </div>
                 <!--OSAKUTSETE MOODULID-->
-                <div ng-repeat = "partOccupation in occupation.partOccupations | orderBy: 'nameEt'" layout="column">
+                <div ng-repeat = "partOccupation in occupation.partOccupations | orderBy: [partOccupation, '-validThru', '-validFrom']:false:compareUsingLanguage" layout="column">
                     <div class="occupation-header2 align-center">
 						<span ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !occupationHasPModule(partOccupation.code)}">
 							{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}: {{partOccupation | hoisValidDates }}
@@ -352,7 +352,7 @@
                     </div>
                 </div>
                 <!--SPETSKUTSETE MOODULID-->
-                <div ng-repeat = "speciality in occupation.specialities | orderBy: 'nameEt'" layout="column">
+                <div ng-repeat = "speciality in occupation.specialities | orderBy: [speciality, '-validThru', '-validFrom']:false:compareUsingLanguage" layout="column">
                     <div class="occupation-header2 align-center">
 						<span ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && (!occupationHasPModule(speciality.code) || !isSpetsOccupationValid(speciality, occupation))}">
 							{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: {{speciality | hoisValidDates }}

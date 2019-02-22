@@ -18,7 +18,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Contract;
-import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
@@ -26,6 +25,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
+import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveStatus;
@@ -125,10 +125,6 @@ public class EkisServiceTests {
         enterprise.setContactPersonPhone("9876543");
         enterprise.setContactPersonEmail("enterprise.contactperson@dev.null");
         contract.setEnterprise(enterprise);
-
-        contract.setSupervisorName("Supervisor Name");
-        contract.setSupervisorPhone("12345678");
-        contract.setSupervisorEmail("supervisor.name@dev.null");
         contract.setPracticePlan("Practice plan");
 
         // ekisService.registerPracticeContract(contract);

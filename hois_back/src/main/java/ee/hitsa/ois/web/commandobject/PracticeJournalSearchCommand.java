@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.util.List;
+
 public class PracticeJournalSearchCommand {
 
     private Long studyYear;
@@ -8,6 +10,7 @@ public class PracticeJournalSearchCommand {
     private Long student;
     private Long curriculumVersion;
     private Long teacher;
+    private List<String> status;
 
     public Long getStudyYear() {
         return studyYear;
@@ -55,6 +58,14 @@ public class PracticeJournalSearchCommand {
 
     public void setTeacher(Long teacher) {
         this.teacher = teacher;
+    }
+
+    public List<String> getStatus() {
+        return status;
+    }
+
+    public void setStatus(List<String> status) {
+        this.status = status;
     }
 
 }

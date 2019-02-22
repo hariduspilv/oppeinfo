@@ -20,7 +20,15 @@
     </md-input-container>
     <md-input-container flex>
       <label>{{'subject.credits' | translate}}</label>
-      <input ng-model="subject.credits" type="number" ng-required="true" step="0.1">
+      <input name="credits" ng-model="subject.credits" type="number" ng-required="true" step="0.1" max="999" min="0.1">
+      <div ng-messages="subjectForm.credits.$error" ng-show="subjectForm.credits.$dirty">
+        <div ng-message="max">
+          {{'main.messages.error.max' | translate: {max: 999} }}
+        </div>
+        <div ng-message="min">
+          {{'main.messages.error.min' | translate: {min: 0.1} }}
+        </div>
+      </div>
     </md-input-container>
     <md-input-container flex>
       <label>{{'subject.assessment' | translate}}</label>
@@ -82,9 +90,53 @@
       <label>{{'subject.additionalInfo' | translate}}</label>
       <textarea ng-model="subject.additionalInfo" md-maxlength="4000" max-rows="2"></textarea>
     </md-input-container>
-    <hois-autocomplete ng-model="subject.mandatoryPrerequisiteSubjects" label="subject.mandatoryPrerequisiteSubjects" method="subjects" multiple></hois-autocomplete>
-    <hois-autocomplete ng-model="subject.recommendedPrerequisiteSubjects" label="subject.recommendedPrerequisiteSubjects" method="subjects" multiple></hois-autocomplete>
-    <hois-autocomplete ng-model="subject.substituteSubjects" label="subject.substituteSubjects" method="subjects" multiple></hois-autocomplete>
+    
+    <div>&nbsp;</div>
+    <div flex layout="column">
+      <fieldset tabindex="1">
+        <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subject.prerequisiteAndSubstituteSubjects' | translate}}</legend>
+
+        <h3>{{'subject.mandatoryPrerequisiteSubjects' | translate}}</h3>
+        <hois-autocomplete ng-model="mandatoryPrerequisiteSubject" label="subject.label" method="subjects"
+          md-selected-item-change="addSubject(SUBJECT_TYPE.MANDATORY_PREPEQUISITE)"></hois-autocomplete>
+        <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.mandatoryPrerequisiteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
+          <div layout="row" flex layout-align="start center">
+            <div flex="5">&nbsp;</div>
+            <div flex="50"><a ng-href="#/subject/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
+            <div>
+              <a ng-click="deleteSubject(SUBJECT_TYPE.MANDATORY_PREPEQUISITE, sub)" class="remove">&times;</a>
+            </div>
+          </div>
+        </div>
+        <md-divider></md-divider>
+        <h3>{{'subject.recommendedPrerequisiteSubjects' | translate}}</h3>
+        <hois-autocomplete ng-model="recommendedPrerequisiteSubject" label="subject.label" method="subjects"
+          md-selected-item-change="addSubject(SUBJECT_TYPE.RECOMMENDED_PREREQUISITE)"></hois-autocomplete>
+        <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.recommendedPrerequisiteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
+          <div layout="row" flex layout-align="start center">
+            <div flex="5">&nbsp;</div>
+            <div flex="50"><a ng-href="#/subject/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
+            <div>
+              <a ng-click="deleteSubject(SUBJECT_TYPE.RECOMMENDED_PREREQUISITE, sub)" class="remove">&times;</a>
+            </div>
+          </div>
+        </div>
+        <md-divider></md-divider>
+        <h3>{{'subject.substituteSubjects' | translate}}</h3>
+        <hois-autocomplete ng-model="substituteSubject" label="subject.label" method="subjects"
+          md-selected-item-change="addSubject(SUBJECT_TYPE.SUBSTITUTE)"></hois-autocomplete>
+        <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.substituteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
+          <div layout="row" flex layout-align="start center">
+            <div flex="5">&nbsp;</div>
+            <div flex="50"><a ng-href="#/subject/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
+            <div>
+              <a ng-click="deleteSubject(SUBJECT_TYPE.SUBSTITUTE, sub)" class="remove">&times;</a>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div>&nbsp;</div>
     <md-input-container flex>
       <label>{{'subject.linkDepartment' | translate}}</label>
       <hois-select ng-model="subject.schoolDepartment.id" values="departments"></hois-select>
@@ -103,14 +155,50 @@
     </md-input-container>
 
     <!-- info tund -->
-    <h3>{{'subject.subjectIsPrerequisite' | translate}}</h3>
-    <div ng-repeat="row in subject.primarySubjects | orderBy: currentLanguageNameField()">
-      <a ng-href="#/subject/{{row.id}}/edit">{{currentLanguageNameField(row)}}</a>
+    <div flex ng-show="subject.primarySubjects.length > 0">
+      <fieldset tabindex="2">
+          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subject.subjectIsPrerequisite' | translate}}</legend>
+        <div ng-repeat="row in subject.primarySubjects | orderBy: currentLanguageNameField()">
+          <a class="md-body-1" ng-href="#/subject{{isPublic ? '/public' : ''}}/{{row.id}}">{{currentLanguageNameField(row)}}</a>
+        </div>
+      </fieldset>
     </div>
-    <h3>{{'subject.belongsCurriculum' | translate}}</h3>
-    <div ng-repeat="row in subject.curriculumVersions | orderBy: currentLanguageNameField()">
-      <span>{{currentLanguageNameField(row) }}</span>
+    <div flex ng-show="subject.curriculumVersions.length > 0">
+      <div>&nbsp;</div>
+      <fieldset tabindex="3">
+        <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subject.belongsCurriculum' | translate}}</legend>
+        <div ng-repeat="row in subject.curriculumVersions | orderBy: currentLanguageNameField()">
+          <span class="md-body-1">{{currentLanguageNameField(row) }}</span>
+        </div>
+      </fieldset>
     </div>
+    <div flex ng-if="subject.programs && subject.programs.length > 0">
+      <div>&nbsp;</div>
+      <fieldset tabindex="4">
+        <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subject.subjectProgram.label' | translate}}</legend>
+        <div layout="column">
+          <md-table-container>
+              <table md-table class="secondary-table">
+                  <thead md-head>
+                      <tr md-row>
+                          <th md-column>{{'subject.subjectProgram.teacher' | translate}}</th>
+                          <th md-column>{{'subject.subjectProgram.studyPeriod' | translate}}</th>
+                          <th md-column>{{'subject.subjectProgram.status' | translate}}</th>
+                      </tr>
+                  </thead>
+                  <tbody md-body>
+                      <tr md-row ng-repeat="program in subject.programs" >
+                          <td md-cell><a href="#/subjectProgram/periods/{{::program.id}}/view">{{program.teacherName}}</a></td>
+                          <td md-cell><a href="#/subjectProgram/periods/{{::program.id}}/view">{{currentLanguageNameField(program.studyPeriod)}}</a></td>
+                          <td md-cell><hois-classifier-value ng-model="program.status" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value></td>
+                      </tr>
+                  </tbody>
+              </table>
+          </md-table-container>
+      </div>
+      </fieldset>
+    </div>
+    <div>&nbsp;</div>
     <hois-created-modified object="subject"></hois-created-modified>
     <div layout="row" layout-xs="column">
       <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>

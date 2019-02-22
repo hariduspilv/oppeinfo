@@ -73,9 +73,16 @@ public class SubjectStudyPeriodSubjectSearchService {
                 Subquery<Long> sspTeachersQuery = query.subquery(Long.class);
                 Root<SubjectStudyPeriodTeacher> sspTeachertRoot = sspTeachersQuery
                         .from(SubjectStudyPeriodTeacher.class);
-                sspTeachersQuery = sspTeachersQuery
-                        .select(sspTeachertRoot.get("subjectStudyPeriod").get("subject").get("id"))
-                        .where(cb.equal(sspTeachertRoot.get("teacher").get("id"), criteria.getTeacher()));
+                if (criteria.getStudyPeriod() != null) {
+                    sspTeachersQuery = sspTeachersQuery
+                            .select(sspTeachertRoot.get("subjectStudyPeriod").get("subject").get("id"))
+                            .where(cb.and(cb.equal(sspTeachertRoot.get("teacher").get("id"), criteria.getTeacher())),
+                                    cb.equal(sspTeachertRoot.get("subjectStudyPeriod").get("studyPeriod").get("id"), criteria.getStudyPeriod()));
+                } else {
+                    sspTeachersQuery = sspTeachersQuery
+                            .select(sspTeachertRoot.get("subjectStudyPeriod").get("subject").get("id"))
+                            .where(cb.equal(sspTeachertRoot.get("teacher").get("id"), criteria.getTeacher()));
+                }
                 filters.add(root.get("id").in(sspTeachersQuery));
             }
             return cb.and(filters.toArray(new Predicate[filters.size()]));

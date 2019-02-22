@@ -1,0 +1,61 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.id" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/edit?_noback" name="enterprise.data">
+        {{'enterprise.data' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/persons/edit?_noback" name="enterprise.persons">
+        {{'enterprise.persons' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/locations/edit?_noback" name="enterprise.locations">
+        {{'enterprise.locations' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/studentGroups/edit?_noback" name="enterprise.studentGroups">
+        {{'enterprise.studentGroups' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/contracts/edit?_noback" name="enterprise.contracts">
+        {{'enterprise.contracts' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/grades/edit?_noback" name="enterprise.grades">
+        {{'enterprise.grades' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId && enterprise.application" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/admission/edit?_noback" name="enterprise.admission">
+        {{'enterprise.requests' | translate}}</md-nav-item>
+</md-nav-bar>
+<div layout-padding>
+    <div flex>
+        <md-table-container>
+            <table md-table md-progress="tabledata.$promise" class="secondary-table">
+                <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+                <tr md-row>
+                    <th md-column md-order-by="c.contract_nr">{{'enterprise.contractTab.contractNr' | translate}}</th>
+                    <th md-column>{{'enterprise.contractTab.student' | translate}}</th>
+                    <th md-column>{{'enterprise.contractTab.duration' | translate}}</th>
+                    <th md-column>{{'enterprise.contractTab.enterpriseSupervisors' | translate}}</th>
+                    <th md-column>{{'enterprise.contractTab.schoolSupervisors' | translate}}</th>
+                    <th md-column>{{'enterprise.contractTab.contractDate' | translate}}</th>
+                    <th md-column>{{'enterprise.contractTab.status' | translate}}</th>
+                    <th md-column></th>
+                </tr>
+                </thead>
+                <tbody md-body>
+                <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell ng-if="!row.contractNr">{{'-'}}</td>
+                    <td md-cell ng-if="row.contractNr"><a ng-href="#/contracts/{{::row.id}}/view">{{row.contractNr}}</a></td>
+                    <td md-cell>{{currentLanguageNameField(row.student)}}</td>
+                    <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
+                    <td md-cell>{{row.enterpriseContactPersonName ? row.enterpriseContactPersonName : '-'}}</td>
+                    <td md-cell>{{currentLanguageNameField(row.teacher)}}</td>
+                    <td md-cell>{{row.confirmDate | hoisDate}}</td>
+                    <td md-cell>{{row.status ? currentLanguageNameField(row.status) : '-'}}</td>
+                    <td>
+                    <md-button md-no-ink class="md-primary view-button" 
+                        ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" 
+        md-total="{{tabledata.totalElements}}"
+        md-on-paginate="loadData" 
+        md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select>
+        </md-table-pagination>
+    </div>
+</div>
+<div layout="row" layout-xs="column">
+    <md-button ng-if="auth.isAdmin()" class="md-raised" ng-click="back('#/practice/enterprise')">{{'main.button.back' | translate}}</md-button>
+</div>

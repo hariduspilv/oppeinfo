@@ -392,6 +392,11 @@
     $scope.loadData();
   }]).controller('TeacherViewController', ['$scope', '$route', '$translate', 'QueryUtils', 'message', function ($scope, $route, $translate, QueryUtils, message) {
     $scope.isShowingRtipTab = false;
+    $route.current.locals = angular.extend($route.current.locals || {}, {
+      params: {
+        myData: true
+      }
+    });
     var auth = $route.current.locals.auth;
     $scope.auth = auth;
     var id = (auth.isTeacher() ? auth.teacher : $route.current.params.id);
@@ -479,5 +484,27 @@
       });
     };
 
+  }]).controller('TeacherProgramController', ['$scope', '$route', 'QueryUtils', '$translate', function ($scope, $route, QueryUtils, $translate) {
+    var id = $route.current.params.id;
+    var Endpoint = QueryUtils.endpoint('/teachers');
+    
+    $route.current.locals = angular.extend($route.current.locals || {}, {
+      params: {
+        myData: true
+      }
+    });
+    $scope.separateController = true;
+    $scope.auth = $route.current.locals.auth;
+    
+    function afterLoad() {
+      setIsVocationalOrIsHigher($scope, $translate);
+      $scope.currentNavItem = 'teacher.programs';
+    }
+
+    if (id) {
+      $scope.teacher = Endpoint.get({id: id}, afterLoad);
+    } else {
+      $scope.teacher = new Endpoint({isActive: true, isStudyPeriodScheduleLoad: true, person: {citizenship: 'RIIK_EST'}});
+    }
   }]);
 }());

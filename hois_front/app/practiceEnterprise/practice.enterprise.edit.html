@@ -1,0 +1,198 @@
+<style>
+  .inaadressSearch {
+    margin-top: -5px;
+  } 
+  .ui-input-search {
+    margin-bottom: 6px;
+  }
+</style>
+
+<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+    <md-nav-item ng-if="!enterprise.id" md-nav-href="#/practice/enterprise/new?_noback" name="enterprise.data">
+      {{'enterprise.data' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.id" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/edit?_noback" name="enterprise.data">
+        {{'enterprise.data' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/persons/edit?_noback" name="enterprise.persons">
+        {{'enterprise.persons' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/locations/edit?_noback" name="enterprise.locations">
+        {{'enterprise.locations' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/studentGroups/edit?_noback" name="enterprise.studentGroups">
+        {{'enterprise.studentGroups' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/contracts/edit?_noback" name="enterprise.contracts">
+        {{'enterprise.contracts' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/grades/edit?_noback" name="enterprise.grades">
+        {{'enterprise.grades' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId && (enterprise.application && !enterpriseForm.application.$dirty)" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/admission/edit?_noback" name="enterprise.admission">
+      {{'enterprise.requests' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<div class="ois-form-layout-padding ois-form-layout" layout="column" ng-cloak>
+  <form name="enterpriseForm" role="form" class="nomargin" novalidate>
+    <fieldset ng-if="auth.isAdmin()">
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'enterprise.basicData' | translate}}</legend>
+      <div layout="column" flex>
+        <div layout="row">
+          <md-input-container flex="50">
+            <label>{{'main.country' | translate}}</label>
+            <hois-classifier-select ng-change="lookupRegNr()" ng-model="enterprise.country" name="country" model-value-attr="code" main-classifier-code="RIIK" required ng-disabled="(enterprise.id && enterprise.country === 'RIIK_EST') || cameFromRegister"></hois-classifier-select>
+          </md-input-container>
+          <md-input-container layout="row" flex="50" layout-align="center">
+              <md-checkbox ng-model="enterprise.person" ng-change="clearAddressAndRegCode()" ng-disabled="enterprise.id || cameFromRegister">
+                {{'enterprise.fie' | translate}}
+              </md-checkbox>
+          </md-input-container>
+        </div>
+        <div layout="row" ng-if="!enterprise.person && enterprise.country === 'RIIK_EST'">
+          <md-input-container flex="50" flex-xs="100">
+            <label>{{'enterprise.regCode' | translate}}</label>
+            <input ng-model="enterprise.regCode" ng-blur="lookupRegNr()" name="enterpriseCode" type="text" pattern="^\d+$" minlength="8" md-maxlength="8" ng-required="enterprise.country==='RIIK_EST'" ng-disabled="(enterprise.id && enterprise.country === 'RIIK_EST') || cameFromRegister">
+            <ng-messages for="enterpriseForm.enterpriseCode.$error" role="alert">
+              <ng-message when="enterpriseCodeError">{{'enterprise.error' | translate}}</ng-message>
+            </ng-messages>
+            <div ng-messages="enterpriseForm.enterpriseCode.$error">
+              <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+              </div>
+              <div ng-message="pattern"> 
+                  {{'enterprise.personsTab.number' | translate}}
+              </div>
+              <div ng-message="minlength">
+                  {{'enterprise.minlength' | translate}}
+              </div>
+            </div>
+          </md-input-container>
+        </div>
+        <div layout="row" ng-if="!enterprise.person && enterprise.country !== 'RIIK_EST'">
+          <md-input-container flex="50" flex-xs="100">
+            <label>{{'enterprise.regCode' | translate}}</label>
+            <input ng-model="enterprise.regCode" name="enterpriseCode" type="text" md-maxlength="20">
+            <div ng-messages="enterpriseForm.enterpriseCode.$error">
+              <div ng-message="md-maxlength">
+                  {{'main.messages.error.maxlength' | translate}}
+              </div>
+            </div>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-input-container flex="100" ng-if="enterprise.country === 'RIIK_EST' && !enterprise.person && !enterpriseForm.enterpriseCode.$error.min && !enterpriseForm.enterpriseCode.$error.max && enterprise.registerAddress">
+            <label style="height: 26px">{{'enterprise.address' | translate}}</label>
+            <hois-value value="enterprise.registerAddress"></hois-value>
+          </md-input-container>
+        </div>
+      <md-input-container flex="100">
+        <label>{{'enterprise.name' | translate}}</label>
+        <input ng-model="enterprise.name" name="enterpriseName" type="text" md-maxlength="100" required ng-disabled="(enterprise.id && enterprise.country === 'RIIK_EST') || (cameFromRegister && !enterprise.person)">
+        <div ng-messages="enterpriseForm.enterpriseName.$error">
+            <div ng-message="md-maxlength">
+            {{'main.messages.error.maxlength' | translate}}
+            </div>
+        </div>
+      </md-input-container>
+    </div>
+    </fieldset>
+
+    <fieldset ng-if="auth.isAdmin()">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'enterprise.schoolData' | translate}}</legend>
+      <div layout="row">
+        <div flex="70" ng-if="enterprise.country === 'RIIK_EST'">
+          <hois-ads-adapter flex="100" class="md-text" ng-model="enterprise.addressAds" ads-oid-model="enterprise.addressAdsOid" address-model="enterprise.address" ng-required="enterprise.countryCode === 'RIIK_EST'"></hois-ads-adapter>
+        </div>
+        <md-input-container flex="70" ng-if="enterprise.country !== 'RIIK_EST'">
+          <label>{{'building.address' | translate}}</label>
+          <input ng-model="enterprise.address" name="address" type="text" md-maxlength="100">
+          <div ng-messages="enterpriseForm.address.$error">
+            <div ng-message="md-maxlength">
+              {{'main.messages.error.maxlength' | translate}}
+            </div>
+          </div>
+        </md-input-container>
+        <md-input-container flex="30">
+          <label>{{'enterprise.postcode' | translate}}</label>
+          <input ng-model="enterprise.postcode" name="postcode" type="text" md-maxlength="8">
+          <div ng-messages="enterpriseForm.postcode.$error">
+              <div ng-message="md-maxlength">
+                {{'main.messages.error.maxlength' | translate}}
+              </div>
+          </div>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-xs="column">
+        <md-input-container flex="40" flex-xs="100">
+          <label>{{'teacher.email' | translate}}</label>
+          <input ng-model="enterprise.email" name="email" type="email" md-maxlength="100">
+          <div ng-messages="enterpriseForm.email.$error">
+            <div ng-message="md-maxlength">
+              {{'main.messages.error.maxlength' | translate}}
+            </div>
+          </div>
+        </md-input-container>
+        <md-input-container flex="20" flex-xs="100">
+          <label>{{'teacher.phone' | translate}}</label>
+          <input ng-model="enterprise.phone" name="phone" type="text" md-maxlength="100">
+          <div ng-messages="enterpriseForm.phone.$error">
+            <div ng-message="md-maxlength">
+              {{'main.messages.error.maxlength' | translate}}
+            </div>
+          </div>
+        </md-input-container>
+        <md-input-container flex="40" flex-xs="100">
+            <label>{{'enterprise.language' | translate}}</label>
+            <hois-classifier-select ng-model="enterprise.language" name="language" model-value-attr="code" main-classifier-code="OPPEKEEL" aria-label="{{'enterprise.language' | translate}}"></hois-classifier-select>
+            <div class="invalid" ng-messages="enterpriseForm.language.$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+            </div>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-xs="column">
+        <md-input-container flex="25" flex-xs="100">
+          <label>{{'enterprise.internSpots' | translate}}</label>
+          <input ng-model="enterprise.places" name="internSpots" type="text" pattern="^\d+$" md-maxlength="4" md-minlength="0">
+            <div ng-messages="enterpriseForm.internSpots.$error">
+                <div ng-message="md-maxlength">
+                    {{'main.messages.error.maxlength' | translate}}
+                </div>
+                <div ng-message="pattern">
+                    {{'enterprise.personsTab.number' | translate}}
+                </div>
+                <div ng-message="md-minlength">
+                    {{'main.messages.error.minlength' | translate}}
+                </div>
+            </div>
+        </md-input-container>
+        <md-input-container flex="75" flex-xs="100">
+          <label>{{'enterprise.explanation' | translate}}</label>
+          <input ng-model="enterprise.placesDescr" name="explanation" type="text" md-maxlength="100">
+          <div ng-messages="enterpriseForm.explanation.$error">
+            <div ng-message="md-maxlength">
+              {{'main.messages.error.maxlength' | translate}}
+            </div>
+          </div>
+          </md-input-container>
+      </div>
+      <div layout="row">
+        <md-input-container flex="100">
+          <label>{{'main.notes' | translate}}</label>
+          <input ng-model="enterprise.addInfo" name="notes" type="text" md-maxlength="255">
+          <div ng-messages="enterpriseForm.notes.$error">
+            <div ng-message="md-maxlength">
+              {{'main.messages.error.maxlength' | translate}}
+            </div>
+          </div>
+        </md-input-container>
+      </div>
+      <md-checkbox ng-model="enterprise.application" name="application">
+        {{'enterprise.isApplication' | translate}}
+      </md-checkbox>
+      <md-checkbox ng-model="enterprise.active" ng-checked="true">
+        {{'enterprise.isActive' | translate}}
+      </md-checkbox>
+    </fieldset>
+    <div layout="row" layout-xs="column">
+      <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+      <md-button flex-xs="100" ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+      <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="goBack()" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    </div>
+  </form>
+</div>  

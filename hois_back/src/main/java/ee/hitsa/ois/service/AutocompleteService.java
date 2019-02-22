@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -73,6 +76,7 @@ import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
+import ee.hitsa.ois.web.commandobject.PracticeEvaluationAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.RoomAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
@@ -91,7 +95,6 @@ import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteComm
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
-import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.JournalAutocompleteResult;
 import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.PersonDto;
@@ -103,12 +106,14 @@ import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearIdDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.SubjectResult;
+import ee.hitsa.ois.web.dto.SupervisorDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOModulesAndThemesResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
+import ee.hitsa.ois.web.dto.enterprise.EnterpriseResult;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 
@@ -823,8 +828,11 @@ public class AutocompleteService {
     }
 
     public List<AutocompleteResult> students(Long schoolId, StudentAutocompleteCommand lookup) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                "from student s inner join person p on s.person_id = p.id").sort("p.lastname", "p.firstname");
+        String from = "from student s inner join person p on s.person_id = p.id";
+        if (Boolean.TRUE.equals(lookup.getShowStudentGroup())) {
+            from += " left join student_group sg on s.student_group_id = sg.id";
+        }
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from).sort("p.lastname", "p.firstname");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname", "concat(p.firstname, ' ', p.lastname, ' (', p.idcode, ')')"), "name", lookup.getName());
@@ -870,9 +878,13 @@ public class AutocompleteService {
         qb.optionalCriteria("s.curriculum_version_id in (:curriculumVersion)", "curriculumVersion", lookup.getCurriculumVersion());
         qb.optionalCriteria("s.student_group_id in (:studentGroup)", "studentGroup", lookup.getStudentGroup());
 
-        List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
+        String select = "s.id, p.firstname, p.lastname, p.idcode"
+                + (Boolean.TRUE.equals(lookup.getShowStudentGroup()) ? ", sg.code" : ", null") + " sg_code";
+        List<?> data = qb.select(select, em).setMaxResults(MAX_ITEM_COUNT).getResultList();
         return StreamUtil.toMappedList(r -> {
             String name = PersonUtil.fullnameAndIdcode(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3));
+            String studentGroupCode = resultAsString(r, 4);
+            name += studentGroupCode != null ? " - " + studentGroupCode : "";
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
     }
@@ -1245,15 +1257,31 @@ public class AutocompleteService {
         return new PageRequest(0, MAX_ITEM_COUNT, new Sort(sortFields));
     }
 
-    public List<EnterpriseResult> enterprises() {
+    public List<EnterpriseResult> enterprises(SearchCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from enterprise e");
-
+        qb.optionalContains("e.name", "name", lookup.getName());
         List<?> data = qb.select("e.id, e.name, e.contact_person_name, e.contact_person_email, e.contact_person_phone, e.reg_code", em)
                 .getResultList();
         return StreamUtil.toMappedList(r -> {
-            String name = resultAsString(r, 1);
-            String regCode = resultAsString(r, 5);
-            String enterpriseName = EnterpriseUtil.getName(name, regCode);
+            String enterpriseName = EnterpriseUtil.getName(resultAsString(r, 1), resultAsString(r, 5));
+            EnterpriseResult enterpriseResult = new EnterpriseResult(resultAsLong(r, 0), enterpriseName, enterpriseName);
+            enterpriseResult.setContactPersonName(resultAsString(r, 2));
+            enterpriseResult.setContactPersonEmail(resultAsString(r, 3));
+            enterpriseResult.setContactPersonPhone(resultAsString(r, 4));
+            return enterpriseResult;
+        }, data);
+    }
+    
+    public List<EnterpriseResult> activeEnterprises(HoisUserDetails user, SearchCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from enterprise e "
+                + "join enterprise_school es on es.enterprise_id = e.id");
+        qb.requiredCriteria("es.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalContains("e.name", "name", lookup.getName());
+        qb.filter("es.is_active = true");
+        List<?> data = qb.select("e.id, e.name, e.contact_person_name, e.contact_person_email, e.contact_person_phone, e.reg_code", em)
+                .getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String enterpriseName = EnterpriseUtil.getName(resultAsString(r, 1), resultAsString(r, 5));
             EnterpriseResult enterpriseResult = new EnterpriseResult(resultAsLong(r, 0), enterpriseName, enterpriseName);
             enterpriseResult.setContactPersonName(resultAsString(r, 2));
             enterpriseResult.setContactPersonEmail(resultAsString(r, 3));
@@ -1375,6 +1403,77 @@ public class AutocompleteService {
             return new SpecialityAutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3),
                     versions == null ? null : Arrays.stream(versions.split(";")).map(Long::parseLong).collect(Collectors.toSet()));
         }, results);
+    }
+
+    public List<AutocompleteResult> enterpriseLocations(HoisUserDetails user, SearchCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from enterprise e "
+                + "join enterprise_school es on es.enterprise_id = e.id "
+                + "left join enterprise_school_location esl on esl.enterprise_school_id = es.id ");
+        qb.requiredCriteria("e.id = :esId", "esId", lookup.getId());
+        qb.requiredCriteria("es.school_id = :schoolId", "schoolId", user.getSchoolId());
+        List<?> data = qb.select("distinct esl.address as eslAddress, es.address as esAddress, es.id", em).getResultList();
+        List<AutocompleteResult> eslAddress = StreamUtil.toMappedList(r -> {
+            AutocompleteResult locations = new AutocompleteResult(null, resultAsString(r, 0), resultAsString(r, 0));
+            return locations;
+        }, data);
+        List<AutocompleteResult> esAddress = StreamUtil.toMappedList(r -> {
+            AutocompleteResult locations = new AutocompleteResult(null, resultAsString(r, 1), resultAsString(r, 1));
+            return locations;
+        }, data);
+        eslAddress.addAll(esAddress);
+        List<AutocompleteResult> filteredAddresses = eslAddress.stream().filter(p->p.getNameEt() != null).filter(distinctByKey(AutocompleteResult::getNameEt)).collect(Collectors.toList());
+        return filteredAddresses;
+    }
+    
+    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+        Set<Object> seen = ConcurrentHashMap.newKeySet();
+        return t -> seen.add(keyExtractor.apply(t));
+    }
+
+    public List<SupervisorDto> enterpriseSupervisors(HoisUserDetails user, SearchCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from enterprise e "
+                + "join enterprise_school es on es.enterprise_id = e.id "
+                + "left join enterprise_school_person esp on esp.enterprise_school_id = es.id ");
+        qb.requiredCriteria("e.id = :esId", "esId", lookup.getId());
+        qb.requiredCriteria("es.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.filter("esp.is_supervisor = true");
+        List<?> data = qb.select("concat(esp.firstname, ' ', esp.lastname), esp.email, esp.phone", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            SupervisorDto supervisor = new SupervisorDto();
+            supervisor.setSupervisorName(resultAsString(r, 0));
+            supervisor.setSupervisorEmail(resultAsString(r, 1));
+            supervisor.setSupervisorPhone(resultAsString(r, 2));
+            return supervisor;
+        }, data);
+    }
+    
+    public List<SupervisorDto> enterpriseContacts(HoisUserDetails user, SearchCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from enterprise e "
+                + "join enterprise_school es on es.enterprise_id = e.id "
+                + "left join enterprise_school_person esp on esp.enterprise_school_id = es.id ");
+        qb.requiredCriteria("e.id = :esId", "esId", lookup.getId());
+        qb.requiredCriteria("es.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.filter("esp.is_contact = true");
+        List<?> data = qb.select("concat(esp.firstname, ' ', esp.lastname), esp.email, esp.phone", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            SupervisorDto supervisor = new SupervisorDto();
+            supervisor.setSupervisorName(resultAsString(r, 0));
+            supervisor.setSupervisorEmail(resultAsString(r, 1));
+            supervisor.setSupervisorPhone(resultAsString(r, 2));
+            return supervisor;
+        }, data);
+    }
+
+    public List<AutocompleteResult> practiceEvaluation(HoisUserDetails user,
+            PracticeEvaluationAutocompleteCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_evaluation pe ");
+        qb.requiredCriteria("pe.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalCriteria("pe.is_active = :isActive", "isActive", lookup.getActive());
+        qb.optionalCriteria("pe.target_code = :targetCode", "targetCode", lookup.getTargetCode());
+        List<?> data = qb.select("pe.id, pe.name_et", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            return new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 1));
+        }, data);
     }
     
 }

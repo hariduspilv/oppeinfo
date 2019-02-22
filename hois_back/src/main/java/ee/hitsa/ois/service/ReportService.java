@@ -417,12 +417,15 @@ public class ReportService {
             result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, sum(ssppc.hours), sspt.teacher_id, sp.id", em, pageable);
         } else {
             JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                    "from journal_teacher jt inner join journal j on j.id = jt.journal_id " +
-                    "inner join study_year sy on j.study_year_id = sy.id " +
-                    "inner join classifier syc on sy.year_code = syc.code " +
-                    "inner join study_period sp on sp.study_year_id = sy.id " +
-                    "inner join teacher t on jt.teacher_id = t.id inner join person p on t.person_id = p.id " +
-                    "inner join journal_capacity jc on j.id = jc.journal_id and jc.study_period_id = sp.id").sort(pageable);
+                    "from journal_teacher jt " +
+                    "join journal j on j.id = jt.journal_id " +
+                    "join study_year sy on j.study_year_id = sy.id " +
+                    "join classifier syc on sy.year_code = syc.code " +
+                    "join study_period sp on sp.study_year_id = sy.id " +
+                    "join teacher t on jt.teacher_id = t.id inner join person p on t.person_id = p.id " +
+                    "left join journal_capacity jc on j.id = jc.journal_id and jc.study_period_id = sp.id and (j.is_capacity_diff is null or j.is_capacity_diff = false)" +
+                    "left join journal_teacher_capacity jtc on jt.id = jtc.journal_teacher_id and jtc.study_period_id = sp.id and j.is_capacity_diff = true")
+                    .sort(pageable);
             qb.requiredCriteria("j.school_id = :schoolId", "schoolId", schoolId);
             qb.requiredCriteria("j.study_year_id = :studyYear", "studyYear", criteria.getStudyYear());
             qb.optionalCriteria("jc.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
@@ -432,8 +435,13 @@ public class ReportService {
                     "inner join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id = cvot.id " +
                     "inner join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "+
                     "where cvo.curriculum_module_id = :module)", "module", criteria.getModule());
-            qb.groupBy("syc.name_et, syc.name_en, sp.name_et, sp.name_en, p.firstname, p.lastname, jt.teacher_id, jc.study_period_id");
-            result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, sum(jc.hours), jt.teacher_id, jc.study_period_id", em, pageable);
+            
+            qb.filter("((jc.id is not null and (j.is_capacity_diff is null or j.is_capacity_diff = false)) or (jtc.id is not null and j.is_capacity_diff = true))");
+            qb.groupBy("syc.name_et, syc.name_en, sp.name_et, sp.name_en, p.firstname, p.lastname, jt.teacher_id, coalesce(jc.study_period_id, jtc.study_period_id)");
+            result = JpaQueryUtil.pagingResult(qb,
+                    "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, " +
+                    "coalesce(sum(jc.hours), 0) + coalesce(sum(jtc.hours), 0), jt.teacher_id, coalesce(jc.study_period_id, jtc.study_period_id) as study_period_id",
+                    em, pageable);
         }
 
         // calculate used teacher id and study period id values for returned page
@@ -505,23 +513,26 @@ public class ReportService {
                 modules.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 5), () -> moduleRecords, Collectors.groupingBy(r -> resultAsLong(r, 6))));
 
                 qb = new JpaNativeQueryBuilder("from journal_teacher jt"
-                        + " join journal_capacity jc on jc.journal_id = jt.journal_id"
-                        + " join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id"
-                        + " join journal j on j.id = jc.journal_id"
-                        + " join study_period sp on sp.id = jc.study_period_id"
+                        + " join journal j on j.id = jt.journal_id"
+                        + " left join journal_capacity jc on jc.journal_id = j.id and (j.is_capacity_diff is null or j.is_capacity_diff = false)"
+                        + " left join journal_teacher_capacity jtc on jtc.journal_teacher_id = jt.id and j.is_capacity_diff = true"
+                        + " join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id or jct.id = jtc.journal_capacity_type_id"
+                        + " join study_period sp on sp.id = jc.study_period_id or sp.id = jtc.study_period_id"
                         + " join school_capacity_type sct on sct.school_id = j.school_id and sct.capacity_type_code = jct.capacity_type_code and sct.is_higher = false"
                         + " join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id and sctl.study_year_id = sp.study_year_id");
 
                 qb.requiredCriteria("jt.teacher_id in (:teacher)", "teacher", teachers);
-                qb.requiredCriteria("jc.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
+                qb.requiredCriteria("((jc.study_period_id in (:studyPeriod) and (j.is_capacity_diff is null or j.is_capacity_diff = false)) "
+                        + "or (jtc.study_period_id in (:studyPeriod) and j.is_capacity_diff = true))", "studyPeriod", studyPeriods);
                 qb.optionalCriteria("jt.journal_id in (select jot.journal_id from journal_omodule_theme jot " +
                         "join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id = cvot.id " +
                         "join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "+
                         "where cvo.curriculum_module_id = :module)", "module", criteria.getModule());
 
-                qb.groupBy("jt.teacher_id, jc.study_period_id, jct.capacity_type_code, sctl.load_percentage");
+                qb.groupBy("jt.teacher_id, coalesce(jc.study_period_id, jtc.study_period_id), jct.capacity_type_code, sctl.load_percentage");
                 
-                String hoursByTypeQuery = qb.querySql("jt.teacher_id, jc.study_period_id, sctl.load_percentage * sum(jc.hours) / 100.0 as hours", false);
+                String hoursByTypeQuery = qb.querySql("jt.teacher_id, coalesce(jc.study_period_id, jtc.study_period_id) as study_period_id,"
+                        + " sctl.load_percentage * (coalesce(sum(jc.hours), 0) + coalesce(sum(jtc.hours), 0)) / 100.0 as hours", false);
                 Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
 
                 qb = new JpaNativeQueryBuilder("from (" + hoursByTypeQuery + ") bytype");

@@ -44,6 +44,7 @@ import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.student.StudentVocationalResult;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalCapacity;
@@ -297,21 +298,19 @@ public class JournalService {
                             cb.equal(journalStudentsJoin.get("student").get("id"), root.get("id"))));
             filters.add(cb.not(cb.exists(studentsQuery)));
 
-            
             // who has no positive result in given module
-            
             Journal journal = journalRepository.findOne(journalId);
-            Set<Long> omodules = StreamUtil.toMappedSet(t -> EntityUtil.getId(
-                    t.getCurriculumVersionOccupationModuleTheme().getModule()), journal.getJournalOccupationModuleThemes());
-            
-            Subquery<Long> protocolStudentsQuery = query.subquery(Long.class);
-            Root<Protocol> protocolRoot = protocolStudentsQuery.from(Protocol.class);
-            Join<Object, Object> protocolStudentsJoin = protocolRoot.join("protocolStudents", JoinType.LEFT);
-            protocolStudentsQuery.select(protocolStudentsJoin.get("student").get("id")).where(
-                    cb.and(cb.equal(protocolStudentsJoin.get("student").get("id"), root.get("id"))),
-                    protocolStudentsJoin.get("grade").get("code").in(OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE),
-                    protocolRoot.get("protocolVdata").get("curriculumVersionOccupationModule").get("id").in(omodules));
-            filters.add(cb.not(cb.exists(protocolStudentsQuery)));
+            Set<Long> omodules = StreamUtil.toMappedSet(
+                    t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule()),
+                    journal.getJournalOccupationModuleThemes());
+
+            Subquery<Long> vocationalResultsQuery = query.subquery(Long.class);
+            Root<StudentVocationalResult> vocationalResultRoot = vocationalResultsQuery
+                    .from(StudentVocationalResult.class);
+            vocationalResultsQuery.select(vocationalResultRoot.get("student").get("id")).where(
+                    vocationalResultRoot.get("grade").get("code").in(OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE),
+                    vocationalResultRoot.get("curriculumVersionOmodule").get("id").in(omodules));
+            filters.add(cb.not(root.get("id").in(vocationalResultsQuery)));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(JournalStudentDto::of);
@@ -348,17 +347,17 @@ public class JournalService {
 
             // who has no positive result in given module
             Journal journal = journalRepository.findOne(journalId);
-            Set<Long> modules = StreamUtil.toMappedSet(t -> EntityUtil.getId(
-                    t.getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule()), journal.getJournalOccupationModuleThemes());
-            
-            Subquery<Long> protocolStudentsQuery = query.subquery(Long.class);
-            Root<Protocol> protocolRoot = protocolStudentsQuery.from(Protocol.class);
-            Join<Object, Object> protocolStudentsJoin = protocolRoot.join("protocolStudents", JoinType.LEFT);
-            protocolStudentsQuery.select(protocolStudentsJoin.get("student").get("id")).where(
-                    cb.and(cb.equal(protocolStudentsJoin.get("student").get("id"), root.get("id"))),
-                    protocolStudentsJoin.get("grade").get("code").in(OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE),
-                    protocolRoot.get("protocolVdata").get("curriculumVersionOccupationModule").get("curriculumModule").get("id").in(modules));
-            filters.add(cb.not(cb.exists(protocolStudentsQuery)));
+            Set<Long> omodules = StreamUtil.toMappedSet(
+                    t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule()),
+                    journal.getJournalOccupationModuleThemes());
+
+            Subquery<Long> vocationalResultsQuery = query.subquery(Long.class);
+            Root<StudentVocationalResult> vocationalResultRoot = vocationalResultsQuery
+                    .from(StudentVocationalResult.class);
+            vocationalResultsQuery.select(vocationalResultRoot.get("student").get("id")).where(
+                    vocationalResultRoot.get("grade").get("code").in(OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE),
+                    vocationalResultRoot.get("curriculumVersionOmodule").get("id").in(omodules));
+            filters.add(cb.not(root.get("id").in(vocationalResultsQuery)));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }));
@@ -1024,18 +1023,22 @@ public class JournalService {
     
     private Map<Long, List<StudentAbsenceDto>> wholeDayAcceptedAbsences(Journal journal, LocalDate entryDate) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_student js "
-                + "join student_absence sa on sa.student_id = js.student_id");
+                + "join student_absence sa on sa.student_id = js.student_id "
+                + "left join contract c on c.id = sa.contract_id");
         qb.requiredCriteria("js.journal_id = :journalId", "journalId", EntityUtil.getId(journal));
         qb.requiredCriteria("sa.valid_from <= :entryDate", "entryDate", entryDate);
         qb.requiredCriteria("coalesce(sa.valid_thru, sa.valid_from) >= :entryDate", "entryDate", entryDate);
         qb.filter("coalesce(sa.is_lesson_absence, false) = false");
         qb.filter("sa.is_accepted = true");
 
-        List<?> result = qb.select("js.id as student_id, sa.id as absence_id, sa.contract_id", em).getResultList();
+        List<?> result = qb.select("js.id student_id, sa.id absence_id, c.id contract_id, c.is_practice_absence", em).getResultList();
         return result.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
             StudentAbsenceDto dto = new StudentAbsenceDto();
             dto.setId(resultAsLong(r, 1));
-            dto.setContractId(resultAsLong(r, 2));
+            // if contract is_practice_absence is false act as if student absence is normal 'Absence with reason'(PUUDUMINE_V)
+            if (Boolean.TRUE.equals(resultAsBoolean(r, 3))) {
+                dto.setContractId(resultAsLong(r, 2));
+            }
             return dto;
         }, Collectors.toList())));
     }

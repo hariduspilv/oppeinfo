@@ -1,6 +1,8 @@
-<div class="ois-form-layout-padding form-readonly" ng-cloak>
+<div class="ois-form-layout-padding" ng-cloak>
   <div flex>
     <div layout="column">
+      <form name="contractForm" ng-submit="save()" layout="column" novalidate>
+      <div class="form-readonly">
       <div layout="row" layout-sm="column" layout-xs="column" flex>
         <md-input-container flex="35">
           <label>{{'student.label' | translate}}</label>
@@ -8,44 +10,51 @@
         </md-input-container>
       </div>
 
-      <div ng-if="!contract.subject" layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-input-container flex>
-          <label class="textInput">{{'module.practice' | translate}}</label>
-          <hois-value value="currentLanguageNameField(contract.module)"></hois-value>
-        </md-input-container>
+      <md-table-container ng-if="!formState.isHigher">
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column width="35%">{{'module.practice' | translate}}</th>
+              <th md-column width="35%">{{'contract.theme' | translate}}</th>
+              <th md-column width="10%">{{'contract.creditsEKAP' | translate}}</th>
+              <th md-column width="10%">{{'contract.acadHours' | translate}}</th>
+              <th md-column width="10%">{{'contract.astroHours' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="module in contract.moduleSubjects" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{currentLanguageNameField(module.module)}}</td>
+              <td md-cell>{{currentLanguageNameField(module.theme)}}</td>
+              <td md-cell>{{::module.credits}}</td>
+              <td md-cell>{{::module.hours}}</td>
+              <td md-cell>{{getAstronomicalHours(module.hours)}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
 
-        <md-input-container flex flex-offset-gt-md="5">
-          <label class="textInput">{{'contract.theme' | translate}}</label>
-          <hois-value value="currentLanguageNameField(contract.theme)"></hois-value>
-        </md-input-container>
+      <md-table-container ng-if="formState.isHigher">
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column width="70%">{{'contract.subject' | translate}}</th>
+              <th md-column width="10%">{{'contract.creditsEAP' | translate}}</th>
+              <th md-column width="10%">{{'contract.acadHours' | translate}}</th>
+              <th md-column width="10%">{{'contract.astroHours' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="subject in contract.moduleSubjects" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{currentLanguageNameField(subject.subject)}}</td>
+              <td md-cell>{{::subject.credits}}</td>
+              <td md-cell>{{::subject.hours}}</td>
+              <td md-cell>{{getAstronomicalHours(subject.hours)}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
 
-        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
-          <label class="textInput">{{'contract.creditsEKAP' | translate}}</label>
-          <hois-value value="contract.credits"></hois-value>
-        </md-input-container>
-
-        <md-input-container flex="10" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'contract.hours' | translate}}</label>
-          <hois-value value="contract.hours"></hois-value>
-        </md-input-container>
-      </div>
-
-      <div ng-if="contract.subject" layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-input-container flex>
-          <label class="textInput">{{'contract.subject' | translate}}</label>
-          <hois-value value="currentLanguageNameField(contract.subject)"></hois-value>
-        </md-input-container>
-
-        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
-          <label class="textInput">{{'contract.creditsEAP' | translate}}</label>
-          <hois-value value="contract.credits"></hois-value>
-        </md-input-container>
-
-        <md-input-container flex="10" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'contract.hours' | translate}}</label>
-          <hois-value value="contract.hours"></hois-value>
-        </md-input-container>
-      </div>
+      <br>
 
       <div layout="row" layout-sm="column" layout-xs="column" flex>
         <md-input-container flex="15">
@@ -56,13 +65,6 @@
         <md-input-container flex="15" flex-offset-gt-md="5">
           <label>{{'contract.end' | translate}}</label>
           <hois-value value="contract.endDate | hoisDate"></hois-value>
-        </md-input-container>
-      </div>
-
-      <div layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-input-container flex>
-          <label class="textInput">{{'contract.practicePlace' | translate}}</label>
-          <hois-value value="contract.practicePlace"></hois-value>
         </md-input-container>
       </div>
 
@@ -90,20 +92,75 @@
 
       <div layout="row" layout-sm="column" layout-xs="column" flex>
         <md-input-container flex>
-          <label class="textInput">{{'contract.supervisorName' | translate}}</label>
-          <hois-value value="contract.supervisorName"></hois-value>
-        </md-input-container>
-        <md-input-container flex>
-          <label class="textInput">{{'contract.supervisorEmail' | translate}}</label>
-          <hois-value value="contract.supervisorEmail"></hois-value>
-        </md-input-container>
-        <md-input-container flex>
-          <label class="textInput">{{'contract.supervisorPhone' | translate}}</label>
-          <hois-value value="contract.supervisorPhone"></hois-value>
+          <label class="textInput">{{'contract.supervisors' | translate}}</label>
         </md-input-container>
       </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column" flex>
+      <md-table-container ng-if="contract.supervisors.length > 0" layout="row" flex="100">
+      <table md-table class="secondary-table">
+        <thead md-head>
+        <tr md-row>
+            <th md-column width="25%">{{'contract.supervisorName' | translate}}</th>
+            <th md-column width="25%">{{'contract.supervisorEmail' | translate}}</th>
+            <th md-column width="25%">{{'contract.supervisorPhone' | translate}}</th>
+            <th md-column width="10%"></th>
+        </tr>
+        </thead>
+        <tbody md-body>
+        <tr md-row ng-repeat="contractSupervisor in contract.supervisors" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{contractSupervisor.supervisorName}}</td>
+            <td md-cell>{{contractSupervisor.supervisorEmail}}</td>
+            <td md-cell>{{contractSupervisor.supervisorPhone}}</td>
+            <td layout="row" ng-if="contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
+             || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_T'" md-cell style="height: inherit;">
+              <div flex="50" ng-if="contract.status.code !== 'LEPING_STAATUS_T'" style="margin: auto;">
+                <a target="_blank" ng-href="#/practiceJournals/supervisor/{{contractSupervisor.supervisorUrl}}">{{'journal.entry.open' | translate}}</a>
+              </div>
+              <div flex="50" ng-if="contract.status.code !== 'LEPING_STAATUS_T'" style="margin: auto;">
+                <a ng-click="sendEmailAgain(contractSupervisor.id)">{{'contract.sendAgain' | translate}}</a>
+              </div>
+            </td>
+        </tr>
+        </tbody>
+      </table>
+      </md-table-container>
+
+      <div ng-if="contract.isPracticeSchool || contract.isPracticeTelework || contract.isPracticeEnterprise || contract.isPracticeOther">
+      <fieldset flex="100">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'contract.practicePlace' | translate}}</legend>
+        <div layout="column">
+          <md-input-container flex ng-if="contract.isPracticeSchool">
+            <md-checkbox ng-model="contract.isPracticeSchool" disabled>
+              {{'contract.practicePlaceSchool' | translate}}</md-checkbox>
+          </md-input-container>
+          <md-input-container flex ng-if="contract.isPracticeTelework">
+            <md-checkbox ng-model="contract.isPracticeTelework" disabled>
+              {{'contract.practicePlaceDistanceWork' | translate}}</md-checkbox>
+          </md-input-container>
+          <md-input-container flex ng-if="contract.isPracticeEnterprise">
+            <md-checkbox ng-model="contract.isPracticeEnterprise" disabled>
+              {{'contract.practicePlaceEnterprise' | translate}}</md-checkbox>
+          </md-input-container>
+          <div layout="row" ng-if="contract.isPracticeEnterprise" flex>
+            <md-input-container flex>
+              <label>{{'contract.practicePlaceEnterpriseLocation' | translate}}</label>
+              <hois-value value="contract.practicePlace"></hois-value>
+            </md-input-container>
+          </div>
+          <md-input-container flex ng-if="contract.isPracticeOther">
+            <md-checkbox ng-model="contract.isPracticeOther" disabled>
+              {{'contract.practicePlaceElse' | translate}}</md-checkbox>
+          </md-input-container>
+          <div layout="row" ng-if="contract.isPracticeOther" flex>
+            <md-input-container flex>
+              <label class="textInput">{{'contract.otherPlace' | translate}}</label>
+              <hois-value value="contract.practicePlace"></hois-value>
+            </md-input-container>
+          </div>
+        </div>
+      </fieldset>
+      </div>
+      <div style="margin-top:20px;" layout="row" layout-sm="column" layout-xs="column" flex>
         <md-input-container flex>
           <label class="textInput">{{'contract.schoolSupervisor' | translate}}</label>
           <hois-value value="currentLanguageNameField(contract.teacher)"></hois-value>
@@ -133,19 +190,103 @@
 
       <div layout="row" flex>
         <md-input-container flex>
-          <label>{{'contract.markPracticeAsExcusedInDiaries' | translate}}</label>
+          <label>{{'contract.supervisorEvaluation' | translate}}</label>
+          <hois-value value="currentLanguageNameField(contract.practiceEvaluation)"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div ng-if="!formState.isHigher" layout="column" flex>
+        <md-input-container flex>
+          <label>{{'contract.markPracticeAsAtPractice' | translate}}</label>
           <hois-value value="contract.isPracticeAbsence ? 'main.yes' : 'main.no' | translate"></hois-value>
         </md-input-container>
+        <md-input-container flex>
+          <label>{{'contract.markPracticeAsExcused' | translate}}</label>
+          <hois-value value="contract.isPracticeHidden ? 'main.yes' : 'main.no' | translate"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" class="form-readonly">
+        <md-input-container flex>
+          <label>{{'contract.status' | translate}}</label>
+          <hois-value value="currentLanguageNameField(contract.status)"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div ng-if="!showCancelBoolean && contract.canceledBy !== null" layout="column">
+        <fieldset class="form-readonly" flex="100">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'contract.cancelInfo' | translate}}</legend>
+          <div layout="row" style="padding-top:15px">
+          <div flex="50">
+            <md-input-container style="width: 100%">
+                <label>{{'practice.contract.date' | translate}}</label>
+                <hois-value value="contract.canceled | hoisDate"></hois-value>
+            </md-input-container>
+          </div>
+          <div flex="50">
+              <md-input-container style="width: 100%">
+                  <label>{{'contract.canceledBy' | translate}}</label>
+                  <hois-value value="contract.canceledBy"></hois-value>
+              </md-input-container>
+          </div>
+          </div>
+          <div layout="row">
+            <md-input-container style="width: 100%">
+              <label class="textInput">{{'practice.contract.cancelReason' | translate}}</label>
+              <hois-classifier-value ng-model="contract.cancelReason" required model-value-attr="code" main-classifier-code="LEPING_TYH_POHJUS"></hois-classifier-value>
+            </md-input-container>
+          </div>
+          <div layout="row">
+          <md-input-container flex>
+            <label class="textInput">{{'enterprise.admissionTab.addInfo' | translate}}</label>
+            <hois-value value="contract.cancelDesc"></hois-value>
+          </md-input-container>
+          </div>
+        </fieldset>
+      </div>
+      </div>
+      <div ng-if="showCancelBoolean && contract.canceledBy === null" layout="column">
+        <fieldset flex="100">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'contract.cancelInfo' | translate}}</legend>
+          <div layout="row">
+          <md-input-container flex="50">
+            <label class="textInput">{{'practice.contract.cancelReason' | translate}}</label>
+            <hois-classifier-select ng-model="contract.cancelReason" required model-value-attr="code" main-classifier-code="LEPING_TYH_POHJUS"></hois-classifier-select>
+          </md-input-container>
+          <div class="form-readonly" flex>
+            <div>
+            <md-input-container style="margin-top: 20px;width: 100%">
+                <label>{{'practice.contract.date' | translate}}</label>
+                <hois-value value="contract.canceled | hoisDate"></hois-value>
+            </md-input-container>
+            </div>
+          </div>
+          </div>
+          <div layout="row">
+          <md-input-container flex>
+            <label class="textInput">{{'enterprise.admissionTab.addInfo' | translate}}</label>
+            <input name="info" ng-model="contract.cancelDesc" md-maxlength="4000" ng-required="contract.cancelReason === 'LEPING_TYH_POHJUS_M'">
+          </md-input-container>
+          </div>
+          <div layout="row">
+            <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="showCancel()">{{'main.button.cancel' | translate}}</md-button>
+          </div>
+        </fieldset>
       </div>
 
       <div layout="row">
         <md-button class="md-raised md-default" ng-click="back('#/contracts/')">{{'main.button.back' | translate}}</md-button>
-        <md-button ng-if="(auth.isAdmin() && contract.status === 'LEPING_STAATUS_Y' || contract.status === 'LEPING_STAATUS_S')
+        <md-button ng-if="(auth.isAdmin() && contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code=== 'LEPING_STAATUS_S')
           && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" class="md-raised" 
           ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-        <md-button ng-if="contract.wdId && (contract.status === 'LEPING_STAATUS_Y' || contract.status === 'LEPING_STAATUS_L' || contract.status === 'LEPING_STAATUS_K')"
+        <md-button ng-if="contract.wdId && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_K')"
           class="md-raised md-default" ng-href="{{getEkisContractUrl(contract.wdId)}}" target="_blank">{{'contract.button.viewContractFromEkis' | translate}}</md-button>
+        <md-button ng-if="auth.isAdmin() && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K')
+        && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING') && contract.canceledBy === null" class="md-raised" 
+        ng-click="showCancel()">{{'contract.cancel' | translate}}</md-button>
       </div>
+      </form>
     </div>
   </div>
 </div>

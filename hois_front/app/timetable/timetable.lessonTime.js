@@ -1,6 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableLessonTimeController', function ($scope, $rootScope, $q, QueryUtils, Classifier, DataUtils, ArrayUtils, $route, message, $timeout, $location) {
+angular.module('hitsaOis').controller('TimetableLessonTimeController',
+function ($scope, $rootScope, $q, QueryUtils, Classifier, DataUtils, ArrayUtils, $route, message, $timeout, $location, dialogService) {
   var INITIAL_BLOCK_COUNT = 10;
   $rootScope.replaceLastUrl("#/timetable/lessonTime/search");
   $scope.buildings = QueryUtils.endpoint('/autocomplete/buildings').query();
@@ -243,22 +244,31 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
         $scope.blocks.push(initialBlock());
       });
   }
-  function isEdit() {
+  $scope.isEdit = function() {
     return angular.isDefined(entity);
-  }
+  };
 
   $scope.save = function() {
     $scope.lessonTimeForm.$setSubmitted();
     if($scope.lessonTimeForm.$valid && eachBlockHasValidRows()) {
       var LessonTimeEndpoint;
-      if(isEdit()) {
+      if($scope.isEdit()) {
         LessonTimeEndpoint = QueryUtils.endpoint('/lessontimes/');
         var updatedEntity = dtoToEntity($scope);
-        new LessonTimeEndpoint(updatedEntity).$update().then(function(result) {
-          message.info('main.messages.create.success');
-          $scope.lessonTimeForm.$setPristine();
-          entityToForm(result);
-        });
+        if (!updatedEntity.lessonTimeBuildingGroups || (angular.isArray(updatedEntity.lessonTimeBuildingGroups) && updatedEntity.lessonTimeBuildingGroups.length === 0)) {
+          dialogService.confirmDialog({prompt: 'timetable.lessonTime.deleteConfirm'}, function() {
+            new LessonTimeEndpoint(updatedEntity).$update().then(function() {
+              message.info('main.messages.delete.success');
+              $scope.back('#/timetable/lessonTime/search');
+            });
+          });
+        } else {
+          new LessonTimeEndpoint(updatedEntity).$update().then(function(result) {
+            message.info('main.messages.create.success');
+            $scope.lessonTimeForm.$setPristine();
+            entityToForm(result);
+          });
+        }
       } else {
         LessonTimeEndpoint = QueryUtils.endpoint('/lessontimes');
         var newEntity = dtoToEntity($scope);

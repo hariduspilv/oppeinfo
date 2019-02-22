@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.Enterprise;
+import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.service.EnterpriseService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.EnterpriseForm;
-import ee.hitsa.ois.web.dto.EnterpriseDto;
+import ee.hitsa.ois.web.dto.enterprise.EnterpriseDto;
 
 @RestController
 @RequestMapping("/enterprises")

@@ -192,28 +192,29 @@ public class ModuleProtocolService extends AbstractProtocolService {
         return results;
     }
 
-    public Collection<ModuleProtocolStudentSelectDto> occupationModuleStudents(HoisUserDetails user, Long studyYearId,
+    public Collection<ModuleProtocolStudentSelectDto> occupationModuleStudents(HoisUserDetails user,
             Long occupationalModuleId) {
         Map<Long, ModuleProtocolStudentSelectDto> result = studentsForSelection(user, occupationalModuleId);
-        addJournalAndPracticeJournalResults(result, studyYearId, occupationalModuleId);
+        addJournalAndPracticeJournalResults(result, occupationalModuleId);
         return result.values();
     }
 
-    private void addJournalAndPracticeJournalResults(Map<Long, ModuleProtocolStudentSelectDto> result, Long studyYearId, Long occupationalModule) {
+    private void addJournalAndPracticeJournalResults(Map<Long, ModuleProtocolStudentSelectDto> result, Long occupationalModule) {
         if (!result.isEmpty()) {
             List<?> grades = em.createNativeQuery("select js.student_id, jes.grade_code from journal_entry_student jes "
                     + "join journal_student js on js.id = jes.journal_student_id "
                     + "join journal_entry je on je.id = jes.journal_entry_id "
                     + "join journal j on je.journal_id = j.id "
-                    + "where js.student_id in (:studentIds) and j.study_year_id = :studyYearId and je.entry_type_code = :entryTypeCode "
+                    + "where js.student_id in (:studentIds) and je.entry_type_code = :entryTypeCode "
                     + "and exists (select jot.id from journal_omodule_theme jot "
                     + "join curriculum_version_omodule_theme t on t.id = jot.curriculum_version_omodule_theme_id "
                     + "where jot.journal_id = js.journal_id and t.curriculum_version_omodule_id = :occupationalModule) "
                     + "union all "
                     + "select pj.student_id, pj.grade_code from practice_journal pj "
-                    + "where pj.student_id in (:studentIds) and pj.study_year_id = :studyYearId and pj.curriculum_version_omodule_id = :occupationalModule")
+                    + "where pj.student_id in (:studentIds) and pj.grade_code is not null and exists "
+                    + "(select pjms.id from practice_journal_module_subject pjms "
+                        + "where pjms.practice_journal_id = pj.id and pjms.curriculum_version_omodule_id = :occupationalModule)")
             .setParameter("studentIds", result.keySet())
-            .setParameter("studyYearId", studyYearId)
             .setParameter("entryTypeCode", JournalEntryType.SISSEKANNE_L.name())
             .setParameter("occupationalModule", occupationalModule).getResultList();
 
@@ -382,7 +383,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
     public ModuleProtocolOccupationalModuleDto occupationModule(HoisUserDetails user, Long studyYearId,
             Long curriculumVersionOccupationModuleId) {
         ModuleProtocolOccupationalModuleDto dto = new ModuleProtocolOccupationalModuleDto();
-        dto.setOccupationModuleStudents(occupationModuleStudents(user, studyYearId, curriculumVersionOccupationModuleId));
+        dto.setOccupationModuleStudents(occupationModuleStudents(user, curriculumVersionOccupationModuleId));
         dto.setTeacher(lessonPlanModuleTeacher(studyYearId, curriculumVersionOccupationModuleId));
         return dto;
     }

@@ -43,7 +43,7 @@
       <table class="lessonplan">
         <thead>
           <tr>
-            <th colspan="3" class="dividerBorder">{{'lessonplan.total' | translate}}</th>
+            <th colspan="3" class="dividerBorder"></th>
             <th ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></th>
             <th ng-if="sp._selected" colspan="{{sp.weekNrs.length}}" class="dividerBorder" ng-repeat="sp in ::formState.studyPeriods track by $index">
               {{currentLanguageNameField(sp)}} ({{sp.startDate | hoisDayMonth}}-{{sp.endDate | hoisDayMonth}})</th>

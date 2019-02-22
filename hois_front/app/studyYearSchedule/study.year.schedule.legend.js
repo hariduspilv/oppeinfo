@@ -5,7 +5,7 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController',
     $scope.removedInUseLegend = false;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPETOOGRAAFIK);
     $scope.colorOptions = {
-      disabled: $scope.canEdit
+      disabled: !$scope.canEdit
     };
 
     function colorSetter(row) {

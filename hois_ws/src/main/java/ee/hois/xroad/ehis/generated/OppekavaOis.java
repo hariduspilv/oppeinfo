@@ -1,6 +1,7 @@
 
 package ee.hois.xroad.ehis.generated;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="tase" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oasKinnitDoc" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oasKinnitKp" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
- *         &lt;element name="oppekeeled" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisOppekeeled" maxOccurs="unbounded"/&gt;
+ *         &lt;element name="oppekeeled" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisOppekeeled"/&gt;
  *         &lt;element name="nomKestusAasta" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="nomKestusKuud" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}monthsInteger" minOccurs="0"/&gt;
  *         &lt;element name="oppekavaMaht" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
@@ -37,10 +38,10 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="oppekavaGrupp" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="opetajaKoolitus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oneOrZeroInteger" minOccurs="0"/&gt;
  *         &lt;element name="akadKraad" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="praktikaMaht" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
- *         &lt;element name="spetsialiseerumised" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisOKSpetsialiseerumised" maxOccurs="unbounded"/&gt;
+ *         &lt;element name="praktikaMaht" type="{http://www.w3.org/2001/XMLSchema}decimal"/&gt;
+ *         &lt;element name="spetsialiseerumised" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisOKSpetsialiseerumised"/&gt;
  *         &lt;element name="vastavusRiikOppekava" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="toimumiseKohad" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisToimumiseKohad" maxOccurs="unbounded" minOccurs="0"/&gt;
+ *         &lt;element name="toimumiseKohad" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisToimumiseKohad" minOccurs="0"/&gt;
  *         &lt;element name="yhisOppekavaOas" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisYhisOppekava" maxOccurs="unbounded" minOccurs="0"/&gt;
  *         &lt;element name="kutsestandardid" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisKutsestandardid"/&gt;
  *         &lt;element name="failid" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisFailid"/&gt;
@@ -96,7 +97,7 @@ public class OppekavaOis {
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar oasKinnitKp;
     @XmlElement(required = true)
-    protected List<OisOppekeeled> oppekeeled;
+    protected OisOppekeeled oppekeeled;
     @XmlElement(required = true)
     protected BigInteger nomKestusAasta;
     @XmlSchemaType(name = "integer")
@@ -111,11 +112,11 @@ public class OppekavaOis {
     protected Integer opetajaKoolitus;
     protected String akadKraad;
     @XmlElement(required = true)
-    protected BigInteger praktikaMaht;
+    protected BigDecimal praktikaMaht;
     @XmlElement(required = true)
-    protected List<OisOKSpetsialiseerumised> spetsialiseerumised;
+    protected OisOKSpetsialiseerumised spetsialiseerumised;
     protected String vastavusRiikOppekava;
-    protected List<OisToimumiseKohad> toimumiseKohad;
+    protected OisToimumiseKohad toimumiseKohad;
     protected List<OisYhisOppekava> yhisOppekavaOas;
     @XmlElement(required = true)
     protected OisKutsestandardid kutsestandardid;
@@ -294,30 +295,25 @@ public class OppekavaOis {
     /**
      * Gets the value of the oppekeeled property.
      * 
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the oppekeeled property.
-     * 
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getOppekeeled().add(newItem);
-     * </pre>
-     * 
-     * 
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link OisOppekeeled }
-     * 
-     * 
+     * @return
+     *     possible object is
+     *     {@link OisOppekeeled }
+     *     
      */
-    public List<OisOppekeeled> getOppekeeled() {
-        if (oppekeeled == null) {
-            oppekeeled = new ArrayList<OisOppekeeled>();
-        }
-        return this.oppekeeled;
+    public OisOppekeeled getOppekeeled() {
+        return oppekeeled;
+    }
+
+    /**
+     * Sets the value of the oppekeeled property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link OisOppekeeled }
+     *     
+     */
+    public void setOppekeeled(OisOppekeeled value) {
+        this.oppekeeled = value;
     }
 
     /**
@@ -493,10 +489,10 @@ public class OppekavaOis {
      * 
      * @return
      *     possible object is
-     *     {@link BigInteger }
+     *     {@link BigDecimal }
      *     
      */
-    public BigInteger getPraktikaMaht() {
+    public BigDecimal getPraktikaMaht() {
         return praktikaMaht;
     }
 
@@ -505,40 +501,35 @@ public class OppekavaOis {
      * 
      * @param value
      *     allowed object is
-     *     {@link BigInteger }
+     *     {@link BigDecimal }
      *     
      */
-    public void setPraktikaMaht(BigInteger value) {
+    public void setPraktikaMaht(BigDecimal value) {
         this.praktikaMaht = value;
     }
 
     /**
      * Gets the value of the spetsialiseerumised property.
      * 
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the spetsialiseerumised property.
-     * 
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getSpetsialiseerumised().add(newItem);
-     * </pre>
-     * 
-     * 
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link OisOKSpetsialiseerumised }
-     * 
-     * 
+     * @return
+     *     possible object is
+     *     {@link OisOKSpetsialiseerumised }
+     *     
      */
-    public List<OisOKSpetsialiseerumised> getSpetsialiseerumised() {
-        if (spetsialiseerumised == null) {
-            spetsialiseerumised = new ArrayList<OisOKSpetsialiseerumised>();
-        }
-        return this.spetsialiseerumised;
+    public OisOKSpetsialiseerumised getSpetsialiseerumised() {
+        return spetsialiseerumised;
+    }
+
+    /**
+     * Sets the value of the spetsialiseerumised property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link OisOKSpetsialiseerumised }
+     *     
+     */
+    public void setSpetsialiseerumised(OisOKSpetsialiseerumised value) {
+        this.spetsialiseerumised = value;
     }
 
     /**
@@ -568,30 +559,25 @@ public class OppekavaOis {
     /**
      * Gets the value of the toimumiseKohad property.
      * 
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the toimumiseKohad property.
-     * 
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getToimumiseKohad().add(newItem);
-     * </pre>
-     * 
-     * 
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link OisToimumiseKohad }
-     * 
-     * 
+     * @return
+     *     possible object is
+     *     {@link OisToimumiseKohad }
+     *     
      */
-    public List<OisToimumiseKohad> getToimumiseKohad() {
-        if (toimumiseKohad == null) {
-            toimumiseKohad = new ArrayList<OisToimumiseKohad>();
-        }
-        return this.toimumiseKohad;
+    public OisToimumiseKohad getToimumiseKohad() {
+        return toimumiseKohad;
+    }
+
+    /**
+     * Sets the value of the toimumiseKohad property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link OisToimumiseKohad }
+     *     
+     */
+    public void setToimumiseKohad(OisToimumiseKohad value) {
+        this.toimumiseKohad = value;
     }
 
     /**

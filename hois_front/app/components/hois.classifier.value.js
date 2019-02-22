@@ -15,12 +15,16 @@ angular.module('hitsaOis')
       restrict: 'E',
       replace: true,
       scope: {
-        ngModel: '=',
+        ngModel: '=?',
+        ngValue: '=?',
         mainClassifierCode: '@',
         mainClassifierCodes: '@',
         showDate: '@'
       },
       link: function postLink(scope, element) {
+        if (angular.isDefined(scope.ngValue)) {
+          scope.ngModel = scope.ngValue;
+        }
         element[0].parentElement.classList.add("md-input-has-value");
         var classifiervalues;
         scope.getLabel = angular.isDefined(scope.showDate) ? hoisValidDatesFilter : scope.$root.currentLanguageNameField;

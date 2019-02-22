@@ -1,0 +1,74 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+    <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/student/statistics" name="practice.students">
+        {{'practice.student.statistics' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/contract/statistics" name="practice.contracts">
+      {{'practice.contract.statistics' | translate}}</md-nav-item>
+    <!--<md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/studyYear/statistics" name="practice.studyYear">
+    {{'practice.studyYear.statistics' | translate}}</md-nav-item>-->
+  </md-nav-bar>
+  <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+      <fieldset ng-if="auth.isAdmin()">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+          <div layout="column" flex>
+            <div layout="row">
+              <md-input-container>
+                <label class="textInput">{{'practice.contract.studyYear' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.studyYear" required model-value-attr="code" main-classifier-code="OPPEAASTA"></hois-classifier-select>
+              </md-input-container>
+            </div>
+  
+            <div layout="row" layout-xs="column">
+              <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+              <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'document.button.excel' | translate}}</a>
+            </div>
+  
+          </div>
+          <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+        </form>
+      </fieldset>
+    </div>
+  </div>
+  <div layout-padding>
+    <div flex>
+      <md-table-container>
+        <table md-table md-progress="tabledata.$promise" class="secondary-table">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th md-column md-order-by="en.name">{{'practice.studyYear.studentGroup' | translate}}</th>
+              <th md-column>{{'practice.studyYear.curriculumName' | translate}}</th>
+              <th md-column>{{'practice.studyYear.curriculumCode' | translate}}</th>
+              <th md-column>{{'practice.studyYear.curriculumGroup' | translate}}</th>
+              <th md-column>{{'practice.studyYear.course' | translate}}</th>
+              <th md-column>{{'practice.studyYear.totalWent' | translate}}</th>
+              <th md-column>{{'practice.studyYear.totalCompleted' | translate}}</th>
+              <th md-column>{{'practice.studyYear.totalFailed' | translate}}</th>
+              <th md-column>{{'practice.studyYear.nameAndReason' | translate}}</th>
+              <th md-column>{{'practice.studyYear.grade' | translate}}</th>
+              <th md-column>{{'practice.studyYear.enterprises' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{row.student ? row.student : '-'}}</td>
+              <td md-cell>{{row.studentGroup ? row.studentGroup : '-'}}</td>
+              <td md-cell>{{row.contractNr ? row.contractNr : '-'}}</td>
+              <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
+              <td md-cell>{{row.enterprise ? row.enterprise : '-'}}</td>
+              <td md-cell>{{row.status ? currentLanguageNameField(row.status) : "-"}}</td>
+              <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" 
+                    ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+        md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select></md-table-pagination>
+    </div>
+  </div>
+    

@@ -132,10 +132,7 @@
           </div>
 
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
-            <md-input-container class="md-block" flex>
-              <label>{{'lessonplan.journal.group' | translate}}</label>
-              <hois-select ng-model="formState.group" values="formState.studentGroups" flex></hois-select>
-            </md-input-container>
+            <hois-autocomplete flex ng-model="formState.group" label="lessonplan.journal.group" ha-search="searchStudentGroups"></hois-autocomplete>
           </div>
 
           <div layout="row" flex>

@@ -31,6 +31,8 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     entityToForm(entity);
   }
 
+  $scope.getAstronomicalHours = DataUtils.getAstronomicalHours;
+
   $scope.addNewEntryRow = function () {
     $scope.practiceJournal.practiceJournalEntries.push({ isStudentEntry: $scope.auth.isStudent() });
   };
@@ -109,6 +111,10 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
         $location.path('/practiceJournals');
       });
     });
+  };
+
+  $scope.getNames = function(names) {
+    return names.map(function(elem){return elem.supervisorName;}).join(', ');
   };
 
   $scope.deleteFile = function(file){

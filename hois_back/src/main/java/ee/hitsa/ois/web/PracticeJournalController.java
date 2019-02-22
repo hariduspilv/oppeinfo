@@ -25,8 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.PracticeJournal;
+import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.ContractService;

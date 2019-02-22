@@ -1,6 +1,8 @@
 package ee.hitsa.ois.util;
 
-import ee.hitsa.ois.domain.Enterprise;
+import org.apache.commons.lang3.StringUtils;
+
+import ee.hitsa.ois.domain.enterprise.Enterprise;
 
 public abstract class EnterpriseUtil {
 
@@ -18,6 +20,9 @@ public abstract class EnterpriseUtil {
      * @return "name (regCode)"
      */
     public static String getName(String name, String regCode) {
+        if (StringUtils.isEmpty(regCode)) {
+            return name;
+        }
         return name + " (" + regCode + ")";
     }
 }

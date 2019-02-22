@@ -1,0 +1,65 @@
+<div layout-padding>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" novalidate>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'practiceEvaluation.nameEt' | translate}}</label>
+            <input ng-model="criteria.nameEt" name="nameEt" type="text" md-maxlength="255">
+          </md-input-container>
+          <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'practiceEvaluation.target' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.target" name="target" model-value-attr="code" main-classifier-code="PRAKTIKA_SIHTRYHM"></hois-classifier-select>
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="criteria.isActive">{{'practiceEvaluation.isActive' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PRHINDAMISVORM')" 
+            href="#/practice/evaluation/new">{{'main.button.create' | translate}}</md-button>
+        </div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table class="secondary-table">
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'practiceEvaluation.nameEt' | translate}}</th>
+            <th md-column>{{'practiceEvaluation.addInfo' | translate}}</th>
+            <th md-column>{{'practiceEvaluation.target' | translate}}</th>
+            <th md-column>{{'practiceEvaluation.isActive' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <a md-no-ink class="md-primary" ng-href="#/practice/evaluation/{{::row.id}}/view">{{::row.nameEt}}</a>
+            </td>
+            <td md-cell>{{::row.addInfo}}</td>
+            <td md-cell>{{currentLanguageNameField(row.target)}}</td>
+            <td md-cell>{{row.isActive ? 'main.yes' : 'main.no' | translate}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PRHINDAMISVORM')"
+                ng-href="#/practice/evaluation/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }" md-page-select></md-table-pagination>
+  </div>
+</div>

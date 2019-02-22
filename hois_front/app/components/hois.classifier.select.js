@@ -53,6 +53,9 @@ angular.module('hitsaOis')
         element.attr('required', scope.isRequired);
         
         scope.isSelected = function(option) {
+          if (angular.isUndefined(scope.value)) {
+            return false;
+          }
           if (scope.isMultiple) {
             if (angular.isDefined(scope.modelValueAttr)) {
               if (angular.isArray(scope.value)) {

@@ -217,6 +217,11 @@
       <div ng-include="'teacher/teacher.rtip.absence.view.html'"></div>
     </md-content>
   </md-tab>
+  <md-tab label="{{'teacher.subjectPrograms.label' | translate}}" ng-if="teacher.isHigher">
+    <md-content class="md-padding">
+      <div ng-include="'teacher/teacher.programs.html'"></div>
+    </md-content>
+  </md-tab>
 </md-tabs>
 <div layout="row" ng-if="!auth.isTeacher()" class="md-padding">
   <md-button ng-if="!isShowingRtipTab && teacher.canEdit" ng-href="#/teachers/{{teacher.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>

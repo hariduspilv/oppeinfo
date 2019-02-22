@@ -1,18 +1,26 @@
 package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import ee.hitsa.ois.domain.PracticeJournalModuleSubject;
+import ee.hitsa.ois.util.StreamUtil;
 
 public class ModuleProtocolPracticeJournalResultDto {
 
     private Long journalId;
     private String grade;
-    private AutocompleteResult theme;
+    private List<AutocompleteResult> themes;
     private LocalDateTime inserted; 
     
-    public ModuleProtocolPracticeJournalResultDto(Long journalId, String grade, AutocompleteResult theme, LocalDateTime inserted) {
+    public ModuleProtocolPracticeJournalResultDto(Long journalId, Set<PracticeJournalModuleSubject> moduleSubject,
+            String grade, LocalDateTime inserted) {
         this.journalId = journalId;
         this.grade = grade;
-        this.theme = theme;
+        this.themes = StreamUtil.nullSafeSet(moduleSubject).stream().filter(ms -> ms.getTheme() != null)
+                .map(ms -> AutocompleteResult.of(ms.getTheme())).collect(Collectors.toList());
         this.inserted = inserted;
     }
 
@@ -32,12 +40,12 @@ public class ModuleProtocolPracticeJournalResultDto {
         this.grade = grade;
     }
     
-    public AutocompleteResult getTheme() {
-        return theme;
+    public List<AutocompleteResult> getThemes() {
+        return themes;
     }
     
-    public void setTheme(AutocompleteResult theme) {
-        this.theme = theme;
+    public void setTheme(List<AutocompleteResult> themes) {
+        this.themes = themes;
     }
 
     public LocalDateTime getInserted() {

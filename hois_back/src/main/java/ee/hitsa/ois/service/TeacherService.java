@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,7 @@ import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.teacher.Teacher;
@@ -236,6 +238,10 @@ public class TeacherService {
      */
     public void delete(HoisUserDetails user, Teacher teacher) {
         EntityUtil.setUsername(user.getUsername(), em);
+        Optional<User> teacherUser = teacher.getPerson().getUsers().stream().filter(u -> teacher.getId().equals(EntityUtil.getNullableId(u.getTeacher()))).findFirst();
+        if (teacherUser.isPresent()) {
+            EntityUtil.deleteEntity(teacherUser.get(), em);
+        }
         EntityUtil.deleteEntity(teacher, em);
     }
 
