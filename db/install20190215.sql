@@ -1,4 +1,4 @@
-\c tahvel_20190215_uus
+\c hois
 
 /* Create Tables */
 
