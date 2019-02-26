@@ -34,6 +34,7 @@ import ee.hitsa.ois.domain.ContractModuleSubject;
 import ee.hitsa.ois.domain.ContractSupervisor;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.PracticeJournal;
+import ee.hitsa.ois.domain.PracticeJournalModuleSubject;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
@@ -472,6 +473,14 @@ public class ContractService {
         }
         practiceJournal.setStudyYear(studyYear);
         practiceJournal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
+
+        for (ContractModuleSubject contractModuleSubject : contract.getModuleSubjects()) {
+            PracticeJournalModuleSubject moduleSubject = EntityUtil.bindToEntity(contractModuleSubject,
+                    new PracticeJournalModuleSubject());
+            moduleSubject.setPracticeJournal(practiceJournal);
+            practiceJournal.getModuleSubjects().add(moduleSubject);
+        }
+
         return practiceJournal;
     }
 
