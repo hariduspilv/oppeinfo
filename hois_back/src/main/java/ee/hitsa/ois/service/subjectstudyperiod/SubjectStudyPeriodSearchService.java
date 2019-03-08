@@ -19,7 +19,7 @@ import ee.hitsa.ois.enums.SubjectProgramStatus;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
-import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodSearchCommand;
+import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
 

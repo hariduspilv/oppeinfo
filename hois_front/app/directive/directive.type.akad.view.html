@@ -2,6 +2,7 @@
   <table md-table md-row-select="formState.cancelSelect" multiple ng-model="formState.selectedStudents" class="secondary-table">
     <thead md-head>
       <tr md-row>
+        <th md-column>{{'directive.student.order' | translate}}</th>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
         <th md-column>{{'directive.student.isPeriod' | translate}}</th>
@@ -14,6 +15,7 @@
     </thead>
     <tbody md-body>
       <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" md-auto-select ng-repeat="row in record.students | orderBy:'+lastname'" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{$index + 1}}.</td>
         <td md-cell>
           <a class="md-primary" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a>
         </td>

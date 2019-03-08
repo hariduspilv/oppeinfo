@@ -28,6 +28,7 @@ public class StudentAbsence extends BaseEntityWithId {
     private Boolean isAccepted;
     private Boolean isRejected;
     private Boolean isLessonAbsence;
+    private String rejectReason;
     
     @OneToOne
     private Contract contract;
@@ -114,5 +115,12 @@ public class StudentAbsence extends BaseEntityWithId {
     public void setContract(Contract contract) {
         this.contract = contract;
     }
-    
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
+    }
 }

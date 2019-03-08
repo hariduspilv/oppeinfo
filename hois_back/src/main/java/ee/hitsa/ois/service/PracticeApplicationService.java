@@ -3,6 +3,7 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.domain.enterprise.EnterpriseSchool;
 import ee.hitsa.ois.domain.enterprise.EnterpriseSchoolPerson;
 import ee.hitsa.ois.domain.enterprise.PracticeAdmission;
@@ -26,6 +28,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.PracticeApplicationStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -34,6 +37,7 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.practice.PracticeApplicationForm;
 import ee.hitsa.ois.web.commandobject.practice.PracticeApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.practice.PracticeApplicationSearchCommand;
@@ -65,8 +69,8 @@ public class PracticeApplicationService {
 
     private List<PracticeAdmissionStudentDto> studentAdmissions(HoisUserDetails user, boolean passed) {
         List<?> result = em.createNativeQuery("select padm.id as admission_id, e.name, padm.valid_from, padm.valid_thru, padm.places, "
-                + "(select count(*) from practice_application where practice_admission_id = padm.id) as app_count, "
-                + "padm.add_info, papp.submitted, papp.status_code, papp.reject_reason, c.id as contract_id"
+                + "(select count(*) from practice_application where practice_admission_id = padm.id and status_code in (?3, ?4)) as app_count, "
+                + "padm.add_info, papp.submitted, papp.status_code, papp.reject_reason, c.id as contract_id, padm.is_strict "
                 + " from practice_admission padm"
                 + " join enterprise_school es on es.id = padm.enterprise_school_id"
                 + " join enterprise e on e.id = es.enterprise_id"
@@ -80,6 +84,8 @@ public class PracticeApplicationService {
                 + " order by e.name, padm.valid_from, padm.valid_thru")
                 .setParameter(1, user.getSchoolId())
                 .setParameter(2, user.getStudentId())
+                .setParameter(3, PracticeApplicationStatus.PR_TAOTLUS_A.name())
+                .setParameter(4, PracticeApplicationStatus.PR_TAOTLUS_E.name())
                 .getResultList();
         return StreamUtil.toMappedList(r -> {
             PracticeAdmissionStudentDto dto = new PracticeAdmissionStudentDto();
@@ -94,6 +100,7 @@ public class PracticeApplicationService {
             dto.setStatus(resultAsString(r, 8));
             dto.setRejectReason(resultAsString(r, 9));
             dto.setContractId(resultAsLong(r, 10));
+            dto.setIsStrict(resultAsBoolean(r, 11));
             return dto;
         }, result);
     }
@@ -101,9 +108,13 @@ public class PracticeApplicationService {
     public void apply(HoisUserDetails user, PracticeAdmission admission, PracticeApplicationForm form) {
         UserUtil.assertSameSchool(user, admission.getEnterpriseSchool().getSchool());
         Student student = em.getReference(Student.class, user.getStudentId());
-        AssertionFailedException.throwIf(getStudentPracticeApplication(admission, student) != null, 
+        PracticeApplication application = getStudentPracticeApplication(admission, student);
+        AssertionFailedException.throwIf(application != null && !ClassifierUtil.equals(PracticeApplicationStatus.PR_TAOTLUS_C, application.getStatus()), 
                 "Student already applied for this admission");
-        PracticeApplication application = new PracticeApplication();
+        ValidationFailedException.throwIf(!admissionHasPlaces(admission), "practiceApplication.errors.noplaces");
+        if (application == null) {
+            application = new PracticeApplication();
+        }
         application.setPracticeAdmission(admission);
         application.setStudent(student);
         application.setAddInfo(form.getAddInfo());
@@ -125,6 +136,19 @@ public class PracticeApplicationService {
                 "Cannot annul this application");
         EntityUtil.setUsername(user.getUsername(), em);
         application.setStatus(em.getReference(Classifier.class, PracticeApplicationStatus.PR_TAOTLUS_C.name()));
+    }
+    
+    private boolean admissionHasPlaces(PracticeAdmission admission) {
+        if (Boolean.TRUE.equals(admission.getIsStrict()) && admission.getPlaces() != null) {
+            return em.createNativeQuery("select papp.id from practice_admission pa "
+                    + "join practice_application papp on pa.id = papp.practice_admission_id "
+                    + "where pa.id = ?1 and papp.status_code in (?2, ?3) limit " + admission.getPlaces().intValue())
+                .setParameter(1, admission.getId())
+                .setParameter(2, PracticeApplicationStatus.PR_TAOTLUS_A.name())
+                .setParameter(3, PracticeApplicationStatus.PR_TAOTLUS_E.name())
+                .getResultList().size() < admission.getPlaces().intValue();
+        }
+        return true;
     }
     
     private PracticeApplication getStudentPracticeApplication(PracticeAdmission admission, Student student) {
@@ -205,7 +229,8 @@ public class PracticeApplicationService {
         Student student = application.getStudent();
         dto.setIsHigher(Boolean.valueOf(StudentUtil.isHigher(student)));
         dto.setStudent(AutocompleteResult.of(student));
-        dto.setEnterpriseId(EntityUtil.getId(enterpriseSchool.getEnterprise()));
+        Enterprise enterprise = enterpriseSchool.getEnterprise();
+        dto.setEnterprise(new AutocompleteResult(EntityUtil.getId(enterprise), enterprise.getName(), enterprise.getName()));
         List<EnterpriseSchoolPerson> enterpriseSchoolPersons = enterpriseSchool.getEnterpriseSchoolPersons();
         List<EnterpriseSchoolPerson> contactPersons = StreamUtil.toFilteredList(esp -> Boolean.TRUE.equals(esp.getContact()), 
                 enterpriseSchoolPersons);

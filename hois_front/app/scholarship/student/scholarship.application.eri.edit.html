@@ -148,7 +148,7 @@
 
             <md-input-container flex="50" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
               <label>{{'stipend.student.bankAccountOwnerName' | translate}}</label>
-              <input type="text" ng-model="application.bankAccountOwnerName" name="bankAccount" required md-maxlength="100"
+              <input type="text" ng-model="application.bankAccountOwnerName" name="bankAccountOwnerName" required md-maxlength="100"
                 ng-disabled="!application.canApply">
             </md-input-container>
           </div>
@@ -156,7 +156,7 @@
           <div layout="row" flex>
             <md-input-container flex="45" flex-md="100" flex-sm="100" flex-xs="100">
               <label>{{'stipend.student.bankAccountOwnerIdcode' | translate}}</label>
-              <input type="text" ng-model="application.bankAccountOwnerIdcode" name="bankAccount" required md-maxlength="20" 
+              <input type="text" ng-model="application.bankAccountOwnerIdcode" name="bankAccountOwnerIdcode" required md-maxlength="20" 
                 ng-disabled="!application.canApply">
             </md-input-container>
           </div>

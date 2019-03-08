@@ -234,8 +234,13 @@ public class EkisService {
         request.setStEmail(studentEmail);
         request.setStCurricula(student.getCurriculumVersion().getCurriculum().getNameEt());
         request.setStForm(student.getStudyForm() != null ? student.getStudyForm().getNameEt() : null);
+
         StudentGroup sg = student.getStudentGroup();
-        request.setStCourse(sg != null ? sg.getCourse().toString() : null);
+        String course = sg != null ? sg.getCourse().toString() : null;
+        if (course == null) {
+            throw new ValidationFailedException("contract.messages.sendToEkis.error.studentGroupCourseMissing");
+        }
+        request.setStCourse(course);
         
         List<ContractModuleSubject> moduleSubjects = contract.getModuleSubjects();
         request.setStEkap(moduleSubjects.stream().map(ContractModuleSubject::getCredits)

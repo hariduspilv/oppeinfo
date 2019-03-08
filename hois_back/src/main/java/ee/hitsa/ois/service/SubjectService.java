@@ -47,9 +47,9 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUserRights;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
-import ee.hitsa.ois.web.commandobject.SubjectForm;
-import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.commandobject.subject.SubjectForm;
+import ee.hitsa.ois.web.commandobject.subject.SubjectSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
@@ -250,7 +250,7 @@ public class SubjectService {
      */
     public SubjectDto get(HoisUserDetails user, Subject subject) {
         SubjectDto dto;
-        if (user.isSchoolAdmin() || user.isTeacher()) {
+        if (user.isSchoolAdmin()) {
             dto = SubjectDto.of(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
         } else {
             dto = SubjectDto.forPublic(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));

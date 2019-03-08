@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController', function ($scope, $route, dialogService, oisFileService, QueryUtils, message, DataUtils, ArrayUtils) {
+angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController', function ($scope, $route, dialogService, oisFileService, QueryUtils, message, DataUtils, ArrayUtils, Classifier) {
 
   $scope.removeFromArray = ArrayUtils.remove;
 
@@ -12,6 +12,8 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
 
   function entityToForm(entity) {
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
+    $scope.gradesClassCode = entity.isHigher ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
+    $scope.grades = Classifier.queryForDropdown({ mainClassCode: $scope.gradesClassCode });
     $scope.practiceJournal = entity;
   }
 
@@ -19,6 +21,10 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
   if (angular.isDefined(entity)) {
     entityToForm(entity);
   }
+
+  $scope.getNames = function(names) {
+    return names.map(function(elem){return elem.supervisorName;}).join(', ');
+  };
 
   $scope.getAstronomicalHours = DataUtils.getAstronomicalHours;
 
@@ -38,11 +44,16 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
 
   var Endpoint = QueryUtils.endpoint('/practiceJournals/supervisor/' + $route.current.params.uuid + '/saveEntries/');
   $scope.save = function () {
+    var files = [];
+    files = files.concat($scope.practiceJournal.practiceJournalFiles, $scope.practiceJournal.practiceJournalStudentFiles);
+    var evals = [];
+    evals = evals.concat($scope.practiceJournal.supervisorPracticeEvalCriteria, $scope.practiceJournal.studentPracticeEvalCriteria);
     var practiceJournalEntries = new Endpoint(
       {
         supervisorOpinion: $scope.practiceJournal.supervisorOpinion,
         supervisorComment: $scope.practiceJournal.supervisorComment,
-        practiceJournalFiles: $scope.practiceJournal.practiceJournalFiles,
+        supervisorPracticeEvalCriteria: evals,
+        practiceJournalFiles: files,
         practiceJournalEntries: $scope.practiceJournal.practiceJournalEntries
       });
 

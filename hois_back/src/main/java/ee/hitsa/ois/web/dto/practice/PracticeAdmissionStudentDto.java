@@ -15,6 +15,7 @@ public class PracticeAdmissionStudentDto {
     private String status;
     private String rejectReason;
     private Long contractId;
+    private Boolean isStrict;
     
     public Long getId() {
         return id;
@@ -81,6 +82,12 @@ public class PracticeAdmissionStudentDto {
     }
     public void setContractId(Long contractId) {
         this.contractId = contractId;
+    }
+    public Boolean getIsStrict() {
+        return isStrict;
+    }
+    public void setIsStrict(Boolean isStrict) {
+        this.isStrict = isStrict;
     }
     
 }

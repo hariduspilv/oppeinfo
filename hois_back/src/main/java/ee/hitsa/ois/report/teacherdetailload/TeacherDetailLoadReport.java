@@ -7,11 +7,13 @@ import java.util.Map;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class TeacherDetailLoadReport {
 
     private StudyYear studyYear;
     private StudyPeriod studyPeriod;
+    private AutocompleteResult teacher;
     private LocalDate from;
     private LocalDate thru;
     private List<Classifier> capacities;
@@ -19,7 +21,8 @@ public class TeacherDetailLoadReport {
     private List<Map<String, Object>> periodTypesRow;
     private List<LoadTypeDto> loadTypesRow;
     private List<ResultRowDto> rows;
-    private Boolean journalReport;
+    private Boolean journalSubjectReport;
+    private Boolean isHigher;
     private Boolean isHigherSchool;
 
     public StudyYear getStudyYear() {
@@ -36,6 +39,14 @@ public class TeacherDetailLoadReport {
 
     public void setStudyPeriod(StudyPeriod studyPeriod) {
         this.studyPeriod = studyPeriod;
+    }
+
+    public AutocompleteResult getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(AutocompleteResult teacher) {
+        this.teacher = teacher;
     }
 
     public LocalDate getFrom() {
@@ -94,12 +105,20 @@ public class TeacherDetailLoadReport {
         this.rows = rows;
     }
 
-    public Boolean getJournalReport() {
-        return journalReport;
+    public Boolean getJournalSubjectReport() {
+        return journalSubjectReport;
     }
 
-    public void setJournalReport(Boolean journalReport) {
-        this.journalReport = journalReport;
+    public void setJournalSubjectReport(Boolean journalSubjectReport) {
+        this.journalSubjectReport = journalSubjectReport;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
     }
 
     public Boolean getIsHigherSchool() {

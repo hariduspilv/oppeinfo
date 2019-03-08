@@ -76,19 +76,34 @@ angular.module('hitsaOis').controller('StudentAbsenceController',
       });
     };
 
-    var RejectEndpoint = QueryUtils.endpoint('/absences/reject');
-    $scope.reject = function (absence) {
-      dialogService.confirmDialog({
-        prompt: 'absence.rejectConfirm'
-      }, function () {
-        new RejectEndpoint(absence).$update().then(function () {
-          ArrayUtils.remove($scope.tabledata.content, absence);
-          message.info('absence.rejected');
-          if (!$scope.criteria.status) {
-            $scope.loadData();
+    $scope.openRejectDialog = function (absence) {
+      var form = 'studentAbsence/absence.reject.dialog.html';
+
+      dialogService.showDialog(form,
+        function (dialogScope) {
+          dialogScope.absence = absence;
+          console.log(absence);
+          function isFormValid() {
+            dialogScope.dialogForm.$setSubmitted();
+            if (!dialogScope.dialogForm.$valid) {
+              message.error('main.messages.form-has-errors');
+              return false;
+            }
+            return true;
           }
-        });
-      });
+  
+          dialogScope.rejectAbsence = function () {
+            if (isFormValid()) {
+              QueryUtils.endpoint('/absences/reject/' + dialogScope.absence.id).put(dialogScope.rejectReason).$promise.then(function () {
+                ArrayUtils.remove($scope.tabledata.content, absence);
+                message.info('absence.rejected');
+                if (!$scope.criteria.status) {
+                  $scope.loadData();
+                }
+              });
+            }
+          };
+        }, function () {});
     };
 
     var AcceptByLessonsEndpoint = QueryUtils.endpoint('/absences/acceptByLessons');

@@ -71,6 +71,12 @@ public class PracticeEnterpriseController {
         return practiceEnterpriseService.search(user, command, pageable);
     }
     
+    @GetMapping("/sameCountryAndCode")
+    public EnterpriseRegCodeResponseDto sameCountryAndCode(HoisUserDetails user, EnterpriseRegCodeCheckDto enterpriseForm) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return practiceEnterpriseService.sameCountryAndCode(user, enterpriseForm);
+    }
+    
     
     @GetMapping("/regCodeCheck")
     public EnterpriseRegCodeResponseDto regCodeCheck(HoisUserDetails user, EnterpriseRegCodeCheckDto enterpriseForm) {
@@ -285,6 +291,12 @@ public class PracticeEnterpriseController {
     public void searchExcel(HoisUserDetails user, ContractStatisticsCommand criteria, HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
         HttpUtil.xls(response, "practiceContractStatistics.xls", practiceEnterpriseService.searchExcel(user, criteria));
+    }
+    
+    @GetMapping("/practiceStudyYearStatistics.xls")
+    public void searchExcel(HoisUserDetails user, StudyYearStatisticsCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "practiceStudyYearStatistics.xls", practiceEnterpriseService.searchExcel(user, criteria));
     }
     
     @PostMapping("importCsv")

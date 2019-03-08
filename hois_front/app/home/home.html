@@ -1,57 +1,58 @@
 <div layout-padding>
   <div ng-if="state.currentUser" ng-controller="AuthenticatedHomeController as ctrl" layout="column">
-    <div flex ng-if="canCreateAbsence">
+    <div flex ng-if="canCreateAbsence" layout-margin>
       <md-button ng-click="addAbsence()" class="md-primary md-raised">{{'home.student.absence.addAbsence' | translate}}</md-button>
     </div>
-    <div ng-if="canApplyForPractice">
-      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-        <div md-colors="{color: 'accent'}">
-          <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
-          <span>{{'practiceApplication.canApplyForPractice' | translate}} <a href="/#/practice/application/myData?_menu">{{'main.button.view' | translate}}</a></span>
-        </div>
-      </md-whiteframe>
-    </div>
-    <div ng-if="hasUnconfirmedPrograms.has">
-      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-        <div md-colors="{color: 'warn'}">
-          <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-          <span>{{'subjectProgram.youHaveUnconfirmedPrograms' | translate}} <a ng-href="/#/subjectProgram?_menu">{{'main.button.view' | translate}}</a></span>
-        </div>
-      </md-whiteframe>
-    </div>
-    <div ng-if="hasUncompletedPrograms.has">
-      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-        <div md-colors="{color: 'warn'}">
-          <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-          <span>{{'subjectProgram.youHaveUncompletedPrograms' | translate}} <a ng-href="/#/subjectStudyPeriods?_menu">{{'main.button.view' | translate}}</a></span>
-        </div>
-      </md-whiteframe>
-    </div>
-    <div ng-if="hasExpiredBaseModules.length">
-      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-        <div md-colors="{color: 'warn'}">
-          <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-          <span>{{'basemodule.youHaveExpiredBaseModules' | translate}} <a ng-href="/#/basemodule?_menu">{{'main.button.view' | translate}}</a></span>
-        </div>
-      </md-whiteframe>
-    </div>
-    <div ng-if="hasUnacceptedAbsences">
-      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-        <div md-colors="{color: 'warn'}">
-          <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-          <span>{{'absence.youHaveUnacceptedAbsences' | translate}} <a ng-href="/#/absences?_menu">{{'main.button.view' | translate}}</a></span>
-        </div>
-      </md-whiteframe>
-    </div>
-    <div ng-if="unconfirmedJournals && unconfirmedJournals.count > 0">
-      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-        <div md-colors="{color: 'accent'}">
-          <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
-          <span ng-if="unconfirmedJournals.count === 1">{{'journal.unconfirmedCountOne' | translate}}</span>
-          <span ng-if="unconfirmedJournals.count > 1">{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
-        </div>
-      </md-whiteframe>
-      <br>
+    <div layout-margin>
+      <div ng-if="canApplyForPractice">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'accent'}">
+            <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'practiceApplication.canApplyForPractice' | translate}} <a href="/#/practice/application/myData?_menu">{{'main.button.view' | translate}}</a></span>
+          </div>
+        </md-whiteframe>
+      </div>
+      <div ng-if="hasUnconfirmedPrograms.has">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'warn'}">
+            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'subjectProgram.youHaveUnconfirmedPrograms' | translate}} <a ng-href="/#/subjectProgram?_menu">{{'main.button.view' | translate}}</a></span>
+          </div>
+        </md-whiteframe>
+      </div>
+      <div ng-if="hasUncompletedPrograms.has">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'warn'}">
+            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'subjectProgram.youHaveUncompletedPrograms' | translate}} <a ng-href="/#/subjectStudyPeriods?_menu">{{'main.button.view' | translate}}</a></span>
+          </div>
+        </md-whiteframe>
+      </div>
+      <div ng-if="hasExpiredBaseModules.length">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'warn'}">
+            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'basemodule.youHaveExpiredBaseModules' | translate}} <a ng-href="/#/basemodule?_menu">{{'main.button.view' | translate}}</a></span>
+          </div>
+        </md-whiteframe>
+      </div>
+      <div ng-if="hasUnacceptedAbsences">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'warn'}">
+            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'absence.youHaveUnacceptedAbsences' | translate}} <a ng-href="/#/absences?_menu">{{'main.button.view' | translate}}</a></span>
+          </div>
+        </md-whiteframe>
+      </div>
+      <div ng-if="unconfirmedJournals && unconfirmedJournals.count > 0">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'accent'}">
+            <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+            <span ng-if="unconfirmedJournals.count === 1">{{'journal.unconfirmedCountOne' | translate}}</span>
+            <span ng-if="unconfirmedJournals.count > 1">{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
+          </div>
+        </md-whiteframe>
+      </div>
     </div>
     <div layout="column" layout-gt-md="row" layout-margin>
       <div id="column-1" flex-gt-md="{{ sessionStudentId ? '50' : '100' }}" flex="100">

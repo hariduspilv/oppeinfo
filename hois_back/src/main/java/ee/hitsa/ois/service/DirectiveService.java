@@ -72,6 +72,7 @@ import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.FormType;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
@@ -1130,9 +1131,14 @@ public class DirectiveService {
                 + " join protocol p on p.id = ps.protocol_id"
                 + " where scc.student_id in ?1 and scc.average_mark >= 4.6 and p.status_code = ?2"
                 + " and ((p.is_final = true and p.is_final_thesis = false and ps.grade_mark = 5)"
-                + " or exists(select 1 from protocol_student_occupation pso where pso.protocol_student_id = ps.id))")
+                + " or exists(select 1 from protocol_student_occupation pso where pso.protocol_student_id = ps.id))"
+                + " and exists(select 1 from student s join curriculum_version cv on s.curriculum_version_id = cv.id"
+                + " join curriculum c on cv.curriculum_id = c.id"
+                + " left join classifier_connect cc on c.orig_study_level_code = cc.classifier_code and cc.connect_classifier_code = ?3"
+                + " where s.id = scc.student_id and (c.is_higher = true or cc.classifier_code is not null))")
                 .setParameter(1, studentIds)
                 .setParameter(2, ProtocolStatus.PROTOKOLL_STAATUS_K.name())
+                .setParameter(3, FormType.LOPUBLANKETT_KK.name())
                 .getResultList();
         return data.stream().map(r -> resultAsLong(r, 0)).collect(Collectors.toSet());
     }

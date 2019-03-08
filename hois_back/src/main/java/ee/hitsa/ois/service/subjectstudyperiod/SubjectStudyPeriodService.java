@@ -28,8 +28,8 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodForm;
-import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodTeacherForm;
+import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodForm;
+import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodTeacherForm;
 
 @Transactional
 @Service

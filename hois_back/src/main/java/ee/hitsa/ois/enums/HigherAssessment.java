@@ -1,5 +1,9 @@
 package ee.hitsa.ois.enums;
 
+import java.util.List;
+
+import ee.hitsa.ois.util.EnumUtil;
+
 public enum HigherAssessment {
 
     KORGHINDAMINE_0(Boolean.TRUE, Boolean.FALSE, Short.valueOf((short) 0)),
@@ -16,6 +20,9 @@ public enum HigherAssessment {
     private final Boolean isPositive;
     // grade as number, used for calculating average grade
     private final Short mark;
+    
+    public static final List<String> GRADE_POSITIVE = EnumUtil.toNameList(KORGHINDAMINE_5, KORGHINDAMINE_4,
+            KORGHINDAMINE_3, KORGHINDAMINE_2, KORGHINDAMINE_1, KORGHINDAMINE_A);
  
     private HigherAssessment(Boolean isDistinctive, Boolean isPositive, Short mark) {
         this.isDistinctive = isDistinctive;

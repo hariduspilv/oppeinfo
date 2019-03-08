@@ -35,7 +35,7 @@ public class ContractForm extends VersionedCommand {
     @Size(max = 100)
     private String contactPersonEmail;
     @NotNull
-    private Long teacher;
+    private AutocompleteResult teacher;
     @Size(max = 255)
     private String otherSupervisor;
     @NotNull
@@ -51,6 +51,7 @@ public class ContractForm extends VersionedCommand {
     private Boolean isPracticeEnterprise;
     private Boolean isPracticeOther;
     private Long practiceEvaluation;
+    private Long studentPracticeEvaluation;
     private Long practiceApplication;
     private List<ContractSupervisorDto> supervisors;
     @NotEmpty
@@ -121,11 +122,11 @@ public class ContractForm extends VersionedCommand {
         this.contactPersonEmail = contactPersonEmail;
     }
 
-    public Long getTeacher() {
+    public AutocompleteResult getTeacher() {
         return teacher;
     }
 
-    public void setTeacher(Long teacher) {
+    public void setTeacher(AutocompleteResult teacher) {
         this.teacher = teacher;
     }
 
@@ -239,6 +240,14 @@ public class ContractForm extends VersionedCommand {
 
     public void setPracticeEvaluation(Long practiceEvaluation) {
         this.practiceEvaluation = practiceEvaluation;
+    }
+
+    public Long getStudentPracticeEvaluation() {
+        return studentPracticeEvaluation;
+    }
+
+    public void setStudentPracticeEvaluation(Long studentPracticeEvaluation) {
+        this.studentPracticeEvaluation = studentPracticeEvaluation;
     }
 
 }

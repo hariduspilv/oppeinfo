@@ -1,7 +1,14 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q) {
-  $scope.currentNavItem = 'enterprise.persons';    
+angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q, $timeout) {
+  $scope.currentNavItem = 'enterprise.persons';
+  angular.element(document).ready(function() {
+    $timeout(function() {
+      var scrollAmount = document.getElementsByName($scope.currentNavItem)[0].offsetLeft;
+      document.getElementById('scrolling_div').scrollLeft += scrollAmount;
+    }, 0);
+  });
+
   $scope.auth = $route.current.locals.auth;
   $scope.enterprise = {};
   $scope.enterprise.id = $route.current.params.id;
@@ -72,8 +79,14 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
     });
   };
 
-}).controller('PracticeEnterpriseLocationsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q) {
+}).controller('PracticeEnterpriseLocationsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q, $timeout) {
   $scope.currentNavItem = 'enterprise.locations';    
+  angular.element(document).ready(function() {
+    $timeout(function() {
+      var scrollAmount = document.getElementsByName($scope.currentNavItem)[0].offsetLeft;
+      document.getElementById('scrolling_div').scrollLeft += scrollAmount;
+    }, 0);
+  });
   $scope.auth = $route.current.locals.auth;
   $scope.enterprise = {};
   $scope.enterprise.id = $route.current.params.id;
@@ -154,8 +167,14 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
   };
 
 })
-.controller('PracticeEnterpriseStudentGroupsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q) {
-  $scope.currentNavItem = 'enterprise.studentGroups';    
+.controller('PracticeEnterpriseStudentGroupsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q, $timeout) {
+  $scope.currentNavItem = 'enterprise.studentGroups';
+  angular.element(document).ready(function() {
+    $timeout(function() {
+      var scrollAmount = document.getElementsByName($scope.currentNavItem)[0].offsetLeft;
+      document.getElementById('scrolling_div').scrollLeft += scrollAmount;
+    }, 0);
+  });
   $scope.auth = $route.current.locals.auth;
   $scope.enterprise = {};
   $scope.enterprise.id = $route.current.params.id;
@@ -215,8 +234,14 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
     });
   };
 })
-.controller('PracticeEnterpriseGradesEditController', function ($scope, $route, QueryUtils, Classifier, message, $q, $location, FormUtils) {
-  $scope.currentNavItem = 'enterprise.grades';    
+.controller('PracticeEnterpriseGradesEditController', function ($scope, $route, QueryUtils, Classifier, message, $q, $location, FormUtils, $timeout) {
+  $scope.currentNavItem = 'enterprise.grades';
+  angular.element(document).ready(function() {
+    $timeout(function() {
+      var scrollAmount = document.getElementsByName($scope.currentNavItem)[0].offsetLeft;
+      document.getElementById('scrolling_div').scrollLeft += scrollAmount;
+    }, 0);
+  });
   $scope.auth = $route.current.locals.auth;
   $scope.enterprise = {};
   $scope.enterprise.id = $route.current.params.id;
@@ -273,8 +298,14 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
   };
   
 })
-.controller('PracticeEnterpriseContractsViewController', function ($scope, $route, $q, QueryUtils, Classifier) {
-  $scope.currentNavItem = 'enterprise.contracts';    
+.controller('PracticeEnterpriseContractsViewController', function ($scope, $route, $q, QueryUtils, Classifier, $timeout) {
+  $scope.currentNavItem = 'enterprise.contracts';
+  angular.element(document).ready(function() {
+    $timeout(function() {
+      var scrollAmount = document.getElementsByName($scope.currentNavItem)[0].offsetLeft;
+      document.getElementById('scrolling_div').scrollLeft += scrollAmount;
+    }, 0);
+  });
   $scope.auth = $route.current.locals.auth;
   $scope.enterprise = {};
   $scope.enterprise.id = $route.current.params.id;
@@ -291,8 +322,14 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
 
   refresh();
 })
-.controller('PracticeEnterpriseAdmissionEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, $q) {
-  $scope.currentNavItem = 'enterprise.admission';    
+.controller('PracticeEnterpriseAdmissionEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, $q, $timeout) {
+  $scope.currentNavItem = 'enterprise.admission';
+  angular.element(document).ready(function() {
+    $timeout(function() {
+      var scrollAmount = document.getElementsByName($scope.currentNavItem)[0].offsetLeft;
+      document.getElementById('scrolling_div').scrollLeft += scrollAmount;
+    }, 0);
+  });
   $scope.auth = $route.current.locals.auth;
   $scope.enterprise = {};
   $scope.enterprise.id = $route.current.params.id;

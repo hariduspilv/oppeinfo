@@ -91,6 +91,7 @@ angular.module('hitsaOis').controller('PracticeEvaluationSearchController', ['$q
       $scope.criteria.nameEt = criteria.nameEt;
       $scope.criteria.addInfo = criteria.addInfo;
       $scope.criteria.type = criteria.type;
+      $scope.criteria.disabled = criteria.disabled;
     };
 
     $scope.saveCriteria = function() {

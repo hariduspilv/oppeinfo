@@ -32,7 +32,6 @@ import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.SpecialitiesAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
-import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.basemodule.BaseModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAutocompleteCommand;
@@ -40,6 +39,7 @@ import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCo
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.studymaterial.StudyMaterialAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.subject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;

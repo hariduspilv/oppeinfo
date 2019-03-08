@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'message', 'Classifier', 'SspCapacities', 'DataUtils', function ($scope, QueryUtils, ArrayUtils, $route, message, Classifier, SspCapacities, DataUtils) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController', ['$rootScope', '$route', '$scope', 'ArrayUtils', 'DataUtils', 'SspCapacities', 'QueryUtils', 'dialogService', 'message', function ($rootScope, $route, $scope, ArrayUtils, DataUtils, SspCapacities, QueryUtils, dialogService, message) {
     var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId, 10) : null;
     var teacher = $route.current.params.teacherId ? parseInt($route.current.params.teacherId, 10) : null;
     $scope.isNew = teacher === null && studyPeriodId === null;
@@ -45,6 +45,13 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
 
     $scope.$watch('record.studyPeriod', loadTeachers);
 
+    $scope.sspTeacherCapacities = function (subjectStudyPeriod) {
+      var sspTeacher = subjectStudyPeriod.teachers.filter(function (it) {
+        return it.teacherId === teacher;
+      })[0];
+      return sspTeacher.capacities;
+    };
+
     function isValid() {
       $scope.subjectStudyPeriodTeacherEditForm.$setSubmitted();
       if(!$scope.subjectStudyPeriodTeacherEditForm.$valid) {
@@ -60,15 +67,33 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
     }
 
     $scope.save = function() {
-        if(!isValid()) {
-          return;
-        }
-        $scope.capacitiesUtil.filterEmptyCapacities();
-        $scope.record.$put().then(function(response){
-            message.updateSuccess();
-            $scope.record = response;
-            $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
-            $scope.subjectStudyPeriodTeacherEditForm.$setPristine();
-        });
+      if(!isValid()) {
+        return;
+      }
+
+      var wrongSubjects = $scope.record.subjects.filter(function(el){
+        return !$scope.capacitiesUtil.subjectsLoadValid(el.id, $scope.capacityTypes);
+      });
+      if (!ArrayUtils.isEmpty(wrongSubjects)) {
+        var subjectsNames = wrongSubjects.map(function(el){
+            return $rootScope.currentLanguageNameField(el);
+        }).join(", ");
+        dialogService.confirmDialog({
+            prompt: 'subjectStudyPeriod.error.subjectLoad',
+            subject: subjectsNames
+        }, save);
+        return;
+      }
+      save();
     };
+
+    function save() {
+      $scope.capacitiesUtil.filterEmptyCapacities();
+      $scope.record.$put().then(function(response) {
+          message.updateSuccess();
+          $scope.record = response;
+          $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
+          $scope.subjectStudyPeriodTeacherEditForm.$setPristine();
+      });
+    }
 }]);

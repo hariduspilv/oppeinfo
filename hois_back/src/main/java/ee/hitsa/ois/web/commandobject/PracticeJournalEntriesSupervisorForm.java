@@ -10,7 +10,9 @@ public class PracticeJournalEntriesSupervisorForm {
     @Valid
     private List<PracticeJournalEntrySupervisorForm> practiceJournalEntries;
     @Valid
-    private List<OisFileForm> practiceJournalFiles;
+    private List<PracticeJournalEvaluationForm> supervisorPracticeEvalCriteria;
+    @Valid
+    private List<PracticeFileForm> practiceJournalFiles;
     @Size(max=10000)
     private String supervisorOpinion;
     @Size(max=10000)
@@ -24,11 +26,11 @@ public class PracticeJournalEntriesSupervisorForm {
         this.practiceJournalEntries = practiceJournalEntries;
     }
 
-    public List<OisFileForm> getPracticeJournalFiles() {
+    public List<PracticeFileForm> getPracticeJournalFiles() {
         return practiceJournalFiles;
     }
 
-    public void setPracticeJournalFiles(List<OisFileForm> practiceJournalFiles) {
+    public void setPracticeJournalFiles(List<PracticeFileForm> practiceJournalFiles) {
         this.practiceJournalFiles = practiceJournalFiles;
     }
 
@@ -46,6 +48,14 @@ public class PracticeJournalEntriesSupervisorForm {
 
     public void setSupervisorComment(String supervisorComment) {
         this.supervisorComment = supervisorComment;
+    }
+
+    public List<PracticeJournalEvaluationForm> getSupervisorPracticeEvalCriteria() {
+        return supervisorPracticeEvalCriteria;
+    }
+
+    public void setSupervisorPracticeEvalCriteria(List<PracticeJournalEvaluationForm> supervisorPracticeEvalCriteria) {
+        this.supervisorPracticeEvalCriteria = supervisorPracticeEvalCriteria;
     }
 
 }

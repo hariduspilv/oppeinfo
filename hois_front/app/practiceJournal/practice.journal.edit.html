@@ -45,22 +45,22 @@
       <div ng-if="!formState.isHigher" ng-repeat="module in practiceJournal.moduleSubjects track by $index" layout="row" layout-sm="column" layout-xs="column" flex="50">
         <md-input-container flex>
           <label class="textInput">{{'module.practice' | translate}}</label>
-          <hois-select ng-model="module.module" values="formState.modules" ng-change="moduleChanged(module.module, module)" required></hois-select>
+          <hois-select ng-model="module.module" values="formState.modules" ng-change="moduleChanged(module.module, module)" required ng-disabled="practiceJournal.contract"></hois-select>
         </md-input-container>
 
         <md-input-container flex flex-offset-gt-md="5">
           <label class="textInput">{{'practiceJournal.theme' | translate}}</label>
-          <hois-select ng-model="module.theme" values="formState.themesByModuleId[module.module]" ng-change="themeChanged(module.theme, module)"></hois-select>
+          <hois-select ng-model="module.theme" values="formState.themesByModuleId[module.module]" ng-change="themeChanged(module.theme, module)" ng-disabled="practiceJournal.contract"></hois-select>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
           <label class="textInput">{{'practiceJournal.creditsEKAP' | translate}}</label>
-          <input type="number" name="credits[{{$index}}]" ng-model="module.credits" min="0" max="999.9" ng-change="updateHours(module, $index)" required>
+          <input type="number" name="credits[{{$index}}]" ng-model="module.credits" min="0" max="999.9" ng-change="updateHours(module, $index)" ng-disabled="practiceJournal.contract" required>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'practiceJournal.acadHours' | translate}}</label>
-          <input type="number" name="hours[{{$index}}]" ng-model="module.hours" min="0" max="32767" pattern="^\d+$" ng-change="updateCredits(module, $index)" required>
+          <input type="number" name="hours[{{$index}}]" ng-model="module.hours" min="0" max="32767" pattern="^\d+$" ng-change="updateCredits(module, $index)" ng-disabled="practiceJournal.contract" required>
           <div ng-messages="practiceJournalForm['hours['+$index+']'].$error" ng-show="practiceJournalForm['hours['+$index+']'].$dirty">
             <div ng-message="pattern">
               {{'main.messages.error.integer' | translate}}
@@ -68,35 +68,35 @@
           </div>
         </md-input-container>
 
-        <md-input-container flex="10" flex-sm="100" flex-xs="100">
+        <md-input-container flex="{{practiceJournal.contract ? '20' : '10'}}" flex-sm="100" flex-xs="100">
           <label>{{'practiceJournal.astroHours' | translate}}</label>
           <br>
           <hois-value value="getAstronomicalHours(module.hours)"></hois-value>
         </md-input-container>
 
-        <div flex="10" flex-sm="100" flex-xs="100" class="center">
+        <div flex="10" flex-sm="100" flex-xs="100" class="center" ng-if="!practiceJournal.contract">
           <a class="remove" ng-click="removeModuleSubject(module)">&times;&nbsp;&nbsp;</a>
         </div>
       </div>
 
-      <div ng-if="!formState.isHigher" layout="row" layout-sm="column" layout-xs="column" flex>
+      <div ng-if="!formState.isHigher && !practiceJournal.contract" layout="row" layout-sm="column" layout-xs="column" flex>
         <md-button class="md-primary" ng-click="addModuleSubject()">{{'practiceJournal.button.addModule' | translate}}</md-button>
       </div>
 
       <div ng-if="formState.isHigher" ng-repeat="subject in practiceJournal.moduleSubjects track by $index" layout="row" layout-sm="column" layout-xs="column" flex="50">
         <md-input-container flex>
           <label class="textInput">{{'practiceJournal.subject' | translate}}</label>
-          <hois-select ng-model="subject.subject" values="formState.subjects" ng-change="subjectChanged(subject.subject, subject)" required></hois-select>
+          <hois-select ng-model="subject.subject" values="formState.subjects" ng-change="subjectChanged(subject.subject, subject)" required ng-disabled="practiceJournal.contract"></hois-select>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
           <label class="textInput">{{'practiceJournal.creditsEAP' | translate}}</label>
-          <input type="number" name="credits[{{$index}}]" ng-model="subject.credits" min="0" max="999.9" ng-change="updateHours(subject, $index)" required>
+          <input type="number" name="credits[{{$index}}]" ng-model="subject.credits" min="0" max="999.9" ng-change="updateHours(subject, $index)" ng-disabled="practiceJournal.contract" required>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'practiceJournal.acadHours' | translate}}</label>
-          <input type="number" name="hours[{{$index}}]" ng-model="subject.hours" min="0" max="32767" pattern="^\d+$" ng-change="updateCredits(subject, $index)" required>
+          <input type="number" name="hours[{{$index}}]" ng-model="subject.hours" min="0" max="32767" pattern="^\d+$" ng-change="updateCredits(subject, $index)" ng-disabled="practiceJournal.contract" required>
           <div ng-messages="practiceJournalForm['hours['+$index+']'].$error" ng-show="practiceJournalForm['hours['+$index+']'].$dirty">
             <div ng-message="pattern">
               {{'main.messages.error.integer' | translate}}
@@ -110,12 +110,12 @@
           <hois-value value="getAstronomicalHours(subject.hours)"></hois-value>
         </md-input-container>
 
-        <div flex="10" flex-sm="100" flex-xs="100" class="center">
+        <div flex="{{practiceJournal.contract ? '20' : '10'}}" flex-sm="100" flex-xs="100" class="center">
           <a class="remove" ng-click="removeModuleSubject(subject)">&times;&nbsp;&nbsp;</a>
         </div>
       </div>
 
-      <div ng-if="formState.isHigher" layout="row" layout-sm="column" layout-xs="column" flex>
+      <div ng-if="formState.isHigher" layout="row" layout-sm="column" layout-xs="column" flex ng-if="!practiceJournal.contract">
         <md-button class="md-primary" ng-click="addModuleSubject()">{{'practiceJournal.button.addSubject' | translate}}</md-button>
       </div>
 
@@ -123,38 +123,40 @@
       <div layout="row" flex>
         <md-input-container>
           <label>{{'practiceJournal.startDate' | translate}}</label>
-          <md-datepicker ng-model="practiceJournal.startDate" md-max-date="practiceJournal.endDate" required></md-datepicker>
+          <md-datepicker ng-model="practiceJournal.startDate" md-max-date="practiceJournal.endDate" required ng-disabled="practiceJournal.contract"></md-datepicker>
         </md-input-container>
 
         <md-input-container>
           <label>{{'practiceJournal.endDate' | translate}}</label>
-          <md-datepicker ng-model="practiceJournal.endDate" md-min-date="practiceJournal.startDate" required></md-datepicker>
+          <md-datepicker ng-model="practiceJournal.endDate" md-min-date="practiceJournal.startDate" required ng-disabled="practiceJournal.contract"></md-datepicker>
         </md-input-container>
       </div>
 
       <div layout="row" flex>
         <md-input-container flex>
           <label class="textInput">{{'practiceJournal.practicePlace' | translate}}</label>
-          <input type="text" ng-model="practiceJournal.practicePlace" md-maxlength="255" required>
+          <input type="text" ng-model="practiceJournal.practicePlace" md-maxlength="255" required ng-disabled="practiceJournal.contract">
         </md-input-container>
       </div>
-
-      <div layout="row" flex>
-        <md-input-container flex>
-          <label class="textInput">{{'practiceJournal.schoolSupervisor' | translate}}</label>
-          <hois-select ng-model="practiceJournal.teacher" type="teacher" criteria="{valid: true}" required></hois-select>
-        </md-input-container>
-      </div>
+      
+      <hois-autocomplete ng-model="practiceJournal.teacher" method="teachers" name="techers" label="contract.schoolSupervisor" additional-query-params="{valid: true}" required ng-disabled="practiceJournal.contract"></hois-autocomplete>
 
       <div layout="row" flex>
         <md-input-container flex>
           <label class="textInput">{{'practiceJournal.practicePlan' | translate}}</label>
-          <textarea ng-model="practiceJournal.practicePlan" required md-maxlength="20000" max-rows="2"></textarea>
+          <textarea ng-model="practiceJournal.practicePlan" required md-maxlength="20000" max-rows="2" ng-disabled="practiceJournal.contract"></textarea>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex ng-if="!practiceJournal.contract">
+        <md-input-container flex>
+          <label>{{'contract.studentEvaluation' | translate}}</label>
+          <hois-select ng-model="practiceJournal.practiceEvaluation" type="practiceEvaluation" criteria="{active: true, targetCode: 'PRAKTIKA_SIHTRYHM_O'}" value-property="id" display-property="nameEt"></hois-select>
         </md-input-container>
       </div>
 
       <div layout="row" layout-xs="column">
-        <md-button ng-if="!practiceJournal.id || (practiceJournal.status !== 'PAEVIK_STAATUS_K' && practiceJournal.canEdit)" 
+        <md-button ng-if="(!practiceJournal.id || (practiceJournal.status !== 'PAEVIK_STAATUS_K' && practiceJournal.canEdit)) && !practiceJournal.contract" 
           class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="practiceJournal.canConfirm" class="md-raised md-primary" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
         <md-button ng-if="practiceJournal.id && practiceJournal.canDelete" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>

@@ -321,7 +321,7 @@ public class StudentService {
         StudentAbsence absence = new StudentAbsence();
         absence.setStudent(student);
 
-        Page<StudentAbsenceDto> data = JpaQueryUtil.pagingResult(qb, "sa.id, sa.is_accepted, sa.is_rejected, sa.valid_from, sa.valid_thru, sa.cause, sa.version", em, pageable).map(r -> {
+        Page<StudentAbsenceDto> data = JpaQueryUtil.pagingResult(qb, "sa.id, sa.is_accepted, sa.is_rejected, sa.valid_from, sa.valid_thru, sa.cause, sa.version, sa.reject_reason", em, pageable).map(r -> {
             StudentAbsenceDto dto = new StudentAbsenceDto();
             dto.setId(resultAsLong(r, 0));
             dto.setIsAccepted(resultAsBoolean(r, 1));
@@ -330,6 +330,7 @@ public class StudentService {
             dto.setValidThru(resultAsLocalDate(r, 4));
             dto.setCause(resultAsString(r, 5));
             dto.setVersion(resultAsLong(r, 6));
+            dto.setRejectReason(resultAsString(r, 7));
             absence.setIsAccepted(dto.getIsAccepted());
             absence.setIsRejected(dto.getIsRejected() != null ? dto.getIsRejected() : Boolean.FALSE);
             dto.setUserCanEdit(Boolean.valueOf(StudentAbsenceUtil.canEdit(user, absence)));

@@ -44,7 +44,13 @@
             <td md-cell>{{::row.cause}}</td>
             <td md-cell>
               <span ng-if="row.isAccepted">{{'student.absence.isAccepted' | translate}}</span>
-              <span ng-if="row.isRejected">{{'student.absence.isRejected' | translate}}</span>
+              <span ng-if="row.isRejected">
+                {{'student.absence.isRejected' | translate}}
+                <span ng-if="row.rejectReason">
+                  <md-tooltip md-direction="bottom"><p>{{row.rejectReason}}</p></md-tooltip>
+                  <md-icon md-font-set="material-icons" ng-if="row.rejectReason">message</md-icon>
+                </span>
+              </span>
               <span ng-if="!row.isAccepted && !row.isRejected">{{'student.absence.isNotAccepted' | translate}}</span>
             </td>
             <td md-cell>
@@ -62,3 +68,26 @@
     <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>
+
+<style>
+    md-tooltip {
+      height: auto !important;
+    }
+  
+    md-tooltip p {
+      white-space: normal;
+    }
+  
+    @media only screen and (max-width: 649px) {
+      md-tooltip p {
+        max-width: 90vw;
+      }
+    }
+  
+    @media only screen and (min-width: 650px) {
+      md-tooltip p {
+        /* Give at least 10 px free space */
+        max-width: 640px;
+      }
+    }
+  </style>

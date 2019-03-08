@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.commandobject;
+package ee.hitsa.ois.web.commandobject.subject.studyperiod;
 
 import java.util.Set;
 

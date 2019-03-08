@@ -5,12 +5,13 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
   $scope.removeFromArray = ArrayUtils.remove;
   $scope.practiceJournal = {
     practiceJournalEntries: [],
-    practiceJournalFiles: []
+    practiceJournalFiles: [],
+    practiceJournalStudentFiles: []
   };
   $scope.formState = {};
 
   function assertPermissionToEdit(entity) {
-    if ($route.current.locals.isEntryEdit === true && !entity.canEdit) {
+    if ($route.current.locals.isEntryEdit === true && !entity.canAddEntries) {
       message.error('main.messages.error.nopermission');
       $location.path('');
     }
@@ -18,12 +19,10 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
 
   function entityToForm(entity) {
     assertPermissionToEdit(entity);
-
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
+    $scope.gradesClassCode = entity.isHigher ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
+    $scope.grades = Classifier.queryForDropdown({ mainClassCode: $scope.gradesClassCode });
     $scope.practiceJournal = entity;
-    
-    var gradesClassCode = $scope.practiceJournal.isHigher ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
-    $scope.grades = Classifier.queryForDropdown({ mainClassCode: gradesClassCode });
   }
 
   var entity = $route.current.locals.entity;
@@ -53,17 +52,30 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     }
   };
 
-  $scope.openAddFileDialog = function () {
+  $scope.openAddFileDialog = function (student) {
     dialogService.showDialog('practiceJournal/practice.journal.entry.add.file.dialog.html', function (dialogScope) {
-      dialogScope.addedFiles = $scope.practiceJournal.practiceJournalFiles;
+      if (student) {
+        dialogScope.addedFiles = $scope.practiceJournal.practiceJournalStudentFiles;
+      } else {
+        dialogScope.addedFiles = $scope.practiceJournal.practiceJournalFiles;
+      }
     }, function (submittedDialogScope) {
       var data = submittedDialogScope.data;
       oisFileService.getFromLfFile(data.file[0], function (file) {
         data.oisFile = file;
-        $scope.practiceJournal.practiceJournalFiles.push(data);
+        if (student) {
+          data.isStudent = true;
+          $scope.practiceJournal.practiceJournalStudentFiles.push(data);
+        } else {
+          $scope.practiceJournal.practiceJournalFiles.push(data);
+        }
       });
     });
   };
+
+  $scope.deleteEntry = function(entry) {
+    ArrayUtils.remove($scope.practiceJournal.practiceJournalEntries, entry);
+  }
 
   $scope.getUrl = oisFileService.getUrl;
 
@@ -77,12 +89,18 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     }
 
     var practiceJournalEntries;
+    var files = [];
+    files = files.concat($scope.practiceJournal.practiceJournalFiles, $scope.practiceJournal.practiceJournalStudentFiles);
+    var evals = [];
+    evals = evals.concat($scope.practiceJournal.supervisorPracticeEvalCriteria, $scope.practiceJournal.studentPracticeEvalCriteria);
     if ($scope.auth.isStudent()) {
       var EndpointStudent = QueryUtils.endpoint(baseEndpointUrl + 'student');
       practiceJournalEntries = new EndpointStudent(
         {
           practiceJournalEntries: $scope.practiceJournal.practiceJournalEntries,
-          practiceReport: $scope.practiceJournal.practiceReport
+          studentPracticeEvalCriteria: evals,
+          practiceReport: $scope.practiceJournal.practiceReport,
+          practiceJournalStudentFiles: files
         });
     } else {
       var EndpointTeacher = QueryUtils.endpoint(baseEndpointUrl + 'teacher');
@@ -91,7 +109,7 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
           teacherComment: $scope.practiceJournal.teacherComment,
           teacherOpinion: $scope.practiceJournal.teacherOpinion,
           grade: $scope.practiceJournal.grade,
-          practiceJournalFiles: $scope.practiceJournal.practiceJournalFiles,
+          practiceJournalFiles: files,
           practiceJournalEntries: $scope.practiceJournal.practiceJournalEntries
         });
     }
@@ -120,6 +138,12 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
   $scope.deleteFile = function(file){
     dialogService.confirmDialog({ prompt: 'practiceJournal.prompt.fileDeleteConfirm' }, function () {
       ArrayUtils.remove($scope.practiceJournal.practiceJournalFiles, file);
+    });
+  };
+
+  $scope.deleteStudentFile = function(file){
+    dialogService.confirmDialog({ prompt: 'practiceJournal.prompt.fileDeleteConfirm' }, function () {
+      ArrayUtils.remove($scope.practiceJournal.practiceJournalStudentFiles, file);
     });
   };
 

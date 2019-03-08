@@ -578,7 +578,6 @@ public class LessonPlanService {
             for (LessonPlanModuleJournalTeacherForm teacherForm : form.getTeachers()) {
                 JournalTeacher journalTeacher = em.getReference(JournalTeacher.class, teacherForm.getId());
                 capacityMapper.mapTeacherInput(journal, journalTeacher, teacherForm.getHours());
-                //EntityUtil.save(journalTeacher, em);
             }
         } else {
             // Remove previously saved teacher capacities

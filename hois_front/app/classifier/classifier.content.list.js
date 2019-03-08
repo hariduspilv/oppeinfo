@@ -13,9 +13,7 @@ angular.module('hitsaOis').controller('ClassifierContentListController', functio
     $scope.tabledata.$promise = Classifier.query(query, $scope.afterLoadData).$promise;
   };
 
-  $scope.isValid = function(record) {
-    return (!record.validFrom || new Date(record.validFrom) <= new Date()) && (!record.validThru || new Date(record.validThru) >= new Date());
-  };
+  $scope.isValid = Classifier.isValid;
 
   $scope.loadData();
 });

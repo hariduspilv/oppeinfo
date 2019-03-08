@@ -1,4 +1,4 @@
-VERSIOON:  1.2.0/20190215
+VERSIOON:  1.2.1/20190308
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.1.5/20190130
+EELDUS: ver. 1.2.0/20190215
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skripti on db/install20190215.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skripti on db/install20190308.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20190215.sql skript, nt
+1. käivitada install20190308.sql skript, nt
    
-   psql -h devhois -f install20190215.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20190308.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20190215.sql - install faili nimi
+   -f install20190308.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
@@ -39,25 +39,7 @@ RAKENDUSE INSTALLEERIMINE:
 1. Backendi paigaldamiseks
 	1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta
 	2. veenduda, et /opt/hois kaustas on olemas muudetud application.properties fail	
-	3. Lisada application.properties faili järgmised read (äriregistri päringu parameetrid):
-        
-        # ariregister configuration
-		ariregister.endpoint=https://141.192.105.176/cgi-bin/consumer-proxy   #x-tee serveri asukoht
-		ariregister.useridprefix=EE         
-		ariregister.userid=EE47909050309  #päringu esitaja isikukood
-		ariregister.client.xRoadInstance=ee-dev    #x-tee versioon
-		ariregister.client.memberClass=COM     #päringu esitaja asutuse memberClass
-		ariregister.client.memberCode=10239452  #päringu esitaja asutuse reg kood
-		ariregister.client.subsystemCode=generic-consumer  #päringu esitaja  allsüsteem
-
-		ariregister.service.xRoadInstance=ee-dev  #x-tee versioon
-		ariregister.service.memberClass=GOV  #äriregistri memberClass
-		ariregister.service.memberCode=70000310
-		ariregister.service.subsystemCode=arireg
-		ariregister.service.serviceCode=lihtandmed_v1
-
-
-	4. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
+	3. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
 	
 2. Frontendi paigaldamiseks
 	1. Kustutada vanad html jms failid: käivitada käsk "rm -Rf /opt/hois/html/*" (nginxist vana seisu tühjendamiseks)

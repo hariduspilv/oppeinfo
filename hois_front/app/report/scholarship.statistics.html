@@ -1,0 +1,36 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="scholarshipStatisticExportForm" novalidate>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex>
+            <label class="textInput">{{'report.scholarships.types' | translate}}</label>
+            <md-select ng-model="criteria.types" multiple>
+              <md-option ng-value="opt.code" ng-repeat="opt in types">
+                {{currentLanguageNameField(opt)}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-input-container>
+            <label>{{'report.scholarships.entriesFrom' | translate}}</label>
+            <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" required></md-datepicker>
+          </md-input-container>
+          <md-input-container flex-offset="5">
+            <label>{{'report.scholarships.entriesThru' | translate}}</label>
+            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" required></md-datepicker>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-button ng-href="{{excel(url, criteria)}}" class="md-button md-primary md-raised" 
+            ng-disabled="!scholarshipStatisticExportForm || !scholarshipStatisticExportForm.$valid">{{'main.button.printXls' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+</div>

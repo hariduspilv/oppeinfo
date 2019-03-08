@@ -7,12 +7,21 @@ angular.module('hitsaOis').factory('SspCapacities', [function () {
         var self = this;
 
         this.addEmptyCapacities = function(types) {
-          for(var i = 0; i < types.length; i++) {
+          for (var i = 0; i < types.length; i++) {
             var ssps = container.subjectStudyPeriodDtos;
-            for(var j = 0; j < ssps.length; j++) {
-              this.getCapacity(ssps[j], types[i].code);
+            for (var j = 0; j < ssps.length; j++) {
+                this.getCapacity(ssps[j], types[i].code);
+                this.addTeacherEmptyCapacities(ssps[j].teachers, types);
             }
           }
+        };
+
+        this.addTeacherEmptyCapacities = function(teachers, types) {
+            for (var i = 0; i < types.length; i++) {
+                for (var j = 0; j < teachers.length; j++) {
+                    this.getCapacity(teachers[j], types[i].code);
+                }
+            }
         };
 
         function getSubjectStudyPeriods() {
@@ -58,6 +67,10 @@ angular.module('hitsaOis').factory('SspCapacities', [function () {
             return ssp.capacities.reduce(countHours, 0);
         };
 
+        this.capacityBySsp = function(ssp, type) {
+            return ssp.capacities.filter(filterByCapacityType(type)).reduce(countHours, 0);
+        };
+
         function capacitiesSumBySsps (ssps) {
             var sum = 0;
             for(var i = 0; i < ssps.length; i++) {
@@ -66,11 +79,8 @@ angular.module('hitsaOis').factory('SspCapacities', [function () {
             return sum;
         }
 
-        this.capacitiesSumOverall = function () {
-            if(!container || !container.subjectStudyPeriodDtos) {
-                return 0;
-            }
-            var ssps = container.subjectStudyPeriodDtos;
+        this.capacitiesSumOverall = function (teacherId) {
+            var ssps = subjectStudyPeriods(teacherId);
             return capacitiesSumBySsps(ssps);
         };
 
@@ -80,11 +90,40 @@ angular.module('hitsaOis').factory('SspCapacities', [function () {
             };
         }
 
-        this.getCapacitiesBySubject = function (subjectId) {
-            return getSubjectStudyPeriods().filter(function(el){
+        this.getCapacitiesBySubject = function (subjectId, teacherId) {
+            var ssps = getSubjectStudyPeriods().filter(function(el){
                 return el.subject === subjectId;
             });
+
+            if (teacherId) {
+                ssps = accountForTeacherDifferentCapacities(ssps, teacherId);
+            }
+            return ssps;
         };
+
+        function accountForTeacherDifferentCapacities(ssps, teacherId) {
+            var teacherSsps = getSubjectCapacitiesByTeacher(ssps, teacherId);
+            ssps = ssps.filter(function (el) { return !el.capacityDiff; });
+
+            teacherSsps.forEach(function (teacherSsp) {
+                ssps.push(teacherSsp);
+            });
+            return ssps;
+        }
+
+        function getSubjectCapacitiesByTeacher(ssps, teacherId) {
+            var sspTeachers = [];
+            for (var i = 0; i < ssps.length; i++) {
+                if (ssps[i].capacityDiff) {
+                    for (var j = 0; j < ssps[i].teachers.length; j++) {
+                        sspTeachers.push(ssps[i].teachers[j]);
+                    }
+                }
+            }
+            return sspTeachers.filter(function(teacher){
+                return teacher.teacherId === teacherId;
+            });
+        }
 
         function capacitiesSumByType (type, ssps) {
             var sum = 0;
@@ -94,27 +133,35 @@ angular.module('hitsaOis').factory('SspCapacities', [function () {
             return sum;
         }
 
-        this.capacitiesSumBySubjectAndType = function (subjectId, type) {
+        this.capacitiesSumBySubjectAndType = function (subjectId, type, teacherId) {
             if(!container || !container.subjectStudyPeriodDtos) {
                 return 0;
             }
-            var ssps = self.getCapacitiesBySubject(subjectId);
+            var ssps = self.getCapacitiesBySubject(subjectId, teacherId);
             return capacitiesSumByType(type, ssps);
         };
 
-        this.capacitiesSumByType = function(type) {
+        this.capacitiesSumByType = function(type, teacherId) {
+            var ssps = subjectStudyPeriods(teacherId);
+            return capacitiesSumByType(type, ssps);
+        };
+
+        function subjectStudyPeriods(teacherId) {
             if(!container || !container.subjectStudyPeriodDtos) {
                 return 0;
             }
             var ssps = container.subjectStudyPeriodDtos;
-            return capacitiesSumByType(type, ssps);
-        };
+            if (teacherId) {
+                ssps = accountForTeacherDifferentCapacities(ssps, teacherId);
+            }
+            return ssps;
+        }
 
-        this.capacitiesSumBySubject = function(subjectId) {
+        this.capacitiesSumBySubject = function(subjectId, teacherId) {
             if(!container || !container.subjectStudyPeriodDtos) {
                 return 0;
             }
-            var ssps = self.getCapacitiesBySubject(subjectId);
+            var ssps = self.getCapacitiesBySubject(subjectId, teacherId);
             return capacitiesSumBySsps(ssps);
         };
 
@@ -140,11 +187,48 @@ angular.module('hitsaOis').factory('SspCapacities', [function () {
             }
         };
 
+        this.subjectsLoadValid = function (subjectId, capacityTypes) {
+            var sspLoadByType, sspsCapacities;
+            var ssps = self.getCapacitiesBySubject(subjectId);
+    
+            var getCapacityByType = function (capacityTypeCode) {
+                return function(el) {
+                    return el.capacityType === capacityTypeCode;
+                };
+            };
+    
+            for (var i = 0; i < capacityTypes.length; i++) {
+    
+                sspsCapacities = self.getSubjectsCapacityByType(subjectId, capacityTypes[i].code);
+    
+                for (var j = 0; j < ssps.length; j++) {
+                    var capacity = ssps[j].capacities.find(getCapacityByType(capacityTypes[i].code));
+                    sspLoadByType = capacity ? capacity.hours : 0;
+                    if(sspLoadByType > sspsCapacities) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        };
+
         this.teachersLoadOk = function(ssp) {
             return ssp.teachers.reduce(function(sum, val){
                 return sum += val.scheduleLoad;
             }, 0) >=  self.capacitiesSumBySsp(ssp);
         };
+
+        this.teacherLoadOk = function(teacher) {
+            return teacher.scheduleLoad >=  self.capacitiesSumBySsp(teacher);
+        };
+
+        this.teacherPlannedLoad = function(teacher) {
+            return {
+                scheduleLoad: teacher.scheduleLoad,
+                unplannedLessons: teacher.scheduleLoad - teacher.plannedLessons > 0 ? teacher.scheduleLoad - teacher.plannedLessons : 0
+            };
+        };
+
     };
     return SspCapacity;
 }]);

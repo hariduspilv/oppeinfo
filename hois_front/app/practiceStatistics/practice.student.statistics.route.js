@@ -24,7 +24,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       }
     })
-    /**.when('/practice/studyYear/statistics', {
+    .when('/practice/studyYear/statistics', {
       templateUrl: 'practiceStatistics/practice.studyYear.list.html',
       controller: 'PracticeStudyYearListController',
       data: {
@@ -35,5 +35,4 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       }
     });
-    */
 }]);

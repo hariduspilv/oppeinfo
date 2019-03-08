@@ -6,17 +6,20 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +31,8 @@ import ee.hitsa.ois.domain.curriculum.CurriculumModuleCompetence;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOccupation;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupation;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupationSpeciality;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -48,11 +53,15 @@ public class CurriculumOccupationService {
     private static final int OCCUPATION_STANDARD_EXPIRE_IN_MONTHS = 3;
 
     @Autowired
-    private EntityManager em;
+    EntityManager em;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private CurriculumModuleRepository curriculumModuleRepository;
+    @Autowired 
+    StateCurriculumCopyService stateCurriculumCopyService;
+    @Autowired
+    CurriculumModuleService curriculumModuleService;
 
     /**
      * occupation standards which are already expired or expiring
@@ -116,9 +125,44 @@ public class CurriculumOccupationService {
     private void updateSpecialities(CurriculumOccupation occupation, Set<String> specialities) {
         EntityUtil.bindEntityCollection(occupation.getSpecialities(), s -> EntityUtil.getCode(s.getSpeciality()), specialities, specialityCode -> {
             Classifier c = EntityUtil.validateClassifier(em.getReference(Classifier.class, specialityCode), MainClassCode.SPETSKUTSE);
-            return new CurriculumOccupationSpeciality(c);
+            CurriculumOccupationSpeciality spec = new CurriculumOccupationSpeciality(c);
+            StateCurriculum sc = occupation.getCurriculum().getStateCurriculum();
+            if (sc != null) {
+                sc.getOccupations().stream()
+                    .flatMap(stateOccupation -> stateOccupation.getOccupation().getChildConnects().stream())
+                    .filter(classifier -> c.equals(classifier.getClassifier()))
+                    .findAny().ifPresent(new Consumer<ClassifierConnect>() {
+                        @Override
+                        public void accept(ClassifierConnect connect) {
+                            sc.getModules().stream()
+                                .filter(m -> m.getModuleOccupations().stream()
+                                    .filter(mo -> mo.getOccupation().equals(c))
+                                    .findAny().isPresent()
+                                ).forEach(m -> {
+                                    CurriculumModule similarModule = hasSimilarModule(occupation.getCurriculum(), m);
+                                    if (similarModule != null) {
+                                        Set<String> codes = similarModule.getOccupations().stream().map(o -> o.getOccupation().getCode()).collect(Collectors.toSet());
+                                        codes.add(c.getCode());
+                                        curriculumModuleService.updateOccupations(similarModule, codes);
+                                    } else {
+                                        EntityUtil.save(stateCurriculumCopyService.copyModule(occupation.getCurriculum(), m, Collections.singleton(c.getCode())), em);
+                                    }
+                                });
+                        }
+                    });
+            }
+            return spec;
         });
     }
+    
+    CurriculumModule hasSimilarModule(Curriculum curriculum, StateCurriculumModule sm) {
+        return curriculum.getModules().stream().filter(cm -> isSameModule(cm, sm)).findAny().orElse(null);
+    }
+    
+    private static boolean isSameModule(CurriculumModule cm, StateCurriculumModule sm) {
+        return cm.getCredits().equals(sm.getCredits()) && (StringUtils.equals(cm.getNameEt(), sm.getNameEt()) || StringUtils.equals(cm.getNameEn(), sm.getNameEn()));
+    }
+    
 
     public void delete(HoisUserDetails user, CurriculumOccupation curriculumOccupation) {
         EntityUtil.setUsername(user.getUsername(), em);

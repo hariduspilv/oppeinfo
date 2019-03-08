@@ -63,7 +63,7 @@
                             <td>
                                 <span ng-repeat="teacher in ssp.teachers">
                                     <span ng-if="$index > 0">, </span>
-                                    {{teacher.name}}
+                                    <span title="{{'subjectStudyPeriod.teacherLoad' | translate : teacherPlannedLoad(teacher) }}">{{teacher.name}}</span>
                                 </span>
                                 <span ng-if="ssp.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
                                     <span class="subject-study-period-proportion">{{'subjectStudyPeriod.proportion' | translate | lowercase}}:

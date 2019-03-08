@@ -2,7 +2,7 @@
   <div flex>
     <form name="contractForm" ng-submit="save()" layout="column" novalidate>
       <div flex>
-        <hois-autocomplete ng-model="contract.student" method="students" name="student" label="student.label" ng-disabled="contract.id"
+        <hois-autocomplete ng-model="contract.student" method="students" name="student" label="student.label" ng-disabled="contract.id || contract.practiceApplication"
           additional-query-params="{active: true, higher: formState.isHigher, showStudentGroup: true}" required></hois-autocomplete>
       </div>
 
@@ -76,7 +76,7 @@
       </div>
 
       <div ng-if="!formState.isHigher" layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-button class="md-primary" ng-click="addModuleSubject()">{{'contract.button.addModule' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="addModuleSubject()">{{'contract.button.addModule' | translate}}</md-button>
       </div>
 
       <div ng-if="formState.isHigher" ng-repeat="subject in contract.moduleSubjects track by $index" layout="row" layout-sm="column" layout-xs="column" flex>
@@ -128,14 +128,14 @@
       </div>
       <div layout="row" flex="100">
         <hois-autocomplete flex ng-model="contract.enterprise" method="activeEnterprises" name="enterprise"
-          label="enterprise.label" required></hois-autocomplete>
+          label="enterprise.label" required ng-disabled="contract.practiceApplication"></hois-autocomplete>
       </div>
       <div layout="row" flex>
         <md-input-container flex>
           <label class="textInput">{{'contract.contactPersonName' | translate}}</label>
           <hois-select ng-model="contract.contactPersonName" values="formState.contacts" ng-change="contactChanged(contract.contactPersonName)" value-property="contactPersonName" show-property="contactPersonName" required></hois-select>
         </md-input-container>
-        <md-input-container flex>
+        <md-input-container flex style="margin-left: 4px">
           <label class="textInput">{{'contract.contactPersonEmail' | translate}}</label>
           <input type="email" ng-model="contract.contactPersonEmail" md-maxlength="100" required>
         </md-input-container>
@@ -203,8 +203,8 @@
               <td md-cell>
 
               <a ng-if="contract.status.code === undefined || contract.status.code === 'LEPING_STAATUS_S'" ng-click="deleteSupervisor(contractSupervisor)" class="remove">&times;</a>
-              <div layout="row" ng-if="contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
-             || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_T'">
+              <div layout="row" ng-if="(contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
+             || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_T') && auth.isAdmin()">
                 <div flex="50">
                   <a target="_blank" ng-href="#/practiceJournals/supervisor/{{contractSupervisor.supervisorUrl}}">{{'journal.entry.open' | translate}}</a>
                 </div>
@@ -250,19 +250,8 @@
           </div>
         </div>
       </fieldset>
-      <div layout="row" flex>
-        <md-input-container flex>
-          <label>{{'contract.schoolSupervisor' | translate}}</label>
-          <hois-select ng-model="contract.teacher" type="teacher" required criteria="{valid: true}"></hois-select>
-        </md-input-container>
-      </div>
-
-      <div layout="row" flex>
-        <md-input-container flex>
-          <label class="textInput">{{'contract.otherSupervisor' | translate}}</label>
-          <input type="text" ng-model="contract.otherSupervisor" md-maxlength="255">
-        </md-input-container>
-      </div>
+      
+      <hois-autocomplete ng-model="contract.teacher" method="teachers" name="techers" label="contract.schoolSupervisor" additional-query-params="{valid: true}" required></hois-autocomplete>
 
       <div layout="row" flex>
         <md-input-container flex>
@@ -281,7 +270,14 @@
       <div layout="row" flex>
         <md-input-container flex>
           <label>{{'contract.supervisorEvaluation' | translate}}</label>
-          <hois-select ng-model="contract.practiceEvaluation" type="practiceEvaluation" required criteria="{active: true, targetCode: 'PRAKTIKA_SIHTRYHM_E'}" value-property="id" display-property="nameEt"></hois-select>
+          <hois-select ng-model="contract.practiceEvaluation" type="practiceEvaluation" criteria="{active: true, targetCode: 'PRAKTIKA_SIHTRYHM_E'}" value-property="id" display-property="nameEt"></hois-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label>{{'contract.studentEvaluation' | translate}}</label>
+          <hois-select ng-model="contract.studentPracticeEvaluation" type="practiceEvaluation" criteria="{active: true, targetCode: 'PRAKTIKA_SIHTRYHM_O'}" value-property="id" display-property="nameEt"></hois-select>
         </md-input-container>
       </div>
 

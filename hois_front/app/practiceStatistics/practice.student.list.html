@@ -3,8 +3,8 @@
       {{'practice.student.statistics' | translate}}</md-nav-item>
   <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/contract/statistics" name="practice.contracts">
     {{'practice.contract.statistics' | translate}}</md-nav-item>
-  <!--<md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/studyYear/statistics" name="practice.studyYear">
-    {{'practice.studyYear.statistics' | translate}}</md-nav-item>-->
+  <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/studyYear/statistics" name="practice.studyYear">
+    {{'practice.studyYear.statistics' | translate}}</md-nav-item>
 </md-nav-bar>
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
@@ -64,7 +64,7 @@
 <div layout-padding>
   <div flex>
     <md-table-container>
-      <table md-table md-progress="tabledata.$promise" class="secondary-table">
+      <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="p.firstname, p.lastname">{{'practice.student.label' | translate}}</th>

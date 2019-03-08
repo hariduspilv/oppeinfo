@@ -7,7 +7,8 @@ public class TeacherAutocompleteCommand extends SearchCommand {
 
     private Boolean valid;
     private Boolean higher;
-    
+    private Boolean vocational;
+
     private Boolean occupied;
     private LocalDate date;
     private LocalDateTime startTime;
@@ -40,7 +41,15 @@ public class TeacherAutocompleteCommand extends SearchCommand {
     public void setHigher(Boolean higher) {
         this.higher = higher;
     }
-    
+
+    public Boolean getVocational() {
+        return vocational;
+    }
+
+    public void setVocational(Boolean vocational) {
+        this.vocational = vocational;
+    }
+
     public Boolean getOccupied() {
         return occupied;
     }

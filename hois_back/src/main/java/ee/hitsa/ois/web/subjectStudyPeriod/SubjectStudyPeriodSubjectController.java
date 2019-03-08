@@ -23,7 +23,7 @@ import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodSubjectSearchSe
 import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodSubjectService;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
-import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodSearchCommand;
+import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDtoContainer;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;

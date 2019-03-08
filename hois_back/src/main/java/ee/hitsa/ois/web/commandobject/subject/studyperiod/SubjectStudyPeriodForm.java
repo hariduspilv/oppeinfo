@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.commandobject;
+package ee.hitsa.ois.web.commandobject.subject.studyperiod;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +9,7 @@ import javax.validation.constraints.NotNull;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Required;
+import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class SubjectStudyPeriodForm  extends VersionedCommand {
     @Valid
@@ -29,6 +30,7 @@ public class SubjectStudyPeriodForm  extends VersionedCommand {
     private String groupProportion;
     
     private Long moodleCourseId;
+    private Boolean capacityDiff;
 
     public List<SubjectStudyPeriodTeacherForm> getTeachers() {
         return teachers != null ? teachers : (teachers = new ArrayList<>());
@@ -93,5 +95,12 @@ public class SubjectStudyPeriodForm  extends VersionedCommand {
     public void setMoodleCourseId(Long moodleCourseId) {
         this.moodleCourseId = moodleCourseId;
     }
-    
+
+    public Boolean getCapacityDiff() {
+        return capacityDiff;
+    }
+
+    public void setCapacityDiff(Boolean capacityDiff) {
+        this.capacityDiff = capacityDiff;
+    }
 }

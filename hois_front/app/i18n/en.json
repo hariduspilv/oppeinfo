@@ -3005,6 +3005,7 @@
     }
   },
   "contract": {
+    "studentEvaluation": "Student evaluation",
     "supervisorEvaluation": "Enterprise supervisor evaluation",
     "sendAgain": "Send again",
     "startFrom": "Starting date since",
@@ -3317,6 +3318,8 @@
     }
   },
   "practice": {
+    "fill": "Journal fulfillment",
+    "info": "Internship info",
     "student": {
       "statistics": "Students with internship contract",
       "startDate": "From",
@@ -3413,6 +3416,7 @@
     "teacherOpinion": "Opinion of head of educational institution (text)",
     "teacherOpinionFile": "Opinion of head of educational institution (file)",
     "supervisorOpinion": "Opinion of instructor (text)",
+    "studentOpinionFile": "Õppija praktika aruanne (fail)",
     "supervisorOpinionFile": "Opinion of instructor (file)",
     "school": "Educational institution",
     "teacherComment": "Comment of head of educational institution",

@@ -37,6 +37,7 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDtoContainer;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanCapacityDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanDto;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherDto;
 
 @Transactional
 @Service
@@ -73,8 +74,10 @@ public class SubjectStudyPeriodTeacherService {
             dto.setSubject(EntityUtil.getId(ssp.getSubject()));
             dto.setStudentGroupObjects(
                     StreamUtil.toMappedList(s -> AutocompleteResult.of(s.getStudentGroup()), ssp.getStudentGroups()));
+            dto.setTeachers(StreamUtil.toMappedList(SubjectStudyPeriodTeacherDto::of, ssp.getTeachers()));
             dto.setCapacities(StreamUtil.toMappedList(SubjectStudyPeriodCapacityDto::of, ssp.getCapacities()));
             dto.setGroupProportion(EntityUtil.getCode(ssp.getGroupProportion()));
+            dto.setCapacityDiff(ssp.getCapacityDiff());
             return dto;
         }, ssps);
         container.setSubjectStudyPeriodDtos(subjectStudyPeriodDtos);
@@ -148,15 +151,16 @@ public class SubjectStudyPeriodTeacherService {
         return xlsService.generate("subjectstudyperiodteacher.xls", data);
     }
     
-    private Map<String, Object> excelSubject(AutocompleteResult subjectDto, SubjectStudyPeriodDtoContainer container, List<String> capacityCodes) {
+    private Map<String, Object> excelSubject(AutocompleteResult subjectDto, SubjectStudyPeriodDtoContainer container,
+            List<String> capacityCodes) {
         Map<String, Object> subject = new HashMap<>();
         Map<String, Short> subjectCapacityHours = subjectStudyPeriodCapacitiesService.subjectCapacityHours(subjectDto.getId(), container, capacityCodes);
         
         List<Map<String, Object>> periods = new ArrayList<>();
         Map<String, Short> periodTotals = subjectStudyPeriodCapacitiesService.emptyOrderedCapacityHours(capacityCodes);
         
-        List<SubjectStudyPeriodDto> periodDtos = StreamUtil.toFilteredList(sp -> sp.getSubject().equals(subjectDto.getId()),
-                container.getSubjectStudyPeriodDtos());
+        List<SubjectStudyPeriodDto> periodDtos = subjectStudyPeriodCapacitiesService.teacherSubjectStudyPeriodDtos(subjectDto,
+                container);
         for (SubjectStudyPeriodDto periodDto : periodDtos) {
             Map<String, Object> period = subjectStudyPeriodCapacitiesService.periodExcel(periodDto, periodTotals, capacityCodes);
             if (periodDto.getStudentGroupObjects() != null) {

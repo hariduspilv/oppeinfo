@@ -57,6 +57,9 @@ public class SubjectStudyPeriodSubjectService {
             filters.add(cb.equal(root.get("subject").get("id"), container.getSubject()));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
+        Map<Long, Map<Long, Short>> teacherPlannedLoads = subjectStudyPeriodCapacitiesService
+                .subjectStudyPeriodTeacherPlannedLoads(ssps);
+
         List<SubjectStudyPeriodDto> subjectStudyPeriodDtos = StreamUtil.toMappedList(ssp -> {
             SubjectStudyPeriodDto dto = new SubjectStudyPeriodDto();
             dto.setId(EntityUtil.getId(ssp));
@@ -65,7 +68,12 @@ public class SubjectStudyPeriodSubjectService {
                     StreamUtil.toMappedList(s -> AutocompleteResult.of(s.getStudentGroup()), ssp.getStudentGroups()));
             dto.setCapacities(StreamUtil.toMappedList(SubjectStudyPeriodCapacityDto::of, ssp.getCapacities()));
             dto.setGroupProportion(EntityUtil.getCode(ssp.getGroupProportion()));
-            dto.setTeachers(StreamUtil.toMappedList(SubjectStudyPeriodTeacherDto::of, ssp.getTeachers()));
+            Map<Long, Short> spPlannedLoads = teacherPlannedLoads.get(EntityUtil.getId(ssp.getStudyPeriod()));
+            dto.setTeachers(StreamUtil.toMappedList(
+                    t -> SubjectStudyPeriodTeacherDto.of(t,
+                            spPlannedLoads != null ? spPlannedLoads.get(EntityUtil.getId(t.getTeacher())) : null),
+                    ssp.getTeachers()));
+            dto.setCapacityDiff(ssp.getCapacityDiff());
             return dto;
         }, ssps);
         container.setSubjectStudyPeriodDtos(subjectStudyPeriodDtos);

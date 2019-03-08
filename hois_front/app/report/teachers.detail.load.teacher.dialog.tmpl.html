@@ -1,7 +1,11 @@
 <md-dialog aria-label="teacher detail load dialog" flex="80" flex-xs="100">
   <md-toolbar>
     <div class="md-toolbar-tools">
-      <h2>{{currentLanguageNameField(teacher)}} {{'report.teachersDetailLoad.journals' | translate}}</h2>
+      <h2>
+        <span>{{currentLanguageNameField(teacher)}}</span>
+        <span ng-if="!criteria.isHigher">{{'report.teachersDetailLoad.journals' | translate}}</span>
+        <span ng-if="criteria.isHigher">{{'report.teachersDetailLoad.subjects' | translate}}</span>
+      </h2>
       <span flex></span>
       <md-button class="md-icon-button" ng-click="cancel()">
         <md-icon md-font-set="material-icons">close</md-icon>
@@ -29,7 +33,7 @@
       <div ng-if="!periodCapacitiesRow" layout="row" layout-sm="column" layout-align="space-around">
         <md-progress-circular md-mode="indeterminate"></md-progress-circular>
       </div>
-      <div ng-include="'report/teachers.detail.load.vocational.table.tmpl.html'"></div>
+      <div ng-include="'report/teachers.detail.load.table.tmpl.html'"></div>
     </div>
   </md-dialog-content>
 

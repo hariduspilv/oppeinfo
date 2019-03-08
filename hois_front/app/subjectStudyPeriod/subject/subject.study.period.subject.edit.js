@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectEditController', ['$scope','QueryUtils', 'ArrayUtils', '$route', 'message', 'Classifier',  'SspCapacities', 'DataUtils', function ($scope, QueryUtils, ArrayUtils, $route, message, Classifier, SspCapacities, DataUtils) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectEditController', ['$route', '$scope', 'ArrayUtils', 'DataUtils', 'SspCapacities', 'QueryUtils', 'dialogService', 'message', function ($route, $scope, ArrayUtils, DataUtils, SspCapacities, QueryUtils, dialogService, message) {
 
     var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId, 10) : null;
     var subject = $route.current.params.subjectId ? parseInt($route.current.params.subjectId, 10) : null;
@@ -65,10 +65,24 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectEditController',
       }
       $scope.capacitiesUtil.filterEmptyCapacities();
       $scope.record.$put().then(function(response){
-          message.updateSuccess();
-          $scope.record = response;
-          $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
-          $scope.subjectStudyPeriodSubjectEditForm.$setPristine();
+        message.updateSuccess();
+        $scope.record = response;
+        $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
+        $scope.subjectStudyPeriodSubjectEditForm.$setPristine();
+      });
+    };
+
+    $scope.teacherPlannedLoad = function (teacher) {
+      return $scope.capacitiesUtil.teacherPlannedLoad(teacher);
+    };
+
+    $scope.teacherCapacities = function (subject) {
+      dialogService.showDialog('subjectStudyPeriod/teacher.capacities.tmpl.html', function (dialogScope) {
+        dialogScope.subject = subject;
+        dialogScope.capacityTypes = $scope.capacityTypes;
+        dialogScope.capacitiesUtil = $scope.capacitiesUtil;
+      }, function () {
+        $scope.save();
       });
     };
 }]);

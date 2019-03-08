@@ -1,6 +1,8 @@
-package ee.hitsa.ois.web.commandobject;
+package ee.hitsa.ois.web.commandobject.subject.studyperiod;
 
 import java.util.List;
+
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 
 public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     

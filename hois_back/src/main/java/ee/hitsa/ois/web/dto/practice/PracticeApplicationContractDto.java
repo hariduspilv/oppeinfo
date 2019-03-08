@@ -6,7 +6,7 @@ public class PracticeApplicationContractDto {
 
     private Boolean isHigher;
     private AutocompleteResult student;
-    private Long enterpriseId;
+    private AutocompleteResult enterprise;
     private String contactPersonName;
     private String contactPersonPhone;
     private String contactPersonEmail;
@@ -26,11 +26,11 @@ public class PracticeApplicationContractDto {
     public void setStudent(AutocompleteResult student) {
         this.student = student;
     }
-    public Long getEnterpriseId() {
-        return enterpriseId;
+    public AutocompleteResult getEnterprise() {
+        return enterprise;
     }
-    public void setEnterpriseId(Long enterpriseId) {
-        this.enterpriseId = enterpriseId;
+    public void setEnterprise(AutocompleteResult enterprise) {
+        this.enterprise = enterprise;
     }
     public String getContactPersonName() {
         return contactPersonName;

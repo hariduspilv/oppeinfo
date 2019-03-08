@@ -6,25 +6,26 @@
     margin-bottom: 6px;
   }
 </style>
-
-<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
-    <md-nav-item ng-if="!enterprise.id" md-nav-href="#/practice/enterprise/new?_noback" name="enterprise.data">
-      {{'enterprise.data' | translate}}</md-nav-item>
-    <md-nav-item ng-if="auth.isAdmin() && enterprise.id" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/edit?_noback" name="enterprise.data">
+<div id="scrolling_div" style="overflow: auto;">
+  <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+      <md-nav-item ng-if="!enterprise.id" md-nav-href="#/practice/enterprise/new?_noback" name="enterprise.data">
         {{'enterprise.data' | translate}}</md-nav-item>
-    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/persons/edit?_noback" name="enterprise.persons">
-        {{'enterprise.persons' | translate}}</md-nav-item>
-    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/locations/edit?_noback" name="enterprise.locations">
-        {{'enterprise.locations' | translate}}</md-nav-item>
-    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/studentGroups/edit?_noback" name="enterprise.studentGroups">
-        {{'enterprise.studentGroups' | translate}}</md-nav-item>
-    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/contracts/edit?_noback" name="enterprise.contracts">
-        {{'enterprise.contracts' | translate}}</md-nav-item>
-    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/grades/edit?_noback" name="enterprise.grades">
-        {{'enterprise.grades' | translate}}</md-nav-item>
-    <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId && (enterprise.application && !enterpriseForm.application.$dirty)" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/admission/edit?_noback" name="enterprise.admission">
-      {{'enterprise.requests' | translate}}</md-nav-item>
-</md-nav-bar>
+      <md-nav-item ng-if="auth.isAdmin() && enterprise.id" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/edit?_noback" name="enterprise.data">
+          {{'enterprise.data' | translate}}</md-nav-item>
+      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/persons/edit?_noback" name="enterprise.persons">
+          {{'enterprise.persons' | translate}}</md-nav-item>
+      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/locations/edit?_noback" name="enterprise.locations">
+          {{'enterprise.locations' | translate}}</md-nav-item>
+      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/studentGroups/edit?_noback" name="enterprise.studentGroups">
+          {{'enterprise.studentGroups' | translate}}</md-nav-item>
+      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/contracts/edit?_noback" name="enterprise.contracts">
+          {{'enterprise.contracts' | translate}}</md-nav-item>
+      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/grades/edit?_noback" name="enterprise.grades">
+          {{'enterprise.grades' | translate}}</md-nav-item>
+      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId && (enterprise.application && !enterpriseForm.application.$dirty)" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/admission/edit?_noback" name="enterprise.admission">
+        {{'enterprise.requests' | translate}}</md-nav-item>
+  </md-nav-bar>
+</div>
 
 <div class="ois-form-layout-padding ois-form-layout" layout="column" ng-cloak>
   <form name="enterpriseForm" role="form" class="nomargin" novalidate>
@@ -65,7 +66,7 @@
         <div layout="row" ng-if="!enterprise.person && enterprise.country !== 'RIIK_EST'">
           <md-input-container flex="50" flex-xs="100">
             <label>{{'enterprise.regCode' | translate}}</label>
-            <input ng-model="enterprise.regCode" name="enterpriseCode" type="text" md-maxlength="20">
+            <input ng-model="enterprise.regCode" name="enterpriseCode" type="text" md-maxlength="20" ng-blur="sameCountryAndCode()">
             <div ng-messages="enterpriseForm.enterpriseCode.$error">
               <div ng-message="md-maxlength">
                   {{'main.messages.error.maxlength' | translate}}

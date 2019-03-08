@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.commandobject;
+package ee.hitsa.ois.web.commandobject.subject;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -12,6 +12,8 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Required;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class SubjectForm extends VersionedCommand {

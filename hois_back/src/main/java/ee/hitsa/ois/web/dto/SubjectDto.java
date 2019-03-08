@@ -17,7 +17,7 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
-import ee.hitsa.ois.web.commandobject.SubjectForm;
+import ee.hitsa.ois.web.commandobject.subject.SubjectForm;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 
 public class SubjectDto extends SubjectForm {

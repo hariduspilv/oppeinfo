@@ -28,7 +28,7 @@
               <md-tooltip ng-if="'PR_TAOTLUS_T' === admission.status.code && admission.rejectReason">{{admission.rejectReason}}</md-tooltip>
             </td>
             <td md-cell>
-              <span ng-if="!admission.status">
+              <span ng-if="canApply(admission)">
                 <md-button md-no-ink class="md-primary change-button" ng-click="apply(admission)">{{'practiceApplication.applyFor' | translate}}</md-button>
               </span>
               <span ng-if="'PR_TAOTLUS_E' === admission.status.code || ('PR_TAOTLUS_A' === admission.status.code && !admission.contractId)">

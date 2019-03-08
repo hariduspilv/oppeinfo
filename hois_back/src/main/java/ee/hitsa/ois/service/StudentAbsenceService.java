@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Person;
@@ -50,7 +51,7 @@ public class StudentAbsenceService {
     private StudyYearService studyYearService;
 
     private static final String SELECT = "sa.id as absenceId, s.id as studentId, p.firstname, p.lastname, sg.code, sa.valid_from, "
-            + "sa.valid_thru, sa.is_accepted, sa.is_rejected, sa.cause, sa.inserted_by, sa.accepted_by, sa.changed_by, sa.is_lesson_absence ";
+            + "sa.valid_thru, sa.is_accepted, sa.is_rejected, sa.cause, sa.inserted_by, sa.accepted_by, sa.changed_by, sa.is_lesson_absence, sa.reject_reason ";
     private static final String FROM =
               "from student_absence sa "
             + "join student s on s.id = sa.student_id "
@@ -134,6 +135,7 @@ public class StudentAbsenceService {
                         || StudentAbsenceUtil.validTodayOrInFuture(dto.getValidFrom(), dto.getValidThru()))
                 && (dto.getIsRejected() != null ? Boolean.FALSE.equals(dto.getIsRejected()) : true)));
         dto.setIsLessonAbsence(resultAsBoolean(row, 13));
+        dto.setRejectReason(resultAsString(row, 14));
         return dto;
     }
 
@@ -168,10 +170,11 @@ public class StudentAbsenceService {
         return EntityUtil.save(studentAbsence, em);
     }
     
-    public StudentAbsence reject(HoisUserDetails user, StudentAbsence studentAbsence) {
+    public StudentAbsence reject(HoisUserDetails user, StudentAbsence studentAbsence, String rejectReason) {
         studentAbsence.setIsRejected(Boolean.TRUE);
         studentAbsence.setIsAccepted(Boolean.FALSE);
         studentAbsence.setAcceptedBy(PersonUtil.fullname(em.getReference(Person.class, user.getPersonId())));
+        studentAbsence.setRejectReason(StringUtils.hasText(rejectReason) ? rejectReason : null);
         return EntityUtil.save(studentAbsence, em);
     }
 

@@ -492,11 +492,12 @@ public class ScholarshipService {
 
     public ScholarshipApplicationDto getStudentApplicationDto(HoisUserDetails user, ScholarshipTerm term) {
         Student student = em.getReference(Student.class, user.getStudentId());
+        Person person = student.getPerson();
         ScholarshipApplication application = getApplicationForTermAndStudent(term, student);
         ScholarshipApplicationDto applicationDto = application == null ? 
                 getApplicationDto(student, term) : getApplicationDto(application);
         applicationDto.setCanApply(Boolean.valueOf(ScholarshipUtil.canApply(term, application)));
-        applicationDto.setAddress(student.getPerson().getAddress());
+        applicationDto.setAddress(person.getAddress());
         
         StudentResults results = getStudentResults(term, student);
         BigDecimal credits = results.getCredits();
@@ -507,17 +508,27 @@ public class ScholarshipService {
         applicationDto.setIsStudyBacklog(results.getIsStudyBacklog());
         applicationDto.setAbsences(results.getAbsences());
         if (application == null) {
-            applicationDto.setPhone(student.getPerson().getPhone());
+            applicationDto.setPhone(person.getPhone());
             applicationDto.setEmail(student.getEmail());
         }
-        List<ScholarshipApplication> prevApplications = studentStipends(user.getStudentId(), null);
-        if (!prevApplications.isEmpty()) {
-            prevApplications = prevApplications.stream()
-                    .filter(a -> a.getBankAccount() != null)
+
+        if (application == null) {
+            List<ScholarshipApplication> prevApplications = studentStipends(user.getStudentId(), null);
+            prevApplications = StreamUtil.nullSafeList(prevApplications).stream()
+                    .filter(a -> a.getBankAccount() != null && (a.getBankAccountOwnerIdcode() == null
+                            || a.getBankAccountOwnerIdcode().equals(person.getIdcode())))
                     .sorted(Comparator.comparing(a -> a.getInserted(), Comparator.reverseOrder()))
                     .collect(Collectors.toList());
+
             if (!prevApplications.isEmpty()) {
-                applicationDto.setBankAccount(prevApplications.get(0).getBankAccount());
+                ScholarshipApplication prevApplication = prevApplications.get(0);
+                applicationDto.setBankAccount(prevApplication.getBankAccount());
+                applicationDto.setBankAccountOwnerName(PersonUtil.fullname(person));
+                applicationDto.setBankAccountOwnerIdcode(prevApplication.getBankAccountOwnerIdcode());
+            } else {
+                applicationDto.setBankAccount(person.getBankaccount());
+                applicationDto.setBankAccountOwnerName(PersonUtil.fullname(person));
+                applicationDto.setBankAccountOwnerIdcode(person.getIdcode());
             }
         }
         return applicationDto;
@@ -999,7 +1010,7 @@ public class ScholarshipService {
                 + ", (select exists(select 1 from directive_student ds join directive d on d.id = ds.directive_id"
                     + " where ds.scholarship_application_id = sa.id and ds.canceled = false"
                     + " and d.status_code in (" + directiveStatuses + "))) as has_directive"
-                + ", sd.id, sd.decided, sg.code as student_group_code";
+                + ", sd.id, sd.decided, sg.code as student_group_code, sa.bank_account_owner_idcode";
         List<?> data = qb.select(select, em).getResultList();
         return StreamUtil.toMappedList(r -> {
         	ScholarshipApplicationSearchDto dto = new ScholarshipApplicationSearchDto();
@@ -1029,6 +1040,7 @@ public class ScholarshipService {
             dto.setDecisionId(resultAsLong(r, 22));
             dto.setDecisionDecided(resultAsLocalDate(r, 23));
             dto.setStudentGroup(resultAsString(r, 24));
+            dto.setBankAccountOwnerIdcode(resultAsString(r, 25));
             return dto;
         }, data);
     }

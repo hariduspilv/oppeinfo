@@ -25,7 +25,9 @@ public class PracticeJournalForm extends VersionedCommand {
     @Size(max = 255)
     private String practicePlace;
     @NotNull
-    private Long teacher;
+    private AutocompleteResult teacher;
+    
+    private Long practiceEvaluation;
     @NotNull
     @Size(max = 20000)
     private String practicePlan;
@@ -66,11 +68,11 @@ public class PracticeJournalForm extends VersionedCommand {
         this.practicePlace = practicePlace;
     }
 
-    public Long getTeacher() {
+    public AutocompleteResult getTeacher() {
         return teacher;
     }
 
-    public void setTeacher(Long teacher) {
+    public void setTeacher(AutocompleteResult teacher) {
         this.teacher = teacher;
     }
 
@@ -96,6 +98,14 @@ public class PracticeJournalForm extends VersionedCommand {
 
     public void setModuleSubjects(List<PracticeJournalModuleSubjectForm> moduleSubjects) {
         this.moduleSubjects = moduleSubjects;
+    }
+
+    public Long getPracticeEvaluation() {
+        return practiceEvaluation;
+    }
+
+    public void setPracticeEvaluation(Long practiceEvaluation) {
+        this.practiceEvaluation = practiceEvaluation;
     }
 
 }

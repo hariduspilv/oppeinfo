@@ -83,7 +83,6 @@ import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.SpecialitiesAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
-import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.basemodule.BaseModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAutocompleteCommand;
@@ -91,6 +90,7 @@ import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCo
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.studymaterial.StudyMaterialAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.subject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
@@ -966,6 +966,7 @@ public class AutocompleteService {
         qb.optionalCriteria("t.id = :tId", "tId", lookup.getId());
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"),  "name", lookup.getName());
         qb.optionalCriteria("t.is_higher = :higher", "higher", lookup.getHigher());
+        qb.optionalCriteria("t.is_vocational = :vocational", "vocational", lookup.getVocational());
         if(Boolean.TRUE.equals(lookup.getValid())) {
             String validFilter = "t.is_active = true";
             if (lookup.getSelectedTeacherId() != null) {

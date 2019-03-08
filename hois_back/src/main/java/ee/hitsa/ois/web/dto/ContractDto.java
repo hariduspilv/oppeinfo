@@ -46,6 +46,7 @@ public class ContractDto extends VersionedCommand {
     private Boolean isPracticeOther;
     private Long practiceApplication;
     private AutocompleteResult practiceEvaluation;
+    private AutocompleteResult studentPracticeEvaluation;
     private String cancelReason;
     private LocalDate canceled;
     private String cancelDesc;
@@ -387,6 +388,14 @@ public class ContractDto extends VersionedCommand {
 
     public void setPracticeEvaluation(AutocompleteResult practiceEvaluation) {
         this.practiceEvaluation = practiceEvaluation;
+    }
+
+    public AutocompleteResult getStudentPracticeEvaluation() {
+        return studentPracticeEvaluation;
+    }
+
+    public void setStudentPracticeEvaluation(AutocompleteResult studentPracticeEvaluation) {
+        this.studentPracticeEvaluation = studentPracticeEvaluation;
     }
 
 }

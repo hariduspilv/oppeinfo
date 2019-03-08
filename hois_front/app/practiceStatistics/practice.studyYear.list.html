@@ -3,8 +3,8 @@
         {{'practice.student.statistics' | translate}}</md-nav-item>
     <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/contract/statistics" name="practice.contracts">
       {{'practice.contract.statistics' | translate}}</md-nav-item>
-    <!--<md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/studyYear/statistics" name="practice.studyYear">
-    {{'practice.studyYear.statistics' | translate}}</md-nav-item>-->
+    <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/studyYear/statistics" name="practice.studyYear">
+    {{'practice.studyYear.statistics' | translate}}</md-nav-item>
   </md-nav-bar>
   <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
     <div flex>
@@ -15,7 +15,7 @@
             <div layout="row">
               <md-input-container>
                 <label class="textInput">{{'practice.contract.studyYear' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.studyYear" required model-value-attr="code" main-classifier-code="OPPEAASTA"></hois-classifier-select>
+                <hois-classifier-select ng-model="criteria.studyYear" model-value-attr="code" main-classifier-code="OPPEAASTA"></hois-classifier-select>
               </md-input-container>
             </div>
   
@@ -34,10 +34,10 @@
   <div layout-padding>
     <div flex>
       <md-table-container>
-        <table md-table md-progress="tabledata.$promise" class="secondary-table">
+        <table md-table md-progress="tabledata.$promise">
           <thead md-head md-order="criteria.order" md-on-reorder="loadData">
             <tr md-row>
-              <th md-column md-order-by="en.name">{{'practice.studyYear.studentGroup' | translate}}</th>
+              <th md-column md-order-by="sg.code">{{'practice.studyYear.studentGroup' | translate}}</th>
               <th md-column>{{'practice.studyYear.curriculumName' | translate}}</th>
               <th md-column>{{'practice.studyYear.curriculumCode' | translate}}</th>
               <th md-column>{{'practice.studyYear.curriculumGroup' | translate}}</th>
@@ -52,16 +52,17 @@
           </thead>
           <tbody md-body>
             <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-              <td md-cell>{{row.student ? row.student : '-'}}</td>
-              <td md-cell>{{row.studentGroup ? row.studentGroup : '-'}}</td>
-              <td md-cell>{{row.contractNr ? row.contractNr : '-'}}</td>
-              <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
-              <td md-cell>{{row.enterprise ? row.enterprise : '-'}}</td>
-              <td md-cell>{{row.status ? currentLanguageNameField(row.status) : "-"}}</td>
-              <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" 
-                    ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
-              </td>
+              <td md-cell>{{row.studentGroup}}</td>
+              <td md-cell>{{currentLanguageNameField(row.curriculumName)}}</td>
+              <td md-cell>{{row.curriculumCode ? row.curriculumCode : '-'}}</td>
+              <td md-cell>{{row.curriculumGroup ? currentLanguageNameField(row.curriculumGroup) : '-'}}</td>
+              <td md-cell>{{row.course ? row.course : '-'}}</td>
+              <td md-cell>{{row.totalWent ? row.totalWent : '0'}}</td>
+              <td md-cell>{{row.totalCompleted ? row.totalCompleted : '0'}}</td>
+              <td md-cell>{{row.totalFailed ? row.totalFailed : '0'}}</td>
+              <td md-cell>{{row.nameAndReason ? row.nameAndReason : '-'}}</td>
+              <td md-cell>{{row.grade ? row.grade : '-'}}</td>
+              <td md-cell>{{row.enterprises ? row.enterprises : '-'}}</td>
             </tr>
           </tbody>
         </table>

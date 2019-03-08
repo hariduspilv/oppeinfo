@@ -6,6 +6,7 @@ import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.web.dto.PracticeJournalDto;
 import ee.hitsa.ois.web.dto.PracticeJournalSearchDto;
 
 public final class PracticeJournalUserRights {
@@ -38,7 +39,7 @@ public final class PracticeJournalUserRights {
         if(user.isStudent()) {
             return  Boolean.TRUE.equals(dto.getCanStudentAddEntries());
         } else if (user.isSchoolAdmin() || user.isTeacher()) {
-            return isBeforeDaysAfterCanEdit(dto.getEndDate());
+            return true;
         }
         return false;
     }
@@ -49,6 +50,19 @@ public final class PracticeJournalUserRights {
 
     public static boolean canDelete(HoisUserDetails user, LocalDate endDate) {
         return canEdit(user, endDate) && !user.isStudent();
+    }
+    
+    private static Boolean hasOpinion(String opinion) {
+        return opinion == null ? Boolean.FALSE : Boolean.TRUE;
+    }
+
+    public static boolean canAddEntries(HoisUserDetails user, PracticeJournalDto dto) {
+        if(user.isStudent()) {
+            return  canStudentAddEntries(dto.getStatus(), dto.getEndDate(), hasOpinion(dto.getSupervisorOpinion()));
+        } else if (user.isSchoolAdmin() || user.isTeacher()) {
+            return true;
+        }
+        return false;
     }
     
 }

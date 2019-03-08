@@ -1,4 +1,6 @@
-package ee.hitsa.ois.web.commandobject;
+package ee.hitsa.ois.web.commandobject.subject;
+
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 
 public class SubjectAutocompleteCommand extends SearchCommand {
 

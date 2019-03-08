@@ -34,7 +34,7 @@
                             <td>
                                 <span ng-repeat="teacher in ssp.teachers" ng-class="{'invalid': !capacitiesUtil.teachersLoadOk(ssp)}">
                                     <span ng-if="$index > 0">, </span>
-                                    {{teacher.name}}
+                                    <span title="{{'subjectStudyPeriod.teacherLoad' | translate : teacherPlannedLoad(teacher) }}">{{teacher.name}}</span>
                                 </span>
                                 <span ng-show="ssp.studentGroupObjects && ssp.studentGroupObjects.length > 0">
                                     (

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletResponse;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.report.studentgroupteacher.StudentGroupTeacherReport;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.PdfService;
@@ -28,6 +31,7 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
+import ee.hitsa.ois.web.commandobject.report.ScholarshipStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentGroupTeacherCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
@@ -170,7 +174,7 @@ public class ReportController {
                 pdfService.generate(StudentGroupTeacherReport.TEMPLATE_NAME, report));
     }
 
-    @GetMapping("/teachers/detailload/vocational/data")
+    @GetMapping("/teachers/detailload/data")
     public TeacherDetailLoadReportDataDto teacherDetailLoadReportData(HoisUserDetails user,
             @Valid TeacherDetailLoadCommand criteria) {
         UserUtil.assertIsSchoolAdmin(user);
@@ -178,18 +182,10 @@ public class ReportController {
     }
 
     @GetMapping("/teachers/detailload/vocational")
-    public Page<TeacherDetailLoadDto> teacherDetailLoad(HoisUserDetails user,
+    public Page<TeacherDetailLoadDto> teacherVocationalDetailLoad(HoisUserDetails user,
             @Valid TeacherDetailLoadCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return teacherDetailLoadService.teacherDetailLoad(user.getSchoolId(), criteria, pageable);
-    }
-
-    @GetMapping("/teachers/detailload/vocational/teachersdetailloadvocational.xlsx")
-    public void teacherDetailLoadAsExcel(HoisUserDetails user,
-            @Valid TeacherDetailLoadCommand criteria, HttpServletResponse response) throws IOException {
-        UserUtil.assertIsSchoolAdmin(user);
-        HttpUtil.xls(response, "teachersdetailload.xlsx",
-                teacherDetailLoadService.teacherDetailLoadAsExcel(user.getSchoolId(), criteria));
+        return teacherDetailLoadService.teacherVocationalDetailLoad(user.getSchoolId(), criteria, pageable);
     }
 
     @GetMapping("/teachers/detailload/vocational/{id:\\d+}")
@@ -199,11 +195,41 @@ public class ReportController {
         return teacherDetailLoadService.teacherDetailLoadJournals(user.getSchoolId(), criteria, teacher);
     }
 
-    @GetMapping("/teachers/detailload/vocational/{id:\\d+}/teachersdetailloadvocational.xlsx")
+    @GetMapping("/teachers/detailload/higher")
+    public Page<TeacherDetailLoadDto> teacherHigherDetailLoad(HoisUserDetails user,
+            @Valid TeacherDetailLoadCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return teacherDetailLoadService.teacherHigherDetailLoad(user.getSchoolId(), criteria, pageable);
+    }
+
+    @GetMapping("/teachers/detailload/higher/{id:\\d+}")
+    public TeacherDetailLoadDto teacherDetailLoadSubjects(HoisUserDetails user,
+            @Valid TeacherDetailLoadCommand criteria, @WithEntity Teacher teacher) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return teacherDetailLoadService.teacherDetailLoadSubjects(user.getSchoolId(), criteria, teacher);
+    }
+
+    @GetMapping("/teachers/detailload/teachersdetailload.xlsx")
+    public void teacherDetailLoadAsExcel(HoisUserDetails user, @Valid TeacherDetailLoadCommand criteria,
+            HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "teachersdetailload.xlsx",
+                teacherDetailLoadService.teacherDetailLoadAsExcel(user.getSchoolId(), criteria));
+    }
+
+    @GetMapping("/teachers/detailload/teacher/{id:\\d+}/teachersdetailload.xlsx")
     public void teacherDetailLoadJournalsAsExcel(HoisUserDetails user, @Valid TeacherDetailLoadCommand criteria,
             @WithEntity Teacher teacher, HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
-        HttpUtil.xls(response, "teachersdetailload.xlsx",
-                teacherDetailLoadService.teacherDetailLoadJournalsAsExcel(user.getSchoolId(), criteria, teacher));
+        HttpUtil.xls(response, "teachersdetailload.xlsx", teacherDetailLoadService
+                .teacherDetailLoadJournalSubjectsAsExcel(user.getSchoolId(), criteria, teacher));
+    }
+    
+    @GetMapping("/scholarships/statistics.xlsx")
+    public void scholarshipStatisticsAsExcel(HoisUserDetails user, @Valid ScholarshipStatisticsCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMYYYY");
+        HttpUtil.xls(response, String.format("toestip_rmp_%s_%s.xlsx", formatter.format(criteria.getFrom()), formatter.format(criteria.getThru())), reportService.scholarshipStatisticsAsExcel(user, criteria));
     }
 }

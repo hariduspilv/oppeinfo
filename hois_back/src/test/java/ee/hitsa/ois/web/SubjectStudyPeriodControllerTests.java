@@ -28,8 +28,8 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.DeclarationType;
 import ee.hitsa.ois.enums.GroupProportion;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodForm;
-import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodTeacherForm;
+import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodForm;
+import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodTeacherForm;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherDto;
 

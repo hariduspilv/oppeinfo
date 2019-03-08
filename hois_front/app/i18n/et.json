@@ -270,6 +270,9 @@
       "curriculums": {
         "label": "Õppekavad"
       },
+      "scholarshipStatistics": {
+        "label": "Toet/stip RMP"
+      },
       "subjects": {
         "label": "Õppeained"
       },
@@ -367,6 +370,7 @@
         "teachersLoadVocationalHigher": "Õppejõu koormus (kutse)",
         "teachersLoadVocational": "Õpetaja koormus (kutse)",
         "teachersLoadDetailVocational": "Õp. koormus detail (kutse)",
+        "teachersLoadDetailHigher": "Õp. koormus detail (kõrg)",
         "vota": "VÕTA statistika",
         "studentGroupTeacher": "Rühmajuhataja aruanne"
       },
@@ -1265,6 +1269,7 @@
       "alreadyhascertificatedefaultcoordinator": "Õppija koostatud tõendi vaikimisi kooskõlastaja on juba eelnevalt lisatud"
     },
     "student": {
+      "order": "Jrk",
       "abroadProgramme": "Õppeprogramm",
       "abroadPurpose": "Õpingute eesmärk",
       "akadCancelDate": "Akad. puhkuse katkestamise kuupäev",
@@ -2468,6 +2473,11 @@
     "changeLoad": "Muuda õppekoormus",
     "teacher": "Õppejõud",
     "programStatus": "Aineprogrammi staatus",
+    "teacherSpecificLoads": "Õpetaja täpsemad koormused",
+    "loadsDiffer": "Koormused erinevad",
+    "subjectTeacherPairTotal": "Aine-õppejõu paar kokku",
+    "teacherLoadDiffersFromPair": "NB! õppejõu koormus erineb aõ-paari koormusest",
+    "teacherLoad": "Koormus: {{scheduleLoad}}, planeerimata tunde: {{unplannedLessons}}",
     "error": {
       "groupCannotBeRemoved": "See õpperühm peab olema lisatud!",
       "teacherNotAdded": "Õppejõud pole lisatud!",
@@ -3299,7 +3309,14 @@
     "acceptLessons": "Olen kindel, et kõik on õige, ja aktsepteerin tõendi",
     "acceptConfirm": "Kas oled kindel, et soovid tõendi aktsepteerida?",
     "rejectConfirm": "Kas oled kindel, et soovid tõendi tagasi lükata?",
-    "youHaveUnacceptedAbsences": "Teil on aktsepteerimata puudumistõendeid."
+    "youHaveUnacceptedAbsences": "Teil on aktsepteerimata puudumistõendeid.",
+    "dialog": {
+      "reject": {
+        "message": "Kas oled kindel, et soovid tõendi tagasi lükata?",
+        "yes": "Jah, lükkan tagasi",
+        "info": "Märkus"
+      }
+    }
   },
   "groupAbsence": {
     "studyYear": "Õppeaasta",
@@ -3495,11 +3512,19 @@
       "study": "Õppetöö",
       "journal": "Päevik",
       "journals": "Päevikud",
+      "subject": "Õppeaine",
+      "subjects": "Õppeained",
       "studentGroups": "Õpperühm(ad)",
       "total": "Kokku"
+    },
+    "scholarships": {
+      "types": " Õppetoetuse/stipendiumi liik",
+      "entriesFrom": "Sissekanded alates",
+      "entriesThru": "Sissekanded kuni"
     }
   },
   "contract": {
+    "studentEvaluation": "Õppija hindamisvorm",
     "supervisorEvaluation": "Ettevõtte juhendaja hindamisvorm",
     "sendAgain": "Saada uuesti",
     "startFrom": "Alguskuupäev alates",
@@ -3556,9 +3581,10 @@
     },
     "messages": {
       "sendToEkis" : {
-        "success": "Leping Ekis'esse saadetud",
+        "success": "Leping EKIS'esse saadetud",
         "error": {
-          "studentEmailMissing": "Õppijal puudub e-posti aadress õppeasutuses"
+          "studentEmailMissing": "Õppijal puudub e-posti aadress õppeasutuses",
+          "studentGroupCourseMissing": "Õppijal puudub õpperühma kursus"
         }
       },
       "updatingOnlyAllowedForStatusKandY": "Tühistamiseks peab leping olema staatuses Ülevaatamisel või Kehtiv",
@@ -3855,6 +3881,8 @@
     }
   },
   "practice": {
+    "fill": "Praktikapäeviku täitmine",
+    "info": "Praktika info",
     "student": {
       "statistics": "Ettevõtete lõikes praktikal käinud õppijad",
       "startDate": "Alates",
@@ -3967,6 +3995,9 @@
       "annulConfirm": "Kas oled kindel, et soovid taotluse tühistada?",
       "rejectConfirm": "Kas oled kindel, et soovid taotluse tagasi lükata?",
       "acceptConfirm": "Kas oled kindel, et soovid taotluse aktsepteerida?"
+    },
+    "errors": {
+      "noplaces": "Puuduvad vabad kohad taotlemiseks"
     }
   },
   "practiceEvaluation": {
@@ -4006,6 +4037,7 @@
     "teacherOpinion": "Õppeasutuse juhendaja arvamus (tekst)",
     "teacherOpinionFile": "Õppeasutuse juhendaja arvamus (fail)",
     "supervisorOpinion": "Juhendaja arvamus (tekst)",
+    "studentOpinionFile": "Õppija praktika aruanne (fail)",
     "supervisorOpinionFile": "Juhendaja arvamus (fail)",
     "school": "Õppeasutus",
     "teacherComment": "Õppeasutuse juhendaja kommentaar",
@@ -4017,7 +4049,7 @@
     "vocationalOrHigherPracticeJournal": "Palun valige, kas soovite lisada kutseõppe või kõrgõppe praktika päevikut?",
     "prompt":{
       "fileDeleteConfirm": "Kas oled kindel, et soovid faili kustutada?",
-      "confirmConfirm": "Kas oled kindel, et soovid praktikapäeviku kinnitada?",
+      "confirmConfirm": "Kas oled kindel, et soovid praktikapäeviku kinnitada? Peale kinnitamist õppija enam päevikut täita ei saa.",
       "isAfterDaysAfterCanEditSave": "Praktikapäevikut ei saa enam muuta, kui praktika lõppkuupäev on varasem, kui tänane kuupäev + 30 päeva. Kas oled kindel, et soovid salvestada?",
       "isAfterDaysAfterCanEditConfirm": "Praktikapäevikut ei saa enam muuta, kui praktika lõppkuupäev on varasem, kui tänane kuupäev + 30 päeva. Kas oled kindel, et soovid kinnitada?"
     },
@@ -4042,7 +4074,7 @@
     "practiceJournalEntry": {
       "practiceDate": "Praktika kp",
       "description": "Sisu",
-      "hours": "Maht tundides",
+      "astroHours": "Maht astron tundides",
       "supervisorComment": "Juhendaja kommentaar",
       "teacherComment": "Õppeasutuse juhendaja kommentaar",
       "error":{
@@ -4292,6 +4324,7 @@
     "addAllCurriculums": "Lisa kõik õppekavad",
     "generalCriteria": "Üldised taotluse kriteeriumid",
     "previousPeriodCriteria": "Eelmise perioodi kriteeriumid",
+    "bankIdcodeNotMatchingPerson": "Arveldusarve konto omaniku isikukood erineb õpilase isikukoodist",
     "confirmations": {
       "publish": "Kas oled kindel, et soovid stipendiumi avalikustada?",
       "saveAndPublish": "Kas oled kindel, et soovid õppetoetuse salvestada ja avalikustada?",

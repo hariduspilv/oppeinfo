@@ -24,6 +24,28 @@ function ($location, $route, $scope, message, dialogService, FormUtils, QueryUti
     }
   };
 
+  $scope.sameCountryAndCode = function() {
+    QueryUtils.loadingWheel($scope, true);
+    QueryUtils.endpoint(baseUrl + '/sameCountryAndCode').get(
+      {
+        country: $scope.enterprise.country,
+        regCode: $scope.enterprise.regCode
+      }
+    ).$promise.then(function (response) {
+      var ctrl;
+      if (response.status) {
+        message.error(response.status);
+        ctrl = $scope.enterpriseForm.enterpriseCode;
+        ctrl.$setValidity('enterpriseCodeError', false);
+      } else {
+        ctrl = $scope.enterpriseForm.enterpriseCode;
+        ctrl.$setValidity('enterpriseCodeError', true);
+      }
+      QueryUtils.loadingWheel($scope, false);
+    }).catch(angular.noop);
+  };
+
+
   $scope.lookupRegNr = function() {
     if ($scope.enterprise.country === 'RIIK_EST' && $scope.enterpriseForm.enterpriseCode.$error.pattern === undefined && $scope.enterpriseForm.enterpriseCode.$error.minlength === undefined && $scope.enterpriseForm.enterpriseCode.$error.maxlength === undefined && $scope.enterprise.regCode) {
       QueryUtils.loadingWheel($scope, true);

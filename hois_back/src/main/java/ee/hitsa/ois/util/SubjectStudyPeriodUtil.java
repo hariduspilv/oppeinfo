@@ -5,6 +5,7 @@ import java.util.List;
 
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacherCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -19,6 +20,23 @@ public abstract class SubjectStudyPeriodUtil {
         long sum = 0;
         for (SubjectStudyPeriod ssp : ssps) {
             sum += ssp.getCapacities().stream().mapToLong(SubjectStudyPeriodCapacity::getHours).sum();
+        }
+        return Long.valueOf(sum);
+    }
+
+    public static Long getHours(List<SubjectStudyPeriod> ssps, Long teacherId) {
+        long sum = 0;
+        for (SubjectStudyPeriod ssp : ssps) {
+            if (Boolean.TRUE.equals(ssp.getCapacityDiff())) {
+                List<SubjectStudyPeriodTeacher> teacherSsps = StreamUtil
+                        .toFilteredList(t -> EntityUtil.getId(t.getTeacher()).equals(teacherId), ssp.getTeachers());
+                for (SubjectStudyPeriodTeacher teacherSsp : teacherSsps) {
+                    sum += teacherSsp.getCapacities().stream().mapToLong(SubjectStudyPeriodTeacherCapacity::getHours)
+                            .sum();
+                }
+            } else {
+                sum += ssp.getCapacities().stream().mapToLong(SubjectStudyPeriodCapacity::getHours).sum();
+            }
         }
         return Long.valueOf(sum);
     }

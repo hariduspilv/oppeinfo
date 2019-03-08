@@ -62,7 +62,7 @@
             <br>
             <md-input-container>
                 <label class="textInput">{{'stateCurriculum.enter.validFrom' | translate}}</label>
-                <md-datepicker ng-model="classifier.validFrom"></md-datepicker>
+                <md-datepicker ng-model="classifier.validFrom" md-max-date="classifier.validThru"></md-datepicker>
             </md-input-container>
             <md-input-container>
                 <label class="textInput">{{'stateCurriculum.enter.validThru' | translate}}</label>

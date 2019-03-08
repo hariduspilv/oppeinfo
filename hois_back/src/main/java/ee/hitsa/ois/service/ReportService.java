@@ -37,6 +37,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -47,6 +48,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
+import ee.hitsa.ois.web.commandobject.report.ScholarshipStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsCommand;
@@ -56,6 +58,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
+import ee.hitsa.ois.web.dto.report.ScholarshipReportDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
 import ee.hitsa.ois.web.dto.report.StudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.TeacherLoadDto;
@@ -406,15 +409,19 @@ public class ReportService {
                     "join classifier syc on sy.year_code = syc.code " +
                     "join teacher t on sspt.teacher_id = t.id " +
                     "join person p on t.person_id = p.id " +
-                    /*"join subject_study_period_plan sspp on ssp.subject_id = sspp.subject_id and sspp.study_period_id = sp.id " +*/
-                    "join subject_study_period_capacity ssppc on ssppc.subject_study_period_id = ssp.id").sort(pageable);
+                    "join subject_study_period_capacity ssppc on ssppc.subject_study_period_id = ssp.id " +
+                    "left join subject_study_period_teacher_capacity " +
+                        "ssptc on ssptc.subject_study_period_capacity_id = ssppc.id and ssptc.subject_study_period_teacher_id = sspt.id").sort(pageable);
             qb.requiredCriteria("sy.school_id = :schoolId", "schoolId", schoolId);
             qb.requiredCriteria("sp.study_year_id = :studyYear", "studyYear", criteria.getStudyYear());
             qb.optionalCriteria("ssp.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
             qb.optionalCriteria("ssp.subject_id = :subject", "subject", criteria.getSubject());
             qb.optionalCriteria("sspt.teacher_id = :teacher", "teacher", criteria.getTeacher());
             qb.groupBy("syc.name_et, syc.name_en, sp.name_et, sp.name_en, p.firstname, p.lastname, sspt.teacher_id, sp.id");
-            result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, sum(ssppc.hours), sspt.teacher_id, sp.id", em, pageable);
+            result = JpaQueryUtil.pagingResult(qb, 
+                    "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, " +
+                    "coalesce(sum(case when ssp.is_capacity_diff is null or ssp.is_capacity_diff is false then ssppc.hours end), 0) " +
+                    "+ coalesce(sum(case when ssp.is_capacity_diff then ssptc.hours end), 0), sspt.teacher_id, sp.id", em, pageable);
         } else {
             JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                     "from journal_teacher jt " +
@@ -472,6 +479,7 @@ public class ReportService {
 
                 qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt"
                         + " join subject_study_period_capacity sspc on sspc.subject_study_period_id = sspt.subject_study_period_id"
+                        + " left join subject_study_period_teacher_capacity ssptc on ssptc.subject_study_period_capacity_id = sspc.id and ssptc.subject_study_period_teacher_id = sspt.id"
                         + " join subject_study_period ssp on ssp.id = sspt.subject_study_period_id"
                         + " join study_period sp on sp.id = ssp.study_period_id"
                         + " join study_year sy on sy.id = sp.study_year_id"
@@ -484,7 +492,9 @@ public class ReportService {
 
                 qb.groupBy("sspt.teacher_id, ssp.study_period_id, sspc.capacity_type_code, sctl.load_percentage");
                 
-                String hoursByTypeQuery = qb.querySql("sspt.teacher_id, ssp.study_period_id, sctl.load_percentage * sum(sspc.hours) / 100.0 as hours", false);
+                String hoursByTypeQuery = qb.querySql("sspt.teacher_id, ssp.study_period_id, "
+                        + "sctl.load_percentage * (coalesce(sum(case when ssp.is_capacity_diff is null or ssp.is_capacity_diff is false then sspc.hours end), 0) "
+                        + "+ coalesce(sum(case when ssp.is_capacity_diff then ssptc.hours end), 0)) / 100.0 as hours", false);
                 Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
 
                 qb = new JpaNativeQueryBuilder("from (" + hoursByTypeQuery + ") bytype");
@@ -636,6 +646,51 @@ public class ReportService {
             return null;
         }
         return dtosByPeriodAndCurriculum.get(sp.getId()).get(cvId);
+    }
+
+    public byte[] scholarshipStatisticsAsExcel(HoisUserDetails user, ScholarshipStatisticsCommand criteria) {
+        StringBuilder from = new StringBuilder("from directive d ");
+        from.append("join directive_student ds on ds.directive_id = d.id ");
+        from.append("join scholarship_application sa on sa.id = ds.scholarship_application_id ");
+        from.append("join student s on s.id = sa.student_id ");
+        from.append("join person p on p.id = s.person_id ");
+        from.append("join scholarship_term st on st.id = sa.scholarship_term_id ");
+        from.append("join classifier c on c.code = st.type_code ");
+        from.append("left join student_group sg on sg.id = sa.student_group_id ");
+        StringBuilder select = new StringBuilder("sg.code, p.idcode, p.firstname || ' ' || p.lastname as fullname, ");
+        select.append("d.confirm_date, d.directive_nr, coalesce(ds.amount_paid, st.amount_paid) as amount_paid, c.name_et, c.name_en, ");
+        select.append("sa.bank_account_owner_idcode, sa.bank_account_owner_name, coalesce(ds.bank_account, sa.bank_account) as bank_account, ");
+        select.append("coalesce(ds.start_date, sa.scholarship_from, st.payment_start) as date_from, ");
+        select.append("coalesce(ds.end_date, sa.scholarship_thru, st.payment_end) as date_thru ");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString());
+        qb.requiredCriteria("d.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("d.type_code = :type", "type", DirectiveType.KASKKIRI_STIPTOET);
+        qb.requiredCriteria("d.status_code = :status", "status", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.filter("(d.confirm_date >= :from and d.confirm_date <= :thru)");
+        qb.parameter("from", criteria.getFrom());
+        qb.parameter("thru", criteria.getThru());
+        qb.optionalCriteria("st.type_code in (:types)", "types", criteria.getTypes());
+        List<?> results = qb.select(select.toString(), em).getResultList();
+        Map<String, Object> context = new HashMap<>();
+        context.put("scholarships", StreamUtil.toMappedList(row -> {
+            ScholarshipReportDto dto = new ScholarshipReportDto();
+            dto.setGroup(resultAsString(row, 0));
+            dto.setStudent(new ScholarshipReportDto.Person(resultAsString(row, 1), resultAsString(row, 2)));
+            dto.setDecisionDate(resultAsLocalDate(row, 3));
+            dto.setProtocolNr(resultAsString(row, 4));
+            dto.setAmountPaid(resultAsDecimal(row, 5));
+            dto.setType(new AutocompleteResult(null, resultAsString(row, 6), resultAsString(row, 7)));
+            String receiverIdCode = resultAsString(row, 8);
+            String receiverName = resultAsString(row, 9);
+            if (receiverIdCode != null || receiverName != null) {
+                dto.setReceiver(new ScholarshipReportDto.Person(receiverIdCode, receiverName));
+            }
+            dto.setBankAccount(resultAsString(row, 10));
+            dto.setFrom(resultAsLocalDate(row, 11));
+            dto.setThru(resultAsLocalDate(row, 12));
+            return dto;
+        }, results));
+        return xlsService.generate("scholarships.xlsx", context);
     }
 
     private static class StudyPeriod {

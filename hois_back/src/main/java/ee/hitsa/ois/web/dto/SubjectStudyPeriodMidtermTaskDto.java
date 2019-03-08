@@ -9,7 +9,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.MidtermTaskUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodMidtermTaskForm;
+import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodMidtermTaskForm;
 
 public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermTaskForm {
 

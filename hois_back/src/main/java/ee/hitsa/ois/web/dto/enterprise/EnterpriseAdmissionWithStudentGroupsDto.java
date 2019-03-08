@@ -10,7 +10,7 @@ public class EnterpriseAdmissionWithStudentGroupsDto {
 	private Long id;
 	private LocalDate validFrom;
 	private LocalDate validThru;
-	private String places;
+	private Short places;
 	private String addInfo;
 	private Boolean allStudentGroups;
 	private Boolean isStrict;
@@ -34,11 +34,11 @@ public class EnterpriseAdmissionWithStudentGroupsDto {
 	public void setValidThru(LocalDate validThru) {
 		this.validThru = validThru;
 	}
-	public String getPlaces() {
+	public Short getPlaces() {
 		return places;
 	}
-	public void setPlaces(Long places) {
-		this.places = Long.toString(places);
+	public void setPlaces(Short places) {
+		this.places = places;
 	}
 	public String getAddInfo() {
 		return addInfo;

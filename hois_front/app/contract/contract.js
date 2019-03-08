@@ -7,7 +7,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
 
   function entityToForm(entity) {
     $scope.formState.isHigher = entity.isHigher;
-    DataUtils.convertObjectToIdentifier(entity, ['teacher', 'contractCoordinator', 'practiceEvaluation']);
+    DataUtils.convertObjectToIdentifier(entity, ['contractCoordinator', 'practiceEvaluation', 'studentPracticeEvaluation']);
     entity.moduleSubjects.forEach(function (it) {
       DataUtils.convertObjectToIdentifier(it, ['module', 'theme', 'subject']);
     });
@@ -21,6 +21,21 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
         clMapper.objectmapper($scope.contract);
       }
     });
+  }
+
+  var addStringToPracticePlan = function(addable) {
+    if (angular.isString(addable)) {
+      if ($scope.contract.practicePlan === undefined || $scope.contract.practicePlan === null) {
+        $scope.contract.practicePlan = addable;
+      } else {
+        if (($scope.contract.practicePlan + "\n" + addable).length <= 20000) {
+          $scope.contract.practicePlan += "\n" + addable;
+        } else {
+          var index = 20000 - $scope.contract.practicePlan.length + 2;
+          $scope.contract.practicePlan += "\n" + addable.substring(0, index);
+        }
+      }
+    }
   }
 
   $scope.sendEmailAgain = function (supervisor) {
@@ -48,7 +63,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
       QueryUtils.endpoint('/practiceApplication/contractData/' + practiceApplication).get(function (result) {
         $scope.formState.isHigher = result.isHigher;
         $scope.contract.student = result.student;
-        $scope.contract.enterprise = result.enterpriseId;
+        $scope.contract.enterprise = result.enterprise;
         $scope.contract.contactPersonName = result.contactPersonName;
         $scope.contract.contactPersonPhone = result.contactPersonPhone;
         $scope.contract.contactPersonEmail = result.contactPersonEmail;
@@ -90,10 +105,28 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
           $scope.contract.contactPersonName = result[0].contactPersonName;
           $scope.contract.contactPersonEmail= result[0].contactPersonEmail;
           $scope.contract.contactPersonPhone= result[0].contactPersonPhone;
+        } else {
+          if ($scope.contract.contactPersonName !== undefined && $scope.contract.contactPersonName !== null && !$scope.formState.contactsByName[$scope.contract.contactPersonName]) {
+            $scope.contract.contactPersonEmail = undefined;
+            $scope.contract.contactPersonPhone = undefined;
+            $scope.contract.contactPersonName = undefined;
+          }
         }
       });
       QueryUtils.endpoint('/autocomplete/supervisors').query({id: enterprise.id}).$promise.then(function (result) {
         $scope.supervisors = result;
+        var nameList = result.map(function (item) {
+          return item.supervisorName;
+        });
+        if ($scope.contract.supervisors !== undefined) {
+          $scope.contract.supervisors.some(function (supervisor) {
+            if (nameList.indexOf(supervisor.supervisorName) === -1) {
+              $scope.contract.supervisors = $scope.contract.supervisors.filter(function (item) {
+                return item.supervisorName !== supervisor.supervisorName;
+              });
+            }
+          });
+        }
         if (result.length === 1 && ($scope.contract.supervisors === undefined || $scope.contract.supervisors.length === 0)) {
           $scope.contract.supervisor = result[0];
         }
@@ -192,8 +225,8 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
 
       setModuleCredits(moduleSubject);
 
-      if (!angular.isDefined(entity) && angular.isString(module.assessmentMethodsEt)) {
-        $scope.contract.practicePlan = module.assessmentMethodsEt;
+      if (angular.isString(module.assessmentMethodsEt)) {
+        addStringToPracticePlan(module.assessmentMethodsEt);
       }
     }
   };
@@ -203,8 +236,8 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
       moduleSubject.credits = $scope.formState.themesById[themeId].credits;
       moduleSubject.hours = DataUtils.creditsToHours(moduleSubject.credits);
 
-      if (!angular.isDefined(entity) && angular.isString($scope.formState.themesById[themeId].subthemes)) {
-        $scope.contract.practicePlan = $scope.formState.themesById[themeId].subthemes;
+      if (angular.isString($scope.formState.themesById[themeId].subthemes)) {
+        addStringToPracticePlan($scope.formState.themesById[themeId].subthemes);
       }
     } else {
       setModuleCredits(moduleSubject);
@@ -244,8 +277,8 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
       moduleSubject.credits = $scope.formState.subjectsById[subjectId].credits;
       moduleSubject.hours = DataUtils.creditsToHours(moduleSubject.credits);
 
-      if (!angular.isDefined(entity) && angular.isString($scope.formState.subjectsById[subjectId].outcomesEt)) {
-        $scope.contract.practicePlan = $scope.formState.subjectsById[subjectId].outcomesEt;
+      if (angular.isString($scope.formState.subjectsById[subjectId].outcomesEt)) {
+        addStringToPracticePlan($scope.formState.subjectsById[subjectId].outcomesEt);
       }
     }
   };
@@ -315,7 +348,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
       var contract = new ContractEndpoint($scope.contract);
       contract.$delete().then(function () {
         message.info('main.messages.delete.success');
-        $location.path('/contracts');
+        $scope.back('/contracts');
       }).catch(angular.noop);
     });
   };

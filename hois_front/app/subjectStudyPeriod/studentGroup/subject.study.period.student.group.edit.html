@@ -69,11 +69,13 @@
                             <td class="bold">{{capacitiesUtil.getSubjectsTotalCapacity(subject.id, capacityTypes)}}</td>
                         </tr>
                         <tr ng-repeat="ssp in record.subjectStudyPeriodDtos | filter:{ subject: subject.id }">
-                            <td>
+                            <td>    
                                 <span ng-repeat="teacher in ssp.teachers" ng-class="{'invalid': !capacitiesUtil.teachersLoadOk(ssp)}">
                                     <span ng-if="$index > 0">, </span>
-                                    {{teacher.name}}
+                                    <span title="{{'subjectStudyPeriod.teacherLoad' | translate : teacherPlannedLoad(teacher) }}">{{teacher.name}}</span>
                                 </span>
+                                <i ng-if="ssp.capacityDiff || ssp.teachers.length > 1" class="material-icons pointer" title="{{'subjectStudyPeriod.teacherSpecificLoads' | translate}}"
+                                    ng-click="teacherCapacities(ssp)">*</i>
                                 <span ng-if="ssp.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
                                     <span class="subject-study-period-proportion">{{'subjectStudyPeriod.proportion' | translate | lowercase}}:
                                         <hois-classifier-value ng-model="ssp.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>

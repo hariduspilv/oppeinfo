@@ -28,6 +28,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.util.EntityUtil;
@@ -184,7 +185,7 @@ public class PracticeJournalControllerTests {
         form.setStartDate(LocalDate.now());
         form.setEndDate(LocalDate.now().plusDays(1));
         form.setPracticePlace("place");
-        form.setTeacher(teacherId());
+        form.setTeacher(AutocompleteResult.of(teacher()));
         form.setPracticePlan("plan");
         return form;
     }
@@ -193,7 +194,7 @@ public class PracticeJournalControllerTests {
         return JpaQueryUtil.resultAsLong(em.createNativeQuery("select id from curriculum_version_omodule").setMaxResults(1).getResultList().get(0), 0);
     }
 
-    private Long teacherId() {
-        return JpaQueryUtil.resultAsLong(em.createNativeQuery("select id from teacher").setMaxResults(1).getResultList().get(0), 0);
+    private Teacher teacher() {
+        return em.createQuery("select teacher from teacher", Teacher.class).setMaxResults(1).getResultList().get(0);
     }
 }

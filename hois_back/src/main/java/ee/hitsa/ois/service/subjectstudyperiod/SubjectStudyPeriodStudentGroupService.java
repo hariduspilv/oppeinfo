@@ -74,13 +74,21 @@ public class SubjectStudyPeriodStudentGroupService {
             filters.add(root.get("id").in(studentGroupSubquery));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
+        Map<Long, Map<Long, Short>> teacherPlannedLoads = subjectStudyPeriodCapacitiesService
+                .subjectStudyPeriodTeacherPlannedLoads(ssps);
+
         List<SubjectStudyPeriodDto> subjectStudyPeriodDtos = StreamUtil.toMappedList(ssp -> {
             SubjectStudyPeriodDto dto = new SubjectStudyPeriodDto();
             dto.setId(EntityUtil.getId(ssp));
             dto.setSubject(EntityUtil.getId(ssp.getSubject()));
-            dto.setTeachers(StreamUtil.toMappedList(SubjectStudyPeriodTeacherDto::of, ssp.getTeachers()));
+            Map<Long, Short> spPlannedLoads = teacherPlannedLoads.get(EntityUtil.getId(ssp.getStudyPeriod()));
+            dto.setTeachers(StreamUtil.toMappedList(
+                    t -> SubjectStudyPeriodTeacherDto.of(t,
+                            spPlannedLoads != null ? spPlannedLoads.get(EntityUtil.getId(t.getTeacher())) : null),
+                    ssp.getTeachers()));
             dto.setCapacities(StreamUtil.toMappedList(SubjectStudyPeriodCapacityDto::of, ssp.getCapacities()));
             dto.setGroupProportion(EntityUtil.getCode(ssp.getGroupProportion()));
+            dto.setCapacityDiff(ssp.getCapacityDiff());
             return dto;
         }, ssps);
         container.setSubjectStudyPeriodDtos(subjectStudyPeriodDtos);
@@ -169,25 +177,25 @@ public class SubjectStudyPeriodStudentGroupService {
             return dto;
         }, curriculums);
     }
-    
+
     public byte[] subjectStudyPeriodStudentGroupAsExcel(Long schoolId, SubjectStudyPeriodDtoContainer container) {
         setSubjectStudyPeriodsToStudentGroupsContainer(schoolId, container);
         setSubjectStudyPeriodPlansToStudentGroupContainer(container);
         subjectStudyPeriodCapacitiesService.setSubjects(container);
-        
+
         List<Classifier> capacities = subjectStudyPeriodCapacitiesService.capacityClassifiers(schoolId, container);
         List<String> capacityCodes = StreamUtil.toMappedList(c -> EntityUtil.getCode(c), capacities);
-        
+
         List<Map<String, Object>> subjects = new ArrayList<>();
         for (AutocompleteResult s : container.getSubjects()) {
             subjects.add(excelSubject(s, container, capacityCodes));
         }
-        
+
         Map<String, Object> data = new HashMap<>();
         StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, container.getStudyPeriod());
         StudentGroup studentGroup = em.getReference(StudentGroup.class, container.getStudentGroup());
         Curriculum curriculum = studentGroup.getCurriculum();
-        
+
         data.put("studyYear", AutocompleteResult.of(studyPeriod.getStudyYear()));
         data.put("studyPeriod", AutocompleteResult.of(studyPeriod));
         data.put("studentGroup", AutocompleteResult.of(studentGroup));
@@ -201,29 +209,32 @@ public class SubjectStudyPeriodStudentGroupService {
 
         return xlsService.generate("subjectstudyperiodstudentgroup.xls", data);
     }
-    
-    private Map<String, Object> excelSubject(AutocompleteResult subjectDto, SubjectStudyPeriodDtoContainer container, List<String> capacityCodes) {
+
+    private Map<String, Object> excelSubject(AutocompleteResult subjectDto, SubjectStudyPeriodDtoContainer container,
+            List<String> capacityCodes) {
         Map<String, Object> subject = new HashMap<>();
-        Map<String, Short> subjectCapacityHours = subjectStudyPeriodCapacitiesService.subjectCapacityHours(subjectDto.getId(), container, capacityCodes);
-        
+        Map<String, Short> subjectCapacityHours = subjectStudyPeriodCapacitiesService
+                .subjectCapacityHours(subjectDto.getId(), container, capacityCodes);
+
         List<Map<String, Object>> periods = new ArrayList<>();
         Map<String, Short> periodTotals = subjectStudyPeriodCapacitiesService.emptyOrderedCapacityHours(capacityCodes);
-        
-        List<SubjectStudyPeriodDto> periodDtos = StreamUtil.toFilteredList(sp -> sp.getSubject().equals(subjectDto.getId()),
-                container.getSubjectStudyPeriodDtos());
+
+        List<SubjectStudyPeriodDto> periodDtos = StreamUtil.toFilteredList(
+                sp -> sp.getSubject().equals(subjectDto.getId()), container.getSubjectStudyPeriodDtos());
         for (SubjectStudyPeriodDto periodDto : periodDtos) {
-            Map<String, Object> period = subjectStudyPeriodCapacitiesService.periodExcel(periodDto, periodTotals, capacityCodes);
+            Map<String, Object> period = subjectStudyPeriodCapacitiesService.periodExcel(periodDto, periodTotals,
+                    capacityCodes);
             String name = periodDto.getTeachers().stream().map(t -> t.getName()).collect(Collectors.joining(", "));
             period.put("studentGroups", new AutocompleteResult(null, name, name));
-            
+
             periods.add(period);
         }
-        
+
         subject.put("subject", subjectDto);
         subject.put("hours", subjectCapacityHours);
         subject.put("subjectPeriods", periods);
         subject.put("totals", periodTotals);
         return subject;
     }
-    
+
 }

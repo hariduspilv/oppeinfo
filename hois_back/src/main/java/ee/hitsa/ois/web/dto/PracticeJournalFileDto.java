@@ -12,6 +12,7 @@ public class PracticeJournalFileDto {
     private OisFileViewDto oisFile;
     private LocalDateTime inserted;
     private String insertedBy;
+    private Boolean isStudent;
 
     public static PracticeJournalFileDto of(PracticeJournalFile practiceJournalFile) {
         PracticeJournalFileDto dto = EntityUtil.bindToDto(practiceJournalFile, new PracticeJournalFileDto(), "oisFile");
@@ -49,6 +50,14 @@ public class PracticeJournalFileDto {
 
     public void setInsertedBy(String insertedBy) {
         this.insertedBy = insertedBy;
+    }
+
+    public Boolean getIsStudent() {
+        return isStudent;
+    }
+
+    public void setIsStudent(Boolean isStudent) {
+        this.isStudent = isStudent;
     }
 
 }

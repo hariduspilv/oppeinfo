@@ -106,6 +106,9 @@ public class Contract extends BaseEntityWithId {
     
     @ManyToOne(fetch = FetchType.LAZY)
     private PracticeEvaluation practiceEvaluation;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    private PracticeEvaluation studentPracticeEvaluation;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Subject subject;
@@ -417,6 +420,14 @@ public class Contract extends BaseEntityWithId {
 
     public void setPracticeEvaluation(PracticeEvaluation practiceEvaluation) {
         this.practiceEvaluation = practiceEvaluation;
+    }
+
+    public PracticeEvaluation getStudentPracticeEvaluation() {
+        return studentPracticeEvaluation;
+    }
+
+    public void setStudentPracticeEvaluation(PracticeEvaluation studentPracticeEvaluation) {
+        this.studentPracticeEvaluation = studentPracticeEvaluation;
     }
     
 }

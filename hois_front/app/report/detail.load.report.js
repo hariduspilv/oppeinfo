@@ -20,7 +20,7 @@
 
     scope.periodTypesRow = [];
     scope.periodCapacitiesRow = [];
-    if (reportData.criteria.byStudyPeriods) {
+    if (reportData.criteria.byStudyPeriods || reportData.criteria.isHigher) {
       if (reportData.criteria.studyPeriod) {
         reportData.studyPeriods = reportData.studyPeriods.filter(function (sp) {
           return sp.id === reportData.criteria.studyPeriod;
@@ -168,13 +168,13 @@
         studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(),
         allStudyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriods').query(),
         studyPeriods: {},
-        xlsUrl: 'reports/teachers/detailload/vocational/teachersdetailloadvocational.xlsx'
+        xlsUrl: 'reports/teachers/detailload/teachersdetailload.xlsx'
       };
 
       function loadReportData() {
         QueryUtils.loadingWheel($scope, true);
         $scope.content = $scope.tabledata.content;
-        QueryUtils.endpoint(baseUrl + '/data').get($scope.criteria).$promise.then(function (reportData) {
+        QueryUtils.endpoint('/reports/teachers/detailload/data').get($scope.criteria).$promise.then(function (reportData) {
           DataUtils.convertStringToDates(reportData.criteria, ['from', 'thru']);
           var teachers = $scope.tabledata ? $scope.tabledata.content : null;
           setReportData($scope, MONTH, teachers, reportData);
@@ -266,25 +266,149 @@
 
       var loadData = $scope.loadData;
       $scope.loadData = function() {
+        $scope.criteria.isHigher = false;
         FormUtils.withValidForm($scope.searchForm, loadData);
       };
 
       $scope.teacherJournalsDialog = function (teacher) {
-        dialogService.showDialog('report/teachers.detail.load.journals.html', function (dialogScope) {
+        dialogService.showDialog('report/teachers.detail.load.teacher.dialog.tmpl.html', function (dialogScope) {
           dialogScope.teacher = teacher;
           dialogScope.criteria = angular.copy($scope.reportData.criteria);
           dialogScope.criteria.showSingleEvents = false;
           dialogScope.capacityTypes = $scope.capacityTypes;
-          dialogScope.xlsUrl = 'reports/teachers/detailload/vocational/' + teacher.id + '/teachersdetailloadvocational.xlsx';
+          dialogScope.xlsUrl = 'reports/teachers/detailload/teacher/' + teacher.id + '/teachersdetailload.xlsx';
 
           QueryUtils.endpoint(baseUrl + '/' + dialogScope.teacher.id).get(dialogScope.criteria).$promise.then(function (result) {
-            dialogScope.content = result.journals;
-            QueryUtils.endpoint(baseUrl + '/data').get(dialogScope.criteria).$promise.then(function (reportData) {
+            dialogScope.content = result.journalSubjects;
+            QueryUtils.endpoint('/reports/teachers/detailload/data').get(dialogScope.criteria).$promise.then(function (reportData) {
               DataUtils.convertStringToDates(reportData.criteria, ['from', 'thru']);
               var teachers = [];
               teachers.push(result);
               setReportData(dialogScope, MONTH, teachers, reportData);
               dialogScope.reportData.byJournals = true;
+              dialogScope.$broadcast('refreshFixedColumns');
+            });
+          });
+        });
+      };
+    }
+  ]).controller('ReportTeacherDetailLoadHigherController', ['$scope', '$route', 'Classifier', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService',
+    function ($scope, $route, Classifier, DataUtils, FormUtils, QueryUtils, dialogService) {
+      $scope.auth = $route.current.locals.auth;
+      var baseUrl = '/reports/teachers/detailload/higher';
+
+      Classifier.queryForDropdown({ mainClassCode: 'MAHT' }, function (result) {
+        $scope.capacityTypes = Classifier.toMap(result);
+      });
+
+      $scope.formState = {
+        studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(),
+        allStudyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriods').query(),
+        studyPeriods: {},
+        xlsUrl: 'reports/teachers/detailload/teachersdetailload.xlsx'
+      };
+
+      function loadReportData() {
+        QueryUtils.loadingWheel($scope, true);
+        $scope.content = $scope.tabledata.content;
+        QueryUtils.endpoint('/reports/teachers/detailload/data').get($scope.criteria).$promise.then(function (reportData) {
+          var teachers = $scope.tabledata ? $scope.tabledata.content : null;
+          //TODO: get rid of month?
+          setReportData($scope, null, teachers, reportData);
+          $scope.reportData.byTeachers = true;
+          $scope.$broadcast('refreshFixedColumns');
+          QueryUtils.loadingWheel($scope, false);
+        });
+      }
+
+      QueryUtils.createQueryForm($scope, baseUrl, {}, loadReportData);
+
+      $scope.$watch('criteria.studyYear', function () {
+        var studyYear = $scope.formState.studyYears.filter(function (sy) {
+          return sy.id === $scope.criteria.studyYear;
+        })[0];
+
+        if ($scope.criteria.studyPeriod) {
+          var studyYearPeriods = $scope.formState.studyPeriods[$scope.criteria.studyYear] || [];
+          var chosenPeriodInStudyYear = studyYearPeriods.filter(function (sp) {
+            return sp.id === $scope.criteria.studyPeriod;
+          }).length > 0;
+          if (!chosenPeriodInStudyYear) {
+            $scope.criteria.studyPeriod = null;
+          }
+        }
+
+        $scope.criteria.studyYearStart = studyYear ? studyYear.startDate : null;
+        $scope.criteria.studyYearEnd = studyYear ? studyYear.endDate : null;
+      });
+
+      $scope.$watch('criteria.studyPeriod', function () {
+        var studyPeriod = $scope.formState.allStudyPeriods.filter(function (sp) {
+          return sp.id === $scope.criteria.studyPeriod;
+        })[0];
+
+        $scope.criteria.studyPeriodStart = studyPeriod ? studyPeriod.startDate : null;
+        $scope.criteria.studyPeriodEnd = studyPeriod ? studyPeriod.endDate : null;
+      });
+
+      $scope.formState.studyYears.$promise.then(function () {
+        $scope.formState.allStudyPeriods.$promise.then(function (studyPeriods) {
+          for (var i = 0; i < studyPeriods.length; i++) {
+            var sp = studyPeriods[i];
+            var sy = $scope.formState.studyPeriods[sp.studyYear];
+            if (!sy) {
+              $scope.formState.studyPeriods[sp.studyYear] = sy = [];
+            }
+            sy.push(sp);
+          }
+        });
+
+        if (!$scope.criteria.studyYear) {
+          var sy = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyYears);
+          if (sy) {
+            $scope.criteria.studyYear = sy.id;
+          }
+        }
+      });
+
+      $scope.periodChanged = function (period) {
+        switch (period) {
+          case 'byStudyPeriods':
+            $scope.criteria.byWeeks = false;
+            $scope.criteria.byMonths = false;
+            break;
+          case 'byWeeks':
+            $scope.criteria.byStudyPeriods = false;
+            $scope.criteria.byMonths = false;
+            break;
+          case 'byMonths':
+            $scope.criteria.byStudyPeriods = false;
+            $scope.criteria.byWeeks = false;
+            break;
+        }
+      };
+
+      var loadData = $scope.loadData;
+      $scope.loadData = function() {
+        $scope.criteria.isHigher = true;
+        FormUtils.withValidForm($scope.searchForm, loadData);
+      };
+
+      $scope.teacherSubjectsDialog = function (teacher) {
+        dialogService.showDialog('report/teachers.detail.load.teacher.dialog.tmpl.html', function (dialogScope) {
+          dialogScope.teacher = teacher;
+          dialogScope.criteria = angular.copy($scope.reportData.criteria);
+          dialogScope.criteria.showSingleEvents = false;
+          dialogScope.capacityTypes = $scope.capacityTypes;
+          dialogScope.xlsUrl = 'reports/teachers/detailload/teacher/' + teacher.id + '/teachersdetailload.xlsx';
+
+          QueryUtils.endpoint(baseUrl + '/' + dialogScope.teacher.id).get(dialogScope.criteria).$promise.then(function (result) {
+            dialogScope.content = result.journalSubjects;
+            QueryUtils.endpoint('/reports/teachers/detailload/data').get(dialogScope.criteria).$promise.then(function (reportData) {
+              var teachers = [];
+              teachers.push(result);
+              setReportData(dialogScope, null, teachers, reportData);
+              dialogScope.reportData.byStudyPeriods = true;
               dialogScope.$broadcast('refreshFixedColumns');
             });
           });

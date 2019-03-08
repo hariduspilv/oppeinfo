@@ -19,4 +19,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectViewController',
         $scope.capacityTypes = response.capacityTypes;
     });
     $scope.subject = QueryUtils.endpoint('/subjectStudyPeriods/subject/' + subject).get();
+
+    $scope.teacherPlannedLoad = function (teacher) {
+      return $scope.capacitiesUtil.teacherPlannedLoad(teacher);
+    };
   });

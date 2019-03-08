@@ -20,17 +20,21 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
   }
 
   function assertPermissionToEdit(entity) {
-    if (!(entity.canEdit && ($scope.auth.isTeacher() || $scope.auth.isAdmin()))) {
+    if (!(entity.canEdit && $scope.auth.isAdmin())) {
       noPermission();
     }
   }
 
   function entityToForm(entity) {
     assertPermissionToEdit(entity);
-    
+    if (!entity.isHigher) {
+      $scope.grades = Classifier.queryForDropdown({mainClassCode: 'KUTSEHINDAMINE'});
+    } else {
+      $scope.grades = Classifier.queryForDropdown({mainClassCode: 'KORGHINDAMINE'});
+    }
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
     $scope.formState.isHigher = entity.isHigher;
-    DataUtils.convertObjectToIdentifier(entity, ['teacher']);
+    DataUtils.convertObjectToIdentifier(entity, ['practiceEvaluation']);
     entity.moduleSubjects.forEach(function (it) {
       DataUtils.convertObjectToIdentifier(it, ['module', 'theme', 'subject']);
     });
@@ -136,10 +140,11 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
       
       setModuleCredits(moduleSubject);
 
-      if (!angular.isDefined(entity) && angular.isString(module.assessmentMethodsEt)) {
-        $scope.practiceJournal.practicePlan = module.assessmentMethodsEt;
+      if (angular.isString(module.assessmentMethodsEt)) {
+        addStringToPracticePlan(module.assessmentMethodsEt);
       }
     }
+
   };
 
   $scope.themeChanged = function (themeId, moduleSubject) {
@@ -147,21 +152,36 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
       moduleSubject.credits = $scope.formState.themesById[themeId].credits;
       moduleSubject.hours = DataUtils.creditsToHours(moduleSubject.credits);
 
-      if (!angular.isDefined(entity) && angular.isString($scope.formState.themesById[themeId].subthemes)) {
-        $scope.practiceJournal.practicePlan = $scope.formState.themesById[themeId].subthemes;
+      if (angular.isString($scope.formState.themesById[themeId].subthemes)) {
+        addStringToPracticePlan($scope.formState.themesById[themeId].subthemes);
       }
     } else {
       setModuleCredits(moduleSubject);
     }
   };
 
+  var addStringToPracticePlan = function(addable) {
+    if (angular.isString(addable)) {
+      if ($scope.practiceJournal.practicePlan === undefined || $scope.practiceJournal.practicePlan === null) {
+        $scope.practiceJournal.practicePlan = addable;
+      } else {
+        if (($scope.practiceJournal.practicePlan + "\n" + addable).length <= 20000) {
+          $scope.practiceJournal.practicePlan += "\n" + addable;
+        } else {
+          var index = 20000 - $scope.practiceJournal.practicePlan.length + 2;
+          $scope.practiceJournal.practicePlan += "\n" + addable.substring(0, index);
+        }
+      }
+    }
+  }
+
   $scope.subjectChanged = function (subjectId, moduleSubject) {
     if ($scope.formState.subjectsById[subjectId]) {
       moduleSubject.credits = $scope.formState.subjectsById[subjectId].credits;
       moduleSubject.hours = DataUtils.creditsToHours(moduleSubject.credits);
 
-      if (!angular.isDefined(entity) && angular.isString($scope.formState.subjectsById[subjectId].outcomesEt)) {
-        $scope.practiceJournal.practicePlan = $scope.formState.subjectsById[subjectId].outcomesEt;
+      if (angular.isString($scope.formState.subjectsById[subjectId].outcomesEt)) {
+        addStringToPracticePlan($scope.formState.subjectsById[subjectId].outcomesEt);
       }
     }
   };

@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacherCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
@@ -24,6 +25,14 @@ public class SubjectStudyPeriodCapacityDto {
         dto.setId(EntityUtil.getId(c));
         dto.setHours(c.getHours());
         dto.setCapacityType(EntityUtil.getCode(c.getCapacityType()));
+        return dto;
+    }
+
+    public static SubjectStudyPeriodCapacityDto of(SubjectStudyPeriodTeacherCapacity c) {
+        SubjectStudyPeriodCapacityDto dto = new SubjectStudyPeriodCapacityDto();
+        dto.setId(EntityUtil.getId(c));
+        dto.setHours(c.getHours());
+        dto.setCapacityType(EntityUtil.getCode(c.getSubjectStudyPeriodCapacity().getCapacityType()));
         return dto;
     }
 

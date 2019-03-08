@@ -15,6 +15,8 @@ public class PracticeJournalFile extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false, insertable = false)
     private PracticeJournal practiceJournal;
+    
+    private Boolean isStudent;
 
     public OisFile getOisFile() {
         return oisFile;
@@ -30,6 +32,14 @@ public class PracticeJournalFile extends BaseEntityWithId {
 
     public void setPracticeJournal(PracticeJournal practiceJournal) {
         this.practiceJournal = practiceJournal;
+    }
+
+    public Boolean getIsStudent() {
+        return isStudent;
+    }
+
+    public void setIsStudent(Boolean isStudent) {
+        this.isStudent = isStudent;
     }
 
 }

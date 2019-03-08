@@ -91,7 +91,7 @@
       </div>
 
       <div layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-input-container flex>
+        <md-input-container flex style="margin-bottom:0px; padding-bottom: 0px;">
           <label class="textInput">{{'contract.supervisors' | translate}}</label>
         </md-input-container>
       </div>
@@ -103,7 +103,8 @@
             <th md-column width="25%">{{'contract.supervisorName' | translate}}</th>
             <th md-column width="25%">{{'contract.supervisorEmail' | translate}}</th>
             <th md-column width="25%">{{'contract.supervisorPhone' | translate}}</th>
-            <th md-column width="10%"></th>
+            <th md-column width="10%" ng-if="(contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
+            || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_T') && auth.isAdmin()"></th>
         </tr>
         </thead>
         <tbody md-body>
@@ -111,8 +112,8 @@
             <td md-cell>{{contractSupervisor.supervisorName}}</td>
             <td md-cell>{{contractSupervisor.supervisorEmail}}</td>
             <td md-cell>{{contractSupervisor.supervisorPhone}}</td>
-            <td layout="row" ng-if="contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
-             || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_T'" md-cell style="height: inherit;">
+            <td layout="row" ng-if="(contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
+            || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_T') && auth.isAdmin()" md-cell style="height: inherit;">
               <div flex="50" ng-if="contract.status.code !== 'LEPING_STAATUS_T'" style="margin: auto;">
                 <a target="_blank" ng-href="#/practiceJournals/supervisor/{{contractSupervisor.supervisorUrl}}">{{'journal.entry.open' | translate}}</a>
               </div>
@@ -129,30 +130,30 @@
       <fieldset flex="100">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'contract.practicePlace' | translate}}</legend>
         <div layout="column">
-          <md-input-container flex ng-if="contract.isPracticeSchool">
-            <md-checkbox ng-model="contract.isPracticeSchool" disabled>
+          <md-input-container flex ng-if="contract.isPracticeSchool" style="margin-bottom: 0px;">
+            <md-checkbox ng-model="contract.isPracticeSchool" disabled style="margin-bottom: 0px;" flex>
               {{'contract.practicePlaceSchool' | translate}}</md-checkbox>
           </md-input-container>
-          <md-input-container flex ng-if="contract.isPracticeTelework">
-            <md-checkbox ng-model="contract.isPracticeTelework" disabled>
+          <md-input-container flex ng-if="contract.isPracticeTelework" style="margin-bottom: 0px;">
+            <md-checkbox ng-model="contract.isPracticeTelework" disabled style="margin-bottom: 0px;">
               {{'contract.practicePlaceDistanceWork' | translate}}</md-checkbox>
           </md-input-container>
           <md-input-container flex ng-if="contract.isPracticeEnterprise">
-            <md-checkbox ng-model="contract.isPracticeEnterprise" disabled>
+            <md-checkbox ng-model="contract.isPracticeEnterprise" disabled style="margin-bottom: 0px;">
               {{'contract.practicePlaceEnterprise' | translate}}</md-checkbox>
           </md-input-container>
           <div layout="row" ng-if="contract.isPracticeEnterprise" flex>
-            <md-input-container flex>
+            <md-input-container flex style="margin-bottom: 0px;">
               <label>{{'contract.practicePlaceEnterpriseLocation' | translate}}</label>
               <hois-value value="contract.practicePlace"></hois-value>
             </md-input-container>
           </div>
           <md-input-container flex ng-if="contract.isPracticeOther">
-            <md-checkbox ng-model="contract.isPracticeOther" disabled>
+            <md-checkbox ng-model="contract.isPracticeOther" disabled style="margin-bottom: 0px;">
               {{'contract.practicePlaceElse' | translate}}</md-checkbox>
           </md-input-container>
           <div layout="row" ng-if="contract.isPracticeOther" flex>
-            <md-input-container flex>
+            <md-input-container flex style="margin-bottom: 0px;">
               <label class="textInput">{{'contract.otherPlace' | translate}}</label>
               <hois-value value="contract.practicePlace"></hois-value>
             </md-input-container>
@@ -164,13 +165,6 @@
         <md-input-container flex>
           <label class="textInput">{{'contract.schoolSupervisor' | translate}}</label>
           <hois-value value="currentLanguageNameField(contract.teacher)"></hois-value>
-        </md-input-container>
-      </div>
-
-      <div layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-input-container flex>
-          <label class="textInput">{{'contract.otherSupervisor' | translate}}</label>
-          <hois-value value="contract.otherSupervisor"></hois-value>
         </md-input-container>
       </div>
 
@@ -192,6 +186,13 @@
         <md-input-container flex>
           <label>{{'contract.supervisorEvaluation' | translate}}</label>
           <hois-value value="currentLanguageNameField(contract.practiceEvaluation)"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label>{{'contract.studentEvaluation' | translate}}</label>
+          <hois-value value="currentLanguageNameField(contract.studentPracticeEvaluation)"></hois-value>
         </md-input-container>
       </div>
 

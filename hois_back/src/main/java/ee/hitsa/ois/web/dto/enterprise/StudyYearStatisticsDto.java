@@ -1,17 +1,19 @@
 package ee.hitsa.ois.web.dto.enterprise;
 
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+
 public class StudyYearStatisticsDto {
 	
 	private String studentGroup;
-	private String curriculumName;
+	private AutocompleteResult curriculumName;
 	private String curriculumCode;
-	private String curriculumGroup;
-	private String course;
-	private String totalWent;
-	private String totalCompleted;
-	private String totalFailed;
+	private AutocompleteResult curriculumGroup;
+	private Long course;
+	private int totalWent;
+	private int totalCompleted;
+	private int totalFailed;
 	private String nameAndReason;
-	private String grade;
+	private double grade;
 	private String enterprises;
 	
 	public String getStudentGroup() {
@@ -20,10 +22,10 @@ public class StudyYearStatisticsDto {
 	public void setStudentGroup(String studentGroup) {
 		this.studentGroup = studentGroup;
 	}
-	public String getCurriculumName() {
+	public AutocompleteResult getCurriculumName() {
 		return curriculumName;
 	}
-	public void setCurriculumName(String curriculumName) {
+	public void setCurriculumName(AutocompleteResult curriculumName) {
 		this.curriculumName = curriculumName;
 	}
 	public String getCurriculumCode() {
@@ -32,34 +34,34 @@ public class StudyYearStatisticsDto {
 	public void setCurriculumCode(String curriculumCode) {
 		this.curriculumCode = curriculumCode;
 	}
-	public String getCurriculumGroup() {
+	public AutocompleteResult getCurriculumGroup() {
 		return curriculumGroup;
 	}
-	public void setCurriculumGroup(String curriculumGroup) {
+	public void setCurriculumGroup(AutocompleteResult curriculumGroup) {
 		this.curriculumGroup = curriculumGroup;
 	}
-	public String getCourse() {
+	public Long getCourse() {
 		return course;
 	}
-	public void setCourse(String course) {
+	public void setCourse(Long course) {
 		this.course = course;
 	}
-	public String getTotalWent() {
+	public int getTotalWent() {
 		return totalWent;
 	}
-	public void setTotalWent(String totalWent) {
+	public void setTotalWent(int totalWent) {
 		this.totalWent = totalWent;
 	}
-	public String getTotalCompleted() {
+	public int getTotalCompleted() {
 		return totalCompleted;
 	}
-	public void setTotalCompleted(String totalCompleted) {
+	public void setTotalCompleted(int totalCompleted) {
 		this.totalCompleted = totalCompleted;
 	}
-	public String getTotalFailed() {
+	public int getTotalFailed() {
 		return totalFailed;
 	}
-	public void setTotalFailed(String totalFailed) {
+	public void setTotalFailed(int totalFailed) {
 		this.totalFailed = totalFailed;
 	}
 	public String getNameAndReason() {
@@ -68,10 +70,10 @@ public class StudyYearStatisticsDto {
 	public void setNameAndReason(String nameAndReason) {
 		this.nameAndReason = nameAndReason;
 	}
-	public String getGrade() {
+	public double getGrade() {
 		return grade;
 	}
-	public void setGrade(String grade) {
+	public void setGrade(double grade) {
 		this.grade = grade;
 	}
 	public String getEnterprises() {

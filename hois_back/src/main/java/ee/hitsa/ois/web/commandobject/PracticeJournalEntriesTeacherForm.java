@@ -19,8 +19,7 @@ public class PracticeJournalEntriesTeacherForm {
 
     @ClassifierRestriction({MainClassCode.KUTSEHINDAMINE, MainClassCode.KORGHINDAMINE})
     private String grade;
-    private List<OisFileForm> practiceJournalFiles;
-
+    private List<PracticeFileForm> practiceJournalFiles;
     public List<PracticeJournalEntryTeacherForm> getPracticeJournalEntries() {
         return practiceJournalEntries;
     }
@@ -53,11 +52,11 @@ public class PracticeJournalEntriesTeacherForm {
         this.grade = grade;
     }
 
-    public List<OisFileForm> getPracticeJournalFiles() {
+    public List<PracticeFileForm> getPracticeJournalFiles() {
         return practiceJournalFiles;
     }
 
-    public void setPracticeJournalFiles(List<OisFileForm> practiceJournalFiles) {
+    public void setPracticeJournalFiles(List<PracticeFileForm> practiceJournalFiles) {
         this.practiceJournalFiles = practiceJournalFiles;
     }
 

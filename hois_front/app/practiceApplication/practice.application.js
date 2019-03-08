@@ -26,6 +26,20 @@ angular.module('hitsaOis').controller('PracticeApplicationStudentController', ['
       loadPassedAdmissions();
     });
 
+    /**
+     * True if:
+     *    (Without `status` OR `status` is "Tühistatud")
+     *    AND
+     *    (
+     *      (Not strict OR `places` is null)
+     *      OR
+     *      `submittedApplications` < `places`
+     *    )
+     */
+    $scope.canApply = function (admission) {
+      return (!admission.status || 'PR_TAOTLUS_C' === admission.status.code) && ((!admission.isStrict || admission.places === null) || admission.submittedApplications < admission.places);
+    }
+
     $scope.apply = function (admission) {
       dialogService.showDialog('practiceApplication/practice.application.apply.dialog.html', function () {
       }, function (submittedDialogScope) {

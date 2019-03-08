@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.PracticeJournalEvaluation;
 import ee.hitsa.ois.domain.enterprise.PracticeEvaluation;
 import ee.hitsa.ois.domain.enterprise.PracticeEvaluationCriteria;
 import ee.hitsa.ois.domain.school.School;
@@ -77,20 +79,28 @@ public class PracticeEvaluationService {
         practiceEvaluation.setTarget(em.getReference(Classifier.class, form.getTarget()));
         
         EntityUtil.bindEntityCollection(practiceEvaluation.getCriteria(), criteria -> EntityUtil.getId(criteria),
-                form.getCriteria(), PracticeEvaluationCriteriaDto::getId, dto -> {
+                form.getCriteria(), PracticeEvaluationCriteriaDto::getCriteriaId, dto -> {
                     PracticeEvaluationCriteria criteria = new PracticeEvaluationCriteria();
                     criteria.setPracticeEvaluation(practiceEvaluation);
                     return updateCriteria(dto, criteria);
                 }, this::updateCriteria);
-        
         return EntityUtil.save(practiceEvaluation, em);
     }
     
     private PracticeEvaluationCriteria updateCriteria(PracticeEvaluationCriteriaDto dto, PracticeEvaluationCriteria criteria) {
         criteria.setNameEt(dto.getNameEt());
         criteria.setAddInfo(dto.getAddInfo());
-        criteria.setType(em.getReference(Classifier.class, dto.getType()));
         criteria.setOrderNr(dto.getOrderNr());
+        List<PracticeJournalEvaluation> evals = em.createQuery("select pje from PracticeJournalEvaluation pje where "
+                + "pje.practiceEvaluationCriteria.id = ?1", PracticeJournalEvaluation.class)
+                .setParameter(1, dto.getCriteriaId()).getResultList();
+        for (PracticeJournalEvaluation eval : evals) {
+            eval.setPracticeEvaluationCriteria(criteria);
+            eval.setPracticeEvaluation(criteria.getPracticeEvaluation());
+        }
+        if (evals.isEmpty()) {
+            criteria.setType(em.getReference(Classifier.class, dto.getType()));
+        }
         return criteria;
     }
     
@@ -111,6 +121,16 @@ public class PracticeEvaluationService {
 
     public PracticeEvaluationDto get(PracticeEvaluation practiceEvaluation) {
         PracticeEvaluationDto dto = PracticeEvaluationDto.of(practiceEvaluation);
+        List<Long> criteriaIds = dto.getCriteria().stream().map(p -> p.getCriteriaId()).collect(Collectors.toList());
+        List<PracticeJournalEvaluation> evals = em.createQuery("select pje from PracticeJournalEvaluation pje where "
+                + "pje.practiceEvaluationCriteria.id in ?1", PracticeJournalEvaluation.class)
+                .setParameter(1, criteriaIds).getResultList();
+        List<Long> relatedCriteriaIds =  evals.stream().map(p -> p.getPracticeEvaluationCriteria().getId()).collect(Collectors.toList());
+        for (PracticeEvaluationCriteriaDto criteria : dto.getCriteria()) {
+            if (relatedCriteriaIds.contains(criteria.getCriteriaId())) {
+                criteria.setDisabled(Boolean.TRUE);
+            }
+        }
         dto.setCanDelete(Boolean.valueOf(canDelete(practiceEvaluation)));
         return dto;
     }

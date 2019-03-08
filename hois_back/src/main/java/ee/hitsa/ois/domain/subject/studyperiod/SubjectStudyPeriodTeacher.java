@@ -29,6 +29,9 @@ public class SubjectStudyPeriodTeacher extends BaseEntityWithId {
     
     @OneToMany(mappedBy="subjectStudyPeriodTeacher", cascade=CascadeType.ALL, orphanRemoval=true)
     private Set<SubjectProgram> subjectPrograms = new HashSet<>();
+    
+    @OneToMany(mappedBy="subjectStudyPeriodTeacher", cascade=CascadeType.ALL, orphanRemoval=true)
+    private Set<SubjectStudyPeriodTeacherCapacity> capacities = new HashSet<>();
 
     public Boolean getIsSignatory() {
         return isSignatory;
@@ -62,4 +65,13 @@ public class SubjectStudyPeriodTeacher extends BaseEntityWithId {
         getSubjectPrograms().clear();
         getSubjectPrograms().addAll(subjectPrograms);
     }
+
+    public Set<SubjectStudyPeriodTeacherCapacity> getCapacities() {
+        return capacities;
+    }
+
+    public void setCapacities(Set<SubjectStudyPeriodTeacherCapacity> capacities) {
+        this.capacities = capacities;
+    }
+
 }

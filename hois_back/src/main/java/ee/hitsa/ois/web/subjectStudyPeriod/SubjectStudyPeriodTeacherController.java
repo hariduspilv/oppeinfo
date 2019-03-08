@@ -24,7 +24,7 @@ import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodTeacherSearchSe
 import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodTeacherService;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
-import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodSearchCommand;
+import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodSearchCommand;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDtoContainer;
@@ -44,14 +44,15 @@ public class SubjectStudyPeriodTeacherController {
     private SubjectStudyPeriodTeacherService subjectStudyPeriodTeacherService;
 
     @GetMapping
-    public Page<SubjectStudyPeriodTeacherSearchDto> searchByTeachers(HoisUserDetails user, SubjectStudyPeriodSearchCommand criteria, Pageable pageable) {
+    public Page<SubjectStudyPeriodTeacherSearchDto> searchByTeachers(HoisUserDetails user,
+            SubjectStudyPeriodSearchCommand criteria, Pageable pageable) {
         return subjectStudyPeriodTeacherSearchService.search(user.getSchoolId(), criteria, pageable);
     }
 
     @GetMapping("/container")
-    public SubjectStudyPeriodDtoContainer getTeachersSspContainer(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container) {
-        AssertionFailedException.throwIf(container.getTeacher() == null,
-                "Teacher must be specified");
+    public SubjectStudyPeriodDtoContainer getTeachersSspContainer(HoisUserDetails user,
+            @Valid SubjectStudyPeriodDtoContainer container) {
+        AssertionFailedException.throwIf(container.getTeacher() == null, "Teacher must be specified");
         subjectStudyPeriodTeacherService.setSubjectStudyPeriodsToTeachersContainer(user.getSchoolId(), container);
         subjectStudyPeriodCapacitiesService.setSubjects(container);
         subjectStudyPeriodTeacherService.setSubjectStudyPeriodPlansToTeachersContainer(container);
@@ -60,35 +61,42 @@ public class SubjectStudyPeriodTeacherController {
     }
 
     @PutMapping("/container")
-    public SubjectStudyPeriodDtoContainer updateTeachersSspCapacities(HoisUserDetails user, @Valid @RequestBody SubjectStudyPeriodDtoContainer container) {
+    public SubjectStudyPeriodDtoContainer updateTeachersSspCapacities(HoisUserDetails user,
+            @Valid @RequestBody SubjectStudyPeriodDtoContainer container) {
         UserUtil.assertIsSchoolAdmin(user);
-        AssertionFailedException.throwIf(container.getTeacher() == null,
-                "Teacher must be specified");
+        AssertionFailedException.throwIf(container.getTeacher() == null, "Teacher must be specified");
         subjectStudyPeriodCapacitiesService.updateSspCapacities(user.getSchoolId(), container);
         return getTeachersSspContainer(user, container);
     }
 
     @GetMapping("/page")
-    public Page<AutocompleteResult> getTeachersPage(TeacherSearchCommand command, Pageable pageable, HoisUserDetails user) {
+    public Page<AutocompleteResult> getTeachersPage(TeacherSearchCommand command, Pageable pageable,
+            HoisUserDetails user) {
         command.setIsHigher(Boolean.TRUE);
         command.setIsActive(Boolean.TRUE);
-        return teacherService.search(user, command, pageable).map(t -> new AutocompleteResult(t.getId(), t.getName(), t.getName()));
+        return teacherService.search(user, command, pageable)
+                .map(t -> new AutocompleteResult(t.getId(), t.getName(), t.getName()));
     }
 
     @GetMapping("/list/limited/{studyPeriodId:\\d+}")
-    public List<AutocompleteResult> getTeachersFilteredList(HoisUserDetails user, @PathVariable("studyPeriodId") Long studyPeriodId) {
+    public List<AutocompleteResult> getTeachersFilteredList(HoisUserDetails user,
+            @PathVariable("studyPeriodId") Long studyPeriodId) {
         return subjectStudyPeriodTeacherService.getTeachersList(user.getSchoolId(), studyPeriodId);
     }
 
     @GetMapping("/searchByTeacher.xls")
-    public void searchByStudentGroupAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodSearchCommand criteria, HttpServletResponse response) throws IOException {
+    public void searchByStudentGroupAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodSearchCommand criteria,
+            HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
-        HttpUtil.xls(response, "searchByTeacher.xls", subjectStudyPeriodTeacherSearchService.searchByTeacherAsExcel(user.getSchoolId(), criteria));
+        HttpUtil.xls(response, "searchByTeacher.xls",
+                subjectStudyPeriodTeacherSearchService.searchByTeacherAsExcel(user.getSchoolId(), criteria));
     }
 
     @GetMapping("/subjectstudyperiodteacher.xls")
-    public void subjectStudyPeriodAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container, HttpServletResponse response) throws IOException {
+    public void subjectStudyPeriodAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container,
+            HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
-        HttpUtil.xls(response, "subjectstudyperiodteacher.xls", subjectStudyPeriodTeacherService.subjectStudyPeriodTeacherAsExcel(user.getSchoolId(), container));
+        HttpUtil.xls(response, "subjectstudyperiodteacher.xls",
+                subjectStudyPeriodTeacherService.subjectStudyPeriodTeacherAsExcel(user.getSchoolId(), container));
     }
 }

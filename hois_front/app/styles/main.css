@@ -1440,6 +1440,21 @@ label.required::after {
 .subject-study-period a {
   float: right;
 }
+.subject-study-period i {
+  line-height: 5px;
+  margin-left: 5px;
+}
+
+.subject-study-period-period-total-label {
+  float: right;
+  margin-top: 10px;
+  color: rgb(189, 189, 189);
+}
+
+.subject-study-period-period-total {
+  margin-top: 5px;
+  color: rgb(189, 189, 189);
+}
 
 .subject-study-period input[type="number"] {
 	width: 30px;
@@ -1805,7 +1820,9 @@ tr.scholarship-bottom-border td {
   color: red;
 }
 
-
+.scholarship-warning {
+  background: #FFCCBC;
+}
 
 .substitutableModuleSelect {
   width: 30%;

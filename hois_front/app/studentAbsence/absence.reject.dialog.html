@@ -1,0 +1,30 @@
+<md-dialog aria-label="reject dialog" flex="60" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{currentLanguageNameField(absence.student)}}, {{absence.validFrom | hoisDate}} - {{absence.validThru | hoisDate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div class="ois-form-layout-padding nomargin" layout="column" ng-cloak>
+        <p>{{'absence.dialog.reject.message' | translate}}</p>
+        <md-input-container flex>
+          <label>{{'absence.dialog.reject.info' | translate}}</label>
+          <textarea ng-model="rejectReason" md-maxlength="4000" max-rows="10" rows="2"></textarea>
+        </md-input-container>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="rejectAbsence()">{{"absence.dialog.reject.yes" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.no" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>
+  

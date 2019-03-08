@@ -27,7 +27,7 @@ import ee.hitsa.ois.service.XlsService;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
-import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodSearchCommand;
+import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodSearchCommand;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherSearchDto;
 
 @Transactional
@@ -84,7 +84,7 @@ public class SubjectStudyPeriodTeacherSearchService {
         List<SubjectStudyPeriod> ssps = SubjectStudyPeriodUtil.filterSsps
                 (StreamUtil.toMappedList(sspt -> sspt.getSubjectStudyPeriod(), t.getSubjectStudyPeriods()), 
                         studyPeriod);
-        return SubjectStudyPeriodUtil.getHours(ssps);
+        return SubjectStudyPeriodUtil.getHours(ssps, EntityUtil.getId(t));
     }
     
     public byte[] searchByTeacherAsExcel(Long schoolId, SubjectStudyPeriodSearchCommand criteria) {

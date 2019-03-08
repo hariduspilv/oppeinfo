@@ -75,7 +75,7 @@ public class CurriculumModuleService {
         return EntityUtil.save(module, em);
     }
 
-    private void updateOccupations(CurriculumModule module, Set<String> occupations) {
+    public void updateOccupations(CurriculumModule module, Set<String> occupations) {
         EntityUtil.bindEntityCollection(module.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), occupations, occupationCode -> {
             Classifier c = EntityUtil.validateClassifier(em.getReference(Classifier.class, occupationCode),
                     MainClassCode.OSAKUTSE, MainClassCode.KUTSE, MainClassCode.SPETSKUTSE);

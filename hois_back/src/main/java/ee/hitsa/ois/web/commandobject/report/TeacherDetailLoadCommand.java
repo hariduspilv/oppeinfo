@@ -20,6 +20,7 @@ public class TeacherDetailLoadCommand {
     private LocalDate from;
     private LocalDate thru;
 
+    private Boolean isHigher;
     private Boolean byStudyPeriods;
     private Boolean byWeeks;
     private Boolean byMonths;
@@ -97,6 +98,14 @@ public class TeacherDetailLoadCommand {
 
     public void setThru(LocalDate thru) {
         this.thru = thru;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
     }
 
     public Boolean getByStudyPeriods() {

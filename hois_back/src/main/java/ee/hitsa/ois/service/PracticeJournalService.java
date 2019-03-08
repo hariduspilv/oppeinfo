@@ -34,11 +34,14 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.domain.PracticeJournalEntry;
+import ee.hitsa.ois.domain.PracticeJournalEvaluation;
 import ee.hitsa.ois.domain.PracticeJournalFile;
 import ee.hitsa.ois.domain.PracticeJournalModuleSubject;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
+import ee.hitsa.ois.domain.enterprise.PracticeEvaluation;
+import ee.hitsa.ois.domain.enterprise.PracticeEvaluationCriteria;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
@@ -63,6 +66,7 @@ import ee.hitsa.ois.web.commandobject.PracticeJournalEntriesTeacherForm;
 import ee.hitsa.ois.web.commandobject.PracticeJournalEntryStudentForm;
 import ee.hitsa.ois.web.commandobject.PracticeJournalEntrySupervisorForm;
 import ee.hitsa.ois.web.commandobject.PracticeJournalEntryTeacherForm;
+import ee.hitsa.ois.web.commandobject.PracticeJournalEvaluationForm;
 import ee.hitsa.ois.web.commandobject.PracticeJournalForm;
 import ee.hitsa.ois.web.commandobject.PracticeJournalModuleSubjectForm;
 import ee.hitsa.ois.web.commandobject.PracticeJournalSearchCommand;
@@ -70,6 +74,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.PracticeJournalDto;
 import ee.hitsa.ois.web.dto.PracticeJournalSearchDto;
 import ee.hitsa.ois.web.dto.PracticeJournalSearchModuleSubjectDto;
+import ee.hitsa.ois.web.dto.practice.PracticeEvaluationCriteriaDto;
 
 @Transactional
 @Service
@@ -217,8 +222,43 @@ public class PracticeJournalService {
                 }, Collectors.toList())));
     }
     
+    private List<PracticeEvaluationCriteriaDto> setEvalValues(List<PracticeEvaluationCriteriaDto> criteria, PracticeJournal practiceJournal) {
+        for (PracticeEvaluationCriteriaDto dto : criteria) {
+            List<PracticeJournalEvaluation> evals = em.createQuery("select pje from PracticeJournalEvaluation pje where pje.practiceJournal.id = ?1 "
+                    + "and pje.practiceEvaluationCriteria.id = ?2", PracticeJournalEvaluation.class)
+                    .setParameter(1, EntityUtil.getId(practiceJournal))
+                    .setParameter(2, dto.getCriteriaId())
+                    .setMaxResults(1).getResultList();
+            if (evals != null && !evals.isEmpty()) {
+                PracticeJournalEvaluation eval = evals.get(0);
+                dto.setId(EntityUtil.getId(eval));
+                if (eval.getValueClf() != null) {
+                    dto.setValueClf(eval.getValueClf().getCode());
+                }
+                if (eval.getValueNr() != null) {
+                    dto.setValueNr(eval.getValueNr().toString());
+                }
+                dto.setValueTxt(eval.getValueTxt());
+            }
+        }
+        return criteria;
+    }
+    
     public PracticeJournalDto get(PracticeJournal practiceJournal) {
-        return PracticeJournalDto.of(practiceJournal);
+        PracticeJournalDto dto = PracticeJournalDto.of(practiceJournal);
+        if (practiceJournal.getContract() != null) {
+            if (practiceJournal.getContract().getStudentPracticeEvaluation() != null) {
+                dto.setStudentPracticeEvalCriteria(setEvalValues(StreamUtil.toMappedList(PracticeEvaluationCriteriaDto::of,practiceJournal.getContract().getStudentPracticeEvaluation().getCriteria()), practiceJournal));
+            }
+            if (practiceJournal.getContract().getPracticeEvaluation() != null) {
+                dto.setSupervisorPracticeEvalCriteria(setEvalValues(StreamUtil.toMappedList(PracticeEvaluationCriteriaDto::of,practiceJournal.getContract().getPracticeEvaluation().getCriteria()), practiceJournal));
+            }
+        } else {
+            if (practiceJournal.getPracticeEvaluation() != null) {
+                dto.setStudentPracticeEvalCriteria(setEvalValues(StreamUtil.toMappedList(PracticeEvaluationCriteriaDto::of,practiceJournal.getPracticeEvaluation().getCriteria()), practiceJournal));
+            }
+        }
+        return dto;
     }
 
     public PracticeJournalDto get(HoisUserDetails user, PracticeJournal practiceJournal) {
@@ -226,6 +266,7 @@ public class PracticeJournalService {
         dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate())));
         dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate())));
         dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, dto.getEndDate())));
+        dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.canAddEntries(user, dto)));
         return dto;
     }
 
@@ -249,7 +290,8 @@ public class PracticeJournalService {
     public PracticeJournal save(PracticeJournal practiceJournal, PracticeJournalForm practiceJournalForm) {
         assertValidationRules(practiceJournalForm);
         PracticeJournal changedPracticeJournal = EntityUtil.bindToEntity(practiceJournalForm, practiceJournal,
-                "student", "module", "theme", "teacher", "subject", "moduleSubjects");
+                "student", "module", "theme", "teacher", "subject", "moduleSubjects", "practiceEvaluation");
+        changedPracticeJournal.setPracticeEvaluation(EntityUtil.getOptionalOne(PracticeEvaluation.class, practiceJournalForm.getPracticeEvaluation(), em));
         changedPracticeJournal.setStudent(EntityUtil.getOptionalOne(Student.class, practiceJournalForm.getStudent(), em));
         changedPracticeJournal.setTeacher(EntityUtil.getOptionalOne(Teacher.class, practiceJournalForm.getTeacher(), em));
         EntityUtil.bindEntityCollection(changedPracticeJournal.getModuleSubjects(), moduleSubject -> EntityUtil.getId(moduleSubject),
@@ -309,9 +351,43 @@ public class PracticeJournalService {
     public PracticeJournal saveEntriesStudent(PracticeJournal practiceJournal,
             PracticeJournalEntriesStudentForm practiceJournalEntriesStudentForm) {
         assertStudentSaveEntries(practiceJournal);
-        EntityUtil.bindToEntity(practiceJournalEntriesStudentForm, practiceJournal, "practiceJournalEntries");
+        EntityUtil.bindToEntity(practiceJournalEntriesStudentForm, practiceJournal, "practiceJournalEntries", "studentPracticeEvalCriteria", "practiceJournalStudentFiles");
+        updatePracticeJournalStudentEvaluations(practiceJournal, practiceJournalEntriesStudentForm);
         updatePracticeJournalStudentEntries(practiceJournal, practiceJournalEntriesStudentForm);
+        updatePracticeJournalStudentFiles(practiceJournal, practiceJournalEntriesStudentForm);
         return EntityUtil.save(practiceJournal, em);
+    }
+
+    private void updatePracticeJournalStudentEvaluations(PracticeJournal practiceJournal,
+            PracticeJournalEntriesStudentForm practiceJournalEntriesStudentForm) {
+        EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalEvaluations(), eval -> EntityUtil.getId(eval),
+                practiceJournalEntriesStudentForm.getStudentPracticeEvalCriteria(), PracticeJournalEvaluationForm::getId, dto -> {
+                    PracticeJournalEvaluation eval = new PracticeJournalEvaluation();
+                    eval.setPracticeJournal(practiceJournal);
+                    return updateEvals(dto, eval);
+                }, this::updateEvals);
+    }
+    
+    private void updatePracticeJournalSupervisorEvaluations(PracticeJournal practiceJournal,
+            PracticeJournalEntriesSupervisorForm practiceJournalEntriesSupervisorForm) {
+        EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalEvaluations(), eval -> EntityUtil.getId(eval),
+                practiceJournalEntriesSupervisorForm.getSupervisorPracticeEvalCriteria(), PracticeJournalEvaluationForm::getId, dto -> {
+                    PracticeJournalEvaluation eval = new PracticeJournalEvaluation();
+                    eval.setPracticeJournal(practiceJournal);
+                    return updateEvals(dto, eval);
+                }, this::updateEvals);
+    }
+    
+    private PracticeJournalEvaluation updateEvals(PracticeJournalEvaluationForm form, PracticeJournalEvaluation eval) {
+        eval = EntityUtil.bindToEntity(form, eval, "criteriaId", "id", "valueClf");
+        eval.setPracticeEvaluationCriteria(EntityUtil.getOptionalOne(PracticeEvaluationCriteria.class, form.getCriteriaId(), em));
+        eval.setPracticeEvaluation(eval.getPracticeEvaluationCriteria().getPracticeEvaluation());
+        if (form.getValueClf() != null) {
+            eval.setValueClf(em.getReference(Classifier.class, form.getValueClf()));
+        } else {
+            eval.setValueClf(null);
+        }
+        return eval;
     }
 
     private static void updatePracticeJournalStudentEntries(PracticeJournal practiceJournal,
@@ -341,7 +417,8 @@ public class PracticeJournalService {
             PracticeJournalEntriesSupervisorForm practiceJournalEntriesSupervisorForm) {
         assertSupervisorSaveEntries(practiceJournal);
         EntityUtil.bindToEntity(practiceJournalEntriesSupervisorForm, practiceJournal, classifierRepository,
-                "practiceJournalEntries", "practiceJournalFiles");
+                "practiceJournalEntries", "practiceJournalFiles", "supervisorPracticeEvalCriteria");
+        updatePracticeJournalSupervisorEvaluations(practiceJournal, practiceJournalEntriesSupervisorForm);
         updatePracticeJournalSupervisorEntries(practiceJournal, practiceJournalEntriesSupervisorForm);
         updatePracticeJournalSupervisorFiles(practiceJournal, practiceJournalEntriesSupervisorForm);
         return EntityUtil.save(practiceJournal, em);
@@ -352,6 +429,8 @@ public class PracticeJournalService {
         EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalFiles(), EntityUtil::getId,
                 practiceJournalEntriesSupervisorForm.getPracticeJournalFiles(), OisFileForm::getId, dto -> {
                     PracticeJournalFile file = new PracticeJournalFile();
+                    file.setPracticeJournal(practiceJournal);
+                    file.setIsStudent(dto.getIsStudent());
                     file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));
                     return file;
                 });
@@ -396,12 +475,26 @@ public class PracticeJournalService {
             throw new ValidationFailedException("practiceJournal.messages.editNotAllowedSupervisorOpinionExists");
         }
     }
-
+    
     private static void updatePracticeJournalFiles(PracticeJournal practiceJournal,
             PracticeJournalEntriesTeacherForm practiceJournalEntriesForm) {
         EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalFiles(), EntityUtil::getId,
                 practiceJournalEntriesForm.getPracticeJournalFiles(), OisFileForm::getId, dto -> {
                     PracticeJournalFile file = new PracticeJournalFile();
+                    file.setPracticeJournal(practiceJournal);
+                    file.setIsStudent(dto.getIsStudent());
+                    file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));
+                    return file;
+                });
+    }
+
+    private static void updatePracticeJournalStudentFiles(PracticeJournal practiceJournal,
+            PracticeJournalEntriesStudentForm practiceJournalEntriesForm) {
+        EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalFiles(), EntityUtil::getId,
+                practiceJournalEntriesForm.getPracticeJournalStudentFiles(), OisFileForm::getId, dto -> {
+                    PracticeJournalFile file = new PracticeJournalFile();
+                    file.setPracticeJournal(practiceJournal);
+                    file.setIsStudent(dto.getIsStudent());
                     file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));
                     return file;
                 });

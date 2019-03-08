@@ -16,6 +16,7 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
+import ee.hitsa.ois.domain.enterprise.PracticeEvaluation;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
@@ -23,6 +24,10 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 
 @Entity
 public class PracticeJournal extends BaseEntityWithId {
+    
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "practice_journal_id", nullable = false, updatable = false)
+    private Set<PracticeJournalEvaluation> practiceJournalEvaluations = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "practice_journal_id", nullable = false, updatable = false)
@@ -84,6 +89,9 @@ public class PracticeJournal extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Classifier status;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    private PracticeEvaluation practiceEvaluation;
 
     //KUTSEHINDAMINE if module != null and KORGHINDAMINE if subject != null
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -298,6 +306,22 @@ public class PracticeJournal extends BaseEntityWithId {
 
     public void setSubject(Subject subject) {
         this.subject = subject;
+    }
+
+    public PracticeEvaluation getPracticeEvaluation() {
+        return practiceEvaluation;
+    }
+
+    public void setPracticeEvaluation(PracticeEvaluation practiceEvaluation) {
+        this.practiceEvaluation = practiceEvaluation;
+    }
+
+    public Set<PracticeJournalEvaluation> getPracticeJournalEvaluations() {
+        return practiceJournalEvaluations;
+    }
+
+    public void setPracticeJournalEvaluations(Set<PracticeJournalEvaluation> practiceJournalEvaluations) {
+        this.practiceJournalEvaluations = practiceJournalEvaluations;
     }
 
 }

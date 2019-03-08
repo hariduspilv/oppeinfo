@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.commandobject;
+package ee.hitsa.ois.web.commandobject.subject;
 
 import java.util.Set;
 
@@ -6,6 +6,7 @@ import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.SubjectProgramStudyContentDto;
 
 public class SubjectProgramForm extends VersionedCommand {

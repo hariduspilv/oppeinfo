@@ -1,7 +1,9 @@
-package ee.hitsa.ois.web.commandobject;
+package ee.hitsa.ois.web.commandobject.subject;
 
 import java.math.BigDecimal;
 import java.util.Collection;
+
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 
 public class SubjectSearchCommand extends SearchCommand {
 

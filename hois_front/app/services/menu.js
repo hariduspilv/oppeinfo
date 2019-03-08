@@ -382,6 +382,14 @@ angular.module('hitsaOis')
             }
           },
           {
+            name: 'main.menu.reports.teachersLoadDetailHigher',
+            url: "/reports/teachers/detailload/higher?_menu",
+            icon:"gradient",
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
             name: 'main.menu.reports.vota',
             url: "/reports/vota?_menu",
             icon:"transfer_within_a_station"
@@ -393,6 +401,11 @@ angular.module('hitsaOis')
             studyLevel: {
               vocational: true
             }
+          },
+          {
+            name: 'main.menu.scholarshipStatistics.label',
+            url: '/reports/scholarships?_menu',
+            icon: 'euro_symbol'
           }
         ]
       });

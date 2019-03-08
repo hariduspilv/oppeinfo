@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 
 import org.slf4j.Logger;
@@ -15,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsAriregLog;
 import ee.hitsa.ois.domain.WsEkisLog;
 import ee.hitsa.ois.domain.school.School;
@@ -36,6 +39,9 @@ public class AriregisterService {
 	
 	private static final String ERROR_MARKER_RESULT = "Viga!";
     private static final String ERROR_MARKER_MSG = "VIGA";
+    
+    @Autowired
+    private EntityManager em;
 
     @Autowired
     protected AriregisterClient ariregisterClient;
@@ -46,6 +52,9 @@ public class AriregisterService {
     @Value("${ariregister.endpoint}")
     protected String endpoint;
 
+    @Value("${ariregister.useridprefix}")
+    protected String useridprefix;
+    
     @Value("${ariregister.userid}")
     protected String userid;
     
@@ -69,14 +78,15 @@ public class AriregisterService {
     @Value("${ariregister.service.serviceCode}")
     protected String serviceCode;
     
-    public LihtandmedResponse getSimpleData(BigInteger regCode, School school) {
+    public LihtandmedResponse getSimpleData(BigInteger regCode, HoisUserDetails user) {
+        School school = em.getReference(School.class, user.getSchoolId());
     	ParinglihtV5Paring simpleRequest = new ParinglihtV5Paring();
     	simpleRequest.setAriregistriKood(regCode);
-    	LihtandmedResponse response = ariregisterClient.lihtandmed(getXroadHeader(), simpleRequest);
-    	return withResponse(ariregisterClient.lihtandmed(getXroadHeader(), simpleRequest), school , response);
+    	LihtandmedResponse response = ariregisterClient.lihtandmed(getXroadHeader(user), simpleRequest);
+    	return withResponse(ariregisterClient.lihtandmed(getXroadHeader(user), simpleRequest), school , response);
     }
     
-    protected XRoadHeaderV4 getXroadHeader() {
+    protected XRoadHeaderV4 getXroadHeader(HoisUserDetails user) {
         XRoadHeaderV4.Client client = new XRoadHeaderV4.Client();
         client.setXRoadInstance(clientXRoadInstance);
         client.setMemberClass(clientMemberClass);
@@ -94,7 +104,17 @@ public class AriregisterService {
         header.setClient(client);
         header.setService(service);
         header.setEndpoint(endpoint);
-        header.setUserId(userid);
+        String personCode = null;
+        try {
+            personCode = em.getReference(Person.class, user.getPersonId()).getIdcode();
+        } catch(IllegalArgumentException | EntityNotFoundException | NullPointerException e) {
+            LOG.error("Error while handling person id code :", e);
+        }
+        if (personCode == null) {
+            header.setUserId(userid);
+        } else {
+            header.setUserId(useridprefix + personCode);
+        }
         return header;
     }
     

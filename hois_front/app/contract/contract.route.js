@@ -54,8 +54,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
           auth: function (AuthResolver) { return AuthResolver.resolve(); },
-          entity: function(QueryUtils, $route, Classifier) {
-            var clMapper = Classifier.valuemapper({ status: 'LEPING_STAATUS' });
+          entity: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/contracts').get({id: $route.current.params.id}).$promise;
           }
         },

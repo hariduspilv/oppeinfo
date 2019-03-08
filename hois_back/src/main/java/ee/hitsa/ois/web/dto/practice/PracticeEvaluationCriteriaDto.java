@@ -11,10 +11,15 @@ public class PracticeEvaluationCriteriaDto extends VersionedCommand {
     private String addInfo;
     private String type;
     private Long orderNr;
+    private Long criteriaId;
+    private String valueNr;
+    private String valueClf;
+    private String valueTxt;
+    private Boolean disabled;
     
     public static PracticeEvaluationCriteriaDto of(PracticeEvaluationCriteria practiceEvaluationCriteria) {
         PracticeEvaluationCriteriaDto dto = new PracticeEvaluationCriteriaDto();
-        dto.setId(EntityUtil.getId(practiceEvaluationCriteria));
+        dto.setCriteriaId(EntityUtil.getId(practiceEvaluationCriteria));
         dto.setNameEt(practiceEvaluationCriteria.getNameEt());
         dto.setAddInfo(practiceEvaluationCriteria.getAddInfo());
         dto.setType(EntityUtil.getCode(practiceEvaluationCriteria.getType()));
@@ -56,6 +61,46 @@ public class PracticeEvaluationCriteriaDto extends VersionedCommand {
     }
     public void setOrderNr(Long orderNr) {
         this.orderNr = orderNr;
+    }
+
+    public Long getCriteriaId() {
+        return criteriaId;
+    }
+
+    public void setCriteriaId(Long criteriaId) {
+        this.criteriaId = criteriaId;
+    }
+
+    public String getValueNr() {
+        return valueNr;
+    }
+
+    public void setValueNr(String valueNr) {
+        this.valueNr = valueNr;
+    }
+
+    public String getValueClf() {
+        return valueClf;
+    }
+
+    public void setValueClf(String valueClf) {
+        this.valueClf = valueClf;
+    }
+
+    public String getValueTxt() {
+        return valueTxt;
+    }
+
+    public void setValueTxt(String valueTxt) {
+        this.valueTxt = valueTxt;
+    }
+
+    public Boolean getDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(Boolean disabled) {
+        this.disabled = disabled;
     }
     
 }

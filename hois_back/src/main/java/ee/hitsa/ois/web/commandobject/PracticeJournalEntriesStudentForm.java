@@ -10,7 +10,11 @@ public class PracticeJournalEntriesStudentForm {
     @Size(max=10000)
     private String practiceReport;
     @Valid
+    private List<PracticeFileForm> practiceJournalStudentFiles;
+    @Valid
     private List<PracticeJournalEntryStudentForm> practiceJournalEntries;
+    @Valid
+    private List<PracticeJournalEvaluationForm> studentPracticeEvalCriteria;
 
     public String getPracticeReport() {
         return practiceReport;
@@ -26,6 +30,22 @@ public class PracticeJournalEntriesStudentForm {
 
     public void setPracticeJournalEntries(List<PracticeJournalEntryStudentForm> practiceJournalEntries) {
         this.practiceJournalEntries = practiceJournalEntries;
+    }
+
+    public List<PracticeJournalEvaluationForm> getStudentPracticeEvalCriteria() {
+        return studentPracticeEvalCriteria;
+    }
+
+    public void setStudentPracticeEvalCriteria(List<PracticeJournalEvaluationForm> studentPracticeEvalCriteria) {
+        this.studentPracticeEvalCriteria = studentPracticeEvalCriteria;
+    }
+
+    public List<PracticeFileForm> getPracticeJournalStudentFiles() {
+        return practiceJournalStudentFiles;
+    }
+
+    public void setPracticeJournalStudentFiles(List<PracticeFileForm> practiceJournalStudentFiles) {
+        this.practiceJournalStudentFiles = practiceJournalStudentFiles;
     }
 
 }

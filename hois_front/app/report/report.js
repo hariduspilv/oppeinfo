@@ -477,4 +477,22 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
     });
   };
 }
-]);
+]).controller("ScholarshipStatisticsController", ["$scope", "Classifier", "$route", function ($scope, Classifier, $route) {
+  var auth = $route.current.locals.auth;
+  $scope.criteria = {};
+  $scope.url = "reports/scholarships/statistics.xlsx";
+  $scope.types = Classifier.queryForDropdown({mainClassCode: "STIPTOETUS"});
+  $scope.types.$promise.then(function (response) {
+    $scope.types = response.filter(function (r) {
+      return (auth.vocational && r.vocational) || (auth.higher && r.higher);
+    });
+  });
+
+  // function isFormValid() {
+  //   if ($scope.scholarshipStatisticExportForm) {
+  //     $scope.scholarshipStatisticExportForm.$setSubmitted();
+  //     return $scope.scholarshipStatisticExportForm.$valid;
+  //   }
+  //   return false;
+  // }
+}]);

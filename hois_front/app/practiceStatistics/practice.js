@@ -20,7 +20,7 @@ angular.module('hitsaOis').controller('PracticeStudentListController', function 
     QueryUtils.createQueryForm($scope, '/practiceEnterprise/contractStatistics', {}, clMapper.objectmapper);
     $q.all(clMapper.promises).then($scope.loadData);
 
-}).controller('PracticeStudyYearListController', function ($scope, $route, QueryUtils, Classifier) {
+}).controller('PracticeStudyYearListController', function ($scope, $route, QueryUtils, Classifier, $q) {
     $scope.currentNavItem = 'practice.studyYear';    
     $scope.auth = $route.current.locals.auth;
     var clMapper = Classifier.valuemapper({
@@ -28,6 +28,6 @@ angular.module('hitsaOis').controller('PracticeStudentListController', function 
     });
     $scope.formState = {xlsUrl: 'practiceEnterprise/practiceStudyYearStatistics.xls'};
     QueryUtils.createQueryForm($scope, '/practiceEnterprise/studyYearStatistics', {}, clMapper.objectmapper);
-    //$q.all(clMapper.promises).then($scope.loadData);
+    $q.all(clMapper.promises).then($scope.loadData);
 
 });

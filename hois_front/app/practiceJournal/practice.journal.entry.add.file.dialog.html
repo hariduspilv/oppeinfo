@@ -17,11 +17,11 @@
           <md-input-container flex>
                     <lf-ng-md-file-input name="file" lf-files="data.file" lf-browse-label="{{'main.button.uploadFile' | translate}}"
                       lf-remove-label="{{'main.button.delete' | translate}}"
-                      lf-placeholder="" lf-filesize="5MB" disallow-same-file="addedFiles" lf-required> </lf-ng-md-file-input>
+                      lf-placeholder="" lf-filesize="10MB" disallow-same-file="addedFiles" lf-required> </lf-ng-md-file-input>
           </md-input-container>
           <div ng-messages="dialogForm.file.$error">
             <div class="invalid" ng-message="required">{{'main.messages.error.selectFile' | translate}}</div>
-            <div class="invalid" ng-message="filesize">{{'main.messages.error.fileTooLarge' | translate}} 5MB!</div>
+            <div class="invalid" ng-message="filesize">{{'main.messages.error.fileTooLarge' | translate}} 10MB!</div>
             <div class="invalid" ng-message="samefile">{{'main.messages.error.fileAlreadyExists' | translate}}</div>
           </div>
         </div>

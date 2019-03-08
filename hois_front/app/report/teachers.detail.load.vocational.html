@@ -17,7 +17,7 @@
 
           <div flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
             <hois-autocomplete ng-model="criteria.teacher" ha-controller="directiveControllers" ha-attribute="id" 
-              method="teachers" additional-query-params="{valid: true}" 
+              method="teachers" additional-query-params="{valid: true, vocational: true}" 
               label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}"></hois-autocomplete>
           </div>
         </div>
@@ -95,7 +95,7 @@
     </div>
   </div>
   <div flex>
-    <div ng-include="'report/teachers.detail.load.vocational.table.tmpl.html'"></div>
+    <div ng-include="'report/teachers.detail.load.table.tmpl.html'"></div>
     <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" 
       md-total="{{tabledata.totalElements}}" md-on-paginate="loadData" 
       md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"

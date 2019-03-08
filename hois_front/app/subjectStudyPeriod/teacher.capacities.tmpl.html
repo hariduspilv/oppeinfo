@@ -1,0 +1,61 @@
+<md-dialog aria-label="teacher capacities dialog" flex="80" flex-sm="80" flex-xs="100">
+  <form name="dialogForm" ng-submit="dialogForm.$valid && submit()" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{'subjectStudyPeriod.teacherSpecificLoads' | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div class="md-dialog-content">
+        <md-checkbox ng-model="subject.capacityDiff" aria-label="{{'subjectStudyPeriod.loadsDiffer' | translate}}">
+          {{'subjectStudyPeriod.loadsDiffer' | translate}}
+        </md-checkbox>
+
+        <md-table-container>
+          <table class="subject-study-period">
+            <thead>
+              <tr>
+                <th>{{'subjectStudyPeriod.label.teachers' | translate}}</th>
+                <th ng-repeat="capacityType in capacityTypes" >{{capacityType.value.toUpperCase()}}</th>
+                <th>{{'subjectStudyPeriod.overall' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="teacher in subject.teachers">
+                <td>
+                  <!-- TODO: teachers load per teacher ??? 
+                  ng-class="{'invalid': !capacitiesUtil.teachersLoadOk(ssp)}"
+                  -->
+                  <span ng-class="{'invalid': !capacitiesUtil.teacherLoadOk(teacher)}">{{teacher.name}}</span>
+                </td>
+                <td ng-repeat="type in capacityTypes">
+                  <span ng-repeat="capacity in teacher.capacities | filter:{ capacityType: type.code } : true">
+                    <input type="number" ng-model="capacity.hours" min="0" max="1000" aria-label="{{'subjectStudyPeriod.changeLoad' | translate}}" 
+                      pattern="^\d+$" ng-disabled="!subject.capacityDiff">
+                  </span>
+                </td>
+                <td class="bold">{{capacitiesUtil.capacitiesSumBySsp(teacher)}}</td>
+              </tr>
+              <tr class="bold">
+                <td>{{'subjectStudyPeriod.subjectTeacherPairTotal' | translate}}</td>
+                <td ng-repeat="type in capacityTypes" >{{capacitiesUtil.capacityBySsp(subject, type.code)}}</td>
+                <td class="bold">{{capacitiesUtil.capacitiesSumBySsp(subject)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </md-dialog-content>
+    
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

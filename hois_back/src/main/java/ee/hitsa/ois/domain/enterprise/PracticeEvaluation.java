@@ -26,7 +26,7 @@ public class PracticeEvaluation extends BaseEntityWithId {
     @JoinColumn(nullable = false)
 	private Classifier target;
 	
-	@OneToMany(mappedBy = "practiceEvaluation", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy="practiceEvaluation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PracticeEvaluationCriteria> criteria = new ArrayList<>();
 	
     public School getSchool() {

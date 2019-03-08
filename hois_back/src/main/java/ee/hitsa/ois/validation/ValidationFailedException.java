@@ -46,6 +46,12 @@ public class ValidationFailedException extends RuntimeException {
         return errorInfo;
     }
 
+    public static void throwIf(boolean expression, String message) {
+        if(expression) {
+            throw new ValidationFailedException(message);
+        }
+    }
+    
     public static <T> void throwOnError(Set<ConstraintViolation<T>> errors) {
         if(!errors.isEmpty()) {
             throw new ValidationFailedException(errors);

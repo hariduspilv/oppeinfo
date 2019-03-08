@@ -18,7 +18,7 @@ public class SubjectStudyPeriodDtoContainer {
      * As single container class is used for both forms, @NotNull annotations are not used.
      * Appropriate checks are done in controller methods instead.
      */
-    private Long studentGroup;    
+    private Long studentGroup;
     private Long teacher;
     private Long subject;
 

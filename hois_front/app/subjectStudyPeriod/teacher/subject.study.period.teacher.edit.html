@@ -51,34 +51,48 @@
                         </tr>
                         <tr ng-repeat="ssp in record.subjectStudyPeriodDtos | filter:{ subject: subject.id }">
                             <td>
-                                <span ng-repeat="studentGroup in ssp.studentGroupObjects">
-                                    <span ng-if="$index > 0">, </span>
-                                    {{studentGroup.nameEt}}
-                                </span>
-                                <span ng-if="ssp.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
-                                    <span class="subject-study-period-proportion">{{'subjectStudyPeriod.proportion' | translate | lowercase}}:
-                                        <hois-classifier-value ng-model="ssp.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
+                                <div>
+                                    <span ng-repeat="studentGroup in ssp.studentGroupObjects">
+                                        <span ng-if="$index > 0">, </span>
+                                        {{studentGroup.nameEt}}
                                     </span>
-                                </span>
-                                <a ng-href="#/subjectStudyPeriod/{{ssp.id}}/edit?teacherId={{record.teacher}}">{{'main.button.change' | translate}}</a>
+                                    <i ng-if="ssp.capacityDiff">
+                                        <span>{{'subjectStudyPeriod.teacherLoadDiffersFromPair' | translate}}</span>
+                                    </i>
+                                    <span ng-if="ssp.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
+                                        <span class="subject-study-period-proportion">{{'subjectStudyPeriod.proportion' | translate | lowercase}}:
+                                            <hois-classifier-value ng-model="ssp.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
+                                        </span>
+                                    </span>
+                                    <a ng-href="#/subjectStudyPeriod/{{ssp.id}}/edit?teacherId={{record.teacher}}">{{'main.button.change' | translate}}</a>
+                                </div>
+                                <div ng-if="ssp.capacityDiff" class="subject-study-period-period-total-label">{{'subjectStudyPeriod.subjectTeacherPairTotal' | translate}}</div>
                             </td>
                             <td ng-repeat="type in capacityTypes">
-                                <span ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code } : true">
-                                  <input type="number" ng-model="capacity.hours" min="0" max="1000" aria-label="{{'subjectStudyPeriod.changeLoad' | translate}}" pattern="^\d+$">
+                                <span ng-if="!ssp.capacityDiff" ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code } : true">
+                                    <input type="number" ng-model="capacity.hours" min="0" max="1000" aria-label="{{'subjectStudyPeriod.changeLoad' | translate}}" pattern="^\d+$">
                                 </span>
+                                <span ng-if="ssp.capacityDiff" ng-repeat="capacity in sspTeacherCapacities(ssp) | filter:{ capacityType: type.code } : true">
+                                    <input type="number" ng-model="capacity.hours" min="0" max="1000" aria-label="{{'subjectStudyPeriod.changeLoad' | translate}}" pattern="^\d+$">
+                                </span>
+                                <div ng-if="ssp.capacityDiff" ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code } : true"
+                                    class="subject-study-period-period-total">{{capacity.hours}}</div>
                             </td>
-                            <td>{{capacitiesUtil.capacitiesSumBySsp(ssp)}}</td>
+                            <td>
+                                <div ng-if="ssp.capacityDiff">{{capacitiesUtil.capacitiesSumBySsp(ssp.teachers[0])}}</div>
+                                <div ng-class="{'subject-study-period-period-total': ssp.capacityDiff}">{{capacitiesUtil.capacitiesSumBySsp(ssp)}}</div>
+                            </td>
                         </tr>
                         <tr>
                             <td>{{'subjectStudyPeriod.overall' | translate}}</td>
-                            <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumBySubjectAndType(subject.id, type.code)}}</td>
-                            <td>{{capacitiesUtil.capacitiesSumBySubject(subject.id)}}</td>
+                            <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumBySubjectAndType(subject.id, type.code, teacher.id)}}</td>
+                            <td>{{capacitiesUtil.capacitiesSumBySubject(subject.id, teacher.id)}}</td>
                         </tr>
                     </tbody>
                     <tr class="bold">
                         <td>{{'subjectStudyPeriod.overall' | translate | uppercase}}</td>
-                        <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumByType(type.code)}}</td>
-                        <td>{{capacitiesUtil.capacitiesSumOverall()}}</td>
+                        <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumByType(type.code, teacher.id)}}</td>
+                        <td>{{capacitiesUtil.capacitiesSumOverall(teacher.id)}}</td>
                     </tr>
                 </table>
             </md-table-container>

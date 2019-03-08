@@ -117,7 +117,7 @@ angular.module('hitsaOis')
               journalButtonsDiv.setAttribute('layout', 'column');
               journalButtonsDiv.setAttribute('layout-align', 'space-around center');
 
-              if (journal.teachers.length > 1) {
+              if (journal.teachers.length > 1 || journal.capacityDiff) {
                 var journalTeacherCapacitySpan = document.createElement('i');
                 journalTeacherCapacitySpan.className = TEACHER_CAPACITIES;
                 journalTeacherCapacitySpan.innerHTML = '*';

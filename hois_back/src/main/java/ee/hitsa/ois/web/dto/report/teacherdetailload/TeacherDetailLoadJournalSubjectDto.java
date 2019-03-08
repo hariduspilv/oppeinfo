@@ -5,17 +5,17 @@ import java.util.Set;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
-public class TeacherDetailLoadJournalDto extends PeriodDetailLoadDto {
+public class TeacherDetailLoadJournalSubjectDto extends PeriodDetailLoadDto {
 
-    private AutocompleteResult journal;
+    private AutocompleteResult journalSubject;
     private Set<String> studentGroups = new HashSet<>();
 
-    public AutocompleteResult getJournal() {
-        return journal;
+    public AutocompleteResult getJournalSubject() {
+        return journalSubject;
     }
 
-    public void setJournal(AutocompleteResult journal) {
-        this.journal = journal;
+    public void setJournalSubject(AutocompleteResult journalSubject) {
+        this.journalSubject = journalSubject;
     }
 
     public Set<String> getStudentGroups() {

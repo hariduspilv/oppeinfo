@@ -8,9 +8,10 @@
         </div>
     </md-toolbar>
     <md-dialog-content>
-        <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'enterprise.csv.addedEnterprises' | translate}}</legend>
+        <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <p md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'enterprise.csv.addedEnterprises' | translate}}</p>
         <md-table-container>
-            <table md-table class="secondary-table">
+            <table md-table>
               <thead md-head md-order="criteria.order" md-on-reorder="loadData">
                 <tr md-row>
                   <th md-column>{{'enterprise.csv.csvFileRow' | translate}}</th>
@@ -29,9 +30,9 @@
               </tbody>
             </table>
         </md-table-container>
-        <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'enterprise.csv.failed' | translate}}</legend>
+        <p md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'enterprise.csv.failed' | translate}}</p>
         <md-table-container>
-            <table md-table class="secondary-table">
+            <table md-table>
               <thead md-head md-order="criteria.order" md-on-reorder="loadData">
                 <tr md-row>
                   <th md-column>{{'enterprise.csv.csvFileRow' | translate}}</th>
@@ -46,9 +47,10 @@
               </tbody>
             </table>
         </md-table-container>
+        </div>
     </md-dialog-content>
     
     <md-dialog-actions layout="row" layout-align="start start">
-        <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+        <md-button class="md-raised md-primary" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
     </md-dialog>

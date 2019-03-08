@@ -183,8 +183,13 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
       return {promises: promises, objectmapper: objectmapper};
     };
 
+    /**
+     * new Date(record.validFrom) generates a date from LocalDate object which were received. Because in backend used LocalDate it has zero timezone.
+     * So object will be at 0 hours in UTC zone (so for Estonia at 2 hours). That means that we need to "reset" our currentDate to without time format in UTC zone.
+     */
     Classifier.isValid = function(record) {
-      var currentDate = new Date().withoutTime();
+      var currentDate = new Date();
+      currentDate.setUTCHours(0, 0, 0, 0);
       return (!record.validFrom || new Date(record.validFrom) <= currentDate) && (!record.validThru || new Date(record.validThru) >= currentDate);
     };
 

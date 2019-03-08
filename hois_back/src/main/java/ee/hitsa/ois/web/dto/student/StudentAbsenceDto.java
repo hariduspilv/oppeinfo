@@ -20,6 +20,7 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
     private Long id;
     private Boolean isAccepted;
     private Boolean isRejected;
+    private String rejectReason;
     private Boolean userCanEdit;
     private Boolean canAccept;
     private Boolean canReject;
@@ -89,6 +90,14 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
 
     public void setIsRejected(Boolean isRejected) {
         this.isRejected = isRejected;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
 
     public Boolean getUserCanEdit() {

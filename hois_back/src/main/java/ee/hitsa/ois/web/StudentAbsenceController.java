@@ -60,9 +60,9 @@ public class StudentAbsenceController {
     }
     
     @PutMapping("/reject/{id:\\d+}")
-    public StudentAbsenceDto reject(HoisUserDetails user, @WithEntity StudentAbsence studentAbsence) {
+    public StudentAbsenceDto reject(HoisUserDetails user, @WithEntity StudentAbsence studentAbsence, @RequestBody(required=false) String rejectReason) {
         StudentAbsenceUtil.assertCanReject(user, studentAbsence);
-        return get(user, studentAbsenceService.reject(user, studentAbsence));
+        return get(user, studentAbsenceService.reject(user, studentAbsence, rejectReason));
     }
 
     @GetMapping("/hasUnaccepted")

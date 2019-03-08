@@ -197,6 +197,7 @@ public class ContractService {
         qb.filter("cm.is_practice = true");
 
         //kellel puudub vastavas moodulis positiivne tulemus.
+        //who has no positive 
         qb.requiredCriteria(
                 "s.id not in (select ps.student_id from protocol_student ps "
                         + "inner join protocol p on p.id = ps.protocol_id "
@@ -306,8 +307,9 @@ public class ContractService {
 
         Contract changedContract = EntityUtil.bindToEntity(contractForm, contract,
                 "student", "module", "theme", "enterprise", "teacher", "contractCoordinator", "subject", "practiceApplication", 
-                "contractSupervisors", "moduleSubjects", "practiceEvaluation");
+                "contractSupervisors", "moduleSubjects", "practiceEvaluation", "studentPracticeEvaluation");
         changedContract.setPracticeEvaluation(EntityUtil.getOptionalOne(PracticeEvaluation.class, contractForm.getPracticeEvaluation(), em));
+        changedContract.setStudentPracticeEvaluation(EntityUtil.getOptionalOne(PracticeEvaluation.class, contractForm.getStudentPracticeEvaluation(), em));
         changedContract.setStudent(EntityUtil.getOptionalOne(Student.class, contractForm.getStudent(), em));
         changedContract.setEnterprise(EntityUtil.getOptionalOne(Enterprise.class, contractForm.getEnterprise(), em));
         changedContract.setTeacher(EntityUtil.getOptionalOne(Teacher.class, contractForm.getTeacher(), em));
@@ -360,7 +362,7 @@ public class ContractService {
     public void delete(HoisUserDetails user, Contract contract) {
         if (contract.getStudentAbsence() != null) {
             contract.getStudentAbsence().setContract(null);
-            studentAbsenceService.reject(user, contract.getStudentAbsence());
+            studentAbsenceService.reject(user, contract.getStudentAbsence(), null);
         }
         EntityUtil.setUsername(user.getUsername(), em);
         // delete also practice journal(s)

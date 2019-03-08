@@ -11,7 +11,7 @@ public class TeacherDetailLoadDto extends PeriodDetailLoadDto {
 
     private AutocompleteResult teacher;
 
-    private List<TeacherDetailLoadJournalDto> journals = new ArrayList<>();
+    private List<TeacherDetailLoadJournalSubjectDto> journalSubjects = new ArrayList<>();
     private Set<String> teacherCapacities = new HashSet<>();
 
     public AutocompleteResult getTeacher() {
@@ -22,12 +22,12 @@ public class TeacherDetailLoadDto extends PeriodDetailLoadDto {
         this.teacher = teacher;
     }
 
-    public List<TeacherDetailLoadJournalDto> getJournals() {
-        return journals;
+    public List<TeacherDetailLoadJournalSubjectDto> getJournalSubjects() {
+        return journalSubjects;
     }
 
-    public void setJournals(List<TeacherDetailLoadJournalDto> journals) {
-        this.journals = journals;
+    public void setJournalSubjects(List<TeacherDetailLoadJournalSubjectDto> journalSubjects) {
+        this.journalSubjects = journalSubjects;
     }
 
     public Set<String> getTeacherCapacities() {

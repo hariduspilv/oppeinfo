@@ -10,7 +10,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.web.commandobject.SubjectProgramForm;
+import ee.hitsa.ois.web.commandobject.subject.SubjectProgramForm;
 
 public class SubjectProgramDto extends SubjectProgramForm {
 

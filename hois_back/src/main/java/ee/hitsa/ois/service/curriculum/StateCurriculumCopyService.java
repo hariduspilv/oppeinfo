@@ -180,7 +180,7 @@ public class StateCurriculumCopyService {
         }
     }
 
-    private CurriculumModule copyModule(Curriculum newCurriculum, StateCurriculumModule copied, Set<String> codes) {
+    public CurriculumModule copyModule(Curriculum newCurriculum, StateCurriculumModule copied, Set<String> codes) {
         CurriculumModule newModule = new CurriculumModule();
         BeanUtils.copyProperties(copied, newModule, "id", "inserted", "insertedBy", "changed", "changedBy", "version", "outcomes");
         newModule.setCurriculum(newCurriculum);

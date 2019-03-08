@@ -52,7 +52,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
     $scope.$watch('record.studyPeriod', loadStudentGroups);
 
     function getCurriculum() {
-      $scope.curriculum = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/curriculum/' +  $scope.studentGroup.curriculum.id).get(getCurriculumStudyPeriod);
+      $scope.curriculum = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/curriculum/' + $scope.studentGroup.curriculum.id).get(getCurriculumStudyPeriod);
     }
 
     function getCurriculumStudyPeriod() {
@@ -85,33 +85,6 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
         }
     );
 
-    // load validation
-
-    $scope.subjectsLoadValid = function(subjectId) {
-        var sspLoadByType, sspsCapacities;
-        var ssps = $scope.capacitiesUtil.getCapacitiesBySubject(subjectId);
-
-        var getCapacityByType = function(capacityTypeCode) {
-            return function(el) {
-                return el.capacityType === capacityTypeCode;
-            };
-        };
-
-        for (var i = 0; i < $scope.capacityTypes.length; i++) {
-
-            sspsCapacities = $scope.capacitiesUtil.getSubjectsCapacityByType(subjectId, $scope.capacityTypes[i].code);
-
-            for(var j = 0; j < ssps.length; j++) {
-                var capacity = ssps[j].capacities.find(getCapacityByType($scope.capacityTypes[i].code));
-                sspLoadByType = capacity ? capacity.hours : 0;
-                if(sspLoadByType > sspsCapacities) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    };
-
     $scope.save = function() {
       $scope.subjectStudyPeriodStudentGroupEditForm.$setSubmitted();
       if(!$scope.subjectStudyPeriodStudentGroupEditForm.$valid) {
@@ -124,7 +97,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
           return;
       }
       var wrongSubjects = $scope.record.subjects.filter(function(el){
-          return !$scope.subjectsLoadValid(el.id);
+          return !$scope.capacitiesUtil.subjectsLoadValid(el.id, $scope.capacityTypes);
       });
       if(!ArrayUtils.isEmpty(wrongSubjects)) {
           var subjectsNames = wrongSubjects.map(function(el){
@@ -149,5 +122,19 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
             $scope.subjectStudyPeriodStudentGroupEditForm.$setPristine();
         });
     }
+
+    $scope.teacherPlannedLoad = function (teacher) {
+        return $scope.capacitiesUtil.teacherPlannedLoad(teacher);
+    };
+
+    $scope.teacherCapacities = function (subject) {
+        dialogService.showDialog('subjectStudyPeriod/teacher.capacities.tmpl.html', function (dialogScope) {
+            dialogScope.subject = subject;
+            dialogScope.capacityTypes = $scope.capacityTypes;
+            dialogScope.capacitiesUtil = $scope.capacitiesUtil;
+        }, function () {
+            $scope.save();
+        });
+    };
 
 }]);

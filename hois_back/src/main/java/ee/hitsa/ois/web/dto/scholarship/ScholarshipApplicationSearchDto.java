@@ -15,6 +15,7 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
     private String firstName;
     private String lastName;
     private String idcode;
+    private String bankAccountOwnerIdcode;
     private BigDecimal credits;
     private Boolean isTeacherConfirm;
     private String rejectComment;
@@ -112,6 +113,14 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
 
     public void setIdcode(String idcode) {
         this.idcode = idcode;
+    }
+
+    public String getBankAccountOwnerIdcode() {
+        return bankAccountOwnerIdcode;
+    }
+
+    public void setBankAccountOwnerIdcode(String bankAccountOwnerIdcode) {
+        this.bankAccountOwnerIdcode = bankAccountOwnerIdcode;
     }
 
     public Boolean getIsTeacherConfirm() {

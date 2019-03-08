@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
@@ -22,9 +23,10 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
     private List<Long> studentGroups;
     private List<AutocompleteResult> studentGroupObjects;
     private Long moodleCourseId;
+    private Boolean capacityDiff;
 
     public List<AutocompleteResult> getStudentGroupObjects() {
-        return studentGroupObjects;
+        return studentGroupObjects != null ? studentGroupObjects : (studentGroupObjects = new ArrayList<>());
     }
 
     public void setStudentGroupObjects(List<AutocompleteResult> studentGroupObjects) {
@@ -32,7 +34,7 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
     }
 
     public List<SubjectStudyPeriodCapacityDto> getCapacities() {
-        return capacities;
+        return capacities != null ? capacities : (capacities = new ArrayList<>());
     }
 
     public void setCapacities(List<SubjectStudyPeriodCapacityDto> capacities) {
@@ -40,7 +42,7 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
     }
 
     public List<Long> getStudentGroups() {
-        return studentGroups;
+        return studentGroups != null ? studentGroups : (studentGroups = new ArrayList<>());
     }
 
     public void setStudentGroups(List<Long> studentGroups) {
@@ -56,7 +58,7 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
     }
 
     public List<SubjectStudyPeriodTeacherDto> getTeachers() {
-        return teachers;
+        return teachers != null ? teachers : (teachers = new ArrayList<>());
     }
 
     public void setTeachers(List<SubjectStudyPeriodTeacherDto> teachers) {
@@ -109,6 +111,14 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
 
     public void setMoodleCourseId(Long moodleCourseId) {
         this.moodleCourseId = moodleCourseId;
+    }
+
+    public Boolean getCapacityDiff() {
+        return capacityDiff;
+    }
+
+    public void setCapacityDiff(Boolean capacityDiff) {
+        this.capacityDiff = capacityDiff;
     }
 
     public static SubjectStudyPeriodDto of(SubjectStudyPeriod subjectStudyPeriod) {

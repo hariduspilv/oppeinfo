@@ -1,3 +1,8 @@
+<div ng-if="applications.length > 0" layout="row" layout-md="column" layout-sm="column" layout-xs="column" flex>
+  <i class="material-icons">*</i>
+  <span class="capacity-type-legend" md-colors="{background: 'deep-orange-100'}">{{'stipend.bankIdcodeNotMatchingPerson' | translate}}</span>
+</div>
+
 <md-table-container>
   <table md-table class="secondary-table" ng-if="submittedType">
     <thead md-head>
@@ -32,7 +37,8 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="application in applications track by $index" ng-class-odd="'odd'" ng-class-even="'even'" ng-class="{'scholarship-bottom-border': $index + 1 === allowedCount}">
+      <tr md-row ng-repeat="application in applications track by $index" ng-class-odd="'odd'" ng-class-even="'even'"
+        ng-class="{'scholarship-bottom-border': $index + 1 === allowedCount, 'scholarship-warning': application.bankAccountOwnerIdcode && application.idcode !== application.bankAccountOwnerIdcode}">
         <td md-cell ng-if="applicationsTable.showSelect">
           <md-input-container>
             <md-checkbox ng-model="selected[application.id]" ng-hide="application.hasDirective" ng-disabled="!application.needsConfirm && auth.isTeacher()" aria-label="mySchool">

@@ -20,130 +20,145 @@
             <label>{{'student.studyForm' | translate}}</label>
             <hois-classifier-value ng-model="practiceJournal.studentStudyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
           </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.studentGroup' | translate}}</label>
+            <hois-value value="currentLanguageNameField(practiceJournal.studentGroup)"></hois-value>
+          </md-input-container>
           <br>
         </div>
 
-        <md-table-container ng-if="!practiceJournal.isHigher">
-          <table md-table class="secondary-table">
-            <thead md-head>
-              <tr md-row>
-                <th md-column width="35%">{{'practiceJournal.module' | translate}}</th>
-                <th md-column width="35%">{{'practiceJournal.theme' | translate}}</th>
-                <th md-column width="10%">{{'practiceJournal.creditsEKAP' | translate}}</th>
-                <th md-column width="10%">{{'practiceJournal.acadHours' | translate}}</th>
-                <th md-column width="10%">{{'practiceJournal.astroHours' | translate}}</th>
-              </tr>
-            </thead>
-            <tbody md-body>
-              <tr md-row ng-repeat="module in practiceJournal.moduleSubjects" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>{{currentLanguageNameField(module.module)}}</td>
-                <td md-cell>{{currentLanguageNameField(module.theme)}}</td>
-                <td md-cell>{{::module.credits}}</td>
-                <td md-cell>{{::module.hours}}</td>
-                <td md-cell>{{getAstronomicalHours(module.hours)}}</td>
-              </tr>
-            </tbody>
-          </table>
-        </md-table-container>
-  
-        <md-table-container ng-if="practiceJournal.isHigher">
-          <table md-table class="secondary-table">
-            <thead md-head>
-              <tr md-row>
-                <th md-column width="70%">{{'practiceJournal.subject' | translate}}</th>
-                <th md-column width="10%">{{'practiceJournal.creditsEAP' | translate}}</th>
-                <th md-column width="10%">{{'practiceJournal.acadHours' | translate}}</th>
-                <th md-column width="10%">{{'practiceJournal.astroHours' | translate}}</th>
-              </tr>
-            </thead>
-            <tbody md-body>
-              <tr md-row ng-repeat="subject in practiceJournal.moduleSubjects" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>{{currentLanguageNameField(subject.subject)}}</td>
-                <td md-cell>{{::subject.credits}}</td>
-                <td md-cell>{{::subject.hours}}</td>
-                <td md-cell>{{getAstronomicalHours(subject.hours)}}</td>
-              </tr>
-            </tbody>
-          </table>
-        </md-table-container>
-
-        <br>
-
-        <div layout="row" flex>
-          <md-input-container flex>
-            <label>{{'enterprise.label' | translate}}</label>
-            <hois-value value="currentLanguageNameField(practiceJournal.contract.enterprise)"></hois-value>
-          </md-input-container>
-          <md-input-container flex>
-            <label>{{'enterprise.supervisor' | translate}}</label>
-            <hois-value value="practiceJournal.contract.supervisorName"></hois-value>
-          </md-input-container>
+        <fieldset>
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practice.info' | translate}}</legend>
+          <br>
+          <div layout="row" flex>
+            <md-input-container flex>
+              <label>{{'enterprise.label' | translate}}</label>
+              <hois-value value="currentLanguageNameField(practiceJournal.contract.enterprise)"></hois-value>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'contract.supervisors' | translate}}</label>
+              <hois-value value="getNames(practiceJournal.contract.supervisors)"></hois-value>
+            </md-input-container>
+          </div>
+          <div layout="row" flex>
+            <md-input-container flex="25">
+              <label>{{'practiceJournal.startDate' | translate}}</label>
+              <hois-value value="practiceJournal.startDate | hoisDate"></hois-value>
+            </md-input-container>
+            <md-input-container flex="25">
+              <label>{{'practiceJournal.endDate' | translate}}</label>
+              <hois-value value="practiceJournal.endDate | hoisDate"></hois-value>
+            </md-input-container>
+            <md-input-container flex="25">
+              <label>{{'practiceJournal.schoolSupervisor' | translate}}</label>
+              <hois-value value="currentLanguageNameField(practiceJournal.teacher)"></hois-value>
+            </md-input-container>
+            <md-input-container flex="25">
+              <label>{{'practiceJournal.status' | translate}}</label>
+              <hois-classifier-value ng-model="practiceJournal.status" main-classifier-code="PAEVIK_STAATUS"></hois-classifier-value>
+            </md-input-container>
+          </div>
+          <div layout="row">
+            <md-input-container flex>
+              <label>{{'practiceJournal.practicePlace' | translate}}</label>
+              <hois-value value="practiceJournal.practicePlace"></hois-value>
+            </md-input-container>
+          </div>
+          <md-table-container ng-if="!practiceJournal.isHigher">
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column width="35%">{{'practiceJournal.module' | translate}}</th>
+                  <th md-column width="35%">{{'practiceJournal.theme' | translate}}</th>
+                  <th md-column width="10%">{{'practiceJournal.creditsEKAP' | translate}}</th>
+                  <th md-column width="10%">{{'practiceJournal.acadHours' | translate}}</th>
+                  <th md-column width="10%">{{'practiceJournal.astroHours' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="module in practiceJournal.moduleSubjects" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>{{currentLanguageNameField(module.module)}}</td>
+                  <td md-cell>{{currentLanguageNameField(module.theme)}}</td>
+                  <td md-cell>{{::module.credits}}</td>
+                  <td md-cell>{{::module.hours}}</td>
+                  <td md-cell>{{getAstronomicalHours(module.hours)}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+    
+          <md-table-container ng-if="practiceJournal.isHigher">
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column width="70%">{{'practiceJournal.subject' | translate}}</th>
+                  <th md-column width="10%">{{'practiceJournal.creditsEAP' | translate}}</th>
+                  <th md-column width="10%">{{'practiceJournal.acadHours' | translate}}</th>
+                  <th md-column width="10%">{{'practiceJournal.astroHours' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="subject in practiceJournal.moduleSubjects" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>{{currentLanguageNameField(subject.subject)}}</td>
+                  <td md-cell>{{::subject.credits}}</td>
+                  <td md-cell>{{::subject.hours}}</td>
+                  <td md-cell>{{getAstronomicalHours(subject.hours)}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
         </div>
-        <div layout="row" flex>
-          <md-input-container flex="25">
-            <label>{{'practiceJournal.startDate' | translate}}</label>
-            <hois-value value="practiceJournal.startDate | hoisDate"></hois-value>
-          </md-input-container>
-          <md-input-container flex="25">
-            <label>{{'practiceJournal.endDate' | translate}}</label>
-            <hois-value value="practiceJournal.endDate | hoisDate"></hois-value>
-          </md-input-container>
-          <md-input-container flex="25">
-            <label>{{'practiceJournal.schoolSupervisor' | translate}}</label>
-            <hois-value value="currentLanguageNameField(practiceJournal.teacher)"></hois-value>
-          </md-input-container>
-          <md-input-container flex="25">
-            <label>{{'practiceJournal.status' | translate}}</label>
-            <hois-classifier-value ng-model="practiceJournal.status" main-classifier-code="PAEVIK_STAATUS"></hois-classifier-value>
-          </md-input-container>
+      </fieldset>
+
+      <br>
+
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practice.fill' | translate}}</legend>
+        <div flex>
+          <md-table-container>
+            <table md-table md-progress="entries.$promise" class="secondary-table">
+              <thead md-head md-on-reorder="loadEntries">
+                <tr md-row flex>
+                  <th md-column>{{'practiceJournal.practiceJournalEntry.practiceDate' | translate}}</th>
+                  <th md-column>{{'practiceJournal.practiceJournalEntry.description' | translate}}</th>
+                  <th md-column>{{'practiceJournal.practiceJournalEntry.astroHours' | translate}}</th>
+                  <th md-column>{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}</th>
+                  <th md-column>{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in practiceJournal.practiceJournalEntries | orderBy: 'practiceDate'" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>
+                    <div>
+                      <hois-value value="row.practiceDate | hoisDate"></hois-value>
+                    </div>
+                  </td>
+                  <td md-cell>
+                    <div>
+                      <hois-value value="row.description"></hois-value>
+                    </div>
+                  </td>
+                  <td md-cell>
+                    <div>
+                      <hois-value value="row.hours"></hois-value>
+                    </div>
+                  </td>
+                  <td md-cell>
+                    <md-input-container>
+                      <input ng-model="row.supervisorComment" type="text" aria-label="{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}" md-maxlength="10000">
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                    <div>
+                      <hois-value value="row.teacherComment"></hois-value>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
         </div>
-      </div>
-
-      <div flex>
-        <md-table-container>
-          <table md-table md-progress="entries.$promise">
-            <thead md-head md-on-reorder="loadEntries">
-              <tr md-row flex>
-                <th md-column>{{'practiceJournal.practiceJournalEntry.practiceDate' | translate}}</th>
-                <th md-column>{{'practiceJournal.practiceJournalEntry.description' | translate}}</th>
-                <th md-column>{{'practiceJournal.practiceJournalEntry.hours' | translate}}</th>
-                <th md-column>{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}</th>
-                <th md-column>{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}</th>
-              </tr>
-            </thead>
-            <tbody md-body>
-              <tr md-row ng-repeat="row in practiceJournal.practiceJournalEntries | orderBy: 'practiceDate'" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>
-                  <div>
-                    <hois-value value="row.practiceDate | hoisDate"></hois-value>
-                  </div>
-                </td>
-                <td md-cell>
-                  <div>
-                    <hois-value value="row.description"></hois-value>
-                  </div>
-                </td>
-                <td md-cell>
-                  <div>
-                    <hois-value value="row.hours"></hois-value>
-                  </div>
-                </td>
-                <td md-cell>
-                  <md-input-container>
-                    <input ng-model="row.supervisorComment" type="text" aria-label="{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}" md-maxlength="10000">
-                  </md-input-container>
-                </td>
-                <td md-cell>
-                  <div>
-                    <hois-value value="row.teacherComment"></hois-value>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </md-table-container>
-      </div>
-
+      </fieldset>
       <br><br>
 
       <div class="form-readonly" layout="row">
@@ -152,6 +167,46 @@
           <hois-value value="practiceJournal.practiceReport"></hois-value>
         </md-input-container>
       </div>
+
+      <div layout="column" flex>
+        <fieldset>
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practiceJournal.studentOpinionFile' | translate}}</legend>
+          <md-button ng-if="auth.isStudent()" class="md-raised" href="" ng-click="openAddFileDialog(true)">{{'main.button.uploadFile' | translate}}</md-button>
+          <md-table-container>
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
+                  <th md-column><span>{{'file.additionDate' | translate}}</span></th>
+                  <th md-column>{{'file.addedBy' | translate}}</th>
+                  <th md-column ng-if="!auth.isStudent()"></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="file in practiceJournal.practiceJournalStudentFiles | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>
+                    {{file.oisFile.fname}}
+                    <a ng-href="{{getUrl(file.oisFile, 'practicejournal')}}" target="_blank" rel="noopener noreferrer">
+                      <md-icon md-font-set="material-icons">file_download</md-icon>
+                    </a>
+                  </td>
+                  <td md-cell>
+                    {{file.inserted | hoisDateTime}}
+                  </td>
+                  <td md-cell>
+                    {{file.insertedBy}}
+                  </td>
+                  <td md-cell ng-if="auth.isStudent()">
+                    <md-button class="remove nomargin" ng-click="deleteStudentFile(file)">&times;</md-button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </fieldset>
+      </div>
+      
+      <br>
 
       <div class="form-readonly" layout="row" flex>
         <md-input-container flex>
@@ -218,6 +273,82 @@
           <input ng-model="practiceJournal.supervisorOpinion" type="text" md-maxlength="10000">
         </md-input-container>
       </div>
+
+      <br>
+
+      <hois-collapsable label="('contract.studentEvaluation' | translate)" ng-if="practiceJournal.studentPracticeEvalCriteria && practiceJournal.studentPracticeEvalCriteria.length !== 0" expanded="false">
+        <div class="form-readonly" layout="column" flex>
+          <fieldset>
+            <div ng-repeat="eval in practiceJournal.studentPracticeEvalCriteria track by $index" layout="column">
+    
+              <label style="font-size: 14px; padding-bottom: 10px;">{{eval.nameEt}}</label>
+    
+              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="row">
+              <md-input-container flex>
+                <label>{{eval.addInfo}}</label>
+                <hois-value value="eval.valueTxt"></hois-value>
+              </md-input-container>
+              </div>
+    
+              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="row">
+                <md-input-container flex="25">
+                  <label>{{eval.addInfo}}</label>
+                  <hois-value value="eval.valueNr"></hois-value>
+                </md-input-container>
+              </div>
+    
+              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="row">
+                <md-input-container flex="25">
+                  <label>{{eval.addInfo}}</label>
+                  <hois-value value="practiceJournal.isHigher && auth.school.letterGrades ? getGrade(eval.valueClf).value2 : getGrade(eval.valueClf).value"></hois-value>
+                </md-input-container>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+      </hois-collapsable>
+      <hois-collapsable label="('contract.supervisorEvaluation' | translate)" ng-if="practiceJournal.supervisorPracticeEvalCriteria && practiceJournal.supervisorPracticeEvalCriteria.length !== 0" expanded="false">
+        <div layout="column" flex>
+          <fieldset>
+            <div ng-repeat="eval in practiceJournal.supervisorPracticeEvalCriteria track by $index" layout="column">
+    
+                <label style="font-size: 14px;">{{eval.nameEt}}</label>
+      
+                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="row">
+                <md-input-container flex>
+                  <label>{{eval.addInfo}}</label>
+                  <input ng-model="eval.valueTxt" name="superEval[{{$index}}]" type="text" md-maxlength="4000">
+                  <div ng-messages="practiceJournalEntryForm['superEval['+$index+']'].$error" ng-show="practiceJournalEntryForm['superEval['+$index+']'].$dirty">
+                    <div ng-message="md-maxlength">
+                      {{'main.messages.error.maxlength' | translate}}
+                    </div>
+                  </div>
+                </md-input-container>
+                </div>
+      
+                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="row">
+                  <md-input-container flex="25">
+                    <label>{{eval.addInfo}}</label>
+                    <input ng-model="eval.valueNr" name="superEval[{{$index}}]" type="text" pattern="^\d+$" md-maxlength="19">
+                    <div ng-messages="practiceJournalEntryForm['superEval['+$index+']'].$error" ng-show="practiceJournalEntryForm['superEval['+$index+']'].$dirty">
+                      <div ng-message="pattern">
+                        {{'main.messages.error.integer' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+      
+                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="row">
+                  <md-input-container flex="25">
+                    <label>{{eval.addInfo}}</label>
+                    <hois-select ng-model="eval.valueClf" values="grades" value-property="code"
+                          show-property="{{auth.school.letterGrades && practiceJournal.isHigher ? 'value2' : 'value'}}" aria-label="grade"></hois-select>
+                  </md-input-container>
+                </div>
+              </div>
+          </fieldset>
+        </div>
+      </hois-collapsable>
 
       <div layout="row">
         <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>

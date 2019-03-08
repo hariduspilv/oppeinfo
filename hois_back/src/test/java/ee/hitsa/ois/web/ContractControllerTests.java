@@ -30,6 +30,7 @@ import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
@@ -232,7 +233,7 @@ public class ContractControllerTests {
         form.setEnterprise(AutocompleteResult.of(enterprise()));
         form.setContactPersonName("person name");
         form.setContactPersonEmail("test@test.ee");
-        form.setTeacher(teacherId());
+        form.setTeacher(AutocompleteResult.of(teacher()));
         form.setContractCoordinator(directiveCoordinator().getId());
         form.setPracticePlan("plan");
         return form;
@@ -250,7 +251,7 @@ public class ContractControllerTests {
         return em.createQuery("select e from Enterprise e", Enterprise.class).setMaxResults(1).getResultList().get(0);
     }
 
-    private Long teacherId() {
-        return JpaQueryUtil.resultAsLong(em.createNativeQuery("select id from teacher").setMaxResults(1).getResultList().get(0), 0);
+    private Teacher teacher() {
+        return em.createQuery("select teacher from teacher", Teacher.class).setMaxResults(1).getResultList().get(0);
     }
 }

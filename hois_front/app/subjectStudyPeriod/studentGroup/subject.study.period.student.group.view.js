@@ -37,4 +37,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewControl
     }
 
     $scope.studyPeriod = QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId});
+
+    $scope.teacherPlannedLoad = function (teacher) {
+        return $scope.capacitiesUtil.teacherPlannedLoad(teacher);
+    };
   });
