@@ -37,7 +37,6 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
         $scope.studyPeriods.forEach(function (studyPeriod) {
           studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
         });
-        DataUtils.sortStudyYearsOrPeriods($scope.studyPeriods);
         setCurrentStudyPeriod();
     });
 

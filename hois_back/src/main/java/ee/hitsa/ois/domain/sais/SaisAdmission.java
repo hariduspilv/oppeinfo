@@ -56,6 +56,10 @@ public class SaisAdmission extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyLoad;
+    
+    private Boolean isFullLoad;
+    private Boolean isPartialLoad;
+    private Boolean isUndefinedLoad;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sais_admission_id", nullable = false, updatable = false)
@@ -155,6 +159,38 @@ public class SaisAdmission extends BaseEntityWithId {
 
     public void setStudyLoad(Classifier studyLoad) {
         this.studyLoad = studyLoad;
+    }
+
+    public Boolean getIs_archived() {
+        return is_archived;
+    }
+
+    public void setIs_archived(Boolean is_archived) {
+        this.is_archived = is_archived;
+    }
+
+    public Boolean getIsFullLoad() {
+        return isFullLoad;
+    }
+
+    public void setIsFullLoad(Boolean isFullLoad) {
+        this.isFullLoad = isFullLoad;
+    }
+
+    public Boolean getIsPartialLoad() {
+        return isPartialLoad;
+    }
+
+    public void setIsPartialLoad(Boolean isPartialLoad) {
+        this.isPartialLoad = isPartialLoad;
+    }
+
+    public Boolean getIsUndefinedLoad() {
+        return isUndefinedLoad;
+    }
+
+    public void setIsUndefinedLoad(Boolean isUndefinedLoad) {
+        this.isUndefinedLoad = isUndefinedLoad;
     }
 
     public Set<SaisApplication> getApplications() {

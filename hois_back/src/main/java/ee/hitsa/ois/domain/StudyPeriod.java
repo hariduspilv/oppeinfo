@@ -5,9 +5,9 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -134,10 +134,10 @@ public class StudyPeriod extends BaseEntityWithId implements Translatable {
      * returns all the week nrs in this study period
      */
     @Transient
-    public List<Short> getWeekNrs() {
+    public LinkedList<Short> getWeekNrs() {
         short weekNr = firstWeekNr();
         //get all the week nrs from the first until the end
-        List<Short> weekNrs = new ArrayList<>();
+        LinkedList<Short> weekNrs = new LinkedList<>();
         while (endDate.isAfter(spStart) || endDate.isEqual(spStart)) {
             weekNrs.add(Short.valueOf(weekNr++));
             spStart = spStart.plusDays(7);

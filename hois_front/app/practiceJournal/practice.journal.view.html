@@ -2,7 +2,14 @@
   <div flex>
     <form name="practiceJournalEntryForm" ng-submit="practiceJournalEntryForm.$valid && save()" novalidate layout="column">
       <div class="form-readonly" layout="column">
-          <div>&nbsp;</div>
+        <div layout="row">
+          <div md-colors="{color: 'orange'}">
+            <md-icon md-colors="{color: 'orange'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'practiceJournal.canAddEntries' | translate}}
+              {{practiceJournal.endDateDisplay | hoisDate}}</span>
+          </div>
+        </div>
+        <br>
         <div layout="row" flex>
           <md-input-container class="label-only" flex>
             <label>{{'student.label' | translate}}</label>
@@ -25,7 +32,6 @@
 
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practice.info' | translate}}</legend>
-          <br>
           <div ng-if="practiceJournal.contract" layout="row" flex>
             <md-input-container flex>
               <label>{{'enterprise.label' | translate}}</label>
@@ -110,7 +116,7 @@
         </fieldset>
       </div>
 
-      <br>
+      <div>&nbsp;</div>
 
       <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practice.fill' | translate}}</legend>
@@ -122,6 +128,7 @@
                   <th md-column>{{'practiceJournal.practiceJournalEntry.practiceDate' | translate}}</th>
                   <th md-column style="padding: 0 300px 0 5px !important">{{'practiceJournal.practiceJournalEntry.description' | translate}}</th>
                   <th md-column>{{'practiceJournal.practiceJournalEntry.astroHours' | translate}}</th>
+                  <th md-column>{{'practiceJournal.acadHours' | translate}}</th>
                   <th ng-if="practiceJournal.contract" md-column>{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}</th>
                   <th md-column>{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}</th>
                 </tr>
@@ -136,7 +143,10 @@
                     <hois-value value="row.description"></hois-value>
                   </td>
                   <td md-cell>
-                    <hois-value value="row.hours"></hois-value>
+                    <hois-value value="row.astroHours"></hois-value>
+                  </td>
+                  <td md-cell>
+                    <hois-value value="row.acadHours"></hois-value>
                   </td>
                   <td ng-if="practiceJournal.contract" md-cell>
                     <hois-value value="row.supervisorComment"></hois-value>
@@ -144,6 +154,24 @@
                   <td md-cell>
                     <hois-value value="row.teacherComment"></hois-value>
                   </td>
+                </tr>
+                <tr ng-if="practiceJournal.practiceJournalEntries && practiceJournal.practiceJournalEntries.length !== 0" md-row ng-class-odd="'odd'" ng-class-even="'even'" flex>
+                  <td md-cell></td>
+                  <td md-cell>
+                      <label style="font-weight: 700">{{'main.sum' | translate}}</label>
+                  </td>
+                  <td md-cell>
+                    <md-input-container>
+                      <hois-value style="font-weight: 700" value="totalAstro"></hois-value>
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                      <md-input-container>
+                        <hois-value style="font-weight: 700" value="totalAcad"></hois-value>
+                      </md-input-container>
+                  </td>
+                  <td ng-if="practiceJournal.contract" md-cell></td>
+                  <td md-cell></td>
                 </tr>
               </tbody>
             </table>
@@ -253,8 +281,6 @@
       </fieldset>
     </div>
 
-    <div>&nbsp;</div>
-
     <div class="form-readonly" layout="row">
       <md-input-container flex>
         <label>{{'practiceJournal.teacherOpinion' | translate}}</label>
@@ -276,6 +302,8 @@
       </md-input-container>
     </div>
 
+    <div>&nbsp;</div>
+
     <div flex>
       <hois-collapsable label="('contract.studentEvaluation' | translate)" ng-if="practiceJournal.studentPracticeEvalCriteria && practiceJournal.studentPracticeEvalCriteria.length !== 0" expanded="false">
         <div class="form-readonly" layout="column" flex>
@@ -284,23 +312,23 @@
     
               <label style="font-size: 14px; padding-bottom: 10px;">{{eval.nameEt}}</label>
     
-              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="row">
-              <md-input-container flex>
-                <label>{{eval.addInfo}}</label>
-                <hois-value value="eval.valueTxt"></hois-value>
-              </md-input-container>
+              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="column">
+                <label class="responsiveLabel">{{eval.addInfo}}</label>
+                <md-input-container flex="100">
+                  <hois-value value="eval.valueTxt"></hois-value>
+                </md-input-container>
               </div>
     
-              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="row">
-                <md-input-container flex="25">
-                  <label>{{eval.addInfo}}</label>
+              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="column">
+                <label class="responsiveLabel">{{eval.addInfo}}</label>
+                <md-input-container flex="100">
                   <hois-value value="eval.valueNr"></hois-value>
                 </md-input-container>
               </div>
     
-              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="row">
-                <md-input-container flex="25">
-                  <label>{{eval.addInfo}}</label>
+              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
+                <label class="responsiveLabel">{{eval.addInfo}}</label>
+                <md-input-container flex="100">
                   <hois-value value="practiceJournal.isHigher && auth.school.letterGrades ? getGrade(eval.valueClf).value2 : getGrade(eval.valueClf).value"></hois-value>
                 </md-input-container>
               </div>
@@ -320,23 +348,23 @@
     
                 <label style="font-size: 14px; padding-bottom: 10px;">{{eval.nameEt}}</label>
       
-                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="row">
-                <md-input-container flex>
-                  <label>{{eval.addInfo}}</label>
-                  <hois-value value="eval.valueTxt"></hois-value>
-                </md-input-container>
+                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="column">
+                  <label class="responsiveLabel">{{eval.addInfo}}</label>
+                  <md-input-container flex="100">
+                    <hois-value value="eval.valueTxt"></hois-value>
+                  </md-input-container>
                 </div>
       
-                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="row">
-                  <md-input-container flex="25">
-                    <label>{{eval.addInfo}}</label>
+                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="column">
+                  <label class="responsiveLabel">{{eval.addInfo}}</label>
+                  <md-input-container flex="100">
                     <hois-value value="eval.valueNr"></hois-value>
                   </md-input-container>
                 </div>
       
-                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="row">
-                  <md-input-container flex="25">
-                    <label>{{eval.addInfo}}</label>
+                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
+                  <label class="responsiveLabel">{{eval.addInfo}}</label>
+                  <md-input-container flex="100">
                     <hois-value value="practiceJournal.isHigher && auth.school.letterGrades ? getGrade(eval.valueClf).value2 : getGrade(eval.valueClf).value"></hois-value>
                   </md-input-container>
                 </div>
@@ -350,3 +378,10 @@
     </div>
   </div>
 </div>
+
+<style>
+  .form-readonly md-input-container, .readonly {
+    margin-bottom: 0px !important;
+    margin-top: 18px !important;
+  }
+</style>

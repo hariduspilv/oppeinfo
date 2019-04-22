@@ -14,6 +14,7 @@ public class StudentAutocompleteCommand extends SearchCommand {
     private Boolean showStudentGroup;
     private List<Long> curriculumVersion;
     private List<Long> studentGroup;
+    private Long studentGroupTeacher;
 
     public Boolean getActive() {
         return active;
@@ -94,4 +95,13 @@ public class StudentAutocompleteCommand extends SearchCommand {
     public void setStudentGroup(List<Long> studentGroup) {
         this.studentGroup = studentGroup;
     }
+
+    public Long getStudentGroupTeacher() {
+        return studentGroupTeacher;
+    }
+
+    public void setStudentGroupTeacher(Long studentGroupTeacher) {
+        this.studentGroupTeacher = studentGroupTeacher;
+    }
+
 }

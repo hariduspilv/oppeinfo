@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.Query;
@@ -89,7 +90,7 @@ public class EhisStudentService extends EhisService {
                             LocalDate gradeDate = sorm.getGradeDate();
                             ApelSchool apelSchool = sorm.getApelSchool();
                             String schoolNameEt = apelSchool != null ? apelSchool.getNameEt() : null;
-                            Classifier country = apelSchool != null ? apelSchool.getCountry() : null;
+                            Classifier country = apelSchool != null ? apelSchool.getCountry() : em.getReference(Classifier.class, "RIIK_EST");
                             
                             KhlVOTA vota = new KhlVOTA();
                             vota.setMuutusKp(confirmed);
@@ -97,7 +98,7 @@ public class EhisStudentService extends EhisService {
                             vota.setAinepunkte(credits != null ? credits.toString() : null);
                             vota.setOppeasutuseNimi(schoolNameEt);
                             vota.setOrigSooritAeg(date(gradeDate));
-                            vota.setKlRiik(ehisValue(country));
+                            vota.setKlRiik(value2(country));
                             votaRecords.getVOTA().add(vota);
                             
                             EhisStudentReport.ApelApplication.StudyRecord reportRecord = new EhisStudentReport.ApelApplication.StudyRecord(credits, Boolean.valueOf(formalLearning));
@@ -151,14 +152,24 @@ public class EhisStudentService extends EhisService {
         Query extraQuery = em.createNativeQuery("select f.full_code"
                 + " from form f"
                 + " join diploma_supplement_form dsf on dsf.form_id = f.id"
-                + " where dsf.diploma_supplement_id = ?1 and f.status_code = ?2 and f.type_code = ?3"
+                + " where dsf.diploma_supplement_id = ?1 and f.status_code = ?2 and f.type_code in (?3) and (dsf.is_english is not true)"
                 + " order by f.numeral")
                 .setParameter(2, FormStatus.LOPUBLANKETT_STAATUS_T.name())
-                .setParameter(3, FormType.LOPUBLANKETT_HINL.name());
-        List<?> result = em.createNativeQuery("select ds.id, dip_f.full_code as dip_code, sup_f.full_code as sup_code, sup.id as sup_id"
+                .setParameter(3, Arrays.asList(FormType.LOPUBLANKETT_HINL.name(), FormType.LOPUBLANKETT_S.name()));
+        Query extraQueryEn = em.createNativeQuery("select f.full_code"
+                + " from form f"
+                + " join diploma_supplement_form dsf on dsf.form_id = f.id"
+                + " where dsf.diploma_supplement_id = ?1 and f.status_code = ?2 and f.type_code in (?3) and (dsf.is_english is true)"
+                + " order by f.numeral")
+                .setParameter(2, FormStatus.LOPUBLANKETT_STAATUS_T.name())
+                .setParameter(3, Arrays.asList(FormType.LOPUBLANKETT_S.name()));
+        List<?> result = em.createNativeQuery("select ds.id, dip_f.full_code as dip_code, sup_f.full_code as sup_code, sup.id as sup_id,"
+                + " (select sup_f_en.full_code from diploma_supplement_form dsf_en"
+                + " join form sup_f_en on sup_f_en.id = dsf_en.form_id"
+                + " where dsf_en.diploma_supplement_id = sup.id and dsf_en.is_english"
+                + " and sup_f_en.status_code = ?7 and sup_f_en.type_code = ?9 ) as sup_en_code"
                 + " from directive_student ds"
                 + " join directive d on d.id = ds.directive_id"
-                + " left join study_period spe on spe.id = ds.study_period_end_id"
                 + " join diploma dip on dip.directive_id = ds.directive_id and dip.student_id = ds.student_id"
                 + " join form dip_f on dip_f.id = dip.form_id"
                 + " join diploma_supplement sup on sup.diploma_id = dip.id"
@@ -168,7 +179,7 @@ public class EhisStudentService extends EhisService {
                 + " and d.type_code = ?2 and d.status_code = ?3"
                 + " and d.confirm_date >= ?4 and d.confirm_date <= ?5"
                 + " and dip.status_code != ?6 and dip_f.status_code = ?7"
-                + " and sup.status_code != ?6 and sup_f.status_code = ?7 and sup_f.type_code = ?8")
+                + " and sup.status_code != ?6 and sup_f.status_code = ?7 and sup_f.type_code in (?8)")
                 .setParameter(1, schoolId)
                 .setParameter(2, DirectiveType.KASKKIRI_LOPET.name())
                 .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
@@ -176,18 +187,24 @@ public class EhisStudentService extends EhisService {
                 .setParameter(5, JpaQueryUtil.parameterAsTimestamp(ehisStudentForm.getThru()))
                 .setParameter(6, DocumentStatus.LOPUDOK_STAATUS_K.name())
                 .setParameter(7, FormStatus.LOPUBLANKETT_STAATUS_T.name())
-                .setParameter(8, FormType.LOPUBLANKETT_HIN.name())
+                .setParameter(8, Arrays.asList(FormType.LOPUBLANKETT_HIN.name(), FormType.LOPUBLANKETT_R.name()))
+                .setParameter(9, FormType.LOPUBLANKETT_DS.name())
                 .getResultList();
         for (Object r : result) {
             DirectiveStudent directiveStudent = em.getReference(DirectiveStudent.class, resultAsLong(r, 0));
             String docNr = resultAsString(r, 1);
             String academicNr = resultAsString(r, 2);
+            String academicNrEn = resultAsString(r, 4);
             List<?> extraResult = extraQuery
                     .setParameter(1, resultAsLong(r, 3))
                     .getResultList();
+            List<?> extraResultEn = extraQueryEn
+                    .setParameter(1, resultAsLong(r, 3))
+                    .getResultList();
             List<String> extraNr = StreamUtil.toMappedList(er -> resultAsString(er, 0), extraResult);
-            WsEhisStudentLog log = ehisDirectiveStudentService.graduation(directiveStudent, docNr, academicNr, extraNr);
-            graduations.add(new EhisStudentReport.Graduation(directiveStudent, log, docNr, academicNr, extraNr));
+            List<String> extraNrEn = StreamUtil.toMappedList(er -> resultAsString(er, 0), extraResultEn);
+            WsEhisStudentLog log = ehisDirectiveStudentService.graduation(directiveStudent, docNr, academicNr, extraNr, academicNrEn, extraNrEn);
+            graduations.add(new EhisStudentReport.Graduation(directiveStudent, log, docNr, academicNr, extraNr, academicNrEn, extraNrEn));
         }
         return graduations;
     }

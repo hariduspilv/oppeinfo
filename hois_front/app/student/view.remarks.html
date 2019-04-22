@@ -1,0 +1,66 @@
+<div ng-cloak>
+  <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
+</div>
+
+<div layout-padding ng-cloak>
+  <div flex>
+    <div layout="row" layout-xs="column" flex class="form-readonly">
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label>{{'student.label' | translate}}</label>
+          <hois-value value="student.person.firstname + ' ' + student.person.lastname"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'student.idcode' | translate}}</label>
+          <hois-value value="student.person.idcode"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label>{{'student.studyForm' | translate}}</label>
+          <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'student.curriculum' | translate}}</label>
+          <hois-value value="currentLanguageNameField(student.curriculumVersion)"></hois-value>
+        </md-input-container>
+      </div>
+    </div>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise" class="secondary-table">
+        <thead md-head md-order="remarksCriteria.order" md-on-reorder="loadRemarks">
+          <tr md-row>
+            <th md-column width="20%">{{'student.remark.reason' | translate}} / {{'student.remark.journal' | translate}}</th>
+						<th md-column width="40%">{{'student.remark.label' | translate}}</th>
+						<th md-column></th>
+						<th md-column md-order-by="remark_time">{{'student.remark.date' | translate}}</th>
+						<th md-column md-order-by="remark_inserted_by">{{'student.remark.addedBy' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <span ng-if="row.reason">{{currentLanguageNameField(row.reason)}}</span>
+              <a ng-if="row.journal && (auth.isStudent() || auth.isParent())" ng-href="#/students/journals/{{::row.journal.id}}">{{currentLanguageNameField(row.journal)}}</a>
+              <a ng-if="row.journal && (auth.isAdmin() || auth.isTeacher())" ng-href="#/journal/{{::row.journal.id}}/view">{{currentLanguageNameField(row.journal)}}</a>
+            </td>
+            <td md-cell>
+              <span>{{row.remark | hoisLimitTo: 150:!row.showAll}}</span>
+            </td>
+            <td md-cell>
+              <span class="custom-tooltip" ng-if="!row.showAll && row.remark.length > 150" ng-click="row.showAll = true">{{'student.remark.showMore' | translate}}</span>
+              <span class="custom-tooltip" ng-if="row.showAll" ng-click="row.showAll = false">{{'student.remark.showLess' | translate}}</span>
+            </td>
+            <td md-cell>{{row.remarkDate | hoisDate}}</td>
+						<td md-cell>{{row.remarkInsertedBy}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="remarksCriteria.size" md-limit-options="[10, 20, 50]"
+      md-page="remarksCriteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadRemarks"
+      md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+
+    <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

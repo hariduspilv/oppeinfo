@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -39,11 +40,13 @@ import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.practice.PracticeApplicationForm;
+import ee.hitsa.ois.web.commandobject.practice.PracticeApplicationPeriodsSearchCommand;
 import ee.hitsa.ois.web.commandobject.practice.PracticeApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.practice.PracticeApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.practice.PracticeAdmissionStudentDto;
 import ee.hitsa.ois.web.dto.practice.PracticeApplicationContractDto;
+import ee.hitsa.ois.web.dto.practice.PracticeApplicationPeriodSearchDto;
 import ee.hitsa.ois.web.dto.practice.PracticeApplicationSearchDto;
 
 @Transactional
@@ -249,6 +252,30 @@ public class PracticeApplicationService {
             dto.setSupervisorEmail(supervisor.getEmail());
         }
         return dto;
+    }
+
+    public Page<PracticeApplicationPeriodSearchDto> applicationPeriods(HoisUserDetails user,
+            PracticeApplicationPeriodsSearchCommand cmd, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_admission padm"
+                + " join enterprise_school es on es.id = padm.enterprise_school_id"
+                + " join enterprise e on e.id = es.enterprise_id").sort(pageable);
+        qb.requiredCriteria("es.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalContains("e.\"name\"", "enterpriseName", cmd.getEnterpriseName());
+        if (Boolean.TRUE.equals(cmd.getOpened())) {
+            qb.requiredCriteria("padm.valid_from <= :now and padm.valid_thru >= :now", "now", LocalDate.now());
+        }
+        qb.optionalCriteria("padm.valid_from >= :validFrom", "validFrom", cmd.getValidFrom());
+        qb.optionalCriteria("padm.valid_thru <= :validThru", "validThru", cmd.getValidThru());
+        return JpaQueryUtil.pagingResult(qb, "padm.id, e.\"name\", padm.places, padm.valid_from, padm.valid_thru, e.reg_code", em, pageable).map(r -> {
+            PracticeApplicationPeriodSearchDto dto = new PracticeApplicationPeriodSearchDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setEnterpriseName(resultAsString(r, 1));
+            dto.setPlaces(resultAsShort(r, 2));
+            dto.setValidFrom(resultAsLocalDate(r, 3));
+            dto.setValidThru(resultAsLocalDate(r, 4));
+            dto.setEnterpriseRegCode(resultAsString(r, 5));
+            return dto;
+        });
     }
 
 }

@@ -48,7 +48,8 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="curriculumVersion.code">{{'report.studentstatisticsbyperiod.curriculum' | translate}}</th>
+            <th md-column md-order-by="c.merCode">{{'report.studentstatisticsbyperiod.merCode' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage() === 'en' ? 'c.nameEn' : 'c.nameEt'}}">{{'report.studentstatisticsbyperiod.curriculum' | translate}}</th>
             <th md-column md-numeric ng-if="formState.resultType !== 'OPPURSTAATUS_L'" ng-repeat="cl in formState.resultDef">{{currentLanguageNameField(cl)}}</th>
             <th md-column md-numeric>{{formState.resultType === 'OPPURSTAATUS_L' ? 'report.studentstatisticsbyperiod.finished' : 'report.studentstatisticsbyperiod.total' | translate}}</th>
             <th md-column md-numeric ng-if="formState.resultType === 'OPPURSTAATUS_L'">{{auth.higher ? 'report.studentstatisticsbyperiod.isCumLaude' : 'report.studentstatisticsbyperiod.isCumLaudeVoc' | translate}}</th>
@@ -56,6 +57,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{row.merCode}}</td>
             <td md-cell>{{currentLanguageNameField(row)}}</td>
             <td md-cell ng-if="formState.resultType !== 'OPPURSTAATUS_L'" ng-repeat="cl in formState.resultDef">{{::row.result[cl.code] || 0}}</td>
             <td md-cell>{{::row.total}}</td>

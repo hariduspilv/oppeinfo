@@ -1,0 +1,41 @@
+<md-dialog aria-label="apel results dialog" flex="50" flex-sm="50" flex-xs="100">
+  <form name="dialogForm" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{journalStudent.fullname}} {{"journal.remarks.label" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div layout-padding>
+        <md-table-container>
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{"journal.remarks.date" | translate}}</th>
+                <th md-column>{{"journal.remarks.addedBy" | translate}}</th>
+                <th md-column>{{"journal.remarks.remark" | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in journalStudent.remarks" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{row.inserted | hoisDate}} {{row.inserted | hoisTimeMin}}</td>
+                <td md-cell>{{row.insertedBy}}</td>
+                <td md-cell>{{row.addInfo}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

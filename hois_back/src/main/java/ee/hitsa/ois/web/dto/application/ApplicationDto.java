@@ -51,11 +51,15 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private Set<ApplicationPlannedSubjectDto> plannedSubjects;
     private Set<ApplicationFileDto> files;
     private Boolean canEditStudent;
+    private AutocompleteResult studentGroup;
 
     public static ApplicationDto of(Application application) {
-        ApplicationDto dto = EntityUtil.bindToDto(application, new ApplicationDto(), "files", "plannedSubjects", "validAcademicLeave");
+        ApplicationDto dto = EntityUtil.bindToDto(application, new ApplicationDto(), "files", "plannedSubjects", "validAcademicLeave", "studentGroup");
         dto.setFiles(StreamUtil.toMappedSet(ApplicationFileDto::of, application.getFiles()));
         dto.setPlannedSubjects(StreamUtil.toMappedSet(ApplicationPlannedSubjectDto::of, application.getPlannedSubjects()));
+        if (application.getStudentGroup() != null) {
+            dto.setStudentGroup(AutocompleteResult.of(application.getStudentGroup()));
+        }
 
         DirectiveStudent directiveStudent = getDirectiveStudent(application);
         if (directiveStudent != null) {
@@ -349,5 +353,13 @@ public class ApplicationDto extends InsertedChangedVersionDto {
 
     public void setCanEditStudent(Boolean canEditStudent) {
         this.canEditStudent = canEditStudent;
+    }
+
+    public AutocompleteResult getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(AutocompleteResult studentGroup) {
+        this.studentGroup = studentGroup;
     }
 }

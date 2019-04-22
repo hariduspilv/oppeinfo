@@ -1,0 +1,86 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+            <div layout="row">
+                <hois-autocomplete flex="30" ng-model="studentGroupObject" method="studentgroups" name="studentGroup"
+                  label="{{'lessonplan.studentGroup'}}" additional-query-params="{valid: true}" required></hois-autocomplete>
+                <div ng-if="criteria.curriculumVersion" layout="column" class="form-readonly" flex-offset="5" flex="30">
+                    <br>
+                    <md-input-container flex>
+                        <label>{{(auth.higher ? 'student.curriculum' : 'studentGroup.curriculumVersionVocational') | translate}}</label>
+                        <hois-value value="currentLanguageNameField(criteria.curriculumVersion)"></hois-value>
+                    </md-input-container>
+                </div>
+                <div layout="column" layout-align="center start" flex-offset="5" flex="30">
+                    <md-input-container>
+                        <md-checkbox aria-label="active students" ng-model="criteria.active" ng-checked="true">
+                            {{'studentGroup.active' | translate}}
+                        </md-checkbox>
+                    </md-input-container>
+                </div>
+            </div>
+          <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+        </form>
+    </div>
+  </div>
+  <div layout-padding>
+    <div flex>
+      <md-table-container>
+        <table md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadContracts">
+            <tr md-row>
+              <th ng-if="auth.isAdmin()" md-column md-order-by="student_person.lastname,student_person.firstname">{{'student.label' | translate}}</th>
+              <th md-column>{{'student.practiceContracts.contractNumber' | translate}}</th>
+              <th md-column>{{'contract.validity' | translate}}</th>
+              <th md-column>{{'contract.supervisors' | translate}}</th>
+              <th md-column>{{'contract.schoolSupervisor' | translate}}</th>
+              <th md-column>{{'contract.contractDate' | translate}}</th>
+              <th md-column>{{'main.status' | translate}}</th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td ng-if="auth.isAdmin()" md-cell>{{currentLanguageNameField(row.student)}}</td>
+                <td md-cell ng-if="!row.id" style="font-style: italic;" colspan="5">{{'contract.missing' | translate}}</td>
+                <td md-cell ng-if="!row.contractNr && row.id">{{'-'}}</td>
+                <td md-cell ng-if="row.contractNr && row.id"><a ng-href="#/contracts/{{::row.id}}/view">{{row.contractNr}}</a></td>
+                <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
+                <td md-cell ng-if="row.id">{{row.enterpriseContactPersonName ? row.enterpriseContactPersonName : '-' }}</td>
+                <td md-cell ng-if="row.id">{{row.teacher ? currentLanguageNameField(row.teacher) : '-' }}</td>
+                <td md-cell ng-if="row.id">{{row.confirmDate ? (row.confirmDate | hoisDate) : '-' }}</td>
+                <td md-cell ng-if="row.id">{{row.status ? currentLanguageNameField(row.status) : '-' }}</td>
+                <td md-cell>
+                  <div layout="row">
+                    <div ng-if="row.id">
+                      <md-button ng-if="row.status.code==='LEPING_STAATUS_S' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" md-no-ink class="md-primary change-button" 
+                        ng-href="#/contracts/{{::row.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
+                      <md-button ng-if="row.status.code!=='LEPING_STAATUS_S' || !isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" md-no-ink class="md-primary change-button" 
+                        ng-href="#/contracts/{{::row.id}}/view?_noback">{{'main.button.view' | translate}}</md-button>
+                    </div>
+                    <div ng-if="row.student.id && row.active">
+                      <md-button md-no-ink class="md-primary change-button"
+                        ng-href="#/contracts/{{::row.student.id}}/new?_noback">{{'main.button.create' | translate}}</md-button>
+                    </div>
+                  </div>
+                </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+        md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select></md-table-pagination>
+    </div>
+    <div layout="row">
+      <div ng-if="!auth.higher && criteria.studentGroup && tabledata.content.length > 0">
+          <md-button md-no-ink class="md-raised" ng-href="#/contracts/new/{{::criteria.studentGroup}}?_menu"
+          >{{'contract.addToSeveral' | translate}}</md-button>
+      </div>
+      <div ng-if="tabledata.content">
+          <md-button md-no-ink class="md-raised" ng-click="sendToEkis()">
+            {{'contract.sendToEkis' | translate}}
+          </md-button>
+      </div>
+    </div> 
+  </div>

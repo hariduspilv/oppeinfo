@@ -160,6 +160,7 @@ public abstract class ClassifierUtil {
         private final Map<MainClassCode, Map<String, Classifier>> byCode = new HashMap<>();
         private final Map<MainClassCode, Map<String, Classifier>> byEhisValue = new HashMap<>();
         private final Map<MainClassCode, Map<String, Classifier>> byValue = new HashMap<>();
+        private final Map<MainClassCode, Map<String, Classifier>> byNameEt = new HashMap<>(); // Can be overwritten by similar classifier
 
         public ClassifierCache(ClassifierService repository) {
             this.repository = repository;
@@ -181,11 +182,21 @@ public abstract class ClassifierUtil {
         public Classifier getByEhisValue(String ehisValue, MainClassCode mainClassCode) {
             return get(ehisValue, mainClassCode, byEhisValue);
         }
+        
+        public Classifier getByNameEt(String nameEt, MainClassCode mainClassCode) {
+            return getLike(nameEt.toUpperCase(), mainClassCode, byNameEt);
+        }
 
         private Classifier get(String cacheKey, MainClassCode mainClassCode, Map<MainClassCode, Map<String, Classifier>> cacheMap) {
             loadClassifiers(mainClassCode);
             Map<String, Classifier> cache = cacheMap.get(mainClassCode);
             return cache.get(cacheKey);
+        }
+        
+        public Classifier getLike(String cacheKey, MainClassCode mainClassCode, Map<MainClassCode, Map<String, Classifier>> cacheMap) {
+            loadClassifiers(mainClassCode);
+            String foundKey = cacheMap.get(mainClassCode).keySet().stream().filter(key -> key.contains(cacheKey)).findFirst().orElse(null);
+            return foundKey == null ? null : cacheMap.get(mainClassCode).get(foundKey);
         }
 
         private void loadClassifiers(MainClassCode mainClassCode) {
@@ -200,6 +211,7 @@ public abstract class ClassifierUtil {
             Map<String, Classifier> code = new HashMap<>();
             Map<String, Classifier> ehisValue = new HashMap<>();
             Map<String, Classifier> value = new HashMap<>();
+            Map<String, Classifier> nameEt = new HashMap<>();
 
             for(Classifier c : records) {
                 code.put(c.getCode(), c);
@@ -207,11 +219,13 @@ public abstract class ClassifierUtil {
                     ehisValue.put(c.getEhisValue(), c);
                 }
                 value.put(c.getValue(), c);
+                nameEt.put(c.getNameEt().toUpperCase(), c);
             }
 
             byCode.put(mainClassCode, code);
             byEhisValue.put(mainClassCode, ehisValue);
             byValue.put(mainClassCode, value);
+            byNameEt.put(mainClassCode, nameEt);
         }
     }
 }

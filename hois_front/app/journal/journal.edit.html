@@ -75,7 +75,8 @@
                   </span>
                 </i>
                 <a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}
-                <span ng-if="row.apelResults"><a ng-click="openApelResultsDialog(row)">{{'journal.apel' | translate}}</a></span>
+                <span ng-if="row.apelResults.length > 0"><a ng-click="openApelResultsDialog(row)">{{'journal.apel' | translate}}</a></span>
+                <span ng-if="row.remarks.length > 0" ng-click="openRemarkDialog(row)"><md-icon md-font-set="material-icons">message</md-icon></span>
                 <span ng-if="row.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
               </span>
             </td>
@@ -84,8 +85,8 @@
                 <div layout="row" layout-align="start center" ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
                   <span ng-if="result.absence">
                     {{result.absence.value}}
-                    <md-tooltip ng-if="result.absence.value" class="entryWithAddInfoTootlip">
-                      {{result.absenceInserted  ? (result.absenceInserted | hoisDate) : (result.inserted | hoisDate)}}
+                    <md-tooltip ng-if="result.absence.value" class="tooltip-multiline">
+                      {{result.absenceInserted ? (result.absenceInserted | hoisDate) : (result.inserted | hoisDate)}}
                       <span ng-if="result.addInfo">,&nbsp;
                         {{result.addInfo}}
                       </span>
@@ -99,7 +100,7 @@
                   <span ng-if="result.lessonAbsences.length > 0">
                     <span ng-repeat="lessonAbsence in result.lessonAbsences | orderBy: 'lessonNr'">
                       <span>{{lessonAbsence.absence.value}}({{lessonAbsence.lessonNr}})</span>
-                      <md-tooltip class="entryWithAddInfoTootlip">
+                      <md-tooltip class="tooltip-multiline">
                         {{lessonAbsence.absenceInserted | hoisDate}}
                         <span ng-if="result.addInfo">,&nbsp;
                           {{result.addInfo}}
@@ -124,7 +125,7 @@
                     <span ng-class="{journalFinalResult: journalEntry.entryType.code === 'SISSEKANNE_L',
                                     badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
                     <span ng-if="!result.grade && result.journalEntryStudentHistories.length > 0"> - </span>
-                    <md-tooltip ng-if="result.grade.value" class="entryWithAddInfoTootlip">
+                    <md-tooltip ng-if="result.grade.value" class="tooltip-multiline">
                       {{result.gradeInserted | hoisDate}}, &nbsp; {{result.gradeInsertedBy}} 
                       <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
                     </md-tooltip>
@@ -144,7 +145,8 @@
                   <md-input-container class="quickUpdateAddInfo">
                     <input type="text" ng-model="journalEntry.quickUpdateStudents[row.id].addInfo" md-maxlength="1000"
                       aria-label="additional info" ng-change="quickUpdateAddInfoChanged(journalEntry, row.id)"
-                      ng-disabled="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType.code === 'SISSEKANNE_L')">
+                      ng-disabled="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType.code === 'SISSEKANNE_L')
+                       || journalEntry.quickUpdateStudents[row.id].isRemark">
                   </md-input-container>
                 </div>
               </div>
@@ -194,11 +196,13 @@
             <td md-cell>{{row.entryDate ? (row.entryDate | hoisDate) : '-'}}</td>
             <td md-cell>{{row.lessons ? row.lessons : '-'}}</td>
             <td md-cell>
-              <span ng-if="row.nameEt">{{row.nameEt}}</span>
+              <span>{{row.nameEt ? row.nameEt : '-'}}</span>
               <span ng-if="row.nameEt && row.content">/</span>
-              <span ng-if="row.content">{{row.content}}</span>
+              <hois-value value="row.content"></hois-value>
             </td>
-            <td md-cell>{{row.homework ? row.homework : '-'}}</td>
+            <td md-cell>
+              <hois-value value="row.homework ? row.homework : '-'"></hois-value>
+            </td>
             <td md-cell>{{row.homeworkDuedate ? (row.homeworkDuedate | hoisDate) : '-' }}</td>
           </tr>
         </tbody>

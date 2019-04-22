@@ -69,8 +69,8 @@ public abstract class ReportUtil {
     private static String journalResultAsString(Boolean absencesPerJournals, StudentJournalResultDto journalResult,
             ClassifierCache classifierCache) {
         List<String> journalGrades = StreamUtil.toMappedList(e -> e.getGrade(),
-                StreamUtil.toFilteredList(e -> e.getGrade() != null, journalResult.getEntries()));
-        
+                StreamUtil.toFilteredList(e -> e.getGrade() != null, journalResult.getResults()));
+
         String result = !CollectionUtils.isEmpty(journalGrades) ? journalGrades.stream()
                 .map(g -> classifierValue(g, "KUTSEHINDAMINE", classifierCache)).collect(Collectors.joining(" ")) : "";
         if (Boolean.TRUE.equals(absencesPerJournals)) {
@@ -90,22 +90,23 @@ public abstract class ReportUtil {
         }
         return result;
     }
-    
+
     private static int absencePerJournal(StudentJournalResultDto journalResult, Absence absence) {
-        if (journalResult.getAbsences() != null && journalResult.getAbsences().get(absence.name()) != null) {
-            return journalResult.getAbsences().get(absence.name()).intValue();
+        if (journalResult.getAbsences() != null && journalResult.getAbsenceTotals().get(absence.name()) != null) {
+            return journalResult.getAbsenceTotals().get(absence.name()).intValue();
         }
         return 0;
     }
-    
-    public static String classifierName(String code, String mainClassCode, ClassifierCache classifierCache, Language lang) {
+
+    public static String classifierName(String code, String mainClassCode, ClassifierCache classifierCache,
+            Language lang) {
         if (code == null) {
             return "";
         }
         Classifier c = classifierCache.getByCode(code, MainClassCode.valueOf(mainClassCode));
         return c != null ? TranslateUtil.name(c, lang) : "? - " + code;
     }
-    
+
     public static String classifierValue(String code, String mainClassCode, ClassifierCache classifierCache) {
         if (code == null) {
             return "";
@@ -113,5 +114,5 @@ public abstract class ReportUtil {
         Classifier c = classifierCache.getByCode(code, MainClassCode.valueOf(mainClassCode));
         return c != null ? c.getValue() : "? - " + code;
     }
-    
+
 }

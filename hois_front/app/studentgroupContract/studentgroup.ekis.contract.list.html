@@ -1,0 +1,83 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+            <fieldset>
+                <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+                <div layout="row">
+                    <hois-autocomplete flex="50" ng-model="studentGroupObject" method="studentgroups" name="studentGroup" 
+                    label="{{'lessonplan.studentGroup'}}" additional-query-params="{valid: true}"></hois-autocomplete>
+                    <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                        <label class="textInput">{{'student.name' | translate}}</label>
+                        <input ng-model="criteria.studentName" name="name" type="text" md-maxlength="255">
+                    </md-input-container>
+                </div>
+                <div layout="row">
+                    <md-button md-no-ink class="md-raised md-primary" ng-click="reload()">{{'main.button.search' | translate}}</md-button>
+                </div> 
+            </fieldset>
+          <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+        </form>
+    </div>
+  </div>
+  <div layout-padding>
+    <div flex>
+      <md-table-container>
+        <table md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadContracts">
+            <tr md-row>
+              <th md-column>
+                    <md-input-container>
+                        <md-checkbox ng-model="allChecked" ng-change="checkAll()"
+                        aria-label="check all"></md-checkbox>
+                    </md-input-container>
+              </th>
+              <th md-column md-order-by="student_person.lastname,student_person.firstname">{{'student.label' | translate}}</th>
+              <th md-column>{{'lessonplan.studentGroup' | translate}}</th>
+              <th md-column>{{'module.practice' | translate}}</th>
+              <th md-column>{{'practice.contract.enterprise' | translate}}</th>
+              <th md-column>{{'contract.supervisors' | translate}}</th>
+              <th md-column>{{'contract.schoolSupervisor' | translate}}</th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>
+                    <md-input-container>
+                        <md-checkbox ng-model="row.checked" aria-label="check row"></md-checkbox>
+                    </md-input-container>
+                </td>
+                <td md-cell>{{currentLanguageNameField(row.student)}}</td>
+                <td md-cell>{{row.studentGroup ? row.studentGroup : '-' }}</td>
+                <td md-cell>{{row.moduleSubjects ? currentLanguageNameField(row.moduleSubjects) : '-' }}</td>
+                <td md-cell>{{row.enterpriseName ? row.enterpriseName : '-' }}</td>
+                <td md-cell>{{row.enterpriseContactPersonName ? row.enterpriseContactPersonName : '-' }}</td>
+                <td md-cell>{{row.teacher ? currentLanguageNameField(row.teacher) : '-' }}</td>
+                <td md-cell>
+                  <div layout="row">
+                    <div ng-if="row.id">
+                      <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" md-no-ink class="md-primary change-button" 
+                        ng-href="#/contracts/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+                    </div>
+                    <div ng-if="row.student.id && row.active">
+                      <md-button md-no-ink class="md-primary change-button"
+                        ng-href="#/contracts/{{::row.student.id}}/new">{{'main.button.create' | translate}}</md-button>
+                    </div>
+                  </div>
+                </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+        md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select></md-table-pagination>
+    </div>
+    <div layout="row" layout-xs="column">
+      <div ng-if="tabledata.content">
+          <md-button md-no-ink class="md-raised"
+          ng-click="sendToEkis()">{{'contract.sendToEkis' | translate}}</md-button>
+      </div>
+      <md-button class="md-raised md-default" ng-click="back()">{{'main.button.back' | translate}}</md-button>
+    </div> 
+  </div>

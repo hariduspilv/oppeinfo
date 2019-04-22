@@ -27,7 +27,7 @@
               </md-input-container>
               <md-input-container ng-repeat="legend in legends">
                 <md-radio-button ng-value="legend.id" aria-label="{{ 'select color' }}">
-                  <div class="colorCell" ng-style="{ background: true ? legend.color : 'white' }">
+                  <div class="colorCell" ng-style="{ background: true ? legend.color : 'white', color: legend.brightText ? 'white' : 'black'  }">
                     <span>&nbsp;{{ legend.code }}</span>
                   </div>
                 </md-radio-button>

@@ -1,0 +1,22 @@
+<div>
+  <div layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'application.validCVVocational' | translate}}</label>
+      <hois-value value="currentLanguageNameField(application.oldCurriculumVersion)"></hois-value>
+    </md-input-container>
+  </div>
+  <div layout="row" layout-sm="column" layout-xs="column">
+    <md-input-container flex="45" flex-sm="100" flex-xs="100">
+      <label>{{'application.newCVVocational' | translate}}</label>
+      <md-select ng-model="application.newCurriculumVersion" ng-model-options="{trackBy: '$value.id'}" required>
+        <md-option ng-value="opt" ng-repeat="opt in formState.curriculumVersions">{{currentLanguageNameField(opt)}}</md-option>
+      </md-select>
+    </md-input-container>
+    <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+      <label>{{'application.newStudentGroup' | translate}}</label>
+      <md-select ng-model="application.studentGroup" ng-model-options="{trackBy: '$value.id'}" required>
+        <md-option ng-value="opt" ng-repeat="opt in formState.studentGroups | filter: {curriculumVersion: application.newCurriculumVersion.id}">{{currentLanguageNameField(opt)}}</md-option>
+      </md-select>
+    </md-input-container>
+  </div>
+</div>

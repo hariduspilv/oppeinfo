@@ -7,7 +7,8 @@
   <md-button ng-if="application.canEditStudent && application.id > 0 && application.status === 'AVALDUS_STAATUS_KOOST' && 
     ((!auth.isAdmin() && application.needsRepresentativeConfirm === false) || (auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS')))" 
     ng-click="submit()" class="md-raised md-primary">{{'main.button.submit' | translate}}</md-button>
-  <md-button ng-if="application.canEditStudent && application.id > 0 && application.type === 'AVALDUS_LIIK_MUU' &&
+  <md-button ng-if="application.canEditStudent && application.id > 0 &&
+    (application.type === 'AVALDUS_LIIK_MUU' || application.type === 'AVALDUS_LIIK_OVERSKAVA' || application.type === 'AVALDUS_LIIK_RAKKAVA') &&
     (application.status === 'AVALDUS_STAATUS_ESIT' || application.status === 'AVALDUS_STAATUS_YLEVAAT') && 
     (auth.isAdmin() && isAuthorized('ROLE_OIGUS_K_TEEMAOIGUS_AVALDUS'))" 
     ng-click="confirm()" class="md-raised md-primary">{{'main.button.confirm' | translate}}</md-button>

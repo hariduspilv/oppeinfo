@@ -391,6 +391,15 @@
 
     $scope.loadData();
   }]).controller('TeacherViewController', ['$scope', '$route', '$translate', 'QueryUtils', 'message', function ($scope, $route, $translate, QueryUtils, message) {
+    var TABS = Object.freeze({
+      DATA: "edit",
+      CONTINUING_EDUCATION: "continuingEducation",
+      QUALIFICATION: "qualification",
+      MOBILITY: "mobility",
+      RTIP_ABSENCE: "rtipAbsence",
+      SUBJECT_PROGRAMS: "programs"
+    });
+    var currentTab = TABS.DATA;
     $scope.isShowingRtipTab = false;
     $route.current.locals = angular.extend($route.current.locals || {}, {
       params: {
@@ -400,7 +409,7 @@
     var auth = $route.current.locals.auth;
     $scope.auth = auth;
     var id = (auth.isTeacher() ? auth.teacher : $route.current.params.id);
-
+    
     $scope.teacherId = id;
     var Endpoint = QueryUtils.endpoint('/teachers');
 
@@ -436,6 +445,7 @@
     $scope.changeIsShowingRtipTab = function () {
       $scope.isShowingRtipTab = !$scope.isShowingRtipTab;
       if ($scope.isShowingRtipTab) {
+        currentTab = TABS.RTIP_ABSENCE;
         $scope.loadData();
       }
     };
@@ -445,6 +455,16 @@
         $scope.loadData();
         message.info("teacher.rtipUpdateOperation.success");
       });
+    };
+
+    $scope.changeTab = function (tab) {
+      if (typeof tab === 'string' && TABS[tab] !== undefined) {
+        currentTab = TABS[tab];
+      }
+    };
+
+    $scope.getUrl = function () {
+      return "#/teachers/" + $scope.teacher.id + "/" + currentTab + "?_noback";
     };
     
     $scope.loadData(); // HITSAOIS-219. Fixes the jumping button

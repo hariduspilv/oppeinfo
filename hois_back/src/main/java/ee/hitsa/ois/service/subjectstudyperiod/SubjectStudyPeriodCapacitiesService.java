@@ -105,6 +105,7 @@ public class SubjectStudyPeriodCapacitiesService {
             }
 
             ssp.setCapacities(capacities);
+            ssp.setCapacityDiff(dto.getCapacityDiff());
             updateTeacherCapacities(ssp, dto);
             ssps.add(ssp);
         }

@@ -6,11 +6,12 @@ public class StudentResultColumnDto {
     private StudentModuleResultDto practiceModuleThemeResult;
     private StudentModuleResultDto practiceModuleResult;
     private StudentModuleResultDto moduleResult;
-    
+    private String moduleType;
+
     public StudentResultColumnDto() {
-        
+
     }
-    
+
     public StudentResultColumnDto(StudentResultColumnDto studentResult) {
         if (studentResult.getJournalResult() != null) {
             this.journalResult = new StudentJournalResultDto(studentResult.getJournalResult());
@@ -21,6 +22,7 @@ public class StudentResultColumnDto {
         } else if (studentResult.getModuleResult() != null) {
             this.moduleResult = new StudentModuleResultDto(studentResult.getModuleResult());
         }
+        this.moduleType = studentResult.getModuleType();
     }
 
     public StudentJournalResultDto getJournalResult() {
@@ -54,5 +56,13 @@ public class StudentResultColumnDto {
     public void setModuleResult(StudentModuleResultDto moduleResult) {
         this.moduleResult = moduleResult;
     }
-    
+
+    public String getModuleType() {
+        return moduleType;
+    }
+
+    public void setModuleType(String moduleType) {
+        this.moduleType = moduleType;
+    }
+
 }

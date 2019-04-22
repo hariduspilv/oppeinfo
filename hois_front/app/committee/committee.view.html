@@ -100,9 +100,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in record.apelApplicationDecisions track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell><a ng-href="/#/apelApplication/{{row.applicationId}}/view">{{row.studentName}}</a></td>
-            <td md-cell>
-              <span>{{row.decision.length &GT 150 && !row.showAll ? (row.decision | limitTo:150) + '...' : row.decision}}</span>
-            </td>
+            <td md-cell><span>{{row.decision | hoisLimitTo: 150:!row.showAll}}</span></td>
             <td md-cell>
               <span class="custom-tooltip" ng-if="!row.showAll && row.decision.length > 150" ng-click="row.showAll = true">{{'committee.apelDecisons.showMore' | translate}}</span>
               <span class="custom-tooltip" ng-if="row.showAll" ng-click="row.showAll = false">{{'committee.apelDecisons.showLess' | translate}}</span>

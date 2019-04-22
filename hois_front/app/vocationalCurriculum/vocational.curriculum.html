@@ -257,34 +257,36 @@
 				  </div>
 				</div>
 			</div>
-			<table md-table class="secondary-table">
-				<thead md-head>
-					<tr md-row>
-						<th md-column>{{'curriculum.occupationTable.order' | translate}}</th>
-						<th md-column ng-show="curriculum.occupation">{{'curriculum.occupationTable.occupation' | translate}}</th>
-						<th md-column ng-show="!curriculum.occupation">{{'curriculum.occupationTable.partOccupation' | translate}}</th>
-						<th md-column ng-show="curriculum.occupation">{{'curriculum.occupationTable.partOccupations' | translate}}</th>
-						<th md-column ng-show="curriculum.occupation">{{'curriculum.occupationTable.speciality' | translate}}</th>
-						<th md-column ng-show="curriculum.occupation">{{'occupation.hasOccupationGrant' | translate}}</th>
-						<th md-column></th>
-					</tr>
-				</thead>
-				<tbody md-body>
-					<tr md-row ng-repeat="item in curriculum.curriculumOccupations | orderBy: ['occupation', '-occupation.validThru', '-occupation.validFrom']:false:compareUsingLanguage" ng-class-odd="'odd'" ng-class-even="'even'">
-						<td md-cell>{{$index + 1}}</td>
-						<td md-cell>
-							<a href="" ng-click="curriculum.occupation ? openOccupationDialog(item) : openPartOccupationsDialog(item)">{{item.occupation | hoisValidDates }}</a>
-						</td>
-						<td md-cell><span ng-hide="!curriculum.occupation" ng-repeat="partOccupation in item.partOccupations">{{currentLanguageNameField(partOccupation)}}{{$last ? '' : ', '}}</span></td>
-						<td md-cell><span ng-hide="!curriculum.occupation || !item.specialities || item.specialities.length == 0" ng-repeat="speciality in item.specialities track by $index">
-                  {{currentLanguageNameField(speciality)}}{{$last ? '' : ', '}}</span></td>
-						<td md-cell><span ng-hide="!curriculum.occupation">
-                <md-checkbox ng-model="item.occupationGrant" disabled></md-checkbox>
-            </span></td>
-						<td md-cell ><a class="remove" ng-click="removeOccupation(item)" ng-if="!formState.notEditableBasicData">&times;</a></td>
-					</tr>
-				</tbody>
-			</table>
+			<md-table-container>
+				<table md-table class="secondary-table">
+					<thead md-head>
+						<tr md-row>
+							<th md-column>{{'curriculum.occupationTable.order' | translate}}</th>
+							<th md-column ng-show="curriculum.occupation">{{'curriculum.occupationTable.occupation' | translate}}</th>
+							<th md-column ng-show="!curriculum.occupation">{{'curriculum.occupationTable.partOccupation' | translate}}</th>
+							<th md-column ng-show="curriculum.occupation">{{'curriculum.occupationTable.partOccupations' | translate}}</th>
+							<th md-column ng-show="curriculum.occupation">{{'curriculum.occupationTable.speciality' | translate}}</th>
+							<th md-column ng-show="curriculum.occupation">{{'occupation.hasOccupationGrant' | translate}}</th>
+							<th md-column></th>
+						</tr>
+					</thead>
+					<tbody md-body>
+						<tr md-row ng-repeat="item in curriculum.curriculumOccupations | orderBy: ['occupation', '-occupation.validThru', '-occupation.validFrom']:false:compareUsingLanguage" ng-class-odd="'odd'" ng-class-even="'even'">
+							<td md-cell>{{$index + 1}}</td>
+							<td md-cell>
+								<a href="" ng-click="curriculum.occupation ? openOccupationDialog(item) : openPartOccupationsDialog(item)">{{item.occupation | hoisValidDates }}</a>
+							</td>
+							<td md-cell><span ng-hide="!curriculum.occupation" ng-repeat="partOccupation in item.partOccupations">{{currentLanguageNameField(partOccupation)}}{{$last ? '' : ', '}}</span></td>
+							<td md-cell><span ng-hide="!curriculum.occupation || !item.specialities || item.specialities.length == 0" ng-repeat="speciality in item.specialities track by $index">
+										{{currentLanguageNameField(speciality)}}{{$last ? '' : ', '}}</span></td>
+							<td md-cell><span ng-hide="!curriculum.occupation">
+									<md-checkbox ng-model="item.occupationGrant" disabled></md-checkbox>
+							</span></td>
+							<td md-cell ><a class="remove" ng-click="removeOccupation(item)" ng-if="!formState.notEditableBasicData">&times;</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</md-table-container>
 		</fieldset>
 
 

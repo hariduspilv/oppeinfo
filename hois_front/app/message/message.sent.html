@@ -2,7 +2,7 @@
     <md-nav-bar md-selected-nav-item="currentNavItem">
         <md-nav-item md-nav-href="#/messages/received?_menu" name="message.received">{{'message.received' | translate}}</md-nav-item>
         <md-nav-item md-nav-href="#/messages/sent?_menu" name="message.sent">{{'message.sent' | translate}}</md-nav-item>
-        <md-nav-item md-nav-href="#/messages/automatic/sent?_menu" name="message.automaticSent" ng-if="auth.isAdmin()">{{'message.automaticSent' | translate}}</md-nav-item>
+        <md-nav-item md-nav-href="#/messages/automatic/sent?_menu" name="message.automaticSent" ng-if="canSeeAutomatic">{{'message.automaticSent' | translate}}</md-nav-item>
     </md-nav-bar>
 </div>
 

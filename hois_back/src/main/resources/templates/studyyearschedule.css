@@ -37,3 +37,11 @@ table.schedule td {
     border: solid black thin;
     padding: 3px;
 }
+
+.break-long-words { /*https://stackoverflow.com/a/36555643*/
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-all;
+  word-break: break-word;
+  hyphens: auto;
+}

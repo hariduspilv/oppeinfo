@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
@@ -323,12 +325,24 @@ public class StudentGroupService {
         return data;
     }
 
-    @SuppressWarnings("unchecked")
-    private List<String> findSpecialities(Curriculum curriculum) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_occupation_speciality s inner join curriculum_occupation co on s.curriculum_occupation_id = co.id");
+    private List<Map<String, Object>> findSpecialities(Curriculum curriculum) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_occupation_speciality s inner"
+                + " join curriculum_occupation co on s.curriculum_occupation_id = co.id"
+                + " join classifier_connect cc on cc.classifier_code = s.speciality_code"
+                + " join classifier c on c.code = cc.connect_classifier_code");
         qb.requiredCriteria("co.curriculum_id = :curriculumId", "curriculumId", EntityUtil.getId(curriculum));
 
-        List<?> data = qb.select("s.speciality_code", em).getResultList();
-        return (List<String>)data;
+        List<?> data = qb.select("s.speciality_code, c.valid_from, c.valid_thru", em).getResultList();
+        return data.stream().map(r -> {
+            Map<String, Object> map = new HashMap<>();
+            LocalDate from = resultAsLocalDate(r, 1);
+            LocalDate thru = resultAsLocalDate(r, 2);
+            LocalDate now = LocalDate.now();
+            map.put("code", resultAsString(r, 0));
+            map.put("validFrom", from);
+            map.put("validThru", thru);
+            map.put("valid", Boolean.valueOf((from == null || from.compareTo(now) <= 0) && (thru == null || thru.compareTo(now) >= 0)));
+            return map;
+        }).collect(Collectors.toList());
     }
 }

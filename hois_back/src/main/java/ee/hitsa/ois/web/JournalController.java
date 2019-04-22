@@ -232,6 +232,13 @@ public class JournalController {
         return journalService.studentJournals(studentId, studyYearId);
     }
 
+    @GetMapping("/studentJournal")
+    public StudentJournalDto studentJournal(HoisUserDetails user, @RequestParam("studentId") Long studentId,
+            @RequestParam("journalId") Long journalId) {
+        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        return journalService.studentJournal(studentId, journalId);
+    }
+
     @GetMapping("/studentJournalTasks")
     public StudentJournalTaskListDto studentJournalTasks(HoisUserDetails user, @RequestParam("studentId") Long studentId) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
@@ -283,13 +290,15 @@ public class JournalController {
     }
 
     @GetMapping("/studentJournalAbsences")
-    public List<StudentJournalAbsenceDto> studentAbsences(HoisUserDetails user, @RequestParam("studentId") Long studentId) {
+    public List<StudentJournalAbsenceDto> studentAbsences(HoisUserDetails user,
+            @RequestParam("studentId") Long studentId) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
         return journalService.studentAbsences(user.getSchoolId(), studentId);
     }
 
     @GetMapping("/studentJournalLastResults")
-    public List<StudentJournalResultDto> studentLastResults(HoisUserDetails user, @RequestParam("studentId") Long studentId) {
+    public List<StudentJournalResultDto> studentLastResults(HoisUserDetails user,
+            @RequestParam("studentId") Long studentId) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
         return journalService.studentLastResults(user.getSchoolId(), studentId);
     }

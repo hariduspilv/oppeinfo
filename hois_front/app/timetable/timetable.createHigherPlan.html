@@ -109,7 +109,16 @@
     <div>&nbsp;</div>
   </div>
 
+  
   <div id="timetableCreation" ng-if="plan.currentStudentGroups.length > 0">
+    <div ng-if="totalLessons === 0">
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'warn'}">
+            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'timetable.timetablePlan.noPeriodLessonTimes' | translate}}</span>
+          </div>
+        </md-whiteframe>
+    </div>
     <md-table-container>
       <table md-table class="higher">
         <thead md-head>

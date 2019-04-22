@@ -80,7 +80,7 @@
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button class="md-raised" ng-href="#/finalVocationalProtocols/exam/new" ng-if="formState.canCreateProtocol">{{'finalProtocol.addFinalExamProtocol' | translate}}</md-button>
-          <md-button ng-if="auth.isAdmin()" class="md-raised" ng-href="#/finalVocationalProtocols/thesis/new" ng-if="formState.canCreateProtocol">{{'finalProtocol.addFinalThesisProtocol' | translate}}</md-button>
+          <md-button ng-if="auth.isAdmin() && formState.canCreateProtocol" class="md-raised" ng-href="#/finalVocationalProtocols/thesis/new">{{'finalProtocol.addFinalThesisProtocol' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>

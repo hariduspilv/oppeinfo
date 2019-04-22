@@ -135,34 +135,37 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
         dialogScope.enterprise.name = window.localStorage.getItem('enterpriseName');
         dialogScope.enterprise.regCode = window.localStorage.getItem('enterpriseRegCode');
       }
-    }, function (submittedDialogScope) {
-      submittedDialogScope.isAddressFilled = function(enterprise) {
+      dialogScope.isAddressFilled = function(enterprise) {
         if (enterprise.country === 'RIIK_EST') {
           return enterprise.address && enterprise.addressAds && enterprise.addressOid;
         }
         return enterprise.address;
       };
-      if (!submittedDialogScope.isAddressFilled(submittedDialogScope.enterprise)) {
-        message.error('student.error.addressRequired');
-        return;
-      } else {
-        FormUtils.withValidForm(submittedDialogScope.dialogForm, function() {
-          if (row) {
-            var LocationEndpoint = QueryUtils.endpoint('/practiceEnterprise/location/' + row.id);
-            var locationEndPoint = new LocationEndpoint(submittedDialogScope.enterprise);
-            locationEndPoint.$save().then(function () {
-              message.info('main.messages.create.success');
-              refresh();
-            }).catch(angular.noop);
-          } else {
-            var enterpriseEndPoint = new EnterpriseEndpoint(submittedDialogScope.enterprise);
-            enterpriseEndPoint.$save().then(function () {
-              message.info('main.messages.create.success');
-              refresh();
-            }).catch(angular.noop);
-          }
-        });
-      }
+      dialogScope.checkAddress = function() {
+        if (!dialogScope.isAddressFilled(dialogScope.enterprise)) {
+          message.error('student.error.addressRequired');
+          return false;
+        } else {
+          dialogScope.submit();
+        }
+      };
+    }, function (submittedDialogScope) {
+      FormUtils.withValidForm(submittedDialogScope.dialogForm, function() {
+        if (row) {
+          var LocationEndpoint = QueryUtils.endpoint('/practiceEnterprise/location/' + row.id);
+          var locationEndPoint = new LocationEndpoint(submittedDialogScope.enterprise);
+          locationEndPoint.$save().then(function () {
+            message.info('main.messages.create.success');
+            refresh();
+          }).catch(angular.noop);
+        } else {
+          var enterpriseEndPoint = new EnterpriseEndpoint(submittedDialogScope.enterprise);
+          enterpriseEndPoint.$save().then(function () {
+            message.info('main.messages.create.success');
+            refresh();
+          }).catch(angular.noop);
+        }
+      });
     });
   };
 

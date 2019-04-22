@@ -1,8 +1,11 @@
 package ee.hitsa.ois.web.dto.sais;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import ee.hitsa.ois.domain.sais.SaisAdmission;
+import ee.hitsa.ois.enums.StudyLoad;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -20,9 +23,23 @@ public class SaisAdmissionDto {
     private String studyLoad;
     private String fin;
     private Boolean is_archived;
+    private Boolean isFullLoad;
+    private Boolean isPartialLoad;
+    private Boolean isUndefinedLoad;
+    private List<String> loads;
 
     public static SaisAdmissionDto of(SaisAdmission saisAdmissionDto) {
         SaisAdmissionDto dto = EntityUtil.bindToDto(saisAdmissionDto, new SaisAdmissionDto());
+        dto.setLoads(new ArrayList<>());
+        if (Boolean.TRUE.equals(dto.getIsFullLoad())) {
+            dto.getLoads().add(StudyLoad.OPPEKOORMUS_TAIS.name());
+        }
+        if (Boolean.TRUE.equals(dto.getIsPartialLoad())) {
+            dto.getLoads().add(StudyLoad.OPPEKOORMUS_OSA.name());
+        }
+        if (Boolean.TRUE.equals(dto.getIsUndefinedLoad())) {
+            dto.getLoads().add(StudyLoad.OPPEKOORMUS_MTA.name());
+        }
         return dto;
     }
 
@@ -121,5 +138,45 @@ public class SaisAdmissionDto {
 	public void setArchived(Boolean is_archived) {
 		this.is_archived = is_archived;
 	}
+
+    public Boolean getIs_archived() {
+        return is_archived;
+    }
+
+    public void setIs_archived(Boolean is_archived) {
+        this.is_archived = is_archived;
+    }
+
+    public Boolean getIsFullLoad() {
+        return isFullLoad;
+    }
+
+    public void setIsFullLoad(Boolean isFullLoad) {
+        this.isFullLoad = isFullLoad;
+    }
+
+    public Boolean getIsPartialLoad() {
+        return isPartialLoad;
+    }
+
+    public void setIsPartialLoad(Boolean isPartialLoad) {
+        this.isPartialLoad = isPartialLoad;
+    }
+
+    public Boolean getIsUndefinedLoad() {
+        return isUndefinedLoad;
+    }
+
+    public void setIsUndefinedLoad(Boolean isUndefinedLoad) {
+        this.isUndefinedLoad = isUndefinedLoad;
+    }
+
+    public List<String> getLoads() {
+        return loads;
+    }
+
+    public void setLoads(List<String> loads) {
+        this.loads = loads;
+    }
 
 }

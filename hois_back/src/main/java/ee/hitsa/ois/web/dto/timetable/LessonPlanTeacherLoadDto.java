@@ -4,11 +4,13 @@ public class LessonPlanTeacherLoadDto {
 
     private Short weekNr;
     private Long studyPeriod;
+    private String capacity;
     private Long sum;
 
-    public LessonPlanTeacherLoadDto(Short weekNr, Long studyPeriod, Long sum) {
+    public LessonPlanTeacherLoadDto(Short weekNr, Long studyPeriod, String capacity, Long sum) {
         this.weekNr = weekNr;
         this.studyPeriod = studyPeriod;
+        this.capacity = capacity;
         this.sum = sum;
     }
 
@@ -26,6 +28,14 @@ public class LessonPlanTeacherLoadDto {
 
     public void setStudyPeriod(Long studyPeriod) {
         this.studyPeriod = studyPeriod;
+    }
+
+    public String getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(String capacity) {
+        this.capacity = capacity;
     }
 
     public Long getSum() {

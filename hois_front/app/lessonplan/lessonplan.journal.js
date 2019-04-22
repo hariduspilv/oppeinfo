@@ -86,7 +86,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       return $scope.formState.studentGroups.filter(function (group) {
         return regExp.test($scope.$parent.currentLanguageNameField(group).toUpperCase());
       });
-    }
+    };
 
     $scope.orderByThemeName = function (themeId) {
       return $scope.currentLanguageNameField($scope.formState.themeMap[themeId]);

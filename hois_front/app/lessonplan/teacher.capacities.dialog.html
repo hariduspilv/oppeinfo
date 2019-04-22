@@ -34,14 +34,15 @@
             <tbody class="teacher-capacity-tbody" ng-repeat="teacher in journal.teachers track by $index">
               <tr>
                 <td></td>
-                <td class="lessonplan-teacher-load-label fix dividerBorder" colspan="2">
+                <td class="lessonplan-teacher-load-label fix dividerBorder" title="{{getPlannedLessonsTitle(teacher.teacher.id)}}" colspan="2">
                   {{'lessonplan.load' | translate}} {{(teacherLoad = getTeacherStudyLoad(teacher.teacher.id)).plannedLessons}}
                 </td>
                 <td ng-if="!atLeastOneShownPeriod" colspan="1" class="dividerBorder"></td>
-                <td ng-if="formState.showWeeks && formState.weekNrs[$index].show" ng-repeat="h in ::teacherLoad.studyLoadByWeek track by $index"
-                  ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center lessonplan-teacher-load">{{h}}</td>
+                <td ng-if="formState.showWeeks && week.show" ng-repeat="week in ::formState.weekNrs track by $index"
+                  ng-class="{dividerBorder: week.endOfPeriod}" title="{{getStudyLoadTitle(teacher.teacher.id, $index)}}"
+                  class="center lessonplan-teacher-load">{{teacherLoad.studyLoadByWeek[$index]}}</td>
                 <td ng-if="!formState.showWeeks && sp._selected" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in ::formState.studyPeriods track by $index" 
-                  class="center dividerBorder lessonplan-teacher-load">{{teacherLoad.studyLoadByPeriod[$index]}}</td>
+                  title="{{getStudyLoadSpTitle(teacher.teacher.id, $index)}}" class="center dividerBorder lessonplan-teacher-load">{{teacherLoad.studyLoadByPeriod[$index]}}</td>
               </tr>
               <tr ng-repeat="ct in journalCapacities" class="fix" ng-style="{'border-top': $first ? 'border-top: solid 2px #777 !important;' : 'inherit'}">
                 <td rowspan="{{::journalCapacities.length}}" ng-if="$first" class="fix"

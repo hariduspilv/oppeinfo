@@ -66,7 +66,7 @@ function ($scope, $route, $timeout, QueryUtils, ArrayUtils, message, DataUtils, 
     function selectCurrentStudyYear() {
         $scope.criteria.studyYear = DataUtils.getCurrentStudyYearOrPeriod($scope.studyYears);
         if ($scope.criteria.studyYear) {
-            DataUtils.sortStudyYearsOrPeriods($scope.criteria.studyYear.studyPeriods);
+            $scope.criteria.studyYear.studyPeriods = DataUtils.sortStudyYearsOrPeriods($scope.criteria.studyYear.studyPeriods);
         }
         $scope.yearSelectionTrigger();
     }
@@ -148,7 +148,7 @@ function ($scope, $route, $timeout, QueryUtils, ArrayUtils, message, DataUtils, 
 
     $scope.filterStudentGroups = function(dept) {
         return function(sg) {
-            return ArrayUtils.includes(sg.schoolDepartments, dept.id);
+            return ArrayUtils.includes(sg.schoolDepartments, dept.id) && $scope.isValidGroup(sg);
         };
     };
 
@@ -157,6 +157,10 @@ function ($scope, $route, $timeout, QueryUtils, ArrayUtils, message, DataUtils, 
             var id = $scope.legends.find(function(el){return el.id === legendId; });
             return id;
         }
+    };
+
+    $scope.isValidGroup = function (group) {
+        return DataUtils.isValidObject($scope.criteria.studyYear.startDate, $scope.criteria.studyYear.endDate, group.validFrom, group.validThru);
     };
 
     $scope.$watch(

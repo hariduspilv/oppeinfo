@@ -1,8 +1,10 @@
 <div>
-  <md-input-container flex="60" flex-sm="100" flex-xs="100">
-    <label>{{'application.reason' | translate}}</label>
-    <hois-classifier-value ng-model="application.validAcademicLeave.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
-  </md-input-container>
+  <div layout="row">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'application.reason' | translate}}</label>
+      <hois-classifier-value ng-model="application.validAcademicLeave.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
+    </md-input-container>
+  </div>
 
   <div ng-show="!application.validAcademicLeave.isPeriod" layout="row" layout-xs="column">
     <md-input-container  flex="20" flex-sm="100" flex-xs="100">

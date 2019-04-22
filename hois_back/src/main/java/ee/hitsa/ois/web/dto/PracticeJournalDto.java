@@ -60,7 +60,9 @@ public class PracticeJournalDto extends VersionedCommand {
     public static PracticeJournalDto of(PracticeJournal practiceJournal) {
         PracticeJournalDto dto = EntityUtil.bindToDto(practiceJournal, new PracticeJournalDto(), "contract",
                 "practiceJournalEntries", "practiceJournalFiles", "moduleSubjects", "practiceEvaluation", "studentGroup");
-        dto.setStudentGroup(AutocompleteResult.of(practiceJournal.getStudent().getStudentGroup()));
+        if (practiceJournal.getStudent().getStudentGroup() != null) {
+            dto.setStudentGroup(AutocompleteResult.of(practiceJournal.getStudent().getStudentGroup()));
+        }
         dto.setContract(ContractDto.of(practiceJournal.getContract()));
         if (practiceJournal.getPracticeEvaluation() != null) {
             dto.setPracticeEvaluation(AutocompleteResult.of(practiceJournal.getPracticeEvaluation()));

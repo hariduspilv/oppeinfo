@@ -16,7 +16,6 @@ import ee.hitsa.ois.web.dto.ContractSupervisorDto;
 @DateRange(from = "startDate", thru = "endDate")
 public class ContractForm extends VersionedCommand {
 
-    @NotNull
     private AutocompleteResult student;
     @NotNull
     private LocalDate startDate;
@@ -54,6 +53,7 @@ public class ContractForm extends VersionedCommand {
     private Long studentPracticeEvaluation;
     private Long practiceApplication;
     private List<ContractSupervisorDto> supervisors;
+    private List<AutocompleteResult> students;
     @NotEmpty
     @Valid
     private List<ContractModuleSubjectForm> moduleSubjects;
@@ -248,6 +248,14 @@ public class ContractForm extends VersionedCommand {
 
     public void setStudentPracticeEvaluation(Long studentPracticeEvaluation) {
         this.studentPracticeEvaluation = studentPracticeEvaluation;
+    }
+
+    public List<AutocompleteResult> getStudents() {
+        return students;
+    }
+
+    public void setStudents(List<AutocompleteResult> students) {
+        this.students = students;
     }
 
 }

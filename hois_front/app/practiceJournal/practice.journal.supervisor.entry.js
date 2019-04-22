@@ -14,7 +14,30 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
     $scope.gradesClassCode = entity.isHigher ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
     $scope.grades = Classifier.queryForDropdown({ mainClassCode: $scope.gradesClassCode });
+    entity.practiceJournalEntries.forEach(function (entry) {
+      entry.astroHours = DataUtils.getAcademicHoursFromDouble(entry.hours);
+      entry.acadHours = DataUtils.getAcademicHours(entry.hours);
+    });
     $scope.practiceJournal = entity;
+    $scope.practiceJournal.endDateDisplay = new Date($scope.practiceJournal.endDate);
+    $scope.practiceJournal.endDateDisplay.setDate($scope.practiceJournal.endDateDisplay.getDate() + 30);
+    updateTotal();
+  }
+
+  function updateTotal() {
+    var totalAstro = 0.00;
+    var totalAcad = 0.00;
+    $scope.practiceJournal.practiceJournalEntries.forEach(function (entry) {
+      if (entry.hours !== undefined) {
+        totalAstro += entry.hours;
+      }
+      if (entry.acadHours !== undefined) {
+        totalAcad += entry.acadHours;
+      }
+    });
+
+    $scope.totalAstro = DataUtils.getAcademicHoursFromDouble(totalAstro);
+    $scope.totalAcad = Math.round(totalAcad * 100) / 100;
   }
 
   var entity = $route.current.locals.entity;

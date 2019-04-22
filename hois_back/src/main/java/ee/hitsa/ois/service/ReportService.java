@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.enums.ApelApplicationStatus;
@@ -74,6 +75,8 @@ public class ReportService {
     private XlsService xlsService;
     @Autowired
     private SchoolService schoolService;
+
+    private static final String DATA_TRANSFER_ROWS = "DATA_TRANSFER_PROCESS";
 
     /**
      * Students report
@@ -150,32 +153,78 @@ public class ReportService {
 
         // load grouped by value counts of given classifier
         if(!result.getContent().isEmpty()) {
-            String groupingField;
-            if(MainClassCode.FINALLIKAS.name().equals(criteria.getResult())) {
-                groupingField = "sh.fin_code";
-            } else if(MainClassCode.OPPEVORM.name().equals(criteria.getResult())) {
-                groupingField = "sh.study_form_code";
-            } else if(MainClassCode.OPPURSTAATUS.name().equals(criteria.getResult())) {
-                groupingField = "sh.status_code";
-            } else if(StringUtils.isEmpty(criteria.getResult())) {
-                groupingField = null;
-            } else {
-                throw new AssertionFailedException("Unknown result classifier");
+            String groupingField = studentStatisticsGroupingField(criteria);
+            String subquerySelect = studentStatisticsSubquerySelect(criteria);
+
+            Map<Long, StudentStatisticsDto> curriculums = StreamUtil.toMap(StudentStatisticsDto::getId,
+                    result.getContent());
+
+            String grouping = "x.curriculum_id";
+            if(groupingField != null) {
+                grouping = grouping + ", " + groupingField;
+            }
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from (select " + subquerySelect + " from student ss "
+                    + "left join student_history sh on ss.id=sh.student_id and sh.inserted_by != :dataTransfer "
+                    + "inner join curriculum_version cv on 1=1 and cv.curriculum_id in (:curriculum) "
+                    + "inner join (select count(case when inserted_by != :dataTransfer then 1 else null end) as history_count, "
+                    + "student_id from student_history group by student_id) x on x.student_id=ss.id "
+                    + "where ss.school_id = :school and x.history_count > 0 "
+                    + "and (sh.curriculum_version_id = cv.id and (sh.valid_thru is null or sh.valid_thru >= :validFrom) and sh.valid_from <= :validThru) "
+                    + "or x.history_count = 0 and (ss.curriculum_version_id = cv.id and ss.status_code in (:status))) x")
+                    .groupBy(grouping);
+            qb.requiredCriteria("x.status_code in (:status)", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
+            qb.parameter("school", schoolId);
+            qb.parameter("curriculum", curriculums.keySet());
+            qb.parameter("dataTransfer", DATA_TRANSFER_ROWS);
+
+            if (criteria.getDate() != null) {
+                qb.parameter("validFrom", DateUtils.firstMomentOfDay(criteria.getDate()));
+                qb.parameter("validThru", DateUtils.lastMomentOfDay(criteria.getDate()));
             }
 
-            Map<Long, StudentStatisticsDto> cs = StreamUtil.toMap(StudentStatisticsDto::getId, result.getContent());
-
-            loadStudentStatistics(cs, groupingField, criteria, false);
-            if(MainClassCode.FINALLIKAS.name().equals(criteria.getResult())) {
-                // Fin source is grouped twice: fin source and fin source explanation
-                loadStudentStatistics(cs, "sh.fin_specific_code", criteria, true);
+            List<?> data = qb.select(grouping + ", count(*)", em).getResultList();
+            if(groupingField == null) {
+                loadCounts(curriculums, data);
+            } else {
+                loadStatisticCounts(curriculums, data);
             }
         }
         return result;
     }
 
+    private static String studentStatisticsGroupingField(StudentStatisticsCommand criteria) {
+        String groupingField;
+        if(MainClassCode.FINALLIKAS.name().equals(criteria.getResult())) {
+            groupingField = "x.fin_specific_code";
+        } else if(MainClassCode.OPPEVORM.name().equals(criteria.getResult())) {
+            groupingField = "x.study_form_code";
+        } else if(MainClassCode.OPPURSTAATUS.name().equals(criteria.getResult())) {
+            groupingField = "x.status_code";
+        } else if(StringUtils.isEmpty(criteria.getResult())) {
+            groupingField = null;
+        } else {
+            throw new AssertionFailedException("Unknown result classifier");
+        }
+        return groupingField;
+    }
+
+    private static String studentStatisticsSubquerySelect(StudentStatisticsCommand criteria) {
+        String select = "distinct cv.curriculum_id";
+        if (MainClassCode.FINALLIKAS.name().equals(criteria.getResult())) {
+            select += ", first_value(coalesce(sh.fin_specific_code,ss.fin_specific_code)) "
+                    + "over (partition by ss.id order by sh.valid_thru nulls first, sh.valid_from desc) as fin_specific_code";
+        } else if (MainClassCode.OPPEVORM.name().equals(criteria.getResult())) {
+            select += ", first_value(coalesce(sh.study_form_code,ss.study_form_code)) "
+                    + "over (partition by ss.id order by sh.valid_thru nulls first, sh.valid_from desc) as study_form_code";
+        }
+        select += ", first_value(coalesce(sh.status_code,ss.status_code)) over "
+                + "(partition by ss.id order by sh.valid_thru nulls first, sh.valid_from desc) as status_code, ss.id";
+        return select;
+    }
+
     public byte[] studentStatisticsAsExcel(Long schoolId, StudentStatisticsCommand criteria) {
-        List<StudentStatisticsDto> students = studentStatistics(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
+        List<StudentStatisticsDto> students = studentStatistics(schoolId, criteria,
+                new PageRequest(0, Integer.MAX_VALUE, new Sort("c.name_et"))).getContent();
         Map<String, Object> data = new HashMap<>();
         data.put("criteria", criteria);
         data.put("students", students);
@@ -211,18 +260,29 @@ public class ReportService {
             if(groupingField != null) {
                 grouping = grouping + ", " + groupingField;
             }
-            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds " +
-                    "inner join directive d on ds.directive_id = d.id " +
-                    "inner join student_history sh on ds.student_history_id = sh.id " +
-                    "inner join curriculum_version cv on sh.curriculum_version_id = cv.id").groupBy(grouping);
+
+            String from = "from directive_student ds "
+                    + "inner join directive d on ds.directive_id = d.id "
+                    + "inner join student ss on ds.student_id = ss.id ";
+            if (StudentStatus.OPPURSTAATUS_L.name().equals(criteria.getResult())) {
+                from += "inner join curriculum_version cv on ss.curriculum_version_id = cv.id";
+            } else {
+                from += "left join student_history sh on ds.student_history_id=sh.id " +
+                        "inner join curriculum_version cv on coalesce(sh.curriculum_version_id,ss.curriculum_version_id) = cv.id";
+            }
+
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from).groupBy(grouping);
 
             qb.requiredCriteria("cv.curriculum_id in (:curriculum)", "curriculum", cs.keySet());
 
             qb.requiredCriteria("d.school_id = :schoolId", "schoolId", schoolId);
             qb.requiredCriteria("d.type_code in(:directiveType)", "directiveType", directiveTypes);
-            qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
-            qb.optionalCriteria("d.confirm_date >= :validFrom", "validFrom", criteria.getFrom());
-            qb.optionalCriteria("d.confirm_date <= :validThru", "validThru", criteria.getThru());
+            qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus",
+                    DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+            qb.optionalCriteria("d.confirm_date >= :validFrom", "validFrom", criteria.getFrom(),
+                    DateUtils::firstMomentOfDay);
+            qb.optionalCriteria("d.confirm_date <= :validThru", "validThru", criteria.getThru(),
+                    DateUtils::lastMomentOfDay);
             // check for directive cancellation for given student
             qb.filter("ds.canceled = false");
 
@@ -230,15 +290,16 @@ public class ReportService {
             if(groupingField == null) {
                 loadCounts(cs, data);
             } else {
-                loadStatisticCounts(cs, data, false);
+                loadStatisticCounts(cs, data);
             }
-        }
+        }   
 
         return result;
     }
 
     public byte[] studentStatisticsByPeriodAsExcel(Long schoolId, StudentStatisticsByPeriodCommand criteria) {
-        List<StudentStatisticsDto> students = studentStatisticsByPeriod(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
+        List<StudentStatisticsDto> students = studentStatisticsByPeriod(schoolId, criteria,
+                new PageRequest(0, Integer.MAX_VALUE, new Sort("c.name_et"))).getContent();
         Map<String, Object> data = new HashMap<>();
         data.put("criteria", criteria);
         data.put("students", students);
@@ -587,45 +648,21 @@ public class ReportService {
     }
 
     private Page<StudentStatisticsDto> loadCurriculums(Long schoolId, List<EntityConnectionCommand> curriculumIds, Pageable pageable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum c").sort("c.name_et");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum c").sort(pageable);
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalCriteria("c.id in (:curriculum)", "curriculum", StreamUtil.toMappedList(r -> r.getId(), curriculumIds));
 
-        return JpaQueryUtil.pagingResult(qb, "c.id, c.name_et, c.name_en", em, pageable).map(r -> new StudentStatisticsDto(r));
+        return JpaQueryUtil.pagingResult(qb, "c.id, c.name_et, c.name_en, c.mer_code", em, pageable).map(r -> new StudentStatisticsDto(r));
     }
 
-    private void loadStudentStatistics(Map<Long, StudentStatisticsDto> curriculums, String groupingField, StudentStatisticsCommand criteria, boolean filterResult) {
-        String grouping = "cv.curriculum_id";
-        if(groupingField != null) {
-            grouping = grouping + ", " + groupingField;
-        }
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_history sh inner join curriculum_version cv on sh.curriculum_version_id = cv.id")
-                .groupBy(grouping);
-        qb.requiredCriteria("cv.curriculum_id in (:curriculum)", "curriculum", curriculums.keySet());
-        qb.requiredCriteria("sh.status_code in (:status)", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
-
-        qb.optionalCriteria("(sh.valid_thru is null or sh.valid_thru >= :validFrom)", "validFrom", criteria.getDate(), DateUtils::firstMomentOfDay);
-        qb.optionalCriteria("sh.valid_from <= :validThru", "validThru", criteria.getDate(), DateUtils::lastMomentOfDay);
-
-        List<?> data = qb.select(grouping + ", count(*)", em).getResultList();
-        if(groupingField == null) {
-            loadCounts(curriculums, data);
-        } else {
-            loadStatisticCounts(curriculums, data, filterResult);
-        }
-    }
-
-    private static void loadStatisticCounts(Map<Long, StudentStatisticsDto> curriculums, List<?> data, boolean filterResult) {
-        for(Object r : data) {
+    private static void loadStatisticCounts(Map<Long, StudentStatisticsDto> curriculums, List<?> data) {
+        for (Object r : data) {
             Long curriculumId = resultAsLong(r, 0);
             String group = resultAsString(r, 1);
-            if(group != null) {
+            if (group != null) {
                 StudentStatisticsDto dto = curriculums.get(curriculumId);
                 dto.getResult().put(group, resultAsLong(r, 2));
-                if(filterResult) {
-                    dto.getResultFilter().add(group);
-                }
             }
         }
     }

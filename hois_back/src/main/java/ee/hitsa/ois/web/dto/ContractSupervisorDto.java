@@ -11,6 +11,9 @@ public class ContractSupervisorDto {
     private String supervisorPhone;
     private String supervisorUrl;
     
+    private String supervisorFirstname;
+    private String supervisorLastname;
+    
     public static ContractSupervisorDto of(ContractSupervisor supervisor) {
         if (supervisor == null) {
             return null;
@@ -49,5 +52,21 @@ public class ContractSupervisorDto {
 
     public void setSupervisorUrl(String supervisorUrl) {
         this.supervisorUrl = supervisorUrl;
+    }
+
+    public String getSupervisorFirstname() {
+        return supervisorFirstname;
+    }
+
+    public void setSupervisorFirstname(String supervisorFirstname) {
+        this.supervisorFirstname = supervisorFirstname;
+    }
+
+    public String getSupervisorLastname() {
+        return supervisorLastname;
+    }
+
+    public void setSupervisorLastname(String supervisorLastname) {
+        this.supervisorLastname = supervisorLastname;
     }
 }

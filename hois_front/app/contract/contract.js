@@ -4,6 +4,60 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
   $scope.auth = $route.current.locals.auth;
   $scope.contract = {moduleSubjects: [{}]};
   $scope.formState = {};
+  
+  if ($route.current.params.studentGroupId) {
+    $scope.studentGroup = $route.current.params.studentGroupId;
+    $scope.studentGroupList = [];
+    $scope.studentGroupList.push($scope.studentGroup);
+    QueryUtils.endpoint('/autocomplete/studentgroups').query({id: $scope.studentGroup}, function (studentGroups) {
+      $scope.studentGroup = studentGroups[0];
+    });
+  }
+
+  $scope.addAllStudents = function () {
+    QueryUtils.endpoint('/autocomplete/students').search({active: true, studentGroup: $scope.studentGroupList}, function (students) {
+      if ($scope.contract === undefined) {
+        $scope.contract = {};
+      }
+      $scope.contract.students = students.content;
+      if ($scope.formState.isHigher) {
+        loadStudentPracticeSubjects($scope.contract.students[0]);
+      } else {
+        loadStudentPracticeModules($scope.contract.students[0]);
+      }
+    });
+  };
+
+  $scope.addStudent = function () {
+    if (!angular.isArray($scope.contract.students)) {
+      $scope.contract.students = [];
+    }
+    if ($scope.contract.students.some(function (student) {
+        return student.id === $scope.contract.student.id;
+      })) {
+      $scope.contract.student = undefined;
+      message.error('timetable.timetableEvent.error.duplicateStudentGroup');
+      return;
+    }
+    $scope.contract.students.push($scope.contract.student);
+    $scope.contract.student = undefined;
+  };
+
+  $scope.deleteStudent = function (student) {
+    var index = $scope.contract.students.indexOf(student);
+    if (index !== -1) {
+      $scope.contract.students.splice(index, 1);
+      $scope.contractForm.$setDirty();
+    }
+  };
+
+  if ($route.current.params.studentId) {
+    QueryUtils.endpoint('/autocomplete/students?id=' + $route.current.params.studentId).get({}, function (result) {
+      if (result && result.totalElements === 1) {
+        $scope.contract.student = result.content[0];
+        }
+      });
+  }
 
   function entityToForm(entity) {
     $scope.formState.isHigher = entity.isHigher;
@@ -31,12 +85,14 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
         if (($scope.contract.practicePlan + "\n" + addable).length <= 20000) {
           $scope.contract.practicePlan += "\n" + addable;
         } else {
-          var index = 20000 - $scope.contract.practicePlan.length + 2;
-          $scope.contract.practicePlan += "\n" + addable.substring(0, index);
+          var index = 20000 - ($scope.contract.practicePlan.length + 2);
+          if (index > 0) {
+            $scope.contract.practicePlan += "\n" + addable.substring(0, index);
+          }
         }
       }
     }
-  }
+  };
 
   $scope.sendEmailAgain = function (supervisor) {
     var ContractEndpoint = QueryUtils.endpoint('/contracts/sendEmail');
@@ -80,6 +136,9 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
 
   var clMapper = Classifier.valuemapper({ studyForm: 'OPPEVORM' });
   $scope.$watch('contract.student', function (student) {
+    if (angular.isDefined($scope.contract) && angular.isDefined($scope.contract.student) && $scope.contract.student !== null && $scope.studentGroup) {
+      $scope.addStudent();
+    }
     if (angular.isObject(student)) {
       QueryUtils.endpoint('/students/' + student.id).search(function (result) {
         $scope.formState.student = clMapper.objectmapper(result);
@@ -101,32 +160,22 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
           $scope.formState.contactsByName[it.contactPersonName] = it;
         });
         $scope.formState.contacts = result;
-        if (result.length === 1) {
-          $scope.contract.contactPersonName = result[0].contactPersonName;
-          $scope.contract.contactPersonEmail= result[0].contactPersonEmail;
-          $scope.contract.contactPersonPhone= result[0].contactPersonPhone;
-        } else {
-          if ($scope.contract.contactPersonName !== undefined && $scope.contract.contactPersonName !== null && !$scope.formState.contactsByName[$scope.contract.contactPersonName]) {
-            $scope.contract.contactPersonEmail = undefined;
-            $scope.contract.contactPersonPhone = undefined;
-            $scope.contract.contactPersonName = undefined;
+        if ($scope.contract.contactPersonName === undefined) {
+          if (result.length >= 1) {
+            $scope.contract.contactPersonName = result[0].contactPersonName;
+            $scope.contract.contactPersonEmail= result[0].contactPersonEmail;
+            $scope.contract.contactPersonPhone= result[0].contactPersonPhone;
+          } else {
+            if ($scope.contract.contactPersonName !== undefined && $scope.contract.contactPersonName !== null && !$scope.formState.contactsByName[$scope.contract.contactPersonName]) {
+              $scope.contract.contactPersonEmail = undefined;
+              $scope.contract.contactPersonPhone = undefined;
+              $scope.contract.contactPersonName = undefined;
+            }
           }
         }
       });
       QueryUtils.endpoint('/autocomplete/supervisors').query({id: enterprise.id}).$promise.then(function (result) {
         $scope.supervisors = result;
-        var nameList = result.map(function (item) {
-          return item.supervisorName;
-        });
-        if ($scope.contract.supervisors !== undefined) {
-          $scope.contract.supervisors.some(function (supervisor) {
-            if (nameList.indexOf(supervisor.supervisorName) === -1) {
-              $scope.contract.supervisors = $scope.contract.supervisors.filter(function (item) {
-                return item.supervisorName !== supervisor.supervisorName;
-              });
-            }
-          });
-        }
         if (result.length === 1 && ($scope.contract.supervisors === undefined || $scope.contract.supervisors.length === 0)) {
           $scope.contract.supervisor = result[0];
         }
@@ -134,7 +183,8 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
 
     }
   });
-  $scope.$watch('contract.isPracticeEnterprise', function (value) {
+
+  $scope.$watch('contract.enterprise', function (value) {
     if (value) {
       QueryUtils.endpoint('/autocomplete/enterpriseLocations').query({id: $scope.contract.enterprise.id}).$promise.then(function (result) {
         $scope.formState.enterpriseLocations = result;
@@ -222,9 +272,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
       if (themeIds.indexOf(moduleSubject.theme) === -1) {
         moduleSubject.theme = null;
       }
-
       setModuleCredits(moduleSubject);
-
       if (angular.isString(module.assessmentMethodsEt)) {
         addStringToPracticePlan(module.assessmentMethodsEt);
       }
@@ -235,7 +283,6 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
     if ($scope.formState.themesById[themeId]) {
       moduleSubject.credits = $scope.formState.themesById[themeId].credits;
       moduleSubject.hours = DataUtils.creditsToHours(moduleSubject.credits);
-
       if (angular.isString($scope.formState.themesById[themeId].subthemes)) {
         addStringToPracticePlan($scope.formState.themesById[themeId].subthemes);
       }
@@ -244,24 +291,36 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
     }
   };
 
-  $scope.$watch('contract.supervisor', function () {
-    if (angular.isDefined($scope.contract) && angular.isDefined($scope.contract.supervisor) && $scope.contract.supervisor !== null) {
-      $scope.addSupervisor();
+  $scope.$watch('contract.supervisor', function (newValue) {
+    if (angular.isDefined($scope.contract) && angular.isDefined(newValue) && newValue !== null) {
+      $scope.addSupervisor(newValue);
+      $scope.contract.supervisor = undefined;
     }
   });
 
-  $scope.addSupervisor = function () {
+  function sameSupervisor(sv1, sv2) {
+    var name1 = sv1.manually ? sv1.supervisorFirstname + " " + sv1.supervisorLastname : sv1.supervisorName;
+    var name2 = sv2.manually ? sv2.supervisorFirstname + " " + sv2.supervisorLastname : sv2.supervisorName;
+    return name1 === name2;
+  }
+
+  $scope.addSupervisor = function (sv) {
     if (!angular.isArray($scope.contract.supervisors)) {
       $scope.contract.supervisors = [];
     }
     if ($scope.contract.supervisors.some(function (supervisor) {
-        return supervisor.supervisorName === $scope.contract.supervisor.supervisorName;
+        return sameSupervisor(supervisor, sv);
       })) {
       message.error('timetable.timetableEvent.error.duplicateSupervisor');
       return;
     }
-    $scope.contract.supervisors.push($scope.contract.supervisor);
-    $scope.contract.supervisor = undefined;
+    $scope.contract.supervisors.push(sv);
+  };
+
+  $scope.addEmptySupervisor = function () {
+    $scope.addSupervisor({
+      manually: true
+    });
   };
 
   $scope.deleteSupervisor = function (supervisor) {
@@ -276,7 +335,6 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
     if ($scope.formState.subjectsById[subjectId]) {
       moduleSubject.credits = $scope.formState.subjectsById[subjectId].credits;
       moduleSubject.hours = DataUtils.creditsToHours(moduleSubject.credits);
-
       if (angular.isString($scope.formState.subjectsById[subjectId].outcomesEt)) {
         addStringToPracticePlan($scope.formState.subjectsById[subjectId].outcomesEt);
       }
@@ -309,7 +367,6 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
       message.error('main.messages.form-has-errors');
       return false;
     }
-
     if($scope.contract.moduleSubjects.length === 0) {
       message.error($scope.formState.isHigher ? 'contract.messages.atleastOneSubjectRequired' : 'contract.messages.atleastOneModuleRequired');
       return false;
@@ -319,11 +376,11 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
   }
 
   var ContractEndpoint = QueryUtils.endpoint('/contracts');
+
   $scope.save = function (success) {
     if(!validationPassed()) {
       return false;
     }
-
     $scope.contract.isHigher = $scope.formState.isHigher;
     var contract = new ContractEndpoint($scope.contract);
     if (angular.isDefined($scope.contract.id)) {
@@ -338,7 +395,11 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
     } else {
       contract.$save().then(function () {
         message.info('main.messages.create.success');
-        $location.url('/contracts/' + contract.id + '/edit?_noback');
+        if ($scope.studentGroup) {
+          $location.url('/practice/studentgroup/contracts/' + $scope.studentGroup.id + '?_noback');
+        } else {
+          $location.url('/contracts/' + contract.id + '/edit?_noback');
+        }
       }).catch(angular.noop);
     }
   };
@@ -348,7 +409,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
       var contract = new ContractEndpoint($scope.contract);
       contract.$delete().then(function () {
         message.info('main.messages.delete.success');
-        $scope.back('/contracts');
+        $scope.back('#/contracts');
       }).catch(angular.noop);
     });
   };
@@ -357,7 +418,6 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
     if(!validationPassed()) {
       return false;
     }
-
     QueryUtils.endpoint('/contracts/checkForEkis').get({id: $scope.contract.id}).$promise.then(function(check) {
       dialogService.confirmDialog({ prompt: (check.templateExists ? 'contract.ekisconfirm' : 'contract.ekisconfirmTemplateMissing'), template: check.templateName }, function () {
         $scope.save(function () {
@@ -367,6 +427,109 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
             $location.url('/contracts/' + contract.id + '/view?_noback');
           }).catch(angular.noop);
         });
+      });
+    });
+  };
+
+  $scope.copyContract = function () {
+    dialogService.showDialog('contract/contract.select.dialog.html', function (dialogScope) {
+      var clMapper = Classifier.valuemapper({ status: 'LEPING_STAATUS' });
+      QueryUtils.createQueryForm(dialogScope, '/contracts/all', {order: 'student_person.lastname,student_person.firstname'}, clMapper.objectmapper);
+      dialogScope.setStudentGroup = function(studentGroup) {
+        dialogScope.criteria.studentGroup = studentGroup.id;
+      };
+      dialogScope.setStudent = function(student) {
+        dialogScope.criteria.student = student.id;
+      };
+
+      dialogScope.deselect = function(row) {
+        dialogScope.tabledata.content.forEach(function (item) {
+          if (item.id !== row.id) {
+            item.checked = false;
+          }
+        });
+      };
+
+      dialogScope.$watch('student', function (newValue) {
+        if (angular.isDefined(dialogScope.student) && angular.isDefined(newValue) && newValue !== null) {
+          dialogScope.setStudent(newValue);
+        } else {
+          dialogScope.criteria.student = undefined;
+        }
+      });
+
+      dialogScope.$watch('studentGroup', function (newValue) {
+        if (angular.isDefined(dialogScope.studentGroup) && angular.isDefined(newValue) && newValue !== null) {
+          dialogScope.setStudentGroup(newValue);
+        } else {
+          dialogScope.criteria.studentGroup = undefined;
+        }
+      });
+
+      //Set student from contract
+      if(angular.isDefined($scope.contract.student)) {
+        dialogScope.student = $scope.contract.student;
+      } else if (angular.isDefined($scope.formState.student)) {
+        dialogScope.student = $scope.formState.student;
+      }
+
+      //Set studentGroup from contract
+      if(angular.isDefined($scope.studentGroup)) {
+        dialogScope.studentGroup = $scope.studentGroup;
+      } else if (angular.isDefined($scope.formState.student)) {
+        dialogScope.studentGroup = $scope.formState.student.studentGroup;
+      }
+
+      dialogScope.checkChecked = function() {
+        dialogScope.checked = dialogScope.tabledata.content.filter(function (item) {
+          return item.checked;
+        });
+
+        if (dialogScope.checked.length === 0) {
+          message.error('contract.atleastOne');
+          return false;
+        } else {
+          dialogScope.submit();
+        }
+      };
+    }, function (submittedDialogScope) {
+      var contract = submittedDialogScope.checked[0];
+      QueryUtils.endpoint('/contracts').get({id: contract.id}).$promise.then(function (entity) {
+        // Keep previous contract values
+        entity.students = $scope.contract.students;
+        entity.practiceApplication = $scope.contract.practiceApplication;
+        entity.student = $scope.contract.student;
+        if (entity.isHigher) {
+          loadStudentPracticeSubjects(entity.student);
+        } else {
+          loadStudentPracticeModules(entity.student);
+        }
+        entity.id = $scope.contract.id;
+        entity.status = $scope.contract.status;
+        entity.version = $scope.contract.version;
+        entity.moduleSubjects = $scope.contract.moduleSubjects;
+        entity.subject = $scope.contract.subject;
+        if ($scope.contract.practiceApplication !== undefined) {
+          //When contract is practice application
+          //Keep enterprise values unchanged
+          entity.enterprise = $scope.contract.enterprise;
+          entity.contactPersonName = $scope.contract.contactPersonName;
+          entity.contactPersonEmail = $scope.contract.contactPersonEmail;
+          entity.contactPersonPhone = $scope.contract.contactPersonPhone;
+          entity.supervisors = $scope.contract.supervisors;
+          entity.isPracticeSchool = $scope.contract.isPracticeSchool;
+          entity.isPracticeTelework = $scope.contract.isPracticeTelework;
+          entity.isPracticeOther = $scope.contract.isPracticeOther;
+          entity.practicePlace = $scope.contract.practicePlace;
+          entity.isPracticeEnterprise = $scope.contract.isPracticeEnterprise;
+        }
+        entity.moduleSubjects.forEach(function (it) {
+          it.id = undefined;
+          DataUtils.convertObjectToIdentifier(it, ['module', 'theme', 'subject']);
+        });
+        $scope.formState.isHigher = entity.isHigher;
+        DataUtils.convertObjectToIdentifier(entity, ['contractCoordinator', 'practiceEvaluation', 'studentPracticeEvaluation']);
+        $scope.contract = entity;
       });
     });
   };

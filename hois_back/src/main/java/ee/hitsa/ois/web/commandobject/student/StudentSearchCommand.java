@@ -18,6 +18,7 @@ public class StudentSearchCommand {
     private List<Long> subjectId;
     private List<String> studyForm;
     private List<String> status;
+    private Boolean higher;
 
     public List<Long> getStudentGroupId() {
         return studentGroupId;
@@ -98,4 +99,13 @@ public class StudentSearchCommand {
     public void setSubjectId(List<Long> subjectId) {
         this.subjectId = subjectId;
     }
+
+    public Boolean getHigher() {
+        return higher;
+    }
+
+    public void setHigher(Boolean higher) {
+        this.higher = higher;
+    }
+
 }

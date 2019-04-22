@@ -48,7 +48,7 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
     $scope.formState = {xlsUrl: 'reports/students/statistics/studentstatistics.xls',
                         filterValues: {OPPURSTAATUS: ['OPPURSTAATUS_K', 'OPPURSTAATUS_L']}};
 
-    QueryUtils.createQueryForm($scope, '/reports/students/statistics', {result: 'OPPEVORM'}, function() {
+    QueryUtils.createQueryForm($scope, '/reports/students/statistics', {order: 'c.name_et', result: 'OPPEVORM'}, function() {
       var resultType = $scope.criteria.result;
       $scope.savedCriteria = angular.copy($scope.criteria);
       if($scope.formState.resultType !== resultType) {
@@ -93,7 +93,7 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
     var school = Session.school || {};
     $scope.formState = {xlsUrl: 'reports/students/statistics/studentstatisticsbyperiod.xls'};
 
-    QueryUtils.createQueryForm($scope, '/reports/students/statistics/byperiod', {result: 'OPPURSTAATUS_A'}, function() {
+    QueryUtils.createQueryForm($scope, '/reports/students/statistics/byperiod', {order: 'c.name_et', result: 'OPPURSTAATUS_A'}, function() {
       var resultType = $scope.criteria.result;
       if($scope.formState.resultType !== resultType) {
         $scope.formState.resultType = resultType;
@@ -273,7 +273,8 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
   $scope.auth = $route.current.locals.auth;
   
   var baseUrl = '/reports/studentgroupteacher';
-  var resultsMapper = Classifier.valuemapper({grade: 'KUTSEHINDAMINE', entryType: 'SISSEKANNE', absence: 'PUUDUMINE'});
+  var resultsMapper = Classifier.valuemapper({grade: 'KUTSEHINDAMINE', entryType: 'SISSEKANNE'});
+  var absencesMapper = Classifier.valuemapper({absence: 'PUUDUMINE', entryType: 'SISSEKANNE'});
   $scope.entryTypesOrder = [
     'SISSEKANNE_H',
     'SISSEKANNE_R',
@@ -298,11 +299,27 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
   $scope.directiveControllers = [];
 
   $scope.formState = {
+    showAllParameters: false,
     studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), 
     studyPeriods: {},
     xlsUrl: 'reports/studentgroupteacher/studentgroupteacher.xls',
-    pdfUrl: 'reports/studentgroupteacher/studentgroupteacher.pdf'
+    pdfUrl: 'reports/studentgroupteacher/studentgroupteacher.pdf',
+    negativeResultsPdfUrl: 'reports/studentgroupteacher/negativeresults.pdf',
+    negativeResultsXlsUrl: 'reports/studentgroupteacher/negativeresults.xls',
   };
+
+  if ($scope.auth.isTeacher()) {
+    QueryUtils.endpoint('/autocomplete/studentgroups').query({
+      valid: true,
+      higher: false,
+      studentGroupTeacherId: $scope.auth.teacher
+    }).$promise.then(function (studentGroups) {
+      $scope.formState.studentGroups = studentGroups;
+      if (!$scope.criteria.studentGroup) {
+        $scope.criteria.studentGroup = studentGroups.length === 1 ? studentGroups[0].id : null;
+      }
+    });
+  }
 
   $scope.pdf = function (url, params) {
     return config.apiUrl + '/'+ url + '?' + $httpParamSerializer(params);
@@ -330,11 +347,13 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
 
   if(!$scope.storedCriteria || angular.equals({}, $scope.storedCriteria)) {
     $scope.criteria = {entryType: {'SISSEKANNE_H': true, 'SISSEKANNE_R': true, 'SISSEKANNE_O': true, 'SISSEKANNE_L': true}};
+    setEntryTypeCriteria();
   } else {
     $scope.criteria = $scope.storedCriteria;
     $scope.formState.studyPeriod = $scope.storedCriteria.formState.studyPeriod;
     $scope.formState.studentGroup = $scope.storedCriteria.formState.studentGroup;
     $scope.formState.student = $scope.storedCriteria.formState.student;
+    setEntryTypeCriteria();
     if ($scope.formState.studentGroup && ($scope.criteria.studyYear || $scope.criteria.from)) {
       $timeout(searchUsingStoredCriteria);
     }
@@ -393,6 +412,35 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
     $scope.criteria.student = $scope.formState.student ? $scope.formState.student.id : null;
   };
 
+  $scope.entryTypeChanged = function () {
+    setEntryTypeCriteria();
+  };
+
+  function setEntryTypeCriteria() {
+    $scope.criteria.entryTypes = [];
+    angular.forEach($scope.criteria.entryType, function (boolean, type) {
+      if (boolean) {
+        $scope.criteria.entryTypes.push(type);
+      }
+    });
+  }
+
+  $scope.negativeResultsChanged = function () {
+    if ($scope.criteria.negativeResults) {
+      $scope.criteria.journalsWithEntries = true;
+    }
+  };
+
+  $scope.onlyModuleGradesChanged = function () {
+    if ($scope.criteria.onlyModuleGrades) {
+      $scope.criteria.moduleGrade = true;
+    }
+  };
+
+  $scope.toggleShowAllParameters = function () {
+    $scope.formState.showAllParameters = !$scope.formState.showAllParameters;
+  };
+
   $scope.search = function() {
     var form = $scope.studentGroupTeacherReportForm;
     form.$setSubmitted();
@@ -406,23 +454,18 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
       return;
     }
 
-    $scope.criteria.entryTypes = [];
-    angular.forEach($scope.criteria.entryType, function (boolean, type) {
-      if (boolean) {
-        $scope.criteria.entryTypes.push(type);
-      }
-    });
-
     QueryUtils.loadingWheel($scope, true);
     QueryUtils.endpoint(baseUrl).get($scope.criteria).$promise.then(function (result) {
       $scope.record = result;
       $scope.record.students.forEach(function (student) {
         student.resultColumns.forEach(function (column) {
-          if (column.journalResult && column.journalResult.entries) {
-            resultsMapper.objectmapper(column.journalResult.entries);
-            column.journalResult.entries.forEach(function (entry) {
-              resultsMapper.objectmapper(entry.lessonAbsences);
-            });
+          if (column.journalResult) {
+            if (column.journalResult.results) {
+              resultsMapper.objectmapper(column.journalResult.results);
+            }
+            if (column.journalResult.absences) {
+              absencesMapper.objectmapper(column.journalResult.absences);
+            }
           }
           if (column.practiceModuleThemeResult) {
             resultsMapper.objectmapper(column.practiceModuleThemeResult);
@@ -435,14 +478,19 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
           }
         });
       });
+      $scope.tableTotalColumnsColspan = 6 + ($scope.record.showAverageGrade ? 1 : 0) +
+        ($scope.record.showWeightedAverageGrade ? 1 : 0);
+        
       QueryUtils.loadingWheel($scope, false);
       $scope.criteria.formState = {studyPeriod: $scope.formState.studyPeriod, studentGroup: $scope.formState.studentGroup};
+      $scope.formState.showAllParameters = false;
       $scope.toStorage(baseUrl, $scope.criteria);
       $scope.$broadcast('refreshFixedColumns');
     });
   };
   
   $scope.clearCriteria = function() {
+    $scope.formState.showAllParameters = true;
     $scope.formState.studyPeriod = null;
     $scope.formState.studentGroup = null;
     $scope.criteria = {};
@@ -455,25 +503,23 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
     return $window.innerHeight;
   };
 
-  $scope.openAddInfoDialog = function (student) {
-    dialogService.showDialog('report/studentgroup.teacher.addinfo.html', function (dialogScope) {
+  $scope.filterOnlyModuleGrades = function (column) {
+    if ($scope.record.showOnlyModuleGrades) {
+      return column.module || column.moduleResult;
+    }
+    return true;
+  };
+
+  $scope.filterAbsences = function (absenceCode) {
+    return function (absence) {
+      return absence.absence.code === absenceCode;
+    }
+  };
+
+  $scope.openRemarkDialog = function (student) {
+    dialogService.showDialog('report/studentgroup.teacher.remark.dialog.html', function (dialogScope) {
       dialogScope.auth = $scope.auth;
       dialogScope.student = student;
-      dialogScope.entriesWithAddInfo = [];
-
-      var addedJournals = [];
-      dialogScope.student.resultColumns.forEach(function (resultColumn) {
-        if (resultColumn.journalResult) {
-          if (addedJournals.indexOf(resultColumn.journalResult.id) === -1) {
-            resultColumn.journalResult.entries.forEach(function (entry) {
-              if (entry.addInfo) {
-                dialogScope.entriesWithAddInfo.push(entry);
-              }
-            });
-            addedJournals.push(resultColumn.journalResult.id);
-          }
-        }
-      });
     });
   };
 }

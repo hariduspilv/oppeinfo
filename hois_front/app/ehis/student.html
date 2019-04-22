@@ -60,6 +60,7 @@
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.abroadPurpose' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.points' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.schoolName' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.nominalStudyExtension' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.country' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{'ehis.student.abroadProgramme' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'VOTA'">{{'ehis.student.votaConfirmDate' | translate}}</th>
@@ -84,6 +85,12 @@
                   <span ng-if="row.extraNr && row.extraNr.length > 0">
                     ({{'ehis.student.extraNr' | translate}}: {{row.extraNr.join(', ')}})
                   </span>
+                  <span ng-if="row.academicNrEn"><br>
+                    {{::row.academicNrEn}}
+                    <span ng-if="row.extraNrEn && row.extraNrEn.length > 0">
+                      ({{'ehis.student.extraNr' | translate}}: {{row.extraNrEn.join(', ')}})
+                    </span>
+                  </span>
                 </td>
                 <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.percentage}}</td>
                 <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.points}}</td>
@@ -95,6 +102,7 @@
                 </td>
                 <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{::row.points}}</td>
                 <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{::row.schoolName}}</td>
+                <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">{{::row.nominalStudyExtension}}</td>
                 <td md-cell ng-if="criteria.dataType === 'FOREIGN_STUDY'">
                     <hois-classifier-value ng-model="row.country" main-classifier-code="RIIK"></hois-classifier-value>
                 </td>

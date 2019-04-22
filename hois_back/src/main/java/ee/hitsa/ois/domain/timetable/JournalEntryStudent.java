@@ -41,6 +41,10 @@ public class JournalEntryStudent extends BaseEntityWithId {
     private String addInfo;
     private Boolean isLessonAbsence;
 
+    private Boolean isRemark;
+    private String remarkInsertedBy;
+    private LocalDateTime remarkInserted;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_entry_student_id", nullable = false, updatable = false, insertable = true)
     private Set<JournalEntryStudentHistory> journalEntryStudentHistories = new HashSet<>();
@@ -127,6 +131,30 @@ public class JournalEntryStudent extends BaseEntityWithId {
 
     public void setIsLessonAbsence(Boolean isLessonAbsence) {
         this.isLessonAbsence = isLessonAbsence;
+    }
+
+    public Boolean getIsRemark() {
+        return isRemark;
+    }
+
+    public void setIsRemark(Boolean isRemark) {
+        this.isRemark = isRemark;
+    }
+
+    public String getRemarkInsertedBy() {
+        return remarkInsertedBy;
+    }
+
+    public void setRemarkInsertedBy(String remarkInsertedBy) {
+        this.remarkInsertedBy = remarkInsertedBy;
+    }
+
+    public LocalDateTime getRemarkInserted() {
+        return remarkInserted;
+    }
+
+    public void setRemarkInserted(LocalDateTime remarkInserted) {
+        this.remarkInserted = remarkInserted;
     }
 
     public Set<JournalEntryStudentHistory> getJournalEntryStudentHistories() {

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.domain.Person;
@@ -24,6 +25,8 @@ public class JournalStudentDto {
     private String status;
     private Boolean isIndividualCurriculum;
     private List<JournalStudentApelResultDto> apelResults;
+    private List<JournalStudentRemarkDto> remarks;
+
     private Boolean canEdit;
 
     public static JournalStudentDto of(Student student) {
@@ -136,11 +139,19 @@ public class JournalStudentDto {
     }
 
     public List<JournalStudentApelResultDto> getApelResults() {
-        return apelResults;
+        return apelResults != null ?  apelResults : (apelResults = new ArrayList<>());
     }
 
     public void setApelResults(List<JournalStudentApelResultDto> apelResults) {
         this.apelResults = apelResults;
+    }
+
+    public List<JournalStudentRemarkDto> getRemarks() {
+        return remarks != null ? remarks : (remarks = new ArrayList<>());
+    }
+
+    public void setRemarks(List<JournalStudentRemarkDto> remarks) {
+        this.remarks = remarks;
     }
 
     public Boolean getCanEdit() {

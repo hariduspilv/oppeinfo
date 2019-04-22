@@ -1,7 +1,8 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-    <fieldset ng-if="!auth.isStudent() && !auth.isParent()">
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" layout="column" novalidate>
+    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate>
+        <fieldset ng-if="!auth.isStudent() && !auth.isParent()">
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+            <div layout="column">
             <md-input-container>
                 <label>{{'certificate.type' | translate}}</label>
                 <hois-classifier-select ng-model="criteria.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" multiple></hois-classifier-select>
@@ -43,8 +44,9 @@
                 <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
                 <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TOEND')" ng-href="#/certificate/new">{{'certificate.add' | translate}}</md-button>
             </div>
-        </form>
-    </fieldset>
+            </div>
+        </fieldset>
+    </form>
 </div>
 
 <div layout-padding>

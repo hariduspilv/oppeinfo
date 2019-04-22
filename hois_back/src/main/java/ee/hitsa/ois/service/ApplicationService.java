@@ -34,6 +34,7 @@ import ee.hitsa.ois.domain.application.ApplicationPlannedSubjectEquivalent;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.AcademicLeaveReason;
 import ee.hitsa.ois.enums.ApplicationStatus;
@@ -90,6 +91,8 @@ public class ApplicationService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private ClassifierService classifierService;
+    @Autowired
+    private StudentService studentService;
     @Autowired
     private EntityManager em;
     @Autowired
@@ -151,10 +154,10 @@ public class ApplicationService {
             throw new ValidationFailedException(String.format("user %s is not allowed to create application", user.getUsername()));
         }
 
-        Map<ApplicationType, ApplicationApplicableDto> applicable = applicableApplicationTypes(student);
-        ApplicationType type = ApplicationType.valueOf(applicationForm.getType());
-        if (Boolean.FALSE.equals(applicable.get(type).getIsAllowed())) {
-            throw new ValidationFailedException(applicable.get(type).getReason());
+        Map<String, ApplicationApplicableDto> applicable = applicableApplicationTypes(student);
+        //ApplicationType type = ApplicationType.valueOfDefault(applicationForm.getType());
+        if (Boolean.FALSE.equals(applicable.get(applicationForm.getType()).getIsAllowed())) {
+            throw new ValidationFailedException(applicable.get(applicationForm.getType()).getReason());
         }
 
         Application application = new Application();
@@ -174,13 +177,16 @@ public class ApplicationService {
     public Application save(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(applicationForm, application, classifierRepository, "student", "files", "plannedSubjects",
-                "studyPeriodStart", "studyPeriodStart", "accademicApplication", "newCurriculumVersion", "oldCurriculumVersion", "submitted");
+                "studyPeriodStart", "studyPeriodStart", "accademicApplication", "newCurriculumVersion", "oldCurriculumVersion", "submitted", "studentGroup");
 
         application.setStudyPeriodStart(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodStart(), em));
         application.setStudyPeriodEnd(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodEnd(), em));
         application.setOldCurriculumVersion(EntityUtil.getOptionalOne(CurriculumVersion.class, applicationForm.getOldCurriculumVersion(), em));
         application.setNewCurriculumVersion(EntityUtil.getOptionalOne(CurriculumVersion.class, applicationForm.getNewCurriculumVersion(), em));
         application.setStudent(EntityUtil.getOptionalOne(Student.class, applicationForm.getStudent(), em));
+        if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_OVERSKAVA, application.getType()) || ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_RAKKAVA, application.getType())) {
+            application.setStudentGroup(EntityUtil.getOptionalOne(StudentGroup.class, applicationForm.getStudentGroup(), em));
+        }
 
         ValidAcademicLeaveDto validAcademicLeave = applicationForm.getValidAcademicLeave();
         if (validAcademicLeave != null) {
@@ -206,6 +212,10 @@ public class ApplicationService {
             break;
         case AVALDUS_LIIK_VALIS:
             ApplicationUtil.assertValisConstraints(application);
+            break;
+        case AVALDUS_LIIK_OVERSKAVA:
+        case AVALDUS_LIIK_RAKKAVA:
+            ApplicationUtil.assertKavaConstraints(application);
             break;
         default:
             break;
@@ -293,13 +303,13 @@ public class ApplicationService {
         EntityUtil.deleteEntity(application, em);
     }
 
-    private List<ApplicationType> existingApplicationsTypes(Long studentId) {
+    private List<String> existingApplicationsTypes(Long studentId) {
         List<?> data = em.createNativeQuery("select distinct a.type_code from application a where a.student_id = ?1 and a.status_code in (?2)")
-            .setParameter(1, studentId)
-            .setParameter(2, EnumUtil.toNameList(ApplicationStatus.AVALDUS_STAATUS_KOOST, ApplicationStatus.AVALDUS_STAATUS_ESIT,
-                        ApplicationStatus.AVALDUS_STAATUS_YLEVAAT, ApplicationStatus.AVALDUS_STAATUS_KINNITAM))
-            .getResultList();
-        return StreamUtil.toMappedList(r -> ApplicationType.valueOf(resultAsString(r, 0)), data);
+                .setParameter(1, studentId)
+                .setParameter(2, EnumUtil.toNameList(ApplicationStatus.AVALDUS_STAATUS_KOOST, ApplicationStatus.AVALDUS_STAATUS_ESIT,
+                            ApplicationStatus.AVALDUS_STAATUS_YLEVAAT, ApplicationStatus.AVALDUS_STAATUS_KINNITAM))
+                .getResultList();
+        return StreamUtil.toMappedList(r -> resultAsString(r, 0), data);
     }
 
     public Application submit(HoisUserDetails user, Application application) {
@@ -329,6 +339,7 @@ public class ApplicationService {
     }
 
     public Application confirm(Application application) {
+        proccessApplicationConfirmation(application);
         setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_KINNITATUD);
         return EntityUtil.save(application, em);
     }
@@ -368,40 +379,41 @@ public class ApplicationService {
       return data.isEmpty() ? null : em.getReference(DirectiveStudent.class, resultAsLong(data.get(0), 0));
     }
 
-    public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(Student student) {
-        List<ApplicationType> existingApplications = existingApplicationsTypes(EntityUtil.getId(student));
+    public Map<String, ApplicationApplicableDto> applicableApplicationTypes(Student student) {
+        List<String> existingApplications = existingApplicationsTypes(EntityUtil.getId(student));
         boolean isHigher = StudentUtil.isHigher(student);
-        Map<ApplicationType, ApplicationApplicableDto> result = new HashMap<>();
+        Map<String, ApplicationApplicableDto> result = new HashMap<>();
         rulesByApplicationType(student, existingApplications, isHigher, result);
         rulesByApplicationClassifier(isHigher, result);
         return result;
     }
 
-    private void rulesByApplicationClassifier(boolean isHigher, Map<ApplicationType, ApplicationApplicableDto> result) {
+    private void rulesByApplicationClassifier(boolean isHigher, Map<String, ApplicationApplicableDto> result) {
         List<Classifier> allowedApplicationTypes = classifierService.findAllByMainClassCode(MainClassCode.AVALDUS_LIIK);
         for (Classifier allowedApplicationType : allowedApplicationTypes) {
             if ((isHigher && !allowedApplicationType.isHigher()) || (!isHigher && !allowedApplicationType.isVocational())) {
-                result.remove(ApplicationType.valueOf(allowedApplicationType.getCode()));
+                result.remove(allowedApplicationType.getCode());
             }
         }
     }
 
-    private void rulesByApplicationType(Student student, List<ApplicationType> existingApplications, boolean isHigher,
-            Map<ApplicationType, ApplicationApplicableDto> result) {
+    private void rulesByApplicationType(Student student, List<String> existingApplications, boolean isHigher,
+            Map<String, ApplicationApplicableDto> result) {
         boolean isActive = StudentUtil.isActive(student);
         boolean isStudying = StudentUtil.isStudying(student);
 
-        for (ApplicationType type : ApplicationType.values()) {
+        for (Classifier classifier : classifierService.findAllByMainClassCode(MainClassCode.AVALDUS_LIIK)) {
+            String type = classifier.getCode();
             if (existingApplications.contains(type)) {
                 result.put(type, new ApplicationApplicableDto("application.messages.applicationAlreadyExists"));
             } else {
-                if (ApplicationType.AVALDUS_LIIK_AKAD.equals(type)) {
+                if (ApplicationType.AVALDUS_LIIK_AKAD.name().equals(type)) {
                     if (!isActive) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
                     } else if (!StudentUtil.isNominalStudy(student)) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotNominalStudy"));
                     }
-                } else if (ApplicationType.AVALDUS_LIIK_AKADK.equals(type)) {
+                } else if (ApplicationType.AVALDUS_LIIK_AKADK.name().equals(type)) {
                     if (!isActive) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
                     } else if (!StudentUtil.isOnAcademicLeave(student)) {
@@ -412,7 +424,7 @@ public class ApplicationService {
                             result.put(type, new ApplicationApplicableDto("application.messages.noValidAcademicLeaveApplicationFound"));
                         }
                     }
-                } else if (ApplicationType.AVALDUS_LIIK_VALIS.equals(type)) {
+                } else if (ApplicationType.AVALDUS_LIIK_VALIS.name().equals(type)) {
                     if (!isStudying) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotStudying"));
                     } else if (!isHigher) {
@@ -456,5 +468,15 @@ public class ApplicationService {
 
     private void setApplicationStatus(Application application, ApplicationStatus status) {
         application.setStatus(em.getReference(Classifier.class, status.name()));
+    }
+    
+    private void proccessApplicationConfirmation(Application application) {
+        if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_OVERSKAVA, application.getType()) || ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_RAKKAVA, application.getType())) {
+            Student student = application.getStudent();
+            studentService.saveWithHistory(student);
+            student.setCurriculumVersion(application.getNewCurriculumVersion());
+            student.setStudentGroup(application.getStudentGroup());
+            EntityUtil.save(student, em);
+        }
     }
 }

@@ -149,15 +149,19 @@ public class EhisStudentReport {
         private final String docNr;
         private final String academicNr;
         private final List<String> extraNr;
+        private final String academicNrEn;
+        private final List<String> extraNrEn;
 
         public Graduation(DirectiveStudent directiveStudent, WsEhisStudentLog log,
-                String docNr, String academicNr, List<String> extraNr) {
+                String docNr, String academicNr, List<String> extraNr, String academicNrEn, List<String> extraNrEn) {
             fill(directiveStudent.getStudent(), log);
             
             cumLaude = directiveStudent.getIsCumLaude();
             this.docNr = docNr;
             this.academicNr = academicNr;
             this.extraNr = extraNr;
+            this.academicNrEn = academicNrEn;
+            this.extraNrEn = extraNrEn;
         }
 
         public Boolean getCumLaude() {
@@ -174,6 +178,14 @@ public class EhisStudentReport {
         
         public List<String> getExtraNr() {
             return extraNr;
+        }
+
+        public String getAcademicNrEn() {
+            return academicNrEn;
+        }
+
+        public List<String> getExtraNrEn() {
+            return extraNrEn;
         }
     }
 

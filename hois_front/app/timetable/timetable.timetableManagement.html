@@ -6,12 +6,12 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="25" flex-sm="100" flex-xs="100">
             <label>{{'timetable.management.studyYear' | translate}}</label>
-            <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required></hois-select>
+            <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required sorted-query="true"></hois-select>
           </md-input-container>
 
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5">
             <label>{{'timetable.management.studyPeriod' | translate}}</label>
-            <hois-select ng-model="criteria.studyPeriod" values="formState.studyPeriods" required></hois-select>
+            <hois-select ng-model="criteria.studyPeriod" values="formState.studyPeriods" required sorted-query="true"></hois-select>
           </md-input-container>
 
           <md-input-container required ng-show="higher && vocational" flex="45" flex-sm="100" flex-xs="100" flex-offset="5">
@@ -24,7 +24,7 @@
         </div>
         <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-          <md-button ng-if="criteria.type === 'TUNNIPLAAN_LIIK_H'" class="md-raised"
+          <md-button ng-if="criteria.type === 'TUNNIPLAAN_LIIK_H' && canEdit" class="md-raised"
                         ng-href="#/timetable/new?type={{criteria.type}}">{{'main.button.create' | translate}}
               </md-button>
         </div>

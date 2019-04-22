@@ -114,6 +114,14 @@ public class PracticeJournalController {
         }
         return get(user, practiceJournalService.confirm(practiceJournal, practiceJournalForm));
     }
+    
+    @PutMapping("/{id:\\d+}/open")
+    public PracticeJournalDto open(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) PracticeJournal practiceJournal,
+            @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
+        UserUtil.assertIsSchoolAdmin(user, practiceJournal.getSchool());
+        return get(user, practiceJournalService.open(practiceJournal, practiceJournalForm));
+    }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user,

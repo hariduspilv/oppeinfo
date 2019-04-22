@@ -12,7 +12,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       },
       data: {
         authorizedRoles: function(Session, roles, ArrayUtils) {
-          return Session.roleCode === 'ROLL_A' && Session.vocational && ArrayUtils.intersect(roles,
+          return Session.roleCode === 'ROLL_A' && ArrayUtils.intersect(roles,
               [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA]);
         }, 
         currentNavItem: 'lessonplan.vocational'
@@ -27,10 +27,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: function(Session, roles, ArrayUtils) {
-          return Session.vocational && ArrayUtils.intersect(roles,
-              [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA]);
-        },
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA
+        ],
         currentNavItem: 'lessonplan.vocational-byteacher'
       }
     })
@@ -43,7 +43,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN], currentNavItem: 'lessonplan.vocational'
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN], currentNavItem: 'lessonplan.vocational'
       }
     })
     .when('/lessonplans/vocational/byteacher/:id/:studyYear', {

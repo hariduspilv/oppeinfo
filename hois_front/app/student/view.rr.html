@@ -1,0 +1,83 @@
+<div ng-cloak>
+  <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
+  <div ng-if="student && student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+</div>
+
+<div layout-padding ng-cloak>
+  <div flex>
+    <div layout="row" layout-xs="column" flex class="form-readonly">
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label>{{'student.label' | translate}}</label>
+          <hois-value value="student.person.firstname + ' ' + student.person.lastname"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'student.idcode' | translate}}</label>
+          <hois-value value="student.person.idcode"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label>{{'student.studyForm' | translate}}</label>
+          <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'student.curriculum' | translate}}</label>
+          <hois-value value="currentLanguageNameField(student.curriculumVersion)"></hois-value>
+        </md-input-container>
+      </div>
+    </div>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise" class="secondary-table">
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'rr.student.oldName' | translate}}</th>
+            <th md-column>{{'rr.student.newName' | translate}}</th>
+            <th md-column>{{'rr.student.oldAddress' | translate}}</th>
+            <th md-column>{{'rr.student.newAddress' | translate}}</th>
+            <th md-column>{{'rr.student.changed' | translate}}</th>
+            <th md-column>{{'rr.student.changedBy' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.oldName}}</td>
+            <td md-cell>{{::row.newName}}</td>
+            <td md-cell>{{::row.oldAddress}}</td>
+            <td md-cell>{{::row.newAddress}}</td>
+            <td md-cell>{{::row.changed | hoisDateTime}}</td>
+            <td md-cell>{{::row.changedBy}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+
+    <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>
+  
+<style>
+  md-tooltip {
+    height: auto !important;
+  }
+
+  md-tooltip p {
+    white-space: normal;
+  }
+
+  @media only screen and (max-width: 649px) {
+    md-tooltip p {
+      max-width: 90vw;
+    }
+  }
+
+  @media only screen and (min-width: 650px) {
+    md-tooltip p {
+      /* Give at least 10 px free space */
+      max-width: 640px;
+    }
+  }
+</style>

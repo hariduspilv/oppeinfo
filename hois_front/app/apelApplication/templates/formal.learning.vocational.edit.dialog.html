@@ -123,7 +123,7 @@
 
                   <hois-autocomplete ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_M'" flex 
                     ng-model="record.newTransferableSubjectOrModule.curriculumVersionOmodule"
-                    method="curriculumversionomodulesandthemes" name="module" label="apel.formalLearnings.transferableModuleEt"
+                    method="curriculumversionomodules" name="module" label="apel.formalLearnings.transferableModuleEt"
                     md-selected-item-change="moduleChanged(record.newTransferableSubjectOrModule.curriculumVersionOmodule)"
                     additional-query-params="{student: student.id, curriculumModules: false, curriculumVersion: curriculumVersionId}"
                     ng-model-options="{ debounce: 500 }" required>
@@ -237,7 +237,7 @@
         </fieldset>
         <br>
         <fieldset>
-          <legend ng-class="{invalid: dialogForm.$submitted && (!record.formalReplacedSubjectsOrModules || record.formalReplacedSubjectsOrModules.length === 0)}"
+          <legend ng-class="{invalid: areReplacedSubjectsOrModulesValid()}"
             class="md-title-small">{{'apel.formalLearnings.substitutableModulesThemes' | translate}}</legend>
           <div flex="50">
             <md-input-container style="width: 100%">

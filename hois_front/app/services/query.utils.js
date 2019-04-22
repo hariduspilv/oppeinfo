@@ -59,8 +59,36 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       scope.clearCriteria = function() {
         clearQueryParams(scope.criteria);
         scope.directiveControllers.forEach(function (c) { 
-          c.clear(); 
-        }); 
+          c.clear();
+        });
+        //Input field clearing fix
+        var charCounters = document.getElementsByClassName("md-char-counter");
+        for (var char = 0; char < charCounters.length; char++) {
+          charCounters[char].innerHTML = "0 / " + charCounters[char].innerHTML.split("/")[1];
+        }
+
+        var inputs = angular.element(document).find("input");
+        for (var index = 0; index < inputs.length; index++) {
+          inputs[index].value = "";
+        }
+        var formName = inputs[0].form.getAttribute("name");
+        //might not find form when ng-if is used outside form
+        var form = scope[formName];
+        if (form) {
+          for (var g = 0; g < form.$$controls.length; g++) {
+            for (var key in form.$error) {
+              form.$$controls[g].$setValidity(key, true);
+            }
+          }
+        }
+  
+        var containers = document.getElementsByClassName("md-input-has-value");
+        var iterations = containers.length;
+        for (var focused = 0; focused < iterations; focused++) {
+          //use first only because removing class name changes containers list
+          containers[0].classList.remove("md-input-has-value");
+        }
+        
       };
 
       if(scope.fromStorage === undefined) {

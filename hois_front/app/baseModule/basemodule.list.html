@@ -87,12 +87,12 @@
                     <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
                         <td md-cell><a ng-href="#/basemodule/{{::row.id}}/view">{{currentLanguageNameField(row)}}</a></td>
                         <td md-cell ng-init="row.c = row.curriculums.join(', ')">
-                            {{row.c.length &gt; 20 && !row.showC ? (row.c | limitTo:20) + '...' : row.c}}
+                            {{row.c | hoisLimitTo: 20:!row.showC}}
                             <span class="custom-tooltip" ng-if="!row.showC && row.c.length > 20" ng-click="row.showC = true">{{'basemodule.search.showMore' | translate}}</span>
                             <span class="custom-tooltip" ng-if="row.showC" ng-click="row.showC = false">{{'basemodule.search.showLess' | translate}}</span>
                         </td>
                         <td md-cell ng-init="row.cv = row.curriculumVersions.join(', ')">
-                            {{row.cv.length &gt; 20 && !row.showCV ? (row.cv | limitTo:20) + '...' : row.cv}}
+                            {{row.cv | hoisLimitTo: 20:!row.showCV}}
                             <span class="custom-tooltip" ng-if="!row.showCV && row.cv.length > 20" ng-click="row.showCV = true">{{'basemodule.search.showMore' | translate}}</span>
                             <span class="custom-tooltip" ng-if="row.showCV" ng-click="row.showCV = false">{{'basemodule.search.showLess' | translate}}</span>
                         </td>

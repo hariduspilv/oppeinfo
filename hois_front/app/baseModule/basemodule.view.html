@@ -216,7 +216,7 @@
             </div>
         </div>
         <div>&nbsp;</div>
-        <md-button class="md-raised md-primary" ng-click="edit()">{{"main.button.edit" | translate}}</md-button>
+        <md-button class="md-raised md-primary" ng-if="canEdit" ng-click="edit()">{{"main.button.edit" | translate}}</md-button>
         <md-button class="md-raised" ng-click="back('#/basemodule')">{{"main.button.back" | translate}}</md-button>
     </form>
 </div>

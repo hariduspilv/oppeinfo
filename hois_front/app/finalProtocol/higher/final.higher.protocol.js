@@ -10,6 +10,7 @@ function ($route, $location, $scope, $filter, $q, ArrayUtils, Classifier, DataUt
   var forbiddenGrades = ['KORGHINDAMINE_MI'];
   var clMapper = Classifier.valuemapper({ grade: 'KORGHINDAMINE', status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
   $scope.formState = {};
+  var deferredEntityToDto;
 
   function filterGrades() {
     $scope.grades = $scope.grades.filter(function(it) {
@@ -21,6 +22,12 @@ function ($route, $location, $scope, $filter, $q, ArrayUtils, Classifier, DataUt
 
   if ($route.current.locals.entity) {
     entityToDto($route.current.locals.entity);
+  }
+
+  function resolveDeferredIfExists() {
+    if (angular.isDefined(deferredEntityToDto) && deferredEntityToDto.promise.$$state.status === 0) {
+      deferredEntityToDto.resolve();
+    }
   }
 
   function entityToDto(entity) {
@@ -64,6 +71,9 @@ function ($route, $location, $scope, $filter, $q, ArrayUtils, Classifier, DataUt
         canChangeConfirmedProtocolGrade: ProtocolUtils.canChangeConfirmedProtocolGrade($scope.auth, $scope.protocol),
         protocolPdfUrl: config.apiUrl + endpoint + '/' + entity.id + '/print/protocol.pdf'
       };
+      resolveDeferredIfExists();
+    }).catch(function () {
+      resolveDeferredIfExists();
     });
   }
 
@@ -138,8 +148,10 @@ function ($route, $location, $scope, $filter, $q, ArrayUtils, Classifier, DataUt
   }
 
   $scope.confirm = function () {
+    deferredEntityToDto = $q.defer();
     if(!validationPassed(true)) {
-      return false;
+      resolveDeferredIfExists();
+      return deferredEntityToDto.promise;
     }
 
     var data = {
@@ -151,10 +163,11 @@ function ($route, $location, $scope, $filter, $q, ArrayUtils, Classifier, DataUt
     };
 
     if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      ProtocolUtils.signBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto);
+      ProtocolUtils.signBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto, resolveDeferredIfExists);
     } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      ProtocolUtils.mobileSignBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto);
+      ProtocolUtils.mobileSignBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto, resolveDeferredIfExists);
     }
+    return deferredEntityToDto.promise;
   };
 
   $scope.selectedFinalDateChanged = function () {

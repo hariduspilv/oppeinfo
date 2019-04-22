@@ -641,6 +641,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           journalStudent: result.journalStudentId,
           grade: result.grade ? result.grade.code : null,
           gradeValue: result.grade ? VocationalGradeUtil.removePrefix(result.grade.code) : null,
+          isRemark: result.isRemark,
           addInfo: result.addInfo
         };
       }
@@ -830,6 +831,12 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
   $scope.openApelResultsDialog = function (journalStudent) {
     dialogService.showDialog('journal/journal.apel.results.dialog.html', function (dialogScope) {
+      dialogScope.journalStudent = journalStudent;
+    });
+  };
+
+  $scope.openRemarkDialog = function (journalStudent) {
+    dialogService.showDialog('journal/journal.remarks.dialog.html', function (dialogScope) {
       dialogScope.journalStudent = journalStudent;
     });
   };

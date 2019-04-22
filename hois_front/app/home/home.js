@@ -156,8 +156,11 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       checkIfHasSubjectProgramNotification();
       checkIfHasExpiredBaseModules();
       checkIfHasUnacceptedAbsences();
+      checkIfHasTodaysAbsences();
       checkUnconfirmedJournals();
+      checkIfHasRecentRRChanges();
       expiringOccupationStandards();
+      studentGroupRemarks();
       studentAfterAuthentication();
       $scope.pageLoadingHandler.enable();
     }
@@ -172,6 +175,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         $scope.studentAbsences = [];
         $scope.absenceGroups = [];
         $scope.lastResults = [];
+        $scope.remarks = [];
       }
     }
 
@@ -180,6 +184,14 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     }
     $scope.$on(AUTH_EVENTS.loginSuccess, afterAuthentication);
     $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
+
+    function checkIfHasRecentRRChanges() {
+      if ('ROLL_A' === Session.roleCode && ArrayUtils.includes(Session.authorizedRoles, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RR)) {
+        QueryUtils.endpoint("/logs/rr/hasrecentchangelogs").get({}, function (response) {
+          $scope.rrHasRecentChangeLogs = response.hasRecentChangeLogs;
+        });
+      }
+    }
 
     function checkIfCanCreateAbsence() {
       $scope.canCreateAbsence = false;
@@ -231,6 +243,16 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       }
     }
 
+    function checkIfHasTodaysAbsences() {
+      if(['ROLL_O'].indexOf(Session.roleCode) !== -1) {
+        QueryUtils.endpoint('/groupAbsences/teacherHasTodaysAbsences').search().$promise.then(function(response) {
+          $scope.hasTodaysAbsences = response.hasTodaysAbsences;
+        });
+      } else {
+        $scope.hasTodaysAbsences = undefined;
+      }
+    }
+
     function checkUnconfirmedJournals() {
       if(['ROLL_A', 'ROLL_O'].indexOf(Session.roleCode) !== -1) {
         QueryUtils.endpoint('/journals/unconfirmedJournalsInfo').search().$promise.then(function(response) {
@@ -265,6 +287,22 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     $scope.toggleNumberOfOccupationStandards = function() {
       $scope.numberOfOccupationStandards = $scope.numberOfOccupationStandards ? undefined : initialNumberOfOccupationStandards;
     };
+
+    function studentGroupRemarks() {
+      if(['ROLL_O'].indexOf(Session.roleCode) !== -1) {
+        $scope.pageLoadingHandler.addPromise("studentGroupRemarks",
+          QueryUtils.endpoint('/remarks/studentGroupRemarks').query().$promise,
+          function (result) {
+            $scope.studentGroupRemarks = result;
+            if (result.length === 0) {
+              $scope.pageLoadingHandler.setFinish("studentGroupRemarks");
+            }
+          }
+        );
+      } else {
+        $scope.studentGroupRemarks = undefined;
+      }
+    }
 
     function getStudentInformation() {
       $scope.pageLoadingHandler.addPromise("studentTasks",
@@ -318,6 +356,16 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
           }
         }
       );
+
+      $scope.pageLoadingHandler.addPromise("remarks",
+      QueryUtils.endpoint('/remarks/student/recent/' + Session.studentId).query().$promise,
+      function (result) {
+        $scope.remarks = result;
+        if (result.length === 0) {
+          $scope.pageLoadingHandler.setFinish("remarks");
+        }
+      }
+    );
 
       $scope.declaration = undefined;
       if (Session.roleCode !== 'ROLL_L') {

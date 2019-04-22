@@ -265,7 +265,15 @@ public class PracticeJournalService {
         PracticeJournalDto dto = get(practiceJournal);
         dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate())));
         dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate())));
-        dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, dto.getEndDate())));
+        //PracticeJournal deletion control
+        if (practiceJournal.getContract() != null) {
+            dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, dto.getEndDate()) 
+                    && "LEPING_STAATUS_T".equals(practiceJournal.getContract().getStatus().getCode())
+                    && practiceJournal.getPracticeJournalEntries().isEmpty()
+                    && practiceJournal.getPracticeJournalEvaluations().isEmpty()));
+        } else {
+            dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, dto.getEndDate())));
+        }
         dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.canAddEntries(user, dto)));
         return dto;
     }
@@ -291,6 +299,9 @@ public class PracticeJournalService {
         assertValidationRules(practiceJournalForm);
         PracticeJournal changedPracticeJournal = EntityUtil.bindToEntity(practiceJournalForm, practiceJournal,
                 "student", "module", "theme", "teacher", "subject", "moduleSubjects", "practiceEvaluation");
+        if (!StringUtils.isEmpty(practiceJournalForm.getGrade())) {
+            changedPracticeJournal.setGrade(em.getReference(Classifier.class, practiceJournalForm.getGrade()));
+        }
         changedPracticeJournal.setPracticeEvaluation(EntityUtil.getOptionalOne(PracticeEvaluation.class, practiceJournalForm.getPracticeEvaluation(), em));
         changedPracticeJournal.setStudent(EntityUtil.getOptionalOne(Student.class, practiceJournalForm.getStudent(), em));
         changedPracticeJournal.setTeacher(EntityUtil.getOptionalOne(Teacher.class, practiceJournalForm.getTeacher(), em));
@@ -313,7 +324,7 @@ public class PracticeJournalService {
     }
 
     public PracticeJournal confirm(PracticeJournal practiceJournal, PracticeJournalForm practiceJournalForm) {
-        save(practiceJournal, practiceJournalForm);
+        practiceJournal = save(practiceJournal, practiceJournalForm);
         practiceJournal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_K.name()));
         return EntityUtil.save(practiceJournal, em);
     }
@@ -344,8 +355,18 @@ public class PracticeJournalService {
     }
 
     public void delete(HoisUserDetails user, PracticeJournal practiceJournal) {
-        EntityUtil.setUsername(user.getUsername(), em);
-        EntityUtil.deleteEntity(practiceJournal, em);
+        // If contract is not null, check user rights, end date, 'Tühistatud' status, missing entries and evaluations
+        // If contract is null, check user rights and end date
+        if ((practiceJournal.getContract() != null 
+                && PracticeJournalUserRights.canDelete(user, practiceJournal.getEndDate()) 
+                && "LEPING_STAATUS_T".equals(practiceJournal.getContract().getStatus().getCode())
+                && practiceJournal.getPracticeJournalEntries().isEmpty()
+                && practiceJournal.getPracticeJournalEvaluations().isEmpty()) 
+                || (practiceJournal.getContract() == null 
+                && PracticeJournalUserRights.canDelete(user, practiceJournal.getEndDate()))) {
+            EntityUtil.setUsername(user.getUsername(), em);
+            EntityUtil.deleteEntity(practiceJournal, em);
+        }
     }
 
     public PracticeJournal saveEntriesStudent(PracticeJournal practiceJournal,
@@ -523,5 +544,11 @@ public class PracticeJournalService {
                 .setParameter(1, contractId)
                 .setMaxResults(1).getResultList();
         return result.isEmpty() ? null : result.get(0);
+    }
+
+    public PracticeJournal open(PracticeJournal practiceJournal, PracticeJournalForm practiceJournalForm) {
+        save(practiceJournal, practiceJournalForm);
+        practiceJournal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
+        return EntityUtil.save(practiceJournal, em);
     }
 }

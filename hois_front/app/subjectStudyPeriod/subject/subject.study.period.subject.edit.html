@@ -4,7 +4,7 @@
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container ng-if="isNew" flex="25" flex-sm="100" flex-xs="100">
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-                    <hois-select ng-model="record.studyPeriod" values="studyPeriods" required></hois-select>
+                    <hois-select ng-model="record.studyPeriod" values="studyPeriods" required sorted-query="true"></hois-select>
                 </md-input-container>
                 <md-input-container ng-if="!isNew" flex="25" flex-sm="100" flex-xs="100">
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>

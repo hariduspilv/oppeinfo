@@ -2,6 +2,7 @@ package ee.hitsa.ois.domain.diploma;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -477,8 +478,9 @@ public class DiplomaSupplement extends BaseEntityWithId {
     }
     
     public List<DiplomaSupplementStudyResult> getStudyResults() {
-        return studyResults;
+        return studyResults != null ? studyResults : (studyResults = new ArrayList<>());
     }
+    
     public void setStudyResults(List<DiplomaSupplementStudyResult> studyResults) {
         this.studyResults = studyResults;
     }

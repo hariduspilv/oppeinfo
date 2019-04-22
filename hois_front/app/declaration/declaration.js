@@ -47,7 +47,11 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
     new SubjectEndpoint(subject).$delete().then(function(){
       message.info('declaration.message.subjectRemoved');
       ArrayUtils.remove($scope.declaration.subjects, subject);
-      $scope.loadData();
+      if ($scope.addCurriculumSubjectForm) {
+        $scope.loadData();
+      } else {
+        getExtraCurriculumSubjectsOptions();
+      }
     });
   };
 

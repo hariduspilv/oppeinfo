@@ -50,5 +50,17 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_ANDMEVAHETUS_SAIS]
       }
+    }).when('/rr/logs', {
+      templateUrl: 'logs/logs.view.html',
+      controller: 'LogsController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        logType: function() { return 'rr'; }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RR]
+      }
     });
 }]);

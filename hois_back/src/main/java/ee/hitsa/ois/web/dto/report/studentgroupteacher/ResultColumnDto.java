@@ -5,24 +5,17 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class ResultColumnDto {
 
     private AutocompleteResult journal;
-    private AutocompleteResult module;
     private AutocompleteResult practiceModuleTheme;
     private AutocompleteResult fullPracticeModule;
-    
+    private AutocompleteResult module;
+    private String moduleType;
+
     public AutocompleteResult getJournal() {
         return journal;
     }
-    
+
     public void setJournal(AutocompleteResult journal) {
         this.journal = journal;
-    }
-    
-    public AutocompleteResult getModule() {
-        return module;
-    }
-    
-    public void setModule(AutocompleteResult module) {
-        this.module = module;
     }
 
     public AutocompleteResult getPracticeModuleTheme() {
@@ -40,5 +33,21 @@ public class ResultColumnDto {
     public void setFullPracticeModule(AutocompleteResult fullPracticeModule) {
         this.fullPracticeModule = fullPracticeModule;
     }
-    
+
+    public AutocompleteResult getModule() {
+        return module;
+    }
+
+    public void setModule(AutocompleteResult module) {
+        this.module = module;
+    }
+
+    public String getModuleType() {
+        return moduleType;
+    }
+
+    public void setModuleType(String moduleType) {
+        this.moduleType = moduleType;
+    }
+
 }

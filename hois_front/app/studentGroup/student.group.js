@@ -78,6 +78,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     var baseUrl = '/studentgroups';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM', studyLevel: 'OPPEASTE', status: 'OPPURSTAATUS'});
+    var clSpecMapper = Classifier.valuemapper({code: 'SPETSKUTSE'});
 
     var school = Session.school || {};
     var onlyvocational = !school.higher && school.vocational;
@@ -113,10 +114,18 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
         $scope.formState.isVocational = result.isVocational;
         $scope.formState.studyPeriodInYears = result.studyPeriodInYears;
 
+        $q.all(clSpecMapper.promises).then(function () {
+          clSpecMapper.objectmapper($scope.formState.specialities);
+          $scope.formState.specialities.forEach(function (r) {
+            r.code.validFrom = r.validFrom;
+            r.code.validThru = r.validThru;
+          });
+          $scope.record.speciality = $scope.formState.specialities.find(function(it) { return it.code.code === $scope.formState.speciality; }) !== undefined ? $scope.formState.speciality : null;
+        });
+
         // try to restore values
         $scope.record.language = $scope.formState.languages.indexOf($scope.formState.language) !== -1 ? $scope.formState.language : null;
         $scope.record.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
-        $scope.record.speciality = $scope.formState.specialities.indexOf($scope.formState.speciality) !== -1 ? $scope.formState.speciality : null;
         $scope.record.curriculumVersion = $scope.formState.curriculumVersions.find(function(it) {return it.id === $scope.formState.curriculumVersion;}) !== undefined ? $scope.formState.curriculumVersion : null;
       };
       if(curriculumId) {
@@ -295,6 +304,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     var baseUrl = '/studentgroups';
 
     var clMapper = Classifier.valuemapper({status: 'OPPURSTAATUS'});
+    var clMapperSpec = Classifier.valuemapper({speciality: 'SPETSKUTSE'});
 
     var school = Session.school || {};
     var onlyvocational = !school.higher && school.vocational;
@@ -312,6 +322,16 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
         QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: result.curriculum.id}, function(result) {
           $scope.formState.origStudyLevel = result.origStudyLevel;
           $scope.formState.isVocational = result.isVocational;
+          var spec = result.specialities.find(function (r) {
+            return r.code === (angular.isObject($scope.record.speciality) ? $scope.record.speciality.code : $scope.record.speciality);
+          });
+          $q.all(clMapperSpec.promises).then(function () {
+            clMapperSpec.objectmapper($scope.record);
+            if (spec) {
+              $scope.record.speciality.validFrom = spec.validFrom;
+              $scope.record.speciality.validThru = spec.validThru;
+            }
+          });
         });
       }
       if(result.curriculumVersion) {

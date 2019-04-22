@@ -28,7 +28,7 @@
             <div layout="column" flex="50">
                 <md-input-container flex>
                     <label class="textInput">{{'person.firstname' | translate}}</label>
-                    <input type="text" ng-model="enterprise.firstname" name="firstname" md-maxlength="100" required>
+                    <input type="text" ng-model="enterprise.firstname" name="firstname" md-maxlength="50" required>
                     <div ng-messages="dialogForm.firstname.$error">
                         <div ng-message="md-maxlength">
                             {{'main.messages.error.maxlength' | translate}}
@@ -39,7 +39,7 @@
             <div layout="column" flex="50">
                 <md-input-container flex>
                     <label class="textInput">{{'person.lastname' | translate}}</label>
-                    <input type="text" ng-model="enterprise.lastname" name="lastname" md-maxlength="100" required>
+                    <input type="text" ng-model="enterprise.lastname" name="lastname" md-maxlength="50" required>
                     <div ng-messages="dialogForm.lastname.$error">
                         <div ng-message="md-maxlength">
                             {{'main.messages.error.maxlength' | translate}}

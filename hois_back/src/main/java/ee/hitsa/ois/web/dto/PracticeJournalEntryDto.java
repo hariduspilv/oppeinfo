@@ -13,7 +13,7 @@ public class PracticeJournalEntryDto extends VersionedCommand {
     private Long id;
     private String description;
     private LocalDate practiceDate;
-    private Short hours;
+    private Double hours;
     private String supervisorComment;
     private String teacherComment;
     private Boolean isStudentEntry;
@@ -49,11 +49,11 @@ public class PracticeJournalEntryDto extends VersionedCommand {
         this.practiceDate = practiceDate;
     }
 
-    public Short getHours() {
+    public Double getHours() {
         return hours;
     }
 
-    public void setHours(Short hours) {
+    public void setHours(Double hours) {
         this.hours = hours;
     }
 

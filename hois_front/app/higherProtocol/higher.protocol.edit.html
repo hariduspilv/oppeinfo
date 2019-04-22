@@ -82,7 +82,7 @@
     <br>
     <div>
       <md-button ng-show="formState.canEditProtocol && record.status.code !== 'PROTOKOLL_STAATUS_K'" class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-      <md-button ng-show="formState.canConfirm" class="md-raised md-primary" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+      <hois-button ng-show="formState.canConfirm" class="md-raised md-primary" hb-click="confirm()" hb-label="{{'main.button.confirm' | translate}}" hb-loading hb-promise></hois-button>
       <a href="{{formState.protocolPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
       <a ng-show="record.oisFile" ng-href="{{getUrl(record.oisFile, 'protocol')}}" target="_blank" rel="noopener noreferrer"
         class="md-button md-raised">{{'higherProtocol.downloadSigned' | translate}}</a>

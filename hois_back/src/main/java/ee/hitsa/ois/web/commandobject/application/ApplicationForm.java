@@ -12,6 +12,7 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.StudyPeriodRange;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
@@ -91,6 +92,8 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     @Size(max = 10000)
     private String otherText;
+    
+    private EntityConnectionCommand studentGroup;
 
     private Set<OisFileForm> files;
 
@@ -319,6 +322,14 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setOtherText(String otherText) {
         this.otherText = otherText;
+    }
+
+    public EntityConnectionCommand getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(EntityConnectionCommand studentGroup) {
+        this.studentGroup = studentGroup;
     }
 
     public Set<ApplicationPlannedSubjectDto> getPlannedSubjects() {

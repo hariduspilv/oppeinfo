@@ -104,7 +104,7 @@
       <div>
         <md-button ng-if="formState.canEditProtocol && protocol.status.code !== 'PROTOKOLL_STAATUS_K'" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="formState.canAddDeleteStudents" class="md-raised" ng-click="addProtocolStudents()">{{'moduleProtocol.addStudents' | translate}}</md-button>
-        <md-button ng-if="formState.canConfirm===true" class="md-primary md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <hois-button ng-if="formState.canConfirm===true" class="md-primary md-raised" hb-click="confirm()" hb-label="{{'main.button.confirm' | translate}}" hb-loading hb-promise></hois-button>
         <md-button ng-if="protocol.canBeDeleted" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         <a ng-show="formState.protocolPdfUrl" ng-href="{{formState.protocolPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
         <a ng-show="protocol.oisFile" ng-href="{{getUrl(protocol.oisFile, 'protocol')}}" target="_blank" rel="noopener noreferrer"

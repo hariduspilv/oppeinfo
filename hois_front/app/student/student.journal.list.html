@@ -6,46 +6,45 @@
 
 <div layout-padding>
     <div flex>
-        <hois-collapsable ng-repeat="year in journalsByYears track by $index" ng-click="getStudyYearJournals(year.yearId, year.yearCode)" expanded="year.collapsableOpen">
+        <hois-collapsable ng-repeat="year in journalsByYears track by $index" expanded="year.collapsableOpen" expand-collapse-action="getStudyYearJournals(year.yearId, year.yearCode)">
             <hois-collapsable-header>
                 <span>
                     <hois-classifier-value style="display: inline-block" ng-model="year.yearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
                     <span>{{'student.journal.studyYear' | translate}}</span>
                 </span>
-                <!-- <button ng-click="getStudyYearJournals(year.yearId, year.yearCode)"></button> --> 
             </hois-collapsable-header>
             <md-table-container>
                 <table md-table class="secondary-table">
                     <thead md-head>
                         <tr md-row>
-                            <th md-column>{{'student.journal.journalName' | translate}}</th>
-                            <th md-column>{{'student.journal.grades' | translate}}</th>
+                            <th md-column width="20%">{{'student.journal.journalName' | translate}}</th>
+                            <th md-column width="10%">{{'student.journal.grades' | translate}}</th>
                             <th md-column>{{'student.journal.modules' | translate}}</th>
                             <th md-column>{{auth.higher ? ('student.journal.teachersHigher' | translate) : ('student.journal.teachersVocational' | translate)}}</th>
-                            <th md-column>{{'student.journal.absencesIncudlingWithoutReason' | translate}}</th>
+                            <th md-column width="10%">{{'student.journal.absencesIncudlingWithoutReason' | translate}}</th>
                             <th md-column>{{'student.journal.lateForClass' | translate}}</th>
                             <th md-column></th>
                         </tr>
                     </thead>
                     <tbody md-body>
                         <tr md-row ng-repeat="journal in year.journals | orderBy: 'nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
-                            <td md-cell width="20%"><a ng-click="showJournal(journal)">{{journal.nameEt}}</a></td>
-                            <td md-cell>
+                            <td md-cell><a ng-href="/#/students/journals/{{journal.id}}">{{journal.nameEt}}</a></td>
+                            <td md-cell>    
                                 <span ng-repeat="result in journal.journalEntries | filter : {gradeValue: ''} | orderBy: ['!entryDate', '-entryDate']"
                                 ng-class="{good: result.entryType.code === 'SISSEKANNE_L' && resultIsPostive(result.gradeValue), 
                                 bad: result.entryType.code === 'SISSEKANNE_L' && !resultIsPostive(result.gradeValue),
                                 bold: isTestButNotFinal(result.entryType.code)}">
-                                {{result.gradeValue}} &nbsp
-                                <md-tooltip ng-if="result.gradeValue">
+                                {{result.gradeValue}}
+                                <md-tooltip class="tooltip-multiline" ng-if="result.gradeValue">
                                     {{result.gradeInserted | hoisDate}}
-                                    <span ng-if="result.entryType.code">,&nbsp;</span> {{currentLanguageNameField(result.entryType)}}
-                                    <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
+                                    <span ng-if="result.entryType.code">, {{currentLanguageNameField(result.entryType)}}</span>
+                                    <span ng-if="result.addInfo && !result.isRemark">, {{result.addInfo}}</span>
                                 </md-tooltip>
                             </span>
                             </td>
                             <td md-cell>{{currentLanguageNameField(journal.modules)}}</td>
                             <td md-cell>{{journal.teachers}}</td>
-                            <td md-cell width="20%">
+                            <td md-cell>
                                 <span>{{journal.absences['PUUDUMINE_P'] + journal.absences['PUUDUMINE_V'] + journal.absences['PUUDUMINE_PR']}} /</span>
                                 <span ng-class="{bad: journal.absences['PUUDUMINE_P'] > 0}">{{journal.absences['PUUDUMINE_P']}}</span>
                             </td>

@@ -20,7 +20,6 @@ import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
-import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.service.ApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -46,8 +45,9 @@ public class ApplicationController {
 
     @GetMapping("/{id:\\d+}")
     public ApplicationDto get(HoisUserDetails user, @WithEntity Application application) {
-        if (!UserUtil.canViewStudent(user, application.getStudent())) {
-            throw new ValidationFailedException(String.format("user %s is not allowed to view application %d", user.getUsername(), application.getId()));
+        if (!UserUtil.canViewStudentSpecificData(user, application.getStudent())) {
+            throw new ValidationFailedException(String.format("user %s is not allowed to view application %d",
+                    user.getUsername(), application.getId()));
         }
         return applicationService.get(user, application);
     }
@@ -92,7 +92,7 @@ public class ApplicationController {
     }
 
     @GetMapping("student/{id:\\d+}/applicable")
-    public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(HoisUserDetails user, @WithEntity Student student) {
+    public Map<String, ApplicationApplicableDto> applicableApplicationTypes(HoisUserDetails user, @WithEntity Student student) {
         if(!(UserUtil.isStudent(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
             throw new ValidationFailedException(String.format("user %s is not allowed to view applicable", user.getUsername()));
         }

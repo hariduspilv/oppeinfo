@@ -30,7 +30,7 @@
         <div ng-controller="StudentTimetableViewController">
             <div ng-include="'timetable/timetable.week.view.html'"></div>
         </div>
-        <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
 </div>
   

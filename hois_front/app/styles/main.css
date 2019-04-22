@@ -77,6 +77,14 @@ md-checkbox.md-checked .md-icon {
   }
 }
 
+.responsiveLabel {
+  word-break: break-word;
+  overflow: visible;
+  white-space: initial;
+  color: rgba(0,0,0,0.54);
+  font-size: 13px;
+}
+
 @media (max-width: 600px) {
   .flex-offset-xs-0 {
     margin-left: 0% !important;
@@ -550,9 +558,19 @@ md-toolbar, header {
 	min-height: 64px;
 }
 
-md-dialog md-toolbar{
-	min-height: inherit;
+@media only screen and (max-width: 599px) {
+  md-toolbar, header  {
+    min-height: 32px
+  }
 }
+
+md-toolbar.hois_header h1.md-display-2 {
+  line-height: normal
+}
+
+/* md-dialog md-toolbar{
+	min-height: inherit;
+} */
 
 md-dialog md-toolbar  h2{
 	color:#fff;
@@ -1255,7 +1273,7 @@ fieldset legend.md-title-small {
     font-size:13px;
 	padding-left: 2px;
 	background-image: linear-gradient(to right, rgb(192,192,192) 33%, rgba(255,255,255,0) 0%);
-	background-position: bottom;
+	background-position: center bottom 1px; /* https://stackoverflow.com/a/53788820 Chrome puts (cuts 1px) border line behind displayable block */
 	background-size: 3px 1px;
 	background-repeat: repeat-x;
 	min-height: 20px;
@@ -1746,6 +1764,10 @@ md-grid-tile {
   color: rgb(13,71,161);
 }
 
+.highlighted-nav-item > ._md-nav-button.md-unselected, .highlighted-nav-item {
+  color: red !important;
+}
+
 .shownTimetable {
   color: grey;
   font-weight: 500;
@@ -1852,6 +1874,10 @@ tr.scholarship-bottom-border td {
 
 md-checkbox.md-checked.journal-lesson-absence .md-icon {
   background-color: rgba(13,71,161, 0.87);;
+}
+
+.journal-add-info-input {
+  width: 100%;
 }
 
 .middle-text {
@@ -2336,6 +2362,23 @@ label.ui-btn {
   padding-bottom: 5px;
 }
 
+.journal-remark {
+  color: red;
+}
+
+.journal-mobile-collapsable .hois-collapse {
+  margin-bottom: 1px;
+}
+
+.journal-mobile-table {
+  table-layout: fixed;
+}
+
+.journal-mobile-table > tbody:first-child > tr:nth-child(odd) {
+  font-weight: bold;
+  background: #eee;
+}
+
 .quickUpdateGrade {
   margin-right: 10px;
 }
@@ -2351,12 +2394,6 @@ label.ui-btn {
 
 .quickUpdateAddInfo input {
   margin: 0px;
-}
-
-.entryWithAddInfoTootlip {
-  height: auto;
-  max-width: 400px;
-  white-space: initial;
 }
 
 #tt >  div:nth-child(2)
@@ -2598,6 +2635,11 @@ input[type=number], md-input-container input[type=number] {
   cursor: pointer;
 }
 
+.tooltip-multiline {
+  height: auto;
+  max-width: 400px;
+  white-space: initial;
+}
 
 .date-period-label {
   font-size: 13px;
@@ -2606,4 +2648,8 @@ input[type=number], md-input-container input[type=number] {
 .form-readonly .date-period-label {
   top: -15px;
   position: relative;
+}
+
+md-input-container label:not(.md-no-float):not(.md-container-ignore), md-input-container .md-placeholder {
+  width: 90%;
 }

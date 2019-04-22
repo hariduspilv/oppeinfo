@@ -124,3 +124,9 @@
                            filter-values search-from-connect connect-main-classifier-code="ISCED_SUUN"></hois-classifier-select>
     </md-input-container>
 </div>
+
+<h2>Hois Button</h2>
+<div layout="row">
+    <hois-button class="md-primary md-raised" hb-click="testClick()" hb-loading hb-label="Test"></hois-button>
+    <hois-button class="md-primary md-raised" hb-click="testClickPromise()" hb-promise hb-loading hb-label="Test with Promise"></hois-button>
+</div>

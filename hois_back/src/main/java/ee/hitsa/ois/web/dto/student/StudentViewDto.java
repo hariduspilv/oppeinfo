@@ -36,10 +36,13 @@ public class StudentViewDto extends StudentForm {
     private Boolean userCanAddRepresentative;
     private Boolean userIsSchoolAdmin;
     private Boolean userIsStudentGroupTeacher;
+    private Boolean userCanViewStudentSpecificData;
+    private Boolean userCanUpdateRR;
     private BigDecimal curriculumCredits;
     private BigDecimal credits;
     private BigDecimal kkh;
     private Boolean isCurriculumFulfilled;
+    private Boolean hasRemarksPastSevenDays;
     private List<StudentOccupationCertificateDto> occupationCertificates;
 
     public Long getId() {
@@ -186,6 +189,22 @@ public class StudentViewDto extends StudentForm {
         this.userIsStudentGroupTeacher = userIsStudentGroupTeacher;
     }
 
+    public Boolean getUserCanViewStudentSpecificData() {
+        return userCanViewStudentSpecificData;
+    }
+
+    public void setUserCanViewStudentSpecificData(Boolean userCanViewStudentSpecificData) {
+        this.userCanViewStudentSpecificData = userCanViewStudentSpecificData;
+    }
+    
+    public Boolean getUserCanUpdateRR() {
+        return userCanUpdateRR;
+    }
+
+    public void setUserCanUpdateRR(Boolean userCanUpdateRR) {
+        this.userCanUpdateRR = userCanUpdateRR;
+    }
+
     public BigDecimal getCurriculumCredits() {
         return curriculumCredits;
     }
@@ -216,6 +235,14 @@ public class StudentViewDto extends StudentForm {
 
     public void setIsCurriculumFulfilled(Boolean isCurriculumFulfilled) {
         this.isCurriculumFulfilled = isCurriculumFulfilled;
+    }
+
+    public Boolean getHasRemarksPastSevenDays() {
+        return hasRemarksPastSevenDays;
+    }
+
+    public void setHasRemarksPastSevenDays(Boolean hasRemarksPastSevenDays) {
+        this.hasRemarksPastSevenDays = hasRemarksPastSevenDays;
     }
 
     public List<StudentOccupationCertificateDto> getOccupationCertificates() {

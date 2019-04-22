@@ -110,6 +110,13 @@ function ($scope, QueryUtils, $route, message, Classifier, $location, $rootScope
         return '#/basemodule/' + $scope.baseModuleId + "/view";
     }
 
+    $scope.joinOutcomes = function (arr, seperator) {
+        if (!arr || angular.isUndefined(seperator)) return '';
+        return arr.map(function (r) {
+            return $scope.currentLanguage() === 'en' ? r.outcomeEn : r.outcomeEt
+        }).join(seperator);
+    }
+
     $scope.save = function () {
         if (!validateTheme()) {
             return;

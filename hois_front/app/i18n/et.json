@@ -109,12 +109,16 @@
         },
         "nopermission": "Vajalikud õigused puuduvad",
         "mobileIdSignFailed": "Allkirjastamine ebaõnnestus",
+        "idCardSigningCancelled": "Allkirjastamine katkestatud",
+        "readingIdCardFailed": "Allkirjastamine ebaõnnestus",
         "max": "Maksimaalne väärtus {{max}}",
         "maxlength": "Tekst liiga pikk",
         "min": "Minimaalne väärtus {{min}}",
         "studentExists": "Õppija juba eksisteerib",
         "time": "Vigane kellaaeg",
-        "InvalidEstonianIdCode": "Isikukood ei vasta standardile"
+        "InvalidEstonianIdCode": "Isikukood ei vasta standardile",
+        "step": "Liiga palju kohti peale koma",
+        "hourMin": "Ei vasta formaadile tt:mm"
       },
       "form-has-errors": "Vormil on vigu",
       "record": {
@@ -238,7 +242,8 @@
         "practiceContracts": "Praktikalepingud",
         "practiceEnterprises": "Praktikaettevõtted",
         "practiceEvaluations": "Hindamisvormid",
-        "statistics": "Statistika"
+        "statistics": "Statistika",
+        "studentgroupContracts": "Õpperühma prak. lepingud"
       },
       "scholarships" : {
         "label": "Õppetoetused ja stipendiumid",
@@ -391,7 +396,9 @@
         "studentInfo": "Õppijate andmed",
         "studentGroups": "Õpperühmad",
         "absences": "Puudumistõendid",
-        "groupAbsences": "Puudumised"
+        "groupAbsences": "Puudumised",
+        "resultCard": "Õpitulemuste kaart",
+        "rrChanges": "RR muutuste logi"
       },
       "studentGroup": {
         "label": "Õpperühmad",
@@ -431,6 +438,7 @@
         "examTimes": "Eksamite ajad",
         "absences": "Puudumistõendid",
         "groupAbsences": "Puudumised",
+        "remarks": "Märkused",
         "loads": "Planeeritud koormused",
         "students": "Õppijad",
         "declarations": "Õpingukavad",
@@ -490,7 +498,8 @@
         "saisLogs": "SAISi andmevahetuse logi",
         "studentinfoExport": "Õppijad",
         "teacherinfoExportHigher": "Õppejõud",
-        "teacherinfoExportVocational": "Pedagoogid"
+        "teacherinfoExportVocational": "Pedagoogid",
+        "rrLogs": "RR andmevahetuse logi"
       },
       "declaration": {
         "current": "Õpingukava koostamine",
@@ -560,6 +569,8 @@
       },
       "declaredSubjects": "Hetkel deklareeritud ained",
       "lastResults": "Viimased hinded",
+      "remarks": "Märkused (30p)",
+      "remark": "Märkus",
       "today": "Täna",
       "tomorrow": "Homme",
       "later": "Edaspidi",
@@ -567,7 +578,8 @@
       "gradeInserted": "lisatud",
       "homework": "kodutöö",
       "test": "kontrolltöö"
-    }
+    },
+    "todaysRemarks": "Tänased märkused"
   },
   "academicCalendar": {
     "studyYear": "Õppeaasta",
@@ -754,6 +766,7 @@
     "response": "Väljund",
     "sentDatesRange": "Saatmise kuupäevade vahemik",
     "time": "Saatmise aeg",
+    "idcode": "Isikukood",
     "ekis": {
       "deleteDirective": "Käskkirja kustutamine",
       "enforceContract": "Praktikalepingu kinnitamine",
@@ -780,9 +793,16 @@
         "AllAdmissionsExport": "Konkursid",
         "AllApplicationsExport": "Avaldused"
       }
+    },
+    "rr": {
+      "rr": {
+        "RR434": "RR434 muutused"
+      }
     }
   },
   "student": {
+    "addAll": "Lisa kõik õppijad",
+    "plural": "Õppijad",
     "label": "Õppija",
     "absences": "Puudumistõendid",
     "results": "Õpitulemused",
@@ -796,6 +816,7 @@
     "curriculumVersion": "Õppekava versioon",
     "curriculumSpeciality": "Peaeriala",
     "documents": "Dokumendid",
+    "remarks": "Märkused",
     "email": "E-posti aadress",
     "fin": "Finantseerimise allikas",
     "finSpecific": "Finantseerimise allika täpsustus",
@@ -841,6 +862,7 @@
     "studyEnd": "Õpingute lõpp",
     "studyLevel": "Õppetase",
     "error": {
+      "checkRequired": "Vähemalt üks õppija peab valitud olema",
       "addressRequired": "Aadress on kohustuslik",
       "cannotBeBeforeStudyStart": "Ei saa olla varasem õpingute alustamise kuupäevast: {{studyStart}}"
     },
@@ -897,6 +919,15 @@
       "partOccupation": "Osakutse/spetsialiseerumine",
       "validFrom": "Kehtivuse alguskuupäev",
       "validThru": "Kehtivuse lõppkuupäev"
+    },
+    "remark": {
+      "label": "Märkus",
+      "reason": "Põhjus",
+      "date": "Kuupäev",
+      "addedBy": "Lisaja",
+      "journal": "Päevik",
+      "showMore": "Näita rohkem",
+      "showLess": "Näita vähem"
     },
     "representative": {
       "add": "Lisa uus esindaja",
@@ -996,6 +1027,36 @@
         "supplementPreviewEn": "Akadeemilise õiendi i.k. eelvaade"
       }
     },
+    "resultcard": {
+      "idcode": "Isikukood",
+      "birthdate": "Sünniaeg",
+      "firstname": "Eesnimi",
+
+      "lastname": "Perekonnanimi",
+      "studyStartAndBase": "Õpingute algus ja alus",  
+      "studyEndAndBase": "Õpingute lõpp ja alus",
+      "directiveNr": "käskkiri nr",
+      "curriculumNameAndCode": "Õppekava nimetus ja kood",
+      "curriculumCredits": "Õppekava maht Eesti kutsehariduse arvestuspunktides",
+      "credits": "EKAP",
+      "studyForm": "Õppevorm",
+      "language": "Õppekeel",
+      "diplomaNr": "Lõputunnistuse nr",
+      "supplementNr": "Hinnetelehe nr",
+      "results": "Õpitulemused (moodulite nimetused, mahud ja hindamise tulemused)",
+      "nr": "Jrk nr",
+      "name": "Nimetus",
+      "creditsLoad": "Maht EKAP",
+      "grade": "Hinne",
+      "date": "Kuupäev",
+      "teacherVocational": "Õpetaja",
+      "teacherHigher": "Õppejõud",
+      "examResults": "Kutse- ja/või lõpueksami tulemused",
+      "totalSubjectCredits": "Õppeainete maht kokku",
+      "transferred": "ülekantud",
+      "apel": "arvestatud VÕTAga",
+      "print": "Trüki õpitulemuste kaart"
+    },
     "journal": {
       "journals": "Päevikud",
       "studyYear": "Õppeaasta",
@@ -1010,10 +1071,12 @@
         "date": "Sissekande kp",
         "content": "Sisu",
         "grade": "Hinne",
-        "gradeAddInfo": "Hinde selgitus",
+        "addInfo": "Hinde selgitus",
+        "remark": "Märkus",
         "homework": "Kodutöö",
         "homeworkDuedate": "Kodutöö tähtaeg",
-        "absence": "Puudumine"
+        "absence": "Puudumine",
+        "empty": "Tühi sissekanne"
       },
       "study": {
         "label": "Õppetöö",
@@ -1067,7 +1130,7 @@
     "additionalInfo": "Lisainfo",
     "assessment": "Õppeaine hindamisviis",
     "assessmentDescription": "Hindamisviisi selgitus",
-    "belongsCurriculum": "Aine kuulub õppekavaversiooni",
+    "belongsCurriculum": "Aine kuulub õppekava versiooni",
     "curriculum": "Õppekava",
     "credits": "Õppeaine maht EAP",
     "creditsEap": "Maht EAP",
@@ -2473,7 +2536,7 @@
     "changeLoad": "Muuda õppekoormus",
     "teacher": "Õppejõud",
     "programStatus": "Aineprogrammi staatus",
-    "teacherSpecificLoads": "Õpetaja täpsemad koormused",
+    "teacherSpecificLoads": "Õppejõu täpsemad koormused",
     "loadsDiffer": "Koormused erinevad",
     "subjectTeacherPairTotal": "Aine-õppejõu paar kokku",
     "teacherLoadDiffersFromPair": "NB! õppejõu koormus erineb aõ-paari koormusest",
@@ -2536,6 +2599,7 @@
     "seats": "Kohtade arv"
   },
   "studentGroup": {
+    "active": "Ainult aktiivsed õppijad",
     "label": "Õpperühm",
     "addStudents": "Lisa õppijad",
     "cannotaddstudents": "Õppijaid ei saa lisada kehtetusse õpperühma",
@@ -2627,6 +2691,11 @@
     "newStudyForm": "Uus õppevorm",
     "validCurriculumVersion": "Kehtiv õppekava",
     "newCurriculumVersion": "Uus õppekava",
+    "validCVHigher": "Kehtiv õppekava versioon",
+    "newCVHigher": "Uus õppekava versioon",
+    "validCVVocational": "Kehtiv rakenduskava",
+    "newCVVocational": "Uus rakenduskava",
+    "newStudentGroup": "Uus õpperühm",
     "periodType": "Ajavahemiku liik",
     "academicLeaveStart": "Akad. puhkuse algus",
     "academicLeaveEnd": "Akad. puhkuse lõpp",
@@ -2668,7 +2737,9 @@
       "studentNotActive": "Õppija ei ole aktiivne",
       "studentNotNominalStudy": "Õppija on ületanud nominaal õppeaja",
       "studentNotOnAcademicLeave": "Õppija ei ole akadeemilisel puhkusel",
-      "noValidAcademicLeaveApplicationFound": "Õpilasel ei ole ühtegi kehtivat akadeemilise puhkuse avaldust"
+      "noValidAcademicLeaveApplicationFound": "Õpilasel ei ole ühtegi kehtivat akadeemilise puhkuse avaldust",
+      "sameCurriculumVersion": "Sama rakenduskava/õppekava versioon ei saa olla",
+      "noConnectionBetweenGroupAndVersion": "Õpperühm ei ole seotud rakenduskava/õppekava versiooniga"
     }
   },
   "reception": {
@@ -2820,7 +2891,8 @@
     "error": {
       "notEnoughForms": "Süsteemis ei ole piisavalt kasutamata blankette",
       "formNotFound": "Blanketti ei eksisteeri või on juba kasutatud: {{nrs}}",
-      "missingEhisCode": "Õppekava HTM kood puudub"
+      "missingEhisCode": "Õppekava HTM kood puudub",
+      "emptyFreeForms": "Puuduvad vabad blanketid"
     }
   },
   "form": {
@@ -2921,7 +2993,8 @@
       "timeClash": "Aeg kattub teise tunniga või on väljaspool ajavahemikku",
       "addForOtherGroups": "Kas lisada aine-õppejõu tund ka teistesse seotud rühmadesse?",
       "displayPeriodLessons": "Kuva perioodi tunnid",
-      "displayLeftOverLessons": "Kuva jääktunnid"
+      "displayLeftOverLessons": "Kuva jääktunnid",
+      "noPeriodLessonTimes": "Perioodile vastavad tundide ajad puuduvad"
     },
     "timetableEvent": {
       "name": "Sündmuse nimetus",
@@ -3041,6 +3114,7 @@
         "absenceValues": "H / P / V / PR",
         "lessonAbsences": "123?",
         "grade": "Hinne",
+        "remark": "Märkus",
         "description": "Selgitus"
       },
       "changingDateAndStartLessonWarning": "Algustunni või kuupäeva muutmisel uuendab süsteem õppija puudumise andmed vastavalt kinnitatud puudumistõenditele!"
@@ -3053,6 +3127,12 @@
       "type": "Liik",
       "informal": "Informaalne õpe",
       "formal": "Formaalne õpe"
+    },
+    "remarks": {
+      "label": "Märkused",
+      "date": "Kuupäev",
+      "addedBy": "Lisaja",
+      "remark": "Märkus"
     },
     "messages": {
       "studentSuccesfullyAdded": "Õppija edukalt lisatud",
@@ -3238,6 +3318,7 @@
       "idcode": "Isikukood",
       "message": "Teade",
       "name": "Õppija nimi",
+      "nominalStudyExtension": "Nominaalaja pikenemine",
       "percentage": "ÕK täidetus",
       "points": "Ainepunktid",
       "votaConfirmDate": "Õpitulemuse arvestamise kp",
@@ -3309,7 +3390,8 @@
     "acceptLessons": "Olen kindel, et kõik on õige, ja aktsepteerin tõendi",
     "acceptConfirm": "Kas oled kindel, et soovid tõendi aktsepteerida?",
     "rejectConfirm": "Kas oled kindel, et soovid tõendi tagasi lükata?",
-    "youHaveUnacceptedAbsences": "Teil on aktsepteerimata puudumistõendeid.",
+    "youHaveUnacceptedAbsences": "Teil on aktsepteerimata puudumistõendeid",
+    "youHaveTodaysAbsences": "Teie õppijad on täna puudunud",
     "dialog": {
       "reject": {
         "message": "Kas oled kindel, et soovid tõendi tagasi lükata?",
@@ -3322,7 +3404,8 @@
     "studyYear": "Õppeaasta",
     "studentGroup": "Õpperühm",
     "studyWeek": "Õppenädal",
-    "student": "Õppija"
+    "student": "Õppija",
+    "todaysAbsences": "Tänased puudumised"
   },
   "declaration": {
     "myDeclaration": "Minu õpingukava",
@@ -3382,6 +3465,21 @@
       "removeConfirmation": "Kas oled kindel, et soovid õpingukava kinnitamise maha võtta?"
     }
   },
+  "remark": {
+    "label": "Märkus",
+    "studyYear": "Õppeaasta",
+    "student": "Õppija",
+    "reason": "Põhjus",
+    "date": "Kuupäev",
+    "time": "Kellaaeg",
+    "addedBy": "Lisaja",
+    "journal": "Päevik",
+    "studentGroup": "Õpperühm",
+    "showJournalRemarks": "Kuva ka päeviku märkused",
+    "showMore": "Näita rohkem",
+    "showLess": "Näita vähem",
+    "deleteconfirm": "Kas oled kindel, et soovid märkuse kustutada?"
+  },
   "report": {
     "excel": "Excelisse",
     "student": {
@@ -3424,6 +3522,7 @@
       "FINALLIKAS": "Aktiivsete õppijate arv finats. allika kaupa",
       "OPPEVORM": "Aktiivsete õppijate arv õppevormide kaupa",
       "OPPURSTAATUS": "Aktiivsete õppijate arv staatuste kaupa",
+      "merCode": "HTM kood",
       "curriculum": "Õppekava",
       "result": "Statistika liik",
       "total": "Õppijate arv kokku"
@@ -3432,6 +3531,7 @@
       "OPPURSTAATUS_A": "Akadeemilisele puhkusele läinud",
       "OPPURSTAATUS_K": "Eksmatrikuleeritud",
       "OPPURSTAATUS_L": "Lõpetanud",
+      "merCode": "HTM kood",
       "curriculum": "Õppekava",
       "finished": "Lõpetanud õppijate arv",
       "isCumLaude": "sh cum laude",
@@ -3476,20 +3576,34 @@
       "moduleGrade": "Mooduli hinne",
       "absencesPerJournals": "Kuvada puudumised päevikute lõikes",
       "journalsWithEntries": "Kuvada sissekannetega päevikud",
+      "negativeResults": "Negatiivsed tulemused",
+      "averageGrade": "Keskmine hinne",
+      "showWeightedAverageGrade": "Kuvada KKH",
+      "weightedAverageGrade": "KKH",
+      "showOnlyModuleGrades": "Kuvada ainult moodulite hinded",
       "printPdf": "Trüki pdf",
       "printXls": "Excelisse",
+      "printNegativeResultsPdf": "Neg. hinded (pdf)",
+      "printNegativeResultsXls": "Neg. hinded (Excel)",
       "studentName": "Õppija nimi",
       "wholePracticeModule": "Praktika moodul",
       "journal": "Päevik",
-      "teacherHigher": "Õppejõud",
-      "teacherVocational": "Õpetaja",
+      "reason": "Põhjus",
+      "remarks": "Märkused",
+      "remark": "Märkus",
+      "showMore": "Näita rohkem",
+      "showLess": "Näita vähem",
       "date": "Kuupäev",
-      "entry": "Sissekanne",
-      "addInfo": "Selgitus",
+      "addedBy": "Lisaja",
+      "studentAverageGrade": "Õppijate keskmine hinne",
+      "journalEntryLessons": "Sissekantud tundide arv kokku",
       "totalAbsences": "Puudumisi kokku",
+      "totalAbsencesPercentage": "Puudumise %",
       "withoutReasonAbsences": "Põhjuseta puudumisi",
       "withReasonAbsences": "Vabandatavaid puudumisi",
       "beingLate": "Hilinemisi",
+      "moreParameters": "Veel valikuid +",
+      "lessParameters": "Vähem valikuid -",
       "error": {
         "studyYearOrEntriesFromRequired": "Täidetud peab olema vähemalt üks väljadest \"Õppeaasta\" või \"Sissekanded alates\""
       }
@@ -3524,6 +3638,14 @@
     }
   },
   "contract": {
+    "copy": "Kopeeri andmed lepingule",
+    "select": "Lepingu andmete kopeerimine",
+    "useContractData": "Kasuta olemasoleva lepingu andmeid",
+    "addNewSupervisor": "Lisa uus juhendaja",
+    "atleastOne": "Vähemalt 1 leping peab olema valitud",
+    "addToSeveral": "Lisa praktikalepingud mitmele",
+    "addToSeveralHeader": "Praktikalepingu lisamine mitmele",
+    "sendToEkis": "Saada koostatud EKISesse",
     "studentEvaluation": "Õppija hindamisvorm",
     "supervisorEvaluation": "Ettevõtte juhendaja hindamisvorm",
     "sendAgain": "Saada uuesti",
@@ -3559,6 +3681,8 @@
     "contactPersonEmail": "Kontaktisiku e-posti aadress ",
     "supervisors": "Ettevõtte juhendajad",
     "supervisorName": "Juhendaja nimi",
+    "supervisorFirstname": "Eesnimi",
+    "supervisorLastname": "Perekonnanimi",
     "supervisorPhone": "Juhendaja telefon",
     "supervisorEmail": "Juhendaja e-posti aadress ",
     "contractCoordinator": "Lepingu menetleja EKISes",
@@ -3569,9 +3693,15 @@
     "vocationalOrHigherContract": "Palun valige, kas soovite lisada kutseõppe või kõrgõppe lepingut?",
     "markPracticeAsAtPractice": "Märgi praktikal viibimised päevikus praktikal viibimiseks (PR)",
     "markPracticeAsExcused": "Märgi praktikal viibimised päevikus vabandatud puudumisteks (V)",
+    "missing": "praktikalepingud puuduvad",
     "cancel": "Tühista leping",
     "cancelInfo": "Tühistamise info",
     "canceledBy": "Tühistaja",
+    "ekisResponse": {
+      "label": "Lepingute EKISesse saatmise tulemus",
+      "success": "Õnnestunud EKISesse saadetud lepingud",
+      "failed": "Ebaõnnestunud EKISesse saadetud lepingud"
+    },
     "button": {
       "vocational": "Kutseõpe",
       "higher": "Kõrgõpe",
@@ -3644,7 +3774,8 @@
     "formalLearnings": {
       "label": "Formaalne õpe",
       "add": "Lisa formaalne õpe",
-      "labelWithSubTitle": "Formaalne õpe (enda või teise õppeasutuse õppeained)",
+      "vocationalSubtitle": "(enda või teise õppeasutuse moodulid)",
+      "higherSubtitle": "(enda või teise õppeasutuse õppeained)",
       "school": "Õppeasutus",
       "schoolNameEt": "Õppeasutuse nimi",
       "schoolNameEn": "Õppeasutuse nimi i.k.",
@@ -3697,7 +3828,8 @@
     "informalLearnings": {
       "label": "Informaalne õpe",
       "add": "Lisa informaalne õpe",
-      "labelWithSubTitle": "Informaalne õpe (töökogemus/täiendkoolitus/muu õppeaine)",
+      "vocationalSubtitle": "(töökogemus/täiendkoolitus/muu moodul)",
+      "higherSubtitle": "(töökogemus/täiendkoolitus/muu õppeaine)",
       "subject": "Õppeaine",
       "code":"Kood",
       "creditsEAP": "Maht EAP",
@@ -3714,7 +3846,8 @@
       "type": "Liik",
       "required": "Kohustuslik",
       "schoolResults": "Õppeasutuse õppesooritused",
-      "otherInformalLearnings": "Töökogemus/täiendkoolitus/muu õppeaine",
+      "vocationalOtherInformalLearnings": "Töökogemus/täiendkoolitus/muu moodul",
+      "higherOtherInformalLearnings": "Töökogemus/täiendkoolitus/muu õppeaine",
       "substitutableModulesThemes": "Asendatavad moodulid/teemad",
       "substitutableSubjects": "Asendatavad ained",
       "outcomes": "Õpiväljundid",
@@ -3804,6 +3937,7 @@
     "lastEnterpriseUpdate": "Viimane uuendus",
     "requests": "Taotluste seaded",
     "schoolGrade": "Hinnang",
+    "changePeriod": "Perioodi muutmine",
     "personsTab": {
       "name": "Nimi",
       "phone": "Kontakttelefon",
@@ -3962,6 +4096,7 @@
     "thresholdPercentage": "Lävendi %"
   },
   "practiceApplication": {
+    "tabLabel": "Taotlused",
     "canApplyForPractice": "Saab praktikale kandideerida",
     "openAdmissions": "Avatud perioodid",
     "passedAdmissions": "Möödunud perioodid",
@@ -3984,6 +4119,12 @@
     "submitThru": "Esitatud kuni",
     "addInfoFromStudent": "Õppija poolt sisestatud lisainfo",
     "applyPeriod": "Kandideerimise ajavahemik",
+    "periods": {
+      "tabLabel": "Taotluse perioodid",
+      "enterpriseName": "Ettevõte nimi",
+      "places": "Kohtade arv",
+      "openedAtTheMoment": "Hetkel avatud"
+    },
     "messages": {
       "applicationSubmitted": "Taotlus on esitatud",
       "applicationAnnulled": "Taotlus on tühistatud",
@@ -4018,6 +4159,8 @@
     }
   },
   "practiceJournal": {
+    "open": "Ava muutmiseks",
+    "canAddEntries": "Päevikut saab täita kuni",
     "moduleAndTheme": "Moodul ja teema",
     "subject": "Õppeaine",
     "practiceStartAndEnd": "Praktika algus ja lõpp",
@@ -4050,6 +4193,7 @@
     "prompt":{
       "fileDeleteConfirm": "Kas oled kindel, et soovid faili kustutada?",
       "confirmConfirm": "Kas oled kindel, et soovid praktikapäeviku kinnitada? Peale kinnitamist õppija enam päevikut täita ei saa.",
+      "confirmOpen": "Kas oled kindel, et soovid praktikapäeviku avada? Peale avamist saab õppija päevikut täita.",
       "isAfterDaysAfterCanEditSave": "Praktikapäevikut ei saa enam muuta, kui praktika lõppkuupäev on varasem, kui tänane kuupäev + 30 päeva. Kas oled kindel, et soovid salvestada?",
       "isAfterDaysAfterCanEditConfirm": "Praktikapäevikut ei saa enam muuta, kui praktika lõppkuupäev on varasem, kui tänane kuupäev + 30 päeva. Kas oled kindel, et soovid kinnitada?"
     },
@@ -4058,6 +4202,7 @@
       "acessNotAllowedJournalStatusIsConfirmed": "Praktikapäevik on juba kinnitatud",
       "acessNotAllowedContractHasEnded": "Praktikalepingu lõpust on möödunud üle 30 päeva",
       "confirmed": "Praktikapäevik edukalt kinnitatud",
+      "opened": "Praktikapäevik edukalt avatud",
       "atleastOneSubjectRequired": "Vähemalt üks õppeaine peab olema lisatud",
       "atleastOneModuleRequired": "Vähemalt üks moodul/teema peab olema lisatud",
       "duplicateModuleTheme": "Mooduli ja teema paar on lisatud mitmekordselt",
@@ -4349,6 +4494,9 @@
       "decisionDate": "Otsuse kuupäev",
       "applications": "Taotlused",
       "myData": "Minu andmed",
+      "grantTerms": "Õppetoetuse tingimused",
+      "scholarshipTerms": "Stipendiumi tingimused",
+      "drGrantTerms": "Doktoranditoetuse tingimused",
       "studentData": "Õppija andmed",
       "studentGroup": "Õpperühm",
       "address": "Elukoht",
@@ -4440,6 +4588,30 @@
       "invalidLastPeriodMark": "Eelmise perioodi keskmine hinne ei vasta tingimustele",
       "invalidCurriculumCompletion": "Õppekava täidetus ei vasta tingimustele",
       "invalidAbsences": "Puudumiste arv ei vasta tingimustele"
+    }
+  },
+  "rr": {
+    "home": {
+      "hasRecentChangeLogs": "RR: õppijate andmed on muutunud"
+    },
+    "student": {
+      "tabLabel": "RR muutused",
+      "student": "Õppija",
+      "studentName": "Õppija nimi",
+      "group": "Õpperühm",
+      "changed": "Muutuse kuupäev",
+      "changedBy": "Muutja nimi",
+      "oldName": "Vana nimi",
+      "newName": "Uus nimi",
+      "oldAddress": "Vana aadress",
+      "newAddress": "Uus aadress",
+      "changeDatesRange": "Muutuse kuupäevade vahemik"
+    },
+    "operations": {
+      "updateStudentData": {
+        "button": "Uuenda andmed RR-st",
+        "success": "Uuendamine õnnestus"
+      }
     }
   },
   "public": {

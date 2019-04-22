@@ -22,9 +22,9 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.service.ehis.EhisDirectiveStudentService;
 import ee.hitsa.ois.service.kutseregister.KutseregisterService;
+import ee.hitsa.ois.service.rr.PopulationRegisterService;
 import ee.hitsa.ois.service.rtip.RtipService;
 import ee.hitsa.ois.util.ClassifierUtil;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 
 /**
@@ -37,8 +37,8 @@ import ee.hitsa.ois.util.EnumUtil;
 public class JobExecutorService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private static final Authentication AUTHENTICATION_JOB = new UsernamePasswordAuthenticationToken("Automatic job", null,
-            Collections.singletonList((GrantedAuthority)(() -> "ROLE_JOB")));
+//    private static final Authentication AUTHENTICATION_JOB = new UsernamePasswordAuthenticationToken("Automatic job", null,
+//            Collections.singletonList((GrantedAuthority)(() -> "ROLE_JOB")));
     private static final Authentication AUTHENTICATION_MSG = new UsernamePasswordAuthenticationToken("Automaatne sõnum", null,
             Collections.singletonList((GrantedAuthority)(() -> "ROLE_JOB")));
 
@@ -58,6 +58,8 @@ public class JobExecutorService {
     private StudentRepresentativeService studentRepresentativeService;
     @Autowired
     private TeacherService teacherService;
+    @Autowired
+    private PopulationRegisterService rrService;
 
     @Value("${hois.jobs.message.representative.days}")
     private Integer representativeMessageDays;
@@ -68,8 +70,8 @@ public class JobExecutorService {
     @Scheduled(cron = "${hois.jobs.contract.cron}")
     public void contractJob() {
         handleJobs(job -> {
-            contractService.endContract(EntityUtil.getId(job.getContract()));
-        }, AUTHENTICATION_JOB, JobType.JOB_PRAKTIKALEPING_KEHTETU);
+            contractService.endContract(job.getContract(), false);
+        }, AUTHENTICATION_MSG, JobType.JOB_PRAKTIKALEPING_KEHTETU);
         
         withAuthentication(() -> {
             teacherService.updateTeacherContractEnd();
@@ -86,11 +88,11 @@ public class JobExecutorService {
             if(ClassifierUtil.oneOf(job.getType(), JobType.JOB_AKAD_KATK, JobType.JOB_AKAD_MINEK)) {
                 jobService.submitEhisSend(job.getDirective(), job.getStudent());
             }
-        }, AUTHENTICATION_JOB, JobType.JOB_AKAD_KATK, JobType.JOB_AKAD_MINEK, JobType.JOB_AKAD_TULEK, JobType.JOB_VALIS_MINEK, JobType.JOB_VALIS_TULEK);
+        }, AUTHENTICATION_MSG, JobType.JOB_AKAD_KATK, JobType.JOB_AKAD_MINEK, JobType.JOB_AKAD_TULEK, JobType.JOB_VALIS_MINEK, JobType.JOB_VALIS_TULEK);
 
         handleJobs(job -> {
             directiveConfirmService.sendAcademicLeaveEndingMessage(job);
-        }, AUTHENTICATION_JOB, JobType.JOB_AKAD_LOPP_TEADE);
+        }, AUTHENTICATION_MSG, JobType.JOB_AKAD_LOPP_TEADE);
     }
 
     /**
@@ -135,6 +137,16 @@ public class JobExecutorService {
         withAuthentication(() -> {
             LocalDate yesterday = LocalDate.now().minusDays(1);
             kutseregisterService.muutunudKutsestandardid(yesterday);
+        }, AUTHENTICATION_MSG);
+    }
+
+    /**
+     * Automatic task to refresh data from Rahvastikuregister
+     */
+    @Scheduled(cron = "${hois.jobs.rr.cron}")
+    public void syncPopulationRegister() {
+        withAuthentication(() -> {
+            rrService.updateAcitveUsers();
         }, AUTHENTICATION_MSG);
     }
 

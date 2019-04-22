@@ -145,7 +145,7 @@ public class StudentResultHigherService {
             subject.setCode(resultAsString(r, 4));
             subject.setCredits(resultAsDecimal(r, 5));
             dto.setSubject(subject);
-            
+
             Long moduleId = resultAsLong(r, 6);
             dto.setHigherModule(moduleId != null ? StudentHigherSubjectResultDto.getHigherModuleDto(em.getReference(CurriculumVersionHigherModule.class, moduleId)): null);
             dto.setIsExtraCurriculum(Boolean.TRUE);

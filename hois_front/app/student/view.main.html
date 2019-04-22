@@ -1,6 +1,6 @@
 <div ng-cloak>
   <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
-  <div ng-if="!student || student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+  <div ng-if="student && student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
 </div>
 
 <div layout-padding ng-cloak class="form-readonly">
@@ -336,6 +336,8 @@
 
     <md-button ng-href="#/students/{{student.id}}/edit" ng-if="student.userCanEditStudent"
       class="md-primary md-raised">{{'main.button.change' | translate}}</md-button>
-    <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-click="updatePersonData() && student.person.idcode" ng-if="student.userCanUpdateRR"
+      class="md-raised">{{'rr.operations.updateStudentData.button' | translate}}</md-button>
+    <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

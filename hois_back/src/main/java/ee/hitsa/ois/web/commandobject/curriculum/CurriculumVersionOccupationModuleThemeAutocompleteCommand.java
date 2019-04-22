@@ -1,11 +1,11 @@
 package ee.hitsa.ois.web.commandobject.curriculum;
 
-import ee.hitsa.ois.validation.Required;
+import java.util.List;
 
 public class CurriculumVersionOccupationModuleThemeAutocompleteCommand {
 
-    @Required
     private Long curriculumVersionOmoduleId;
+    private List<Long> curriculumVersionOmoduleIds;
     private Boolean closedCurriculumVersionModules;
     private Boolean addStudyYearToName;
     private Boolean existInOtherJournals;
@@ -18,6 +18,14 @@ public class CurriculumVersionOccupationModuleThemeAutocompleteCommand {
 
     public void setCurriculumVersionOmoduleId(Long curriculumVersionOmoduleId) {
         this.curriculumVersionOmoduleId = curriculumVersionOmoduleId;
+    }
+
+    public List<Long> getCurriculumVersionOmoduleIds() {
+        return curriculumVersionOmoduleIds;
+    }
+
+    public void setCurriculumVersionOmoduleIds(List<Long> curriculumVersionOmoduleIds) {
+        this.curriculumVersionOmoduleIds = curriculumVersionOmoduleIds;
     }
 
     public Boolean getClosedCurriculumVersionModules() {

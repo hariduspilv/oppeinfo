@@ -53,6 +53,7 @@ public enum MainClassCode {
     LOPUBLANKETT_STAATUS,
     LOPUDOK_STAATUS,
     MAHT,
+    MARKUS,
     OIGUS,
     OPPEAASTA,
     OPPEASTE,

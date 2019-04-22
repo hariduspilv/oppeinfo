@@ -200,11 +200,12 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
       }
     };
   }
-]).controller('TimetableViewController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier',
-  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier) {
+]).controller('TimetableViewController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', "USER_ROLES", "AuthService",
+  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, USER_ROLES, AuthService) {
     $scope.timetableId = $route.current.params.id;
     $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
     var clMapper = Classifier.valuemapper({curriculumStudyLevelCode: 'OPPEASTE'});
+    $scope.canConfirm = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_K_TEEMAOIGUS_TUNNIPLAAN);
     QueryUtils.endpoint('/timetables/:id/view').search({id: $scope.timetableId}, function (result) {
       clMapper.objectmapper(result.curriculums);
       $scope.timetable = result;

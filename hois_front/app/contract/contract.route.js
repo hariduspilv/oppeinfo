@@ -32,6 +32,32 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LEPING]
         }
       })
+      .when('/contracts/:studentId/new', {
+        templateUrl: 'contract/contract.edit.html',
+        controller: 'ContractEditController',
+        controllerAs: 'contractEditController',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          isCreate: function (){return true;}
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LEPING]
+        }
+      })
+      .when('/contracts/new/:studentGroupId', {
+        templateUrl: 'contract/contract.edit.html',
+        controller: 'ContractEditController',
+        controllerAs: 'contractEditController',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          isCreate: function (){return true;}
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LEPING]
+        }
+      })
       .when('/contracts/:id/edit', {
         templateUrl: 'contract/contract.edit.html',
         controller: 'ContractEditController',

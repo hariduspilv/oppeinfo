@@ -15,6 +15,7 @@ public class StudentStatisticsDto implements Translatable {
     private final Long id;
     private final String nameEt;
     private final String nameEn;
+    private final String merCode;
     private final Map<String, Long> result;
     private final Set<String> resultFilter;
 
@@ -22,6 +23,7 @@ public class StudentStatisticsDto implements Translatable {
         this.id = resultAsLong(record, 0);
         this.nameEt = resultAsString(record, 1);
         this.nameEn = resultAsString(record, 2);
+        this.merCode = resultAsString(record, 3);
         this.result = new HashMap<>();
         this.resultFilter = new HashSet<>();
     }
@@ -33,6 +35,14 @@ public class StudentStatisticsDto implements Translatable {
     @Override
     public String getNameEt() {
         return nameEt;
+    }
+
+    public Set<String> getResultFilter() {
+        return resultFilter;
+    }
+
+    public String getMerCode() {
+        return merCode;
     }
 
     @Override
@@ -48,7 +58,4 @@ public class StudentStatisticsDto implements Translatable {
         return result.entrySet().stream().filter(r -> !resultFilter.contains(r.getKey())).mapToLong(r -> r.getValue().longValue()).sum();
     }
 
-    public Set<String> getResultFilter() {
-        return resultFilter;
-    }
 }

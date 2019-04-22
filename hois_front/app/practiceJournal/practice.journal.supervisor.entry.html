@@ -3,6 +3,14 @@
     <form name="practiceJournalEntryForm" ng-submit="practiceJournalEntryForm.$valid && save()" novalidate layout="column">
       <div class="form-readonly" layout="column">
         <br>
+        <div layout="row">
+          <div md-colors="{color: 'orange'}">
+            <md-icon md-colors="{color: 'orange'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'practiceJournal.canAddEntries' | translate}}
+              {{practiceJournal.endDateDisplay | hoisDate}}</span>
+          </div>
+        </div>
+        <br>
         <div layout="row" flex>
           <md-input-container class="label-only" flex>
             <label>{{'student.label' | translate}}</label>
@@ -107,8 +115,8 @@
               </tbody>
             </table>
           </md-table-container>
-        </div>
-      </fieldset>
+        </fieldset>
+      </div>
 
       <br>
 
@@ -122,6 +130,7 @@
                   <th md-column>{{'practiceJournal.practiceJournalEntry.practiceDate' | translate}}</th>
                   <th md-column>{{'practiceJournal.practiceJournalEntry.description' | translate}}</th>
                   <th md-column>{{'practiceJournal.practiceJournalEntry.astroHours' | translate}}</th>
+                  <th md-column>{{'practiceJournal.acadHours' | translate}}</th>
                   <th md-column>{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}</th>
                   <th md-column>{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}</th>
                 </tr>
@@ -140,7 +149,12 @@
                   </td>
                   <td md-cell>
                     <div>
-                      <hois-value value="row.hours"></hois-value>
+                      <hois-value value="row.astroHours"></hois-value>
+                    </div>
+                  </td>
+                  <td md-cell>
+                    <div>
+                      <hois-value value="row.acadHours"></hois-value>
                     </div>
                   </td>
                   <td md-cell>
@@ -153,6 +167,24 @@
                       <hois-value value="row.teacherComment"></hois-value>
                     </div>
                   </td>
+                </tr>
+                <tr ng-if="practiceJournal.practiceJournalEntries && practiceJournal.practiceJournalEntries.length !== 0" md-row ng-class-odd="'odd'" ng-class-even="'even'" flex>
+                  <td md-cell></td>
+                  <td md-cell>
+                      <label style="font-weight: 700">{{'main.sum' | translate}}</label>
+                  </td>
+                  <td md-cell>
+                    <md-input-container>
+                      <hois-value style="font-weight: 700" value="totalAstro"></hois-value>
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                      <md-input-container>
+                        <hois-value style="font-weight: 700" value="totalAcad"></hois-value>
+                      </md-input-container>
+                  </td>
+                  <td md-cell></td>
+                  <td md-cell></td>
                 </tr>
               </tbody>
             </table>
@@ -281,25 +313,25 @@
           <fieldset>
             <div ng-repeat="eval in practiceJournal.studentPracticeEvalCriteria track by $index" layout="column">
     
-              <label style="font-size: 14px; padding-bottom: 10px;">{{eval.nameEt}}</label>
+              <label style="font-size: 14px;">{{eval.nameEt}}</label>
     
-              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="row">
-              <md-input-container flex>
-                <label>{{eval.addInfo}}</label>
-                <hois-value value="eval.valueTxt"></hois-value>
-              </md-input-container>
+              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="column">
+                <label class="responsiveLabel">{{eval.addInfo}}</label>
+                <md-input-container flex>
+                  <hois-value value="eval.valueTxt"></hois-value>
+                </md-input-container>
               </div>
     
-              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="row">
-                <md-input-container flex="25">
-                  <label>{{eval.addInfo}}</label>
+              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="column">
+                <label class="responsiveLabel">{{eval.addInfo}}</label>
+                <md-input-container flex="100">
                   <hois-value value="eval.valueNr"></hois-value>
                 </md-input-container>
               </div>
     
-              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="row">
-                <md-input-container flex="25">
-                  <label>{{eval.addInfo}}</label>
+              <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
+                <label class="responsiveLabel">{{eval.addInfo}}</label>
+                <md-input-container flex="100">
                   <hois-value value="practiceJournal.isHigher && auth.school.letterGrades ? getGrade(eval.valueClf).value2 : getGrade(eval.valueClf).value"></hois-value>
                 </md-input-container>
               </div>
@@ -314,22 +346,22 @@
     
                 <label style="font-size: 14px;">{{eval.nameEt}}</label>
       
-                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="row">
-                <md-input-container flex>
-                  <label>{{eval.addInfo}}</label>
-                  <input ng-model="eval.valueTxt" name="superEval[{{$index}}]" type="text" md-maxlength="4000">
-                  <div ng-messages="practiceJournalEntryForm['superEval['+$index+']'].$error" ng-show="practiceJournalEntryForm['superEval['+$index+']'].$dirty">
-                    <div ng-message="md-maxlength">
-                      {{'main.messages.error.maxlength' | translate}}
+                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="column">
+                  <label class="responsiveLabel">{{eval.addInfo}}</label>
+                  <md-input-container flex>
+                    <textarea aria-label="{{eval.nameEt}}" ng-model="eval.valueTxt" name="superEval[{{$index}}]" type="text" md-maxlength="4000" max-rows="5"></textarea>
+                    <div ng-messages="practiceJournalEntryForm['superEval['+$index+']'].$error" ng-show="practiceJournalEntryForm['superEval['+$index+']'].$dirty">
+                      <div ng-message="md-maxlength">
+                        {{'main.messages.error.maxlength' | translate}}
+                      </div>
                     </div>
-                  </div>
-                </md-input-container>
+                  </md-input-container>
                 </div>
       
-                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="row">
-                  <md-input-container flex="25">
-                    <label>{{eval.addInfo}}</label>
-                    <input ng-model="eval.valueNr" name="superEval[{{$index}}]" type="text" pattern="^\d+$" md-maxlength="19">
+                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="column">
+                  <label class="responsiveLabel">{{eval.addInfo}}</label>
+                  <md-input-container flex="100">
+                    <input aria-label="{{eval.nameEt}}" ng-model="eval.valueNr" name="superEval[{{$index}}]" type="text" pattern="^\d+$" md-maxlength="19">
                     <div ng-messages="practiceJournalEntryForm['superEval['+$index+']'].$error" ng-show="practiceJournalEntryForm['superEval['+$index+']'].$dirty">
                       <div ng-message="pattern">
                         {{'main.messages.error.integer' | translate}}
@@ -338,11 +370,11 @@
                   </md-input-container>
                 </div>
       
-                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="row">
-                  <md-input-container flex="25">
-                    <label>{{eval.addInfo}}</label>
-                    <hois-select ng-model="eval.valueClf" values="grades" value-property="code"
-                          show-property="{{auth.school.letterGrades && practiceJournal.isHigher ? 'value2' : 'value'}}" aria-label="grade"></hois-select>
+                <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
+                  <label class="responsiveLabel">{{eval.addInfo}}</label>
+                  <md-input-container flex="100">
+                    <hois-select aria-label="{{eval.nameEt}}" ng-model="eval.valueClf" values="grades" value-property="code"
+                          show-property="{{auth.school.letterGrades && practiceJournal.isHigher ? 'value2' : 'value'}}"></hois-select>
                   </md-input-container>
                 </div>
               </div>
@@ -359,9 +391,9 @@
 
     <div flex>
       <hois-collapsable label="('contract.practicePlan' | translate)" expanded="false">
-        <div>
+        <p class="practice-plan">
           {{practiceJournal.contract.practicePlan}}
-        </div>
+        </p>
       </hois-collapsable>
     </div>
   </div>

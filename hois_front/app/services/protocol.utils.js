@@ -4,7 +4,7 @@ angular.module('hitsaOis')
   .factory('ProtocolUtils', function ($mdDialog, $timeout, $rootScope, $window, QueryUtils, config, message) {
     var protocolUtils = {};
 
-    protocolUtils.signBeforeConfirm = function (endpoint, data, confirmMessage, callback) {
+    protocolUtils.signBeforeConfirm = function (endpoint, data, confirmMessage, callback, failCallback) {
       $window.hwcrypto.getCertificate({ lang: 'en' }).then(function (certificate) {
         data.certificate = certificate.hex;
         QueryUtils.endpoint(endpoint + '/signToConfirm').save(data, function (result) {
@@ -15,6 +15,10 @@ angular.module('hitsaOis')
             }, function (result) {
               message.info(confirmMessage);
               callback(result);
+            }, function (reason) {
+              if (angular.isFunction(failCallback)) {
+                failCallback(reason);
+              }
             });
           });
         });
@@ -25,10 +29,13 @@ angular.module('hitsaOis')
         } else {
           message.error('main.messages.error.readingIdCardFailed');
         }
+        if (angular.isFunction(failCallback)) {
+          failCallback(reason);
+        }
       });
     };
 
-    protocolUtils.mobileSignBeforeConfirm = function (endpoint, data, confirmMessage, callback) {
+    protocolUtils.mobileSignBeforeConfirm = function (endpoint, data, confirmMessage, callback, failCallback) {
       QueryUtils.endpoint(endpoint + '/mobileSignToConfirm').save(data, function (result) {
         if (result.challengeID) {
           $rootScope.signVersion = result.version;
@@ -41,14 +48,17 @@ angular.module('hitsaOis')
             clickOutsideToClose: false
           });
           $rootScope.mobileIdPolls = 0;
-          $timeout(pollMobileSignStatus(endpoint, confirmMessage, callback), config.mobileIdInitialDelay);
+          $timeout(pollMobileSignStatus(endpoint, confirmMessage, callback, failCallback), config.mobileIdInitialDelay);
         } else {
           message.error('main.messages.error.mobileIdSignFailed');
+          if (angular.isFunction(failCallback)) {
+            failCallback(reason);
+          }
         }
       });
     };
 
-    function pollMobileSignStatus(endpoint, confirmMessage, callback) {
+    function pollMobileSignStatus(endpoint, confirmMessage, callback, failCallback) {
       QueryUtils.endpoint(endpoint + '/mobileSignStatus').get(
         function (response) {
           if (response.status === 'SIGNATURE') {
@@ -58,6 +68,10 @@ angular.module('hitsaOis')
             }, function (result) {
               message.info(confirmMessage);
               callback(result);
+            }, function (reason) {
+              if (angular.isFunction(failCallback)) {
+                failCallback(reason);
+              }
             });
           } else if (response.status === 'OUTSTANDING_TRANSACTION') {
             $rootScope.mobileIdPolls++;
@@ -69,6 +83,9 @@ angular.module('hitsaOis')
           } else {
             $mdDialog.hide();
             message.error('main.messages.error.mobileIdSignFailed');
+            if (angular.isFunction(failCallback)) {
+              failCallback(reason);
+            }
           }
         }
       );

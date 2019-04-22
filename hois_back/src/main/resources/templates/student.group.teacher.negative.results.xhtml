@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>{{ "studentgroupteacher.title" | translate }}</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+      {% include "student.group.teacher.negative.results.css" %}
+    </style>
+  </head>
+
+  <body>
+    <table>
+      <p class="reporttablesubheader">{{ content.studentGroup }}</p>
+      {% for student in content.students %}
+        <p class="reporttablesubheader">{{ student.firstname }} {{ student.lastname }}</p>
+        {% for journal in student.journals %}
+          <p class="journalName">{{ journal.name }}</p>
+          {% for result in journal.results %}
+          <table class="journalResults">
+            <tbody>
+              <tr>
+                <td width="15%">{{ result.grade }} ({{ result.entryType }})</td>
+                <td width="15%">{{ result.gradeInserted | hoisDate }}</td>
+                <td width="70%">{{ result.gradeInsertedBy }}</td>
+              </tr>
+            </tbody>
+          </table>
+          {% endfor %}
+        {% endfor %}
+      {% endfor %}
+    </table>
+  </body>
+</html>

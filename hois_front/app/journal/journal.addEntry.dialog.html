@@ -102,6 +102,7 @@
                     <th md-column><span>{{'journal.entry.student.absenceValues' | translate}}</span></th>
                     <th md-column><span>{{'journal.entry.student.grade' | translate}}</span></th>
                     <th md-column><span>{{'journal.entry.student.description' | translate}}</span></th>
+                    <th md-column><span>{{'journal.entry.student.remark' | translate}}</span></th>
                   </tr>
                 </thead>
                 <tbody md-body>
@@ -198,10 +199,13 @@
                       </span>
                     </td>
                     <td md-cell>
-                      <md-input-container>
-                        <input type="text" ng-model="journalEntryStudents[row.id].addInfo" md-maxlength="1000"
-                          ng-change="journalEntryStudentChanged(row)" aria-label="additional info" ng-disabled="!row.canEdit">
+                      <md-input-container class="journal-add-info-input">
+                        <input type="text" ng-model="journalEntryStudents[row.id].addInfo" md-maxlength="1000" ng-change="journalEntryStudentChanged(row)" 
+                        ng-required="journalEntryStudents[row.id].isRemark" aria-label="additional info" ng-disabled="!row.canEdit">
                       </md-input-container>
+                    </td>
+                    <td md-cell>
+                      <md-checkbox ng-model="journalEntryStudents[row.id].isRemark" aria-label="remark" ng-disabled="!row.canEdit" ng-change="journalEntryStudentChanged(row)"></md-checkbox>
                     </td>
                   </tr>
                 </tbody>

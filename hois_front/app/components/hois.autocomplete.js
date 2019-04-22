@@ -16,7 +16,7 @@
  * <hois-autocomplete ng-model="criteria.object" ha-attribute="id" ha-controller="directiveControllers" ...></hois-autocomplete>
  */
 angular.module('hitsaOis')
-  .directive('hoisAutocomplete', function ($rootScope, $translate, $q, QueryUtils) {
+  .directive('hoisAutocomplete', function ($rootScope, $translate, $q, QueryUtils, DataUtils) {
 
     return {
       templateUrl: function (elem, attr) {
@@ -83,7 +83,7 @@ angular.module('hitsaOis')
                 lookup.query(query, function (data) {
                   deferred.resolve(data);
                 });
-              } else if(url === '/autocomplete/curriculumversionomodulesandthemes') {
+              } else if(url === '/autocomplete/curriculumversionomodules') {
                 lookup.query(query, function (data) {
                   deferred.resolve(data);
                 });
@@ -145,8 +145,8 @@ angular.module('hitsaOis')
            * We need to cache some results to be able to put some value in ngHolder instead of attribute which is given.
            * Might be neccessary to put into watchers as well for ngModel value.
            */
-          var cached = scope.haSearch();
           if (angular.isDefined(scope.haAttribute)) {
+            var cached = scope.haSearch();
             if (angular.isObject(scope.ngModel) && scope.ngModel.hasOwnProperty(scope.haAttribute)) {
               scope.ngHolder = scope.ngModel;
             } else {
@@ -253,6 +253,9 @@ angular.module('hitsaOis')
               scope.ngHolder = null;
             } else {
               scope.ngHolder = [];
+              if (angular.isDefined(DataUtils.get(scope, '$$childHead.$mdChipsCtrl.autocompleteCtrl.scope.searchText'))) {
+                scope.$$childHead.$mdChipsCtrl.autocompleteCtrl.scope.searchText = null;
+              }
             }
             scope.ngSearchText = null;
           };

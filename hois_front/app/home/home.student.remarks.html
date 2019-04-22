@@ -1,0 +1,18 @@
+<hois-collapsable class="hois-collapse2" expanded="true" ng-if="remarks.length > 0">
+  <hois-collapsable-header>
+    <span>{{'home.student.remarks' | translate}}</span>
+  </hois-collapsable-header>
+  <md-table-container>
+    <table md-table>
+      <tbody md-body>
+        <tr md-row ng-repeat="row in remarks" ng-init="$last && pageLoadingHandler.setFinish('remarks')">
+          <td md-cell width="10%">{{row.remarkDate | hoisDate}} {{row.remarkTime | hoisTime}}</td>
+          <td md-cell width="90%">
+            <span>{{row.remark}}</span>
+            <i>(<span>{{row.remarkInsertedBy}}</span><span ng-if="row.journal"> - {{currentLanguageNameField(row.journal)}}</span>)</i>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
+</hois-collapsable>

@@ -22,6 +22,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.util.Period;
 import ee.hitsa.ois.validation.ApplicationValidation.Akad;
 import ee.hitsa.ois.validation.ApplicationValidation.Akadk;
@@ -31,6 +32,8 @@ import ee.hitsa.ois.validation.ApplicationValidation.Muu;
 import ee.hitsa.ois.validation.ApplicationValidation.Okava;
 import ee.hitsa.ois.validation.ApplicationValidation.Ovorm;
 import ee.hitsa.ois.validation.ApplicationValidation.Valis;
+import ee.hitsa.ois.validation.ApplicationValidation.Overskava;
+import ee.hitsa.ois.validation.ApplicationValidation.Rakkava;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.Required;
@@ -44,16 +47,16 @@ public class Application extends BaseEntityWithId implements Period {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
-    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class, Muu.class})
+    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class, Overskava.class, Rakkava.class, Muu.class})
     private Student student;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class, Muu.class})
+    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class, Overskava.class, Rakkava.class, Muu.class})
     private Classifier status;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
-    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class, Muu.class})
+    @Required(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class, Overskava.class, Rakkava.class, Muu.class})
     private Classifier type;
 
     private LocalDateTime submitted;
@@ -82,11 +85,11 @@ public class Application extends BaseEntityWithId implements Period {
     private Classifier reason;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @Required(groups = {Okava.class})
+    @Required(groups = {Okava.class, Overskava.class, Rakkava.class})
     private CurriculumVersion oldCurriculumVersion;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @Required(groups = {Okava.class})
+    @Required(groups = {Okava.class, Overskava.class, Rakkava.class})
     private CurriculumVersion newCurriculumVersion;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
@@ -145,6 +148,13 @@ public class Application extends BaseEntityWithId implements Period {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @Required(groups = {Akadk.class})
     private Directive directive;
+    
+    /**
+     * Overskava/Rakkava - new student group
+     */
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @Required(groups = {Overskava.class, Rakkava.class})
+    private StudentGroup studentGroup;
 
     @OneToMany
     @JoinColumn(name = "application_id", nullable = false, updatable = false, insertable = false)
@@ -423,6 +433,14 @@ public class Application extends BaseEntityWithId implements Period {
 
     public void setFiles(Set<ApplicationFile> files) {
         this.files = files;
+    }
+
+    public StudentGroup getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(StudentGroup studentGroup) {
+        this.studentGroup = studentGroup;
     }
 
     public Set<ApplicationPlannedSubject> getPlannedSubjects() {

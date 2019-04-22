@@ -11,14 +11,17 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     $scope.studentId = studentId;
     $scope.currentNavItem = 'student.main';
 
-    QueryUtils.endpoint(baseUrl).get({ id: studentId }, function (result) {
-      $scope.student = result;
-      if ($scope.student.photo) {
-        $scope.student.imageUrl = oisFileService.getUrl($scope.student.photo, 'student');
-      } else {
-        $scope.student.imageUrl = '?' + new Date().getTime();
-      }
-    });
+    var loadStudent = function () {
+      QueryUtils.endpoint(baseUrl).get({ id: studentId }, function (result) {
+        $scope.student = result;
+        if ($scope.student.photo) {
+          $scope.student.imageUrl = oisFileService.getUrl($scope.student.photo, 'student');
+        } else {
+          $scope.student.imageUrl = '?' + new Date().getTime();
+        }
+      });
+    }
+    loadStudent();
 
     $scope.representativesCriteria = { order: 'person.lastname', size: 5, page: 1 };
     $scope.representatives = {};
@@ -140,6 +143,17 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     };
 
     $scope.loadForeignstudies();
+
+    $scope.updatePersonData = function () {
+      QueryUtils.loadingWheel($scope, true);
+      QueryUtils.endpoint(baseUrl + "/" + studentId + "/populationRegister").get({}, function() {
+        message.info("rr.operations.updateStudentData.success");
+        QueryUtils.loadingWheel($scope, false);
+        loadStudent();
+      }, function() {
+        QueryUtils.loadingWheel($scope, false);
+      });
+    };
   }
 ]).controller('StudentViewResultsController', ['$route', '$scope', '$localStorage', 'QueryUtils', 'config', 'StudentUtil', 
 function ($route, $scope, $localStorage, QueryUtils, config, StudentUtil) {
@@ -527,7 +541,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     };
 
     QueryUtils.endpoint('/students').get({ id: $scope.studentId }).$promise.then(function (student) {
-      $scope.studentInfo = student;
+      $scope.student = student;
     });
 
     $scope.loadApplications = function () {
@@ -584,7 +598,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
 
     // initially load whole form
     QueryUtils.endpoint('/students/:studentId/documents').search({ studentId: $scope.studentId }, function (result) {
-      $scope.student = result.student;
+
       $q.all(applicationsMapper.promises).then(function () {
         $scope.afterApplicationsLoad(result.applications);
       });
@@ -743,4 +757,36 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       };
 
       $scope.loadAbsences();
+    }]).controller('StudentViewRemarksController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', function ($q, $route, $scope, Classifier, QueryUtils) {
+      $scope.auth = $route.current.locals.auth;
+      $scope.studentId = $route.current.params.id;
+      $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
+      $scope.currentNavItem = 'student.remarks';
+
+      var clMapper = Classifier.valuemapper({ reason: 'MARKUS' });
+      $scope.remarksCriteria = { size: 20, page: 1, order: '-remark_time' };
+
+      $scope.loadRemarks = function () {
+        var query = QueryUtils.getQueryParams($scope.remarksCriteria);
+        QueryUtils.endpoint('/remarks/student/' + $scope.studentId).search(query, $scope.afterLoadData);
+      };
+      
+      $scope.afterLoadData = function(resultData) {
+        $scope.tabledata = {};
+        $scope.tabledata.content = clMapper.objectmapper(resultData.content);
+        $scope.tabledata.totalElements = resultData.totalElements;
+      };
+      
+      $q.all(clMapper.promises).then($scope.loadRemarks);
+
+    }]).controller('StudentViewRRController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', function ($q, $route, $scope, Classifier, QueryUtils) {
+      $scope.auth = $route.current.locals.auth;
+      $scope.studentId = $route.current.params.id;
+      $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
+      $scope.currentNavItem = 'student.rr';
+
+      QueryUtils.createQueryForm($scope, '/logs/rr/changelogs');
+      angular.extend($scope.criteria, {order: '-wrcl.inserted', student: $scope.studentId});
+
+      $scope.loadData();
     }]);

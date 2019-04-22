@@ -10,7 +10,8 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteResult {
-    
+
+    private Long moduleId;
     private BigDecimal credits;
     private Short studyYearNumber;
     private Map<String, Short> capacities = new HashMap<>();
@@ -18,21 +19,31 @@ public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteRe
 
     public CurriculumVersionOccupationModuleThemeResult (CurriculumVersionOccupationModuleTheme cvomt) {
         super(cvomt.getId(), cvomt.getNameEt(), cvomt.getNameEt());
+        moduleId = EntityUtil.getId(cvomt.getModule());
         studyYearNumber = cvomt.getStudyYearNumber();
         for(CurriculumVersionOccupationModuleThemeCapacity cap : cvomt.getCapacities()) {
             capacities.put(EntityUtil.getCode(cap.getCapacityType()), cap.getHours());
         }
     }
 
-    public CurriculumVersionOccupationModuleThemeResult(Long id, String nameEt, String nameEn, BigDecimal credits) {
+    public CurriculumVersionOccupationModuleThemeResult(Long id, String nameEt, String nameEn, BigDecimal credits, Long moduleId) {
         super(id, nameEt, nameEn);
+        this.moduleId = moduleId;
         this.credits = credits;
     }
 
     public CurriculumVersionOccupationModuleThemeResult(Long id, String nameEt, String nameEn, BigDecimal credits,
-            Short studyYearNumber) {
-        this(id, nameEt, nameEn, credits);
+            Short studyYearNumber, Long moduleId) {
+        this(id, nameEt, nameEn, credits, moduleId);
         this.studyYearNumber = studyYearNumber;
+    }
+
+    public Long getModuleId() {
+        return moduleId;
+    }
+
+    public void setModuleId(Long moduleId) {
+        this.moduleId = moduleId;
     }
 
     public Short getStudyYearNumber() {

@@ -61,7 +61,7 @@ public class CertificateController {
     @GetMapping("/{id:\\d+}")
     public CertificateDto get(HoisUserDetails user, @WithEntity Certificate certificate) {
         if(certificate.getStudent() != null) {
-            if(!UserUtil.canViewStudent(user, certificate.getStudent())) {
+            if (!UserUtil.canViewStudentSpecificData(user, certificate.getStudent())) {
                 throw new ValidationFailedException("main.messages.error.nopermission");
             }
         } else {

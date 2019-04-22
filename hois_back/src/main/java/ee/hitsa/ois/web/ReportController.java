@@ -18,6 +18,7 @@ import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.report.studentgroupteacher.NegativeResultsReport;
 import ee.hitsa.ois.report.studentgroupteacher.StudentGroupTeacherReport;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.PdfService;
@@ -172,6 +173,24 @@ public class ReportController {
                 studentGroupTeacherReportService.studentGroupTeacher(criteria), new ClassifierCache(classifierService));
         HttpUtil.pdf(response, criteria.getStudentGroup() + ".pdf",
                 pdfService.generate(StudentGroupTeacherReport.TEMPLATE_NAME, report));
+    }
+
+    @GetMapping("/studentgroupteacher/negativeresults.xls")
+    public void studentGroupTeacherNegativeResultsAsExcel(HoisUserDetails user,
+            @Valid StudentGroupTeacherCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdminOrStudentGroupTeacher(user,
+                em.getReference(StudentGroup.class, criteria.getStudentGroup()));
+        HttpUtil.xls(response, "negative_results.xls",
+                studentGroupTeacherReportService.negativeResultsAsExcel(user, criteria));
+    }
+
+    @GetMapping("/studentgroupteacher/negativeresults.pdf")
+    public void studentGroupTeacherNegativeResultsAsPdf(HoisUserDetails user, @Valid StudentGroupTeacherCommand criteria,
+            HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdminOrStudentGroupTeacher(user, em.getReference(StudentGroup.class, criteria.getStudentGroup()));
+        HttpUtil.pdf(response, criteria.getStudentGroup() + ".pdf",
+                pdfService.generate(NegativeResultsReport.TEMPLATE_NAME, studentGroupTeacherReportService
+                        .negativeResultsAsPdfData(criteria, new ClassifierCache(classifierService))));
     }
 
     @GetMapping("/teachers/detailload/data")

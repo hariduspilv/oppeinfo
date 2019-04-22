@@ -213,6 +213,38 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     $q.all([$scope.studentSubjects.$promise, $scope.studyPeriods.$promise]).then(loadFormDeferred.resolve);
   }
 
+  function applicationOverskava(student, loadFormDeferred) {
+    if (!$scope.application.id) {
+      $scope.application.oldCurriculumVersion = student.curriculumVersion;
+    }
+    $scope.formState = {
+      curriculum: student.curriculum,
+      curriculumVersions: QueryUtils.endpoint("/autocomplete/curriculumversions").query({valid: true, higher: true, curriculumId: student.curriculum, hasGroup: true}, function(result) {
+        $scope.formState.curriculumVersions = result.filter(function (r) {
+          return r.id !== $scope.application.oldCurriculumVersion.id;
+        });
+      }),
+      studentGroups: QueryUtils.endpoint("/autocomplete/studentgroups").query({valid: true, higher: true, curriculumId: student.curriculum, studyForm: student.studyForm})
+    };
+    $q.all($scope.formState.curriculumVersions, $scope.formState.studentGroups).then(loadFormDeferred.resolve);
+  }
+  
+  function applicationRakkava(student, loadFormDeferred) {
+    if (!$scope.application.id) {
+      $scope.application.oldCurriculumVersion = student.curriculumVersion;
+    }
+    $scope.formState = {
+      curriculum: student.curriculum,
+      curriculumVersions: QueryUtils.endpoint("/autocomplete/curriculumversions").query({valid: true, higher: false, curriculumId: student.curriculum, hasGroup: true}, function(result) {
+        $scope.formState.curriculumVersions = result.filter(function (r) {
+          return r.id !== $scope.application.oldCurriculumVersion.id;
+        });
+      }),
+      studentGroups: QueryUtils.endpoint("/autocomplete/studentgroups").query({valid: true, higher: false, curriculumId: student.curriculum, studyForm: student.studyForm})
+    };
+    $q.all($scope.formState.curriculumVersions, $scope.formState.studentGroups).then(loadFormDeferred.resolve);
+  }
+
   function applicationEksmat(loadFormDeferred) {
     loadFormDeferred.resolve();
   }
@@ -223,16 +255,27 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
 
   function loadFormData(type, studentId) {
     var loadFormDeferred = $q.defer();
-    if (type === 'AVALDUS_LIIK_AKAD' || type === 'AVALDUS_LIIK_FINM' || type === 'AVALDUS_LIIK_OVORM' || type === 'AVALDUS_LIIK_OKAVA') {
+    if (['AVALDUS_LIIK_AKAD', 'AVALDUS_LIIK_FINM', 'AVALDUS_LIIK_OVORM', 'AVALDUS_LIIK_OKAVA', 'AVALDUS_LIIK_OVERSKAVA', 'AVALDUS_LIIK_RAKKAVA'].indexOf(type) !== -1) {
       QueryUtils.endpoint('/students').get({ id: studentId }, function (student) {
-        if (type === 'AVALDUS_LIIK_AKAD') {
-          applicationAkad(student, loadFormDeferred);
-        } else if (type === 'AVALDUS_LIIK_FINM') {
-          applicationFinm(student, loadFormDeferred);
-        } else if (type === 'AVALDUS_LIIK_OVORM') {
-          applicationOvorm(student, loadFormDeferred);
-        } else if (type === 'AVALDUS_LIIK_OKAVA') {
-          applicationOkava(student, loadFormDeferred);
+        switch (type) {
+          case 'AVALDUS_LIIK_AKAD':
+            applicationAkad(student, loadFormDeferred);
+            break;
+          case 'AVALDUS_LIIK_FINM':
+            applicationFinm(student, loadFormDeferred);
+            break;
+          case 'AVALDUS_LIIK_OVORM':
+            applicationOvorm(student, loadFormDeferred);
+            break;
+          case 'AVALDUS_LIIK_OKAVA':
+            applicationOkava(student, loadFormDeferred);
+            break;
+          case 'AVALDUS_LIIK_OVERSKAVA':
+            applicationOverskava(student, loadFormDeferred);
+            break;
+          case 'AVALDUS_LIIK_RAKKAVA':
+            applicationRakkava(student, loadFormDeferred);
+            break;
         }
       });
     } else if (type === 'AVALDUS_LIIK_AKADK') {

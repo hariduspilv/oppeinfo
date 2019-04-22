@@ -1,0 +1,9 @@
+<jxb:bindings xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+              xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+              jxb:version="2.1">
+  <jxb:bindings schemaLocation="rahvastikuregister.wsdl#types1">
+      <jxb:bindings node="//xsd:simpleType[@name='dokumendi_tyyp']">
+          <jxb:property name="DokumendiTyyp2"/>
+      </jxb:bindings>
+  </jxb:bindings>
+</jxb:bindings>

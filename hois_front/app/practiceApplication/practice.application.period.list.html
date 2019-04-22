@@ -1,0 +1,70 @@
+<md-nav-bar md-selected-nav-item="currentNavItem">
+    <md-nav-item md-nav-href="#/practice/applications?_menu" name="practice.application">{{'practiceApplication.tabLabel' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/practice/applicationPeriods?_menu" name="practice.application-period">{{'practiceApplication.periods.tabLabel' | translate}}</md-nav-item>
+  </md-nav-bar>
+  <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="45" flex-sm="100" flex-xs="100">
+              <label class="textInput">{{'practiceApplication.periods.enterpriseName' | translate}}</label>
+              <input ng-model="criteria.enterpriseName" name="enterpriseName" type="text" md-maxlength="255">
+            </md-input-container>
+            <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+              <label>{{'main.from' | translate}}</label>
+              <md-datepicker name="from" ng-model="criteria.validFrom" md-max-date="criteria.validThru"></md-datepicker>
+            </md-input-container>
+            <md-input-container flex="25" flex-sm="100" flex-xs="100">
+              <label>{{'main.thru' | translate}}</label>
+              <md-datepicker name="thru" ng-model="criteria.validThru" md-min-date="criteria.validFrom"></md-datepicker>
+            </md-input-container>
+          </div>
+          <div layout="column">
+            <md-input-container>
+              <md-checkbox ng-model="criteria.opened" aria-label="{{'practiceApplication.periods.openedAtTheMoment' | translate}}">
+                {{'practiceApplication.periods.openedAtTheMoment' | translate}}
+              </md-checkbox>
+            </md-input-container>
+          </div>
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          </div>
+        </form>
+      </fieldset>
+    </div>
+  </div>
+  <div layout-padding>
+    <div flex>
+      <md-table-container>
+        <table md-table>
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th md-column md-order-by="e.name">{{'practiceApplication.periods.enterpriseName' | translate}}</th>
+              <th md-column md-order-by="padm.places">{{'practiceApplication.periods.places' | translate}}</th>
+              <th md-column md-order-by="padm.valid_from, padm.valid_thru">{{'practiceApplication.period' | translate}}</th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{row.enterpriseName}}</td>
+              <td md-cell>{{row.places}}</td>
+              <td md-cell>{{row.validFrom | hoisDate}} - {{row.validThru | hoisDate}}</td>
+              <td md-cell>
+                <span>
+                  <md-button md-no-ink class="md-primary change-button" ng-click="edit(row)">{{'main.button.edit' | translate}}</md-button>
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                           md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                           md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+    </div>
+  </div>
+  

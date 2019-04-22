@@ -23,10 +23,12 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.practice.PracticeApplicationForm;
+import ee.hitsa.ois.web.commandobject.practice.PracticeApplicationPeriodsSearchCommand;
 import ee.hitsa.ois.web.commandobject.practice.PracticeApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.practice.PracticeApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.practice.PracticeAdmissionStudentDto;
 import ee.hitsa.ois.web.dto.practice.PracticeApplicationContractDto;
+import ee.hitsa.ois.web.dto.practice.PracticeApplicationPeriodSearchDto;
 import ee.hitsa.ois.web.dto.practice.PracticeApplicationSearchDto;
 
 @RestController
@@ -72,6 +74,12 @@ public class PracticeApplicationController {
             Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
         return practiceApplicationService.applications(user, command, pageable);
+    }
+    
+    @GetMapping("/applicationPeriods")
+    public Page<PracticeApplicationPeriodSearchDto> applicationPeriods(HoisUserDetails user, PracticeApplicationPeriodsSearchCommand cmd, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
+        return practiceApplicationService.applicationPeriods(user, cmd, pageable);
     }
 
     @PostMapping("/reject/{id:\\d+}")

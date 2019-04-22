@@ -2,7 +2,7 @@
     <form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
         <md-toolbar>
         <div class="md-toolbar-tools">
-            <h2 flex>{{'enterprise.admissionTab.addNew' | translate}}</h2>
+            <h2 flex>{{header ? (header | translate) : ('enterprise.admissionTab.addNew' | translate)}}</h2>
             <md-button class="md-icon-button" ng-click="cancel()">
             <md-icon md-font-set="material-icons">close</md-icon>
             </md-button>
@@ -64,7 +64,7 @@
                 <div layout="column" flex="100">
                     <md-input-container flex>
                         <label class="textInput">{{'enterprise.admissionTab.addInfo' | translate}}</label>
-                        <input name="info" ng-model="enterprise.addInfo" md-maxlength="4000" required>
+                        <textarea ng-model="enterprise.addInfo" md-maxlength="4000" max-rows="5" required md-autofocus name="info"></textarea>
                         <div ng-messages="dialogForm.info.$error">
                             <div ng-message="md-maxlength">
                                 {{'main.messages.error.maxlength' | translate}}

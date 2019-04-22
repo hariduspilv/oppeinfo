@@ -1,10 +1,13 @@
 package ee.hitsa.ois.service;
 
+import java.awt.Color;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,6 +16,10 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.jxls.common.AreaListener;
+import org.jxls.common.CellRef;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -44,6 +51,7 @@ import ee.hitsa.ois.web.dto.StudyYearDto;
 import ee.hitsa.ois.web.dto.StudyYearScheduleDto;
 import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
+import ee.hitsa.ois.xls.AbstractColorAreaListener;
 
 @Service
 @Transactional
@@ -59,6 +67,8 @@ public class StudyYearScheduleService {
     private XlsService xlsService;
     @Autowired
     private PdfService pdfService;
+    
+    private static final int PDF_MAX_WEEKS = 16;
 
     public Set<StudyYearScheduleDto> getSet(HoisUserDetails user, StudyYearScheduleDtoContainer schedulesCmd) {
         JpaQueryBuilder<StudyYearSchedule> qb = new JpaQueryBuilder<>(StudyYearSchedule.class, "sys");
@@ -141,18 +151,29 @@ public class StudyYearScheduleService {
     }
 
     public List<StudentGroupSearchDto> getStudentGroups(Long schoolId, Long studentId) {
+        return getStudentGroups(schoolId, studentId, null, null);
+    }
+    
+    public List<StudentGroupSearchDto> getStudentGroups(Long schoolId, Long studentId, LocalDate from, LocalDate thru) {
         List<StudentGroup> data;
         if (studentId != null) {
             data = em.createQuery("select s.studentGroup from Student s where s.id = ?1", StudentGroup.class)
                 .setParameter(1, studentId).getResultList();
+        } else if (from != null && thru != null) {
+            data = em.createQuery("select sg from StudentGroup sg where sg.school.id = ?1"
+                    + " and (sg.validFrom is null or sg.validFrom <= ?3)"
+                    + " and (sg.validThru is null or sg.validThru >= ?2)", StudentGroup.class)
+                .setParameter(1, schoolId).setParameter(2, from).setParameter(3, thru).getResultList();
         } else {
             data = em.createQuery("select sg from StudentGroup sg where sg.school.id = ?1", StudentGroup.class)
-                    .setParameter(1, schoolId).getResultList();
+                .setParameter(1, schoolId).getResultList();
         }
         return StreamUtil.toMappedList(sg -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
             dto.setId(sg.getId());
             dto.setCode(sg.getCode());
+            dto.setValidFrom(sg.getValidFrom());
+            dto.setValidThru(sg.getValidThru());
             dto.setSchoolDepartments(StreamUtil.toMappedList(d -> EntityUtil.getId(d.getSchoolDepartment()), sg.getCurriculum().getDepartments()));
             return dto;
         }, data.stream().filter(sg -> !sg.getCurriculum().getDepartments().isEmpty()));
@@ -176,21 +197,20 @@ public class StudyYearScheduleService {
         return StreamUtil.toMappedList(sp -> {
             ReportStudyPeriod studyPeriodData = new ReportStudyPeriod();
             studyPeriodData.setPeriod(StudyPeriodDto.of(sp));
-            List<Short> weekNrs = sp.getWeekNrs();
-            if (!weekNrs.isEmpty()) {
-                weekNrs.remove(0);
-            }
+            LinkedList<Short> weekNrs = sp.getWeekNrs();
             studyPeriodData.setWeeks(weekNrs);
+            studyPeriodData.setStartWeek(weekNrs.peekFirst());
+            studyPeriodData.setEndWeek(weekNrs.peekLast());
             return studyPeriodData;
         }, data);
     }
     
-    private static List<Integer> getWeeks(StudyYear studyYear) {
-        List<Integer> result = new ArrayList<>();
+    private static LinkedList<Integer> getWeeks(StudyYear studyYear) {
+        LinkedList<Integer> result = new LinkedList<>();
         LocalDate start = studyYear.getStartDate();
         LocalDate end = studyYear.getEndDate();
         int weekNr = 1;
-        while (start.isBefore(end)) {
+        while (start.isBefore(end) || start.isEqual(end)) {
             start = start.plusDays(7).minusDays(start.getDayOfWeek().ordinal());
             result.add(Integer.valueOf(weekNr++));
         }
@@ -209,12 +229,12 @@ public class StudyYearScheduleService {
         ReportTable table = new ReportTable();
         List<ReportStudyPeriod> studyPeriods = getStudyPeriodsWithWeeks(studyYear);
         table.setStudyPeriods(studyPeriods);
-        List<Integer> weeks = getWeeks(studyYear);
+        LinkedList<Integer> weeks = getWeeks(studyYear);
         table.setWeeks(weeks);
         List<SchoolDepartmentResult> departmentList = StreamUtil.toFilteredList(d -> schedulesCmd.getSchoolDepartments().contains(d.getId()), 
                 autocompleteService.schoolDepartments(user.getSchoolId()));
         List<StudentGroupSearchDto> studentGroups = getStudentGroups(user.getSchoolId(), 
-                Boolean.TRUE.equals(schedulesCmd.getShowMine()) ? user.getStudentId() : null);
+                Boolean.TRUE.equals(schedulesCmd.getShowMine()) ? user.getStudentId() : null, studyYear.getStartDate(), studyYear.getEndDate());
         StudyYearScheduleDtoContainer schedulesContainer = new StudyYearScheduleDtoContainer();
         schedulesContainer.setStudyPeriods(StreamUtil.toMappedSet(sp -> sp.getPeriod().getId(), studyPeriods));
         schedulesContainer.setStudentGroups(StreamUtil.toMappedSet(StudentGroupSearchDto::getId, studentGroups));
@@ -245,32 +265,146 @@ public class StudyYearScheduleService {
         ReportTable table = report.getTables().get(0);
         Map<String, Object> data = new HashMap<>();
         data.put("legends", report.getLegends());
+        table.getStudyPeriods().forEach(p -> {
+            if (!p.getWeeks().isEmpty()) {
+                p.getWeeks().remove(0);
+            }
+        });
         data.put("studyPeriods", table.getStudyPeriods());
         data.put("weeks", table.getWeeks());
         data.put("departments", table.getDepartments());
-        return xlsService.generate("studyyearschedule.xlsx", data);
+        List<SimpleEntry<String, AreaListener>> listeners = new ArrayList<>();
+        listeners.add(new SimpleEntry<>("Sheet1!B11:B11", new AbstractColorAreaListener<StudyYearScheduleLegendDto>("schedule") {
+            
+            private Font blackFont;
+            private Font whiteFont;
+
+            @Override
+            protected Color getColor(StudyYearScheduleLegendDto dto) {
+                if (dto == null) {
+                    return Color.WHITE;
+                }
+                return Color.decode(dto.getColor());
+            }
+
+            @Override
+            protected Font getFont(StudyYearScheduleLegendDto dto) {
+                if (blackFont == null) {
+                    blackFont = getWorkbook().createFont();
+                    blackFont.setColor(IndexedColors.BLACK.getIndex());
+                }
+                if (whiteFont == null) {
+                    whiteFont = getWorkbook().createFont();
+                    whiteFont.setColor(IndexedColors.WHITE.getIndex());
+                }
+                if (dto != null && Boolean.TRUE.equals(dto.getBrightText())) {
+                    return whiteFont;
+                }
+                return blackFont;
+            }
+
+            @Override
+            protected boolean styleLocked(CellRef srcCell) {
+                return false;
+            }
+        }));
+        listeners.add(new SimpleEntry<>("Sheet1!A4:D4", new AbstractColorAreaListener<StudyYearScheduleLegendDto>("item") {
+            
+            private Font blackFont;
+            private Font whiteFont;
+
+            @Override
+            protected Color getColor(StudyYearScheduleLegendDto dto) {
+                if (dto == null) {
+                    return Color.WHITE;
+                }
+                return Color.decode(dto.getColor());
+            }
+
+            @Override
+            protected Font getFont(StudyYearScheduleLegendDto dto) {
+                if (blackFont == null) {
+                    blackFont = getWorkbook().createFont();
+                    blackFont.setColor(IndexedColors.BLACK.getIndex());
+                }
+                if (whiteFont == null) {
+                    whiteFont = getWorkbook().createFont();
+                    whiteFont.setColor(IndexedColors.WHITE.getIndex());
+                }
+                if (dto != null && Boolean.TRUE.equals(dto.getBrightText())) {
+                    return whiteFont;
+                }
+                return blackFont;
+            }
+
+            @Override
+            protected boolean styleLocked(CellRef srcCell) {
+                return srcCell.getCol() != 3;
+            }
+        }));
+        return xlsService.generate("studyyearschedule.xlsx", data, listeners);
     }
 
+    /**
+     * Splits table by PDF_MAX_WEEKS weeks for A4 PDF format
+     * Weeks are in the ascending order inside of lists
+     * 
+     * @param user
+     * @param schedulesCmd
+     * @return bytes of file
+     */
     public byte[] studyYearScheduleAsPdf(HoisUserDetails user, StudyYearScheduleForm schedulesCmd) {
         StudyYearScheduleReport report = getReport(user, schedulesCmd);
         ReportTable table = report.getTables().get(0);
-        List<ReportStudyPeriod> studyPeriods = table.getStudyPeriods();
-        int studyPeriodSplit = (studyPeriods.size() + 1) / 2;
-        ReportTable table1 = new ReportTable();
-        ReportTable table2 = new ReportTable();
-        table1.setStudyPeriods(studyPeriods.subList(0, studyPeriodSplit));
-        table2.setStudyPeriods(studyPeriods.subList(studyPeriodSplit, studyPeriods.size()));
+        // Map periods by weeks. Fill empty weeks by next period
+        Map<Integer, ReportStudyPeriod> studyPeriodsByWeek = new HashMap<>();
+        table.getStudyPeriods().forEach(p -> {
+            p.getWeeks().forEach(w -> {
+                Integer it = Integer.valueOf(w.intValue());
+                studyPeriodsByWeek.put(it, p);
+                it = Integer.valueOf(it.intValue() - 1);
+                while (it.intValue() > 0 && !studyPeriodsByWeek.containsKey(it)) {
+                    studyPeriodsByWeek.put(it, p);
+                    it = Integer.valueOf(it.intValue() - 1);
+                }
+            });
+        });
         List<Integer> weeks = table.getWeeks();
-        int weekSplit = 0;
-        for (int i = 0; i < studyPeriodSplit; i++) {
-            ReportStudyPeriod studyPeriod = studyPeriods.get(i);
-            weekSplit += 1 + studyPeriod.getWeeks().size();
+        LinkedList<ReportTable> tables = new LinkedList<>();
+        for (int i = 0; i < weeks.size(); ) {
+            int next = Math.min(i + PDF_MAX_WEEKS, weeks.size() - 1); // next index
+            final int week = weeks.get(i).intValue(); // start week
+            final int nextWeek = weeks.get(next).intValue(); // end week
+            boolean nextRow = next % PDF_MAX_WEEKS == 0; // is end week including or excluding
+            if ((i == next && next > 0) || weeks.isEmpty()) { // break when empty or reached the end
+                break;
+            }
+            ReportTable temp = new ReportTable();
+            temp.setWeeks(weeks.subList(i, nextRow ? next : next + 1));
+            // holds pointers of the real period and copied period (difference in weeks) in current table
+            Map<ReportStudyPeriod, ReportStudyPeriod> iteratedPeriods = new HashMap<>();
+            temp.setStudyPeriods(new ArrayList<>());
+            for (int w = week; w < nextWeek || (!nextRow && w == nextWeek); w++) {
+                if (studyPeriodsByWeek.containsKey(Integer.valueOf(w))) {
+                    ReportStudyPeriod p = studyPeriodsByWeek.get(Integer.valueOf(w));
+                    if (!iteratedPeriods.containsKey(p)) {
+                        ReportStudyPeriod tempPeriod = new ReportStudyPeriod();
+                        tempPeriod.setPeriod(p.getPeriod());
+                        tempPeriod.setWeeks(new ArrayList<>());
+                        iteratedPeriods.put(p, tempPeriod);
+                        temp.getStudyPeriods().add(tempPeriod);
+                    }
+                    iteratedPeriods.get(p).getWeeks().add(Short.valueOf((short) w));
+                }
+            }
+            temp.setDepartments(splitDepartments(table, i, nextRow ? next : next + 1));
+            tables.add(temp);
+            i = next;
+            if (next == 0) { // single element in weeks
+                break;
+            }
         }
-        table1.setWeeks(weeks.subList(0, weekSplit));
-        table2.setWeeks(weeks.subList(weekSplit, weeks.size()));
-        table1.setDepartments(splitDepartments(table, 0, weekSplit));
-        table2.setDepartments(splitDepartments(table, weekSplit, weeks.size()));
-        report.setTables(Arrays.asList(table1, table2));
+        report.setTables(tables);
         return pdfService.generate("studyyearschedule.xhtml", report);
     }
 

@@ -574,12 +574,14 @@ public class ScholarshipService {
         StudentResults results = getStudentResults(term, student);
 
         application.setCredits(results.getCredits());
-        application.setCurriculumCompletion(
-                term.getCurriculumCompletion() == null ? null : results.getCurriculumCompletion());
-        application.setAverageMark(term.getAverageMark() == null ? null : 
-            useSaisPoints(term, student) ? getSaisPoints(student) : results.getAverageMark());
-        application.setLastPeriodMark(term.getLastPeriodMark() == null ? null : results.getLastPeriodMark());
-        application.setAbsences(term.getMaxAbsences() == null ? null : results.getAbsences());
+        application.setCurriculumCompletion(term.getCurriculumCompletion() == null && term.getCurriculumCompletionPriority() == null
+                ? null : results.getCurriculumCompletion());
+        application.setAverageMark(term.getAverageMark() == null && term.getAverageMarkPriority() == null
+                ? null : useSaisPoints(term, student) ? getSaisPoints(student) : results.getAverageMark());
+        application.setLastPeriodMark(term.getLastPeriodMark() == null && term.getLastPeriodMarkPriority() == null
+                ? null : results.getLastPeriodMark());
+        application.setAbsences(term.getMaxAbsences() == null && term.getMaxAbsencesPriority() == null
+                ? null : results.getAbsences());
     }
 
     private StudentResults getHigherResults(Student student) {

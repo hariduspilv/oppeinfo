@@ -55,7 +55,7 @@
 
         <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'studentGroup.speciality' | translate}}</label>
-          <hois-classifier-value ng-model="record.speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
+          <hois-value value="record.speciality ? (record.speciality | hoisValidDates) : record.speciality"></hois-value>
         </md-input-container>
       </div>
 

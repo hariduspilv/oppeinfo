@@ -70,6 +70,8 @@ public class SaisApplication extends BaseEntityWithId {
     private String addressAds;
     @Size(max = 50)
     private String addressAdsOid;
+    @Size(max = 20)
+    private String postcode;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sais_application_id", nullable = false, updatable = false)
     private Set<SaisApplicationGraduatedSchool> graduatedSchools = new HashSet<>();
@@ -270,6 +272,14 @@ public class SaisApplication extends BaseEntityWithId {
 
     public void setAddressAdsOid(String addressAdsOid) {
         this.addressAdsOid = addressAdsOid;
+    }
+
+    public String getPostcode() {
+        return postcode;
+    }
+
+    public void setPostcode(String postcode) {
+        this.postcode = postcode;
     }
 
     public Set<SaisApplicationGraduatedSchool> getGraduatedSchools() {

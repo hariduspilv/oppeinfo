@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('StudentGroupAbsenceController',
-  ['$scope', '$route', 'Classifier', 'DataUtils', 'QueryUtils', 'message', 'stateStorageService', function ($scope, $route, Classifier, DataUtils, QueryUtils, message, stateStorageService) {
+  ['$route', '$scope', '$timeout', 'Classifier', 'DataUtils', 'QueryUtils', 'message', 'stateStorageService', function ($route, $scope, $timeout, Classifier, DataUtils, QueryUtils, message, stateStorageService) {
     $scope.auth = $route.current.locals.auth;
     var baseUrl = '/groupAbsences';
     var schoolId = $route.current.locals.auth.school.id;
@@ -20,7 +20,7 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
         }
       }
     }
-    
+
     $scope.criteria = {};
     $scope.directiveControllers = [];
     $scope.formState = {
@@ -38,7 +38,46 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
       $scope.formState.studyWeeks = studyWeeks;
     };
 
-    if (!('_menu' in $route.current.params)) {
+    $scope.search = function() {
+      $scope.studentGroupAbsenceForm.$setSubmitted();
+      if(!$scope.studentGroupAbsenceForm.$valid) {
+        message.error('main.messages.form-has-errors');
+        return;
+      }
+
+      $scope.criteria.studyWeekStart = $scope.criteria.studyWeek ? $scope.criteria.studyWeek.start : null;
+      $scope.criteria.studyWeekEnd = $scope.criteria.studyWeek ? $scope.criteria.studyWeek.end : null;
+      
+      QueryUtils.loadingWheel($scope, true);
+      QueryUtils.endpoint(baseUrl).get($scope.criteria).$promise.then(function (result) {
+        QueryUtils.loadingWheel($scope, false);
+        $scope.content = result;
+        setJournals(result.journalsByDates);
+        setStudentAbsences(result.studentAbsences);
+        $scope.$broadcast('refreshFixedColumns');
+      });
+      stateStorageService.changeState(schoolId, stateKey, $scope.criteria);
+    };
+  
+    $scope.clearCriteria = function() {
+      $scope.criteria = {};
+      $scope.directiveControllers.forEach(function (c) {
+        c.clear();
+      });
+    };
+
+    function searchTodaysAbsences() {
+      if ($scope.studentGroupAbsenceForm && $scope.studentGroupAbsenceForm.$valid) {
+        $scope.search();
+      } else {
+        $timeout(searchTodaysAbsences);
+      }
+    }
+
+    if (('today' in $route.current.params)) {
+      $scope.criteria.todaysAbsences = true;
+      searchTodaysAbsences();
+    } else if (!('_menu' in $route.current.params)) {
       $scope.storedCriteria = stateStorageService.loadState(schoolId, stateKey);
       angular.extend($scope.criteria, $scope.storedCriteria);
       $scope.studyYearChanged(false);
@@ -72,13 +111,13 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
       var currentDate = new Date();
       var currentTime = currentDate.getTime();
 
+      $scope.criteria.studyWeek = null;
       for (var weekId in $scope.formState.studyWeeks) {
         var week = $scope.formState.studyWeeks[weekId];
         if (currentTime >= new Date(week.start) && currentTime <= new Date(week.end)) {
           $scope.criteria.studyWeek = week;
           break;
         }
-        $scope.criteria.studyWeek = null;
       }
     }
 
@@ -89,34 +128,6 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
     $scope.journalsByDateCount = function (date) {
       var dateString = getDateStringWithoutTime(date);
       return $scope.content.journalsByDates[dateString].length;
-    };
-
-    $scope.search = function() {
-      $scope.studentGroupAbsenceForm.$setSubmitted();
-      if(!$scope.studentGroupAbsenceForm.$valid) {
-        message.error('main.messages.form-has-errors');
-        return;
-      }
-
-      $scope.criteria.studyWeekStart = $scope.criteria.studyWeek.start;
-      $scope.criteria.studyWeekEnd = $scope.criteria.studyWeek.end;
-      
-      QueryUtils.loadingWheel($scope, true);
-      QueryUtils.endpoint(baseUrl).get($scope.criteria).$promise.then(function (result) {
-        QueryUtils.loadingWheel($scope, false);
-        $scope.content = result;
-        setJournals(result.journalsByDates);
-        setStudentAbsences(result.studentAbsences);
-        $scope.$broadcast('refreshFixedColumns');
-      });
-      stateStorageService.changeState(schoolId, stateKey, $scope.criteria);
-    };
-  
-    $scope.clearCriteria = function() {
-      $scope.criteria = {};
-      $scope.directiveControllers.forEach(function (c) {
-        c.clear();
-      });
     };
 
     function setJournals(journalsByDates) {
@@ -160,14 +171,12 @@ angular.module('hitsaOis').controller('StudentGroupAbsenceController',
 
     $scope.absenceChanged = function (absence) {
       QueryUtils.endpoint(baseUrl + '/entry/' + absence.journalStudentEntry).put({
-        studentGroup: $scope.criteria.studentGroup,
         absence: absence.absence
       });
     };
 
     $scope.lessonAbsenceChanged = function (absence) {
       QueryUtils.endpoint(baseUrl + '/lesson/' + absence.journalEntryStudentLessonAbsence).put({
-        studentGroup: $scope.criteria.studentGroup,
         absence: absence.absence
       });
     };

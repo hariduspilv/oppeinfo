@@ -58,33 +58,52 @@
         scope.nextWeekIndex = scope.weeks[shownWeekIndex + 1] ? shownWeekIndex + 1 : null;
     }
 
-    angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'QueryUtils', '$mdDialog', 'Classifier', 'DataUtils',
-        function ($scope, $route, QueryUtils, $mdDialog, Classifier, DataUtils) {
+    angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'QueryUtils', 'Classifier', 'DataUtils', 'stateStorageService',
+        function ($scope, $route, QueryUtils, Classifier, DataUtils, stateStorageService) {
             $scope.currentNavItem = 'journals';
             $scope.auth = $route.current.locals.auth;
             var studentId = $scope.auth.student;
             var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE'});
 
-            QueryUtils.endpoint('/journals/studentJournalStudyYears/').query({studentId: studentId}).$promise.then(function (studyYears) {
-                var currentSy = DataUtils.getCurrentStudyYearOrPeriod(studyYears);
-                var currentSyCode = currentSy ? currentSy.code : null;
-                //DataUtils method sorts studyYears
-                $scope.journalsByYears = getJournalYears(studyYears.reverse(), currentSyCode);
+            var schoolId = $route.current.locals.auth.school.id;
+            var stateKey = 'studentJournal';
+            var state = stateStorageService.loadState(schoolId, stateKey);
 
-                if (currentSy) {
-                    $scope.getStudyYearJournals(currentSy.id, currentSy.code);
+            QueryUtils.endpoint('/journals/studentJournalStudyYears/').query({studentId: studentId}).$promise.then(function (studyYears) {
+                var openedStudyYears = [];
+                if (state.openedStudyYears && state.openedStudyYears.length > 0) {
+                    openedStudyYears = state.openedStudyYears;
+                } else {
+                    var currentSy = DataUtils.getCurrentStudyYearOrPeriod(studyYears);
+                    var currentSyCode = currentSy ? currentSy.code : null;
+                    openedStudyYears.push(currentSyCode);
                 }
+                //DataUtils method sorts studyYears
+                $scope.journalsByYears = getJournalYears(studyYears.reverse(), openedStudyYears);
+                openedStudyYears.forEach(function (syCode) {
+                    var index = getJournalYearIndex(syCode);
+                    if (index !== null) {
+                        $scope.getStudyYearJournals($scope.journalsByYears[index].yearId, syCode, true);
+                    }
+                });
             });
 
-            $scope.getStudyYearJournals = function (syId, syCode) {
-                if ($scope.journalsByYears[getJournalYearIndex(syCode)].journals.length === 0) {
+            $scope.getStudyYearJournals = function (syId, syCode, ignoreCollapseValue) {
+                var journalYearIndex = getJournalYearIndex(syCode);
+                var journalsByYears = $scope.journalsByYears[journalYearIndex];
+                if (!ignoreCollapseValue) {
+                    journalsByYears.collapsableOpen = !journalsByYears.collapsableOpen;
+                }
+                setOpenedStudyYearsState();
+
+                if ($scope.journalsByYears[journalYearIndex].journals.length === 0) {
                     QueryUtils.loadingWheel($scope, true);
                     QueryUtils.endpoint('/journals/studentJournals/').query({studentId: studentId, studyYearId: syId}).$promise.then(function (journals) {
                         journals.forEach(function (journal) {
                             journal.journalEntries.forEach(function (entry) {
                                 clMapper.objectmapper(entry);
                             });
-                            $scope.journalsByYears[getJournalYearIndex(syCode)].journals.push(journal);
+                            $scope.journalsByYears[journalYearIndex].journals.push(journal);
                         });
                         QueryUtils.loadingWheel($scope, false);
                     });
@@ -92,7 +111,7 @@
             };
 
             function getJournalYearIndex(syCode) {
-                for (var i = 0; $scope.journalsByYears.length; i++) {
+                for (var i = 0; i < $scope.journalsByYears.length; i++) {
                     if ($scope.journalsByYears[i].yearCode === syCode) {
                         return i;
                     }
@@ -100,17 +119,27 @@
                 return null;
             }
 
-            function getJournalYears(studyYears, currentSyCode) {
+            function getJournalYears(studyYears, openedStudyYears) {
                 var journalYears = [];
                 for (var i = 0; i < studyYears.length; i++) {
                     journalYears.push({
                         yearId: studyYears[i].id,
                         yearCode: studyYears[i].code,
                         journals: [],
-                        collapsableOpen: studyYears[i].code === currentSyCode ? true : false
+                        collapsableOpen: openedStudyYears.indexOf(studyYears[i].code) !== -1
                     });
                 }
                 return journalYears;
+            }
+
+            function setOpenedStudyYearsState() {
+                var openedStudyYears = [];
+                for (var i = 0; i < $scope.journalsByYears.length; i++) {
+                    if ($scope.journalsByYears[i].collapsableOpen) {
+                        openedStudyYears.push($scope.journalsByYears[i].yearCode);
+                    }
+                }
+                stateStorageService.changeState(schoolId, stateKey, {openedStudyYears: openedStudyYears});
             }
 
             var positiveResults = ['A', '3', '4', '5'];
@@ -121,34 +150,6 @@
             var boldResults = ['SISSEKANNE_E', "SISSEKANNE_I", "SISSEKANNE_H"];
             $scope.isTestButNotFinal = function (entryType) {
                 return boldResults.indexOf(entryType) !== -1;
-            };
-
-            $scope.showJournal = function (journal) {
-                $mdDialog.show({
-                    controller: function ($scope) {
-                        $scope.journalEntryTypeColors = {
-                            'SISSEKANNE_T': 'default-grey-50',
-                            'SISSEKANNE_E': 'default-amber-100',
-                            'SISSEKANNE_I': 'default-lime-100',
-                            'SISSEKANNE_H': 'default-pink-50',
-                            'SISSEKANNE_L': 'default-pink-300',
-                            'SISSEKANNE_O': 'default-light-blue-50',
-                            'SISSEKANNE_P': 'default-teal-100',
-                            'SISSEKANNE_R': 'default-indigo-100'
-                        };
-                        $scope.journalEntryTypes = {};
-                        Classifier.queryForDropdown({ mainClassCode: 'SISSEKANNE' }, function (result) {
-                          $scope.journalEntryTypes = Classifier.toMap(result);
-                        });
-                        $scope.getEntryColor = function (type) {
-                            return $scope.journalEntryTypeColors[type];
-                        };
-                        $scope.journal = journal;
-                        $scope.close = $mdDialog.hide;
-                    },
-                    templateUrl: 'student/student.journal.dialog.html',
-                    clickOutsideToClose: true
-                });
             };
         }
     ]).controller('StudentJournalStudyController', ['$scope', '$route', 'QueryUtils', 
@@ -185,5 +186,43 @@
                 getPreviousAndNextWeek($scope);
             };
         }
-    ]);
+    ]).controller('StudentJournalViewController', ['$mdColors', '$route', '$scope', 'Classifier', 'QueryUtils', function ($mdColors, $route, $scope, Classifier, QueryUtils) {
+        $scope.auth = $route.current.locals.auth;
+        var studentId = $scope.auth.student;
+        var journalId = $route.current.params.id;
+  
+        var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE'});
+  
+        $scope.journalEntryTypeColors = {
+            'SISSEKANNE_T': 'default-grey-50',
+            'SISSEKANNE_E': 'default-amber-100',
+            'SISSEKANNE_I': 'default-lime-100',
+            'SISSEKANNE_H': 'default-pink-50',
+            'SISSEKANNE_L': 'default-pink-300',
+            'SISSEKANNE_O': 'default-light-blue-50',
+            'SISSEKANNE_P': 'default-teal-100',
+            'SISSEKANNE_R': 'default-indigo-100'
+        };
+
+        $scope.journalEntryTypes = {};
+        Classifier.queryForDropdown({ mainClassCode: 'SISSEKANNE' }, function (result) {
+            $scope.journalEntryTypes = Classifier.toMap(result);
+        });
+
+        $scope.getEntryColor = function (type) {
+            return $scope.journalEntryTypeColors[type];
+        };
+
+        $scope.getEntryMdColor = function (type) {
+            return $mdColors.getThemeColor($scope.journalEntryTypeColors[type]);
+        };
+  
+        QueryUtils.endpoint('/journals/studentJournal/').search({studentId: studentId, journalId: journalId}).$promise.then(function (journal) {
+            journal.journalEntries.forEach(function (entry) {
+                clMapper.objectmapper(entry);
+            });
+            $scope.journal = journal;
+        });
+  
+      }]);
 }());

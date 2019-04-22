@@ -1,8 +1,8 @@
 package ee.hitsa.ois.web;
 
 import java.util.List;
+import java.util.Map;
 
-import javax.persistence.EntityManager;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudentLessonAbsence;
 import ee.hitsa.ois.service.StudentGroupAbsenceService;
@@ -31,13 +30,11 @@ public class StudentGroupAbsenceController {
 
     @Autowired
     private StudentGroupAbsenceService studentGroupAbsenceService;
-    @Autowired
-    private EntityManager em; 
 
     @GetMapping
     public StudentGroupAbsenceDtoContainer get(HoisUserDetails user, @Valid StudentGroupAbsenceCommand criteria) {
-        UserUtil.assertIsSchoolAdminOrStudentGroupTeacher(user, em.getReference(StudentGroup.class, criteria.getStudentGroup()));
-        return studentGroupAbsenceService.get(criteria);
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return studentGroupAbsenceService.get(user, criteria);
     }
 
     @GetMapping("/studyYearWeeks/{id:\\d+}")
@@ -45,19 +42,26 @@ public class StudentGroupAbsenceController {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return studentGroupAbsenceService.studyYearWeeks(studyYearId);
     }
-    
+
     @PutMapping("/entry/{id:\\d+}")
     public void updateStudentAbsence(HoisUserDetails user, @WithEntity JournalEntryStudent absence,
             @Valid @RequestBody StudentGroupAbsenceForm form) {
-        UserUtil.assertIsSchoolAdminOrStudentGroupTeacher(user, em.getReference(StudentGroup.class, form.getStudentGroup()));
+        UserUtil.assertIsSchoolAdminOrStudentGroupTeacher(user, absence.getJournalStudent().getStudent());
         studentGroupAbsenceService.updateJournalEntryStudentAbsence(absence, form);
     }
-    
+
     @PutMapping("/lesson/{id:\\d+}")
     public void updateStudentAbsenceLesson(HoisUserDetails user, @WithEntity JournalEntryStudentLessonAbsence absence,
             @Valid @RequestBody StudentGroupAbsenceForm form) {
-        UserUtil.assertIsSchoolAdminOrStudentGroupTeacher(user, em.getReference(StudentGroup.class, form.getStudentGroup()));
+        UserUtil.assertIsSchoolAdminOrStudentGroupTeacher(user, absence.getJournalEntryStudent()
+                .getJournalStudent().getStudent());
         studentGroupAbsenceService.updateJournalEntryStudentLessonAbsence(absence, form);
+    }
+
+    @GetMapping("/teacherHasTodaysAbsences")
+    public Map<String, Boolean> teacherHasTodaysAbsences(HoisUserDetails user) {
+        UserUtil.assertIsTeacher(user);
+        return studentGroupAbsenceService.teacherHasTodaysAbsences(user);
     }
 
 }

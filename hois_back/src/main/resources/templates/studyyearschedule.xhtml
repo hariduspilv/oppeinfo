@@ -21,7 +21,7 @@
 	  	<td>{{ item.code }}</td>
 	  	<td>{{ item.nameEt }}</td>
 	  	<td>{{ item.nameEn }}</td>
-	  	<td style="width: 50px; background-color: {{item.color}}; color: {{item.brightText ? 'white' : 'black'}}"></td>
+		<td style="width: 50px; background-color: {{item.color}}; color: {{item.brightText ? 'white' : 'black'}}"></td>
 	  </tr>
 	  {% endfor %}
     </table>
@@ -30,7 +30,7 @@
       <tr>
         <td></td>
         {% for studyPeriod in table.studyPeriods %}
-        <td class="label" colspan="{{ studyPeriod.weeks.size + 1 }}">{{ studyPeriod.period.nameEt }}</td>
+        <td class="label" colspan="{{ studyPeriod.weeks.size }}">{{ studyPeriod.period.nameEt }}</td>
         {% endfor %}
       </tr>
       <tr>
@@ -45,10 +45,10 @@
       </tr>
           {% for studentGroup in department.studentGroups %}
           <tr>
-            <td>{{ studentGroup.group.code }}</td>
+            <td class="break-long-words">{{ studentGroup.group.code }}</td>
             {% for schedule in studentGroup.schedule %}
             {% if schedule is not empty %}
-            	<td style="background-color: {{schedule.color}}; color: {{schedule.brightText ? 'white' : 'black'}}">{{ schedule.code }}</td>
+                <td style="background-color: {{schedule.color}}; color: {{schedule.brightText ? 'white' : 'black'}}">{{ schedule.code }}</td>
             {% else %}
             	<td></td>
             {% endif %}

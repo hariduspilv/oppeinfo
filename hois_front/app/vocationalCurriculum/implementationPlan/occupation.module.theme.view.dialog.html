@@ -73,9 +73,7 @@
 
           <md-input-container flex>
             <label>{{'theme.connectionToStudyOutcome' | translate}}</label>
-            <md-select ng-model="occupationModuleTheme.outcomes" multiple disabled>
-              <md-option ng-repeat="outcome in outcomes" ng-value="outcome.id" aria-label="{{currentLanguage() === 'en' ? outcome.outcomeEn : outcome.outcomeEt}}">{{currentLanguage() === 'en' ? outcome.outcomeEn : outcome.outcomeEt}}</md-option>
-            </md-select>
+            <textarea ng-value="joinOutcomes(getOutcomesByIds(occupationModuleTheme.outcomes), '\n')" max-rows="10" readonly></textarea>
           </md-input-container>
 
           <div>&nbsp;</div>

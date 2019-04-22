@@ -18,9 +18,13 @@ public class StudentGroupTeacherCommand {
     private LocalDate from;
     private LocalDate thru;
     private List<String> entryTypes;
-    private Boolean moduleGrade;
-    private Boolean absencesPerJournals;
-    private Boolean journalsWithEntries;
+    private Boolean moduleGrade = Boolean.FALSE;
+    private Boolean absencesPerJournals = Boolean.FALSE;
+    private Boolean journalsWithEntries = Boolean.FALSE;
+    private Boolean negativeResults = Boolean.FALSE;
+    private Boolean averageGrade = Boolean.FALSE;
+    private Boolean weightedAverageGrade = Boolean.FALSE;
+    private Boolean onlyModuleGrades = Boolean.FALSE;
 
     public Long getStudyYear() {
         return studyYear;
@@ -124,6 +128,38 @@ public class StudentGroupTeacherCommand {
 
     public void setJournalsWithEntries(Boolean journalsWithEntries) {
         this.journalsWithEntries = journalsWithEntries;
+    }
+
+    public Boolean getNegativeResults() {
+        return negativeResults;
+    }
+
+    public void setNegativeResults(Boolean negativeResults) {
+        this.negativeResults = negativeResults;
+    }
+
+    public Boolean getAverageGrade() {
+        return averageGrade;
+    }
+
+    public void setAverageGrade(Boolean averageGrade) {
+        this.averageGrade = averageGrade;
+    }
+
+    public Boolean getWeightedAverageGrade() {
+        return weightedAverageGrade;
+    }
+
+    public void setWeightedAverageGrade(Boolean weightedAverageGrade) {
+        this.weightedAverageGrade = weightedAverageGrade;
+    }
+
+    public Boolean getOnlyModuleGrades() {
+        return onlyModuleGrades;
+    }
+
+    public void setOnlyModuleGrades(Boolean onlyModuleGrades) {
+        this.onlyModuleGrades = onlyModuleGrades;
     }
 
 }

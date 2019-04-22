@@ -1,0 +1,151 @@
+<div layout-padding ng-cloak class="form-readonly">
+  <div flex>
+    <div ng-if="resultCard.idcode" layout="row">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.idcode' | translate}}</label>
+        <hois-value value="resultCard.idcode"></hois-value>
+      </md-input-container>
+    </div>
+    <div ng-if="!resultCard.idcode" layout="row">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.birthdate' | translate}}</label>
+        <hois-value value="(resultCard.birthdate | hoisDate)"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.firstname' | translate}}</label>
+        <hois-value value="resultCard.firstname"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.lastname' | translate}}</label>
+        <hois-value value="resultCard.lastname"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.studyStartAndBase' | translate}}</label>
+        <hois-value ng-if="resultCard.matriculationDate || resultCard.studyStartDirectiveConfirmDate" 
+          value="((resultCard.matriculationDate | hoisDate) || '') + ', ' + ('student.resultcard.directiveNr' | translate) 
+          + ' ' + (resultCard.studyStartDirectiveNr || '') + ' ' + ((resultCard.studyStartDirectiveConfirmDate | hoisDate) || '')"></hois-value>
+        <hois-value ng-if="!(resultCard.matriculationDate || resultCard.studyStartDirectiveConfirmDate)" value=""></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row" ng-if="resultCard.exmatriculationDate || resultCard.studyEndDirectiveConfirmDate">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.studyEndAndBase' | translate}}</label>
+        <hois-value value="((resultCard.exmatriculationDate | hoisDate) || '') + ', ' +  ('student.resultcard.directiveNr' | translate) 
+          + ' ' + (resultCard.studyEndDirectiveNr || '') + ' ' + ((resultCard.studyEndDirectiveConfirmDate | hoisDate) || '')"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.curriculumNameAndCode' | translate}}</label>
+        <hois-value value="resultCard.curriculumName + ', ' + resultCard.curriculumCode"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.curriculumCredits' | translate}}</label>
+        <hois-value value="(resultCard.curriculumCredits ? resultCard.curriculumCredits : 0) + ' ' + ('student.resultcard.credits' | translate)"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.studyForm' | translate}}</label>
+        <hois-value value="resultCard.studyForm"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.language' | translate}}</label>
+        <hois-value value="resultCard.studyLanguage"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row" ng-if="resultCard.diplomaNrs">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.diplomaNr' | translate}}</label>
+        <hois-value value="resultCard.diplomaNrs"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row" ng-if="resultCard.supplementNrs">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.supplementNr' | translate}}</label>
+        <hois-value value="resultCard.supplementNrs"></hois-value>
+      </md-input-container>
+    </div>
+  </div>
+
+  <h2 class="md-title">{{'student.resultcard.results' | translate}}</h2>
+  <md-table-container>
+    <table md-table class="secondary-table">
+      <thead md-head>
+        <tr md-row>
+          <th md-column>{{'student.resultcard.nr' | translate}}</th>
+          <th md-column>{{'student.resultcard.name' | translate}}</th>
+          <th md-column>{{'student.resultcard.creditsLoad' | translate}}</th>
+          <th md-column>{{'student.resultcard.grade' | translate}}</th>
+          <th md-column>{{'student.resultcard.date' | translate}}</th>
+          <th md-column>{{auth.higher ? ('student.resultcard.teacherHigher' | translate) : ('student.resultcard.teacherVocational' | translate)}}</th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="result in resultCard.studyResults track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell width="10%">{{$index + 1}}</td>
+          <td md-cell width="40%">{{result.name}}</td>
+          <td md-cell width="10%">{{result.credits}} {{'student.resultcard.credits' | translate}}</td>
+          <td md-cell width="10%">{{result.grade}} ({{result.gradeName}})</td>
+          <td md-cell width="10%">{{result.gradeDate | hoisDate}}</td>
+          <td md-cell width="20%">{{result.teacher}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
+
+  <h2 class="md-title">{{'student.resultcard.examResults' | translate}}</h2>
+  <md-table-container>
+    <table md-table class="secondary-table">
+      <tbody md-body>
+        <tr md-row ng-repeat="result in resultCard.finalResults track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell width="10%"></td>
+          <td md-cell width="40%">{{result.name}}</td>
+          <td md-cell width="10%">{{result.credits}} {{'student.resultcard.credits' | translate}}</td>
+          <td md-cell width="10%">{{result.grade}} ({{result.gradeName}})</td>
+          <td md-cell width="10%">{{result.gradeDate | hoisDate}}</td>
+          <td md-cell width="20%">{{result.teacher}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
+
+  <div>&nbsp;</div>
+  <md-table-container>
+    <table md-table>
+      <tbody md-body class="secondary-table">
+        <tr md-row>
+          <td md-cell width="50%">{{'student.resultcard.totalSubjectCredits' | translate}}</td>
+          <td md-cell width="10%">{{resultCard.totalCredits}}</td>
+          <td md-cell width="40%"></td>
+        </tr>
+        <tr md-row ng-repeat="apel in resultCard.apels track by $index">
+          <td md-cell>
+            <span>*{{$index + 1}}</span>
+            <span ng-if="apel.isFormal">{{'student.resultcard.transferred' | translate}} {{apel.name}}</span>
+            <span ng-if="!apel.isFormal">{{'student.resultcard.apel' | translate}}</span>
+          </td>
+          <td md-cell></td>
+          <td md-cell></td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-button class="md-raised" ng-click="print()">{{'student.resultcard.print' | translate}}</md-button>
+    <md-button ng-click="back('#/studentResultCards/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

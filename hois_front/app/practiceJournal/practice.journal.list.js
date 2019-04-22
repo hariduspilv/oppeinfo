@@ -52,4 +52,12 @@ angular.module('hitsaOis').controller('PracticeJournalListController', function 
       $location.path("/practiceJournals/new");
     }
   };
+
+  $scope.sendToEkis = function() {
+      $location.path("/practice/studentgroup/ekis").search({
+        "":"_menu",
+        studentGroup: $scope.criteria.studentGroup,
+        studentName: $scope.criteria.studentName
+      });
+    };
 });

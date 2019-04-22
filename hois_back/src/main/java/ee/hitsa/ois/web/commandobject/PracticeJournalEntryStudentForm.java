@@ -12,9 +12,7 @@ public class PracticeJournalEntryStudentForm {
     private LocalDate practiceDate;
     @Size(max=10000)
     private String description;
-    @Min(0)
-    @Max(24)
-    private Short hours;
+    private Double hours;
 
     public Long getId() {
         return id;
@@ -40,11 +38,11 @@ public class PracticeJournalEntryStudentForm {
         this.description = description;
     }
 
-    public Short getHours() {
+    public Double getHours() {
         return hours;
     }
 
-    public void setHours(Short hours) {
+    public void setHours(Double hours) {
         this.hours = hours;
     }
 

@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.StudyPeriod;
@@ -193,9 +194,14 @@ public abstract class LessonPlanUtil {
             }
         }
 
-        public List<Long> mapTeacherLoads(List<LessonPlanTeacherLoadDto> teacherLoads) {
-            List<Long> weekStudyLoads = new ArrayList<>();
-            weekStudyLoads.addAll(Collections.nCopies(weekNrsCount, null));
+        public Map<String, List<Long>> mapTeacherLoadsByCapacities(List<LessonPlanTeacherLoadDto> teacherLoads) {
+            Set<String> capacities = StreamUtil.toMappedSet(l -> l.getCapacity(), teacherLoads);
+            Map<String, List<Long>> weekStudyLoads = new HashMap<>();
+            for (String capacity : capacities) {
+                List<Long> loads = new ArrayList<>();
+                loads.addAll(Collections.nCopies(weekNrsCount, null));
+                weekStudyLoads.put(capacity, loads);
+            }
 
             if (teacherLoads != null) {
                 for (LessonPlanTeacherLoadDto load : teacherLoads) {
@@ -204,7 +210,7 @@ public abstract class LessonPlanUtil {
                     if (offset != null) {
                         int index = studyPeriodWeekNrs.get(key).indexOf(load.getWeekNr());
                         if (index != -1) {
-                            weekStudyLoads.set(index + offset.intValue(), load.getSum());
+                            weekStudyLoads.get(load.getCapacity()).set(index + offset.intValue(), load.getSum());
                         }
                     }
                 }

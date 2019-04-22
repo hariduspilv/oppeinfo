@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hitsaOis')
-.controller('BaseModuleListController', ['$scope', 'QueryUtils', '$route', 
-function ($scope, QueryUtils, $route) {
+.controller('BaseModuleListController', ['$scope', 'QueryUtils', '$route', "USER_ROLES", "AuthService", 
+function ($scope, QueryUtils, $route, USER_ROLES, AuthService) {
     QueryUtils.createQueryForm($scope, '/basemodule');
 
     $scope.auth = $route.current.locals.auth;
@@ -11,7 +11,7 @@ function ($scope, QueryUtils, $route) {
     var autocompleteCurriculumVersion = QueryUtils.endpoint("/autocomplete/curriculumversions");
 
     $scope.formState = {
-        canCreate: $scope.auth.isAdmin() //&& $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPETAJA) !== -1
+        canCreate: $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_BAASMOODUL)
     };
 
     $scope.searchCurriculums = function (name) {
@@ -26,14 +26,15 @@ function ($scope, QueryUtils, $route) {
     $scope.loadData();
 }])
 .controller('BaseModuleEditController',
-['$scope', 'QueryUtils', '$route', 'message', 'ArrayUtils', 'dialogService', '$location', '$rootScope', '$q',
-function ($scope, QueryUtils, $route, message, ArrayUtils, dialogService, $location, $rootScope, $q) {
+['$scope', 'QueryUtils', '$route', 'message', 'ArrayUtils', 'dialogService', '$location', '$rootScope', '$q', "USER_ROLES", "AuthService", 
+function ($scope, QueryUtils, $route, message, ArrayUtils, dialogService, $location, $rootScope, $q, USER_ROLES, AuthService) {
 
     var baseUrl = "/basemodule";
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var autocompleteTeacher = QueryUtils.endpoint(baseUrl + "/teachers");
     var capacityPromise = $q.defer();
 
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_BAASMOODUL);
     $scope.auth = $route.current.locals.auth;
     $scope.baseModuleId = $route.current.params.baseModuleId;
     $scope.capacities = QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: false });

@@ -40,7 +40,7 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
       scope.filteredOptions = [];
       scope.hideOptions = [];
 
-      scope.orderBy = !scope.sortedQuery ? (scope.showProperty ? scope.showProperty : $rootScope.currentLanguageNameField()) : '';
+      scope.orderBy = !scope.sortedQuery ? (scope.showProperty ? scope.showProperty : $rootScope.currentLanguageNameField()) : null;
 
       function doFilter() {
         scope.filteredOptions = (scope.options || []).filter(function(it) {return scope.hideOptions.indexOf(it[scope.valueProperty]) === -1; });

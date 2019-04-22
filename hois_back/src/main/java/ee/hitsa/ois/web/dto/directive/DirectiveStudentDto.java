@@ -43,6 +43,10 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private LocalDate applicationEndDate;
     private AutocompleteResult applicationStudyPeriodStart;
     private AutocompleteResult applicationStudyPeriodEnd;
+    
+    private Boolean isFullLoad = Boolean.FALSE;
+    private Boolean isPartialLoad = Boolean.FALSE;
+    private Boolean isUndefinedLoad = Boolean.FALSE;
 
     public String getFullname() {
         return fullname;
@@ -178,6 +182,30 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
     public void setApplicationStudyPeriodEnd(AutocompleteResult applicationStudyPeriodEnd) {
         this.applicationStudyPeriodEnd = applicationStudyPeriodEnd;
+    }
+
+    public Boolean getIsFullLoad() {
+        return isFullLoad;
+    }
+
+    public void setIsFullLoad(Boolean isFullLoad) {
+        this.isFullLoad = isFullLoad;
+    }
+
+    public Boolean getIsPartialLoad() {
+        return isPartialLoad;
+    }
+
+    public void setIsPartialLoad(Boolean isPartialLoad) {
+        this.isPartialLoad = isPartialLoad;
+    }
+
+    public Boolean getIsUndefinedLoad() {
+        return isUndefinedLoad;
+    }
+
+    public void setIsUndefinedLoad(Boolean isUndefinedLoad) {
+        this.isUndefinedLoad = isUndefinedLoad;
     }
 
     public static DirectiveStudentDto of(ScholarshipApplication application, DirectiveType directiveType) {

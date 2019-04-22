@@ -40,6 +40,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="AdmissionTuitions" type="{http://sais2.x-road.eu/}ArrayOfAdmissionTuition" minOccurs="0"/&gt;
  *         &lt;element name="IsPartialLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
  *         &lt;element name="IsFullLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
+ *         &lt;element name="IsUndefinedLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
  *         &lt;element name="AdmissionCount" type="{http://www.w3.org/2001/XMLSchema}int"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
@@ -72,6 +73,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "admissionTuitions",
     "isPartialLoad",
     "isFullLoad",
+    "isUndefinedLoad",
     "admissionCount"
 })
 public class Admission {
@@ -122,6 +124,8 @@ public class Admission {
     protected boolean isPartialLoad;
     @XmlElement(name = "IsFullLoad")
     protected boolean isFullLoad;
+    @XmlElement(name = "IsUndefinedLoad")
+    protected boolean isUndefinedLoad;
     @XmlElement(name = "AdmissionCount", required = true, type = Integer.class, nillable = true)
     protected Integer admissionCount;
 
@@ -611,6 +615,22 @@ public class Admission {
      */
     public void setIsFullLoad(boolean value) {
         this.isFullLoad = value;
+    }
+
+    /**
+     * Gets the value of the isUndefinedLoad property.
+     * 
+     */
+    public boolean isIsUndefinedLoad() {
+        return isUndefinedLoad;
+    }
+
+    /**
+     * Sets the value of the isUndefinedLoad property.
+     * 
+     */
+    public void setIsUndefinedLoad(boolean value) {
+        this.isUndefinedLoad = value;
     }
 
     /**

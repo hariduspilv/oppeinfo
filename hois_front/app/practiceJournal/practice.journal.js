@@ -168,12 +168,14 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
         if (($scope.practiceJournal.practicePlan + "\n" + addable).length <= 20000) {
           $scope.practiceJournal.practicePlan += "\n" + addable;
         } else {
-          var index = 20000 - $scope.practiceJournal.practicePlan.length + 2;
-          $scope.practiceJournal.practicePlan += "\n" + addable.substring(0, index);
+          var index = 20000 - ($scope.practiceJournal.practicePlan.length + 2);
+          if (index > 0) {
+            $scope.practiceJournal.practicePlan += "\n" + addable.substring(0, index);
+          }
         }
       }
     }
-  }
+  };
 
   $scope.subjectChanged = function (subjectId, moduleSubject) {
     if ($scope.formState.subjectsById[subjectId]) {

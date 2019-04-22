@@ -44,12 +44,37 @@
           </div>
         </md-whiteframe>
       </div>
+      <div ng-if="hasTodaysAbsences">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'warn'}">
+            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'absence.youHaveTodaysAbsences' | translate}} <a ng-href="/#/groupAbsences?today">{{'main.button.view' | translate}}</a></span>
+          </div>
+        </md-whiteframe>
+      </div>
       <div ng-if="unconfirmedJournals && unconfirmedJournals.count > 0">
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
           <div md-colors="{color: 'accent'}">
             <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
             <span ng-if="unconfirmedJournals.count === 1">{{'journal.unconfirmedCountOne' | translate}}</span>
             <span ng-if="unconfirmedJournals.count > 1">{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
+          </div>
+        </md-whiteframe>
+      </div>
+      <div ng-if="studentGroupRemarks && studentGroupRemarks.size > 0">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'accent'}">
+            <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+            <span ng-if="unconfirmedJournals.count === 1">{{'journal.unconfirmedCountOne' | translate}}</span>
+            <span ng-if="unconfirmedJournals.count > 1">{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
+          </div>
+        </md-whiteframe>
+      </div>
+      <div ng-if="rrHasRecentChangeLogs">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'warn'}">
+            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'rr.home.hasRecentChangeLogs' | translate}} <a ng-href="/#/rr/changelogs?_menu">{{'main.button.view' | translate}}</a></span>
           </div>
         </md-whiteframe>
       </div>
@@ -63,10 +88,12 @@
         <div ng-include="'home/home.student.expiringOccupationStandards.html'"></div>
         <div ng-include="'home/home.student.generalMessages.html'"></div>
         <div ng-include="'home/home.student.unreadMessages.html'"></div>
+        <div ng-include="'home/home.student.group.remarks.html'"></div>
     
         <div ng-if="sessionStudentId" ng-include="'home/home.student.homeworkAndTests.html'"></div>
         <div ng-if="sessionStudentId" ng-include="'home/home.student.absences.html'"></div>
         <div ng-if="sessionStudentId" ng-include="'home/home.student.lastResults.html'"></div>
+        <div ng-if="sessionStudentId" ng-include="'home/home.student.remarks.html'"></div>
         <div ng-if="sessionStudentId" ng-include="'home/home.student.declaredSubjects.html'"></div>
       </div>
       <div ng-if="sessionStudentId" id="column-2" flex-gt-md="50" flex="100">

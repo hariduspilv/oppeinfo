@@ -222,15 +222,11 @@
         var syEnd = studyYear.endDate;
 
         for (var i = 0; i < groups.length; i++) {
-          if (isValidStudentGroup(syStart, syEnd, groups[i].validFrom, groups[i].validThru, validGroups) && validGroups.indexOf(groups[i].id) === -1) {
+          if (DataUtils.isValidObject(syStart, syEnd, groups[i].validFrom, groups[i].validThru) && validGroups.indexOf(groups[i].id) === -1) {
             validGroups.push(groups[i].id);
           }
         }
         return validGroups;
-      }
-
-      function isValidStudentGroup(studyYearStart, studyYearEnd, validFrom, validThru) {
-        return (!validFrom || moment(validFrom).isSameOrBefore(studyYearEnd)) && (!validThru || moment(validThru).isSameOrAfter(studyYearStart));
       }
 
       function filterStudentGroups(existing, valid) {
@@ -602,9 +598,22 @@
 
         result.teachers.forEach(function (teacher) {
           teacher.studyLoadByPeriod = {};
+          teacher.studyLoadByPeriodAndCapacity = {};
           $scope.formState.studyPeriods.forEach(function (sp) {
             if (teacher.studyLoadByWeek) {
               teacher.studyLoadByPeriod[sp.arrayIndex] = rowSum(teacher.studyLoadByWeek.slice(sp.weekIndex[0], sp.weekIndex[1]));
+            }
+            if (teacher.studyLoadByWeekAndCapacity) {
+              $scope.formState.capacityTypes.forEach(function (c) {
+                var capacityType = c.code;
+                var capacityStudyLoad = teacher.studyLoadByWeekAndCapacity[capacityType];
+                if (capacityStudyLoad !== undefined) {
+                  if (teacher.studyLoadByPeriodAndCapacity[capacityType] === undefined) {
+                    teacher.studyLoadByPeriodAndCapacity[capacityType] = {};
+                  }
+                  teacher.studyLoadByPeriodAndCapacity[capacityType][sp.arrayIndex] = rowSum(capacityStudyLoad.slice(sp.weekIndex[0], sp.weekIndex[1]));
+                }
+              });
             }
           });
         });
@@ -744,6 +753,21 @@
 
           dialogScope.getTeacherLoad = function (teacherId) {
             return LessonPlanTableService.getTeacherLoad(dialogScope.formState.studyPeriods, dialogScope.formState.teachers, teacherId);
+          };
+
+          dialogScope.getPlannedLessonsTitle = function (teacherId) {
+            return LessonPlanTableService.getPlannedLessonsTitle(teacherId, dialogScope.formState.teachers, 
+              dialogScope.formState.capacityTypes);
+          };
+
+          dialogScope.getStudyLoadTitle = function (teacherId, weekIndex) {
+            return LessonPlanTableService.getStudyLoadTitle(teacherId, dialogScope.formState.teachers, 
+              dialogScope.formState.capacityTypes, weekIndex);
+          };
+
+          dialogScope.getStudyLoadSpTitle = function (teacherId, studyPeriodIndex) {
+            return LessonPlanTableService.getStudyLoadSpTitle(teacherId, dialogScope.formState.teachers,
+              dialogScope.formState.capacityTypes, studyPeriodIndex)
           };
 
         }, function (submittedDialogScope) {

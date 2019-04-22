@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('TestController', function ($scope) {
+  .controller('TestController', function ($scope, $timeout, $q) {
     $scope.name =  "this is a test controller";
     $scope.arbitraryFunction = function(value) {
       console.log('arbitraryFunction ', value);
@@ -38,6 +38,20 @@ angular.module('hitsaOis')
       required: true,
       allowEmpty: false,
       inputClass: 'fit-content'
+    };
+
+    $scope.testClick = function () {
+      console.log("Clicked");
+    };
+
+    $scope.testClickPromise = function () {
+      var deferred = $q.defer();
+      console.log("Timeouted for 3000ms");
+      $timeout(function () {
+        console.log("Clicked");
+        deferred.resolve();
+      }, 3000);
+      return deferred.promise;
     };
   })
 

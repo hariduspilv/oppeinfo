@@ -716,6 +716,7 @@ public class SaisApplicationService {
                     addrString.append(", ");
                 }
                 addrString.append(address.getPostalcode());
+                saisApplication.setPostcode(address.getPostalcode());
             }
             saisApplication.setAddress(addrString.toString());
             saisApplication.setAddressAds(address.getAdsAddressCode());
@@ -732,7 +733,14 @@ public class SaisApplicationService {
         saisApplication.setFin(classifiers.getByCode((application.isIsTuitionFeeRequired() ? FinSource.FINALLIKAS_REV : FinSource.FINALLIKAS_RE).name(), MainClassCode.FINALLIKAS));
         saisApplication.setPoints(application.getApplicationTotalPoints());
         saisApplication.setCitizenship(classifiers.getByValue(classifierValue(application.getCitizenshipCountry()), MainClassCode.RIIK));
-        saisApplication.setStudyLoad(classifiers.getByCode((Boolean.TRUE.equals(application.isIsFullLoad()) ? StudyLoad.OPPEKOORMUS_TAIS : StudyLoad.OPPEKOORMUS_OSA).name(), MainClassCode.OPPEKOORMUS));
+        if (Boolean.TRUE.equals(application.isIsFullLoad())) {
+            saisApplication.setStudyLoad(classifiers.getByCode(StudyLoad.OPPEKOORMUS_TAIS.name(), MainClassCode.OPPEKOORMUS));
+        } else if (Boolean.TRUE.equals(application.isIsPartialLoad())) {
+            saisApplication.setStudyLoad(classifiers.getByCode(StudyLoad.OPPEKOORMUS_OSA.name(), MainClassCode.OPPEKOORMUS));
+        } else {
+            saisApplication.setStudyLoad(classifiers.getByCode(StudyLoad.OPPEKOORMUS_MTA.name(), MainClassCode.OPPEKOORMUS));
+        }
+        
         // XXX is this correct
         saisApplication.setResidenceCountry(classifiers.getByCode(ClassifierUtil.COUNTRY_ESTONIA, MainClassCode.RIIK));
         saisApplication.setStudyForm(classifiers.getByValue(classifierValue(application.getStudyForm()), MainClassCode.OPPEVORM));

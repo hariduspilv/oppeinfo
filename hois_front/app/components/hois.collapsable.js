@@ -22,6 +22,7 @@ angular.module('hitsaOis')
         label: '=',
         link: '=',
         action: '&',
+        expandCollapseAction: '&',
         ngif: '&',
         expanded: '<',
         headerBackgroundColor: '<',
@@ -30,6 +31,9 @@ angular.module('hitsaOis')
       link: function postLink(scope) {
         scope.expanded = angular.isDefined(scope.expanded) ? scope.expanded : true;
         scope.expandCollapse = function() {
+          if (angular.isFunction(scope.expandCollapseAction)) {
+            scope.expandCollapseAction();
+          }
           scope.expanded = !scope.expanded;
         };
       }

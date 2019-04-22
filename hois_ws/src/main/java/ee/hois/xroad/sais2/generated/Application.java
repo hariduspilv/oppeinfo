@@ -2,6 +2,7 @@
 package ee.hois.xroad.sais2.generated;
 
 import java.math.BigDecimal;
+
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -37,7 +38,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="CitizenshipCountry" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
  *         &lt;element name="SecondaryCitizenshipCountry" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
  *         &lt;element name="ResidencePermitType" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
- *         &lt;element name="ResidencePermitNumber" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="ResidencePermitNr" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="ResidencyPermitExpireDate" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/&gt;
  *         &lt;element name="ApplicationTotalPoints" type="{http://www.w3.org/2001/XMLSchema}decimal"/&gt;
  *         &lt;element name="ApplicationCriteriaPoints" type="{http://www.w3.org/2001/XMLSchema}decimal"/&gt;
@@ -50,6 +51,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="DateModified" type="{http://www.w3.org/2001/XMLSchema}dateTime"/&gt;
  *         &lt;element name="ApplicationStatus" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
  *         &lt;element name="IsFullLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
+ *         &lt;element name="IsPartialLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
+ *         &lt;element name="IsUndefinedLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
  *         &lt;element name="StudyForm" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
  *         &lt;element name="ApplicationNumber" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="CandidateEducations" type="{http://sais2.x-road.eu/}ArrayOfCandidateEducation" minOccurs="0"/&gt;
@@ -82,7 +85,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "citizenshipCountry",
     "secondaryCitizenshipCountry",
     "residencePermitType",
-    "residencePermitNumber",
+    "residencePermitNr",
     "residencyPermitExpireDate",
     "applicationTotalPoints",
     "applicationCriteriaPoints",
@@ -95,6 +98,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "dateModified",
     "applicationStatus",
     "isFullLoad",
+    "isPartialLoad",
+    "isUndefinedLoad",
     "studyForm",
     "applicationNumber",
     "candidateEducations",
@@ -135,8 +140,8 @@ public class Application {
     protected SAISClassification secondaryCitizenshipCountry;
     @XmlElement(name = "ResidencePermitType")
     protected SAISClassification residencePermitType;
-    @XmlElement(name = "ResidencePermitNumber")
-    protected String residencePermitNumber;
+    @XmlElement(name = "ResidencePermitNr")
+    protected String residencePermitNr;
     @XmlElementRef(name = "ResidencyPermitExpireDate", type = JAXBElement.class, required = false, namespace = "http://sais2.x-road.eu/")
     protected JAXBElement<XMLGregorianCalendar> residencyPermitExpireDate;
     @XmlElement(name = "ApplicationTotalPoints", required = true, nillable = true)
@@ -163,6 +168,10 @@ public class Application {
     protected SAISClassification applicationStatus;
     @XmlElement(name = "IsFullLoad", required = true, type = Boolean.class, nillable = true)
     protected Boolean isFullLoad;
+    @XmlElement(name = "IsPartialLoad", required = true, type = Boolean.class, nillable = true)
+    protected Boolean isPartialLoad;
+    @XmlElement(name = "IsUndefinedLoad", required = true, type = Boolean.class, nillable = true)
+    protected Boolean isUndefinedLoad;
     @XmlElement(name = "StudyForm")
     protected SAISClassification studyForm;
     @XmlElement(name = "ApplicationNumber")
@@ -531,27 +540,27 @@ public class Application {
     }
 
     /**
-     * Gets the value of the residencePermitNumber property.
+     * Gets the value of the residencePermitNr property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getResidencePermitNumber() {
-        return residencePermitNumber;
+    public String getResidencePermitNr() {
+        return residencePermitNr;
     }
 
     /**
-     * Sets the value of the residencePermitNumber property.
+     * Sets the value of the residencePermitNr property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setResidencePermitNumber(String value) {
-        this.residencePermitNumber = value;
+    public void setResidencePermitNr(String value) {
+        this.residencePermitNr = value;
     }
 
     /**
@@ -832,6 +841,54 @@ public class Application {
      */
     public void setIsFullLoad(Boolean value) {
         this.isFullLoad = value;
+    }
+
+    /**
+     * Gets the value of the isPartialLoad property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isIsPartialLoad() {
+        return isPartialLoad;
+    }
+
+    /**
+     * Sets the value of the isPartialLoad property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setIsPartialLoad(Boolean value) {
+        this.isPartialLoad = value;
+    }
+
+    /**
+     * Gets the value of the isUndefinedLoad property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Boolean }
+     *     
+     */
+    public Boolean isIsUndefinedLoad() {
+        return isUndefinedLoad;
+    }
+
+    /**
+     * Sets the value of the isUndefinedLoad property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Boolean }
+     *     
+     */
+    public void setIsUndefinedLoad(Boolean value) {
+        this.isUndefinedLoad = value;
     }
 
     /**

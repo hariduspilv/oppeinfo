@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Hinneteleht</title>
+    <style type="text/css">
+      {% include "student.result.card.css" %}
+    </style>
+  </head>
+  <body>
+		<div id="header">
+			<div id="header-left">{{ content.school }}</div> 
+			<div id="header-right">{{ content.date | hoisDate }}</div>
+		</div>
+		{% for card in content.cards %}
+			{% if loop.index == 0 %}
+				<div>
+			{% else %}
+				<div class="page-break-before">
+			{% endif %}
+				<div class="padding-top"></div>
+				<div class="general-info">
+						<div class="title">{{ "studentresultcard.title" | translate }}</div>
+						{% if card.idcode is not empty %}
+							<div><span>{{ "studentresultcard.idcode" | translate }}: </span><span class="label">{{ card.idcode }}</span></div>
+						{% else %}
+							<div><span>{{ "studentresultcard.birthdate" | translate }}: </span><span class="label">{{ card.birthdate }}</span></div>
+						{% endif %}
+						<div><span>{{ "studentresultcard.firstname" | translate }}: </span><span class="label">{{ card.firstname }}</span></div>
+						<div><span>{{ "studentresultcard.lastname" | translate }}: </span><span class="label">{{ card.lastname }}</span></div>
+
+						<div>
+							<span>{{ "studentresultcard.studyStart" | translate }}: </span>
+							{% if card.matriculationDate is not empty or card.studyStartDirectiveConfirmDate is not empty %}
+								<span class="label">
+									{% if card.matriculationDate is not empty %}
+										<span>{{ card.matriculationDate | hoisDate }}</span>
+									{% endif %}
+									{% if card.matriculationDate is not empty and card.studyStartDirectiveConfirmDate is not empty %}
+										<span>, </span>
+									{% endif %}
+									{% if card.studyStartDirectiveConfirmDate is not empty %}
+										<span>{{ "studentresultcard.directiveNr" | translate }} {{ card.studyStartDirectiveNr }} {{card.studyStartDirectiveConfirmDate | hoisDate}}</span>
+									{% endif %}
+								</span>
+							{% endif %}
+						</div>
+
+						{% if card.exmatriculationDate is not empty or card.studyEndDirectiveConfirmDate is not empty %}
+							<div>
+								<span>{{ "studentresultcard.studyEnd" | translate }}: </span>
+								<span class="label">
+									{% if card.exmatriculationDate is not empty %}
+										<span>{{ card.exmatriculationDate | hoisDate }}</span>
+									{% endif %}
+									{% if card.exmatriculationDate is not empty and card.studyEndDirectiveConfirmDate is not empty %}
+										<span>, </span>
+									{% endif %}
+									{% if card.studyEndDirectiveConfirmDate is not empty %}
+										<span>{{ "studentresultcard.directiveNr" | translate }} {{ card.studyEndDirectiveNr }} {{card.studyEndDirectiveConfirmDate | hoisDate}}</span>
+									{% endif %}
+								</span>
+							</div>
+						{% endif %}
+
+						<div><span>{{ "studentresultcard.curriculumNameAndCode" | translate }}: </span><span class="label">{{ card.curriculumName }}, {{ card.curriculumCode }}</span></div>
+						<div><span>{{ "studentresultcard.curriculumLoad" | translate }}: </span><span class="label">{{ card.curriculumCredits }} {{ "studentresultcard.credits" | translate }}</span></div>
+						<div><span>{{ "studentresultcard.studyForm" | translate }}: </span><span class="label">{{ card.studyForm }}</span></div>
+						<div><span>{{ "studentresultcard.language" | translate }}: </span><span class="label">{{ card.studyLanguage }}</span></div>
+
+						{% if card.diplomaNrs is not empty %}
+							<div><span>{{ "studentresultcard.diplomaNr" | translate }}: </span><span class="label">{{ card.diplomaNrs }}</span></div>
+						{% endif %}
+
+						{% if card.supplementNrs is not empty %}
+							<div><span>{{ "studentresultcard.supplementNr" | translate }}: </span><span class="label">{{ card.supplementNrs }}</span></div>
+						{% endif %}
+				</div>
+
+				<div class="margin-top page-break-after-avoid"><span class="label">{{ "studentresultcard.studyResults" | translate }}: </span></div>
+				<table class="study-results margin-top">
+					<thead class="page-break-after-avoid">
+						<tr>
+							<th class="center">{{ "studentresultcard.results.orderNr" | translate }}</th>
+							<th>{{ "studentresultcard.results.name" | translate }}</th>
+							<th class="center">{{ "studentresultcard.results.credits" | translate }}</th>
+							<th>{{ "studentresultcard.results.grade" | translate }}</th>
+							<th>{{ "studentresultcard.results.date" | translate }}</th>
+							<th>{{ "studentresultcard.results.teacher" | translate }}</th>
+						</tr>
+					</thead>
+					<tbody>
+					{% for result in card.studyResults %}
+						<tr>
+							<td class="study-results-order center">{{ loop.index + 1 }}</td>
+							<td class="study-results-name">{{ result.name }}</td>
+							<td class="study-results-credits center">{{ result.credits }}</td>
+							<td class="study-results-grade">{{ result.grade }} ({{ result.gradeName }})</td>
+							<td class="study-results-grade-date">{{ result.gradeDate | hoisDate }}</td>
+							<td class="study-results-teacher">{{ result.teacher }}</td>
+						</tr>
+					{% endfor %}
+					</tbody>
+				</table>
+				{% if card.finalResults is not empty %}
+				<div class="margin-top page-break-after-avoid"><span class="label">{{ "studentresultcard.examResults" | translate }}: </span></div>
+				<table class="study-results margin-top">
+					<tbody>
+					{% for result in card.finalResults %}
+						<tr>
+							<td class="study-results-order"></td>
+							<td class="study-results-name">{{ result.name }}</td>
+							<td class="study-results-credits center">
+								{% if result.credits > 0 %}
+									{{ result.credits }}
+								{% endif %}
+							</td>
+							<td class="study-results-grade">{{ result.grade }} ({{ result.gradeName }})</td>
+							<td class="study-results-grade-date"></td>
+							<td class="study-results-teacher"></td>
+						</tr>
+					{% endfor %}
+					</tbody>
+				</table>
+				{% endif %}
+				<table class="study-results margin-top">
+					<tbody>
+						<tr>
+							<td class="study-results-total-credits-label">{{ "studentresultcard.totalSubjectCredits" | translate }}</td>
+							<td class="study-results-credits center">{{ card.totalCredits }}</td>
+							<td class="study-results-grade"></td>
+							<td class="study-results-grade-date"></td>
+							<td class="study-results-teacher"></td>
+						</tr>
+					</tbody>
+				</table>
+				{% for apel in card.apels %}
+				<div>
+					*{{ loop.index + 1 }}
+					{% if apel.isFormal %}
+					{{ "studentresultcard.transferred" | translate }}
+					{% else %}
+					{{ "studentresultcard.apel" | translate }}
+					{% endif %}
+					{{ apel.name }}
+				</div>
+				{% endfor %}
+			</div>
+		{% endfor %}
+  </body>
+</html>

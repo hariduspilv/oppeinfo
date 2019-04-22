@@ -181,40 +181,42 @@
     <div>&nbsp;</div>
     <fieldset tabindex="9">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.approvalInfo' | translate}}</legend>
-      <div layout="row" flex="100" layout-xs="column">
-        <md-input-container flex="30" flex-sm="100" flex-xs="100">
-          <label>{{'curriculum.approvalDocumentNr' | translate}}</label>
-          <input ng-model="curriculum.approvalDokNr" type="text" readonly>
-        </md-input-container>
-        <md-input-container flex="20" flex-offset="4">
-          <label>{{'curriculum.approvalDate' | translate}}</label>
-          <md-datepicker ng-model="curriculum.approval" md-open-on-focus disabled></md-datepicker>
-        </md-input-container>
-        <md-input-container flex="20" flex-offset="5">
-          <label>{{'curriculum.htmRegisterDate' | translate}}</label>
-          <md-datepicker ng-model="curriculum.merRegDate" md-open-on-focus disabled></md-datepicker>
-        </md-input-container>
-      </div>
-      <div layout="row" flex="100" layout-xs="column">
-        <md-input-container flex="30" flex-sm="100" flex-xs="100">
-          <label>{{'curriculum.accreditationDesision' | translate}}</label>
-          <input ng-model="curriculum.accreditationResolution" type="text" readonly>
-        </md-input-container>
-        <md-input-container flex="20" flex-offset="4">
-          <label>{{'curriculum.accreditationDate' | translate}}</label>
-          <md-datepicker ng-model="curriculum.accreditationDate" md-open-on-focus disabled></md-datepicker>
-        </md-input-container>
-      </div>
-      <div layout="row" flex="100" layout-xs="column">
-        <md-input-container flex="30" flex-sm="100" flex-xs="100">
-          <label>{{'curriculum.accreditationDesisionNumber' | translate}}</label>
-          <input ng-model="curriculum.accreditationNr" type="text" readonly>
-        </md-input-container>
-        <md-input-container flex="20" flex-offset="4">
-          <label>{{'curriculum.accreditationValidityDate' | translate}}</label>
-          <md-datepicker ng-model="curriculum.accreditationValidDate" md-open-on-focus disabled></md-datepicker>
-        </md-input-container>
-      </div>
+      <md-table-container>
+        <div layout="row" flex="100" layout-xs="column">
+          <md-input-container flex="30" flex-sm="100" flex-xs="100">
+            <label>{{'curriculum.approvalDocumentNr' | translate}}</label>
+            <input ng-model="curriculum.approvalDokNr" type="text" readonly>
+          </md-input-container>
+          <md-input-container flex="20" flex-offset="4" flex-xs="100" flex-offset-xs="0">
+            <label>{{'curriculum.approvalDate' | translate}}</label>
+            <md-datepicker ng-model="curriculum.approval" md-open-on-focus disabled></md-datepicker>
+          </md-input-container>
+          <md-input-container flex="20" flex-offset="5" flex-xs="100" flex-offset-xs="0">
+            <label>{{'curriculum.htmRegisterDate' | translate}}</label>
+            <md-datepicker ng-model="curriculum.merRegDate" md-open-on-focus disabled></md-datepicker>
+          </md-input-container>
+        </div>
+        <div layout="row" flex="100" layout-xs="column">
+          <md-input-container flex="30" flex-sm="100" flex-xs="100">
+            <label>{{'curriculum.accreditationDesision' | translate}}</label>
+            <input ng-model="curriculum.accreditationResolution" type="text" readonly>
+          </md-input-container>
+          <md-input-container flex="20" flex-offset="4" flex-xs="100" flex-offset-xs="0">
+            <label>{{'curriculum.accreditationDate' | translate}}</label>
+            <md-datepicker ng-model="curriculum.accreditationDate" md-open-on-focus disabled></md-datepicker>
+          </md-input-container>
+        </div>
+        <div layout="row" flex="100" layout-xs="column">
+          <md-input-container flex="30" flex-sm="100" flex-xs="100">
+            <label>{{'curriculum.accreditationDesisionNumber' | translate}}</label>
+            <input ng-model="curriculum.accreditationNr" type="text" readonly>
+          </md-input-container>
+          <md-input-container flex="20" flex-offset="4" flex-xs="100" flex-offset-xs="0">
+            <label>{{'curriculum.accreditationValidityDate' | translate}}</label>
+            <md-datepicker ng-model="curriculum.accreditationValidDate" md-open-on-focus disabled></md-datepicker>
+          </md-input-container>
+        </div>
+      </md-table-container>
     </fieldset>
 		<div>&nbsp;</div>
 		<fieldset tabindex="10">

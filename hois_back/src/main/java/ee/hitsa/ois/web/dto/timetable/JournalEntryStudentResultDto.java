@@ -20,6 +20,7 @@ public class JournalEntryStudentResultDto {
     private LocalDateTime absenceInserted;
     private List<JournalEntryStudentLessonAbsenceDto> lessonAbsences;
     private List<JournalEntryStudentHistoryDto> journalEntryStudentHistories;
+    private Boolean isRemark;
 
     public Long getJournalEntryStudentId() {
         return journalEntryStudentId;
@@ -107,6 +108,14 @@ public class JournalEntryStudentResultDto {
 
     public void setJournalEntryStudentHistories(List<JournalEntryStudentHistoryDto> journalEntryStudentHistories) {
         this.journalEntryStudentHistories = journalEntryStudentHistories;
+    }
+
+    public Boolean getIsRemark() {
+        return isRemark;
+    }
+
+    public void setIsRemark(Boolean isRemark) {
+        this.isRemark = isRemark;
     }
 
 }

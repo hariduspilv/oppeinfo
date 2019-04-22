@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.timetable.LessonTime;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.LessonTimeService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
@@ -42,11 +44,13 @@ public class LessonTimeController {
     @GetMapping("/{id:\\d+}")
     public LessonTimeGroupsDto get(@WithEntity LessonTime lessonTime, HoisUserDetails user) {
         UserUtil.assertSameSchool(user, lessonTime.getSchool());
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_TUNDAEG);
         return lessonTimeService.getLessonTimeBuildingGroupsDto(lessonTime.getLessonTimeBuildingGroup().getValidFrom(), user.getSchoolId());
     }
 
     @PostMapping
     public LessonTimeGroupsDto create(@Valid @RequestBody LessonTimeGroupsDto lessonTimeGroupsDto, HoisUserDetails user) {
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_TUNDAEG);
         LessonTime lessonTime = lessonTimeService.create(user, lessonTimeGroupsDto);
         if (lessonTime != null) {
             return get(lessonTime, user);
@@ -56,6 +60,7 @@ public class LessonTimeController {
 
     @PutMapping
     public LessonTimeGroupsDto save(@Valid @RequestBody LessonTimeGroupsDto lessonTimeGroupsDto, HoisUserDetails user) {
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_TUNDAEG);
         LessonTime lessonTime = lessonTimeService.save(user, lessonTimeGroupsDto);
         if (lessonTime != null) {
             return get(lessonTime, user);

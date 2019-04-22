@@ -1,21 +1,31 @@
 <md-nav-bar hide-xs md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection">
   <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/results?_noback" name="student.results">{{'student.results' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/absences?_noback" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents?_noback" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
+  <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/results?_noback"
+    name="student.results">{{'student.results' | translate}}</md-nav-item>
+  <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/absences?_noback"
+    name="student.absences">{{'student.absences' | translate}}</md-nav-item>
+  <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/documents?_noback"
+    name="student.documents">{{'student.documents' | translate}}</md-nav-item>
+  <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/remarks?_noback"
+    name="student.remarks" ng-class="{'highlighted-nav-item': student.hasRemarksPastSevenDays}">{{'student.remarks' | translate}}</md-nav-item>
   <md-nav-item ng-if="auth.isAdmin() && student.status && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'"
     md-nav-href="#/students/{{::studentId}}/timetable?_noback" name="student.timetable">{{'student.studentTimetable' | translate}}</md-nav-item>
+  <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/rr?_noback"
+    name="student.rr">{{'rr.student.tabLabel' | translate}}</md-nav-item>
 </md-nav-bar>
 
 <div hide-gt-xs layout="column">
   <md-button class="md-raised" flex ng-href="#/students/{{::studentId}}/main?_noback" ng-class="{'md-accent': currentNavItem === 'student.main'}"
     name="student.main">{{'student.main' | translate}}</md-button>
-  <md-button class="md-raised" ng-href="#/students/{{::studentId}}/results?_noback" ng-class="{'md-accent': currentNavItem === 'student.results'}"
-    name="student.results">{{'student.results' | translate}}</md-button>
-  <md-button class="md-raised" ng-href="#/students/{{::studentId}}/absences?_noback" ng-class="{'md-accent': currentNavItem === 'student.absences'}"
-    name="student.absences">{{'student.absences' | translate}}</md-button>
-  <md-button class="md-raised" ng-href="#/students/{{::studentId}}/documents?_noback" ng-class="{'md-accent': currentNavItem === 'student.documents'}"
-    name="student.documents">{{'student.documents' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="student.userCanViewStudentSpecificData" ng-href="#/students/{{::studentId}}/results?_noback"
+    ng-class="{'md-accent': currentNavItem === 'student.results'}" name="student.results">{{'student.results' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="student.userCanViewStudentSpecificData" ng-href="#/students/{{::studentId}}/absences?_noback"
+    ng-class="{'md-accent': currentNavItem === 'student.absences'}" name="student.absences">{{'student.absences' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="student.userCanViewStudentSpecificData" ng-href="#/students/{{::studentId}}/documents?_noback"
+    ng-class="{'md-accent': currentNavItem === 'student.documents'}" name="student.documents">{{'student.documents' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="student.userCanViewStudentSpecificData" ng-href="#/students/{{::studentId}}/remarks?_noback" 
+    ng-class="{'md-accent': currentNavItem === 'student.remarks', 'highlighted-nav-item': student.hasRemarksPastSevenDays && currentNavItem !== 'student.remarks'}"
+    name="student.remarks">{{'student.remarks' | translate}}</md-button>
   <md-button class="md-raised" ng-if="auth.isAdmin() && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'"
     ng-class="{'md-accent': currentNavItem === 'student.timetable'}" ng-href="#/students/{{::studentId}}/timetable?_noback"
     name="student.timetable">{{'student.studentTimetable' | translate}}</md-button>

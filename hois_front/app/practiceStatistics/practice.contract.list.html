@@ -1,9 +1,9 @@
 <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
     <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/student/statistics" name="practice.students">
         {{'practice.student.statistics' | translate}}</md-nav-item>
-    <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/contract/statistics" name="practice.contracts">
+    <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/contract/statistics{{::contractParam}}" name="practice.contracts">
       {{'practice.contract.statistics' | translate}}</md-nav-item>
-    <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/studyYear/statistics" name="practice.studyYear">
+    <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/studyYear/statistics{{::studyYearParam}}" name="practice.studyYear">
       {{'practice.studyYear.statistics' | translate}}</md-nav-item>
   </md-nav-bar>
   <div class="ois-form-layout-padding ois-form-layout" ng-cloak>

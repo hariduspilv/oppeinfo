@@ -144,7 +144,7 @@
           <div flex layout="row" layout-align="center">
             <a class="very-small-caption" ng-click="openTerms()" md-colors="{color: 'background-400'}">{{'home.terms' | translate}}</a>
           </div>
-          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="very-small-caption">Versioon 1.2.1/20190308</span></div> 
+          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="very-small-caption">Versioon 1.2.2/20190422</span></div> 
           <div flex layout="row" ng-show="state.currentUser" layout-align="center">
             <a class="sidenav-link" href="https://kratt.edu.ee" target="_blank" rel="noopener">Kratt</a>
           </div>
@@ -238,6 +238,7 @@
   <script src="components/hois.menu.js"></script>
   <script src="components/hois.ads.adapter.js"></script>
   <script src="components/hois.autocomplete.js"></script>
+  <script src="components/hois.button.js"></script>
   <script src="components/hois.created.modified.js"></script>
   <script src="components/hois.classifier.autocomplete.js"></script>
   <script src="components/hois.classifier.select.js"></script>
@@ -257,6 +258,7 @@
   <script src="components/hois.date.filter.js"></script>
   <script src="components/hois.valid.dates.filter.js"></script>
   <script src="components/hois.study.period.filter.js"></script>
+  <script src="components/hois.string.filter.js"></script>
   <script src="components/md.maxlength.js"></script>
 
   <script src="contract/contract.js"></script>
@@ -368,6 +370,9 @@
   <script src="reception/reception.saisApplication.list.js"></script>
   <script src="reception/reception.route.js"></script>
 
+  <script src="remark/remark.js"></script>
+  <script src="remark/remark.route.js"></script>
+
   <script src="apelApplication/apel.application.js"></script>
   <script src="apelApplication/apel.application.list.js"></script>
   <script src="apelApplication/apel.school.js"></script>
@@ -376,6 +381,9 @@
   <script src="report/detail.load.report.js"></script>
   <script src="report/report.js"></script>
   <script src="report/report.route.js"></script>
+
+  <script src="rr/rr.js"></script>
+  <script src="rr/rr.route.js"></script>
 
   <script src="rtip/rtip.js"></script>
   <script src="rtip/rtip.route.js"></script>
@@ -424,6 +432,9 @@
   <script src="studentAbsence/absence.search.js"></script>
   <script src="studentAbsence/absence.group.js"></script>
 
+  <script src="studentgroupContract/studentgroup.contract.js"></script>
+  <script src="studentgroupContract/studentgroup.contract.route.js"></script>
+
   <script src="studentGroup/student.group.js"></script>
   <script src="studentGroup/student.group.route.js"></script>
 
@@ -432,7 +443,10 @@
 
   <script src="studentRepresentative/student.representative.application.js"></script>
   <script src="studentRepresentative/student.representative.route.js"></script>
-
+  
+  <script src="studentResultCard/student.result.card.js"></script>
+  <script src="studentResultCard/student.result.card.route.js"></script>
+  
   <script src="studyMaterial/study.material.js"></script>
   <script src="studyMaterial/study.material.list.js"></script>
   <script src="studyMaterial/study.material.edit.js"></script>

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -14,7 +15,7 @@ public class StudentJournalDto {
     private Map<String, Long> absences;
     private String teachers;
     private AutocompleteResult modules;
-    private List<StudentJournalEntryDto> journalEntries;
+    private List<StudentJournalEntryDto> journalEntries = new ArrayList<>();
     
     public Long getId() {
         return id;

@@ -11,6 +11,7 @@ public class ModuleDto implements Translatable {
     private Long id;
     private String nameEt;
     private String nameEn;
+    private String type;
     private List<AutocompleteResult> journals = new ArrayList<>();
     private Boolean isPracticeModule;
     private List<AutocompleteResult> practiceModuleThemes = new ArrayList<>();
@@ -40,6 +41,14 @@ public class ModuleDto implements Translatable {
 
     public void setNameEn(String nameEn) {
         this.nameEn = nameEn;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public List<AutocompleteResult> getJournals() {

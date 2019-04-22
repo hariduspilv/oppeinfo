@@ -45,31 +45,27 @@ angular.module('hitsaOis').factory('DataUtils',
     }
 
     function sortStudyYearsOrPeriods(list) {
-      for (var i = 0; i < list.length; i++) {
-        convertStringToDates(list[i], ["startDate", "endDate"]);
+      var sortedArray = (list || []).slice(0);
+      for (var i = 0; i < sortedArray.length; i++) {
+        convertStringToDates(sortedArray[i], ["startDate", "endDate"]);
       }
-      list.sort(function (el1, el2) {
+      sortedArray.sort(function (el1, el2) {
         return el1.endDate - el2.endDate;   //el1.endDate >= el2.endDate did not work in IE11
       });
+      return sortedArray;
     }
-    /**
-     * Beware that using this method changes the order of initial array
-     */
+    
     function getStudyYearOrPeriodAt(date, list) {
-      sortStudyYearsOrPeriods(list);
-      return list.find(function (item) {
+      var sortedList = sortStudyYearsOrPeriods(list);
+      return sortedList.find(function (item) {
         return date <= item.endDate;
       });
     }
-    /**
-     * Beware that using this method changes the order of initial array
-     */
+    
     function getCurrentStudyYearOrPeriod(list) {
       return getStudyYearOrPeriodAt(new Date().withoutTime(), list);
     }
-    /**
-     * Beware that using this method changes the order of initial array
-     */
+    
     function isPastStudyYearOrPeriod(period) {
       convertStringToDates(period, ["endDate"]);
       return new Date().withoutTime() > period.endDate;
@@ -108,6 +104,18 @@ angular.module('hitsaOis').factory('DataUtils',
       return {extraPrompts: prompts, rooms: rooms, teachers: teachers, studentGroups: studentGroups};
     }
 
+    /**
+     * Decides if object (its `validFrom` and `validThru` ) is valid within given period.
+     * 
+     * @param {Date} startDate 
+     * @param {Date} endDate 
+     * @param {Date} validFrom
+     * @param {Date} validThru
+     */
+    function isValidObject(startDate, endDate, validFrom, validThru) {
+      return (!validFrom || moment(validFrom).isSameOrBefore(endDate)) && (!validThru || moment(validThru).isSameOrAfter(startDate));
+    }
+
     return {
       assign: function (path, obj, value) {
         return path.split('.').reduce(function (prev, curr, currentIndex, array) {
@@ -128,6 +136,7 @@ angular.module('hitsaOis').factory('DataUtils',
       isPastStudyYearOrPeriod: isPastStudyYearOrPeriod,
       periodsOverlap: periodsOverlap,
       occupiedEventTimePrompts: occupiedEventTimePrompts,
+      isValidObject: isValidObject,
 
       sexFromIdcode: function (idcode) {
         if (idcode.length !== 11 || isNaN(idcode)) {
@@ -149,8 +158,57 @@ angular.module('hitsaOis').factory('DataUtils',
         return Math.round(HOURS_PER_CREDIT_POINT * credits);
       },
 
+      get: function(obj, key) {
+        return key.split(".").reduce(function(o, x) {
+            return (typeof o === "undefined" || o === null) ? o : o[x];
+        }, obj);
+      },
+
       hoursToCredits: function(hours) {
         return Math.round((hours / HOURS_PER_CREDIT_POINT) * 10) / 10;
+      },
+
+      getAcademicHoursFromString: function (astroString) {
+        var seconds = moment.duration(astroString).asSeconds();
+        var hours = seconds / 60 / 60;
+        return Math.round(hours * 100) / 100;
+      },
+
+      getAcademicHoursFromDouble: function (academicHours) {
+        if (!angular.isNumber(academicHours)) {
+          return '0:00';
+        }
+        var hours = Math.floor(academicHours);
+        var minutes = (academicHours - hours) * 60;
+        minutes = '' + Math.ceil(minutes);
+        return hours + ':' + (minutes ? (minutes.length === 1 ? ('0' + minutes) : minutes) : '00');
+      },
+
+      getAcademicHours: function (astroHours) {
+        if (!angular.isNumber(astroHours)) {
+          return 0;
+        }
+        var academicHours = astroHours * 4/3;
+        return Math.round(academicHours * 100) / 100;
+      },
+
+      getAstronomicalHoursAsString: function (academicHours) {
+        if (!angular.isNumber(academicHours)) {
+          return '0:00';
+        }
+        var total = academicHours * 3 / 4;
+        var hours = Math.floor(total);
+        var minutes = (total - hours) * 60;
+        minutes = '' + Math.ceil(minutes);
+        return hours + ':' + (minutes ? (minutes.length === 1 ? ('0' + minutes) : minutes) : '00');
+      },
+
+      getAstronomicalHoursAsDouble: function (academicHours) {
+        if (!angular.isNumber(academicHours)) {
+          return 0;
+        }
+        var total = academicHours * 3 / 4;
+        return Math.round(total * 100) / 100;
       },
 
       getAstronomicalHours: function (academicHours) {

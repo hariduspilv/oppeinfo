@@ -535,7 +535,9 @@ public class LessonPlanDto extends LessonPlanForm {
         private Short scheduleLoad;
         private Boolean isStudyPeriodScheduleLoad;
         private Long plannedLessons;
+        private Map<String, Long> plannedLessonsByCapacity;
         private List<Long> studyLoadByWeek;
+        private Map<String, List<Long>> studyLoadByWeekAndCapacity;
 
         public Long getId() {
             return id;
@@ -569,12 +571,28 @@ public class LessonPlanDto extends LessonPlanForm {
             this.plannedLessons = plannedLessons;
         }
 
+        public Map<String, Long> getPlannedLessonsByCapacity() {
+            return plannedLessonsByCapacity;
+        }
+
+        public void setPlannedLessonsByCapacity(Map<String, Long> plannedLessonsByCapacity) {
+            this.plannedLessonsByCapacity = plannedLessonsByCapacity;
+        }
+
         public List<Long> getStudyLoadByWeek() {
             return studyLoadByWeek;
         }
 
         public void setStudyLoadByWeek(List<Long> studyLoadByWeek) {
             this.studyLoadByWeek = studyLoadByWeek;
+        }
+
+        public Map<String, List<Long>> getStudyLoadByWeekAndCapacity() {
+            return studyLoadByWeekAndCapacity;
+        }
+
+        public void setStudyLoadByWeekAndCapacity(Map<String, List<Long>> studyLoadByWeekAndCapacity) {
+            this.studyLoadByWeekAndCapacity = studyLoadByWeekAndCapacity;
         }
 
     }

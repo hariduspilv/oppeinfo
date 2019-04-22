@@ -284,7 +284,27 @@ angular.module('hitsaOis').controller('DiplomaSearchController', ['$scope', '$ro
       return config.apiUrl + baseUrl + '/supplement/' + id + '/print.pdf?' + $httpParamSerializer(getPrintParams(lang));
     }
 
+    function formIsValid(form, promt) {
+      if (angular.isUndefined(form)) {
+        return false;
+      }
+      if (angular.isUndefined(form.numeral) || form.numeral === null) {
+        message.error(promt ? promt : 'main.messages.form-has-errors');
+        return false;
+      }
+      return true;
+    }
+
     $scope.print = function(lang) {
+      if (angular.isDefined(lang)) {
+        if (!formIsValid($scope.formDataEn, 'document.error.emptyFreeForms')) {
+          return;
+        }
+      } else {
+        if (!formIsValid($scope.formData, 'document.error.emptyFreeForms')) {
+          return;
+        }
+      }
       QueryUtils.endpoint(baseUrl + '/supplement/' + id + '/calculate').query(getPrintParams(lang), function(result) {
         $window.location = getPrintUrl(lang);
         dialogService.confirmDialog({

@@ -1,0 +1,73 @@
+<div layout-padding>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="searchForm.$valid && loadData()" layout="column" name="searchForm">
+        <div flex>
+          <div layout="column">
+            <div flex layout-gt-sm="row" layout="column">
+              <hois-autocomplete flex="45" ng-model="criteria.student" ha-controller="directiveControllers" url="/autocomplete/students"
+                label="{{'rr.student.student' | translate}}"></hois-autocomplete>
+              <hois-autocomplete flex="50" flex-offset="0" flex-offset-gt-sm="5" ng-model="criteria.group" ha-controller="directiveControllers"
+                url="/autocomplete/studentgroups" label="{{'rr.student.group' | translate}}"></hois-autocomplete>
+            </div>
+            <div flex layout="column">
+              <label class="common-label">{{'rr.student.changeDatesRange' | translate}}</label>
+              <div flex layout="row">
+                <md-input-container>
+                  <label>{{'main.from' | translate}}</label>
+                  <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"></md-datepicker>
+                </md-input-container>
+                <md-input-container>
+                  <label>{{'main.thru' | translate}}</label>
+                  <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+                </md-input-container>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="p.firstname, p.lastname">{{'rr.student.studentName' | translate}}</th>
+            <th md-column md-order-by="sg.code">{{'rr.student.group' | translate}}</th>
+            <th md-column>{{'rr.student.oldName' | translate}}</th>
+            <th md-column>{{'rr.student.newName' | translate}}</th>
+            <th md-column>{{'rr.student.oldAddress' | translate}}</th>
+            <th md-column>{{'rr.student.newAddress' | translate}}</th>
+            <th md-column md-order-by="wrcl.inserted">{{'rr.student.changed' | translate}}</th>
+            <th md-column>{{'rr.student.changedBy' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell><a ng-href="#/students/{{::row.student.id}}/main">{{currentLanguageNameField(row.student)}}</a></td>
+            <td md-cell>{{currentLanguageNameField(row.group)}}</td>
+            <td md-cell>{{row.oldName}}</td>
+            <td md-cell>{{row.newName}}</td>
+            <td md-cell>{{row.oldAddress}}</td>
+            <td md-cell>{{row.newAddress}}</td>
+            <td md-cell>{{::row.changed | hoisDateTime}}</td>
+            <td md-cell>{{::row.changedBy}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

@@ -339,44 +339,6 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
       });
     }
 
-    /*$scope.saveEvent = function (params) {
-
-      var clashingRoom = findRoomClashByIds();
-      var clashingTeacher = findTeachersByIds();
-      var clashingTimes = findEventByTimeAndGroup(startTime, $scope.plan.selectedGroup.substr(5), isSubjectTeacherPair);
-      if(clashingTimes) {
-        dialogService.confirmDialog({ prompt: 'timetable.timetablePlan.addForOtherGroups', accept: 'main.yes', cancel: 'main.no' }, function() {
-          $scope.saveEventAfterClashCheck(params, isSubjectTeacherPair, startTime);
-        });
-      } else {
-        $scope.saveEventAfterClashCheck(params, isSubjectTeacherPair, startTime);
-      }
-    };*/
-
-    /*function findEventByTimeAndGroup(startTime, group, isSubjectTeacherPair) {
-      var endTime = new Date(startTime.getTime() + (MS_PER_FITEENMINUTES * $scope.plan.lessonAmount));
-      var groupLessons;
-      if(isSubjectTeacherPair) {
-        groupLessons = $scope.plan.subjectTeacherPairs.find(function (it) {
-          return it.id === group;
-        }).lessons;
-      } else {
-        groupLessons = $scope.plan.studentGroups.find(function (it) {
-          return it.id === group;
-        }).lessons;
-      }
-      if(groupLessons) {
-        var lessonsFound = groupLessons.filter(function(lesson) {
-          return (startTime.getTime() > lesson.start.getTime() && startTime.getTime() < lesson.end.getTime()) || (endTime.getTime() < lesson.start.getTime() && 
-            endTime.getTime() > lesson.end.getTime());
-        })
-        if(lessonsFound) {
-          return lessonsFound;
-        }
-      }
-      return [];
-    }*/
-
     $scope.saveEventAfterClashCheck = function (params) {
       var isSubjectTeacherPair = this.lessonTime.isSubjectTeacherPair ? true : false;
       var startTime = this.lessonTime.start;
@@ -549,6 +511,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
     }
 
     function setTimetableTimeRange() {
+      $scope.totalLessons = 0;
       $scope.lessonsInDay = {};
       $scope.dayTimeRanges = {};
       $scope.currentLessonTimes = [];
@@ -574,6 +537,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
             overallStartTime = nextStartTime;
           }
         }
+        $scope.totalLessons += lessonsInDay;
         $scope.lessonsInDay[day] = lessonsInDay;
       }
     }
@@ -822,7 +786,11 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
 
     function lessonTimeBuildingChanged(buildingId) {
       if (angular.isDefined($scope.plan.datesForTimetable) && $scope.plan.datesForTimetable.length > 0) {
-        var startTime = new Date($scope.dayTimeRanges[$scope.plan.datesForTimetable[0]].start);
+        var startDayTimeRange = $scope.dayTimeRanges[$scope.plan.datesForTimetable[0]];
+        if (!startDayTimeRange) {
+          return;
+        }
+        var startTime = new Date(startDayTimeRange.start);
         $scope.lessonTimeLegend = [];
 
         //datesForTimetable is an array of date objects currently shown in the timetable

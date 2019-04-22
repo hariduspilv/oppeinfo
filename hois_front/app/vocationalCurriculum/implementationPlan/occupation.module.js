@@ -475,6 +475,25 @@ angular.module('hitsaOis')
             dialogScope.dialogForm.credits.$setDirty();
           };
 
+          dialogScope.getOutcomesByIds = function (arr) {
+            if (!angular.isArray(arr)) return [];
+            return dialogScope.outcomes.filter(function (outcome) {
+              for (var i = 0; i < arr.length; i++) {
+                if (arr[i] === outcome.id) {
+                  return true;
+                }
+              }
+              return false;
+            });
+          }
+          
+          dialogScope.joinOutcomes = function (arr, seperator) {
+            if (!arr || angular.isUndefined(seperator)) return '';
+            return arr.map(function (r) {
+                return $scope.currentLanguage() === 'en' ? r.outcomeEn : r.outcomeEt
+            }).join(seperator);
+          }
+
           dialogScope.saveTheme = function () {
             var submittedDialogScope = dialogScope;
             if (!validateTheme(submittedDialogScope)) {

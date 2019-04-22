@@ -13,6 +13,14 @@ angular.module('hitsaOis').controller('ContractListController', function ($scope
       clMapper.objectmapper(resultData.content);
     };
   }
+  
+  $scope.sendToEkis = function() {
+    $location.path("/practice/studentgroup/ekis").search({
+      "":"_menu",
+      studentGroup: $scope.criteria.studentGroup,
+      studentName: $scope.criteria.studentName
+    });
+  };
 
   $scope.directiveControllers = [];
   var clearCriteria = $scope.clearCriteria;

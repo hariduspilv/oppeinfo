@@ -1,0 +1,106 @@
+@page {
+    size: A4;
+    margin: 60pt, 50pt, 60pt, 50pt;
+    @top-center {
+        content: element(header);
+    }
+}
+
+html {
+    font-family: Garamond;
+    font-size: 11pt;
+}
+
+#header {
+    position: running(header);
+    color: #D3D3D3;
+    margin-top: 30pt;
+}
+
+#header-left {
+    float: left;
+    text-align: left;
+    width: 40%;
+    font-style: italic;
+}
+
+#header-right {
+    float: right;
+    text-align: right;
+    width: 40%;
+    font-style: italic;
+}
+
+.page-break-before {
+    page-break-before: always;
+}
+
+.page-break-avoid, table tr {
+    page-break-inside: avoid;
+}
+
+.page-break-after-avoid {
+    page-break-after: avoid;
+}
+
+.label {
+    font-weight: bold;
+}
+
+.center {
+    text-align: center;
+}
+
+.padding-top {
+    height: 10pt;
+}
+
+.general-info > div {
+    margin-bottom: 9pt;
+    margin-top: 9pt;
+}
+
+.title {
+    font-size: 14pt;
+    font-weight: bold;
+    text-align: center;
+    padding-bottom: 16pt;
+}
+
+.study-results {
+    width: 100%;
+}
+
+.study-results-order {
+    width: 30pt;
+}
+
+.study-results-name {
+    width: 200pt;
+}
+
+.study-results-credits {
+    width: 60pt;
+}
+
+
+.study-results-grade {
+    width: 70pt;
+}
+
+.study-results-grade-date {
+    width: 60pt;
+}
+
+.study-results-teacher {
+    width: 100pt;
+}
+
+/* study-results-order + study-results-name */
+.study-results-total-credits-label {
+    width: 230pt;
+}
+
+.margin-top {
+    margin-top: 10pt;
+}

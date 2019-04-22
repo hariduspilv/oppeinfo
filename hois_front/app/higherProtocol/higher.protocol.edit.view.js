@@ -8,6 +8,7 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
   var Endpoint = QueryUtils.endpoint(baseUrl);
   var midtermTaskUtil = new MidtermTaskUtil();
   var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS', grade: 'KORGHINDAMINE' });
+  var deferredEntityToDto;
 
   function getEmptyStudentResult(student, midtermTask) {
     return {
@@ -23,6 +24,12 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
   $scope.calculateGrades = {
     protocolStudents: []
   };
+
+  function resolveDeferredIfExists() {
+    if (angular.isDefined(deferredEntityToDto) && deferredEntityToDto.promise.$$state.status === 0) {
+      deferredEntityToDto.resolve();
+    }
+  }
 
   function entityToDto(entity) {
     $q.all(clMapper.promises).then(function () {
@@ -45,6 +52,9 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
       $scope.formState.canCalculate = $scope.record.protocolType === 'PROTOKOLLI_LIIK_P' && $scope.formState.canEditProtocol &&
         !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject;
       $scope.formState.isConfirmed = $scope.record.status === 'PROTOKOLL_STAATUS_K';
+      resolveDeferredIfExists();
+    }).catch(function () {
+      resolveDeferredIfExists();
     });
   }
 
@@ -152,15 +162,18 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
   };
 
   $scope.confirm = function () {
+    deferredEntityToDto = $q.defer();
     if(!validationPassed()) {
-      return;
+      resolveDeferredIfExists();
+      return deferredEntityToDto.promise;
     }
 
     if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      ProtocolUtils.signBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, 'higherProtocol.message.confirmed', entityToDto);
+      ProtocolUtils.signBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, 'higherProtocol.message.confirmed', entityToDto, resolveDeferredIfExists);
     } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      ProtocolUtils.mobileSignBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, 'higherProtocol.message.confirmed', entityToDto);
+      ProtocolUtils.mobileSignBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, 'higherProtocol.message.confirmed', entityToDto, resolveDeferredIfExists);
     }
+    return deferredEntityToDto.promise;
   };
 
   $scope.getMidtermTaskHeader = midtermTaskUtil.getMidtermTaskHeader;

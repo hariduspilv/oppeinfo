@@ -9,6 +9,8 @@ public class CurriculumVersionAutocompleteCommand extends SearchCommand {
     private Boolean valid;
     private Boolean closed;
     private Boolean languages;
+    private Long curriculumId;
+    private Boolean hasGroup;
 
     public Boolean getHigher() {
         return higher;
@@ -48,5 +50,21 @@ public class CurriculumVersionAutocompleteCommand extends SearchCommand {
 
     public void setLanguages(Boolean languages) {
         this.languages = languages;
+    }
+
+    public Long getCurriculumId() {
+        return curriculumId;
+    }
+
+    public void setCurriculumId(Long curriculumId) {
+        this.curriculumId = curriculumId;
+    }
+
+    public Boolean getHasGroup() {
+        return hasGroup;
+    }
+
+    public void setHasGroup(Boolean hasGroup) {
+        this.hasGroup = hasGroup;
     }
 }

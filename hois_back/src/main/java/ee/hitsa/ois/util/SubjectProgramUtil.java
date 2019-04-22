@@ -38,7 +38,7 @@ public class SubjectProgramUtil {
         }
         if (isConfirmed && Boolean.TRUE.equals(program.getPublicStudent())) {
             if (user.isStudent()) {
-                return !em.createNativeQuery("select sp.id"
+                return !em.createNativeQuery("select sp.id "
                         + "from subject_program sp "
                         + "join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id "
                         + "join declaration_subject ds on ds.subject_study_period_id = sspt.subject_study_period_id "

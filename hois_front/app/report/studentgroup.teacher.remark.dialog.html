@@ -1,0 +1,57 @@
+<md-dialog aria-label="comment edit dialog" flex="50" flex-sm="50" flex-xs="100">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>{{student.fullname}} {{"report.studentGroupTeacher.remarks" | translate}}</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div layout-padding>
+      <md-table-container>
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column>{{'report.studentGroupTeacher.reason' | translate}} / {{'report.studentGroupTeacher.journal' | translate}}</th>
+              <th md-column>{{'report.studentGroupTeacher.remark' | translate}}</th>
+              <th md-column></th>
+              <th md-column>{{'report.studentGroupTeacher.date' | translate}}</th>
+              <th md-column>{{'report.studentGroupTeacher.addedBy' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in student.remarks | orderBy: ['-remarkDate', '-remarkTime']" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>
+                <span ng-if="row.reason">
+                  <hois-classifier-value ng-model="row.reason" main-classifier-code="MARKUS"></hois-classifier-value>
+                </span>
+                <span ng-if="row.journal">{{currentLanguageNameField(row.journal)}}</span>
+              </td>
+              <td md-cell>
+                <span>{{row.remark | hoisLimitTo: 150:!row.showAll}}</span>
+              </td>
+              <td md-cell>
+                <span class="custom-tooltip" ng-if="!row.showAll && row.remark.length > 150" ng-click="row.showAll = true">
+                  {{'report.studentGroupTeacher.showMore' | translate}}
+                </span>
+                <span class="custom-tooltip" ng-if="row.showAll" ng-click="row.showAll = false">
+                  {{'report.studentGroupTeacher.showLess' | translate}}
+                </span>
+              </td>
+              <td md-cell>{{row.remarkDate | hoisDate}} {{row.remarkTime | hoisTime}}</td>
+              <td md-cell>{{row.remarkInsertedBy}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </div>
+  </md-dialog-content>
+
+  <span flex></span>
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

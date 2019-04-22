@@ -6,6 +6,7 @@ angular.module('hitsaOis')
 
     var BASE_URL = '/lessonplans';
     var WHOLE_NUMBER_REGEX = /^\d+$/;
+    var NEW_LINE_HEX = "\x0A";
 
     var SEPARATOR = '/';
     var MODULE_ID = 'module';
@@ -237,6 +238,21 @@ angular.module('hitsaOis')
 
     lessonPlanTableService.getTeacherLoad = function (studyPeriods, teachers, teacherId) {
       return getTeacherLoad(studyPeriods, teachers, teacherId);
+    };
+
+    lessonPlanTableService.getPlannedLessonsTitle = function (teacherId, teachers, capacities) {
+      var teacher = getTeacherStudyLoad(teachers, teacherId);
+      return teacher ? plannedLessonsTitle(teacher, capacities) : '';
+    };
+
+    lessonPlanTableService.getStudyLoadTitle = function (teacherId, teachers, capacities, weekIndex) {
+      var teacher = getTeacherStudyLoad(teachers, teacherId);
+      return teacher ? studyLoadTitle(teacher, capacities, weekIndex) : '';
+    };
+
+    lessonPlanTableService.getStudyLoadSpTitle = function (teacherId, teachers, capacities, studyPeriodIndex) {
+      var teacher = getTeacherStudyLoad(teachers, teacherId);
+      return teacher ? studyLoadSpTitle(teacher, capacities, studyPeriodIndex) : '';
     };
 
     function getUniqueJournalThemes(themes) {
@@ -486,6 +502,7 @@ angular.module('hitsaOis')
 
     function teachersStudyLoadRow(scope, teacherId) {
       var teacher = getTeacherStudyLoad(scope.record.teachers, teacherId);
+      var teacherCapacities = getCapacityTypes(scope.formState.capacityTypes, teacher.plannedLessonsByCapacity);
       var studyLoadRow = document.createElement('tr');
       studyLoadRow.appendChild(document.createElement('td'));
 
@@ -495,6 +512,7 @@ angular.module('hitsaOis')
       loadLabelColumn.classList.add(FIX);
       loadLabelColumn.classList.add(DIVIDER);
       loadLabelColumn.innerHTML = $translate.instant('lessonplan.load') + ' ' + totalColumnValue(teacher.plannedLessons);
+      loadLabelColumn.title = plannedLessonsTitle(teacher, teacherCapacities);
       studyLoadRow.appendChild(loadLabelColumn);
 
       if (scope.formState.showWeeks) {
@@ -504,6 +522,7 @@ angular.module('hitsaOis')
             var loadByWeek = teacher.studyLoadByWeek ? teacher.studyLoadByWeek[weekIndex] : null;
             var wTotalColumn = weekTotalColumn(null, loadByWeek, week);
             wTotalColumn.classList.add(TEACHER_STUDY_LOAD);
+            wTotalColumn.title = studyLoadTitle(teacher, teacherCapacities, weekIndex);
             studyLoadRow.appendChild(wTotalColumn);
           }
         }
@@ -514,6 +533,7 @@ angular.module('hitsaOis')
             var loadByPeriod = teacher.studyLoadByPeriod ? teacher.studyLoadByPeriod[spIndex] : null;
             var spTotalColumn = studyPeriodTotalColumn(null, loadByPeriod, studyPeriod);
             spTotalColumn.classList.add(TEACHER_STUDY_LOAD);
+            spTotalColumn.title = studyLoadSpTitle(teacher, teacherCapacities, spIndex);
             studyLoadRow.appendChild(spTotalColumn);
           }
         }
@@ -878,7 +898,7 @@ angular.module('hitsaOis')
     function totalColumn(id, value, fontColor) {
       var column = document.createElement('td');
       column.id = id;
-      column.innerHTML = value;
+      column.innerHTML = angular.isDefined(value) ? value : '';
       column.classList.add(CENTER);
       column.classList.add(DIVIDER);
       column.classList.add(FIX);
@@ -889,7 +909,7 @@ angular.module('hitsaOis')
     function weekTotalColumn(id, value, week, fontColor) {
       var totalHourColumn = document.createElement('td');
       totalHourColumn.id = id;
-      totalHourColumn.innerHTML = value;
+      totalHourColumn.innerHTML = angular.isDefined(value) ? value : '';
       totalHourColumn.classList.add(CENTER);
       if (week.endOfPeriod) {
         totalHourColumn.classList.add(DIVIDER);
@@ -901,7 +921,7 @@ angular.module('hitsaOis')
     function studyPeriodTotalColumn(id, value, studyPeriod, fontColor) {
       var totalHourColumn = document.createElement('td');
       totalHourColumn.id = id;
-      totalHourColumn.innerHTML = value;
+      totalHourColumn.innerHTML = angular.isDefined(value) ? value : '';
       totalHourColumn.colSpan = studyPeriod.weekNrs.length;
       totalHourColumn.classList.add(CENTER);
       totalHourColumn.classList.add(DIVIDER);
@@ -914,6 +934,43 @@ angular.module('hitsaOis')
       column.colSpan = 1;
       column.classList.add(DIVIDER);
       return column;
+    }
+
+    function plannedLessonsTitle(teacher, capacityTypes) {
+      var plannedLessonsTitle = "";
+      for (var ctIndex = 0; ctIndex < capacityTypes.length; ctIndex++) {
+        var capacityType = capacityTypes[ctIndex];
+        if (teacher.plannedLessonsByCapacity && teacher.plannedLessonsByCapacity[capacityType.code]) {
+          plannedLessonsTitle += capacityType.value.toUpperCase() + ": " + teacher.plannedLessonsByCapacity[capacityType.code] + NEW_LINE_HEX;
+        }
+      }
+      return plannedLessonsTitle;
+    }
+
+    function studyLoadTitle(teacher, capacityTypes, weekIndex) {
+      var studyLoadTitle = "";
+      for (var ctIndex = 0; ctIndex < capacityTypes.length; ctIndex++) {
+        var capacityType = capacityTypes[ctIndex];
+        if (teacher.studyLoadByWeekAndCapacity && teacher.studyLoadByWeekAndCapacity[capacityType.code] &&
+          teacher.studyLoadByWeekAndCapacity[capacityType.code][weekIndex]) {
+          studyLoadTitle += capacityType.value.toUpperCase() + ": " +
+            teacher.studyLoadByWeekAndCapacity[capacityType.code][weekIndex] + NEW_LINE_HEX;
+        }
+      }
+      return studyLoadTitle;
+    }
+
+    function studyLoadSpTitle(teacher, capacityTypes, spIndex) {
+      var studyLoadSpTitle = "";
+      for (var ctIndex = 0; ctIndex < capacityTypes.length; ctIndex++) {
+        var capacityType = capacityTypes[ctIndex];
+        if (teacher.studyLoadByPeriodAndCapacity && teacher.studyLoadByPeriodAndCapacity[capacityType.code] &&
+          teacher.studyLoadByPeriodAndCapacity[capacityType.code][spIndex]) {
+          studyLoadSpTitle += capacityType.value.toUpperCase() + ": " +
+            teacher.studyLoadByPeriodAndCapacity[capacityType.code][spIndex] + NEW_LINE_HEX;
+        }
+      }
+      return studyLoadSpTitle;
     }
 
     return lessonPlanTableService;

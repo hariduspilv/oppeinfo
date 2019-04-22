@@ -18,6 +18,7 @@ import ee.hois.xroad.ariregister.service.AriregisterClient;
 import ee.hois.xroad.ehis.service.EhisClient;
 import ee.hois.xroad.handler.CustomValidationEventHandler;
 import ee.hois.xroad.kutseregister.service.KutseregisterClient;
+import ee.hois.xroad.rahvastikuregister.service.RahvastikuregisterClient;
 import ee.hois.xroad.rtip.service.RtipClient;
 import ee.hois.xroad.sais2.service.SaisClient;
 
@@ -133,5 +134,13 @@ public class ServicesConfiguration {
     @Bean
     public AriregisterClient ariregisterClient() {
         return new AriregisterClient();
+    }
+    
+    /**
+     * Rahvastikuregister client
+     */
+    @Bean
+    public RahvastikuregisterClient rahvastikuregisterClient() {
+        return new RahvastikuregisterClient();
     }
 }

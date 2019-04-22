@@ -174,6 +174,7 @@ public class SaisAdmissionService {
         Classifier finallikasRev = em.getReference(Classifier.class, FinSource.FINALLIKAS_REV.name());
         Classifier oppekoormusOsa = em.getReference(Classifier.class, StudyLoad.OPPEKOORMUS_OSA.name());
         Classifier oppekoormusTais = em.getReference(Classifier.class, StudyLoad.OPPEKOORMUS_TAIS.name());
+        Classifier oppekoormusMta = em.getReference(Classifier.class, StudyLoad.OPPEKOORMUS_MTA.name());
 
         List<Admission> addmissions = response.getAdmissions() != null ? response.getAdmissions().getAdmission() : null;
         for(Admission admission : StreamUtil.nullSafeList(addmissions)) {
@@ -224,12 +225,18 @@ public class SaisAdmissionService {
             saisAdmission.setPeriodStart(DateUtils.toLocalDate(admission.getAdmissionPeriodStart()));
             saisAdmission.setPeriodEnd(DateUtils.toLocalDate(admission.getAdmissionPeriodEnd()));
 
-            if(admission.isIsPartialLoad()) {
+            saisAdmission.setIsFullLoad(Boolean.valueOf(admission.isIsFullLoad()));
+            saisAdmission.setIsPartialLoad(Boolean.valueOf(admission.isIsPartialLoad()));
+            saisAdmission.setIsUndefinedLoad(Boolean.valueOf(admission.isIsUndefinedLoad()));
+
+            if (admission.isIsFullLoad()) {
+                saisAdmission.setStudyLoad(oppekoormusTais);
+            } else if (admission.isIsPartialLoad()) {
                 saisAdmission.setStudyLoad(oppekoormusOsa);
             } else {
-                saisAdmission.setStudyLoad(oppekoormusTais);
+                saisAdmission.setStudyLoad(oppekoormusMta);
             }
-
+            
             saisAdmission.setStudyLevel(saisAdmission.getCurriculumVersion().getCurriculum().getOrigStudyLevel());
 
             for(SAISClassification clf : admission.getCurriculumLanguages().getSAISClassification()) {
@@ -248,6 +255,7 @@ public class SaisAdmissionService {
                 saisAdmission.setStudyForm(oppevormMap.get(DEFAULT_OPPEVORM));
             }
             saisAdmission.setPlaces(admission.getAdmissionCount());
+            
             result.add(SaisAdmissionSearchDto.of(EntityUtil.save(saisAdmission, em)));
         }
     }

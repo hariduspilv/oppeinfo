@@ -1,12 +1,14 @@
 'use strict';
 
 angular.module('hitsaOis')
-.controller('messageSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route', function ($scope, QueryUtils, DataUtils, $route) {
+.controller('messageSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route', "USER_ROLES", "AuthService",
+  function ($scope, QueryUtils, DataUtils, $route, USER_ROLES, AuthService) {
     $scope.currentNavItem = 'message.sent';
     QueryUtils.createQueryForm($scope, '/message/sent', {order: "-inserted"});
     $scope.loadData();
     DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
     $scope.auth = $route.current.locals.auth;
+    $scope.canSeeAutomatic = $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AUTOTEADE);
 
     $scope.showReceivers = function(row, bool) {
         var name = "";
@@ -21,7 +23,7 @@ angular.module('hitsaOis')
     };
 
     $scope.formState = {
-      canSend: $scope.auth.isAdmin() || $scope.auth.isTeacher() || $scope.auth.isStudent() || $scope.auth.isParent()
+      canSend: AuthService.isAuthorized($route.routes["/message/new"].data.authorizedRoles)
     };
 
     angular.element(document).ready(function() {
@@ -29,12 +31,14 @@ angular.module('hitsaOis')
         document.getElementById('scrolling_div').scrollLeft += scrollAmount;
     });
 
-}]).controller('messageAutomaticSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route',function ($scope, QueryUtils, DataUtils, $route) {
+}]).controller('messageAutomaticSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route', "USER_ROLES", "AuthService",
+  function ($scope, QueryUtils, DataUtils, $route, USER_ROLES, AuthService) {
     $scope.currentNavItem = 'message.automaticSent';
     QueryUtils.createQueryForm($scope, '/message/sent/automatic', {order: "-inserted"});
     $scope.loadData();
     DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
     $scope.auth = $route.current.locals.auth;
+    $scope.canSeeAutomatic = $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AUTOTEADE);
 
     $scope.showReceivers = function(row, bool) {
         var name = "";
@@ -52,27 +56,30 @@ angular.module('hitsaOis')
         document.getElementById('scrolling_div').scrollLeft += scrollAmount;
     });
 
-}]).controller('messageReceivedController', ['$scope', 'QueryUtils', 'DataUtils', '$route', '$rootScope', function ($scope, QueryUtils, DataUtils, $route, $rootScope) {
+}]).controller('messageReceivedController', ['$scope', 'QueryUtils', 'DataUtils', '$route', '$rootScope', "USER_ROLES", "AuthService",
+  function ($scope, QueryUtils, DataUtils, $route, $rootScope, USER_ROLES, AuthService) {
     $scope.currentNavItem = 'message.received';
     QueryUtils.createQueryForm($scope, '/message/received', {order: "-inserted"});
     $scope.loadData();
     DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
     $scope.auth = $route.current.locals.auth;
+    $scope.canSeeAutomatic = $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AUTOTEADE);
 
     QueryUtils.endpoint('/message/received/new').get().$promise.then(function (result) {
         $rootScope.unreadMessages = result.unread;
     });
 
     $scope.formState = {
-      canSend: $scope.auth.isAdmin() || $scope.auth.isTeacher() || $scope.auth.isStudent() || $scope.auth.isParent()
+      canSend: AuthService.isAuthorized($route.routes["/message/new"].data.authorizedRoles)
     };
 
-}]).controller('messageViewController', ['$scope', '$route', 'QueryUtils', 'DataUtils', '$resource', 'config', '$rootScope', function ($scope, $route, QueryUtils, DataUtils, $resource, config, $rootScope) {
+}]).controller('messageViewController', ['$scope', '$route', 'QueryUtils', 'DataUtils', '$resource', 'config', '$rootScope', 'AuthService', function ($scope, $route, QueryUtils, DataUtils, $resource, config, $rootScope, AuthService) {
     var baseUrl = '/message';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
 
     var backUrl = $route.current.params.backUrl;
+    $scope.canSend = AuthService.isAuthorized($route.routes["/message/:id/respond"].data.authorizedRoles);
     $scope.isSent = backUrl !== 'received';
 
     function afterLoad() {

@@ -1,0 +1,50 @@
+<md-dialog aria-label="add enterprise dialog" flex="50">
+        <form name="dialogForm" ng-submit="checkChecked()" novalidate ng-cloak>
+            <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2 flex>{{"contract.addToSeveralHeader" | translate}}</h2>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                <md-icon md-font-set="material-icons">close</md-icon>
+                </md-button>
+            </div>
+            </md-toolbar>
+            <md-dialog-content>
+            <div class="md-dialog-content" flex>
+                <div flex="50" layout="column" class="form-readonly">
+                    <md-input-container>
+                        <label>{{'lessonplan.studentGroup' | translate}}</label>
+                        <hois-value value="currentLanguageNameField(studentGroup)"></hois-value>
+                    </md-input-container>
+                </div>
+                <div layout="row" flex="100">
+                    <hois-autocomplete label="student.label" ng-model="criteria.student" method="students" additional-query-params="{active: true, studentGroup: studentGroupList}" flex></hois-autocomplete>
+                    <md-button flex-offset="5" ng-click="addAllStudents()" class="md-raised">{{"student.addAll" | translate}}</md-button>
+                </div>
+                <md-table-container ng-if="criteria.students.length > 0" layout="row" flex="100" style="max-height: 100px">
+                <table md-table class="secondary-table">
+                    <thead md-head>
+                    <tr md-row>
+                        <th md-column width="90%">{{'student.plural' | translate}}</th>
+                        <th md-column width="10%"></th>
+                    </tr>
+                    </thead>
+                    <tbody md-body>
+                    <tr md-row ng-repeat="student in criteria.students" ng-class-odd="'odd'" ng-class-even="'even'">
+                        <td md-cell>{{currentLanguageNameField(student)}}</td>
+                        <td md-cell>
+                        <a ng-click="deleteStudent(student)" class="remove">&times;</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                </md-table-container>
+            </div>
+            </md-dialog-content>
+        
+            <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
+                <md-button flex-xs="100" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+                <md-button ng-show="enterprise.id" flex-xs="100" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+                <md-button flex-xs="100" class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+            </md-dialog-actions>
+        </form>
+        </md-dialog>

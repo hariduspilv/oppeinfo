@@ -1,4 +1,4 @@
-VERSIOON:  1.2.1/20190308
+VERSIOON:  1.2.2/20190422
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.2.0/20190215
+EELDUS: ver. 1.2.1/20190308
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skripti on db/install20190308.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skripti on db/install20190422.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20190308.sql skript, nt
+1. käivitada install20190422.sql skript, nt
    
-   psql -h devhois -f install20190308.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20190422.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20190308.sql - install faili nimi
+   -f install20190422.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
@@ -39,7 +39,28 @@ RAKENDUSE INSTALLEERIMINE:
 1. Backendi paigaldamiseks
 	1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta
 	2. veenduda, et /opt/hois kaustas on olemas muudetud application.properties fail	
-	3. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
+	3. Lisada application.properties faili järgmised read (rahvastiku registri päringu parameetrid) ja vajadusel muuta vastavad parameetrid õigeks (turvaserveri asukoht, versioon, klient):
+        
+
+		# RR ("Rahvastikuregister") configuration
+		# NB! userID - päringu esitaja, peab olema see isik, kellel on luba RR päringuid esitada. Testsüsteemis see on EE11111111111
+		rr.endpoint=http://TURVASERVER/cgi-bin/consumer-proxy
+		rr.userId=EE11111111111
+		rr.service.xRoadInstance=ee-dev
+		rr.service.memberClass=GOV
+		rr.service.memberCode=70008440
+		rr.service.subsystemCode=rr
+		
+		rr.client.xRoadInstance=ee-dev
+		rr.client.memberClass=COM
+		rr.client.memberCode=10239452
+		rr.client.subsystemCode=generic-consumer
+		
+		
+		# Kõikide isikute RR andmete uuendamise cron 1 kord kuus
+		hois.jobs.rr.cron=0 0 3 * * *
+		
+	4. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
 	
 2. Frontendi paigaldamiseks
 	1. Kustutada vanad html jms failid: käivitada käsk "rm -Rf /opt/hois/html/*" (nginxist vana seisu tühjendamiseks)

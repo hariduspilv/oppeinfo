@@ -1,5 +1,8 @@
 package ee.hitsa.ois.web;
 
+import java.util.AbstractMap.SimpleEntry;
+
+import javax.persistence.EntityManager;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -14,12 +17,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.rr.WsRrLogSchool;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.ehis.EhisLogService;
 import ee.hitsa.ois.service.ekis.EkisLogService;
 import ee.hitsa.ois.service.kutseregister.KutseregisterLogService;
 import ee.hitsa.ois.service.kutseregister.KutseregisterService;
+import ee.hitsa.ois.service.rr.PopulationRegisterLogService;
 import ee.hitsa.ois.service.rtip.RtipLogService;
 import ee.hitsa.ois.service.rtip.RtipService;
 import ee.hitsa.ois.service.sais.SaisLogService;
@@ -33,12 +39,18 @@ import ee.hitsa.ois.web.dto.EhisLogDto;
 import ee.hitsa.ois.web.dto.EkisLogDto;
 import ee.hitsa.ois.web.dto.QfLogDto;
 import ee.hitsa.ois.web.dto.RtipLogDto;
+import ee.hitsa.ois.web.dto.rr.PopulationRegisterChangesSearchDto;
+import ee.hitsa.ois.web.dto.rr.PopulationRegisterSearchDto;
+import ee.hitsa.ois.web.dto.rr.WsRrChangeLogDto;
+import ee.hitsa.ois.web.dto.rr.WsRrLogDto;
 import ee.hitsa.ois.web.dto.sais.SaisLogDto;
 
 @RestController
 @RequestMapping("/logs")
 public class LogsController {
 
+    @Autowired
+    private EntityManager em;
     @Autowired
     private EhisLogService ehisLogService;
     @Autowired
@@ -53,6 +65,8 @@ public class LogsController {
     private RtipService rtipService;
     @Autowired
     private SaisLogService saisLogService;
+    @Autowired
+    private PopulationRegisterLogService rrLogService;
 
     @GetMapping("/ehis")
     public Page<EhisLogDto> ehisSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
@@ -135,5 +149,34 @@ public class LogsController {
     public SaisLogDto saisGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_SAIS);
         return saisLogService.get(user, id, messageType);
+    }
+    
+    @GetMapping("/rr/changelogs")
+    public Page<WsRrChangeLogDto> rrSearchChanges(HoisUserDetails user, PopulationRegisterChangesSearchDto cmd, Pageable pageable) {
+        if (cmd.getStudent() != null) {
+            UserUtil.assertCanViewStudentSpecificData(user, em.getReference(Student.class, cmd.getStudent().getId()));
+        } else {
+            UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RR);
+        }
+        return rrLogService.searchChanges(user, cmd, pageable);
+    }
+    
+    @GetMapping("/rr")
+    public Page<WsRrLogDto> rrSearch(HoisUserDetails user, PopulationRegisterSearchDto cmd, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RR);
+        return rrLogService.search(user, cmd, pageable);
+    }
+    
+    @GetMapping("/rr/{id:\\d+}")
+    public WsRrLogDto rrGet(HoisUserDetails user, @PathVariable("id") Long id) {
+        WsRrLogSchool logSchool = em.getReference(WsRrLogSchool.class, id);
+        UserUtil.assertIsSchoolAdmin(user, logSchool.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RR);
+        return rrLogService.get(logSchool);
+    }
+    
+    @GetMapping("/rr/hasrecentchangelogs")
+    public SimpleEntry<String, Boolean> hasRecentChangeLogs(HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RR);
+        return new SimpleEntry<>("hasRecentChangeLogs", rrLogService.hasRecentChangeLogs(user));
     }
 }

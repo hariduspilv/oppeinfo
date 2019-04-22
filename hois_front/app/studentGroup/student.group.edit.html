@@ -59,7 +59,13 @@
 
         <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'studentGroup.speciality' | translate}}</label>
-          <hois-classifier-select ng-model="record.speciality" name="speciality" ng-disabled="formState.readonly" main-classifier-code="SPETSKUTSE" show-only-values="formState.specialities" model-value-attr="code"></hois-classifier-select>
+          <!-- <hois-classifier-select ng-model="record.speciality" name="speciality" main-classifier-code="SPETSKUTSE" show-only-values="formState.specialities" model-value-attr="code"></hois-classifier-select> -->
+          <md-select ng-model="record.speciality">
+            <md-option md-option-empty></md-option>
+            <md-option ng-value="opt.code.code" ng-repeat="opt in formState.specialities | orderBy: ['code.nameEt', 'code.validFrom', 'code.validThru']">
+              {{opt.code | hoisValidDates}}
+            </md-option>
+          </md-select>
         </md-input-container>
       </div>
 
@@ -75,8 +81,8 @@
           </md-input-container>
         </div>
       </div>
-</div>
-    </form>
+    </div>
+  </form>
 
 	<div>&nbsp;</div>
     <md-table-container ng-if="formState.students">

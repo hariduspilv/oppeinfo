@@ -249,18 +249,46 @@ public class EkisService {
                 .mapToInt(Short::intValue).sum()));
 
         boolean higher = StudentUtil.isHigher(student);
-        Stream<String> moduleStream;
+        Stream<String> moduleStream = null;
+        Stream<String> aimStream = null;
+        Stream<String> outcomesStream = null;
         if (higher) {
             moduleStream = moduleSubjects.stream().map(ms -> ms.getSubject().getNameEt());
+            aimStream = moduleSubjects.stream().map(ms -> {
+                if (ms.getModule() == null 
+                        || ms.getModule().getCurriculumVersion() == null
+                        || ms.getModule().getCurriculumVersion().getModules() == null) return null;
+                List<String> aims = ms.getModule().getCurriculumVersion().getModules().stream()
+                        .filter(p -> p != null)
+                        .map(p -> p.getObjectivesEt()).collect(Collectors.toList());
+                return aims.stream().filter(r -> r != null).collect(Collectors.joining(", "));
+            });
+            outcomesStream = moduleSubjects.stream().map(ms -> {
+                if (ms.getModule() == null 
+                        || ms.getModule().getCurriculumVersion() == null
+                        || ms.getModule().getCurriculumVersion().getModules() == null) return null;
+                List<String> outcomes = ms.getModule().getCurriculumVersion().getModules().stream()
+                        .filter(p -> p != null)
+                        .map(p -> p.getOutcomesEt()).collect(Collectors.toList());
+                return outcomes.stream().filter(r -> r != null).collect(Collectors.joining(", "));
+            });
         } else {
             moduleStream = moduleSubjects.stream().map(ms -> {
                 List<String> names = Arrays.asList(ms.getModule().getCurriculumModule().getNameEt(), 
                         ms.getTheme() != null ? ms.getTheme().getNameEt() : null);
                 return names.stream().filter(r -> r != null).collect(Collectors.joining(", "));
             });
+            aimStream = moduleSubjects.stream().map(ms -> ms.getModule().getCurriculumModule().getObjectivesEt());
+            outcomesStream = moduleSubjects.stream().map(ms -> {
+                if (ms.getModule() == null 
+                        || ms.getModule().getCurriculumModule() == null
+                        || ms.getModule().getCurriculumModule().getOutcomes() == null) return null;
+                List<String> outcomes = ms.getModule().getCurriculumModule().getOutcomes()
+                        .stream().map(p -> p.getOutcomeEt()).collect(Collectors.toList());
+                return outcomes.stream().filter(r -> r != null).collect(Collectors.joining(", "));
+            });
         }
         request.setStModule(moduleStream.sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.joining(", ")));
-
         Enterprise enterprise = contract.getEnterprise();
         request.setOrgName(enterprise.getName());
         request.setOrgCode(enterprise.getRegCode());
@@ -268,10 +296,12 @@ public class EkisService {
         request.setOrgTel(contract.getContactPersonPhone());
         request.setOrgEmail(contract.getContactPersonEmail());
         List<ContractSupervisor> supervisors = contract.getContractSupervisors();
-        request.setOrgTutorName(String.join(",", supervisors.stream().map(p->p.getSupervisorName()).collect(Collectors.toList())));
-        request.setOrgTutorTel(String.join(",", supervisors.stream().map(p->p.getSupervisorPhone()).collect(Collectors.toList())));
-        request.setOrgTutorEmail(String.join(",", supervisors.stream().map(p->p.getSupervisorEmail()).collect(Collectors.toList())));
+        request.setOrgTutorName(String.join(",", supervisors.stream().map(p->p.getSupervisorName()).filter(p->p != null).collect(Collectors.toList())));
+        request.setOrgTutorTel(String.join(",", supervisors.stream().map(p->p.getSupervisorPhone()).filter(p->p != null).collect(Collectors.toList())));
+        request.setOrgTutorEmail(String.join(",", supervisors.stream().map(p->p.getSupervisorEmail()).filter(p->p != null).collect(Collectors.toList())));
         request.setProgramme(contract.getPracticePlan());
+        request.setOutcomes(outcomesStream != null ? outcomesStream.collect(Collectors.joining(", ")) : null);
+        request.setAim(aimStream != null ? aimStream.collect(Collectors.joining(", ")) : null);
         request.setStartDate(date(contract.getStartDate()));
         request.setEndDate(date(contract.getEndDate()));
         request.setSchoolTutorId(contract.getContractCoordinator() != null ? contract.getContractCoordinator().getIdcode() : null);
@@ -375,7 +405,7 @@ public class EkisService {
             content.setLang(name(student.getLanguage()));
             break;
         case KASKKIRI_FINM:
-            content.setFinsource(name(ds.getFin()));
+            content.setFinsource(finsource(ds.getFin(), ds.getFinSpecific()));
             break;
         case KASKKIRI_IMMAT:
         case KASKKIRI_IMMATV:
@@ -392,10 +422,14 @@ public class EkisService {
             content.setDegree(name(ds.getCurriculumGrade()));
             List<DirectiveStudentOccupation> occupations = ds.getOccupations();
             if (occupations != null) {
-                occupations.stream()
-                    .map(DirectiveStudentOccupation::getOccupation)
-                    .sorted(Comparator.comparing(EntityUtil::getCode))
-                    .findFirst().ifPresent(o -> content.setOccupation(name(o)));
+                Classifier occupation = occupations.stream().map(DirectiveStudentOccupation::getOccupation)
+                        .sorted(Comparator.comparing(EntityUtil::getCode)).findFirst().orElse(null);
+                if (occupation != null) {
+                    content.setOccupation(name(occupation));
+                    StreamUtil.nullSafeList(student.getOccupationCertificates()).stream()
+                            .filter(c -> occupation.equals(c.getOccupation()) && c.getSpeciality() != null)
+                            .findFirst().ifPresent(c -> content.setSpecialization(name(c.getSpeciality())));
+                }
             }
             break;
         case KASKKIRI_OKAVA:
@@ -463,7 +497,7 @@ public class EkisService {
             ekisLogService.insertLog(logRecord, school, result.getLog());
 
             if(result.hasError()) {
-                throw new ValidationFailedException(result.getLog().getError().toString());
+                throw new ValidationFailedException(result.getLog().getError().getMessage());
             }
         }
         return errorValue;
@@ -537,5 +571,9 @@ public class EkisService {
 
     private EkisRequestContext ctx() {
         return new EkisRequestContext(endpoint);
+    }
+    
+    private static String finsource(Classifier fin, Classifier finSpecific) {
+        return String.format("%s, %s - %s", name(fin), value(finSpecific), name(finSpecific)); 
     }
 }

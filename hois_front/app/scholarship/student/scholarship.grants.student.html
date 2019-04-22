@@ -29,7 +29,7 @@
             </td>
             <td md-cell>{{stipend.places ? stipend.places : '-'}}</td>
             <td md-cell>
-              <span>{{stipend.addInfo ? (stipend.addInfo.length &GT 100 && !stipend.showAddInfo ? (stipend.addInfo | limitTo:100) + '...' : stipend.addInfo) : '-'}} </span>
+              <span>{{stipend.addInfo ? (stipend.addInfo | hoisLimitTo: 100:!stipend.showAddInfo) : '-'}}</span>
               <span class="custom-tooltip" ng-if="!stipend.showAddInfo && stipend.addInfo.length > 100" 
                 ng-click="stipend.showAddInfo = true">{{'stipend.student.showMore' | translate}}</span>
               <span class="custom-tooltip" ng-if="stipend.showAddInfo" ng-click="stipend.showAddInfo = false">

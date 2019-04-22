@@ -1,0 +1,102 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="searchForm" ng-submit="load()" novalidate>
+      <fieldset tabindex="1">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <div flex layout="column">
+					<div layout="row" layout-sm="column" layout-xs="column">
+						<md-input-container flex="45" flex-sm="100" flex-xs="100">
+							<label class="textInput">{{'remark.studyYear' | translate}}</label>
+							<hois-select ng-model="criteria.studyYear" values="formState.studyYears" required autofocus></hois-select>
+						</md-input-container>
+
+						<md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+							<label>{{'main.from' | translate}}</label>
+							<md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"></md-datepicker>
+						</md-input-container>
+						<md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+							<label>{{'main.thru' | translate}}</label>
+							<md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+						</md-input-container>
+					</div>
+
+					<div layout="row" layout-sm="column" layout-xs="column">
+						<md-input-container flex="45" flex-sm="100" flex-xs="100">
+							<label>{{'remark.studentGroup' | translate}}</label>
+							<hois-select ng-model="criteria.studentGroup" ng-change="studentGroupChanged()" values="formState.studentGroups" 
+								aria-label="studentGroup"></hois-select>
+						</md-input-container>
+
+						<hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" 
+							ng-model="criteria.studentObject" method="students" name="student" label="{{'remark.student'}}" 
+							additional-query-params="{studentGroup: criteria.studentGroup ? [criteria.studentGroup] : [], studentGroupTeacher: teacherId}">
+						</hois-autocomplete>
+					</div>
+
+          <div layout="row" flex>
+            <md-input-container class="md-block">
+              <md-checkbox ng-model="criteria.showJournalRemarks" name="showJournalRemarks">{{'remark.showJournalRemarks' | translate}}</md-checkbox>
+            </md-input-container>
+          </div>
+
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+						<md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+						<md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_MARKUS')" ng-href="#/remarks/new">{{'main.button.create' | translate}}</md-button>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+						<th md-column md-order-by="lastname, firstname" width="15%">{{'remark.student' | translate}}</th>
+						<th md-column md-order-by="student_group">{{'remark.studentGroup' | translate}}</th>
+						<th md-column width="15%">{{'remark.reason' | translate}} / {{'remark.journal' | translate}}</th>
+						<th md-column width="35%">{{'remark.label' | translate}}</th>
+						<th md-column></th>
+						<th md-column md-order-by="remark_time">{{'remark.date' | translate}}</th>
+						<th md-column md-order-by="remark_inserted_by">{{'remark.addedBy' | translate}}</th>
+						<th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+						<td md-cell>
+							<a ng-href="{{row.id ? '#/remarks/' + row.id + '/view' : '#/remarks/journal/' + row.journalStudentEntryId + '/view'}}">
+								{{currentLanguageNameField(row.student)}}
+							</a>
+						</td>
+						<td md-cell>{{row.studentGroup}}</td>
+						<td md-cell>
+							<span ng-if="row.reason">{{currentLanguageNameField(row.reason)}}</span>
+							<a ng-if="row.journal" ng-href="#/journal/{{::row.journal.id}}/view">{{currentLanguageNameField(row.journal)}}</a>
+						</td>
+						<td md-cell>
+							<span>{{row.remark | hoisLimitTo: 150:!row.showAll}}</span>
+						</td>
+						<td md-cell>
+							<span class="custom-tooltip" ng-if="!row.showAll && row.remark.length > 150" ng-click="row.showAll = true">{{'remark.showMore' | translate}}</span>
+							<span class="custom-tooltip" ng-if="row.showAll" ng-click="row.showAll = false">{{'remark.showLess' | translate}}</span>
+						</td>
+						<td md-cell>{{row.remarkDate | hoisDate}}</td>
+						<td md-cell>{{row.remarkInsertedBy}}</td>
+            <td md-cell>
+							<md-button md-no-ink class="md-primary change-button" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_MARKUS') && row.id"
+                ng-href="#/remarks/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+      md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>

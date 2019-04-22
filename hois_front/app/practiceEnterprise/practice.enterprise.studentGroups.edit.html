@@ -32,7 +32,7 @@
                 <tbody md-body>
                 <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>{{row.iscedClass ? currentLanguageNameField(row.iscedClass) : '-'}}{{row.iscedValue ? '(' + row.iscedValue + ')' : ''}}
-                        <span ng-if="row.exists">
+                        <span ng-if="!row.exists">
                             <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">warning</md-icon>
                             <span md-colors="{color: 'default-warn'}">{{'enterprise.iscedTab.warning' | translate}}</span>
                         </span>

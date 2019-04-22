@@ -1,0 +1,47 @@
+<div class="ois-form-layout-padding" ng-cloak>
+  <div flex class="form-readonly">
+    <form layout="column" name="remarkForm">
+      <div layout="row" class="form-readonly">
+        <md-input-container class="label-only" flex>
+          <label>{{'student.label' | translate}}</label>
+          <hois-value value="record.student.nameEt" href-value="'#/students/' + record.student.id + '/main'"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="10" flex-sm="100" flex-xs="100">
+          <label>{{'remark.date' | translate}}</label>
+          <hois-value value="record.remarkDate | hoisDate"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset="10" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'remark.time' | translate}}</label>
+          <hois-value value="record.remarkTime | hoisTime"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex ng-if="record.reason">
+          <label>{{'remark.reason' | translate}}</label>
+          <hois-classifier-value ng-model="record.reason" main-classifier-code="MARKUS"></hois-classifier-value>
+        </md-input-container>
+        <md-input-container flex ng-if="record.journal">
+          <label>{{'remark.reason' | translate}}</label>
+          <hois-value value="currentLanguageNameField(record.journal)" href-value="'#/journal/' + record.journal.id + '/view'"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex>
+          <label>{{'remark.label' | translate}}</label>
+          <hois-value value="record.remark"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-xs="column">
+        <md-button ng-if="record.id" class="md-raised md-primary" ng-href="#/remarks/{{record.id}}/edit">{{'main.button.change' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="back('#/remarks/')">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

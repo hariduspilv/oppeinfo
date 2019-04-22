@@ -167,7 +167,8 @@ public class LessonPlanService {
                 .setParameter("studyYearId", studyYearId)
                     .getResultList();
 
-            Map<Long, List<Long>> teacherStudyLoadByWeek = teacherStudyLoadByWeek(teacherIds, studyYearId);
+            Map<Long, Map<String, List<Long>>> teacherStudyLoadByWeekAndCapacity = teacherStudyLoadByWeekAndCapacity(
+                    teacherIds, studyYearId);
 
             teacherDtos = StreamUtil.toMappedList(r -> {
                 LessonPlanTeacherDto teacherDto = new LessonPlanTeacherDto();
@@ -175,11 +176,32 @@ public class LessonPlanService {
                 teacherDto.setId(teacherId);
                 teacherDto.setScheduleLoad(resultAsShort(r, 1));
                 teacherDto.setIsStudyPeriodScheduleLoad(resultAsBoolean(r, 2));
-                List<Long> teacherStudyLoad = teacherStudyLoadByWeek.get(teacherId);
-                Long plannedLessons = teacherStudyLoad != null
-                        ? Long.valueOf(teacherStudyLoad.stream().filter(l -> l != null).mapToInt(Long::intValue).sum())
-                        : null;
+
+                Map<String, List<Long>> teacherStudyLoadByCapacity = teacherStudyLoadByWeekAndCapacity.get(teacherId);
+
+                List<Long> teacherStudyLoad = new ArrayList<>();
+                Map<String, Long> plannedLessonsByCapacity = new HashMap<>();
+                if (teacherStudyLoadByCapacity != null) {
+                    for (String capacity : teacherStudyLoadByCapacity.keySet()) {
+                        List<Long> weekLoads = teacherStudyLoadByCapacity.get(capacity);
+                        plannedLessonsByCapacity.put(capacity, sumWeekLoads(weekLoads));
+
+                        if (teacherStudyLoad.isEmpty()) {
+                            teacherStudyLoad.addAll(weekLoads);
+                        } else {
+                            for (int i = 0; i < weekLoads.size(); i++) {
+                                long sum = Long.sum(teacherStudyLoad.get(i) != null ? teacherStudyLoad.get(i).longValue() : 0,
+                                        weekLoads.get(i) != null ? weekLoads.get(i).longValue() : 0);
+                                teacherStudyLoad.set(i, sum > 0 ? Long.valueOf(sum) : null);
+                            }
+                        }
+                    }
+                }
+
+                Long plannedLessons = sumWeekLoads(teacherStudyLoad);
+                teacherDto.setStudyLoadByWeekAndCapacity(teacherStudyLoadByCapacity);
                 teacherDto.setStudyLoadByWeek(teacherStudyLoad);
+                teacherDto.setPlannedLessonsByCapacity(plannedLessonsByCapacity);
                 teacherDto.setPlannedLessons(plannedLessons);
                 return teacherDto;
             }, teacherScheduleLoads);
@@ -187,40 +209,49 @@ public class LessonPlanService {
         return teacherDtos;
     }
 
-    public Map<Long, List<Long>> teacherStudyLoadByWeek(Set<Long> teacherIds, Long studyYearId) {
-        Map<Long, List<Long>> result = new HashMap<>();
+    private static Long sumWeekLoads(List<Long> loads) {
+        return loads != null ? Long.valueOf(loads.stream().filter(l -> l != null).mapToInt(Long::intValue).sum())
+                : null;
+    }
+
+    private Map<Long, Map<String, List<Long>>> teacherStudyLoadByWeekAndCapacity(Set<Long> teacherIds,
+            Long studyYearId) {
+        Map<Long, Map<String, List<Long>>> result = new HashMap<>();
         
         Map<Long, List<LessonPlanTeacherLoadDto>> loads = new HashMap<>();
         List<?> teacherStudyLoads = em.createNativeQuery(
-                "select teacher_id, week_nr, study_period_id, sum(hours) from (" +
-                "select jt.teacher_id, week_nr, jc.study_period_id, sum(jc.hours) as hours from journal_teacher jt " +
+                "select teacher_id, week_nr, study_period_id, capacity_type_code, sum(hours) from (" +
+                "select jt.teacher_id, week_nr, jc.study_period_id, jct.capacity_type_code, sum(jc.hours) as hours " +
+                    "from journal_teacher jt " +
                     "join journal j on jt.journal_id = j.id " +
-                    "join journal_capacity jc on jc.journal_id = j.id and (j.is_capacity_diff is null or j.is_capacity_diff=false) " +
+                    "join journal_capacity jc on jc.journal_id = j.id and (j.is_capacity_diff is null or j.is_capacity_diff = false) " +
+                    "join journal_capacity_type jct on jc.journal_capacity_type_id = jct.id " +
                 "where jt.teacher_id in (:teacherIds) and j.study_year_id = :studyYearId " +
-                    "group by teacher_id, week_nr, study_period_id " +
+                    "group by teacher_id, week_nr, study_period_id, capacity_type_code " +
                 "union all " +
-                "select jt2.teacher_id, jtc.week_nr, jtc.study_period_id, sum(jtc.hours) as hours from journal_teacher jt2 " +
+                "select jt2.teacher_id, jtc.week_nr, jtc.study_period_id, jct2.capacity_type_code, sum(jtc.hours) as hours " +
+                    "from journal_teacher jt2 " +
                     "join journal j2 on jt2.journal_id = j2.id " +
-                    "join journal_teacher_capacity jtc on jt2.id = jtc.journal_teacher_id and j2.is_capacity_diff=true " +
+                    "join journal_teacher_capacity jtc on jt2.id = jtc.journal_teacher_id and j2.is_capacity_diff = true " +
+                    "join journal_capacity_type jct2 on jtc.journal_capacity_type_id = jct2.id " +
                 "where jt2.teacher_id in (:teacherIds) and j2.study_year_id = :studyYearId " +
-                    "group by teacher_id, week_nr, study_period_id) as hours " +
-                "group by teacher_id, week_nr, study_period_id")
+                    "group by teacher_id, week_nr, study_period_id, capacity_type_code) as hours " +
+                "group by teacher_id, week_nr, study_period_id, capacity_type_code")
             .setParameter("teacherIds", teacherIds)
             .setParameter("studyYearId", studyYearId)
             .getResultList();
 
         if (!teacherStudyLoads.isEmpty()) {
-            loads = teacherStudyLoads.stream()
-                    .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(
-                            r -> new LessonPlanTeacherLoadDto(resultAsShort(r, 1), resultAsLong(r, 2), resultAsLong(r, 3)),
-                            Collectors.toList())));
+            loads = teacherStudyLoads.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> new LessonPlanTeacherLoadDto(resultAsShort(r, 1), resultAsLong(r, 2), 
+                    resultAsString(r, 3), resultAsLong(r, 4)), Collectors.toList())));
 
             StudyYear studyYear = em.getReference(StudyYear.class, studyYearId);
             LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(studyYear);
 
             for (Long teacher : teacherIds) {
                 List<LessonPlanTeacherLoadDto> teacherLoads = loads.get(teacher);
-                result.put(teacher, capacityMapper.mapTeacherLoads(teacherLoads));
+                result.put(teacher, capacityMapper.mapTeacherLoadsByCapacities(teacherLoads));
             }
         }
         return result;
@@ -663,9 +694,18 @@ public class LessonPlanService {
                 + " join subject_study_period ssp on ssp.id = sspt.subject_study_period_id"
                 + " join subject_study_period_capacity sspc on sspc.subject_study_period_id = ssp.id"
                 + " join study_period sp on sp.id = ssp.study_period_id");
-        qb.filter("sspt.teacher_id = t.id");
+        qb.filter("sspt.teacher_id = t.id and (ssp.is_capacity_diff is null or ssp.is_capacity_diff = false)");
         qb.requiredCriteria("sp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         String subjectQuery = qb.querySql("sum(sspc.hours)", false);
+        queryParameters.putAll(qb.queryParameters());
+        
+        qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt2"
+                + " join subject_study_period_teacher_capacity ssptc on ssptc.subject_study_period_teacher_id = sspt2.id"
+                + " join subject_study_period ssp2 on ssp2.id = sspt2.subject_study_period_id"
+                + " join study_period sp2 on sp2.id = ssp2.study_period_id");
+        qb.filter("sspt2.teacher_id = t.id and ssp2.is_capacity_diff = true");
+        qb.requiredCriteria("sp2.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
+        String subjectTeacherQuery = qb.querySql("sum(ssptc.hours)", false);
         queryParameters.putAll(qb.queryParameters());
         
         qb = new JpaNativeQueryBuilder("from teacher t");
@@ -678,15 +718,16 @@ public class LessonPlanService {
         String hoursQuery = qb.querySql("t.id, t.person_id"
                 + ", coalesce((" + journalCapacityQuery + "), 0) as jc_hours"
                 + ", coalesce((" + journalTeacherCapacityQuery + "), 0) as jtc_hours"
-                + ", coalesce((" + subjectQuery + "), 0) as ssp_hours", false);
+                + ", coalesce((" + subjectQuery + "), 0) as ssp_hours"
+                + ", coalesce((" + subjectTeacherQuery + "), 0) as sspt_hours", false);
         queryParameters.putAll(qb.queryParameters());
         
         qb = new JpaNativeQueryBuilder("from (" + hoursQuery + ") hours"
                 + " join person p on hours.person_id = p.id ").sort(pageable);
-        qb.filter("(hours.jc_hours + hours.jtc_hours + hours.ssp_hours) > 0");
+        qb.filter("(hours.jc_hours + hours.jtc_hours + hours.ssp_hours + hours.sspt_hours) > 0");
         
 
-        return JpaQueryUtil.pagingResult(qb, "hours.id, p.firstname, p.lastname, hours.jc_hours + hours.jtc_hours + hours.ssp_hours as total_hours", 
+        return JpaQueryUtil.pagingResult(qb, "hours.id, p.firstname, p.lastname, hours.jc_hours + hours.jtc_hours + hours.ssp_hours + hours.sspt_hours as total_hours", 
                 queryParameters, em, pageable).map(r -> {
             return new LessonPlanSearchTeacherDto(resultAsLong(r, 0), PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)), resultAsLong(r, 3), criteria.getStudyYear());
         });
@@ -776,7 +817,13 @@ public class LessonPlanService {
         Query capacityQuery = em.createNativeQuery("select ssp.study_period_id, sspc.capacity_type_code, sspc.hours"
                 + " from subject_study_period_capacity sspc"
                 + " join subject_study_period ssp on ssp.id = sspc.subject_study_period_id"
-                + " where sspc.subject_study_period_id = ?1");
+                + " where sspc.subject_study_period_id = ?1 and (ssp.is_capacity_diff is null or ssp.is_capacity_diff = false)"
+                + " union all"
+                + " select ssp.study_period_id, sspc.capacity_type_code, ssptc.hours from subject_study_period_teacher_capacity ssptc"
+                + " join subject_study_period_teacher sspt on sspt.id = ssptc.subject_study_period_teacher_id"
+                + " join subject_study_period_capacity sspc on sspc.id = ssptc.subject_study_period_capacity_id"
+                + " join subject_study_period ssp on ssp.id = sspt.subject_study_period_id"
+                + " where sspc.subject_study_period_id = ?1 and sspt.teacher_id = ?2 and ssp.is_capacity_diff = true");
 
         Map<Long, LessonPlanByTeacherSubjectDto> subjects = new HashMap<>();
         Map<Long, Long> subjectStudyPeriodToSubject = new HashMap<>();
@@ -796,6 +843,7 @@ public class LessonPlanService {
             Map<Long, Map<String, Long>> periodCapacityHours = new HashMap<>();
             List<?> capacities = capacityQuery
                     .setParameter(1, subjectStudyPeriodId)
+                    .setParameter(2, teacherId)
                     .getResultList();
             for (Object cr : capacities) {
                 Long studyPeriodId = resultAsLong(cr, 0);

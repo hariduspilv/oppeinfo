@@ -160,7 +160,7 @@ public class CurriculumOccupationService {
     }
     
     private static boolean isSameModule(CurriculumModule cm, StateCurriculumModule sm) {
-        return cm.getCredits().equals(sm.getCredits()) && (StringUtils.equals(cm.getNameEt(), sm.getNameEt()) || StringUtils.equals(cm.getNameEn(), sm.getNameEn()));
+        return cm.getCredits().equals(sm.getCredits()) && StringUtils.equals(cm.getNameEt(), sm.getNameEt());
     }
     
 

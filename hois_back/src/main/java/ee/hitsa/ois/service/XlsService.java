@@ -6,19 +6,30 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.jxls.area.Area;
+import org.jxls.builder.AreaBuilder;
+import org.jxls.common.AreaListener;
+import org.jxls.common.AreaRef;
 import org.jxls.common.CellData;
+import org.jxls.common.CellRef;
 import org.jxls.common.Context;
 import org.jxls.expression.JexlExpressionEvaluator;
+import org.jxls.formula.FastFormulaProcessor;
 import org.jxls.transform.Transformer;
 import org.jxls.transform.poi.PoiTransformer;
 import org.jxls.util.JxlsHelper;
@@ -37,6 +48,8 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.xls.HasPoiTransformer;
+import ee.hitsa.ois.xls.HasWorkbook;
 
 /**
  * xls generator using jxls
@@ -48,6 +61,65 @@ public class XlsService {
 
     @Autowired
     private ClassifierService classifierService;
+    
+    @SuppressWarnings("resource")
+    public byte[] generate(String templateName, Map<String, Object> data, List<SimpleEntry<String, AreaListener>> areaListeners) {
+        try {
+            String fullTemplatePath = XLS_TEMPLATE_PATH + templateName;
+            try (InputStream is = ReportService.class.getResourceAsStream(fullTemplatePath)) {
+                if (is == null) {
+                    throw new AssertionFailedException("XLS template " + fullTemplatePath + " not found");
+                }
+                try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+                    JxlsHelper jxlsHelper = JxlsHelper.getInstance();
+                    Transformer transformer = jxlsHelper.createTransformer(is, os);
+                    JexlExpressionEvaluator evaluator = ((JexlExpressionEvaluator) transformer.getTransformationConfig().getExpressionEvaluator());
+                    evaluator.getJexlEngine().setFunctions(Collections.singletonMap("hois", new HoisFunctions(classifierService)));
+                    // TODO make silent for production
+                    // evaluator.getJexlEngine().setSilent(true);
+                    AreaBuilder areaBuilder = jxlsHelper.getAreaBuilder();
+                    areaBuilder.setTransformer(transformer);
+                    List<Area> xlsAreaList = areaBuilder.build();
+                    Workbook workbook;
+                    if (transformer instanceof PoiTransformer) {
+                        PoiTransformer poiTransformer = (PoiTransformer) transformer;
+                        // SuppressWarnings("resource") because if we close it then we will receive an exception about closed stream when call transformer.write()
+                        // Workbook is closed in after.
+                        workbook = poiTransformer.getWorkbook();
+                        Map<AreaRef, Area> mappedAreas = mapAreas(xlsAreaList);
+                        areaListeners.forEach(entry -> {
+                            Area area = mappedAreas.get(new AreaRef(entry.getKey()));
+                            if (area != null) {
+                                if (entry.getValue() instanceof HasPoiTransformer && ((HasPoiTransformer) entry.getValue()).getTransformer() == null) {
+                                    ((HasPoiTransformer) entry.getValue()).setTransformer(poiTransformer);
+                                }
+                                if (entry.getValue() instanceof HasWorkbook && ((HasWorkbook) entry.getValue()).getWorkbook() == null) {
+                                    ((HasWorkbook) entry.getValue()).setWorkbook(workbook);
+                                }
+                                area.addAreaListener(entry.getValue());
+                            }
+                        });
+                    } else {
+                        workbook = null;
+                    }
+                    Context context = new Context(data);
+                    FastFormulaProcessor fp = new FastFormulaProcessor();
+                    for (Area xlsArea : xlsAreaList) {
+                        xlsArea.applyAt(new CellRef(xlsArea.getStartCellRef().getCellName()), context);
+                        xlsArea.setFormulaProcessor(fp);
+                        xlsArea.processFormulas();
+                    }
+                    transformer.write();
+                    if (workbook != null) {
+                        workbook.close();
+                    }
+                    return postProcess(os.toByteArray());
+                }
+            }
+        } catch (IOException e) {
+            throw new BadConfigurationException(String.format("XLS template %s not found. %s", templateName, e.getMessage()), e);
+        }
+    }
 
     public byte[] generate(String templateName, Map<String, Object> data) {
         try {
@@ -115,6 +187,21 @@ public class XlsService {
         }
 
         return excel;
+    }
+    
+    private static Map<AreaRef, Area> mapAreas(List<Area> areas) {
+        Map<AreaRef, Area> mappedAreas = new HashMap<>();
+        Area currentArea;
+        Queue<Area> queue = new LinkedList<>();
+        if (!areas.isEmpty()) {
+            queue.add(areas.get(0));
+        }
+        while (!queue.isEmpty()) {
+            currentArea = queue.poll();
+            mappedAreas.put(currentArea.getAreaRef(), currentArea);
+            queue.addAll(currentArea.getCommandDataList().stream().flatMap(c -> c.getCommand().getAreaList().stream()).collect(Collectors.toList()));
+        }
+        return mappedAreas;
     }
 
     public static class HoisFunctions {

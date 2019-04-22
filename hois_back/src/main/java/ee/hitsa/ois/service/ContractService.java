@@ -14,14 +14,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import javax.validation.Validator;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -40,6 +43,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.enterprise.Enterprise;
+import ee.hitsa.ois.domain.enterprise.EnterpriseSchool;
 import ee.hitsa.ois.domain.enterprise.PracticeApplication;
 import ee.hitsa.ois.domain.enterprise.PracticeEvaluation;
 import ee.hitsa.ois.domain.school.School;
@@ -51,6 +55,7 @@ import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.message.PracticeJournalUniqueUrlMessage;
 import ee.hitsa.ois.service.ekis.EkisService;
@@ -64,18 +69,25 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ContractValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.ContractAllCommand;
 import ee.hitsa.ois.web.commandobject.ContractCancelForm;
+import ee.hitsa.ois.web.commandobject.ContractForEkisSearchCommand;
 import ee.hitsa.ois.web.commandobject.ContractForm;
 import ee.hitsa.ois.web.commandobject.ContractModuleSubjectForm;
 import ee.hitsa.ois.web.commandobject.ContractSearchCommand;
+import ee.hitsa.ois.web.commandobject.enterprise.PracticeEnterprisePersonCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ContractDto;
+import ee.hitsa.ois.web.dto.ContractForEkisDto;
 import ee.hitsa.ois.web.dto.ContractSearchDto;
 import ee.hitsa.ois.web.dto.ContractStudentHigherModuleDto;
 import ee.hitsa.ois.web.dto.ContractStudentModuleDto;
 import ee.hitsa.ois.web.dto.ContractStudentSubjectDto;
 import ee.hitsa.ois.web.dto.ContractStudentThemeDto;
 import ee.hitsa.ois.web.dto.ContractSupervisorDto;
+import ee.hitsa.ois.web.dto.ContractToEkisMessageDto;
+import ee.hitsa.ois.web.dto.StudentGroupContractSearchCommand;
+import ee.hitsa.ois.web.dto.StudentGroupContractSearchDto;
 
 @Transactional
 @Service
@@ -95,13 +107,34 @@ public class ContractService {
     private StudentAbsenceService studentAbsenceService;
     @Autowired
     private Validator validator;
+    @Autowired
+    private PracticeEnterpriseService enterpriseService;
 
     @Value("${hois.frontend.baseUrl}")
     private String frontendBaseUrl;
+    
+    private static final String STUDENTGROUP_CONTRACT_SEARCH_FROM = "from student s "
+            + "inner join person student_person on s.person_id = student_person.id "
+            + "inner join student_group sg on s.student_group_id = sg.id "
+            + "left join contract c on c.student_id = s.id "
+            + "left join teacher t on c.teacher_id = t.id "
+            + "left join person teacher_person on t.person_id = teacher_person.id "
+            + "left join curriculum_version_omodule cvo on c.curriculum_version_omodule_id = cvo.id "
+            + "left join contract_supervisor cs on cs.contract_id = c.id ";
+    
+    private static final String STUDENTGROUP_CONTRACT_SEARCH_SELECT = "c.id as contractId, c.contract_nr, c.status_code, c.confirm_date, "
+            + "s.id, student_person.firstname as student_person_firstname, student_person.lastname as student_person_lastname, "
+            + "string_agg(cs.supervisor_name, ', '), "
+            + "t.id as teacherId, teacher_person.firstname as teacher_person_firstname, teacher_person.lastname as teacher_person_lastname, sg.code, s.status_code as student_status_code, "
+            + "c.start_date, c.end_date";
+    
+    private static final String STUDENTGROUP_CONTRACT_GROUP_BY = "c.id, c.contract_nr, c.status_code, c.confirm_date, "
+            + "s.id, student_person.firstname, student_person.lastname, "
+            + "t.id, teacher_person.firstname, teacher_person.lastname, sg.code, s.status_code, c.start_date, c.end_date";
 
     private static final String SEARCH_FROM = "from contract "
             + "inner join student on contract.student_id = student.id "
-            + "inner join student_group sg on student.student_group_id = sg.id "
+            + "left join student_group sg on student.student_group_id = sg.id "
             + "inner join person student_person on student.person_id = student_person.id "
             + "inner join enterprise on contract.enterprise_id = enterprise.id "
             + "inner join teacher on contract.teacher_id = teacher.id "
@@ -185,6 +218,35 @@ public class ContractService {
 
             String teacherName = PersonUtil.fullname(resultAsString(r, 12), resultAsString(r, 13));
             dto.setTeacher(new AutocompleteResult(resultAsLong(r, 11), teacherName, teacherName));
+            dto.setStudentGroup(resultAsString(r, 14));
+            return dto;
+        });
+    }
+    
+    /**
+     * Search all contracts.
+     *
+     * @param user
+     * @param command
+     * @param pageable
+     * @return
+     */
+    public Page<ContractSearchDto> searchAll(HoisUserDetails user, ContractAllCommand command, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable).groupBy(GROUP_BY);
+        qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalCriteria("student.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
+        qb.optionalCriteria("contract.student_id = :studentId", "studentId", command.getStudent());
+
+        return JpaQueryUtil.pagingResult(qb, SEARCH_SELECT, em, pageable).map(r -> {
+            ContractSearchDto dto = new ContractSearchDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setContractNr(resultAsString(r, 1));
+            dto.setStatus(resultAsString(r, 2));
+            dto.setStartDate(resultAsLocalDate(r, 3));
+            dto.setEndDate(resultAsLocalDate(r, 4));
+            String studentName = PersonUtil.fullname(resultAsString(r, 7), resultAsString(r, 8));
+            dto.setStudent(new AutocompleteResult(resultAsLong(r, 6), studentName, studentName));
+            dto.setEnterpriseName(resultAsString(r, 9));
             dto.setStudentGroup(resultAsString(r, 14));
             return dto;
         });
@@ -283,7 +345,7 @@ public class ContractService {
      * @param contractForm
      * @return
      */
-    public Contract create(ContractForm contractForm) {
+    public Contract create(HoisUserDetails user, ContractForm contractForm) {
         Contract contract = new Contract();
         setContractStatus(contract, ContractStatus.LEPING_STAATUS_S);
         //contract.setSupervisorUrl(generateUniqueUrl());
@@ -292,7 +354,7 @@ public class ContractService {
         contract.setCredits(BigDecimal.ZERO);
         contract.setHours(Short.valueOf((short) 0));
         
-        return save(contract, contractForm);
+        return save(user, contract, contractForm);
     }
 
     /**
@@ -302,7 +364,7 @@ public class ContractService {
      * @param contractForm
      * @return
      */
-    public Contract save(Contract contract, ContractForm contractForm) {
+    public Contract save(HoisUserDetails user, Contract contract, ContractForm contractForm) {
         assertValidationRules(contractForm);
 
         Contract changedContract = EntityUtil.bindToEntity(contractForm, contract,
@@ -327,6 +389,19 @@ public class ContractService {
                 if (supervisor.getId() == null) {
                     ContractSupervisor newSupervisor = new ContractSupervisor();
                     EntityUtil.bindToEntity(supervisor, newSupervisor);
+                    if (StringUtils.isBlank(newSupervisor.getSupervisorName()) && changedContract.getEnterprise() != null && supervisor.getSupervisorFirstname() != null && supervisor.getSupervisorLastname() != null) {
+                        newSupervisor.setSupervisorName(String.format("%s %s", supervisor.getSupervisorFirstname(), supervisor.getSupervisorLastname()));
+                        Optional<EnterpriseSchool> enterpriseSchool = changedContract.getEnterprise().getEnterpriseSchools().stream().filter(p->p.getSchool().getId().equals(user.getSchoolId())).findFirst();
+                        if (enterpriseSchool.isPresent()) {
+                            PracticeEnterprisePersonCommand cmd = new PracticeEnterprisePersonCommand();
+                            cmd.setFirstname(supervisor.getSupervisorFirstname());
+                            cmd.setLastname(supervisor.getSupervisorLastname());
+                            cmd.setEmail(supervisor.getSupervisorEmail());
+                            cmd.setPhone(supervisor.getSupervisorPhone());
+                            cmd.setSupervisor(Boolean.TRUE);
+                            enterpriseService.createPerson(user, enterpriseSchool.get(), cmd);
+                        }
+                    }
                     newSupervisor.setContract(changedContract);
                     newSupervisor.setSupervisorUrl(generateUniqueUrl());
                     updatedSupervisors.add(newSupervisor);
@@ -411,6 +486,23 @@ public class ContractService {
         }
         return contract;
     }
+    
+    /**
+     * Dto for successful and failed ekis requests.
+     * 
+     * @param contract
+     * @param message
+     * @return
+     */
+    public static ContractToEkisMessageDto createContractToEkisDto(Contract contract, String message) {
+        ContractToEkisMessageDto dto = new ContractToEkisMessageDto();
+        dto.setId(EntityUtil.getId(contract));
+        dto.setStudent(contract.getStudent().getPerson().getFullname());
+        dto.setEnterprise(contract.getEnterprise().getName());
+        dto.setContractNr(contract.getContractNr());
+        dto.setMessage(message);
+        return dto;
+    }
 
     /**
      * EKIS has confirmed practice contract.
@@ -434,12 +526,11 @@ public class ContractService {
      *
      * @param contractId
      */
-    public void endContract(Long contractId) {
-        Contract contract = em.getReference(Contract.class, contractId);
-        if(contract.getEndDate() != null && contract.getEndDate().isBefore(LocalDate.now())) {
+    public void endContract(Contract contract, boolean ignoreDate) {
+        if (ignoreDate || (contract.getEndDate() != null && contract.getEndDate().isBefore(LocalDate.now()))) {
             setContractStatus(contract, ContractStatus.LEPING_STAATUS_L);
             if (contract.getStudentAbsence() != null) {
-                StudentAbsence absence = contract.getStudentAbsence(); 
+                StudentAbsence absence = contract.getStudentAbsence();
                 absence.setIsRejected(Boolean.TRUE);
                 absence.setIsAccepted(Boolean.FALSE);
                 EntityUtil.save(absence, em);
@@ -542,5 +633,61 @@ public class ContractService {
 		contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_T.name()));
 		EntityUtil.setUsername(user.getUsername(), em);
 		return EntityUtil.save(contract, em);
+	}
+	
+	public Page<StudentGroupContractSearchDto> searchStudentGroupContract(HoisUserDetails user, StudentGroupContractSearchCommand command, Pageable pageable) {
+	    JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENTGROUP_CONTRACT_SEARCH_FROM).sort(pageable).groupBy(STUDENTGROUP_CONTRACT_GROUP_BY);
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalCriteria("s.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
+        if (command.getActive() != null && command.getActive().booleanValue()) {
+            qb.filter("s.status_code in (:studentStatus)");
+            qb.parameter("studentStatus", StudentStatus.STUDENT_STATUS_ACTIVE);
+        }
+        return JpaQueryUtil.pagingResult(qb, STUDENTGROUP_CONTRACT_SEARCH_SELECT, em, pageable).map(r -> {
+            StudentGroupContractSearchDto dto = new StudentGroupContractSearchDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setContractNr(resultAsString(r, 1));
+            dto.setStatus(resultAsString(r, 2));
+            dto.setConfirmDate(resultAsLocalDate(r, 3));
+            String studentName = PersonUtil.fullname(resultAsString(r, 5), resultAsString(r, 6));
+            dto.setStudent(new AutocompleteResult(resultAsLong(r, 4), studentName, studentName));
+            dto.setEnterpriseContactPersonName(resultAsString(r, 7));
+            String teacherName = PersonUtil.fullname(resultAsString(r, 9), resultAsString(r, 10));
+            dto.setTeacher(new AutocompleteResult(resultAsLong(r, 8), teacherName, teacherName));
+            dto.setStudentGroup(resultAsString(r, 11));
+            dto.setActive(Boolean.valueOf(StudentStatus.STUDENT_STATUS_ACTIVE.contains(resultAsString(r, 12))));
+            dto.setStartDate(resultAsLocalDate(r, 13));
+            dto.setEndDate(resultAsLocalDate(r, 14));
+            return dto;
+        });
+	}
+	
+	public Page<ContractForEkisDto> searchContractForEkis(HoisUserDetails user, ContractForEkisSearchCommand command,Pageable pageable) {
+	    JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable).groupBy(GROUP_BY);
+	    
+        qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalContains(Arrays.asList("student_person.firstname", "student_person.lastname",
+                "student_person.firstname || ' ' || student_person.lastname"), "name", command.getStudentName());
+        qb.optionalCriteria("student.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
+        qb.requiredCriteria("contract.status_code = :status", "status", ContractStatus.LEPING_STAATUS_S.name());
+        
+        return JpaQueryUtil.pagingResult(qb, SEARCH_SELECT, em, pageable).map(r -> {
+            ContractForEkisDto dto = new ContractForEkisDto();
+            Contract contract = em.getReference(Contract.class, resultAsLong(r, 0));
+            dto.setId(resultAsLong(r, 0));
+            String studentName = PersonUtil.fullname(resultAsString(r, 7), resultAsString(r, 8));
+            dto.setStudent(new AutocompleteResult(resultAsLong(r, 6), studentName, studentName));
+            dto.setEnterpriseName(resultAsString(r, 9));
+            dto.setEnterpriseContactPersonName(resultAsString(r, 10));
+            String teacherName = PersonUtil.fullname(resultAsString(r, 12), resultAsString(r, 13));
+            dto.setTeacher(new AutocompleteResult(resultAsLong(r, 11), teacherName, teacherName));
+            dto.setStudentGroup(resultAsString(r, 14));
+            dto.setModuleSubjects(contract.getModuleSubjects().stream()
+                    .map(p -> p.getModule() != null && p.getModule().getCurriculumModule() != null ?
+                            new AutocompleteResult(null, p.getModule().getCurriculumModule().getNameEt(), p.getModule().getCurriculumModule().getNameEn()) 
+                            : null)
+                    .collect(Collectors.toList()));
+            return dto;
+        });
 	}
 }

@@ -3,6 +3,7 @@
 angular.module('hitsaOis').controller('PracticeJournalEntryController', function ($scope, $route, $location, dialogService, oisFileService, QueryUtils, message, DataUtils, ArrayUtils, Classifier) {
   $scope.auth = $route.current.locals.auth;
   $scope.removeFromArray = ArrayUtils.remove;
+  var DAYS_AFTER_CAN_EDIT = 30;
   $scope.practiceJournal = {
     practiceJournalEntries: [],
     practiceJournalFiles: [],
@@ -22,7 +23,29 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
     $scope.gradesClassCode = entity.isHigher ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
     $scope.grades = Classifier.queryForDropdown({ mainClassCode: $scope.gradesClassCode });
+    entity.practiceJournalEntries.forEach(function (entry) {
+      entry.astroHours = DataUtils.getAcademicHoursFromDouble(entry.hours);
+      entry.acadHours = DataUtils.getAcademicHours(entry.hours);
+    });
     $scope.practiceJournal = entity;
+    $scope.practiceJournal.endDateDisplay = new Date($scope.practiceJournal.endDate);
+    $scope.practiceJournal.endDateDisplay.setDate($scope.practiceJournal.endDateDisplay.getDate() + 30);
+    updateTotal();
+  }
+
+  function updateTotal() {
+    var totalAstro = 0.00;
+    var totalAcad = 0.00;
+    $scope.practiceJournal.practiceJournalEntries.forEach(function (entry) {
+      if (entry.hours !== undefined) {
+        totalAstro += entry.hours;
+      }
+      if (entry.acadHours !== undefined) {
+        totalAcad += entry.acadHours;
+      }
+    });
+    $scope.totalAstro = DataUtils.getAcademicHoursFromDouble(totalAstro);
+    $scope.totalAcad = Math.round(totalAcad * 100) / 100;
   }
 
   var entity = $route.current.locals.entity;
@@ -31,6 +54,22 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
   }
 
   $scope.getAstronomicalHours = DataUtils.getAstronomicalHours;
+
+  $scope.setAstronomicalHours = function(row, akadHours) {
+    row.hours = DataUtils.getAstronomicalHoursAsDouble(akadHours);
+    row.astroHours = DataUtils.getAstronomicalHoursAsString(akadHours);
+    updateTotal();
+  };
+
+  $scope.setAcademicalHours = function(row) {
+    if (row.astroHours === undefined) {
+      return;
+    }
+    row.astroHours = row.astroHours.replace(".", ":");
+    row.hours = DataUtils.getAcademicHoursFromString(row.astroHours);
+    row.acadHours = DataUtils.getAcademicHours(row.hours);
+    updateTotal();
+  };
 
   $scope.addNewEntryRow = function () {
     $scope.practiceJournal.practiceJournalEntries.push({ isStudentEntry: $scope.auth.isStudent() });
@@ -75,7 +114,8 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
 
   $scope.deleteEntry = function(entry) {
     ArrayUtils.remove($scope.practiceJournal.practiceJournalEntries, entry);
-  }
+    updateTotal();
+  };
 
   $scope.getUrl = oisFileService.getUrl;
 
@@ -93,6 +133,9 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     files = files.concat($scope.practiceJournal.practiceJournalFiles, $scope.practiceJournal.practiceJournalStudentFiles);
     var evals = [];
     evals = evals.concat($scope.practiceJournal.supervisorPracticeEvalCriteria, $scope.practiceJournal.studentPracticeEvalCriteria);
+    evals = evals.filter(function (criteria) {
+      return criteria.id || (!criteria.id && (criteria.valueNr || criteria.valueTxt || criteria.valueClf));
+    });
     if ($scope.auth.isStudent()) {
       var EndpointStudent = QueryUtils.endpoint(baseEndpointUrl + 'student');
       practiceJournalEntries = new EndpointStudent(
@@ -146,5 +189,83 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
       ArrayUtils.remove($scope.practiceJournal.practiceJournalStudentFiles, file);
     });
   };
+
+  function validationPassed() {
+    $scope.practiceJournalEntryForm.$setSubmitted();
+    if(!$scope.practiceJournalEntryForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      return false;
+    }
+
+    if($scope.practiceJournal.moduleSubjects.length === 0) {
+      message.error($scope.formState.isHigher ? 'practiceJournal.messages.atleastOneSubjectRequired' : 'practiceJournal.messages.atleastOneModuleRequired');
+      return false;
+    }
+
+    return true;
+  }
+
+  function isBeforeDaysAfterCanEdit(practiceJournal) {
+    var now = moment();
+    var endDate = moment(practiceJournal.endDate);
+
+    return moment.duration(now.diff(endDate)).asDays() <= DAYS_AFTER_CAN_EDIT;
+  }
+
+  $scope.confirm = function () {
+    if(!validationPassed()) {
+      return false;
+    }
+    $scope.practiceJournal.isHigher = $scope.formState.isHigher;
+    if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {        
+      dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEditConfirm'}, function () {
+        confirmPracticeJournal(true);
+      });
+    } else {
+      dialogService.confirmDialog({prompt: 'practiceJournal.prompt.confirmConfirm'}, function () {
+        confirmPracticeJournal(false);
+      });
+    }
+  };
+
+  function confirmPracticeJournal(sendBackToList) {
+    var practiceJournalCopy = angular.copy($scope.practiceJournal);
+    practiceJournalCopy.moduleSubjects.forEach(function (it) {
+      DataUtils.convertObjectToIdentifier(it, ['module', 'theme', 'subject']);
+    });
+    DataUtils.convertObjectToIdentifier(practiceJournalCopy, ['practiceEvaluation']);
+    QueryUtils.endpoint('/practiceJournals/' + practiceJournalCopy.id + '/confirm').put(practiceJournalCopy, function (practiceJournal) {
+      message.info('practiceJournal.messages.confirmed');
+      if (sendBackToList) {
+        $location.path('/practiceJournals');
+      } else {
+        entityToForm(practiceJournal);
+        $scope.practiceJournalEntryForm.$setPristine();
+      }
+    });
+  }
+
+  $scope.open = function () {
+    if(!validationPassed()) {
+      return false;
+    }
+    $scope.practiceJournal.isHigher = $scope.formState.isHigher;
+    dialogService.confirmDialog({prompt: 'practiceJournal.prompt.confirmOpen'}, function () {
+      openPracticeJournal();
+    });
+  };
+
+  function openPracticeJournal() {
+    var practiceJournalCopy = angular.copy($scope.practiceJournal);
+    practiceJournalCopy.moduleSubjects.forEach(function (it) {
+      DataUtils.convertObjectToIdentifier(it, ['module', 'theme', 'subject']);
+    });
+    DataUtils.convertObjectToIdentifier(practiceJournalCopy, ['practiceEvaluation']);
+    QueryUtils.endpoint('/practiceJournals/' + practiceJournalCopy.id + '/open').put(practiceJournalCopy, function (practiceJournal) {
+      message.info('practiceJournal.messages.opened');
+      entityToForm(practiceJournal);
+      $scope.practiceJournalEntryForm.$setPristine();
+    });
+  }
 
 });

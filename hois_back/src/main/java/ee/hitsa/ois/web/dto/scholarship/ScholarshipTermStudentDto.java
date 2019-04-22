@@ -25,6 +25,7 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
     private LocalDate studyStartPeriodEnd;
     private LocalDate paymentStart;
     private LocalDate paymentEnd;
+    private BigDecimal amountPaid;
     private List<AutocompleteResult> curriculums;
     private List<String> studyLoads;
     private List<String> studyForms;
@@ -173,6 +174,14 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
 
     public void setPaymentEnd(LocalDate paymentEnd) {
         this.paymentEnd = paymentEnd;
+    }
+
+    public BigDecimal getAmountPaid() {
+        return amountPaid;
+    }
+
+    public void setAmountPaid(BigDecimal amountPaid) {
+        this.amountPaid = amountPaid;
     }
 
     public List<AutocompleteResult> getCurriculums() {

@@ -3,9 +3,6 @@ package ee.hitsa.ois.service.arireg;
 import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
@@ -15,13 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsAriregLog;
-import ee.hitsa.ois.domain.WsEkisLog;
 import ee.hitsa.ois.domain.school.School;
-import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;

@@ -1,5 +1,5 @@
 <div ng-cloak>
-  <div ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
+  <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
 </div>
 
 <div layout-padding ng-cloak>
@@ -65,7 +65,7 @@
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 
     <md-button ng-click="editAbsence({})" class="md-primary md-raised" ng-if="tabledata.canAddAbsence">{{'main.button.create' | translate}}</md-button>
-    <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>
 

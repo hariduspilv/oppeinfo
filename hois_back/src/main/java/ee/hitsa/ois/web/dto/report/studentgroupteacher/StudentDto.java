@@ -1,9 +1,12 @@
 package ee.hitsa.ois.web.dto.report.studentgroupteacher;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import ee.hitsa.ois.web.dto.student.StudentRemarkDto;
 
 public class StudentDto {
 
@@ -12,8 +15,17 @@ public class StudentDto {
     private String status;
     private Boolean isIndividualCurriculum;
     private List<StudentResultColumnDto> resultColumns = new ArrayList<>();
-    private Map<String, Short> absences = new HashMap<>();
-    private Boolean hasAddInfo;
+    private List<StudentJournalEntryAbsenceDto> absenceEntries = new ArrayList<>();
+    private Map<String, Long> absenceTypeTotals = new HashMap<>();
+    private Long totalAbsences;
+    private Long withoutReasonAbsences;
+    private Long withReasonAbsences;
+    private Long beingLate;
+    private Long journalEntryLessons;
+    private BigDecimal lessonAbsencePercentage;
+    private List<StudentRemarkDto> remarks = new ArrayList<>();
+    private BigDecimal averageGrade;
+    private BigDecimal weightedAverageGrade;
 
     public Long getId() {
         return id;
@@ -55,20 +67,92 @@ public class StudentDto {
         this.resultColumns = resultColumns;
     }
 
-    public Map<String, Short> getAbsences() {
-        return absences;
+    public List<StudentJournalEntryAbsenceDto> getAbsenceEntries() {
+        return absenceEntries;
     }
 
-    public void setAbsences(Map<String, Short> absences) {
-        this.absences = absences;
+    public void setAbsenceEntries(List<StudentJournalEntryAbsenceDto> absenceEntries) {
+        this.absenceEntries = absenceEntries;
     }
 
-    public Boolean getHasAddInfo() {
-        return hasAddInfo;
+    public Map<String, Long> getAbsenceTypeTotals() {
+        return absenceTypeTotals;
     }
 
-    public void setHasAddInfo(Boolean hasAddInfo) {
-        this.hasAddInfo = hasAddInfo;
+    public void setAbsenceTypeTotals(Map<String, Long> absenceTypeTotals) {
+        this.absenceTypeTotals = absenceTypeTotals;
+    }
+
+    public Long getTotalAbsences() {
+        return totalAbsences;
+    }
+
+    public void setTotalAbsences(Long totalAbsences) {
+        this.totalAbsences = totalAbsences;
+    }
+
+    public Long getWithoutReasonAbsences() {
+        return withoutReasonAbsences;
+    }
+
+    public void setWithoutReasonAbsences(Long withoutReasonAbsences) {
+        this.withoutReasonAbsences = withoutReasonAbsences;
+    }
+
+    public Long getWithReasonAbsences() {
+        return withReasonAbsences;
+    }
+
+    public void setWithReasonAbsences(Long withReasonAbsences) {
+        this.withReasonAbsences = withReasonAbsences;
+    }
+
+    public Long getBeingLate() {
+        return beingLate;
+    }
+
+    public void setBeingLate(Long beingLate) {
+        this.beingLate = beingLate;
+    }
+
+    public Long getJournalEntryLessons() {
+        return journalEntryLessons;
+    }
+
+    public void setJournalEntryLessons(Long journalEntryLessons) {
+        this.journalEntryLessons = journalEntryLessons;
+    }
+
+    public BigDecimal getLessonAbsencePercentage() {
+        return lessonAbsencePercentage;
+    }
+
+    public void setLessonAbsencePercentage(BigDecimal lessonAbsencePercentage) {
+        this.lessonAbsencePercentage = lessonAbsencePercentage;
+    }
+
+    public List<StudentRemarkDto> getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(List<StudentRemarkDto> remarks) {
+        this.remarks = remarks;
+    }
+
+    public BigDecimal getAverageGrade() {
+        return averageGrade;
+    }
+
+    public void setAverageGrade(BigDecimal averageGrade) {
+        this.averageGrade = averageGrade;
+    }
+
+    public BigDecimal getWeightedAverageGrade() {
+        return weightedAverageGrade;
+    }
+
+    public void setWeightedAverageGrade(BigDecimal weightedAverageGrade) {
+        this.weightedAverageGrade = weightedAverageGrade;
     }
 
 }

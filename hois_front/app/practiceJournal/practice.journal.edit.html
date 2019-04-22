@@ -115,7 +115,7 @@
         </div>
       </div>
 
-      <div ng-if="formState.isHigher" layout="row" layout-sm="column" layout-xs="column" flex ng-if="!practiceJournal.contract">
+      <div layout="row" layout-sm="column" layout-xs="column" flex ng-if="formState.isHigher &&!practiceJournal.contract">
         <md-button class="md-primary" ng-click="addModuleSubject()">{{'practiceJournal.button.addSubject' | translate}}</md-button>
       </div>
 
@@ -158,7 +158,6 @@
       <div layout="row" layout-xs="column">
         <md-button ng-if="(!practiceJournal.id || (practiceJournal.status !== 'PAEVIK_STAATUS_K' && practiceJournal.canEdit)) && !practiceJournal.contract" 
           class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
-        <md-button ng-if="practiceJournal.canConfirm" class="md-raised md-primary" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
         <md-button ng-if="practiceJournal.id && practiceJournal.canDelete" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="back('#/practiceJournals/', practiceJournalForm)">{{'main.button.back' | translate}}</md-button>
       </div>

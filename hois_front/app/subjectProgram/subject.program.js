@@ -10,6 +10,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     public: "public"
   });
 
+  $scope.auth = $route.current.locals.auth;
   var subjectId = $route.current.params.subjectId;
   var subjectStudyPeriodId = $route.current.params.subjectStudyPeriodId;
   var formType = formTypes[$route.current.params.form || ($route.current.locals.params ? $route.current.locals.params.form : undefined)]; // Used to understand from where did user come.
@@ -20,7 +21,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
   $scope.isPublic = formType === formTypes.public;
   var subjectProgramId = $route.current.params.subjectProgramId;
   var baseUrl = "/subject/subjectProgram";
-  var Endpoint = QueryUtils.endpoint("/" + ($scope.isPublic ? "public" : "subject") + "/subjectProgram");
+  var Endpoint = QueryUtils.endpoint("/" + ($scope.isPublic && !$scope.auth ? "public" : "subject") + "/subjectProgram");
   var initial = {
     studyContentType: 'OPPETOOSISU_T',
     status: 'AINEPROGRAMM_STAATUS_L'
@@ -30,7 +31,6 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     return url && url.indexOf("new") !== -1;
   });
 
-  $scope.auth = $route.current.locals.auth;
   $scope.selectedSubjectProgram = undefined;
 
   $scope.studyContentWk = [];
@@ -39,7 +39,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
   $scope.isSupervisor = false;
 
   function getAdditionalData(sId, pId) {
-    $scope.subject = QueryUtils.endpoint(($scope.isPublic ? "/public/subject/view" : baseUrl + "/subject")).get({id: sId, program: pId});
+    $scope.subject = QueryUtils.endpoint(($scope.isPublic && !$scope.auth ? "/public/subject/view" : baseUrl + "/subject")).get({id: sId, program: pId});
     if ($scope.auth && $scope.auth.isTeacher()) {
       $scope.subjectPrograms = QueryUtils.endpoint(baseUrl + "/teacher/" + sId).query();
     }
@@ -191,7 +191,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
   };
 
   $scope.pdfUrl = function () {
-    if ($scope.isPublic) {
+    if ($scope.isPublic && !$scope.auth) {
       return config.apiUrl + '/public/print/subjectProgram/' + $scope.subjectProgram.id + "/program.pdf";
     }
     return config.apiUrl + baseUrl + "/print/" + $scope.subjectProgram.id + "/program.pdf";

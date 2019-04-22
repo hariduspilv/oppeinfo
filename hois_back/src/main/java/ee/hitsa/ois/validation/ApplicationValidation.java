@@ -33,5 +33,13 @@ public interface ApplicationValidation {
     interface Akad extends ApplicationValidation {
 
     }
+    
+    interface Rakkava extends ApplicationValidation {
+        
+    }
+    
+    interface Overskava extends ApplicationValidation {
+        
+    }
 
 }

@@ -48,7 +48,7 @@
       ng-href="#/timetable/{{::timetable.id}}/edit">{{'main.button.change' | translate}}
     </md-button>
 
-    <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_S'" ng-click="confirm()"
+    <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_S' && canConfirm" ng-click="confirm()"
                class="md-raised">{{'main.button.confirm' | translate}}
     </md-button>
     <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_K'" ng-click="publicize()"

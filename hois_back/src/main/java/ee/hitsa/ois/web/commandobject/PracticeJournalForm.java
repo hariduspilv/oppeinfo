@@ -9,6 +9,8 @@ import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -35,6 +37,8 @@ public class PracticeJournalForm extends VersionedCommand {
     @NotEmpty
     @Valid
     private List<PracticeJournalModuleSubjectForm> moduleSubjects;
+    @ClassifierRestriction({MainClassCode.KUTSEHINDAMINE, MainClassCode.KORGHINDAMINE})
+    private String grade;
 
     public AutocompleteResult getStudent() {
         return student;
@@ -106,6 +110,14 @@ public class PracticeJournalForm extends VersionedCommand {
 
     public void setPracticeEvaluation(Long practiceEvaluation) {
         this.practiceEvaluation = practiceEvaluation;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
     }
 
 }

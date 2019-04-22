@@ -689,7 +689,7 @@ public class PracticeEnterpriseService {
 		EnterpriseAdmissionWithStudentGroupsDto dto = new EnterpriseAdmissionWithStudentGroupsDto();
 		dto.setAddInfo(admission.getAddInfo());
 		dto.setId(admission.getId());
-		dto.setPlaces(admission.getPlaces());
+		if (admission.getPlaces() != null) dto.setPlaces(admission.getPlaces().toString());
 		dto.setValidFrom(admission.getValidFrom());
 		dto.setValidThru(admission.getValidThru());
 		dto.setIsStrict(admission.getIsStrict());
@@ -867,26 +867,14 @@ public class PracticeEnterpriseService {
                     failed.add(new EnterpriseImportedRowMessageDto(rowNr, maxValueMessage("SeotudIsikuKontakttelefon", new Integer(100))));
                 }
             }
-			if (StringUtils.isBlank(row.getContactPersonEmail())) {
-				failed.add(new EnterpriseImportedRowMessageDto(rowNr, missingMessage("SeotudIsikuEpost")));
-			} else {
-                if (row.getContactPersonEmail().length() > 100) {
-                    failed.add(new EnterpriseImportedRowMessageDto(rowNr, maxValueMessage("SeotudIsikuEpost", new Integer(100))));
-                }
+			if (!StringUtils.isBlank(row.getContactPersonEmail()) && row.getContactPersonEmail().length() > 100) {
+                failed.add(new EnterpriseImportedRowMessageDto(rowNr, maxValueMessage("SeotudIsikuEpost", new Integer(100))));
             }
-			if (StringUtils.isBlank(row.getContactPersonIdCodeCountry())) {
-				failed.add(new EnterpriseImportedRowMessageDto(rowNr, missingMessage("SeotudIsikuIsikukoodRiik")));
-			} else if (!riikClassifierCodes.contains("RIIK_" + row.getContactPersonIdCodeCountry())) {
+			if (!StringUtils.isBlank(row.getContactPersonIdCodeCountry()) && !riikClassifierCodes.contains("RIIK_" + row.getContactPersonIdCodeCountry())) {
 				failed.add(new EnterpriseImportedRowMessageDto(rowNr, incorrectMessage("SeotudIsikuIsikukoodRiik")));
 			}
-			if (!StringUtils.isBlank(row.getContactPersonIdCodeCountry()) 
-					&& "EST".equals(row.getContactPersonIdCodeCountry()) 
-					&& StringUtils.isBlank(row.getContactPersonIdCode())) {
-				failed.add(new EnterpriseImportedRowMessageDto(rowNr, missingMessage("SeotudIsikuIsikukood")));
-			} else {
-                if (row.getContactPersonIdCode().length() > 50) {
-                    failed.add(new EnterpriseImportedRowMessageDto(rowNr, maxValueMessage("SeotudIsikuIsikukood", new Integer(50))));
-                }
+            if (!StringUtils.isBlank(row.getContactPersonIdCode()) && row.getContactPersonIdCode().length() > 50) {
+                failed.add(new EnterpriseImportedRowMessageDto(rowNr, maxValueMessage("SeotudIsikuIsikukood", new Integer(50))));
             }
 			if (StringUtils.isBlank(row.getContactPersonIsSupervisor())) {
 				failed.add(new EnterpriseImportedRowMessageDto(rowNr, missingMessage("SeotudIsikOnJuhendaja")));
@@ -932,7 +920,7 @@ public class PracticeEnterpriseService {
 				&& StringUtils.isBlank(row.getRegCode())) {
 			failed.add(new EnterpriseImportedRowMessageDto(rowNr, missingMessage("Registrikood")));
 		} else {
-		    if (row.getRegCode().length() > 20) {
+		    if (row.getRegCode() != null && row.getRegCode().length() > 20) {
                 failed.add(new EnterpriseImportedRowMessageDto(rowNr, maxValueMessage("Registrikood", new Integer(20))));
             }
 		}
@@ -1009,10 +997,9 @@ public class PracticeEnterpriseService {
 			EnterpriseSchool school = null;
 			try {
 				enterprise = em.createQuery("select e from Enterprise e "
-		        		+ "where e.regCode = ?2 "
-		        		+ "and e.country.code = ?3", Enterprise.class)
-		        		.setParameter(2, row.getRegCode())
-		        		.setParameter(3, "RIIK_" + row.getCountry())
+		        		+ ("J".equalsIgnoreCase(row.getPerson()) ? "where lower(e.name) = '" + row.getName().toLowerCase() + "' ": "where e.regCode = "+ row.getRegCode() + " ")
+		        		+ "and e.country.code = ?1", Enterprise.class)
+		        		.setParameter(1, "RIIK_" + row.getCountry())
 		        		.getSingleResult();
 			} catch (NoResultException | NonUniqueResultException t) {
 				if (t instanceof NonUniqueResultException) {
@@ -1024,11 +1011,10 @@ public class PracticeEnterpriseService {
 			try {
 				school = em.createQuery("select s from EnterpriseSchool s "
 		        		+ "where s.school.id = ?1 "
-		        		+ "and s.enterprise.regCode = ?2 "
-		        		+ "and s.enterprise.country.code = ?3", EnterpriseSchool.class)
+		        		+ ("J".equalsIgnoreCase(row.getPerson()) ? "and lower(s.enterprise.name) = '" + row.getName().toLowerCase() + "' " : "and s.enterprise.regCode = "+ row.getRegCode() + " ")
+		        		+ "and s.enterprise.country.code = ?2", EnterpriseSchool.class)
 		        		.setParameter(1, user.getSchoolId())
-		        		.setParameter(2, row.getRegCode())
-		        		.setParameter(3, "RIIK_" + row.getCountry())
+		        		.setParameter(2, "RIIK_" + row.getCountry())
 		        		.getSingleResult();
 			} catch (NoResultException | NonUniqueResultException t) {
 				if (t instanceof NonUniqueResultException) {

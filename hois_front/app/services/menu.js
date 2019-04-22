@@ -87,6 +87,19 @@ angular.module('hitsaOis')
             studyLevel: {
               vocational: true
             }
+          },
+          {
+            name: 'main.menu.student.resultCard',
+            url: "/studentResultCards?_menu",
+            icon: "announcement",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.student.rrChanges',
+            url: "/rr/changelogs?_menu",
+            icon:"view_week"
           }
         ]
       });
@@ -180,6 +193,11 @@ angular.module('hitsaOis')
             name: 'main.menu.practice.statistics',
             url: "/practice/student/statistics?_menu",
             icon:"blur_circular"
+          },
+          {
+            name: 'main.menu.practice.studentgroupContracts',
+            url: "/practice/studentgroup/contracts?_menu",
+            icon:"assignment"
           }
         ]
       });
@@ -532,6 +550,11 @@ angular.module('hitsaOis')
             name: 'main.menu.dataexchange.saisLogs',
             url: "/sais/logs?_menu",
             icon:"view_module"
+          },
+          {
+            name: 'main.menu.dataexchange.rrLogs',
+            url: "/rr/logs?_menu",
+            icon:"view_week"
           }
         ]
       });
@@ -768,6 +791,15 @@ angular.module('hitsaOis')
             }
           },
           {
+            name: 'main.menu.study.remarks',
+            url: "/remarks?_menu",
+            icon: "warning",
+            studyLevel: {
+              vocational: true
+            },
+            studentGroupTeacher: true
+          },
+          {
             name: 'main.menu.study.journal.journalsVocational',
             url: "/journals?_menu",
             icon: "chrome_reader_mode",
@@ -910,17 +942,16 @@ angular.module('hitsaOis')
         icon: 'transfer_within_a_station'
       });
 
-      if (authenticatedUser.teacherGroupIds.length > 0) {
-        sections.push({
-          name: 'main.menu.studentGroupTeacher.label',
-          type: 'link',
-          url: "/reports/studentgroupteacher?_menu",
-          icon: "accessibility_new",
-          studyLevel: {
-            vocational: true
-          }
-        });
-      }
+      sections.push({
+        name: 'main.menu.studentGroupTeacher.label',
+        type: 'link',
+        url: "/reports/studentgroupteacher?_menu",
+        icon: "accessibility_new",
+        studyLevel: {
+          vocational: true
+        },
+        studentGroupTeacher: true
+      });
     }
 
     function getMainAdminSections() {
@@ -1437,7 +1468,6 @@ angular.module('hitsaOis')
       return hasAccess;
     }
 
-
     function studyLevelMatch(section, authenticatedUser) {
         if(angular.isDefined(section.studyLevel) && angular.isDefined(authenticatedUser.school) && authenticatedUser.school !== null) {
             return authenticatedUser.higher && section.studyLevel.higher ||
@@ -1445,6 +1475,10 @@ angular.module('hitsaOis')
               authenticatedUser.doctoral && section.studyLevel.doctoral;
         }
         return true;
+    }
+
+    function isStudentGroupTeacher(section, authenticatedUser) {
+      return section.studentGroupTeacher && authenticatedUser.teacherGroupIds.length > 0;
     }
 
     function addToggleItem(pages, section, roles, authenticatedUser) {
@@ -1468,7 +1502,11 @@ angular.module('hitsaOis')
         return;
       }
       if (!studyLevelMatch(section, authenticatedUser)) {
-          return;
+        return;
+      }
+
+      if (angular.isDefined(section.studentGroupTeacher) && !isStudentGroupTeacher(section, authenticatedUser)) {
+        return;
       }
 
       menu.push({
@@ -1484,7 +1522,11 @@ angular.module('hitsaOis')
         return;
       }
       if (!studyLevelMatch(section, authenticatedUser)) {
-          return;
+        return;
+      }
+
+      if (angular.isDefined(section.studentGroupTeacher) && !isStudentGroupTeacher(section, authenticatedUser)) {
+        return;
       }
 
       pages.push({

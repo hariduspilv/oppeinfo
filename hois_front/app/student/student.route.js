@@ -32,6 +32,15 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         translationLoaded: function($translate) { return $translate.onReady(); } ,
         auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
+    }).when('/students/:id/remarks', {
+      templateUrl: 'student/view.remarks.html',
+      controller: 'StudentViewRemarksController',
+      controllerAs: 'controller',
+      data: authorizedRoles,
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
     }).when('/students/:id/timetable', {
       templateUrl: 'student/view.timetable.html',
       controller: 'StudentViewTimetableController',
@@ -53,6 +62,15 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     }).when('/students/:id/absences', {
       templateUrl: 'student/view.absences.html',
       controller: 'StudentAbsencesController',
+      controllerAs: 'controller',
+      data: authorizedRoles,
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
+    }).when('/students/:id/rr', {
+      templateUrl: 'student/view.rr.html',
+      controller: 'StudentViewRRController',
       controllerAs: 'controller',
       data: authorizedRoles,
       resolve: {
@@ -97,6 +115,20 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       templateUrl: 'student/student.journal.list.html',
       controller: 'StudentJournalListController',
       controllerAs: 'StudentJournalListController',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR,
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK
+        ]
+      }
+    }).when('/students/journals/:id', {
+      templateUrl: 'student/student.journal.html',
+      controller: 'StudentJournalViewController',
+      controllerAs: 'StudentJournalViewController',
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); } ,
         auth: function (AuthResolver) { return AuthResolver.resolve(); }

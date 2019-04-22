@@ -8,7 +8,8 @@ angular.module('hitsaOis').controller('LogsController', ['$mdDialog', '$route', 
       ekis: ['registerDirective', 'deleteDirective', 'registerCertificate', 'registerPracticeContract', 'enforceContract', 'enforceDirective', 'rejectDirective'],
       kutseregister: [$scope.auth.roleCode === 'ROLL_P' ? 'kutseregister.muutunudKutsestandardid' : 'kutseregister.kutsetunnistus'],
       rtip: ['sap.Z_EMPLOEES', 'sap.tootajaPohiandmed'],
-      sais: ['sais2.AllAdmissionsExport', 'sais2.AllApplicationsExport']
+      sais: ['sais2.AllAdmissionsExport', 'sais2.AllApplicationsExport'],
+      rr: ['rr.RR434']
     };
 
     var logType = $route.current.locals.logType, messagePrefix = 'logs.' + logType + '.';

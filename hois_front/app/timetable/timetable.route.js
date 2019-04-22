@@ -34,10 +34,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNDAEG]
       }
     })
-    .when('/timetable/lessonTime/:id/:action', {
-      templateUrl: function (urlAttrs) {
-        return urlAttrs.action === 'edit' ? 'timetable/timetable.lessonTime.html' : 'timetable/timetable.lessonTime.view.html';
-      },
+    .when('/timetable/lessonTime/:id/view', {
+      templateUrl: 'timetable/timetable.lessonTime.view.html',
       controller: 'TimetableLessonTimeController',
       controllerAs: 'controller',
       resolve: {
@@ -49,13 +47,29 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         entity: function (QueryUtils, $route) {
           return QueryUtils.endpoint('/lessontimes').get({id: $route.current.params.id}).$promise;
-        },
-        isView: function ($route) {
-          return $route.current.params.action === 'view';
         }
       },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNDAEG]
+      }
+    })
+    .when('/timetable/lessonTime/:id/edit', {
+      templateUrl: 'timetable/timetable.lessonTime.html',
+      controller: 'TimetableLessonTimeController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        },
+        entity: function (QueryUtils, $route) {
+          return QueryUtils.endpoint('/lessontimes').get({id: $route.current.params.id}).$promise;
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNDAEG]
       }
     })
     .when('/timetable/generalTimetableByGroup/:schoolId?', {
@@ -305,8 +319,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: function (Session, roles) {
-          return (Session.roleCode === 'ROLL_A' || Session.roleCode === 'ROLL_O') && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN) !== -1;
+        authorizedRoles: function (Session, roles, ArrayUtils) {
+          return (Session.roleCode === 'ROLL_A' || Session.roleCode === 'ROLL_O') && ArrayUtils.intersect(roles, [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIPLAAN, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS]);
         }
       }
     })
@@ -326,7 +340,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIPLAAN, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS]
       }
     })
     .when('/timetable/timetableEvent/:id/view', {
@@ -342,7 +356,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS]
       }
     });
 }]);

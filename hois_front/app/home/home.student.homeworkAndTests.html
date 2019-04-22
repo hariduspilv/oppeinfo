@@ -11,9 +11,7 @@
                     <td md-cell width="10%">{{'home.student.today' | translate}} {{todaysDate | hoisDate}}</td>
                     <td md-cell>
                         <span style="font-weight:bold">{{task.journalName}}: </span><br>
-                        <span ng-if="testTaskTypes.indexOf(task.entryType) !== -1">{{'home.student.test' | translate}} - </span>
-                        <span ng-if="testTaskTypes.indexOf(task.entryType) === -1">{{'home.student.homework' | translate}} - </span>
-                        <span>{{task.taskContent}}</span>
+                        <hois-value value="(testTaskTypes.indexOf(task.entryType) !== -1 ? ('home.student.test' | translate) : ('home.student.homework' | translate)) + ' - ' + task.taskContent"></hois-value>
                     </td>
                 </tr>
                 <!-- Tomorrow -->
@@ -21,9 +19,7 @@
                     <td md-cell width="10%">{{'home.student.tomorrow' | translate}} {{tomorrowsDate | hoisDate}}</td>
                     <td md-cell>
                         <span style="font-weight:bold">{{task.journalName}}: </span><br>
-                        <span ng-if="testTaskTypes.indexOf(task.entryType) !== -1">{{'home.student.test' | translate}} - </span>
-                        <span ng-if="testTaskTypes.indexOf(task.entryType) === -1">{{'home.student.homework' | translate}} - </span>
-                        <span>{{task.taskContent}}</span>
+                        <hois-value value="(testTaskTypes.indexOf(task.entryType) !== -1 ? ('home.student.test' | translate) : ('home.student.homework' | translate)) + ' - ' + task.taskContent"></hois-value>
                     </td>
                 </tr>
                 <!-- Later -->
@@ -31,9 +27,7 @@
                     <td md-cell width="10%">{{task.date | hoisDate}}</td>
                     <td md-cell>
                         <span style="font-weight:bold">{{task.journalName}}: </span><br>
-                        <span ng-if="testTaskTypes.indexOf(task.entryType) !== -1">{{'home.student.test' | translate}} - </span>
-                        <span ng-if="testTaskTypes.indexOf(task.entryType) === -1">{{'home.student.homework' | translate}} - </span>
-                        <span>{{task.taskContent}}</span>
+                        <hois-value value="(testTaskTypes.indexOf(task.entryType) !== -1 ? ('home.student.test' | translate) : ('home.student.homework' | translate)) + ' - ' + task.taskContent"></hois-value>
                     </td>
                 </tr>
             </tbody>

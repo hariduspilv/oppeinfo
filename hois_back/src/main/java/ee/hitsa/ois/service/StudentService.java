@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -46,6 +45,7 @@ import ee.hitsa.ois.domain.student.StudentHigherResultModule;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
+import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JournalEntryType;
@@ -95,6 +95,7 @@ import ee.hitsa.ois.web.dto.student.StudentVocationalModuleDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultByTimeDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
+import ee.hitsa.ois.web.dto.student.StudentVocationalStudyProgramme;
 
 @Transactional
 @Service
@@ -121,6 +122,8 @@ public class StudentService {
     private EntityManager em;
     @Autowired
     private CurriculumVersionOccupationModuleRepository curriculumVersionOccupationModuleRepository;
+    @Autowired
+    private StudentRemarkService studentRemarkService;
 
     /**
      * Search students
@@ -169,6 +172,13 @@ public class StudentService {
         qb.optionalCriteria("s.status_code in (:status)", "status", criteria.getStatus());
         qb.optionalCriteria("j.id in (:journalIds)", "journalIds", criteria.getJournalId());
         qb.optionalCriteria("sj.id in (:subjectIds)", "subjectIds", criteria.getSubjectId());
+
+        if (Boolean.TRUE.equals(criteria.getHigher())) {
+            qb.filter("curriculum.is_higher = true");
+        }
+        if (Boolean.FALSE.equals(criteria.getHigher())) {
+            qb.filter("curriculum.is_higher = false");
+        }
 
         return JpaQueryUtil.pagingResult(qb, select.toString(), em, pageable).map(r -> {
             StudentSearchDto dto = new StudentSearchDto();
@@ -552,6 +562,8 @@ public class StudentService {
         dto.setUserCanAddRepresentative(Boolean.valueOf(UserUtil.canAddStudentRepresentative(user, student)));
         dto.setUserIsSchoolAdmin(Boolean.valueOf(UserUtil.isSchoolAdmin(user, student.getSchool())));
         dto.setUserIsStudentGroupTeacher(Boolean.valueOf(UserUtil.isStudentGroupTeacher(user, student)));
+        dto.setUserCanViewStudentSpecificData(Boolean.valueOf(UserUtil.canViewStudentSpecificData(user, student)));
+        dto.setUserCanUpdateRR(Boolean.valueOf(UserUtil.canUpdateStudentRR(user, student)));
         if(!(Boolean.TRUE.equals(dto.getUserIsSchoolAdmin()) || UserUtil.isStudent(user, student) || UserUtil.isStudentRepresentative(user, student))) {
             dto.setSpecialNeed(null);
             dto.setIsRepresentativeMandatory(null);
@@ -568,11 +580,13 @@ public class StudentService {
                 dto.setKkh(BigDecimal.ZERO);
                 dto.setIsCurriculumFulfilled(Boolean.FALSE);
             }
+
+            dto.setHasRemarksPastSevenDays(studentRemarkService.studentHasRemarksPastSevenDays(student));
         }
         dto.setOccupationCertificates(occupationCertificates(student));
-        
+
         OisFile logo = student.getPhoto();
-        if(logo != null) {
+        if (logo != null) {
             dto.setPhoto(EntityUtil.bindToDto(logo, new OisFileCommand()));
         }
         return dto;
@@ -643,7 +657,8 @@ public class StudentService {
                     "cvot.name_et || ' (' || coalesce(cm.name_en,cm.name_et) || ' - ' || coalesce(cm.name_en,cm.name_et) || ')' as my_theme_en, " +
                     "null, null, pj.grade_code, sy.year_code, sy.start_date, false as informal, false as formal, true as practice " +
                 "from practice_journal pj " +
-                "join curriculum_version_omodule_theme cvot on cvot.id = pj.curriculum_version_omodule_theme_id " +
+                "join practice_journal_module_subject pjms on pj.id = pjms.practice_journal_id " +
+                "join curriculum_version_omodule_theme cvot on cvot.id = pjms.curriculum_version_omodule_theme_id " +
                 "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id " +
                 "join curriculum_module cm on cm.id = cvo.curriculum_module_id " +
                 "join classifier mcl on mcl.code = cm.module_code " +
@@ -938,7 +953,8 @@ public class StudentService {
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
                 + "false is_apel_transfer, false is_formal, cvo.id = :curriculumVersionId curriculum_version_result "
                 + "from practice_journal pj "
-                + "join curriculum_version_omodule_theme cvot on cvot.id = pj.curriculum_version_omodule_theme_id "
+                + "join practice_journal_module_subject pjms on pj.id = pjms.practice_journal_id "
+                + "join curriculum_version_omodule_theme cvot on cvot.id = pjms.curriculum_version_omodule_theme_id "
                 + "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id "
                 + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
                 + "join classifier mcl on mcl.code = cm.module_code "
@@ -1217,7 +1233,6 @@ public class StudentService {
                 student.getCurriculumVersion().getSpecialities());
     }
 
-
     public List<StudentSpecialitySearchDto> saveSpecialities(HoisUserDetails user, List<StudentSpecialitySearchDto> form) {
         EntityUtil.setUsername(user.getUsername(), em);
         Map<Long, StudentSpecialitySearchDto> rows = form.stream().collect(Collectors.toMap(StudentSpecialitySearchDto::getId, Function.identity()));
@@ -1232,4 +1247,33 @@ public class StudentService {
         });
         return rows.values().stream().collect(Collectors.toList());
     }
+
+    public Map<Long, StudentVocationalStudyProgramme> studentStudyProgrammes(Set<Long> studentIds) {
+        List<?> data = em.createNativeQuery("select student_id, "
+                + "sum(case when m.module_code = 'KUTSEMOODUL_Y' then m.credits else 0 end) as general, "
+                + "sum(case when m.module_code = 'KUTSEMOODUL_P' then m.credits else 0 end) as core, "
+                + "sum(case when m.module_code = 'KUTSEMOODUL_L' then m.credits else 0 end) as final, "
+                + "min(m.optional_study_credits) as free_choice from "
+                + "(select distinct ss.id student_id, cvo.id cvo_id, cm.id as m_id, cm.credits, "
+                + "cc.optional_study_credits, cm.module_code from curriculum_version cv "
+                + "join curriculum_version_omodule cvo on cv.id = cvo.curriculum_version_id "
+                + "join curriculum_module cm on cvo.curriculum_module_id = cm.id and cv.curriculum_id = cm.curriculum_id "
+                    + "and coalesce(cm.is_additional, false) = false and cm.module_code in (?1) "
+                    + "and coalesce(cm.is_additional, false) = false "
+                + "join curriculum cc on cv.curriculum_id = cc.id "
+                + "join student ss on cv.id = ss.curriculum_version_id "
+                + "left join student_group sg on ss.student_group_id = sg.id "
+                + "where ss.id in (?2) and (sg.id is null or coalesce( sg.speciality_code, 'x' )= 'x' "
+                + "or coalesce( sg.speciality_code, 'x' )!= 'x' and exists(select 1 from curriculum_module_occupation cmo left "
+                + "join classifier_connect ccc on cmo.occupation_code = ccc.connect_classifier_code "
+                + "where cmo.curriculum_module_id = cm.id and (cmo.occupation_code = sg.speciality_code "
+                + "or ccc.classifier_code = sg.speciality_code)))) as m group by student_id")
+                .setParameter(1, EnumUtil.toNameList(CurriculumModuleType.KUTSEMOODUL_Y,
+                        CurriculumModuleType.KUTSEMOODUL_P, CurriculumModuleType.KUTSEMOODUL_L))
+                .setParameter(2, studentIds)
+                .getResultList();
+        return StreamUtil.toMap(r -> resultAsLong(r, 0), r -> new StudentVocationalStudyProgramme(resultAsDecimal(r, 1),
+                resultAsDecimal(r, 2), resultAsDecimal(r, 3), resultAsDecimal(r, 4)), data);
+    }
+
 }

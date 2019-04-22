@@ -209,7 +209,7 @@ public class EhisDirectiveStudentService extends EhisService {
     }
 
     WsEhisStudentLog graduation(DirectiveStudent directiveStudent, String docNr, 
-            String academicNr, List<String> extraNr) {
+            String academicNr, List<String> extraNr, String academicNrEn, List<String> extraNrEn) {
         try {
             Student student = directiveStudent.getStudent();
             KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
@@ -235,7 +235,32 @@ public class EhisDirectiveStudentService extends EhisService {
                 }
             }
             oppeasutuseLopetamine.setEestikeelneAkademOiend(oiend);
+            
+            if (academicNrEn != null) {
+                KhlOppeasutuseLopetamine oppeasutuseLopetamineEn = new KhlOppeasutuseLopetamine();
+                oppeasutuseLopetamineEn.setMuutusKp(date(LocalDate.now()));
+                oppeasutuseLopetamineEn.setLopudokumendiNr(docNr);
+                KhlOiendType oiendEn = new KhlOiendType();
+                oiendEn.setOiendiNr(academicNrEn);
+                if (extraNrEn != null) {
+                    int size = extraNrEn.size();
+                    if (size > 0) {
+                        oiendEn.setLisaleht1Nr(extraNrEn.get(0));
+                    }
+                    if (size > 1) {
+                        oiendEn.setLisaleht2Nr(extraNrEn.get(1));
+                    }
+                    if (size > 2) {
+                        oiendEn.setLisaleht3Nr(extraNrEn.get(2));
+                    }
+                    if (size > 3) {
+                        oiendEn.setLisaleht4Nr(extraNrEn.get(3));
+                    }
+                }
+                oppeasutuseLopetamine.setInglisekeelneAkademOiend(oiendEn);
+            }
             oppeasutuseLopetamine.setCumLaude(yesNo(directiveStudent.getIsCumLaude()));
+            
 
             Optional.ofNullable(directiveStudent.getCurriculumGrade())
                     .map(CurriculumGrade::getEhisGrade)

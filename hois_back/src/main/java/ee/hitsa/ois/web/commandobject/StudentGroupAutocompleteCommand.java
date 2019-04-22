@@ -13,6 +13,7 @@ public class StudentGroupAutocompleteCommand extends SearchCommand {
     private Boolean higher;
     private Long studentGroupTeacherId;
     private Long studyYear;
+    private String studyForm;
     
     private Boolean occupied;
     private LocalDate date;
@@ -76,6 +77,14 @@ public class StudentGroupAutocompleteCommand extends SearchCommand {
 
     public void setStudyYear(Long studyYear) {
         this.studyYear = studyYear;
+    }
+
+    public String getStudyForm() {
+        return studyForm;
+    }
+
+    public void setStudyForm(String studyForm) {
+        this.studyForm = studyForm;
     }
 
     public Boolean getOccupied() {

@@ -256,10 +256,9 @@ public class StudentRepresentativeService {
     }
 
     private void representativeCreatedMessage(StudentRepresentative representative) {
-        // send message to new representative
         Student student = representative.getStudent();
         StudentRepresentativeApplicationAccepted data = new StudentRepresentativeApplicationAccepted(representative);
-        automaticMessageService.sendMessageToPersons(MessageType.TEATE_LIIK_OP_ESINDAJA, student.getSchool(), Arrays.asList(student.getPerson(), representative.getPerson()), data);
+        automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_ESINDAJA, student, data);
     }
 
     private void setApplicationStatus(StudentRepresentativeApplication application, StudentRepresentativeApplicationStatus status) {

@@ -28,7 +28,9 @@
                 <tr md-row ng-repeat="task in shownWeek.entries" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>{{task.date | hoisDate}}</td>
                     <td md-cell>{{task.journalName}}</td>
-                    <td md-cell>{{task.taskContent}}</td>
+                    <td md-cell>
+                        <hois-value value="task.taskContent"></hois-value>
+                    </td>
                 </tr>
             </tbody>
         </table>

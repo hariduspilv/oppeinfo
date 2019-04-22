@@ -11,6 +11,7 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
   var viewForbiddenGrades = ['KUTSEHINDAMINE_X'];
   var allGrades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
   $scope.formState = {};
+  var deferredEntityToDto;
 
   allGrades.$promise.then(function (result) {
     $scope.grades = result.filter(function (it) {
@@ -21,6 +22,13 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
       }
     });
   });
+
+  function resolveDeferredIfExists() {
+    if (angular.isDefined(deferredEntityToDto) && deferredEntityToDto.promise.$$state.status === 0) {
+      deferredEntityToDto.resolve();
+    }
+  }
+
   function entityToDto(entity) {
     $q.all(clMapper.promises).then(function () {
       $scope.finalProtocolForm.$setPristine();
@@ -49,6 +57,9 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
         canChangeConfirmedProtocolGrade: ProtocolUtils.canChangeConfirmedProtocolGrade($scope.auth, $scope.protocol),
         protocolPdfUrl: config.apiUrl + endpoint + '/' + entity.id + '/print/protocol.pdf'
       };
+      resolveDeferredIfExists();
+    }).catch(function () {
+      resolveDeferredIfExists();
     });
   }
 
@@ -189,8 +200,10 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
   };
 
   $scope.confirm = function () {
+    deferredEntityToDto = $q.defer();
     if(!validationPassed()) {
-      return false;
+      resolveDeferredIfExists();
+      return deferredEntityToDto.promise;
     }
 
     var data = {
@@ -202,10 +215,11 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
     };
 
     if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      ProtocolUtils.signBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto);
+      ProtocolUtils.signBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto, resolveDeferredIfExists);
     } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      ProtocolUtils.mobileSignBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto);
+      ProtocolUtils.mobileSignBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto, resolveDeferredIfExists);
     }
+    return deferredEntityToDto.promise;
   };
 
   var FinalVocationlProtocolEndpoint = QueryUtils.endpoint(endpoint);

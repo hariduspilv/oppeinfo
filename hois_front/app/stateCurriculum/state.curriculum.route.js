@@ -2,13 +2,8 @@
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
 
-  function checkRightsToEdit(message, $location, ArrayUtils, AuthResolver, USER_ROLES) {
-    AuthResolver.resolve().then(function(auth){
-      if((!auth.isMainAdmin() && !auth.isExternalExpert()) || !ArrayUtils.includes(auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_RIIKLIKOPPEKAVA)) {
-        message.error('main.messages.error.nopermission');
-        $location.path('');
-      }
-    });
+  function checkRightsToEdit(Session, roles) {
+    return ['ROLL_P', 'ROLL_V'].indexOf(Session.roleCode) !== -1 && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_RIIKLIKOPPEKAVA) !== -1;
   }
 
   $routeProvider
@@ -18,10 +13,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
-        checkAccess: checkRightsToEdit
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_RIIKLIKOPPEKAVA]
+        authorizedRoles: checkRightsToEdit
       }
     })
     .when('/stateCurriculum/:id/edit', {
@@ -30,17 +25,20 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
-        checkAccess: checkRightsToEdit
-       },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_RIIKLIKOPPEKAVA]
+        authorizedRoles: checkRightsToEdit
       }
     })
     .when('/stateCurriculum/:id/view', {
       templateUrl: 'stateCurriculum/state.curriculum.view.html',
       controller: 'StateCurriculumController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      resolve: { 
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RIIKLIKOPPEKAVA]
       }

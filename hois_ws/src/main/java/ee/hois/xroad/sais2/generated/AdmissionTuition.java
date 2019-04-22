@@ -25,6 +25,8 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="TuitionType" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
  *         &lt;element name="Descripiton" type="{http://sais2.x-road.eu/}ArrayOfKvp" minOccurs="0"/&gt;
  *         &lt;element name="IsFullLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
+ *         &lt;element name="IsPartialLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
+ *         &lt;element name="IsUndefinedLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -41,7 +43,9 @@ import javax.xml.bind.annotation.XmlType;
     "amount",
     "tuitionType",
     "descripiton",
-    "isFullLoad"
+    "isFullLoad",
+    "isPartialLoad",
+    "isUndefinedLoad"
 })
 public class AdmissionTuition {
 
@@ -59,6 +63,10 @@ public class AdmissionTuition {
     protected ArrayOfKvp descripiton;
     @XmlElement(name = "IsFullLoad")
     protected boolean isFullLoad;
+    @XmlElement(name = "IsPartialLoad")
+    protected boolean isPartialLoad;
+    @XmlElement(name = "IsUndefinedLoad")
+    protected boolean isUndefinedLoad;
 
     /**
      * Gets the value of the id property.
@@ -210,6 +218,38 @@ public class AdmissionTuition {
      */
     public void setIsFullLoad(boolean value) {
         this.isFullLoad = value;
+    }
+
+    /**
+     * Gets the value of the isPartialLoad property.
+     * 
+     */
+    public boolean isIsPartialLoad() {
+        return isPartialLoad;
+    }
+
+    /**
+     * Sets the value of the isPartialLoad property.
+     * 
+     */
+    public void setIsPartialLoad(boolean value) {
+        this.isPartialLoad = value;
+    }
+
+    /**
+     * Gets the value of the isUndefinedLoad property.
+     * 
+     */
+    public boolean isIsUndefinedLoad() {
+        return isUndefinedLoad;
+    }
+
+    /**
+     * Sets the value of the isUndefinedLoad property.
+     * 
+     */
+    public void setIsUndefinedLoad(boolean value) {
+        this.isUndefinedLoad = value;
     }
 
 }

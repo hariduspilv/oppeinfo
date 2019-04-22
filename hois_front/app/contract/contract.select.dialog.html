@@ -1,0 +1,63 @@
+<md-dialog aria-label="select contract dialog">
+    <form name="dialogForm" ng-submit="checkChecked()" novalidate ng-cloak>
+      <md-toolbar>
+        <div class="md-toolbar-tools">
+          <h2 flex>{{"contract.select" | translate}}</h2>
+          <md-button class="md-icon-button" ng-click="cancel()">
+            <md-icon md-font-set="material-icons">close</md-icon>
+          </md-button>
+        </div> 
+      </md-toolbar>
+      <md-dialog-content>
+        <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+            <div layout="row">
+                <hois-autocomplete flex ng-model="studentGroup" method="studentgroups" name="studentGroup"
+                label="{{'lessonplan.studentGroup'}}"></hois-autocomplete>
+                <hois-autocomplete flex ng-model="student" method="students" name="students"
+                label="{{'document.student'}}"></hois-autocomplete>
+            </div>
+            <div layout="row">
+                <md-button class="md-raised md-primary" ng-click="loadData()">{{'main.button.search' | translate}}</md-button>
+            </div>
+            <div flex>
+                <md-table-container>
+                    <table md-table md-progress="tabledata.$promise">
+                    <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+                        <tr md-row>
+                            <th md-column></th>
+                            <th md-column md-order-by="student_person.lastname,student_person.firstname">{{'student.label' | translate}}</th>
+                            <th md-column>{{'studentGroup.label' | translate}}</th>
+                            <th md-column>{{'contract.contractNumber' | translate}}</th>
+                            <th md-column>{{'contract.validity' | translate}}</th>
+                            <th md-column>{{'enterprise.label' | translate}}</th>
+                            <th md-column>{{'main.status' | translate}}</th>
+                        </tr>
+                    </thead>
+                    <tbody md-body>
+                        <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                            <td md-cell>
+                                <md-input-container>
+                                    <md-checkbox ng-model="row.checked" ng-click="deselect(row)" aria-label="check row"></md-checkbox>
+                                </md-input-container>
+                            </td>
+                            <td md-cell>{{currentLanguageNameField(row.student)}}</td>
+                            <td md-cell>{{row.studentGroup}}</td>
+                            <td md-cell>{{row.contractNr}}</td>
+                            <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
+                            <td md-cell>{{row.enterpriseName}}</td>
+                            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+                        </tr>
+                    </tbody>
+                    </table>
+                </md-table-container>
+                <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+                    md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+                    md-page-select></md-table-pagination>
+            </div>
+        </div>
+      </md-dialog-content>
+      <md-dialog-actions layout="row" layout-align="start start">
+        <md-button class="md-raised" type="submit">{{"contract.copy" | translate}}</md-button>
+      </md-dialog-actions>
+    </form>
+  </md-dialog>

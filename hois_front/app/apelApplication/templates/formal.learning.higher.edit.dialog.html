@@ -219,7 +219,7 @@
         </fieldset>
         <br>
         <fieldset>
-          <legend ng-class="{invalid: dialogForm.$submitted && (!record.formalReplacedSubjectsOrModules || record.formalReplacedSubjectsOrModules.length === 0)}"
+          <legend ng-class="{invalid: areReplacedSubjectsOrModulesValid()}"
             class="md-title-small">{{'apel.formalLearnings.substitutableSubjects' | translate}}</legend>
           <div flex="50">
             <md-input-container style="width: 100%">

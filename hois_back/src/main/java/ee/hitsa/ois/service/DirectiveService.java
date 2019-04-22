@@ -20,13 +20,17 @@ import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_K;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_O;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_V;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -70,6 +74,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.FormType;
@@ -121,6 +126,7 @@ import ee.hitsa.ois.web.dto.directive.DirectiveStudentDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveStudentSearchDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveViewDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveViewStudentDto;
+import ee.hitsa.ois.web.dto.student.StudentVocationalStudyProgramme;
 
 @Transactional
 @Service
@@ -150,6 +156,7 @@ public class DirectiveService {
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OVORM, EnumUtil.toNameList(OPPURSTAATUS_O));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_STIPTOET, StudentStatus.STUDENT_STATUS_ACTIVE);
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_VALIS, EnumUtil.toNameList(OPPURSTAATUS_O));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_STIPTOETL, StudentStatus.STUDENT_STATUS_ACTIVE);
 
         for(ApplicationType appType : ApplicationType.values()) {
             if(appType.directiveType() != null) {
@@ -173,6 +180,8 @@ public class DirectiveService {
     private Validator validator;
     @Autowired
     private AutomaticMessageService automaticMessageService;
+    @Autowired
+    private StudentService studentService;
 
     /**
      * get directive record for editing
@@ -421,16 +430,17 @@ public class DirectiveService {
             // remove possible existing directive students not included in update command
             students.removeAll(studentMapping.values());
         } else {
+            boolean isHigher = directive.getIsHigher().booleanValue();
             Map<Long, DirectiveStudent> studentMapping = StreamUtil.toMap(DirectiveStudent::getId, students);
             Set<Long> fetchedStudentIds = StreamUtil.toMappedSet(DirectiveFormStudent::getStudent, form.getStudents());
             Set<Long> cumLaude = !fetchedStudentIds.isEmpty() && KASKKIRI_LOPET.equals(directiveType) ?
-                    cumLaudes(fetchedStudentIds) : Collections.emptySet();
+                    cumLaudes(fetchedStudentIds, isHigher) : Collections.emptySet();
             Set<Long> studentsWithCertificate = !fetchedStudentIds.isEmpty() && KASKKIRI_LOPET.equals(directiveType) ?
                     occupationCertificates(fetchedStudentIds) : Collections.emptySet();
             Map<Long, List<String>> occupations = !fetchedStudentIds.isEmpty() && KASKKIRI_LOPET.equals(directiveType) ?
-                    occupations(fetchedStudentIds, directive.getIsHigher().booleanValue()) : Collections.emptyMap();
+                    occupations(fetchedStudentIds, isHigher) : Collections.emptyMap();
             Map<Long, List<String>> partOccupations = !fetchedStudentIds.isEmpty() && KASKKIRI_LOPET.equals(directiveType) ?
-                    partOccupations(fetchedStudentIds, directive.getIsHigher().booleanValue()) : Collections.emptyMap();
+                    partOccupations(fetchedStudentIds, isHigher) : Collections.emptyMap();
             List<DirectiveStudent> messagesToStudents = new ArrayList<>();
             for(DirectiveFormStudent formStudent : StreamUtil.nullSafeList(form.getStudents())) {
                 Long directiveStudentId = formStudent.getId();
@@ -665,10 +675,11 @@ public class DirectiveService {
         if(KASKKIRI_LOPET.equals(directiveType)) {
             Set<Long> fetchedStudentIds = StreamUtil.toMappedSet(DirectiveStudentDto::getStudent, result);
             if(!fetchedStudentIds.isEmpty()) {
-                Set<Long> cumLaude = cumLaudes(fetchedStudentIds);
+                boolean isHigher = cmd.getIsHigher().booleanValue();
+                Set<Long> cumLaude = cumLaudes(fetchedStudentIds, isHigher);
                 Set<Long> studentsWithCertificate = occupationCertificates(fetchedStudentIds);
-                Map<Long, List<String>> occupations = occupations(fetchedStudentIds, cmd.getIsHigher().booleanValue());
-                Map<Long, List<String>> partOccupations = partOccupations(fetchedStudentIds, cmd.getIsHigher().booleanValue());
+                Map<Long, List<String>> occupations = occupations(fetchedStudentIds, isHigher);
+                Map<Long, List<String>> partOccupations = partOccupations(fetchedStudentIds, isHigher);
                 for (DirectiveStudentDto dto : result) {
                     Long studentId = dto.getStudent();
                     dto.setIsCumLaude(Boolean.valueOf(cumLaude.contains(studentId)));
@@ -1064,6 +1075,7 @@ public class DirectiveService {
         person.setResidenceCountry(sais.getResidenceCountry());
         person.setAddressAds(sais.getAddressAds());
         person.setAddressAdsOid(sais.getAddressAdsOid());
+        person.setPostcode(sais.getPostcode());
     }
 
     private Person findForeignPerson(DirectiveFormStudent formStudent) {
@@ -1125,7 +1137,30 @@ public class DirectiveService {
                 .setParameter(1, schoolId).setParameter(2, now).getResultList();
     }
 
-    private Set<Long> cumLaudes(Set<Long> studentIds) {
+    private Set<Long> cumLaudes(Set<Long> studentIds, boolean isHigher) {
+        if (isHigher) {
+            return higherCumLaudes(studentIds);
+        }
+        return vocationalCumLaudes(studentIds);
+    }
+
+    private Set<Long> higherCumLaudes(Set<Long> studentIds) {
+        List<?> data = em.createNativeQuery("select scc.student_id from student_curriculum_completion scc"
+                + " join protocol_student ps on ps.student_id = scc.student_id"
+                + " join protocol p on p.id = ps.protocol_id"
+                + " where scc.student_id in ?1 and scc.average_mark >= 4.6 and p.status_code = ?2"
+                + " and ((p.is_final = true and p.is_final_thesis = false and ps.grade_mark = 5)"
+                + " or exists(select 1 from protocol_student_occupation pso where pso.protocol_student_id = ps.id))"
+                + " and exists(select 1 from student s join curriculum_version cv on s.curriculum_version_id = cv.id"
+                + " join curriculum c on cv.curriculum_id = c.id and c.is_higher = true"
+                + " where s.id = scc.student_id)")
+                .setParameter(1, studentIds)
+                .setParameter(2, ProtocolStatus.PROTOKOLL_STAATUS_K.name())
+                .getResultList();
+        return data.stream().map(r -> resultAsLong(r, 0)).collect(Collectors.toSet());
+    }
+
+    private Set<Long> vocationalCumLaudes(Set<Long> studentIds) {
         List<?> data = em.createNativeQuery("select scc.student_id from student_curriculum_completion scc"
                 + " join protocol_student ps on ps.student_id = scc.student_id"
                 + " join protocol p on p.id = ps.protocol_id"
@@ -1134,15 +1169,64 @@ public class DirectiveService {
                 + " or exists(select 1 from protocol_student_occupation pso where pso.protocol_student_id = ps.id))"
                 + " and exists(select 1 from student s join curriculum_version cv on s.curriculum_version_id = cv.id"
                 + " join curriculum c on cv.curriculum_id = c.id"
-                + " left join classifier_connect cc on c.orig_study_level_code = cc.classifier_code and cc.connect_classifier_code = ?3"
-                + " where s.id = scc.student_id and (c.is_higher = true or cc.classifier_code is not null))")
+                + " join classifier_connect cc on c.orig_study_level_code = cc.classifier_code and cc.connect_classifier_code = ?3"
+                + " where s.id = scc.student_id)"
+                + " and not exists(select 1 from student_vocational_result svr3 where svr3.student_id = scc.student_id"
+                    + " and svr3.grade_code = ?4)")
                 .setParameter(1, studentIds)
                 .setParameter(2, ProtocolStatus.PROTOKOLL_STAATUS_K.name())
                 .setParameter(3, FormType.LOPUBLANKETT_KK.name())
+                .setParameter(4, OccupationalGrade.KUTSEHINDAMINE_3.name())
                 .getResultList();
-        return data.stream().map(r -> resultAsLong(r, 0)).collect(Collectors.toSet());
+
+        Set<Long> studentsMeetingCriteria = data.stream().map(r -> resultAsLong(r, 0)).collect(Collectors.toSet());
+        if (!studentsMeetingCriteria.isEmpty()) {
+            Set<Long> filteredStudentIds = studentsMeetingCriteria;
+            Map<Long, StudentVocationalStudyProgramme> studyProgrammes = studentService
+                    .studentStudyProgrammes(filteredStudentIds);
+            Map<Long, BigDecimal> generalStudiesCredits = studentModuleTypeCredits(filteredStudentIds,
+                    EnumUtil.toNameList(CurriculumModuleType.KUTSEMOODUL_Y), true);
+            Map<Long, BigDecimal> coreStudiesCredits = studentModuleTypeCredits(filteredStudentIds,
+                    EnumUtil.toNameList(CurriculumModuleType.KUTSEMOODUL_P), true);
+            Map<Long, BigDecimal> freeChoiceCredits = studentModuleTypeCredits(filteredStudentIds,
+                    EnumUtil.toNameList(CurriculumModuleType.KUTSEMOODUL_Y, CurriculumModuleType.KUTSEMOODUL_P,
+                            CurriculumModuleType.KUTSEMOODUL_L), false);
+
+            for (Long studentId : filteredStudentIds) {
+                StudentVocationalStudyProgramme studentStudyProgramme = studyProgrammes.get(studentId);
+                if (studentStudyProgramme == null) {
+                    studentsMeetingCriteria.remove(studentId);
+                    continue;
+                }
+                BigDecimal studentGeneralCredits = generalStudiesCredits.containsKey(studentId)
+                        ? generalStudiesCredits.get(studentId) : BigDecimal.ZERO;
+                BigDecimal studentCoreCredits = coreStudiesCredits.containsKey(studentId)
+                        ? coreStudiesCredits.get(studentId) : BigDecimal.ZERO;
+                BigDecimal studentFreeChoiceCredits = freeChoiceCredits.containsKey(studentId)
+                        ? freeChoiceCredits.get(studentId) : BigDecimal.ZERO;
+                BigDecimal distinctiveGradesCriteria = BigDecimal.valueOf(0.5);
+
+                BigDecimal programmeGeneralCredits = studentStudyProgramme.getGeneralStudies();
+                if (BigDecimal.ZERO.compareTo(programmeGeneralCredits) != 0
+                        && studentGeneralCredits.divide(programmeGeneralCredits, 3, RoundingMode.DOWN)
+                                .compareTo(distinctiveGradesCriteria) == -1) {
+                    studentsMeetingCriteria.remove(studentId);
+                    continue;
+                }
+
+                BigDecimal programmeCoreAndFreeCredits = studentStudyProgramme.getCoreStudies()
+                        .add(studentStudyProgramme.getFreeChoice());
+                BigDecimal studentCoreAndFreeCredits = studentCoreCredits.add(studentFreeChoiceCredits);
+                if (BigDecimal.ZERO.compareTo(programmeCoreAndFreeCredits) != 0
+                        && studentCoreAndFreeCredits.divide(programmeCoreAndFreeCredits, 3, RoundingMode.DOWN)
+                                .compareTo(distinctiveGradesCriteria) == -1) {
+                    studentsMeetingCriteria.remove(studentId);
+                }
+            }
+        }
+        return studentsMeetingCriteria;
     }
-    
+
     private CurriculumGrade getCurriculumGrade(Long studentId) {
         List<CurriculumGrade> result = em.createQuery("select ps.curriculumGrade"
                 + " from ProtocolStudent ps"
@@ -1153,6 +1237,33 @@ public class DirectiveService {
                 .setParameter(2, ProtocolStatus.PROTOKOLL_STAATUS_K.name())
                 .getResultList();
         return result.isEmpty() ? null : result.get(0);
+    }
+
+    private Map<Long, BigDecimal> studentModuleTypeCredits(Set<Long> studentIds, List<String> moduleTypes, boolean ofModuleType) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_vocational_result svr"
+                + " join curriculum_version_omodule cmm on (svr.arr_modules is null"
+                + " and svr.curriculum_version_omodule_id = cmm.id or cmm.id=any(svr.arr_modules))");
+        qb.requiredCriteria("svr.student_id in (:studentIds)", "studentIds", studentIds);
+        qb.requiredCriteria("grade in (:positiveDistinctiveGrades)", "positiveDistinctiveGrades",
+                Arrays.asList("3", "4", "5"));
+        qb.filter("cmm.curriculum_module_id in (select cm.id as m_id from curriculum_version cv"
+                + " join curriculum_version_omodule cvo on cv.id=cvo.curriculum_version_id"
+                + " join curriculum_module cm on cvo.curriculum_module_id=cm.id and cv.curriculum_id=cm.curriculum_id"
+                    + " and coalesce(cm.is_additional,false)=false"
+                    + " and cm.module_code" + (ofModuleType ? " " : " not ") + "in (:moduleTypes)"
+                    + " and coalesce(cm.is_additional,false)=false"
+                + " join student ss on cv.id=ss.curriculum_version_id"
+                + " left join student_group sg on ss.student_group_id=sg.id"
+                + " where ss.id in (:studentIds) and (sg.id is null or coalesce(sg.speciality_code,'x')='x' or"
+                + " coalesce(sg.speciality_code,'x')!='x' and exists("
+                + " select 1 from curriculum_module_occupation cmo"
+                + " left join classifier_connect ccc on cmo.occupation_code=ccc.connect_classifier_code"
+                + " where cmo.curriculum_module_id=cm.id and (cmo.occupation_code=sg.speciality_code or ccc.classifier_code=sg.speciality_code))))"
+                + " group by svr.student_id");
+        qb.parameter("moduleTypes", moduleTypes);
+
+        List<?> data = qb.select("svr.student_id, sum(svr.credits)", em).getResultList();
+        return StreamUtil.toMap(r -> resultAsLong(r, 0), r -> resultAsDecimal(r, 1), data);
     }
 
     private Set<Long> occupationCertificates(Set<Long> studentIds) {

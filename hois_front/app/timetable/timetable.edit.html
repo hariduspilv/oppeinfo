@@ -4,12 +4,12 @@
 
       <md-input-container layout="row" flex="50" flex-sm="100" flex-xs="100">
         <label>{{'timetable.management.studyYear' | translate}}</label>
-        <hois-select required ng-model="timetable.studyYear" values="formState.studyYears" ng-change="studyYearChanged()" ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V'"></hois-select>
+        <hois-select required ng-model="timetable.studyYear" values="formState.studyYears" ng-change="studyYearChanged()" ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V'" sorted-query="true"></hois-select>
       </md-input-container>
 
       <md-input-container layout="row" flex="50" flex-sm="100" flex-xs="100">
         <label>{{'timetable.management.studyPeriod' | translate}}</label>
-        <hois-select required ng-model="timetable.studyPeriod" values="formState.studyPeriods" ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V'"></hois-select>
+        <hois-select required ng-model="timetable.studyPeriod" values="formState.studyPeriods" ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V'" sorted-query="true"></hois-select>
       </md-input-container>
 
       <div layout="row">

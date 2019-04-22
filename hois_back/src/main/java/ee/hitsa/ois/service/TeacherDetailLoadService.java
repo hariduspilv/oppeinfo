@@ -187,14 +187,7 @@ public class TeacherDetailLoadService {
             setTeacherDetailLoadOccurredHours(dto, criteria, teacherOccurredHours, capacities, report);
 
             if (Boolean.TRUE.equals(criteria.getByCapacities())) {
-                Set<String> teacherCapacities = new HashSet<>();
-                if (!dto.getTotalCapacityOccurredLessons().isEmpty()) {
-                    teacherCapacities.addAll(nonNullCapacities(dto.getTotalCapacityOccurredLessons()));
-                }
-                if (!dto.getTotalCapacityPlannedHours().isEmpty()) {
-                    teacherCapacities.addAll(nonNullCapacities(dto.getTotalCapacityPlannedHours()));
-                }
-                dto.setTeacherCapacities(teacherCapacities);
+                dto.setTeacherCapacities(getTeacherPeriodCapacities(dto));
             }
 
             if (Boolean.TRUE.equals(criteria.getShowSingleEvents())) {
@@ -235,14 +228,7 @@ public class TeacherDetailLoadService {
             setTeacherDetailLoadOccurredHours(dto, criteria, teacherOccurredHours, capacities, report);
 
             if (Boolean.TRUE.equals(criteria.getByCapacities())) {
-                Set<String> teacherCapacities = new HashSet<>();
-                if (!dto.getTotalCapacityOccurredLessons().isEmpty()) {
-                    teacherCapacities.addAll(nonNullCapacities(dto.getTotalCapacityOccurredLessons()));
-                }
-                if (!dto.getTotalCapacityPlannedHours().isEmpty()) {
-                    teacherCapacities.addAll(nonNullCapacities(dto.getTotalCapacityPlannedHours()));
-                }
-                dto.setTeacherCapacities(teacherCapacities);
+                dto.setTeacherCapacities(getTeacherPeriodCapacities(dto));
             }
 
             if (Boolean.TRUE.equals(criteria.getShowSingleEvents())) {
@@ -255,6 +241,17 @@ public class TeacherDetailLoadService {
         }
 
         return teachers;
+    }
+
+    private static Set<String> getTeacherPeriodCapacities(PeriodDetailLoadDto dto) {
+        Set<String> teacherCapacities = new HashSet<>();
+        if (!dto.getTotalCapacityOccurredLessons().isEmpty()) {
+            teacherCapacities.addAll(nonNullCapacities(dto.getTotalCapacityOccurredLessons()));
+        }
+        if (!dto.getTotalCapacityPlannedHours().isEmpty()) {
+            teacherCapacities.addAll(nonNullCapacities(dto.getTotalCapacityPlannedHours()));
+        }
+        return teacherCapacities;
     }
 
     private static List<String> nonNullCapacities(Map<String, Long> capacityTotals) {
@@ -393,7 +390,7 @@ public class TeacherDetailLoadService {
             return dto;
         });
     }
-    
+
     private List<Classifier> getTeacherCapacities(Long schoolId, TeacherDetailLoadCommand criteria,
             List<Long> teacherIds) {
         String capacitiesQuery = "select c.code from school_capacity_type sct"
@@ -721,12 +718,10 @@ public class TeacherDetailLoadService {
             boolean singleEvents) {
         String from = "from timetable_event_time tem"
                 + " join timetable_event te on tem.timetable_event_id = te.id"
-                + " join timetable_event_teacher tet on tem.id = tet.timetable_event_time_id";
-        if (!singleEvents) {
-            from += " join timetable_object t_o on te.timetable_object_id = t_o.id"
-                    + " join timetable t on t_o.timetable_id = t.id"
-                    + " join study_period sp on t.study_period_id = sp.id";
-        }
+                + " join timetable_event_teacher tet on tem.id = tet.timetable_event_time_id"
+                + " left join timetable_object t_o on te.timetable_object_id = t_o.id"
+                + " left join timetable t on t_o.timetable_id = t.id"
+                + " left join study_period sp on t.study_period_id = sp.id";
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
         qb.optionalCriteria("tem.start >= :studyYearStart", "studyYearStart", criteria.getStudyYearStart(),
@@ -746,12 +741,17 @@ public class TeacherDetailLoadService {
 
         qb.optionalCriteria("tet.teacher_id in (:teacherIds)", "teacherIds", teacherIds);
 
-        if (!singleEvents) {
-            qb.filter(Boolean.TRUE.equals(criteria.getIsHigher()) ? "t_o.subject_study_period_id is not null"
-                    : "t_o.journal_id is not null");
-        } else if (singleEvents && Boolean.FALSE.equals(criteria.getIsHigher())) {
+        if (singleEvents) {
+            qb.filter("t_o.subject_study_period_id is null and t_o.journal_id is null");
             qb.filter("not exists(select 1 from subject_study_period_exam sspe"
                     + " where sspe.timetable_event_id = tem.timetable_event_id)");
+        } else {
+            if (Boolean.TRUE.equals(criteria.getIsHigher())) {
+                qb.filter("(t_o.subject_study_period_id is not null or exists (select 1 from "
+                        + "subject_study_period_exam sspe where sspe.timetable_event_id = tem.timetable_event_id))");
+            } else {
+                qb.filter("t_o.journal_id is not null");
+            }
         }
         return qb;
     }
@@ -939,11 +939,7 @@ public class TeacherDetailLoadService {
             setTeacherDetailLoadOccurredHours(journal, criteria, journalOccurredLessons, capacities, report);
 
             if (Boolean.TRUE.equals(criteria.getByCapacities())) {
-                Set<String> teacherCapacities = new HashSet<>();
-                if (!journal.getTotalCapacityOccurredLessons().isEmpty()) {
-                    teacherCapacities.addAll(journal.getTotalCapacityOccurredLessons().keySet());
-                }
-                dto.setTeacherCapacities(teacherCapacities);
+                dto.getTeacherCapacities().addAll(getTeacherPeriodCapacities(journal));
             }
 
             List<TimetableEvent> journalSubstitutedLessons = StreamUtil
@@ -1002,7 +998,7 @@ public class TeacherDetailLoadService {
                 .get(teacherId);
 
         Set<Long> subjectStudyPeriodIds = StreamUtil.toMappedSet(e -> e.getSubjectStudyPeriodId(), occurredLessons);
-        subjectStudyPeriodIds.addAll(StreamUtil.toMappedSet(e -> e.getJournalId(), substitutedLessons));
+        subjectStudyPeriodIds.addAll(StreamUtil.toMappedSet(e -> e.getSubjectStudyPeriodId(), substitutedLessons));
         if (Boolean.TRUE.equals(criteria.getShowPlannedLessons())) {
             subjectStudyPeriodIds.addAll(StreamUtil.toMappedSet(p -> p.getSubjectStudyPeriodId(), plannedLoads));
         }
@@ -1025,11 +1021,7 @@ public class TeacherDetailLoadService {
             setTeacherDetailLoadOccurredHours(subject, criteria, subjectOccurredLessons, capacities, report);
 
             if (Boolean.TRUE.equals(criteria.getByCapacities())) {
-                Set<String> teacherCapacities = new HashSet<>();
-                if (!subject.getTotalCapacityOccurredLessons().isEmpty()) {
-                    teacherCapacities.addAll(subject.getTotalCapacityOccurredLessons().keySet());
-                }
-                dto.setTeacherCapacities(teacherCapacities);
+                dto.getTeacherCapacities().addAll(getTeacherPeriodCapacities(subject));
             }
 
             List<TimetableEvent> subjectSubstitutedLessons = StreamUtil
@@ -1076,12 +1068,8 @@ public class TeacherDetailLoadService {
                 ? teacherHigherDetailLoad(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent()
                 : teacherVocationalDetailLoad(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
 
-        List<Long> teacherIds = StreamUtil.toMappedList(t -> t.getTeacher().getId(), teachers);
-        List<Classifier> capacities = new ArrayList<>();
-        if (Boolean.TRUE.equals(criteria.getByCapacities())) {
-            capacities = getTeacherCapacities(schoolId, criteria, teacherIds);
-            capacities.sort(Comparator.comparing(Classifier::getValue, String.CASE_INSENSITIVE_ORDER));
-        }
+        List<Classifier> capacities = Boolean.TRUE.equals(criteria.getByCapacities()) 
+                ? excelTeacherCapacities(teachers) : new ArrayList<>();
         boolean entriesWithoutCapacity = Boolean.TRUE.equals(criteria.getByCapacities())
                 ? existsEntriesWithoutCapacity(teachers) : false;
  
@@ -1098,17 +1086,28 @@ public class TeacherDetailLoadService {
         return xlsService.generate("teachersdetailload" + ".xlsx", Collections.singletonMap("report", report));
     }
 
+    private List<Classifier> excelTeacherCapacities(List<TeacherDetailLoadDto> teachers) {
+        Set<String> capacityCodes = new HashSet<>();
+        for (TeacherDetailLoadDto teacher : teachers) {
+            capacityCodes.addAll(teacher.getTeacherCapacities());
+        }
+
+        List<Classifier> capacities = new ArrayList<>();
+        if (!capacityCodes.isEmpty()) {
+            capacities = em.createQuery("select c from Classifier c where c.code in (:codes)", Classifier.class)
+                    .setParameter("codes", capacityCodes).getResultList();
+        }
+        capacities.sort(Comparator.comparing(Classifier::getValue, String.CASE_INSENSITIVE_ORDER));
+        return capacities;
+    }
+
     public byte[] teacherDetailLoadJournalSubjectsAsExcel(Long schoolId, TeacherDetailLoadCommand criteria, Teacher teacher) {
         TeacherDetailLoadDto teacherLoad = Boolean.TRUE.equals(criteria.getIsHigher())
                 ? teacherDetailLoadSubjects(schoolId, criteria, teacher)
                 : teacherDetailLoadJournals(schoolId, criteria, teacher);
 
-        List<Classifier> capacities = new ArrayList<>();
-        if (Boolean.TRUE.equals(criteria.getByCapacities())) {
-            List<Long> teacherIds = Arrays.asList(EntityUtil.getId(teacher));
-            capacities = getTeacherCapacities(schoolId, criteria, teacherIds);
-            capacities.sort(Comparator.comparing(Classifier::getValue, String.CASE_INSENSITIVE_ORDER));
-        }
+        List<Classifier> capacities = Boolean.TRUE.equals(criteria.getByCapacities()) 
+                ? excelTeacherCapacities(Arrays.asList(teacherLoad)) : new ArrayList<>();
         boolean entriesWithoutCapacity = Boolean.TRUE.equals(criteria.getByCapacities())
                 ? existsEntriesWithoutCapacity(Arrays.asList(teacherLoad)) : false;
 

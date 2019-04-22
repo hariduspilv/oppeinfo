@@ -6,17 +6,19 @@
         <div layout="row">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'groupAbsence.studyYear' | translate}}</label>
-            <hois-select ng-model="criteria.studyYear" values="formState.studyYears" ng-change="studyYearChanged(true)" required></hois-select>
+            <hois-select ng-model="criteria.studyYear" values="formState.studyYears" ng-change="studyYearChanged(true)"
+              ng-disabled="criteria.todaysAbsences" ng-required="!criteria.todaysAbsences"></hois-select>
           </md-input-container>
 
           <div ng-if="auth.isAdmin()" flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
             <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
-              label="{{'groupAbsence.studentGroup'}}" additional-query-params="{higher: false}" required></hois-autocomplete>
+              label="{{'groupAbsence.studentGroup'}}" additional-query-params="{higher: false}" ng-required="!criteria.todaysAbsences"></hois-autocomplete>
           </div>
 
           <md-input-container ng-if="auth.isTeacher()" flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'groupAbsence.studentGroup' | translate}}</label>
-            <md-select ng-model="criteria.studentGroup" required>
+            <md-select ng-model="criteria.studentGroup" ng-required="!criteria.todaysAbsences">
+              <md-option ng-if="criteria.todaysAbsences" md-option-empty></md-option>
               <md-option ng-value="studentGroup.id" ng-repeat="studentGroup in formState.studentGroups | orderBy: currentLanguageNameField()">
                 {{currentLanguageNameField(studentGroup)}}
               </md-option>
@@ -27,11 +29,18 @@
         <div layout="row">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'groupAbsence.studyWeek' | translate}}</label>
-            <md-select ng-model="criteria.studyWeek" ng-change="studyWeekChanged()" required>
-              <md-option ng-value="week" ng-repeat="week in formState.studyWeeks | orderBy: 'nr'">
+            <md-select ng-model="criteria.studyWeek" ng-change="studyWeekChanged()" ng-disabled="criteria.todaysAbsences" 
+              ng-required="!criteria.todaysAbsences">
+              <md-option ng-value="week" ng-repeat="week in formState.studyWeeks | orderBy: 'nr' track by $index">
                 {{week.start | hoisDate}}-{{week.end | hoisDate}}
               </md-option>
             </md-select>
+          </md-input-container>
+
+          <md-input-container class="md-block" flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="criteria.todaysAbsences" aria-label="{{'groupAbsence.todaysAbsences' | translate}}">
+              {{'groupAbsence.todaysAbsences' | translate}}
+            </md-checkbox>
           </md-input-container>
         </div>
         

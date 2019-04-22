@@ -17,7 +17,7 @@ function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, dialogService, 
   }
 
   function canCreateProtocol() {
-    return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) && $scope.auth.authorizedRoles.indexOf("ROLE_OIGUS_M_TEEMAOIGUS_LOPPROTOKOLL") !== -1;
+    return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) && $scope.auth.authorizedRoles.indexOf("ROLE_OIGUS_M_TEEMAOIGUS_LOPMOODULPROTOKOLL") !== -1;
   }
 
   $scope.formState = {

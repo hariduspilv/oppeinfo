@@ -1,0 +1,60 @@
+<md-dialog aria-label="contract to ekis result" flex="50">
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2 flex>{{"contract.ekisResponse.label" | translate}}</h2>
+            <md-button class="md-icon-button" ng-click="cancel()">
+            <md-icon md-font-set="material-icons">close</md-icon>
+            </md-button>
+        </div>
+    </md-toolbar>
+    <md-dialog-content>
+        <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <p md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'contract.ekisResponse.success' | translate}}</p>
+        <md-table-container style="max-height: 30vh;">
+            <table md-table>
+              <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+                <tr md-row>
+                  <th md-column>{{'student.label' | translate}}</th>
+                  <th md-column>{{'enterprise.name' | translate}}</th>
+                  <th md-column>{{'practice.student.contractNr' | translate}}</th>
+                  <th md-column>{{'enterprise.csv.note' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in criteria.successful" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>{{row.student ? row.student : '-'}}</td>
+                  <td md-cell>{{row.enterprise ? row.enterprise : '-'}}</td>
+                  <td md-cell>{{row.contractNr ? row.contractNr : '-'}}</td>
+                  <td md-cell>{{row.message ? (row.message | translate) : '-'}}</td>
+                </tr>
+              </tbody>
+            </table>
+        </md-table-container>
+        <p md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'contract.ekisResponse.failed' | translate}}</p>
+        <md-table-container style="max-height: 30vh;">
+            <table md-table>
+              <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+                <tr md-row>
+                    <th md-column>{{'student.label' | translate}}</th>
+                    <th md-column>{{'enterprise.name' | translate}}</th>
+                    <th md-column>{{'practice.student.contractNr' | translate}}</th>
+                    <th md-column>{{'enterprise.csv.note' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in criteria.failed" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell>{{row.student ? row.student : '-'}}</td>
+                    <td md-cell>{{row.enterprise ? row.enterprise : '-'}}</td>
+                    <td md-cell>{{row.contractNr ? row.contractNr : '-'}}</td>
+                    <td md-cell>{{row.message ? (row.message | translate) : '-'}}</td>
+                </tr>
+              </tbody>
+            </table>
+        </md-table-container>
+        </div>
+    </md-dialog-content>
+    
+    <md-dialog-actions layout="row" layout-align="start start">
+        <md-button class="md-raised md-primary" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+    </md-dialog>

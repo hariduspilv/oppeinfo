@@ -4,7 +4,7 @@
       <div layout="row" class="form-readonly">
         <md-input-container flex="20" flex-sm="100" flex-xs="100" ng-if="!record.id">
           <label class="textInput">{{'exam.studyPeriod' | translate}}</label>
-          <hois-select ng-model="formState.studyPeriod" ng-change="studyPeriodChanged()" values="formState.studyPeriods" required></hois-select>
+          <hois-select ng-model="formState.studyPeriod" ng-change="studyPeriodChanged()" values="formState.studyPeriods" required sorted-query="true"></hois-select>
         </md-input-container>
 
         <md-input-container flex="20" flex-sm="100" flex-xs="100" ng-if="record.id">

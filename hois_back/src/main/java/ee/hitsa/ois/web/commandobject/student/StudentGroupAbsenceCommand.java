@@ -8,6 +8,7 @@ public class StudentGroupAbsenceCommand {
     private Long studentGroup;
     private LocalDate studyWeekStart;
     private LocalDate studyWeekEnd;
+    private Boolean todaysAbsences;
 
     public Long getStudyYear() {
         return studyYear;
@@ -39,6 +40,14 @@ public class StudentGroupAbsenceCommand {
 
     public void setStudyWeekEnd(LocalDate studyWeekEnd) {
         this.studyWeekEnd = studyWeekEnd;
+    }
+
+    public Boolean getTodaysAbsences() {
+        return todaysAbsences;
+    }
+
+    public void setTodaysAbsences(Boolean todaysAbsences) {
+        this.todaysAbsences = todaysAbsences;
     }
 
 }

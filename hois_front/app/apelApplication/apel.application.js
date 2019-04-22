@@ -816,7 +816,8 @@
                 subjectCode: copy.subjectCode,
                 curriculumVersionHmodule: copy.curriculumVersionHmodule,
                 isOptional: copy.isOptional,
-                transferableModuleIndex: copy.transferableModuleIndex
+                transferableModuleIndex: copy.transferableModuleIndex,
+                transfer: copy.transfer
               };
               getGrades(dialogScope.record.newTransferableSubjectOrModule.assessment);
               if (copy.isMySchool === true) {
@@ -863,20 +864,23 @@
 
         function getTransferableModules(typeCode) {
           if (typeCode === 'VOTA_AINE_LIIK_O') {
-            QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query(
+            QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query(
               {student: dialogScope.student.id, curriculumModules: true, curriculumVersion: dialogScope.curriculumVersionId}).$promise.then(function (modules) {
               setTransferableModules(typeCode, modules);
             });
-          } else if (typeCode === 'VOTA_AINE_LIIK_M') {
-            QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query(
-              {student: dialogScope.student.id, curriculumModules: false, curriculumVersion: dialogScope.curriculumVersionId}).$promise.then(function (modules) {
-              setTransferableModules(typeCode, modules);
-            });
           } else if (typeCode === 'VOTA_AINE_LIIK_V') {
-            QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query(
+            QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query(
               {student: dialogScope.student.id, otherStudents: true, ignoreStatuses: true}).$promise.then(function (modules) {
               setTransferableModules(typeCode, modules);
             });
+          } else if (typeCode === 'VOTA_AINE_LIIK_M') {
+            if (dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule) {
+              QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query(
+                {id: dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule.id, student: dialogScope.student.id, 
+                  curriculumModules: false, curriculumVersion: dialogScope.curriculumVersionId}).$promise.then(function (modules) {
+                setTransferableModules(typeCode, modules);
+              });
+            }
           }
         }
 
@@ -910,18 +914,20 @@
               dialogScope.transferableSubjects = subjects;
               setSubject();
             });
-          } else if (typeCode === 'VOTA_AINE_LIIK_M') {
-            QueryUtils.endpoint('/autocomplete/subjectsList').query(
-              {student: dialogScope.student.id, curriculumSubjects: false, curriculumVersion: dialogScope.curriculumVersionId, withCredits: false}).$promise.then(function (subjects) {
-              dialogScope.transferableSubjects = subjects;
-              setSubject();
-            });
           } else if (typeCode === 'VOTA_AINE_LIIK_V') {
             QueryUtils.endpoint('/autocomplete/subjectsList').query(
               {student: dialogScope.student.id, otherStudents: true, withCredits: false}).$promise.then(function (subjects) {
               dialogScope.transferableSubjects = subjects;
               setSubject();
             });
+          } else if (typeCode === 'VOTA_AINE_LIIK_M') {
+            if (dialogScope.record.newTransferableSubjectOrModule.subject) {
+              QueryUtils.endpoint('/autocomplete/subjectsList').query(
+                {student: dialogScope.student.id, curriculumSubjects: false, curriculumVersion: dialogScope.curriculumVersionId, withCredits: false}).$promise.then(function (subjects) {
+                dialogScope.transferableSubjects = subjects;
+                setSubject();
+              });
+            }
           }
         }
 
@@ -1325,22 +1331,41 @@
           }
           return credits;
         }
+
+        dialogScope.areReplacedSubjectsOrModulesValid = function () {
+          if (dialogScope.isVocational) {
+            return dialogScope.dialogForm.$submitted && (!dialogScope.record.formalReplacedSubjectsOrModules ||
+              dialogScope.record.formalReplacedSubjectsOrModules.length === 0);
+          } else {
+            if (dialogScope.record.newTransferableSubjectOrModule.curriculumVersionHmodule.type !== 'KORGMOODUL_V') {
+              return dialogScope.dialogForm.$submitted && (!dialogScope.record.formalReplacedSubjectsOrModules ||
+                dialogScope.record.formalReplacedSubjectsOrModules.length === 0);
+            }
+            return false;
+          }
+        };
         
         dialogScope.submitHigherFormalLearning = function () {
-          if (dialogScope.record.formalReplacedSubjectsOrModules.length <= 0) {
-            message.error('apel.error.atLeastOneSubstitutableSubject');
-          } else if (!areThereMoreTransferableCreditsThanReplacedCredits(false)) {
-            message.error('apel.error.thereMustBeMoreTransferableCreditsThanSubstitutableCreditsHigher');
-          } else {
-            dialogScope.record.formalSubjectsOrModules[0] = dialogScope.record.newTransferableSubjectOrModule;
-            dialogScope.record.formalSubjectsOrModules[0].isMySchool = dialogScope.formState.isMySchool;
-            if (!dialogScope.record.formalSubjectsOrModules[0].isMySchool) {
-              dialogScope.record.formalSubjectsOrModules[0].type = 'VOTA_AINE_LIIK_M';
+          if (dialogScope.record.newTransferableSubjectOrModule.curriculumVersionHmodule.type !== 'KORGMOODUL_V') {
+            if (dialogScope.record.formalReplacedSubjectsOrModules.length <= 0) {
+              message.error('apel.error.atLeastOneSubstitutableSubject');
+              return;
             }
-            formalSubjectsOrModulesToArray();
-            formalSubjectOrModulesObjectsToIdentifiers(DataUtils, dialogScope.record);
-            dialogScope.submit();
+            
+            if (!areThereMoreTransferableCreditsThanReplacedCredits(false)) {
+              message.error('apel.error.thereMustBeMoreTransferableCreditsThanSubstitutableCreditsHigher');
+              return;
+            } 
           }
+          
+          dialogScope.record.formalSubjectsOrModules[0] = dialogScope.record.newTransferableSubjectOrModule;
+          dialogScope.record.formalSubjectsOrModules[0].isMySchool = dialogScope.formState.isMySchool;
+          if (!dialogScope.record.formalSubjectsOrModules[0].isMySchool) {
+            dialogScope.record.formalSubjectsOrModules[0].type = 'VOTA_AINE_LIIK_M';
+          }
+          formalSubjectsOrModulesToArray();
+          formalSubjectOrModulesObjectsToIdentifiers(DataUtils, dialogScope.record);
+          dialogScope.submit();
         };
         
         function formalSubjectsOrModulesToArray() {

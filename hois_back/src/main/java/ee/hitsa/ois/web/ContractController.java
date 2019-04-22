@@ -1,9 +1,12 @@
 package ee.hitsa.ois.web;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,13 +33,22 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.ContractAllCommand;
 import ee.hitsa.ois.web.commandobject.ContractCancelForm;
+import ee.hitsa.ois.web.commandobject.ContractEkisForm;
+import ee.hitsa.ois.web.commandobject.ContractForEkisSearchCommand;
 import ee.hitsa.ois.web.commandobject.ContractForm;
 import ee.hitsa.ois.web.commandobject.ContractSearchCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ContractDto;
+import ee.hitsa.ois.web.dto.ContractEkisDto;
+import ee.hitsa.ois.web.dto.ContractForEkisDto;
 import ee.hitsa.ois.web.dto.ContractSearchDto;
 import ee.hitsa.ois.web.dto.ContractStudentModuleDto;
 import ee.hitsa.ois.web.dto.ContractStudentSubjectDto;
+import ee.hitsa.ois.web.dto.ContractToEkisMessageDto;
+import ee.hitsa.ois.web.dto.StudentGroupContractSearchCommand;
+import ee.hitsa.ois.web.dto.StudentGroupContractSearchDto;
 
 @RestController
 @RequestMapping("/contracts")
@@ -44,6 +56,9 @@ public class ContractController {
 
     @Autowired
     private ContractService contractService;
+    
+    @Autowired
+    private EntityManager em;
 
     @GetMapping
     public Page<ContractSearchDto> search(HoisUserDetails user, ContractSearchCommand command, Pageable pageable) {
@@ -51,6 +66,23 @@ public class ContractController {
             command.setStudent(user.getStudentId());
         }
         return contractService.search(user, command, pageable);
+    }
+    
+    @GetMapping("/all")
+    public Page<ContractSearchDto> search(HoisUserDetails user, ContractAllCommand command, Pageable pageable) {
+        return contractService.searchAll(user, command, pageable);
+    }
+    
+    @GetMapping("/studentGroup")
+    public Page<StudentGroupContractSearchDto> searchStudentGroupContract(HoisUserDetails user, @Valid StudentGroupContractSearchCommand command, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return contractService.searchStudentGroupContract(user, command, pageable);
+    }
+    
+    @GetMapping("/ekis")
+    public Page<ContractForEkisDto> searchContractForEkis(HoisUserDetails user, @Valid ContractForEkisSearchCommand command, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return contractService.searchContractForEkis(user, command, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
@@ -69,7 +101,19 @@ public class ContractController {
     @PostMapping
     public ContractDto create(HoisUserDetails user, @Valid @RequestBody ContractForm contractForm) {
         UserUtil.assertIsSchoolAdmin(user);
-        Contract savedContract = contractService.create(contractForm);
+        Contract savedContract = null;
+        if (contractForm.getStudents() != null && !contractForm.getStudents().isEmpty()) {
+            for (AutocompleteResult student : contractForm.getStudents()) {
+               ContractForm copyOfContracForm = contractForm;
+               copyOfContracForm.setStudent(student);
+               savedContract = contractService.create(user, contractForm);
+            }
+            if (savedContract != null) {
+                return get(user, savedContract);
+            }
+        } else {
+            savedContract = contractService.create(user, contractForm);
+        }
         return get(user, savedContract);
     }
 
@@ -81,7 +125,7 @@ public class ContractController {
         if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())) {
             throw new ValidationFailedException("contract.messages.updatingOnlyAllowedForStatusS");
         }
-        return get(user, contractService.save(contract, contractForm));
+        return get(user, contractService.save(user, contract, contractForm));
     }
     
     @PutMapping("/cancel/{id:\\d+}")
@@ -127,6 +171,12 @@ public class ContractController {
         return contractService.checkForEkis(user, contractId);
     }
     
+    @GetMapping("/checkForEkis")
+    public Map<String, ?> checkForEkis(HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return contractService.checkForEkis(user, null);
+    }
+    
     @PutMapping("/sendEmail/{id:\\d+}")
     public void sendEmail(HoisUserDetails user, @WithEntity ContractSupervisor supervisor) {
         UserUtil.assertIsSchoolAdmin(user);
@@ -137,5 +187,25 @@ public class ContractController {
     public ContractDto sendToEkis(HoisUserDetails user, @WithEntity Contract contract) {
         UserUtil.assertIsSchoolAdmin(user);
         return get(user, contractService.sendToEkis(user, contract));
+    }
+    
+    @PostMapping("/sendToEkis")
+    public ContractEkisDto sendToEkis(HoisUserDetails user, @RequestBody ContractEkisForm contractEkisForm) {
+        UserUtil.assertIsSchoolAdmin(user);
+        List<ContractToEkisMessageDto> passed = new ArrayList<>();
+        List<ContractToEkisMessageDto> failed = new ArrayList<>();
+        for (Long id : contractEkisForm.getContracts()) {
+            Contract contract = em.getReference(Contract.class, id);
+            try {
+                contractService.sendToEkis(user, contract);
+                passed.add(ContractService.createContractToEkisDto(contract, "contract.messages.sendToEkis.success"));
+            } catch(Exception e) {
+                failed.add(ContractService.createContractToEkisDto(contract, e.getMessage()));
+            }
+        }
+        ContractEkisDto dto = new ContractEkisDto();
+        dto.setFailed(failed);
+        dto.setSuccessful(passed);
+        return dto;
     }
 }

@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
@@ -48,6 +49,7 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.DirectiveCancelType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
@@ -68,6 +70,7 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.DirectiveUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -91,6 +94,8 @@ public class DirectiveConfirmService {
     private AutomaticMessageService automaticMessageService;
     @Autowired
     private DirectiveService directiveService;
+    @Autowired
+    private ContractService contractService;
     @Autowired
     private EkisService ekisService;
     @Autowired
@@ -221,6 +226,15 @@ public class DirectiveConfirmService {
                 if(academicLeaves.containsKey(EntityUtil.getId(ds.getStudent()))) {
                     reason = "directive.scholarshipOverlapsAcademicLeave";
                 } else if(!StudentUtil.isActive(ds.getStudent())) {
+                    reason = "directive.scholarshipStudentNotActive";
+                }
+                if(reason != null) {
+                    invalidStudents.add(createInvalidStudent(ds, reason));
+                }
+            } else if (DirectiveType.KASKKIRI_STIPTOETL.equals(directiveType)) {
+                // status should be active
+                String reason = null;
+                if(!StudentUtil.isActive(ds.getStudent())) {
                     reason = "directive.scholarshipStudentNotActive";
                 }
                 if(reason != null) {
@@ -443,6 +457,7 @@ public class DirectiveConfirmService {
             student.setStudyEnd(confirmDate);
             userService.disableUser(student, LocalDate.now().minusDays(1));
             cancelScholarships(directiveStudent);
+            endContracts(student);
             break;
         case KASKKIRI_ENNIST:
             student.setStudyStart(confirmDate);
@@ -578,6 +593,21 @@ public class DirectiveConfirmService {
                     }
                 }
                 sa.setStatus(rejected);
+            }
+        }
+    }
+
+    private void endContracts(Student student) {
+        List<Contract> contracts = em
+                .createQuery("select c from Contract c where c.student.id = ?1 and c.status.code in (?2)", Contract.class)
+                .setParameter(1, EntityUtil.getId(student))
+                .setParameter(2, EnumUtil.toNameList(ContractStatus.LEPING_STAATUS_S, ContractStatus.LEPING_STAATUS_Y,
+                        ContractStatus.LEPING_STAATUS_K))
+                .getResultList();
+
+        if (!contracts.isEmpty()) {
+            for (Contract contract : contracts) {
+                contractService.endContract(contract, true);
             }
         }
     }

@@ -105,7 +105,9 @@
         "maxlength": "Text too long",
         "min": "Minimal value {{min}}",
         "time": "Incorrect time",
-        "InvalidEstonianIdCode": "Personal identification code does not correspond to standard"
+        "InvalidEstonianIdCode": "Personal identification code does not correspond to standard",
+        "step": "Too many places after comma",
+        "hourMin": "Pattern does not match hh:mm"
       },
       "form-has-errors": "Mistakes in the form",
       "record": {
@@ -210,7 +212,8 @@
         "label": "Internship",
         "practiceContracts": "Internship contracts",
         "practiceEnterprises": "Internship enterprises",
-        "statistics": "Internship statistics"
+        "statistics": "Internship statistics",
+        "studentgroupContracts": "Studentgroup contracts"
       },
       "scholarships" : {
         "label": "Study allowances and scholarships",
@@ -644,6 +647,8 @@
     }
   },
   "student": {
+    "addAll": "Add all learners",
+    "plural": "Learners",
     "label": "Learner",
     "absences": "Leaves of absence",
     "results": "Learning outcomes",
@@ -702,6 +707,7 @@
     "studyEnd": "End of studies",
     "studyLevel": "Level of studies",
     "error": {
+      "checkRequired": "Atleast one student needs to be chosen",
       "addressRequired": "Address is mandatory"
     },
     "absence": {
@@ -3005,6 +3011,12 @@
     }
   },
   "contract": {
+    "copy": "Copy data to contract",
+    "select": "Copying contract data",
+    "useContractData": "Use existing contract data",
+    "addToSeveral": "Add practice contract to several",
+    "addToSeveralHeader": "Add practice contract to several",
+    "sendToEkis": "Send created contracts to EKIS",
     "studentEvaluation": "Student evaluation",
     "supervisorEvaluation": "Enterprise supervisor evaluation",
     "sendAgain": "Send again",
@@ -3047,9 +3059,15 @@
     "deleteconfirm":"Are you sure you wish to delete contract?",
     "vocationalOrHigherSelect": "Either professional training or higher education?",
     "vocationalOrHigherContract": "Please select whether you wish to add contract of professional training or higher education?",
+    "missing": "praktikalepingud puuduvad",
     "cancel": "Cancel contract",
     "cancelInfo": "Cancellation info",
     "canceledBy": "Canceled by",
+    "ekisResponse": {
+      "label": "Contract to EKIS result",
+      "success": "Contracts sent successfully",
+      "failed": "Contracts that failed to send"
+    },
     "button": {
       "vocational": "Professional training",
       "higher": "Higher education",
@@ -3333,6 +3351,7 @@
       "status": "Status"
     },
     "contract": {
+      "atleastOne": "Atleast 1 contract needs to be chosen",
       "statistics": "Canceled contract statistics",
       "startDate": "Canceled from",
       "endDate": "Canceled until",
@@ -3398,6 +3417,8 @@
     "thresholdPercentage": "Threshold’s %"
   },
   "practiceJournal": {
+    "open": "Open for change",
+    "canAddEntries": "Journal can be edited until",
     "moduleAndTheme": "Module and topic",
     "subject": "Subject",
     "practiceStartAndEnd": "Beginning and end of internship",
@@ -3427,7 +3448,8 @@
     "vocationalOrHigherPracticeJournal": "Please select whether you wish to add internship journal of professional training or higher education?",
     "prompt":{
       "fileDeleteConfirm": "Are you sure you want to delete file?",
-      "confirmConfirm": "Are you sure you want to confirm internship journal?",
+      "confirmConfirm": "Are you sure you want to confirm internship journal? After confirming, student can no longer fill the journal.",
+      "confirmOpen": "Are you sure you want to open internship journal? After opening, student can fill the journal.",
       "isAfterDaysAfterCanEditSave": "Internship journal cannot be changed when end date of internship is earlier than today’ date + 30 days. Are you sure you wish to save?",
       "isAfterDaysAfterCanEditConfirm": "Internship journal cannot be changed when end date of internship is earlier than today’ date + 30 days. Are you sure you wish to confirm?"
     },
@@ -3435,7 +3457,8 @@
       "noPracticeJournalFound": "Internship journal not found",
       "acessNotAllowedJournalStatusIsConfirmed": "Internship journal already confirmed",
       "acessNotAllowedContractHasEnded": "More than 30 days have passed since end of internship contract",
-      "confirmed": "Internship journal successfully confirmed"
+      "confirmed": "Internship journal successfully confirmed",
+      "opened": "Internship journal successfully opened"
     },
     "button": {
       "createWithoutContract": "Add new journal without contract",

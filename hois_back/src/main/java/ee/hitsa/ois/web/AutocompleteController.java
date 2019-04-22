@@ -58,6 +58,7 @@ import ee.hitsa.ois.web.dto.SubjectResult;
 import ee.hitsa.ois.web.dto.SupervisorDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOModulesAndThemesResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeResult;
@@ -132,22 +133,26 @@ public class AutocompleteController {
     }
     
     @GetMapping("/curriculumversionhmodules")
-    public List<AutocompleteResult> curriculumVersionHigherModules(HoisUserDetails user, @Valid CurriculumVersionHigherModuleAutocompleteCommand lookup) {
+    public List<CurriculumVersionHigherModuleResult> curriculumVersionHigherModules(HoisUserDetails user,
+            @Valid CurriculumVersionHigherModuleAutocompleteCommand lookup) {
         return autocompleteService.curriculumVersionHigherModules(user, lookup);
     }
 
     @GetMapping("/curriculumversionomodules")
-    public List<CurriculumVersionOccupationModuleResult> curriculumVersionOccupationModules(HoisUserDetails user, @Valid CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
+    public List<CurriculumVersionOccupationModuleResult> curriculumVersionOccupationModules(HoisUserDetails user,
+            @Valid CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
         return autocompleteService.curriculumVersionOccupationModules(user, lookup);
     }
 
     @GetMapping("/curriculumversionomodulethemes")
-    public List<CurriculumVersionOccupationModuleThemeResult> curriculumVersionOccupationModuleThemes(@Valid CurriculumVersionOccupationModuleThemeAutocompleteCommand lookup) {
+    public List<CurriculumVersionOccupationModuleThemeResult> curriculumVersionOccupationModuleThemes(
+            @Valid CurriculumVersionOccupationModuleThemeAutocompleteCommand lookup) {
         return autocompleteService.curriculumVersionOccupationModuleThemes(lookup);
     }
-    
+
     @GetMapping("/curriculumversionomodulesandthemes")
-    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(HoisUserDetails user, @Valid CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
+    public List<CurriculumVersionOModulesAndThemesResult> curriculumVersionOccupationModulesAndThemes(
+            HoisUserDetails user, @Valid CurriculumVersionOccupationModuleAutocompleteCommand lookup) {
         return autocompleteService.curriculumVersionOccupationModulesAndThemes(user, lookup);
     }
 

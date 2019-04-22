@@ -1,5 +1,5 @@
 <md-tabs md-dynamic-height md-border-bottom>
-  <md-tab label="{{'teacher.data' | translate}}">
+  <md-tab label="{{'teacher.data' | translate}}" md-on-select="changeTab('DATA')">
     <md-content class="md-padding form-readonly">
       <div style="padding-top: 1em">
         <div layout="column">
@@ -197,17 +197,17 @@
       <md-button ng-if="teacher.canEdit && auth.isTeacher()" ng-href="#/teachers/{{teacher.id}}/editmydata" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
     </md-content>
   </md-tab>
-  <md-tab label="{{'teacher.continuingEducation.continuingEducation' | translate}}" ng-if="teacher.teacherContinuingEducations.length > 0 && teacher.isVocational">
+  <md-tab label="{{'teacher.continuingEducation.continuingEducation' | translate}}" md-on-select="changeTab('CONTINUING_EDUCATION')" ng-if="teacher.teacherContinuingEducations.length > 0 && teacher.isVocational">
       <md-content class="md-padding">
         <div ng-include="'teacher/teacher.continuing.education.view.html'"></div>
       </md-content>
     </md-tab>
-  <md-tab label="{{'teacher.qualification.qualification' | translate}}" ng-if="teacher.teacherQualifications.length > 0">
+  <md-tab label="{{'teacher.qualification.qualification' | translate}}" md-on-select="changeTab('QUALIFICATION')" ng-if="teacher.teacherQualifications.length > 0">
     <md-content class="md-padding">
       <div ng-include="'teacher/teacher.qualification.view.html'"></div>
     </md-content>
   </md-tab>
-  <md-tab label="{{'teacher.mobility.mobility' | translate}}" ng-if="teacher.teacherMobility.length > 0">
+  <md-tab label="{{'teacher.mobility.mobility' | translate}}" md-on-select="changeTab('MOBILITY')" ng-if="teacher.teacherMobility.length > 0">
     <md-content class="md-padding">
       <div ng-include="'teacher/teacher.mobility.view.html'"></div>
     </md-content>
@@ -217,14 +217,14 @@
       <div ng-include="'teacher/teacher.rtip.absence.view.html'"></div>
     </md-content>
   </md-tab>
-  <md-tab label="{{'teacher.subjectPrograms.label' | translate}}" ng-if="teacher.isHigher">
+  <md-tab label="{{'teacher.subjectPrograms.label' | translate}}" md-on-select="changeTab('SUBJECT_PROGRAMS')" ng-if="teacher.isHigher">
     <md-content class="md-padding">
       <div ng-include="'teacher/teacher.programs.html'"></div>
     </md-content>
   </md-tab>
 </md-tabs>
 <div layout="row" ng-if="!auth.isTeacher()" class="md-padding">
-  <md-button ng-if="!isShowingRtipTab && teacher.canEdit" ng-href="#/teachers/{{teacher.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+  <md-button ng-if="!isShowingRtipTab && teacher.canEdit" ng-href="{{getUrl()}}" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
   <md-button ng-if="isShowingRtipTab && teacher.canEdit && teacher.rtipNr" ng-click="updateData()" class="md-raised md-primary">{{'teacher.rtipAbsence.updateData' | translate}}</md-button>
   <md-button ng-click="back('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>
